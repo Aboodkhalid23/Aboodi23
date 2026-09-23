@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/scripts/update-skills.sh >/dev/null 2>&1 || true",
+            "timeout": 120
+          }
+        ]
+      }
+    ]
+  }
+}

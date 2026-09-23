@@ -184,3 +184,23 @@ git clone <repo-url> /tmp/skill && cp -r /tmp/skill/skills/<name> ~/.claude/skil
 /plugin marketplace add <owner>/<repo>
 /plugin install <plugin-name>
 ```
+
+---
+
+## ✅ السكيلزات المثبتة بهذا الريبو (تتحدث تلقائياً)
+
+المثبت حالياً (20 سكيل) موجود في `.claude/skills/` والقائمة الكاملة في `skills.manifest`:
+karpathy-guidelines، 12 سكيل من superpowers، caveman، caveman-compress، ceo-assistant، recursive-research، deep-research، webapp-testing، frontend-design.
+
+| الأمر | شنو يسوي |
+|---|---|
+| `scripts/update-skills.sh` | يثبّت/يحدّث كل السكيلزات لآخر نسخة |
+| `scripts/update-skills.sh --check` | يعرض شنو عنده تحديث بدون ما يغيّر شي |
+| `scripts/update-skills.sh --global` | يثبّتها بـ `~/.claude/skills` على جهازك لكل المشاريع |
+
+- **التحديث التلقائي:** hook بـ `.claude/settings.json` يشغّل التحديث ببداية كل جلسة.
+- **إضافة/حذف سكيل:** عدّل سطر في `skills.manifest` وشغّل السكربت.
+- **النسخ المثبتة:** `.claude/skills/.skills.lock` (رقم الـ commit لكل سكيل).
+- **deep-research** يحتاج `GEMINI_API_KEY` وكل بحث يكلف تقريباً $2-5.
+- **ceo-assistant** أول مرة يسألك عن شركتك ويحفظها بـ `company-profile.md` داخل مجلده.
+- **تنبيه أمان:** التحديث التلقائي يجيب آخر نسخة من الريبوهات بدون مراجعة. إذا تريد تثبّت النسخ، احذف الـ hook وحدّث يدوياً بعد `--check`.

@@ -1,0 +1,35 @@
+# قائمة السكيلزات المثبتة — عدّلها وشغّل scripts/update-skills.sh
+# الصيغة: owner/repo  مسار_السكيل_داخل_الريبو  [اسم_المجلد]
+# سطر يبدأ بـ # يتجاهله السكربت. لإضافة سكيل جديد أضف سطر، ولحذفه احذف السطر.
+
+# سلوك وفهم
+multica-ai/andrej-karpathy-skills  skills/karpathy-guidelines
+
+# تطوير — superpowers
+obra/superpowers  skills/brainstorming                   superpowers-brainstorming
+obra/superpowers  skills/writing-plans
+obra/superpowers  skills/executing-plans
+obra/superpowers  skills/subagent-driven-development
+obra/superpowers  skills/dispatching-parallel-agents
+obra/superpowers  skills/test-driven-development
+obra/superpowers  skills/systematic-debugging
+obra/superpowers  skills/verification-before-completion
+obra/superpowers  skills/requesting-code-review
+obra/superpowers  skills/receiving-code-review
+obra/superpowers  skills/using-git-worktrees
+obra/superpowers  skills/finishing-a-development-branch
+
+# تقليل التوكينز
+JuliusBrussee/caveman  skills/caveman
+JuliusBrussee/caveman  skills/caveman-compress
+
+# مدير أعمال
+Claudefarid/claude-ceo-skill  .  ceo-assistant
+
+# بحث
+Anjos2/recursive-research  plugins/recursive-research/skills/recursive-research
+sanjay3290/ai-skills       skills/deep-research
+
+# رسمية من Anthropic (غير موجودة افتراضياً بالجلسة)
+anthropics/skills  skills/webapp-testing
+anthropics/skills  skills/frontend-design
