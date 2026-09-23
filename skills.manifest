@@ -33,3 +33,16 @@ sanjay3290/ai-skills       skills/deep-research
 # رسمية من Anthropic (غير موجودة افتراضياً بالجلسة)
 anthropics/skills  skills/webapp-testing
 anthropics/skills  skills/frontend-design
+
+# صناعة المحتوى — كتابة وقصص ويوتيوب
+yaxeen/storytelling-skills     skills/long-form-youtube
+yaxeen/storytelling-skills     skills/storytelling-hooks
+yaxeen/storytelling-skills     skills/titles-and-thumbnails
+yaxeen/storytelling-skills     skills/retention-audit
+yaxeen/storytelling-skills     skills/channel-formula
+artemnovitckii/content-skills  dumbify
+artemnovitckii/content-skills  viral-hooks
+
+# تدقيق الحقائق والمصادر (من أدوات الصحفيين)
+jamditis/claude-skills-journalism  journalism-core/skills/fact-check-workflow
+jamditis/claude-skills-journalism  journalism-core/skills/source-verification
