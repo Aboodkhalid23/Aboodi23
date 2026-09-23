@@ -27,6 +27,7 @@ trap 'rm -rf "$TMP"' EXIT
 mkdir -p "$DEST"
 touch "$LOCK"
 
+KEEP_FILES=(company-profile.md .env)
 declare -A HEAD
 changed=0; failed=0
 
@@ -58,9 +59,16 @@ while read -r repo path name; do
   changed=1
   [[ $CHECK_ONLY -eq 1 ]] && continue
 
+  # ملفاتك الشخصية داخل السكيل (مثل ملف شركتك أو مفتاح API) تبقى بعد التحديث
+  keep="$TMP/keep-$name"; mkdir -p "$keep"
+  for f in "${KEEP_FILES[@]}"; do
+    [[ -f "$DEST/$name/$f" ]] && cp "$DEST/$name/$f" "$keep/$f"
+  done
+
   rm -rf "${DEST:?}/$name"
   mkdir -p "$DEST/$name"
   (cd "$src/$path" && tar --exclude=.git --exclude=.github -cf - .) | tar -xf - -C "$DEST/$name"
+  cp -a "$keep/." "$DEST/$name/"
   awk -v n="$name" '$1!=n' "$LOCK" > "$LOCK.tmp"
   echo "$name $repo $new" >> "$LOCK.tmp"
   sort -o "$LOCK" "$LOCK.tmp"; rm -f "$LOCK.tmp"
