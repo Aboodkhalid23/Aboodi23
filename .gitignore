@@ -2,3 +2,11 @@
 .env
 **/.env
 *.key
+
+# المصمم: صور الوجه والمراجع ما تنرفع (الريبو عام)
+designer/faces/
+designer/references/
+# المصمم: صور المشاهد موجودة بحسابه بـ Canva، ما تنرفع حتى ما يكبر الريبو
+episodes/*/design/scene-*.png
+designs/*/scene-*.png
+__pycache__/

@@ -20,6 +20,7 @@ description: استوديو المحتوى — يشغّل فريق كامل (م�
 | محرر اللهجة | `dialect-editor` | `04-script.md` |
 | التغليف والسيو | `packager` | `05-package.md` |
 | منسق المنصات | `platform-strategist` | `06-distribution.md` |
+| مصمم الأغلفة | `designer` | `design/grid.jpg` ثم `final-youtube.jpg` و`final-reels.jpg` |
 | محلل النمو | `growth-analyst` | `studio/growth/<التاريخ>.md` |
 
 **المراجع المشتركة:** بمجلد `studio/references/`:
@@ -88,6 +89,13 @@ python3 -c "import sys;print(len(open(sys.argv[1],encoding='utf-8').read().split
 ### 8. التغليف والمنصات ← `packager` و`platform-strategist`
 يشتغلون **بالتوازي**، لأن الاثنين يعتمدون على `04-script.md` بس. إذا تحتاج، `platform-strategist` يقرا `05-package.md` بعد ما يخلص.
 
+### 8b. الأغلفة ← `designer`
+بعد ما يخلص `packager` (المصمم يحتاج `05-package.md`):
+1. اسأل صاحب القناة بـ AskUserQuestion **مرة وحدة**: "المصمم راح يولّد 4 مشاهد ويحفظ لوحة التنزيل بـ Canva حتى ينزّلها. موافق؟" واحفظ جوابه.
+2. شغّل `designer` على مجلد الحلقة، وانطيه بالتعليمات جوابه: "موافقة لوحة التنزيل: نعم" أو "موافقة لوحة التنزيل: لا". يرجعلك `design/grid.jpg` ووصف 4 أفكار.
+3. دز `grid.jpg` لصاحب القناة بأداة SendUserFile، واسأله يختار (A أو B أو C أو D).
+4. كمّل انت الخطوتين 8 و9 من `.claude/skills/designer/SKILL.md` (الغلاف الطولي والتسليم).
+
 ### 9. التسليم
 1. ضيف سطر بـ `episodes/log.md`: التاريخ | الموضوع | الفئة | نوع الهوك | العنوان الموصى به | عدد الكلمات | المجلد.
 2. سوّ commit وpush.
@@ -98,6 +106,7 @@ python3 -c "import sys;print(len(open(sys.argv[1],encoding='utf-8').read().split
    - أهم تصحيحات المدقق.
    - عدد المقاطع القصيرة وأول موعد نشر.
    - مسار السكربت النهائي.
+   - الغلاف المختار وغلاف الريلز (`design/final-youtube.jpg` و`design/final-reels.jpg`).
    - سطر "📚 تعلّم اليوم" عن تقنية كتابة أو قاعدة منصة استخدمها الفريق بهاي الحلقة.
 4. **اسأله:**
    - شنو عجبك، وشنو ما عجبك؟ ضيف ملاحظاته لقسم "تفضيلات" بـ `studio/channel.md`.
@@ -111,6 +120,7 @@ python3 -c "import sys;print(len(open(sys.argv[1],encoding='utf-8').read().split
 | "قوّي هاي الفكرة" / "زاوية أحسن" | `creative-director` بس |
 | "دقق هذا السكربت" | `fact-checker` ثم `dialect-editor` على نص يعطيك إياه |
 | "عناوين لهذا" | `packager` بس |
+| "صمملي غلاف" / "غلاف للحلقة" / "كفر ريلز" | سكيل `designer` بس |
 | "سوّيلي ريلز وتيك توك من هذا" | `platform-strategist` بس |
 | "ليش الفيديو ما نجح" / "حلل القناة" / "خطة الشهر" | `growth-analyst` |
 | "عدّل الهوك" / "قصّر" / "طوّل" | `dialect-editor` بتعليمات محددة |
