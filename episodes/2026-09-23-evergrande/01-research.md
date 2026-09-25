@@ -380,3 +380,22 @@
 95. Caixin Global: China's Residential Land Sales Revenue Slumps 65% From Peak. https://www.caixinglobal.com/2026-01-06/chinas-residential-land-sales-revenue-slumps-65-from-peak-as-state-backers-retreat-102400671.html. 06-01-2026. (ب)
 96. The Wire China: Slowing the Slump. https://www.thewirechina.com/2026/02/01/slowing-the-slump/. 01-02-2026. (ب)
 97. SteelOrbis: China's real estate investments keep falling in Jan-Aug 2026. https://www.steelorbis.com/steel-news/latest-news/chinas-real-estate-investments-keeps-falling-in-jan-aug-2026-new-construction-down-248-1477622.htm. أيلول 2026. (ب/ج)
+
+---
+
+## إضافات الكاتب (23 أيلول 2026)
+
+> بحث صغير للتأكد من شرط الهوك ب (القصر). صفحة Yuan Trends انحجبت من البروكسي (EGRESS_BLOCKED)، فالمعلومات من **ملخصات نتائج البحث** بس، مثل باقي الملف.
+
+1. **القصر (تأكيد شرط الهوك ب):** ملخصين مستقلين لنتائج البحث يگولون: "حسب تقارير بلومبرغ عن إجراءات محكمة هونگ كونگ، المصفّين حددوا أصول تحت سيطرة شيا هايجون بمقاطعة أورنج بكاليفورنيا، منها عقار بـ20 مليون دولار انشترى بأيلول 2021، وقيمته هسه أكثر من 30 مليون". **النتيجة:** التاريخ والسعر مأكدين من ملخصات لتقارير بلومبرغ (ب). **الصياغة المعتمدة بالسكربت:** "حسب ملفات المصفّين الي نقلتها بلومبرغ، انشترى قصر بكاليفورنيا بـ20 مليون دولار، والمصفّين يگولون إن المسيطر عليه هو الرجل الثاني بالشركة". ما نگول "اشتراه من فلوس الشركة". المصادر:
+   - Bloomberg: Evergrande Liquidators Zero In on Ex-CEO in Courtroom Standoff. https://www.bloomberg.com/news/articles/2024-10-03/evergrande-liquidators-zero-in-on-ex-ceo-in-courtroom-standoff. 03-10-2024. (ب). ونسخة BNN Bloomberg: https://www.bnnbloomberg.ca/business/international/2024/10/03/evergrande-liquidators-zero-in-on-ex-ceo-in-courtroom-standoff/
+   - Bloomberg: Evergrande Liquidators Seek Receivership of Ex-CEO Xia's Assets. https://www.bloomberg.com/news/articles/2025-09-17/evergrande-liquidators-seek-receivership-of-ex-ceo-xia-s-assets. 17-09-2025. (ب)
+   - Yuan Trends (بنقل عن بلومبرغ): https://yuantrends.com/evergrande-liquidation-xia-haijun-asset-recovery/ (ج)
+2. **"الحگني إذا تگدر" (catch me if you can):** حسب ملخص نتائج البحث عن تقارير بلومبرغ، المصفّين گالوا بالمحكمة إن شيا "دا ينقل أمواله ويلعب لعبة الحگني إذا تگدر" بعد ما انتقل لكاليفورنيا. (ب، عبر ملخص). النص الحرفي ما انقرا من المصدر.
+3. **ممتلكات طليقة شيا (هي كون):** 3 عقارات بكاليفورنيا (إرفاين ونيوپورت بيتش) و4 سيارات، قيمتها حوالي 24 مليون دولار، مجمدة. Bloomberg Law: https://news.bloomberglaw.com/bankruptcy-law/evergrande-liquidators-seek-asset-freeze-on-former-ceos-ex-wife (ب)؛ Caproasia (ج). **ما استخدمتها بالسكربت**، بس للمدقق.
+4. **تحويلات حسابية (مو معلومات جديدة):**
+   - 205 آلاف يوان ≈ **أقل من 30 ألف دولار** (بسعر الملف نفسه: 1200 يوان = 168 دولار، يعني الدولار ≈ 7.14 يوان، و205,000 ÷ 7.14 ≈ 28,700).
+   - 1.2 مليون دولار هونگ كونگي ≈ **حوالي 150 ألف دولار أمريكي** (بسعر الملف: 46.8 مليار دولار هونگ كونگي ≈ 6 مليار دولار، يعني الدولار ≈ 7.8).
+   - 0.69% = الي إله 100 يوان يرجعله 0.69 يوان، يعني **أقل من يوان واحد**.
+   - فرع شنجن: 52.3 من 250 مليار معترف بيها (20.9%)، يعني حوالي **4 أخماس** المطالبات ما انعترف بيها.
+   - 79% إيرادات منفوخة سنة 2020 = من كل 100 يوان مبيعات معلنة، حوالي 21 حقيقية.
