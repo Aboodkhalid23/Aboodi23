@@ -58,7 +58,7 @@ def main(argv=None) -> int:
     args = ap.parse_args(argv)
     try:
         sheet = make_sheet([Path(p) for p in args.images])
-    except (ValueError, FileNotFoundError) as e:
+    except (ValueError, OSError) as e:
         print(f"✗ خطأ: {e}")
         return 1
     out = Path(args.out)

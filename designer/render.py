@@ -12,7 +12,7 @@ import random
 import sys
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageOps
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageOps, UnidentifiedImageError
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from arabic import load_font, shape_word, visual_words  # noqa: E402
@@ -75,7 +75,11 @@ def canvas_size(spec: dict) -> tuple[int, int]:
 
 def resolve(src: str, base_dir: Path) -> Path:
     p = Path(src)
-    for candidate in (p, base_dir / p, ROOT / p):
+    if p.is_absolute():
+        if p.is_file():
+            return p
+        raise SpecError(f"الصورة مو موجودة: {src}")
+    for candidate in (base_dir / p, ROOT / p):
         if candidate.is_file():
             return candidate
     raise SpecError(f"الصورة مو موجودة: {src}")
@@ -92,7 +96,13 @@ def hex_rgba(color: str, alpha: int = 255) -> tuple[int, int, int, int]:
 def _background(bg: dict, size, base_dir: Path) -> Image.Image:
     _, h = size
     if "image" in bg:
-        img = Image.open(resolve(bg["image"], base_dir)).convert("RGB")
+        src = bg["image"]
+        try:
+            img = Image.open(resolve(src, base_dir)).convert("RGB")
+        except SpecError:
+            raise
+        except (UnidentifiedImageError, OSError):
+            raise SpecError(f"الصورة {src} مو صورة أو خربانة، نزّلها من جديد")
         focus = tuple(bg.get("focus", [0.5, 0.5]))
         img = ImageOps.fit(img, size, Image.LANCZOS, centering=focus)
     elif "gradient" in bg:
@@ -136,7 +146,13 @@ def _silhouette(alpha: Image.Image, grow: float, color: str) -> Image.Image:
 def _image_layer(canvas: Image.Image, layer: dict, base_dir: Path) -> list[str]:
     W, H = canvas.size
     warnings = []
-    img = Image.open(resolve(layer["src"], base_dir)).convert("RGBA")
+    src = layer["src"]
+    try:
+        img = Image.open(resolve(src, base_dir)).convert("RGBA")
+    except SpecError:
+        raise
+    except (UnidentifiedImageError, OSError):
+        raise SpecError(f"الصورة {src} مو صورة أو خربانة، نزّلها من جديد")
     if img.getchannel("A").getextrema()[0] == 255 and ("outline" in layer or "glow" in layer):
         warnings.append(f"الصورة {layer['src']} ما بيها شفافية، فالحد راح يطلع مربع. شيل خلفيتها أول.")
     if "h" in layer:
@@ -374,6 +390,8 @@ def _overlaps(a, b) -> bool:
 
 def render(spec: dict, base_dir) -> tuple[Image.Image, list[str]]:
     """يرسم الغلاف ويرجع الصورة وقائمة تحذيرات بالعربي."""
+    if not isinstance(spec, dict):
+        raise SpecError("ملف الطبقات لازم يكون كائن JSON {}")
     size = canvas_size(spec)
     if "background" not in spec:
         raise SpecError("ملف الطبقات ناقصه background")
@@ -382,13 +400,16 @@ def render(spec: dict, base_dir) -> tuple[Image.Image, list[str]]:
         canvas = _background(spec["background"], size, base_dir)
     except SpecError:
         raise
-    except (KeyError, ValueError, TypeError) as e:
+    except (KeyError, ValueError, TypeError, AttributeError) as e:
         raise SpecError(f"الخلفية: قيمة غلط ({e})")
     W, H = size
     zones = UNSAFE.get(size_name(spec), [])
+    layers = spec.get("layers", [])
+    if not isinstance(layers, list):
+        raise SpecError("layers لازم تكون قائمة")
     warnings, words = [], 0
-    for i, layer in enumerate(spec.get("layers", []), 1):
-        kind = layer.get("type")
+    for i, layer in enumerate(layers, 1):
+        kind = layer.get("type") if isinstance(layer, dict) else None
         if kind == "image":
             try:
                 warnings += _image_layer(canvas, layer, base_dir)
@@ -396,11 +417,14 @@ def render(spec: dict, base_dir) -> tuple[Image.Image, list[str]]:
                 raise
             except KeyError as e:
                 raise SpecError(f"الطبقة {i}: ناقصها {e.args[0]}")
-            except (ValueError, TypeError) as e:
+            except (ValueError, TypeError, AttributeError) as e:
                 raise SpecError(f"الطبقة {i}: قيمة غلط ({e})")
         elif kind == "text":
             try:
-                if not str(layer.get("text", "")).strip():
+                text = layer.get("text", "")
+                if not isinstance(text, str):
+                    raise SpecError(f"الطبقة {i}: text لازم يكون كتابة، مو رقم أو شي ثاني")
+                if not text.strip():
                     raise SpecError(f"الطبقة {i}: الكتابة فارغة")
                 bbox, ink_mask = _text_layer(canvas, layer)
                 words += len(layer["text"].split())
@@ -417,7 +441,7 @@ def render(spec: dict, base_dir) -> tuple[Image.Image, list[str]]:
                 raise
             except KeyError as e:
                 raise SpecError(f"الطبقة {i}: ناقصها {e.args[0]}")
-            except (ValueError, TypeError) as e:
+            except (ValueError, TypeError, AttributeError) as e:
                 raise SpecError(f"الطبقة {i}: قيمة غلط ({e})")
         elif kind == "shape":
             try:
@@ -426,7 +450,7 @@ def render(spec: dict, base_dir) -> tuple[Image.Image, list[str]]:
                 raise
             except KeyError as e:
                 raise SpecError(f"الطبقة {i}: ناقصها {e.args[0]}")
-            except (ValueError, TypeError) as e:
+            except (ValueError, TypeError, AttributeError) as e:
                 raise SpecError(f"الطبقة {i}: قيمة غلط ({e})")
         else:
             raise SpecError(f"الطبقة {i}: نوع مو معروف: {kind}. المسموح: image، text، shape")
@@ -464,6 +488,10 @@ def main(argv=None) -> int:
     ap.add_argument("-o", "--out", required=True)
     ap.add_argument("--guides", action="store_true", help="يرسم مناطق الأمان للفحص")
     args = ap.parse_args(argv)
+    out = Path(args.out)
+    if out.suffix.lower() not in (".jpg", ".jpeg", ".png"):
+        print("✗ خطأ: اسم الملف لازم ينتهي بـ .jpg أو .png")
+        return 1
     try:
         spec = load_spec(args.spec)
         img, warnings = render(spec, Path(args.spec).parent)
@@ -472,8 +500,11 @@ def main(argv=None) -> int:
         return 1
     if args.guides:
         img = draw_guides(img, size_name(spec))
-    out = Path(args.out)
-    save(img, out)
+    try:
+        save(img, out)
+    except OSError as e:
+        print(f"✗ خطأ: ما گدرت أحفظ الصورة ({e})")
+        return 1
     if size_name(spec) == "youtube" and out.stat().st_size > YOUTUBE_MAX_BYTES:
         warnings.append("حجم الملف أكبر من 2MB ويوتيوب ما يقبله. احفظه .jpg")
     for w in warnings:

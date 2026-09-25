@@ -6,6 +6,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from PIL import Image, ImageDraw
 
@@ -27,6 +28,7 @@ class RenderTest(unittest.TestCase):
         face.save(cls.dir / "face.png")
         Image.new("RGB", (300, 400), (220, 170, 110)).save(cls.dir / "face_opaque.jpg")
         Image.frombytes("RGB", (1280, 720), os.urandom(1280 * 720 * 3)).save(cls.dir / "noise.png")
+        (cls.dir / "corrupt.png").write_bytes(b"<xml>error</xml>")
 
     @classmethod
     def tearDownClass(cls):
@@ -318,6 +320,68 @@ class RenderTest(unittest.TestCase):
         _, warnings = self.render(spec)
         self.assertTrue(any("منطقة الكابشن" in w for w in warnings), warnings)
         self.assertTrue(any("أزرار اليمين" in w for w in warnings), warnings)
+
+    # Final-fix wave item 1: corrupt/non-image files
+    def test_corrupt_background_image_gives_arabic_error(self):
+        with self.assertRaisesRegex(SpecError, "مو صورة"):
+            self.render({"background": {"image": "corrupt.png"}})
+
+    def test_corrupt_image_layer_gives_arabic_error(self):
+        layer = {"type": "image", "src": "corrupt.png", "x": 0.5}
+        with self.assertRaisesRegex(SpecError, "مو صورة"):
+            self.render({"background": GRADIENT, "layers": [layer]})
+
+    def test_cli_corrupt_background_exits_with_error(self):
+        code, out = self.run_cli({"background": {"image": "corrupt.png"}}, "corrupt-out.jpg")
+        self.assertEqual(code, 1)
+        self.assertIn("✗ خطأ", out)
+
+    # Final-fix wave item 3: malformed spec shapes
+    def test_top_level_array_spec_gives_arabic_error(self):
+        with self.assertRaisesRegex(SpecError, "كائن JSON"):
+            render.render(["not", "a", "dict"], self.dir)
+
+    def test_layers_not_a_list_gives_arabic_error(self):
+        with self.assertRaisesRegex(SpecError, "layers لازم تكون قائمة"):
+            self.render({"background": GRADIENT, "layers": {"type": "text"}})
+
+    def test_bool_stroke_gives_arabic_error(self):
+        with self.assertRaisesRegex(SpecError, "قيمة غلط"):
+            self.render({"background": GRADIENT, "layers": [self.text("هلا", stroke=True)]})
+
+    def test_non_string_text_gives_arabic_error_naming_layer(self):
+        with self.assertRaisesRegex(SpecError, "الطبقة 1"):
+            self.render({"background": GRADIENT, "layers": [{"type": "text", "text": 2008, "x": 0.5, "y": 0.5}]})
+
+    # Final-fix wave item 4: bad output file name
+    def test_cli_bad_output_extension(self):
+        code, out = self.run_cli({"background": GRADIENT}, "out")
+        self.assertEqual(code, 1)
+        self.assertIn("لازم ينتهي بـ .jpg أو .png", out)
+
+    def test_cli_save_oserror_gives_arabic_error(self):
+        spec_path = self.dir / "save-error.json"
+        spec_path.write_text(json.dumps({"background": GRADIENT}, ensure_ascii=False), encoding="utf-8")
+        buf = io.StringIO()
+        with mock.patch.object(Image.Image, "save", side_effect=OSError("disk full")), \
+                contextlib.redirect_stdout(buf):
+            code = render.main([str(spec_path), "-o", str(self.dir / "save-error.jpg")])
+        self.assertEqual(code, 1)
+        self.assertIn("✗ خطأ", buf.getvalue())
+
+    # Final-fix wave item 5: resolve() order
+    def test_resolve_prefers_base_dir_over_cwd(self):
+        with tempfile.TemporaryDirectory() as cwd_dir, tempfile.TemporaryDirectory() as base_dir:
+            cwd, base = Path(cwd_dir), Path(base_dir)
+            Image.new("RGB", (10, 10), (1, 2, 3)).save(cwd / "img.png")
+            Image.new("RGB", (10, 10), (9, 9, 9)).save(base / "img.png")
+            old_cwd = os.getcwd()
+            os.chdir(cwd)
+            try:
+                found = render.resolve("img.png", base)
+            finally:
+                os.chdir(old_cwd)
+            self.assertEqual(found, base / "img.png")
 
 
 if __name__ == "__main__":

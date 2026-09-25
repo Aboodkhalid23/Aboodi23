@@ -23,6 +23,9 @@ class ArabicTest(unittest.TestCase):
     def test_mixed_numbers_and_arabic(self):
         self.assertEqual(arabic.visual_words("300 مليار $"), ["$", "مليار", "300"])
 
+    def test_mixed_arabic_and_multiword_latin_keeps_run_order(self):
+        self.assertEqual(arabic.visual_words("خسرت Apple Watch!"), ["Apple", "Watch!", "خسرت"])
+
     def test_raqm_available_in_pillow(self):
         self.assertTrue(arabic.RAQM, "Pillow بدون raqm: الحروف العربية راح تطلع مقطعة")
 

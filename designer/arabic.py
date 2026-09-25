@@ -28,6 +28,28 @@ def shape_word(word: str) -> tuple[str, dict]:
 
 
 def visual_words(line: str) -> list[str]:
-    """ترتيب الكلمات مثل ما تنرسم من اليسار لليمين."""
+    """ترتيب الكلمات مثل ما تنرسم من اليسار لليمين.
+
+    بسطر فيه عربي: كل كلمة عربية تبقى بمكانها، وكل مجموعة كلمات لاتينية
+    متلاصقة (مثل "Apple Watch!") تنحسب وحدة (ترتيبها الداخلي ما ينعكس)،
+    وبعدين ترتيب المجموعات نفسها ينعكس.
+    """
     words = line.split()
-    return list(reversed(words)) if is_rtl(line) else words
+    if not is_rtl(line):
+        return words
+    runs: list[list[str]] = []
+    latin_run: list[str] = []
+    for word in words:
+        if is_rtl(word):
+            if latin_run:
+                runs.append(latin_run)
+                latin_run = []
+            runs.append([word])
+        else:
+            latin_run.append(word)
+    if latin_run:
+        runs.append(latin_run)
+    result: list[str] = []
+    for run in reversed(runs):
+        result.extend(run)
+    return result

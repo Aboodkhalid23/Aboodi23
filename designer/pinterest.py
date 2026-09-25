@@ -6,6 +6,7 @@
 يحتاج الشبكة مفتوحة لـ *.pinterest.com و*.pinimg.com.
 """
 import argparse
+import hashlib
 import json
 import re
 import sys
@@ -16,10 +17,16 @@ from pathlib import Path
 OUT_DIR = Path(__file__).resolve().parent / "references" / "pinterest"
 SEARCH_URL = "https://www.pinterest.com/resource/BaseSearchResource/get/"
 UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+MAX_DOWNLOAD_BYTES = 15 * 1024 * 1024
 
 
 def slug(query: str) -> str:
-    return re.sub(r"[^a-z0-9]+", "-", query.lower()).strip("-") or "search"
+    """اسم مجلد آمن للبحث. البحوث العربية ما إلها أحرف لاتينية، فنميّزها بهاش
+    قصير حتى بحثين مختلفين ما يتشاركون نفس المجلد ويمسح وحدة صور الثانية."""
+    s = re.sub(r"[^a-z0-9]+", "-", query.lower()).strip("-")
+    if s:
+        return s
+    return "q-" + hashlib.sha1(query.encode("utf-8")).hexdigest()[:8]
 
 
 def search_url(query: str, limit: int) -> str:
@@ -72,9 +79,14 @@ def fetch_json(url: str) -> dict:
 
 
 def download(url: str, dest: Path) -> None:
+    """ينزّل صورة من pinimg.com بس، وبحد أقصى 15MB. أي رابط ثاني (http أو
+    موقع غير Pinterest) يترك بصمت حتى ما نفتح على مصدر غريب."""
+    parsed = urllib.parse.urlparse(url)
+    if parsed.scheme != "https" or not (parsed.hostname or "").endswith("pinimg.com"):
+        return
     req = urllib.request.Request(url, headers={"User-Agent": UA})
     with urllib.request.urlopen(req, timeout=30) as r:
-        dest.write_bytes(r.read())
+        dest.write_bytes(r.read(MAX_DOWNLOAD_BYTES))
 
 
 def main(argv=None) -> int:

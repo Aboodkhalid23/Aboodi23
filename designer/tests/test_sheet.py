@@ -65,6 +65,15 @@ class SheetTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("✗ خطأ", buf.getvalue())
 
+    def test_cli_corrupt_file_gives_error(self):
+        corrupt = self.dir / "corrupt.png"
+        corrupt.write_bytes(b"<xml>error</xml>")
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            code = sheet.main([str(corrupt), "-o", str(self.dir / "x.jpg")])
+        self.assertEqual(code, 1)
+        self.assertIn("✗ خطأ", buf.getvalue())
+
 
 if __name__ == "__main__":
     unittest.main()
