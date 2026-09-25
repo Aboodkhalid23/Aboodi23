@@ -2,3 +2,8 @@
 .env
 **/.env
 *.key
+
+# المصمم: صور الوجه والمراجع ما تنرفع (الريبو عام)
+designer/faces/
+designer/references/
+__pycache__/
