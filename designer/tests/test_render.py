@@ -164,7 +164,8 @@ class RenderTest(unittest.TestCase):
 
     def test_text_bbox_is_real_ink(self):
         canvas = Image.new("RGBA", (1280, 720), (0, 0, 0, 255))
-        x0, y0, x1, y1 = render._text_layer(canvas, self.text("وين", x=0.5, y=0.5, size=0.1))
+        bbox, _ = render._text_layer(canvas, self.text("وين", x=0.5, y=0.5, size=0.1))
+        x0, y0, x1, y1 = bbox
         self.assertTrue(560 < x0 < 640 < x1 < 720, (x0, x1))
         self.assertTrue(290 < y0 < 360 < y1 < 430, (y0, y1))
 
@@ -172,7 +173,7 @@ class RenderTest(unittest.TestCase):
         layer = self.text("مش لوحدنا", x=0.5, y=0.5, size=0.12, color="#111111",
                           box={"style": "paper", "pad": 0.4})
         img, _ = self.render({"background": {"color": "#000000"}, "layers": [layer]})
-        bright = sum(1 for v in img.convert("L").getdata() if v > 150)
+        bright = sum(img.convert("L").histogram()[151:])
         self.assertGreater(bright, 40000)  # الورق الفاتح واضح خلف الكتابة الداكنة
 
     def test_background_finish_options(self):
@@ -233,6 +234,42 @@ class RenderTest(unittest.TestCase):
             code = render.main([str(bad), "-o", str(self.dir / "x.jpg")])
         self.assertEqual(code, 1)
         self.assertIn("غلط بالصيغة", buf.getvalue())
+
+    # Fix round 1 tests for error handling
+    def test_image_layer_without_src_raises_spec_error(self):
+        with self.assertRaisesRegex(SpecError, "ناقصها src"):
+            self.render({"background": GRADIENT, "layers": [{"type": "image", "x": 0.5}]})
+
+    def test_arrow_shape_without_from_raises_spec_error(self):
+        with self.assertRaisesRegex(SpecError, "ناقصها from"):
+            self.render({"background": GRADIENT, "layers": [{"type": "shape", "shape": "arrow", "to": [0.5, 0.5]}]})
+
+    def test_bad_gradient_raises_spec_error(self):
+        with self.assertRaisesRegex(SpecError, "الخلفية"):
+            self.render({"background": {"gradient": ["#000000"]}, "layers": []})
+
+    def test_rotated_text_not_warning_on_empty_corner(self):
+        # Finding 2 reproduction: rotated text with empty bbox corner in unsafe zone should not warn if no ink pixels there
+        spec = {
+            "background": GRADIENT,
+            "layers": [
+                {
+                    "type": "text",
+                    "text": "لا تقرب\nمنه!",
+                    "font": "Baloo",
+                    "x": 0.29,
+                    "y": 0.62,
+                    "size": 0.17,
+                    "line_spacing": 0.62,
+                    "line_colors": ["#FFFFFF", ["#FFC400", "#FF6A00"]],
+                    "stroke": {"color": "#0B0B0F", "width": 0.1},
+                    "shadow": True,
+                    "rotate": 5
+                }
+            ]
+        }
+        _, warnings = self.render(spec)
+        self.assertEqual(warnings, [])
 
 
 if __name__ == "__main__":

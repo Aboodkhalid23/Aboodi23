@@ -90,13 +90,16 @@ def hex_rgba(color: str, alpha: int = 255) -> tuple[int, int, int, int]:
 
 
 def _background(bg: dict, size, base_dir: Path) -> Image.Image:
-    w, h = size
+    _, h = size
     if "image" in bg:
         img = Image.open(resolve(bg["image"], base_dir)).convert("RGB")
         focus = tuple(bg.get("focus", [0.5, 0.5]))
         img = ImageOps.fit(img, size, Image.LANCZOS, centering=focus)
     elif "gradient" in bg:
-        top, bottom = bg["gradient"]
+        try:
+            top, bottom = bg["gradient"]
+        except (ValueError, TypeError):
+            raise SpecError("الخلفية: gradient لازم [لون فوق، لون جوه]")
         mask = Image.linear_gradient("L").resize(size)
         img = Image.composite(Image.new("RGB", size, hex_rgba(bottom)[:3]),
                               Image.new("RGB", size, hex_rgba(top)[:3]), mask)
@@ -267,9 +270,11 @@ def _paper(target: Image.Image, box, color: str, seed: str) -> None:
     target.alpha_composite(paper)
 
 
-def _text_layer(canvas: Image.Image, layer: dict) -> tuple[int, int, int, int]:
-    """يرسم الكتابة (مع الظل والصندوق والميلان) ويرجع حدود الحبر الحقيقي بالبكسل (x0، y0، x1، y1).
+def _text_layer(canvas: Image.Image, layer: dict) -> tuple[tuple[int, int, int, int], Image.Image]:
+    """يرسم الكتابة (مع الظل والصندوق والميلان) ويرجع (حدود الحبر الحقيقي، قناع الحبر).
 
+    حدود الحبر: (x0، y0، x1، y1) بالبكسل.
+    قناع الحبر: صورة ثنائية (canvas size)، 255 حيث يوجد الحبر.
     الرسم يصير على لوحة أوسع من الغلاف بهامش M، حتى الحدود تنحسب صح
     حتى لو الكتابة طالعة برا الصورة.
     """
@@ -320,10 +325,12 @@ def _text_layer(canvas: Image.Image, layer: dict) -> tuple[int, int, int, int]:
         center = ((bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2)
         out = out.rotate(angle, resample=Image.BICUBIC, center=center)
     ink = out.getchannel("A").point(lambda a: 255 if a > 40 else 0).getbbox()
-    canvas.alpha_composite(out.crop((M, M, M + W, M + H)))
+    cropped = out.crop((M, M, M + W, M + H))
+    canvas.alpha_composite(cropped)
+    ink_mask = cropped.getchannel("A").point(lambda a: 255 if a > 40 else 0)
     if ink is None:
-        return (0, 0, 0, 0)
-    return (ink[0] - M, ink[1] - M, ink[2] - M, ink[3] - M)
+        return (0, 0, 0, 0), ink_mask
+    return (ink[0] - M, ink[1] - M, ink[2] - M, ink[3] - M), ink_mask
 
 
 def _shape_layer(canvas: Image.Image, layer: dict) -> None:
@@ -371,26 +378,47 @@ def render(spec: dict, base_dir) -> tuple[Image.Image, list[str]]:
     if "background" not in spec:
         raise SpecError("ملف الطبقات ناقصه background")
     base_dir = Path(base_dir)
-    canvas = _background(spec["background"], size, base_dir)
+    try:
+        canvas = _background(spec["background"], size, base_dir)
+    except (KeyError, ValueError, TypeError) as e:
+        raise SpecError(f"الخلفية: قيمة غلط ({e})")
     W, H = size
     zones = UNSAFE.get(size_name(spec), [])
     warnings, words = [], 0
     for i, layer in enumerate(spec.get("layers", []), 1):
         kind = layer.get("type")
         if kind == "image":
-            warnings += _image_layer(canvas, layer, base_dir)
+            try:
+                warnings += _image_layer(canvas, layer, base_dir)
+            except KeyError as e:
+                raise SpecError(f"الطبقة {i}: ناقصها {e.args[0]}")
+            except (ValueError, TypeError) as e:
+                raise SpecError(f"الطبقة {i}: قيمة غلط ({e})")
         elif kind == "text":
-            if not str(layer.get("text", "")).strip():
-                raise SpecError(f"الطبقة {i}: الكتابة فارغة")
-            bbox = _text_layer(canvas, layer)
-            words += len(layer["text"].split())
-            for name, x0, y0, x1, y1 in zones:
-                if _overlaps(bbox, (x0 * W, y0 * H, x1 * W, y1 * H)):
-                    warnings.append(f"الكتابة \"{layer['text']}\" داخلة بمنطقة مغطاة ({name}).")
-            if bbox[0] < 0 or bbox[1] < 0 or bbox[2] > W or bbox[3] > H:
-                warnings.append(f"الكتابة \"{layer['text']}\" طالعة برا حدود الصورة.")
+            try:
+                if not str(layer.get("text", "")).strip():
+                    raise SpecError(f"الطبقة {i}: الكتابة فارغة")
+                bbox, ink_mask = _text_layer(canvas, layer)
+                words += len(layer["text"].split())
+                for name, x0, y0, x1, y1 in zones:
+                    zone_px = (int(x0 * W), int(y0 * H), int(x1 * W), int(y1 * H))
+                    cropped = ink_mask.crop(zone_px)
+                    if cropped.getbbox() is not None:
+                        warnings.append(f"الكتابة \"{layer['text']}\" داخلة بمنطقة مغطاة ({name}).")
+                        break
+                if bbox[0] < 0 or bbox[1] < 0 or bbox[2] > W or bbox[3] > H:
+                    warnings.append(f"الكتابة \"{layer['text']}\" طالعة برا حدود الصورة.")
+            except KeyError as e:
+                raise SpecError(f"الطبقة {i}: ناقصها {e.args[0]}")
+            except (ValueError, TypeError) as e:
+                raise SpecError(f"الطبقة {i}: قيمة غلط ({e})")
         elif kind == "shape":
-            _shape_layer(canvas, layer)
+            try:
+                _shape_layer(canvas, layer)
+            except KeyError as e:
+                raise SpecError(f"الطبقة {i}: ناقصها {e.args[0]}")
+            except (ValueError, TypeError) as e:
+                raise SpecError(f"الطبقة {i}: قيمة غلط ({e})")
         else:
             raise SpecError(f"الطبقة {i}: نوع مو معروف: {kind}. المسموح: image، text، shape")
     if words > MAX_WORDS:
