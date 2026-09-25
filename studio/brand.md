@@ -41,7 +41,7 @@
 
 **رقعة الورق:**
 ```json
-{"type": "text", "text": "إحنا مش\nلوحدنا!", "font": "Rubik", "x": 0.27, "y": 0.6, "size": 0.13,
+{"type": "text", "text": "إحنا مش\nلوحدنا!", "font": "Rubik", "x": 0.27, "y": 0.52, "size": 0.13,
  "line_spacing": 0.9, "color": "#141414", "box": {"style": "paper", "pad": 0.3}, "rotate": -4}
 ```
 
