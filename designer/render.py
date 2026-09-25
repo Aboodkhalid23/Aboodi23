@@ -380,6 +380,8 @@ def render(spec: dict, base_dir) -> tuple[Image.Image, list[str]]:
     base_dir = Path(base_dir)
     try:
         canvas = _background(spec["background"], size, base_dir)
+    except SpecError:
+        raise
     except (KeyError, ValueError, TypeError) as e:
         raise SpecError(f"الخلفية: قيمة غلط ({e})")
     W, H = size
@@ -390,6 +392,8 @@ def render(spec: dict, base_dir) -> tuple[Image.Image, list[str]]:
         if kind == "image":
             try:
                 warnings += _image_layer(canvas, layer, base_dir)
+            except SpecError:
+                raise
             except KeyError as e:
                 raise SpecError(f"الطبقة {i}: ناقصها {e.args[0]}")
             except (ValueError, TypeError) as e:
@@ -400,14 +404,17 @@ def render(spec: dict, base_dir) -> tuple[Image.Image, list[str]]:
                     raise SpecError(f"الطبقة {i}: الكتابة فارغة")
                 bbox, ink_mask = _text_layer(canvas, layer)
                 words += len(layer["text"].split())
+                warned_zones = set()
                 for name, x0, y0, x1, y1 in zones:
                     zone_px = (int(x0 * W), int(y0 * H), int(x1 * W), int(y1 * H))
                     cropped = ink_mask.crop(zone_px)
-                    if cropped.getbbox() is not None:
+                    if cropped.getbbox() is not None and name not in warned_zones:
                         warnings.append(f"الكتابة \"{layer['text']}\" داخلة بمنطقة مغطاة ({name}).")
-                        break
+                        warned_zones.add(name)
                 if bbox[0] < 0 or bbox[1] < 0 or bbox[2] > W or bbox[3] > H:
                     warnings.append(f"الكتابة \"{layer['text']}\" طالعة برا حدود الصورة.")
+            except SpecError:
+                raise
             except KeyError as e:
                 raise SpecError(f"الطبقة {i}: ناقصها {e.args[0]}")
             except (ValueError, TypeError) as e:
@@ -415,6 +422,8 @@ def render(spec: dict, base_dir) -> tuple[Image.Image, list[str]]:
         elif kind == "shape":
             try:
                 _shape_layer(canvas, layer)
+            except SpecError:
+                raise
             except KeyError as e:
                 raise SpecError(f"الطبقة {i}: ناقصها {e.args[0]}")
             except (ValueError, TypeError) as e:

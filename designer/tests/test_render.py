@@ -271,6 +271,54 @@ class RenderTest(unittest.TestCase):
         _, warnings = self.render(spec)
         self.assertEqual(warnings, [])
 
+    # Fix round 2 tests
+    def test_circle_without_center_raises_spec_error(self):
+        with self.assertRaisesRegex(SpecError, "ناقصها center"):
+            self.render({"background": GRADIENT, "layers": [{"type": "shape", "shape": "circle", "r": 0.2}]})
+
+    def test_rect_without_box_raises_spec_error(self):
+        with self.assertRaisesRegex(SpecError, "ناقصها box"):
+            self.render({"background": GRADIENT, "layers": [{"type": "shape", "shape": "rect", "fill": True}]})
+
+    def test_empty_text_not_double_wrapped(self):
+        # FINDING A: SpecError should pass through unchanged, not double-wrapped
+        try:
+            self.render({"background": GRADIENT, "layers": [self.text("  ")]})
+            self.fail("Expected SpecError")
+        except SpecError as e:
+            msg = str(e)
+            self.assertNotIn("قيمة غلط", msg)
+            self.assertIn("الكتابة فارغة", msg)
+
+    def test_unknown_shape_not_double_wrapped(self):
+        # FINDING A: SpecError from _shape_layer should not be wrapped as "قيمة غلط"
+        try:
+            self.render({"background": GRADIENT, "layers": [{"type": "shape", "shape": "star"}]})
+            self.fail("Expected SpecError")
+        except SpecError as e:
+            msg = str(e)
+            self.assertTrue(msg.startswith("شكل مو معروف"))
+
+    def test_bad_background_color_not_double_wrapped(self):
+        # FINDING A: SpecError from hex_rgba should not be wrapped as "قيمة غلط"
+        try:
+            self.render({"background": {"color": "red"}, "layers": []})
+            self.fail("Expected SpecError")
+        except SpecError as e:
+            msg = str(e)
+            self.assertTrue(msg.startswith("لون غلط"))
+
+    def test_text_overlapping_two_zones_warns_both(self):
+        # FINDING B: Text overlapping two zones should warn for both (no break)
+        spec = {
+            "size": "reels",
+            "background": GRADIENT,
+            "layers": [self.text("وين؟", x=0.93, y=0.9, size=0.05)]
+        }
+        _, warnings = self.render(spec)
+        self.assertTrue(any("منطقة الكابشن" in w for w in warnings), warnings)
+        self.assertTrue(any("أزرار اليمين" in w for w in warnings), warnings)
+
 
 if __name__ == "__main__":
     unittest.main()
