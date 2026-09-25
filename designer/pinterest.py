@@ -30,16 +30,27 @@ def search_url(query: str, limit: int) -> str:
 
 def parse_results(payload: dict, limit: int) -> list[dict]:
     """يطلع من رد Pinterest قائمة: رقم الـ pin، والعنوان، والوصف، ورابط أكبر صورة."""
-    results = (payload.get("resource_response") or {}).get("data") or {}
-    if isinstance(results, dict):
-        results = results.get("results") or []
+    if not isinstance(payload, dict):
+        return []
+    resource_response = payload.get("resource_response")
+    if not isinstance(resource_response, dict):
+        return []
+    data = resource_response.get("data")
+    if isinstance(data, dict):
+        results = data.get("results") or []
+    elif isinstance(data, list):
+        results = data
+    else:
+        return []
     pins = []
     for item in results:
         if not isinstance(item, dict):
             continue
-        images = item.get("images") or {}
+        images = item.get("images")
+        if not isinstance(images, dict):
+            continue
         best = images.get("orig") or images.get("736x") or images.get("474x") or {}
-        if not best.get("url"):
+        if not isinstance(best, dict) or not isinstance(best.get("url"), str):
             continue
         pins.append({
             "id": str(item.get("id", "")),
@@ -72,29 +83,37 @@ def main(argv=None) -> int:
     ap.add_argument("--limit", type=int, default=30)
     args = ap.parse_args(argv)
     try:
-        pins = parse_results(fetch_json(search_url(args.query, args.limit)), args.limit)
+        data = fetch_json(search_url(args.query, args.limit))
+        if not isinstance(data, dict):
+            print("✗ خطأ: رد Pinterest مو مفهوم. يمكن غيّروا شكل الموقع.")
+            return 1
+        pins = parse_results(data, args.limit)
     except OSError as e:
         print(f"✗ خطأ: ما گدرت أوصل لـ Pinterest ({e}). تأكد إن *.pinterest.com و*.pinimg.com مفتوحة بالشبكة.")
         return 1
-    except (ValueError, json.JSONDecodeError):
+    except (ValueError, json.JSONDecodeError, AttributeError, TypeError):
         print("✗ خطأ: رد Pinterest مو مفهوم. يمكن غيّروا شكل الموقع.")
         return 1
     if not pins:
         print("✗ ما طلعت نتائج. جرّب كلمة بحث ثانية.")
         return 1
-    out = OUT_DIR / slug(args.query)
-    out.mkdir(parents=True, exist_ok=True)
-    saved = 0
-    for i, pin in enumerate(pins, 1):
-        name = f"{i:02d}-{pin['id']}.jpg"
-        try:
-            download(pin["image"], out / name)
-        except OSError:
-            continue
-        pin["file"] = name
-        saved += 1
-    (out / "index.json").write_text(json.dumps(pins, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"✓ انحفظت {saved} صورة بـ {out}")
+    try:
+        out = OUT_DIR / slug(args.query)
+        out.mkdir(parents=True, exist_ok=True)
+        saved = 0
+        for i, pin in enumerate(pins, 1):
+            name = f"{i:02d}-{pin['id']}.jpg"
+            try:
+                download(pin["image"], out / name)
+            except OSError:
+                continue
+            pin["file"] = name
+            saved += 1
+        (out / "index.json").write_text(json.dumps(pins, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"✓ انحفظت {saved} صورة بـ {out}")
+    except OSError as e:
+        print(f"✗ خطأ: ما گدرت أحفظ الصور ({e}).")
+        return 1
     return 0
 
 

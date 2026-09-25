@@ -54,6 +54,41 @@ class PinterestTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("*.pinterest.com", buf.getvalue())
 
+    def test_parse_list_payload_returns_empty(self):
+        self.assertEqual(pinterest.parse_results([], 5), [])
+
+    def test_parse_non_dict_resource_response_returns_empty(self):
+        self.assertEqual(pinterest.parse_results({"resource_response": "x"}, 5), [])
+
+    def test_parse_skips_item_with_non_dict_images(self):
+        payload = {"resource_response": {"data": {"results": [
+            {"id": "111", "images": "abc"},
+            {"id": "222", "images": {"orig": {"url": "https://i.pinimg.com/originals/a.jpg"}}},
+        ]}}}
+        pins = pinterest.parse_results(payload, 10)
+        self.assertEqual([p["id"] for p in pins], ["222"])
+
+    def test_main_malformed_json_gives_arabic_error(self):
+        buf = io.StringIO()
+        with mock.patch.object(pinterest, "fetch_json", return_value=[1, 2]), \
+                contextlib.redirect_stdout(buf):
+            code = pinterest.main(["test"])
+        self.assertEqual(code, 1)
+        self.assertIn("رد Pinterest مو مفهوم", buf.getvalue())
+
+    def test_main_write_error_gives_arabic_error(self):
+        buf = io.StringIO()
+        valid_payload = {"resource_response": {"data": {"results": [
+            {"id": "111", "title": "Test", "images": {"orig": {"url": "https://i.pinimg.com/originals/a.jpg"}}},
+        ]}}}
+        with mock.patch.object(pinterest, "fetch_json", return_value=valid_payload), \
+                mock.patch.object(pinterest, "download", return_value=None), \
+                mock.patch.object(Path, "mkdir", side_effect=PermissionError("no write")), \
+                contextlib.redirect_stdout(buf):
+            code = pinterest.main(["test"])
+        self.assertEqual(code, 1)
+        self.assertIn("ما گدرت أحفظ الصور", buf.getvalue())
+
 
 if __name__ == "__main__":
     unittest.main()
