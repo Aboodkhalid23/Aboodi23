@@ -17,6 +17,7 @@
 | الموقف | السكيل |
 |---|---|
 | **سكربت، حلقة، أفكار مواضيع، ترند** | **`studio`** (يشغّل الفريق الكامل بـ `.claude/agents/`) |
+| **غلاف يوتيوب، صورة مصغرة، كفر ريلز أو تيك توك، أغلفة تعجبه** | **`designer`** (يستخدم Canva و`thumbnail-design` و`titles-and-thumbnails`) |
 | تحليل ليش فيديو ما نجح | `retention-audit`، `channel-formula` |
 | أي كود أو تعديل | `karpathy-guidelines` |
 | فكرة أو ميزة جديدة | `superpowers-brainstorming` ← `writing-plans` ← `executing-plans` |

@@ -46,3 +46,8 @@ artemnovitckii/content-skills  viral-hooks
 # تدقيق الحقائق والمصادر (من أدوات الصحفيين)
 jamditis/claude-skills-journalism  journalism-core/skills/fact-check-workflow
 jamditis/claude-skills-journalism  journalism-core/skills/source-verification
+
+# تصميم الأغلفة
+pottertech/claude-skills  youtube/thumbnail-design
+# موقوف لحد ما ينضاف مفتاح Google (GEMINI_API_KEY) بإعدادات البيئة. شيل # من أول السطر الجاي حتى يتفعل:
+# aabrole/claude-video-thumbnail-skill  skills/video-thumbnail
