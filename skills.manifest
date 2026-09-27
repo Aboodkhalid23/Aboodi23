@@ -51,3 +51,13 @@ jamditis/claude-skills-journalism  journalism-core/skills/source-verification
 remotion-dev/skills  skills/remotion-best-practices
 Tarquished/motioner  .  motioner
 haidrrrry/claude-remotion-skill  remotion-motion-graphics
+browser-use/video-use  .  video-use
+appergb/ClipSkills  clip-skills
+krusemediallc/video-editor-agent  .claude/skills/talking-head-image-overlays
+krusemediallc/video-editor-agent  .claude/skills/sound-design
+krusemediallc/video-editor-agent  .claude/skills/video-qa
+krusemediallc/video-editor-agent  .claude/skills/edl-tighten
+roohe/agentic-super-skills  skills_library/sound-design-film
+smixs/visual-skills  video  visual-video-prompts
+smixs/visual-skills  image  visual-image-prompts
+digitalsamba/claude-code-video-toolkit  .claude/skills/ffmpeg  ffmpeg-recipes
