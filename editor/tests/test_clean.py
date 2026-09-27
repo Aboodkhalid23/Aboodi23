@@ -61,8 +61,31 @@ def test_clean_video_duration_matches_segments(talking_video, tmp_path):
     fetch(str(talking_video), ep)
     save_words(speech((0, 4), (7, 12), (13, 20)), ep.transcript)
     total = clean(ep)
-    assert total == pytest.approx(16.48, abs=0.01)
+    assert total == pytest.approx(496 / 30, abs=1e-6)  # frame-snapped 16.48 s
     cuts = json.loads(ep.cuts.read_text())
     assert total == pytest.approx(sum(e - s for s, e in cuts), abs=0.01)
     assert probe(ep.clean_video).duration == pytest.approx(total, abs=0.1)
     assert load_words(ep.clean_words)[-1].end <= total + 0.01
+
+
+@pytest.mark.slow
+def test_clean_video_matches_cuts_with_many_segments(tmp_path):
+    """C-1: per-segment frame rounding must not accumulate (100+ segments)."""
+    import subprocess
+    src = tmp_path / "long.mp4"
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi", "-i", "testsrc2=size=320x240:rate=30:duration=130",
+                    "-f", "lavfi", "-i", "sine=f=440:r=48000:d=130", "-c:v", "libx264", "-preset", "ultrafast",
+                    "-c:a", "aac", "-ar", "48000", "-shortest", str(src)], check=True)
+    ep = Episode(tmp_path / "ep").ensure()
+    fetch(str(src), ep)
+    words, t = [], 0.0
+    for n in range(110):  # 0.43 s of speech, then 0.74 s pause
+        words.append(Word(f"كلمة{n}", round(t, 3), round(t + 0.43, 3)))
+        t += 1.17
+    save_words(words, ep.transcript)
+    total = clean(ep)
+    cuts = json.loads(ep.cuts.read_text())
+    assert len(cuts) >= 100
+    assert total == pytest.approx(sum(e - s for s, e in cuts), abs=1e-6)
+    info = probe(ep.clean_video)
+    assert abs(info.duration - total) <= 1 / 30

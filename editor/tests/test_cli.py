@@ -25,13 +25,13 @@ def cli(*args, env=None):
 def test_cli_prep_and_render_end_to_end(talking_video, tmp_path):
     ep = Episode(tmp_path / "ep")
     fake = tmp_path / "fake_transcript.json"
-    save_words(speech((0, 4), (7, 12), (13, 20)), fake)
+    save_words(speech((0, 4), (7, 12), (13, 20)), fake)  # cleans to 496 frames
     r = cli("prep", ep.root, "--source", talking_video, env={"EDITOR_FAKE_TRANSCRIPT": str(fake)})
     assert r.returncode == 0, r.stdout + r.stderr
     assert ep.plan_input.exists()
     kinds = ["face", "face_zoom_in", "image", "face_zoom_out", "graphic", "face", "face_zoom_in", "face_framed"]
     beats = [Beat(2.0 * i, 2.0 * (i + 1), "hook", k) for i, k in enumerate(kinds)]
-    beats[-1].end = 16.48
+    beats[-1].end = 496 / 30
     beats[2].query = "Evergrande Group headquarters"
     beats[4].graphic = {"type": "number", "value": 300, "label": "مليار دولار"}
     save_plan(EditPlan({"primary": "vox", "sections": []}, "اختبار", [], beats), ep.plan)

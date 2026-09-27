@@ -72,17 +72,33 @@ def remap_words(words: list[Word], segments: list[tuple[float, float]]) -> list[
     return out
 
 
+FPS = 30                   # fetch() normalizes to 30 fps / 48 kHz
+SAMPLES_PER_FRAME = 48000 // FPS
+
+
+def snap_to_frames(segments: list[tuple[float, float]]) -> list[tuple[float, float]]:
+    """Cut on frame boundaries so video and audio pieces are exactly the same length."""
+    out = []
+    for s, e in segments:
+        f0, f1 = round(s * FPS), round(e * FPS)
+        if f1 > f0:
+            out.append((f0 / FPS, f1 / FPS))
+    return out
+
+
 def clean(ep: Episode) -> float:
     words = load_words(ep.transcript)
     duration = probe(ep.source).duration
-    segs = keep_segments(drop_retakes(split_phrases(words)), duration=duration)
+    segs = snap_to_frames(keep_segments(drop_retakes(split_phrases(words)), duration=duration))
     ep.cuts.write_text(json.dumps(segs), encoding="utf-8")
     save_words(remap_words(words, segs), ep.clean_words)
 
     parts, labels = [], []
     for i, (s, e) in enumerate(segs):
-        parts.append(f"[0:v]trim={s}:{e},setpts=PTS-STARTPTS[v{i}];"
-                     f"[0:a]atrim={s}:{e},asetpts=PTS-STARTPTS[a{i}];")
+        f0, f1 = round(s * FPS), round(e * FPS)
+        parts.append(f"[0:v]trim=start_frame={f0}:end_frame={f1},setpts=PTS-STARTPTS[v{i}];"
+                     f"[0:a]atrim=start_sample={f0 * SAMPLES_PER_FRAME}:end_sample={f1 * SAMPLES_PER_FRAME},"
+                     f"asetpts=PTS-STARTPTS[a{i}];")
         labels.append(f"[v{i}][a{i}]")
     graph = "".join(parts) + "".join(labels) + f"concat=n={len(segs)}:v=1:a=1[v][a]"
     script = ep.work / "clean_filter.txt"
@@ -90,4 +106,4 @@ def clean(ep: Episode) -> float:
     run_ffmpeg(["-i", str(ep.source), "-filter_complex_script", str(script),
                 "-map", "[v]", "-map", "[a]", "-r", "30", "-c:v", "libx264", "-crf", "18",
                 "-preset", "fast", "-c:a", "aac", "-b:a", "192k", str(ep.clean_video)])
-    return round(sum(e - s for s, e in segs), 3)
+    return sum(e - s for s, e in segs)
