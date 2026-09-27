@@ -20,11 +20,24 @@ def _ts(t: float) -> str:
     return f"{int(m):02d}:{s:04.1f}"
 
 
+def _chunks(phrases, max_seconds: float = 5.0):
+    """Split long breathless phrases into lines of at most ~max_seconds."""
+    for p in phrases:
+        line = []
+        for w in p:
+            if line and w.end - line[0].start > max_seconds:
+                yield line
+                line = []
+            line.append(w)
+        if line:
+            yield line
+
+
 def write_brief(ep: Episode, styles_summary: str) -> Path:
     cuts = json.loads(ep.cuts.read_text(encoding="utf-8"))
     duration = round(sum(e - s for s, e in cuts), 2)
     lines = [f"مدة الفيديو المنظف: {duration} ثانية", RULES, "", "الستايلات:", styles_summary, "", "الكلام:"]
-    for p in split_phrases(load_words(ep.clean_words)):
+    for p in _chunks(split_phrases(load_words(ep.clean_words))):
         lines.append(f"[{_ts(p[0].start)}–{_ts(p[-1].end)}] " + " ".join(w.text for w in p))
     ep.plan_input.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return ep.plan_input

@@ -107,3 +107,13 @@ def test_image_needs_arabic_caption():
     plan, clean = build()
     plan.beats[16].caption = None
     assert errors_for(plan, clean).startswith("beat 16:")
+
+
+def test_brief_splits_long_phrases_into_short_lines(tmp_path):
+    """A 20 s breathless phrase becomes ~5 s lines so beats can be timed to the words."""
+    ep = Episode(tmp_path / "ep").ensure()
+    ep.cuts.write_text(json.dumps([[0, 20]]))
+    save_words([Word(f"ك{i}", i * 0.5, i * 0.5 + 0.45) for i in range(40)], ep.clean_words)
+    lines = [ln for ln in write_brief(ep, "vox: x").read_text(encoding="utf-8").splitlines() if ln.startswith("[")]
+    assert len(lines) == 4
+    assert lines[0].startswith("[00:00.0–00:04.9]")
