@@ -63,3 +63,18 @@ def test_prepare_delivery_recompresses(talking_video, tmp_path):
     out = prepare_delivery(ep, max_mb=size_mb * 0.8)
     assert out.name == "final_small.mp4"
     assert out.stat().st_size < ep.final.stat().st_size
+
+
+def test_prepare_delivery_single_pass_fits(talking_video, tmp_path, monkeypatch):
+    """I-5: one encode sized from the target, not a CRF ladder over the whole episode."""
+    import editor.pipeline.deliver as deliver
+    calls = []
+    real = deliver.run_ffmpeg
+    monkeypatch.setattr(deliver, "run_ffmpeg", lambda args: (calls.append(args), real(args))[1])
+    ep = Episode(tmp_path / "ep").ensure()
+    shutil.copyfile(talking_video, ep.final)
+    target = ep.final.stat().st_size / 1e6 * 0.5
+    out = deliver.prepare_delivery(ep, max_mb=target)
+    assert len(calls) == 1
+    assert "veryfast" in calls[0]
+    assert out.stat().st_size <= target * 1e6
