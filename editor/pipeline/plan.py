@@ -40,6 +40,11 @@ class EditPlan:
     teaser: list[tuple[float, float]]
     beats: list[Beat]
     shorts: list = field(default_factory=list)
+    chapters: list[dict] = field(default_factory=list)  # [{"t": cleaned-timeline seconds, "title": str}]
+
+    def chapter_times(self) -> list[float]:
+        """Chapter starts on the final timeline: the first covers the teaser, the rest shift by it."""
+        return [0.0 if i == 0 else c["t"] + self.teaser_total for i, c in enumerate(self.chapters)]
 
     @property
     def teaser_total(self) -> float:
@@ -50,7 +55,8 @@ def load_plan(path: Path) -> EditPlan:
     d = json.loads(Path(path).read_text(encoding="utf-8"))
     return EditPlan(style=d["style"], style_reason=d.get("style_reason", ""),
                     teaser=[tuple(t) for t in d.get("teaser", [])],
-                    beats=[Beat(**b) for b in d["beats"]], shorts=d.get("shorts", []))
+                    beats=[Beat(**b) for b in d["beats"]], shorts=d.get("shorts", []),
+                    chapters=d.get("chapters", []))
 
 
 def save_plan(plan: EditPlan, path: Path) -> None:
@@ -104,6 +110,16 @@ def validate_plan(plan: EditPlan, clean_duration: float) -> list[str]:
         if b.kind == "graphic" and (not b.graphic or b.graphic.get("type") not in GRAPHIC_TYPES):
             errs.append(f"beat {i}: گرافيك لازم type من {', '.join(GRAPHIC_TYPES)}")
         prev_end = b.end
+
+    if plan.chapters:
+        if len(plan.chapters) < 3:
+            errs.append("chapter 0: يوتيوب يحتاج 3 فصول أو أكثر")
+        if plan.chapters[0]["t"] != 0:
+            errs.append("chapter 0: أول فصل لازم يبدي من 0")
+        times = plan.chapter_times()
+        for i in range(1, len(times)):
+            if times[i] - times[i - 1] < 10:
+                errs.append(f"chapter {i}: لازم يبعد 10 ثواني أو أكثر عن الي قبله")
 
     body = [b for b in beats if b.zone == "body" and b.kind in KINDS]
     body_time = sum(b.duration for b in body)

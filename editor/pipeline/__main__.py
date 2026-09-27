@@ -7,6 +7,7 @@ import sys
 
 from .align import align, find_script
 from .brief import write_brief
+from .chapters import write_chapters
 from .clean import clean
 from .compose import compose
 from .deliver import prepare_delivery
@@ -83,6 +84,9 @@ def st_compose(ep, a):
 def st_deliver(ep, a):
     if a.preview:
         return
+    plan = load_plan(ep.plan)
+    if plan.chapters:
+        print(f"📑 فصول يوتيوب (انسخها للوصف): {write_chapters(plan, ep.edit / 'chapters.txt')}")
     out = prepare_delivery(ep, a.max_mb)
     print(f"📦 جاهز: {out} ({out.stat().st_size / 1e6:.0f} ميگا)")
 
