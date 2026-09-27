@@ -17,6 +17,7 @@
 | الموقف | السكيل |
 |---|---|
 | **سكربت، حلقة، أفكار مواضيع، ترند** | **`studio`** (يشغّل الفريق الكامل بـ `.claude/agents/`) |
+| **منتجة حلقة من فيديو خام** (رابط درايف) | **`editor`** (المونتير الآلي) |
 | تحليل ليش فيديو ما نجح | `retention-audit`، `channel-formula` |
 | أي كود أو تعديل | `karpathy-guidelines` |
 | فكرة أو ميزة جديدة | `superpowers-brainstorming` ← `writing-plans` ← `executing-plans` |
