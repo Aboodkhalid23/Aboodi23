@@ -2,7 +2,7 @@ import '@fontsource/cairo/400.css';
 import '@fontsource/cairo/700.css';
 import '@fontsource/cairo/900.css';
 import React, {useEffect, useState} from 'react';
-import {AbsoluteFill, continueRender, delayRender, Easing, interpolate} from 'remotion';
+import {AbsoluteFill, continueRender, delayRender, Easing, interpolate, staticFile} from 'remotion';
 
 export type Palette = {paper: string; ink: string; accent: string};
 export type StyleProps = {palette: Palette; fonts: {title: string; body: string}; texture: string};
@@ -27,11 +27,8 @@ export const Background: React.FC<{style: StyleProps; children: React.ReactNode}
   return (
     <AbsoluteFill style={{background: style.palette.paper, direction: 'rtl', fontFamily: style.fonts.body, color: style.palette.ink}}>
       {style.texture !== 'clean' && (
-        <svg width="100%" height="100%" style={{position: 'absolute', opacity: style.texture === 'grain' ? 0.25 : 0.35, mixBlendMode: 'multiply'}}>
-          <filter id="paper"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves={3} stitchTiles="stitch" />
-            <feColorMatrix type="saturate" values="0" /></filter>
-          <rect width="100%" height="100%" filter="url(#paper)" />
-        </svg>
+        <AbsoluteFill style={{backgroundImage: `url(${staticFile('paper-noise.png')})`, backgroundSize: '512px 512px',
+          mixBlendMode: 'multiply', opacity: style.texture === 'grain' ? 0.25 : 0.35}} />
       )}
       <AbsoluteFill style={{alignItems: 'center', justifyContent: 'center'}}>{children}</AbsoluteFill>
     </AbsoluteFill>

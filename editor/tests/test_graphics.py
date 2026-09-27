@@ -42,3 +42,14 @@ def test_render_each_graphic_type(gtype, tmp_path):
 def test_render_face_frame_bg(tmp_path):
     out = render_face_frame_bg(load_style("vox"), tmp_path / "frame.png")
     assert out.exists() and out.stat().st_size > 1000
+
+
+@pytest.mark.slow
+def test_bundle_built_once(tmp_path):
+    """I-4: the Remotion project is bundled once, not once per graphic."""
+    from editor.pipeline.graphics import ensure_bundle
+    b = ensure_bundle(tmp_path / "bundle")
+    stamp = (b / "index.html").stat().st_mtime
+    assert ensure_bundle(tmp_path / "bundle") == b
+    assert (b / "index.html").stat().st_mtime == stamp
+    assert (b / "public" / "paper-noise.png").exists()

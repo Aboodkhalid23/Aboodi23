@@ -4,7 +4,7 @@ import json
 from dataclasses import asdict
 from pathlib import Path
 
-from .graphics import render_face_frame_bg, render_graphic
+from .graphics import ensure_bundle, render_face_frame_bg, render_graphic
 from .media import MediaError, run_ffmpeg
 from .paths import Episode
 from .plan import Beat, EditPlan, load_plan
@@ -64,8 +64,8 @@ def _face_clip(ep: Episode, beat: Beat, frames: int, teaser, out: Path, frame_bg
     run_ffmpeg([*args, "-filter_complex", graph, "-frames:v", str(frames), "-an", *ENCODE, str(out)])
 
 
-def _graphic_clip(ep: Episode, beat: Beat, i: int, style: Style, frames: int, out: Path) -> None:
-    raw = render_graphic(beat, style, ep.work / f"graphic_{i}.mp4", public_dir=ep.assets, index=i)
+def _graphic_clip(ep: Episode, beat: Beat, i: int, style: Style, frames: int, out: Path, bundle: Path) -> None:
+    raw = render_graphic(beat, style, ep.work / f"graphic_{i}.mp4", public_dir=ep.assets, index=i, bundle=bundle)
     run_ffmpeg(["-i", str(raw), "-vf", f"{FIT},fps={FPS},tpad=stop_mode=clone:stop_duration=1",
                 "-frames:v", str(frames), "-an", *ENCODE, str(out)])
 
@@ -88,11 +88,12 @@ def compose(ep: Episode) -> Path:
     plan: EditPlan = load_plan(ep.plan)
     style = load_style(plan.style["primary"])
     teaser = [tuple(t) for t in plan.teaser]
+    bundle = ensure_bundle(ep.work / "bundle")
     frame_bg = None
     if any(b.kind == "face_framed" for b in plan.beats):
         frame_bg = ep.work / f"face_frame_{style.name}.png"
         if not frame_bg.exists():
-            render_face_frame_bg(style, frame_bg)
+            render_face_frame_bg(style, frame_bg, bundle)
 
     src_stamp = str(ep.clean_video.stat().st_mtime)
     clips = []
@@ -105,7 +106,7 @@ def compose(ep: Episode) -> Path:
                                       ensure_ascii=False, sort_keys=True).encode()).hexdigest()
         if not (out.exists() and stamp.exists() and stamp.read_text() == key):
             if b.kind in ("image", "graphic"):
-                _graphic_clip(ep, b, i, style, frames, out)
+                _graphic_clip(ep, b, i, style, frames, out, bundle)
             else:
                 _face_clip(ep, b, frames, teaser, out, frame_bg)
             stamp.write_text(key)
