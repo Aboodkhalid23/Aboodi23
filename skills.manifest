@@ -61,3 +61,40 @@ roohe/agentic-super-skills  skills_library/sound-design-film
 smixs/visual-skills  video  visual-video-prompts
 smixs/visual-skills  image  visual-image-prompts
 digitalsamba/claude-code-video-toolkit  .claude/skills/ffmpeg  ffmpeg-recipes
+
+# ستايل Vox (قصاصات ورق)
+Alisa0808/vox-director  .  vox-director
+Phantomlau3674/voxstylehub-steven  xingchen-vox-collage  vox-collage
+aijiduonadegou/Paper-Cut  .  paper-cut
+
+# مونتاج فيديوهات الكلام (Talking head) ويوتيوب
+Vincentwei1021/video-talkcraft  .  video-talkcraft
+hassancs91/claude-youtube-editor  .claude/skills/clean-cut  yt-clean-cut
+hassancs91/claude-youtube-editor  .claude/skills/clean-audio  yt-clean-audio
+hassancs91/claude-youtube-editor  .claude/skills/suggest-sfx  yt-suggest-sfx
+hassancs91/claude-youtube-editor  .claude/skills/make-tsx  yt-make-tsx
+zhouyuechuan2025-ui/ai-self-media-video-packaging-skill  .  package-talking-head-video
+kurbaitaev/ghost-editor  .  ghost-editor
+PoetCoderJun/MotionTalk  .  motiontalk
+jincheng2026/jc-remotion-skills  skills/remotion-assembly
+jincheng2026/jc-remotion-skills  skills/remotion-design-system
+jincheng2026/jc-remotion-skills  skills/remotion-sfx
+jincheng2026/jc-remotion-skills  skills/remotion-broll
+jincheng2026/jc-remotion-skills  skills/remotion-gotchas-index
+
+# حركة وتصميم وخرائط وشرح
+iart-ai/map-animation-skills  skills/map-animation
+iart-ai/motion-design-skills  skills/animation-principles
+iart-ai/motion-design-skills  skills/motion-art-direction
+iart-ai/motion-design-skills  skills/color-motion
+iart-ai/motion-design-skills  skills/shot-composition
+iart-ai/motion-design-skills  skills/beat-sync-editing
+iart-ai/explainer-video-skills  skills/diagram-animation
+kylezantos/design-motion-principles  skills/design-motion-principles
+BusyBee3333/animated-explainer-skills  skills/retention-pass
+bangtutorial/bang-motion  .  bang-motion
+BayramAnnakov/remotion-video-director  .  remotion-video-director
+
+# ألوان وشورتس
+kajisho5/color-grading-skill  .  color-grading
+AgriciDaniel/claude-shorts  .  claude-shorts

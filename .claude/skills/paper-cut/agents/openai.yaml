@@ -1,0 +1,4 @@
+interface:
+  display_name: "Paper Cut"
+  short_description: "Create editable image-led paper-collage explainers"
+  default_prompt: "Use $paper-cut to turn my topic or script into an editable image-led paper-collage explainer: storyboard first, generate real hero-frame stills, extract only key moving layers, animate in HyperFrames without a video model, and stop at each approval gate."

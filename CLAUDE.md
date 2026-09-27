@@ -17,7 +17,7 @@
 | الموقف | السكيل |
 |---|---|
 | **سكربت، حلقة، أفكار مواضيع، ترند** | **`studio`** (يشغّل الفريق الكامل بـ `.claude/agents/`) |
-| **منتجة حلقة من فيديو خام** (رابط درايف) | **`editor`** (المونتير الآلي) |
+| **منتجة حلقة من فيديو خام** (رابط درايف) | **`editor`** (المونتير الآلي). قواعده بـ `editor/CRAFT.md`، وكل سكيلزات المونتاج (أكثر من 40) مرتبة بـ `editor/SKILLS_LIBRARY.md` |
 | تحليل ليش فيديو ما نجح | `retention-audit`، `channel-formula` |
 | أي كود أو تعديل | `karpathy-guidelines` |
 | فكرة أو ميزة جديدة | `superpowers-brainstorming` ← `writing-plans` ← `executing-plans` |

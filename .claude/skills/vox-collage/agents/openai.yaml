@@ -1,0 +1,4 @@
+interface:
+  display_name: "Xingchen Vox Collage"
+  short_description: "Layered editorial collage scenes with strict visual evidence"
+  default_prompt: "Use $xingchen-vox-collage to turn the selected Xingchen scenes into a layered editorial paper-collage visual prototype."

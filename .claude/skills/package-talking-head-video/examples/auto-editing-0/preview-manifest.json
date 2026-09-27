@@ -1,0 +1,85 @@
+{
+  "caseId": "auto-editing-0",
+  "renderer": "remotion",
+  "directorPlan": {
+    "beats": 22,
+    "palettes": 6,
+    "structures": 8,
+    "maxBeatSeconds": 3.2,
+    "placements": {
+      "left": 6,
+      "right": 6,
+      "full": 10
+    }
+  },
+  "output": {
+    "sha256": "60BE56C417FE63EF17F18874A4EE74318D001CD40D7A40BA3312488900B85443",
+    "sizeBytes": 32921365,
+    "durationSeconds": 49.322667,
+    "video": "h264 1920x1080 30fps",
+    "audio": "aac 48000Hz stereo"
+  },
+  "frames": [
+    {
+      "file": "../../docs/assets/previews/auto-editing-0-01-thesis-and-proof-1.920s.png",
+      "timeSeconds": 1.92,
+      "structure": "thesis-and-proof",
+      "presentationMode": "opaque-full-screen",
+      "sha256": "C9AB299773F1C54929485A6FA74AA1B30F4D0EFBD52D20B073A271C8AA35D6FC"
+    },
+    {
+      "file": "../../docs/assets/previews/auto-editing-0-02-editorial-dual-rail-4.269s.png",
+      "timeSeconds": 4.269,
+      "structure": "editorial-dual-rail",
+      "presentationMode": "presenter-safe",
+      "sha256": "2A723A012D7E26E4CEE5AE62E4DD708787BD7E06AEBBAC98726F79D3AE549972"
+    },
+    {
+      "file": "../../docs/assets/previews/auto-editing-0-03-metric-odometer-6.403s.png",
+      "timeSeconds": 6.403,
+      "structure": "metric-odometer",
+      "presentationMode": "presenter-safe",
+      "sha256": "91BEBE9A7D2EB8EBA131234F719D32A0C30645409FBCEA08233BB951297130BF"
+    },
+    {
+      "file": "../../docs/assets/previews/auto-editing-0-04-command-palette-10.546s.png",
+      "timeSeconds": 10.546,
+      "structure": "command-palette",
+      "presentationMode": "presenter-safe",
+      "sha256": "AFE5C4E535C0A0B5CD6E7C083A6DE8FDE99BB4E5F63E44EA4A3982AEA655372F"
+    },
+    {
+      "file": "../../docs/assets/previews/auto-editing-0-05-semantic-doodle-15.606s.png",
+      "timeSeconds": 15.606,
+      "structure": "semantic-doodle",
+      "presentationMode": "opaque-full-screen",
+      "sha256": "72373895D9AFE860E479353D3B025B0B78AF6B7FADB2ECCC2E0C538C8F60FA19"
+    },
+    {
+      "file": "../../docs/assets/previews/auto-editing-0-06-before-after-scrub-19.564s.png",
+      "timeSeconds": 19.564,
+      "structure": "before-after-scrub",
+      "presentationMode": "opaque-full-screen",
+      "sha256": "D99B485A6592CC5BFA1BF675E82566E725251F00E45D79E878872BCFE219055F"
+    },
+    {
+      "file": "../../docs/assets/previews/auto-editing-0-07-four-stage-pipeline-21.501s.png",
+      "timeSeconds": 21.501,
+      "structure": "four-stage-pipeline",
+      "presentationMode": "opaque-full-screen",
+      "sha256": "C88460A452108E8E371B9C66D08B14B096675BAEA85F197693F165EA922BEB6F"
+    },
+    {
+      "file": "../../docs/assets/previews/auto-editing-0-08-signal-route-26.980s.png",
+      "timeSeconds": 26.98,
+      "structure": "signal-route",
+      "presentationMode": "opaque-full-screen",
+      "sha256": "D8B822F21B2BD851951EAC3C7DE56D9BBDCDB86873A89937DADD1945932A651A"
+    }
+  ],
+  "contactSheet": {
+    "file": "../../docs/assets/previews/auto-editing-0-contact-sheet.jpg",
+    "frames": 8,
+    "sha256": "E4579F3B73A6AD6685C3817570A04AF80CB099ECED40538C8F150408DFE1EE44"
+  }
+}

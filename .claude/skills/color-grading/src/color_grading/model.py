@@ -1,0 +1,385 @@
+"""Typed Colour Project Model and request validation.
+
+Concepts (docs/architecture.md):
+  ColorProject   one source + a graph of colour operations + one or more outputs
+  ColorSource    one media file (path); fingerprinted (sha256) at execution
+  ColorOperation typed node of the operation graph: op_id, type, input (ref: "source" or "op:<id>"), parameters
+  ColorOutput    a terminal artifact: output_id, operation ref, path, format, expectations
+  OperationDependency / OperationResult  graph.py / executor.py
+
+Validation is structural and semantic but never touches the file system: the PathPolicy (security.py) and the
+executor do that. Unknown fields are rejected everywhere; fields that could carry a command, a filter string or an
+executable are rejected by name, everywhere in the document.
+
+Every operation here maps 1:1 onto a mode of ffmpeg-skill/color (`--to-sdr`, `--lut`, `--retag`, `--strip-dovi`,
+`--correct`): this skill is a typed front end for that tool's public contract, not a colour-correction engine of
+its own. PRIMARY_CORRECTION (ffmpeg-skill >= 0.9.2) covers exposure / contrast / saturation / white balance
+(temperature + tint) as five typed, range-checked parameters, exactly mirroring `color.py --correct`'s own five
+original flags and ranges (docs/ffmpeg-skill.md) -- never a raw filter string. ffmpeg-skill 0.12.3 added five more
+typed `--correct` flags (gamma, three-way lift/gain, colorlevels, and the curves filter's built-in presets);
+PRIMARY_CORRECTION gained the matching eight parameters (gamma / lift / gain / levels_in_black / levels_in_white /
+levels_out_black / levels_out_white / curves) the same way, still never a raw filter string (docs/decisions.md
+ADR-18). White balance stays in UNSUPPORTED_OPERATIONS as its own operation type because no single "white balance"
+flag exists -- only PRIMARY_CORRECTION's temperature and tint parameters together achieve it; this package will
+never work around a genuine ffmpeg-skill gap by improvising a raw ffmpeg filter string of its own (that would cross
+the ffmpeg-skill boundary, see docs/architecture.md)."""
+from __future__ import annotations
+
+import math
+import re
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional, Tuple
+
+from . import REQUEST_SCHEMA_VERSION, SKILL_ID
+from .errors import ColorError
+
+REQUEST_SCHEMA_ID = f"{SKILL_ID}/request@{REQUEST_SCHEMA_VERSION}"
+ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
+REF_RE = re.compile(r"^(source|op:([A-Za-z0-9][A-Za-z0-9._-]{0,63}))$")
+
+FORBIDDEN_KEYS = frozenset({"command", "commands", "argv", "args", "cmd", "shell", "exec", "executable", "script",
+                            "filter", "filters", "filter_complex", "vf", "af", "ffmpeg", "env", "cwd", "api_key",
+                            "workspace"})
+
+# output container: format name -> extension. color-grading-skill does not convert containers (that is
+# ffmpeg-skill/export's job); an output's container must match the source's, see executor._check_output_format.
+OUTPUT_FORMATS: Dict[str, Dict[str, Any]] = {
+    "mp4": {"extension": ".mp4"},
+    "mov": {"extension": ".mov"},
+    "m4v": {"extension": ".m4v"},
+    "mkv": {"extension": ".mkv"},
+}
+
+X264_PRESETS = ("ultrafast", "superfast", "veryfast", "faster", "fast", "medium", "slow", "slower", "veryslow", "placebo")
+TONEMAPS = ("hable", "mobius", "reinhard", "bt2390", "clip", "linear", "gamma")
+RETAG_TARGETS = ("bt709", "bt2020-pq", "bt2020-hlg", "bt601")
+# color.py's own curves filter built-in presets (its CURVES_PRESETS, `ffmpeg -h filter=curves`), excluding the
+# filter's own "none" (0): omitting --curves already gets that identity result without a curves filter term.
+CURVES_PRESETS = ("color_negative", "cross_process", "darker", "increase_contrast", "lighter",
+                  "linear_contrast", "medium_contrast", "negative", "strong_contrast", "vintage")
+# color.py's own retag mapping (colorspace, color_primaries, color_trc), used again in executor._expected_retag_tags
+RETAG_TAGS: Dict[str, Tuple[str, str, str]] = {
+    "bt709": ("bt709", "bt709", "bt709"),
+    "bt2020-pq": ("bt2020nc", "bt2020", "smpte2084"),
+    "bt2020-hlg": ("bt2020nc", "bt2020", "arib-std-b67"),
+    "bt601": ("smpte170m", "smpte170m", "smpte170m"),
+}
+
+MAX_LUT_BYTES = 200 * 1024 * 1024   # 200 MiB; a .cube LUT is normally a few KB to a few MB
+CUBE_EXTENSIONS = (".cube",)        # the only LUT format ffmpeg-skill/color accepts (lut3d)
+MAX_OPERATIONS = 200
+
+# ---- parameter schemas: name -> {type, required, min, max, enum, default, description}
+_NUM, _INT, _BOOL, _STR = "number", "integer", "boolean", "string"
+
+# common encode parameters accepted by every re-encoding mode of ffmpeg-skill/color (--crf / --preset); RETAG and
+# STRIP_DOVI do not take them: RETAG is a stream copy that only re-encodes on an automatic ffmpeg-skill fallback
+# (still using its own defaults, crf/preset are not forwarded for that path) and STRIP_DOVI is always a stream copy.
+_ENCODE_PARAMS: Dict[str, Dict[str, Any]] = {
+    "crf": {"type": _INT, "required": False, "min": 0, "max": 51, "default": 18, "description": "x264 constant rate factor (0=lossless, 51=worst); lower is higher quality / larger file"},
+    "preset": {"type": _STR, "required": False, "enum": list(X264_PRESETS), "default": "medium", "description": "x264 encoding speed/efficiency preset"},
+}
+
+# which audio stream of a multi-audio-track input to keep (ffmpeg-skill/color --audio-stream, >= 0.12.0), 0-based in
+# file order; default 0 matches every prior release's unconditional behaviour (always the first track). Unlike
+# crf/preset, this DOES apply to RETAG: color.py forwards --audio-stream to RETAG's automatic re-encode fallback
+# (`-map 0:a:{audio_stream}?`) even though crf/preset there still use ffmpeg-skill's own defaults; a successful
+# RETAG stream-copy and STRIP_DOVI's stream copy both keep every audio track untouched (`-map 0`), so the flag has
+# nothing to select for STRIP_DOVI and is not offered there.
+_AUDIO_STREAM_PARAM: Dict[str, Dict[str, Any]] = {
+    "audio_stream": {"type": _INT, "required": False, "min": 0, "default": 0,
+                      "description": "which audio stream of the input to keep, 0-based in file order; matters on a multi-track "
+                                     "input (dubbed languages, M&E stems) -- only affects paths that re-encode audio"},
+}
+
+OPERATION_TYPES: Dict[str, Dict[str, Any]] = {
+    "HDR_TO_SDR": {"description": "Tone-map HDR (PQ/HLG, BT.2020) to SDR BT.709 (ffmpeg-skill/color --to-sdr)", "parameters": {
+        "tonemap": {"type": _STR, "required": False, "enum": list(TONEMAPS), "default": "hable", "description": "tone-mapping curve"},
+        "peak_nits": {"type": _NUM, "required": False, "min": 1.0, "max": 10000.0, "default": 1000.0, "description": "source peak brightness in nits, used for PQ"},
+        "desat": {"type": _NUM, "required": False, "min": 0.0, "max": 5.0, "default": 0.0, "description": "tonemap desaturation strength"},
+        "force": {"type": _BOOL, "required": False, "default": False, "description": "tone-map even if the source is not tagged HDR (treat as PQ)"},
+        **_ENCODE_PARAMS, **_AUDIO_STREAM_PARAM}},
+    "LUT_APPLY": {"description": "Apply a 3D .cube LUT (ffmpeg-skill/color --lut); LUT is data, resolved and hashed by this skill, never a filter string", "parameters": {
+        "lut_path": {"type": _STR, "required": True, "description": "path to a .cube LUT file, resolved through the LUT PathPolicy"},
+        "lut_strength": {"type": _NUM, "required": False, "min": 0.0, "max": 1.0, "default": 1.0, "description": "blend of the LUT result with the original, 0..1 "
+                          "(ffmpeg-skill applies the LUT at full strength for both 0.0 and 1.0; only a value strictly between them blends, see docs/ffmpeg-skill.md)"},
+        **_ENCODE_PARAMS, **_AUDIO_STREAM_PARAM}},
+    "RETAG": {"description": "Rewrite colour tags only, no re-encode when the container allows it (ffmpeg-skill/color --retag)", "parameters": {
+        "target": {"type": _STR, "required": True, "enum": list(RETAG_TARGETS), "description": "colour tag set to write"},
+        **_AUDIO_STREAM_PARAM}},
+    "STRIP_DOVI": {"description": "Remove the Dolby Vision RPU (profile 8.4 clips), keeping the HLG/HDR10 base layer; stream copy (ffmpeg-skill/color --strip-dovi)", "parameters": {}},
+    "PRIMARY_CORRECTION": {"description": "Typed primary colour correction: exposure, contrast, saturation, white balance (temperature + tint), "
+                           "gamma, three-way shadows/highlights (lift/gain), levels and a curves preset "
+                           "(ffmpeg-skill/color --correct, requires ffmpeg-skill >= 0.9.2 for the first five, >= 0.12.3 for the other eight); "
+                           "each parameter is one option of one real ffmpeg filter (exposure / eq / colortemperature / colorbalance / colorlevels / "
+                           "curves), range-checked by ffmpeg-skill itself -- never a filter string", "parameters": {
+        "exposure": {"type": _NUM, "required": False, "min": -3.0, "max": 3.0, "default": 0.0, "description": "exposure correction in stops; 0 is unchanged"},
+        "contrast": {"type": _NUM, "required": False, "min": 0.0, "max": 2.0, "default": 1.0, "description": "contrast; 1 is unchanged, 0 is flat grey, 2 is double contrast"},
+        "saturation": {"type": _NUM, "required": False, "min": 0.0, "max": 2.0, "default": 1.0, "description": "saturation; 1 is unchanged, 0 is grayscale, 2 is double saturation"},
+        "temperature": {"type": _NUM, "required": False, "min": 2000.0, "max": 12000.0, "default": 6500.0, "description": "white-balance temperature in Kelvin; 6500 is unchanged"},
+        "tint": {"type": _NUM, "required": False, "min": -1.0, "max": 1.0, "default": 0.0, "description": "green(-1)/magenta(+1) tint; 0 is unchanged"},
+        "gamma": {"type": _NUM, "required": False, "min": 0.1, "max": 10.0, "default": 1.0, "description": "master gamma (eq filter's own gamma); 1 is unchanged"},
+        "lift": {"type": _NUM, "required": False, "min": -1.0, "max": 1.0, "default": 0.0, "description": "shadows lift (colorbalance rs/gs/bs, three-way colour correction); 0 is unchanged"},
+        "gain": {"type": _NUM, "required": False, "min": -1.0, "max": 1.0, "default": 0.0, "description": "highlights gain (colorbalance rh/gh/bh, three-way colour correction); 0 is unchanged"},
+        "levels_in_black": {"type": _INT, "required": False, "min": 0, "max": 255, "default": 0, "description": "colorlevels input black point, 0..255 (8-bit units); 0 is unchanged"},
+        "levels_in_white": {"type": _INT, "required": False, "min": 0, "max": 255, "default": 255, "description": "colorlevels input white point, 0..255 (8-bit units); 255 is unchanged"},
+        "levels_out_black": {"type": _INT, "required": False, "min": 0, "max": 255, "default": 0, "description": "colorlevels output black point, 0..255 (8-bit units); 0 is unchanged"},
+        "levels_out_white": {"type": _INT, "required": False, "min": 0, "max": 255, "default": 255, "description": "colorlevels output white point, 0..255 (8-bit units); 255 is unchanged"},
+        "curves": {"type": _STR, "required": False, "enum": list(CURVES_PRESETS), "default": None, "description": "curves filter built-in preset; None (default) adds no curves term"},
+        **_ENCODE_PARAMS, **_AUDIO_STREAM_PARAM}},
+}
+
+# declared, not implemented: ffmpeg-skill's public contract has no typed filter for these (docs/ffmpeg-skill.md).
+# This skill never adds one by writing a raw ffmpeg filter itself. Exposure / contrast / saturation / temperature /
+# tint moved out of this table in favour of PRIMARY_CORRECTION once ffmpeg-skill 0.9.2 added typed --correct flags
+# for them (docs/decisions.md ADR-15); gamma / lift / gain / levels / curves moved out the same way once ffmpeg-skill
+# 0.12.3 added typed --correct flags for them too (ADR-18). WHITE_BALANCE stays declared because there is no single
+# "white balance" operation type or flag -- only the two separate PRIMARY_CORRECTION parameters that together
+# achieve it.
+UNSUPPORTED_OPERATIONS: Dict[str, str] = {
+    "WHITE_BALANCE": "no single white-balance operation or flag exists; use PRIMARY_CORRECTION's temperature and tint parameters",
+}
+
+
+@dataclass
+class ColorSource:
+    source_id: str
+    path: str
+
+
+@dataclass
+class ColorOperation:
+    op_id: str
+    type: str
+    input: str                                # ref "source" or "op:<id>"
+    parameters: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class ColorOutput:
+    output_id: str
+    operation: str                            # ref "source" or "op:<id>"
+    path: str
+    format: str
+    overwrite: bool = False
+    expect: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class ColorProject:
+    project_id: str
+    source: ColorSource
+    operations: List[ColorOperation]
+    outputs: List[ColorOutput]
+
+
+@dataclass
+class ColorRequest:
+    project: ColorProject
+    options: Dict[str, Any]
+
+
+# ---- validation helpers
+def _reject_forbidden(obj: Any, where: str) -> None:
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            if not isinstance(k, str):
+                raise ColorError("INVALID_REQUEST", f"{where}: object keys must be strings")
+            if k.lower() in FORBIDDEN_KEYS:
+                raise ColorError("INVALID_REQUEST", f"{where}: field {k!r} is not accepted (this skill never takes commands, argv, filters, executables or credentials)",
+                                 {"field": k, "reason": "forbidden_field"})
+            _reject_forbidden(v, f"{where}.{k}")
+    elif isinstance(obj, list):
+        for i, v in enumerate(obj):
+            _reject_forbidden(v, f"{where}[{i}]")
+
+
+def _obj(value: Any, where: str, allowed: Tuple[str, ...], required: Tuple[str, ...]) -> Dict[str, Any]:
+    if not isinstance(value, dict):
+        raise ColorError("INVALID_REQUEST", f"{where} must be an object", {"field": where})
+    unknown = sorted(k for k in value if k not in allowed)
+    if unknown:
+        raise ColorError("INVALID_REQUEST", f"{where}: unknown field(s) {unknown}", {"field": where, "unknown": unknown, "allowed": list(allowed)})
+    missing = [k for k in required if k not in value]
+    if missing:
+        raise ColorError("INVALID_REQUEST", f"{where}: missing required field(s) {missing}", {"field": where, "missing": missing})
+    return value
+
+
+def _id(value: Any, where: str) -> str:
+    if not isinstance(value, str) or not ID_RE.match(value):
+        raise ColorError("INVALID_REQUEST", f"{where} must match {ID_RE.pattern}", {"field": where})
+    return value
+
+
+def _number(value: Any, where: str, lo: Optional[float] = None, hi: Optional[float] = None, integer: bool = False) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ColorError("INVALID_REQUEST", f"{where} must be a number", {"field": where})
+    if isinstance(value, float) and not math.isfinite(value):
+        raise ColorError("INVALID_REQUEST", f"{where} must be finite", {"field": where})
+    if integer and (isinstance(value, float) and not value.is_integer()):
+        raise ColorError("INVALID_REQUEST", f"{where} must be an integer", {"field": where})
+    if lo is not None and value < lo or hi is not None and value > hi:
+        raise ColorError("INVALID_REQUEST", f"{where} must be within [{lo}, {hi}], got {value}", {"field": where, "min": lo, "max": hi})
+    return float(value)
+
+
+def validate_parameters(op_type: str, params: Any, where: str) -> Dict[str, Any]:
+    """Validate and normalise parameters against the schema of op_type. Returns the effective parameters
+    (defaults filled in), with every number in its declared type and nothing unknown."""
+    spec = OPERATION_TYPES[op_type]["parameters"]
+    d = _obj(params if params is not None else {}, where, tuple(spec), tuple(k for k, v in spec.items() if v["required"]))
+    out: Dict[str, Any] = {}
+    for name, ps in spec.items():
+        w = f"{where}.{name}"
+        if name not in d:
+            if "default" in ps:
+                out[name] = ps["default"]
+            continue
+        v = d[name]
+        t = ps["type"]
+        if t == _NUM:
+            out[name] = _number(v, w, ps.get("min"), ps.get("max"))
+        elif t == _INT:
+            out[name] = int(_number(v, w, ps.get("min"), ps.get("max"), integer=True))
+        elif t == _STR:
+            if not isinstance(v, str) or not v or len(v) > 4096 or any(ord(c) < 32 for c in v):
+                raise ColorError("INVALID_REQUEST", f"{w} must be a short printable string", {"field": w})
+            if "enum" in ps and v not in ps["enum"]:
+                raise ColorError("INVALID_REQUEST", f"{w}={v!r} is not supported; supported: {ps['enum']}", {"field": w, "allowed": list(ps["enum"])})
+            out[name] = v
+        elif t == _BOOL:
+            if not isinstance(v, bool):
+                raise ColorError("INVALID_REQUEST", f"{w} must be a boolean", {"field": w})
+            out[name] = v
+    if op_type == "PRIMARY_CORRECTION":
+        _validate_levels_ordering(out, where)
+    return out
+
+
+def _validate_levels_ordering(params: Dict[str, Any], where: str) -> None:
+    """PRIMARY_CORRECTION's colorlevels parameters: the same in_black<in_white / out_black<out_white ordering
+    ffmpeg-skill's own color.py --correct enforces (die()), duplicated here as an independent, fail-fast guard at
+    the request boundary -- same convention as every other PRIMARY_CORRECTION range check (docs/decisions.md
+    ADR-15/ADR-18), never relying on ffmpeg-skill's own check exclusively."""
+    in_black, in_white = params["levels_in_black"], params["levels_in_white"]
+    if in_black >= in_white:
+        raise ColorError("INVALID_REQUEST", f"{where}.levels_in_black {in_black} must be less than levels_in_white {in_white}",
+                         {"field": f"{where}.levels_in_black", "levels_in_black": in_black, "levels_in_white": in_white})
+    out_black, out_white = params["levels_out_black"], params["levels_out_white"]
+    if out_black >= out_white:
+        raise ColorError("INVALID_REQUEST", f"{where}.levels_out_black {out_black} must be less than levels_out_white {out_white}",
+                         {"field": f"{where}.levels_out_black", "levels_out_black": out_black, "levels_out_white": out_white})
+
+
+def parse_ref(ref: Any, where: str) -> Tuple[str, str]:
+    if not isinstance(ref, str):
+        raise ColorError("INVALID_REQUEST", f"{where} must be a reference string 'source' or 'op:<id>'", {"field": where})
+    m = REF_RE.match(ref)
+    if not m:
+        raise ColorError("INVALID_REQUEST", f"{where}: bad reference {ref!r} (expected 'source' or 'op:<id>')", {"field": where})
+    return ("source", "") if m.group(1) == "source" else ("op", m.group(2))
+
+
+def parse_request(doc: Any) -> ColorRequest:
+    """Validate a request document (schema color-grading/request@1) into typed objects."""
+    if not isinstance(doc, dict):
+        raise ColorError("INVALID_REQUEST", "request document must be a JSON object")
+    _reject_forbidden(doc, "request")
+    d = _obj(doc, "request", ("schema", "project", "options"), ("schema", "project"))
+    if d["schema"] != REQUEST_SCHEMA_ID:
+        raise ColorError("INVALID_REQUEST", f"unsupported request schema {d['schema']!r}; expected {REQUEST_SCHEMA_ID!r}", {"field": "schema"})
+    options = _obj(d.get("options", {}), "options", ("reuse_intermediates", "timeout"), ())
+    opts: Dict[str, Any] = {"reuse_intermediates": True, "timeout": None}
+    if "reuse_intermediates" in options:
+        if not isinstance(options["reuse_intermediates"], bool):
+            raise ColorError("INVALID_REQUEST", "options.reuse_intermediates must be a boolean")
+        opts["reuse_intermediates"] = options["reuse_intermediates"]
+    if "timeout" in options and options["timeout"] is not None:
+        opts["timeout"] = _number(options["timeout"], "options.timeout", 1.0, 86400.0)
+
+    p = _obj(d["project"], "project", ("project_id", "source", "operations", "outputs"), ("project_id", "source", "outputs"))
+    project_id = _id(p["project_id"], "project.project_id")
+
+    sd = _obj(p["source"], "project.source", ("source_id", "path"), ("source_id", "path"))
+    source_id = _id(sd["source_id"], "project.source.source_id")
+    if not isinstance(sd["path"], str) or not sd["path"]:
+        raise ColorError("INVALID_REQUEST", "project.source.path must be a non-empty string")
+    source = ColorSource(source_id, sd["path"])
+
+    ops_raw = p.get("operations", [])
+    if not isinstance(ops_raw, list):
+        raise ColorError("INVALID_REQUEST", "project.operations must be an array")
+    if len(ops_raw) > MAX_OPERATIONS:
+        raise ColorError("INVALID_REQUEST", f"too many operations (max {MAX_OPERATIONS})")
+    operations: List[ColorOperation] = []
+    op_ids: set = set()
+    for i, o in enumerate(ops_raw):
+        w = f"project.operations[{i}]"
+        od = _obj(o, w, ("op_id", "type", "input", "parameters"), ("op_id", "type", "input"))
+        oid = _id(od["op_id"], f"{w}.op_id")
+        if oid in op_ids:
+            raise ColorError("DEPENDENCY_ERROR", f"duplicate op_id {oid!r}", {"field": w})
+        op_ids.add(oid)
+        typ = od["type"]
+        if not isinstance(typ, str):
+            raise ColorError("INVALID_REQUEST", f"{w}.type must be a string")
+        if typ in UNSUPPORTED_OPERATIONS:
+            raise ColorError("UNSUPPORTED_OPERATION", f"{w}: operation type {typ!r} is declared but not implemented: {UNSUPPORTED_OPERATIONS[typ]}",
+                             {"field": w, "type": typ, "supported": sorted(OPERATION_TYPES)})
+        if typ not in OPERATION_TYPES:
+            raise ColorError("UNSUPPORTED_OPERATION", f"{w}: unknown operation type {typ!r}", {"field": w, "type": typ, "supported": sorted(OPERATION_TYPES)})
+        parse_ref(od["input"], f"{w}.input")
+        params = validate_parameters(typ, od.get("parameters"), f"{w}.parameters")
+        operations.append(ColorOperation(oid, typ, od["input"], params))
+
+    # reference existence (cycles / self-reference / ordering are checked by graph.py)
+    for op in operations:
+        kind, ident = parse_ref(op.input, "")
+        if kind == "op" and ident not in op_ids:
+            raise ColorError("MISSING_INPUT", f"operation {op.op_id!r} references unknown operation {ident!r}", {"op_id": op.op_id, "ref": op.input})
+        if kind == "op" and ident == op.op_id:
+            raise ColorError("DEPENDENCY_ERROR", f"operation {op.op_id!r} references itself", {"op_id": op.op_id})
+
+    if not isinstance(p["outputs"], list) or not p["outputs"]:
+        raise ColorError("INVALID_REQUEST", "project.outputs must be a non-empty array")
+    outputs: List[ColorOutput] = []
+    for i, o in enumerate(p["outputs"]):
+        w = f"project.outputs[{i}]"
+        od = _obj(o, w, ("output_id", "operation", "path", "format", "overwrite", "expect"), ("output_id", "operation", "path", "format"))
+        oid = _id(od["output_id"], f"{w}.output_id")
+        if any(x.output_id == oid for x in outputs):
+            raise ColorError("DEPENDENCY_ERROR", f"duplicate output_id {oid!r}", {"field": w})
+        kind, ident = parse_ref(od["operation"], f"{w}.operation")
+        if kind == "op" and ident not in op_ids:
+            raise ColorError("MISSING_INPUT", f"{w}: references unknown operation {ident!r}", {"field": w, "ref": od["operation"]})
+        if not isinstance(od["path"], str) or not od["path"]:
+            raise ColorError("INVALID_REQUEST", f"{w}.path must be a non-empty string")
+        fmt = od["format"]
+        if fmt not in OUTPUT_FORMATS:
+            raise ColorError("UNSUPPORTED_FORMAT", f"{w}.format {fmt!r} is not supported; supported: {sorted(OUTPUT_FORMATS)}", {"field": w, "format": fmt})
+        if not od["path"].lower().endswith(OUTPUT_FORMATS[fmt]["extension"]):
+            raise ColorError("UNSUPPORTED_FORMAT", f"{w}.path must end with {OUTPUT_FORMATS[fmt]['extension']!r} for format {fmt!r}", {"field": w})
+        overwrite = od.get("overwrite", False)
+        if not isinstance(overwrite, bool):
+            raise ColorError("INVALID_REQUEST", f"{w}.overwrite must be a boolean")
+        ex = _obj(od.get("expect", {}), f"{w}.expect", ("width", "height", "duration", "duration_tolerance", "pix_fmt"), ())
+        expect: Dict[str, Any] = {}
+        if "width" in ex:
+            expect["width"] = int(_number(ex["width"], f"{w}.expect.width", 1, 100000, integer=True))
+        if "height" in ex:
+            expect["height"] = int(_number(ex["height"], f"{w}.expect.height", 1, 100000, integer=True))
+        if "duration" in ex:
+            expect["duration"] = _number(ex["duration"], f"{w}.expect.duration", 0.0, 24 * 3600.0)
+            expect["duration_tolerance"] = _number(ex.get("duration_tolerance", 0.2), f"{w}.expect.duration_tolerance", 0.0, 3600.0)
+        elif "duration_tolerance" in ex:
+            raise ColorError("INVALID_REQUEST", f"{w}.expect.duration_tolerance requires expect.duration")
+        if "pix_fmt" in ex:
+            if not isinstance(ex["pix_fmt"], str) or not ex["pix_fmt"]:
+                raise ColorError("INVALID_REQUEST", f"{w}.expect.pix_fmt must be a non-empty string")
+            expect["pix_fmt"] = ex["pix_fmt"]
+        outputs.append(ColorOutput(oid, od["operation"], od["path"], fmt, overwrite, expect))
+    if len({o.path for o in outputs}) != len(outputs):
+        raise ColorError("OUTPUT_ERROR", "two outputs share the same path", {"reason": "duplicate_output_path"})
+
+    return ColorRequest(ColorProject(project_id, source, operations, outputs), opts)

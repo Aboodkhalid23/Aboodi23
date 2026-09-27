@@ -1,0 +1,554 @@
+"""Integration tests with real video through the real ffmpeg-skill checkout (nothing is mocked or skipped).
+One positive and at least one negative case per implemented operation, a chained pipeline, output validation,
+failure handling, dry run, idempotent re-runs, cancellation by timeout, and the CLI boundary."""
+import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+
+from color_grading.errors import EXIT_CODES
+from conftest import one_json, request_doc, run_cli, sample_avg_color
+
+
+def run(doc, *extra):
+    import shutil
+    shutil.rmtree("out", ignore_errors=True)
+    code, out, err = run_cli(["run", "-", "--json", *extra], json.dumps(doc))
+    d = one_json(out)
+    return code, d
+
+
+def full_error(d):
+    """Full, untruncated error detail (pytest's default assertion repr truncates long strings, which hides the
+    ffmpeg-skill stderr tail needed to diagnose a platform-specific tool failure)."""
+    return "\n" + json.dumps(d.get("error"), indent=2, ensure_ascii=False)
+
+
+def probe(path):
+    r = subprocess.run(["ffprobe", "-v", "error", "-print_format", "json", "-show_format", "-show_streams", str(path)], capture_output=True, text=True, check=True)
+    d = json.loads(r.stdout)
+    v = next(s for s in d["streams"] if s["codec_type"] == "video")
+    return {"duration": float(d["format"]["duration"]), "width": int(v["width"]), "height": int(v["height"]),
+           "pix_fmt": v.get("pix_fmt"), "codec": v["codec_name"], "color_space": v.get("color_space"),
+           "color_primaries": v.get("color_primaries"), "color_transfer": v.get("color_transfer")}
+
+
+def stream_counts(path):
+    """(subtitle_stream_count, data_stream_count, audio_channels_of_first_audio_stream_or_None) via a plain
+    ffprobe call -- independent of both ffmpeg-skill's probe.py and this skill's own adapter."""
+    r = subprocess.run(["ffprobe", "-v", "error", "-print_format", "json", "-show_streams", str(path)], capture_output=True, text=True, check=True)
+    streams = json.loads(r.stdout)["streams"]
+    subs = sum(1 for s in streams if s["codec_type"] == "subtitle")
+    data = sum(1 for s in streams if s["codec_type"] in ("data", "attachment"))
+    audio = [s for s in streams if s["codec_type"] == "audio"]
+    return subs, data, (audio[0].get("channels") if audio else None)
+
+
+def op(op_id, typ, ref, **params):
+    return {"op_id": op_id, "type": typ, "input": ref, "parameters": params}
+
+
+def results(d):
+    return {r["node_id"]: r for r in d["results"]}
+
+
+def test_hdr_to_sdr(workspace, capabilities):
+    if capabilities.get("filter:zscale") == "unsupported":
+        pytest.skip("filter:zscale not available in this ffmpeg build (needs libzimg; e.g. macOS Homebrew's plain 'ffmpeg' formula omits it)")
+    doc = request_doc([op("s", "HDR_TO_SDR", "source", tonemap="hable", peak_nits=1000, desat=0.1)], source={"source_id": "a", "path": "hdr.mp4"},
+                      outputs=[{"output_id": "main", "operation": "op:s", "path": "out/main.mp4", "format": "mp4"}])
+    code, d = run(doc)
+    assert code == 0 and d["ok"] and d["status"] == "ok", d.get("error")
+    p = probe(workspace / "out" / "main.mp4")
+    assert abs(p["duration"] - 2.0) < 0.2 and p["width"] == 160 and p["height"] == 90
+    r = results(d)["op:s"]
+    assert r["tool"] == "ffmpeg-skill/color" and r["status"] == "completed" and r["artifact"]["hdr"] is False
+    assert d["outputs"][0]["artifact"]["sha256"] == r["artifact"]["sha256"]
+    assert d["outputs"][0]["provenance"]["tool_versions"]["ffmpeg-skill"]
+    # negative: a non-HDR source refused without --force
+    code, d = run(request_doc([op("s", "HDR_TO_SDR", "source")], source={"source_id": "a", "path": "sdr.mp4"}))
+    assert d["ok"] is False and d["error"]["code"] == "TOOL_ERROR" and d["error"]["details"]["error_kind"] == "input"
+    # force lets ffmpeg-skill past its own HDR check ("treat as PQ"); the tonemap filter chain then runs on content
+    # that was never PQ-encoded, which is the caller's explicit risk and may legitimately fail inside ffmpeg itself
+    # (measured: zscale/tonemap error out on this fixture) -- a real TOOL_ERROR, not a defect in this skill's boundary
+    code, d = run(request_doc([op("s", "HDR_TO_SDR", "source", force=True)], source={"source_id": "a", "path": "sdr.mp4"}))
+    assert d["ok"] or d["error"]["code"] == "TOOL_ERROR"
+
+
+def test_hdr_to_sdr_invalid_tonemap_rejected(workspace):
+    doc = request_doc([op("s", "HDR_TO_SDR", "source", tonemap="bogus")], source={"source_id": "a", "path": "hdr.mp4"})
+    code, d = run(doc)
+    assert d["error"]["code"] == "INVALID_REQUEST" and code == EXIT_CODES["INVALID_REQUEST"]
+
+
+def test_lut_apply_with_deterministic_pixel_check(workspace):
+    src_color = sample_avg_color(workspace / "sdr.mp4")
+    doc = request_doc([op("l", "LUT_APPLY", "source", lut_path="invert.cube", lut_strength=1.0)])
+    code, d = run(doc)
+    assert code == 0 and d["ok"], full_error(d)
+    out = workspace / "out" / "main.mp4"
+    p = probe(out)
+    assert p["pix_fmt"] == "yuv420p"
+    out_color = sample_avg_color(out)
+    for src_c, out_c in zip(src_color, out_color):
+        assert abs((255 - src_c) - out_c) <= 20, (src_color, out_color)   # deterministic transform, not a subjective look
+    r = results(d)["op:l"]
+    assert r["lut"]["sha256"] and r["lut"]["size"] > 0
+    assert d["outputs"][0]["provenance"]["operations"][0]["lut"]["sha256"] == r["lut"]["sha256"]
+
+
+@pytest.mark.parametrize("bad_path", ["invert.txt", "missing.cube"])
+def test_lut_apply_bad_lut_rejected(workspace, bad_path):
+    if bad_path == "invert.txt":
+        (workspace / "invert.txt").write_text((workspace / "invert.cube").read_text())
+    doc = request_doc([op("l", "LUT_APPLY", "source", lut_path=bad_path)])
+    code, d = run(doc)
+    assert d["ok"] is False and d["error"]["code"] in ("UNSUPPORTED_FORMAT", "INVALID_INPUT")
+
+
+def test_lut_apply_oversized_lut_rejected(workspace, monkeypatch, skill_dir):
+    # this needs the monkeypatched constant to apply in-process, so it calls the Executor directly rather than
+    # through the CLI subprocess (a subprocess would import a fresh, unpatched module)
+    from color_grading import executor as execmod
+    from color_grading.doctor import runtime_context
+    from color_grading.security import PathPolicy
+    monkeypatch.setattr(execmod, "MAX_LUT_BYTES", 10)
+    skill, versions, caps = runtime_context(str(skill_dir), 60)
+    ex = execmod.Executor(PathPolicy(str(workspace)), skill, tool_versions=versions, capabilities=caps)
+    doc = request_doc([op("l", "LUT_APPLY", "source", lut_path="invert.cube")])
+    d = ex.response(doc)
+    assert d["ok"] is False and d["error"]["code"] == "INVALID_INPUT" and "larger than" in d["error"]["message"]
+
+
+@pytest.mark.parametrize("target", ["bt709", "bt2020-pq", "bt2020-hlg", "bt601"])
+def test_retag_all_targets(workspace, target):
+    from color_grading.model import RETAG_TAGS
+    doc = request_doc([op("r", "RETAG", "source", target=target)])
+    code, d = run(doc)
+    assert code == 0 and d["ok"], d.get("error")
+    p = probe(workspace / "out" / "main.mp4")
+    want_space, want_prim, want_trc = RETAG_TAGS[target]
+    assert (p["color_space"], p["color_primaries"], p["color_transfer"]) == (want_space, want_prim, want_trc)
+
+
+def test_retag_invalid_target_rejected(workspace):
+    doc = request_doc([op("r", "RETAG", "source", target="bt2100")])
+    code, d = run(doc)
+    assert d["error"]["code"] == "INVALID_REQUEST" and code == EXIT_CODES["INVALID_REQUEST"]
+
+
+def test_strip_dovi_on_hevc(workspace):
+    doc = request_doc([op("d", "STRIP_DOVI", "source")], source={"source_id": "a", "path": "hevc_sdr.mp4"})
+    code, d = run(doc)
+    assert code == 0 and d["ok"], d.get("error")
+    r = results(d)["op:d"]
+    assert r["artifact"]["dolby_vision"] is False
+
+
+def test_strip_dovi_refuses_non_hevc(workspace):
+    doc = request_doc([op("d", "STRIP_DOVI", "source")], source={"source_id": "a", "path": "sdr.mp4"})
+    code, d = run(doc)
+    assert d["ok"] is False and d["error"]["code"] == "TOOL_ERROR" and d["error"]["details"]["error_kind"] == "input"
+
+
+def test_primary_correction_defaults_are_near_identity(workspace):
+    """All-default PRIMARY_CORRECTION (exposure=0, contrast=1, saturation=1, temperature=6500, tint=0) is a
+    technical no-op: re-encoding introduces only minor lossy rounding, never a visible colour shift."""
+    src_color = sample_avg_color(workspace / "sdr.mp4")
+    doc = request_doc([op("c", "PRIMARY_CORRECTION", "source")])
+    code, d = run(doc)
+    assert code == 0 and d["ok"], full_error(d)
+    out_color = sample_avg_color(workspace / "out" / "main.mp4")
+    # measured: chaining four filters (exposure/colortemperature/colorbalance/eq), each an RGB<->YUV round trip,
+    # plus the x264 re-encode itself, costs a few levels of rounding even at all-default (identity) parameters --
+    # this is real, observed drift, not a colour shift, so the tolerance is wider than a single-filter check
+    for src_c, out_c in zip(src_color, out_color):
+        assert abs(int(src_c) - int(out_c)) <= 20, (src_color, out_color)
+    p = probe(workspace / "out" / "main.mp4")
+    assert abs(p["duration"] - 3.0) < 0.2 and p["width"] == 160 and p["height"] == 90
+
+
+def test_primary_correction_saturation_zero_desaturates(workspace):
+    """saturation=0.0 is a deterministic, measurable transform (near-equal R/G/B), not a subjective 'look'."""
+    doc = request_doc([op("c", "PRIMARY_CORRECTION", "source", saturation=0.0)])
+    code, d = run(doc)
+    assert code == 0 and d["ok"], full_error(d)
+    r, g, b = sample_avg_color(workspace / "out" / "main.mp4")
+    assert max(r, g, b) - min(r, g, b) <= 10, (r, g, b)
+
+
+def test_primary_correction_out_of_range_rejected_through_cli(workspace):
+    doc = request_doc([op("c", "PRIMARY_CORRECTION", "source", exposure=10.0)])
+    code, d = run(doc)
+    assert d["ok"] is False and d["error"]["code"] == "INVALID_REQUEST" and code == EXIT_CODES["INVALID_REQUEST"]
+    assert not (workspace / "out").exists()
+
+
+def test_primary_correction_measurements_are_observed_not_judged(workspace):
+    """Before/after measurement comes from ffmpeg-skill's existing signalstats-based analyze_levels() (real,
+    technical numbers), reused end to end through this skill's provenance -- never a subjective judgement."""
+    doc = request_doc([op("c", "PRIMARY_CORRECTION", "source", exposure=1.0, saturation=0.0)])
+    code, d = run(doc)
+    assert code == 0 and d["ok"], full_error(d)
+    r = results(d)["op:c"]
+    for side in ("input", "output"):
+        m = r["measurements"][side]
+        assert isinstance(m["y_avg"], (int, float)) and isinstance(m["saturation_avg"], (int, float))
+    assert r["measurements"]["output"]["y_avg"] != r["measurements"]["input"]["y_avg"]
+    prov_ops = d["outputs"][0]["provenance"]["operations"]
+    correction_entry = next(o for o in prov_ops if o["type"] == "PRIMARY_CORRECTION")
+    assert correction_entry["measurements"] == r["measurements"]
+
+
+def test_primary_correction_invalid_parameter_type_rejected(workspace):
+    doc = request_doc([op("c", "PRIMARY_CORRECTION", "source")])
+    doc["project"]["operations"][0]["parameters"]["exposure"] = "1.0"
+    code, d = run(doc)
+    assert d["ok"] is False and d["error"]["code"] == "INVALID_REQUEST" and code == EXIT_CODES["INVALID_REQUEST"]
+
+
+# ---- gamma/lift/gain/levels/curves (ffmpeg-skill >= 0.12.3 --correct flags, docs/decisions.md ADR-18): each is a
+# real, measurable transform through the real ffmpeg-skill checkout, verified via analyze_levels() measurements
+# (never a subjective "looks graded" judgement) the same way exposure/saturation already are, above.
+def test_primary_correction_gamma_shifts_measured_luma(workspace):
+    doc = request_doc([op("c", "PRIMARY_CORRECTION", "source", gamma=3.0)])
+    code, d = run(doc)
+    assert code == 0 and d["ok"], full_error(d)
+    r = results(d)["op:c"]
+    assert r["measurements"]["output"]["y_avg"] != r["measurements"]["input"]["y_avg"]
+
+
+def test_primary_correction_lift_and_gain_shift_measured_luma(workspace):
+    doc = request_doc([op("c", "PRIMARY_CORRECTION", "source", lift=0.3, gain=-0.3)])
+    code, d = run(doc)
+    assert code == 0 and d["ok"], full_error(d)
+    r = results(d)["op:c"]
+    assert r["measurements"]["output"]["y_avg"] != r["measurements"]["input"]["y_avg"]
+
+
+def test_primary_correction_levels_stretch_changes_measured_luma(workspace):
+    """A narrow input window (levels_in_black/levels_in_white) stretched back to the full output range is a real
+    contrast-stretch transform, distinct from the always-on eq/colorbalance chain."""
+    doc = request_doc([op("c", "PRIMARY_CORRECTION", "source", levels_in_black=80, levels_in_white=150)])
+    code, d = run(doc)
+    assert code == 0 and d["ok"], full_error(d)
+    r = results(d)["op:c"]
+    assert r["measurements"]["output"]["y_avg"] != r["measurements"]["input"]["y_avg"]
+
+
+def test_primary_correction_curves_changes_output_color(workspace):
+    """curves=negative is ffmpeg's own built-in preset, not a subjective look this skill invented; applying it to
+    a solid-colour source measurably changes the sampled output colour (a deterministic transform, not "looks
+    graded")."""
+    src_color = sample_avg_color(workspace / "sdr.mp4")
+    doc = request_doc([op("c", "PRIMARY_CORRECTION", "source", curves="negative")])
+    code, d = run(doc)
+    assert code == 0 and d["ok"], full_error(d)
+    out_color = sample_avg_color(workspace / "out" / "main.mp4")
+    assert sum(abs(int(a) - int(b)) for a, b in zip(src_color, out_color)) > 30, (src_color, out_color)
+
+
+def test_primary_correction_curves_measurements_are_observed_not_judged(workspace):
+    doc = request_doc([op("c", "PRIMARY_CORRECTION", "source", curves="increase_contrast")])
+    code, d = run(doc)
+    assert code == 0 and d["ok"], full_error(d)
+    r = results(d)["op:c"]
+    for side in ("input", "output"):
+        m = r["measurements"][side]
+        assert isinstance(m["y_avg"], (int, float))
+
+
+def test_primary_correction_invalid_curves_choice_rejected_through_cli(workspace):
+    doc = request_doc([op("c", "PRIMARY_CORRECTION", "source", curves="bogus_preset")])
+    code, d = run(doc)
+    assert d["ok"] is False and d["error"]["code"] == "INVALID_REQUEST" and code == EXIT_CODES["INVALID_REQUEST"]
+    assert not (workspace / "out").exists()
+
+
+def test_primary_correction_levels_in_black_ge_in_white_rejected_through_cli(workspace):
+    doc = request_doc([op("c", "PRIMARY_CORRECTION", "source", levels_in_black=200, levels_in_white=100)])
+    code, d = run(doc)
+    assert d["ok"] is False and d["error"]["code"] == "INVALID_REQUEST" and code == EXIT_CODES["INVALID_REQUEST"]
+    assert not (workspace / "out").exists()
+
+
+def test_primary_correction_levels_out_black_ge_out_white_rejected_through_cli(workspace):
+    doc = request_doc([op("c", "PRIMARY_CORRECTION", "source", levels_out_black=200, levels_out_white=100)])
+    code, d = run(doc)
+    assert d["ok"] is False and d["error"]["code"] == "INVALID_REQUEST" and code == EXIT_CODES["INVALID_REQUEST"]
+    assert not (workspace / "out").exists()
+
+
+def test_primary_correction_gamma_out_of_range_rejected_through_cli(workspace):
+    doc = request_doc([op("c", "PRIMARY_CORRECTION", "source", gamma=10.5)])
+    code, d = run(doc)
+    assert d["ok"] is False and d["error"]["code"] == "INVALID_REQUEST" and code == EXIT_CODES["INVALID_REQUEST"]
+    assert not (workspace / "out").exists()
+
+
+def test_primary_correction_lift_out_of_range_rejected_through_cli(workspace):
+    doc = request_doc([op("c", "PRIMARY_CORRECTION", "source", lift=1.5)])
+    code, d = run(doc)
+    assert d["ok"] is False and d["error"]["code"] == "INVALID_REQUEST" and code == EXIT_CODES["INVALID_REQUEST"]
+    assert not (workspace / "out").exists()
+
+
+def test_primary_correction_gain_out_of_range_rejected_through_cli(workspace):
+    doc = request_doc([op("c", "PRIMARY_CORRECTION", "source", gain=-1.5)])
+    code, d = run(doc)
+    assert d["ok"] is False and d["error"]["code"] == "INVALID_REQUEST" and code == EXIT_CODES["INVALID_REQUEST"]
+    assert not (workspace / "out").exists()
+
+
+def test_primary_correction_levels_out_of_range_rejected_through_cli(workspace):
+    doc = request_doc([op("c", "PRIMARY_CORRECTION", "source", levels_in_black=300)])
+    code, d = run(doc)
+    assert d["ok"] is False and d["error"]["code"] == "INVALID_REQUEST" and code == EXIT_CODES["INVALID_REQUEST"]
+    assert not (workspace / "out").exists()
+
+
+def test_primary_correction_all_new_defaults_are_near_identity(workspace):
+    """All-default gamma/lift/gain/levels/curves (identity values, curves unset) adds no measurable colour shift
+    beyond the same re-encode rounding the existing all-default PRIMARY_CORRECTION test already tolerates."""
+    src_color = sample_avg_color(workspace / "sdr.mp4")
+    doc = request_doc([op("c", "PRIMARY_CORRECTION", "source", gamma=1.0, lift=0.0, gain=0.0,
+                          levels_in_black=0, levels_in_white=255, levels_out_black=0, levels_out_white=255)])
+    code, d = run(doc)
+    assert code == 0 and d["ok"], full_error(d)
+    out_color = sample_avg_color(workspace / "out" / "main.mp4")
+    for src_c, out_c in zip(src_color, out_color):
+        assert abs(int(src_c) - int(out_c)) <= 20, (src_color, out_color)
+
+
+
+# ---- reencoded / dropped_non_av_streams surfaced from ffmpeg-skill (>= 0.12.0/0.12.1), audio_stream (>= 0.12.0)
+def test_retag_surfaces_reencoded_and_dropped_flags_and_keeps_subtitles(workspace):
+    """RETAG's stream-copy path on an untagged source succeeds without a re-encode: ffmpeg-skill reports
+    reencoded=False, dropped_non_av_streams=False, and the source's subtitle track survives untouched."""
+    src_subs, src_data, _ = stream_counts(workspace / "sdr_with_subs.mp4")
+    assert src_subs == 1
+    doc = request_doc([op("r", "RETAG", "source", target="bt709")], source={"source_id": "a", "path": "sdr_with_subs.mp4"})
+    code, d = run(doc)
+    assert code == 0 and d["ok"], full_error(d)
+    r = results(d)["op:r"]
+    assert r["reencoded"] is False and r["dropped_non_av_streams"] is False
+    out_subs, out_data, _ = stream_counts(workspace / "out" / "main.mp4")
+    assert out_subs == src_subs and out_data == src_data
+    # the manifest on disk carries the same two fields (mirrors how `measurements` is already persisted)
+    manifest = next(workspace.glob(".color-grading/p1/*.json"))
+    m = json.loads(manifest.read_text())
+    assert m["reencoded"] is False and m["dropped_non_av_streams"] is False
+    # and the output's provenance chain carries them too
+    prov_entry = next(o for o in d["outputs"][0]["provenance"]["operations"] if o["type"] == "RETAG")
+    assert prov_entry["reencoded"] is False and prov_entry["dropped_non_av_streams"] is False
+
+
+def test_primary_correction_keeps_subtitles_and_reports_not_dropped(workspace):
+    """PRIMARY_CORRECTION always re-encodes (unlike RETAG's common stream-copy path); ffmpeg-skill still keeps the
+    source's subtitle track and reports dropped_non_av_streams=False (no top-level `reencoded` field for this mode
+    -- it isn't conditional the way RETAG's is)."""
+    src_subs, _, _ = stream_counts(workspace / "sdr_with_subs.mp4")
+    doc = request_doc([op("c", "PRIMARY_CORRECTION", "source")], source={"source_id": "a", "path": "sdr_with_subs.mp4"})
+    code, d = run(doc)
+    assert code == 0 and d["ok"], full_error(d)
+    r = results(d)["op:c"]
+    assert r["dropped_non_av_streams"] is False
+    assert "reencoded" not in r
+    out_subs, _, _ = stream_counts(workspace / "out" / "main.mp4")
+    assert out_subs == src_subs == 1
+
+
+def test_strip_dovi_has_no_reencoded_or_dropped_fields(workspace):
+    """STRIP_DOVI's --strip-dovi mode never reports reencoded/dropped_non_av_streams (it is always a full stream
+    copy, -map 0); this skill must not invent values for a field ffmpeg-skill never sent."""
+    doc = request_doc([op("d", "STRIP_DOVI", "source")], source={"source_id": "a", "path": "hevc_sdr.mp4"})
+    code, d = run(doc)
+    assert code == 0 and d["ok"], full_error(d)
+    r = results(d)["op:d"]
+    assert "reencoded" not in r and "dropped_non_av_streams" not in r
+
+
+def test_audio_stream_selects_the_requested_track(workspace):
+    """--audio-stream 1 (ffmpeg-skill >= 0.12.0) keeps the *second* audio track of a multi-track source instead of
+    always defaulting to track 0; multi_audio.mp4's two tracks are deterministically distinguishable (mono vs
+    stereo channel count) so the selection is verified, not assumed."""
+    _, _, default_channels = stream_counts(workspace / "multi_audio.mp4")
+    assert default_channels == 1   # track 0 is mono
+    doc = request_doc([op("c", "PRIMARY_CORRECTION", "source", audio_stream=1)], source={"source_id": "a", "path": "multi_audio.mp4"})
+    code, d = run(doc)
+    assert code == 0 and d["ok"], full_error(d)
+    _, _, out_channels = stream_counts(workspace / "out" / "main.mp4")
+    assert out_channels == 2   # track 1 (stereo) was kept, not the default track 0
+    # the default (audio_stream unset) keeps track 0, matching every prior release's behaviour
+    code, d2 = run(request_doc([op("c", "PRIMARY_CORRECTION", "source")], source={"source_id": "a", "path": "multi_audio.mp4"}))
+    assert code == 0 and d2["ok"], full_error(d2)
+    _, _, out_channels_default = stream_counts(workspace / "out" / "main.mp4")
+    assert out_channels_default == 1
+
+
+def test_audio_stream_default_is_zero_and_out_of_range_rejected_by_ffmpeg_skill(workspace):
+    """audio_stream isn't range-checked against the real stream count by this skill (the bound depends on the
+    source, which is ffmpeg-skill's own job, docs/ffmpeg-skill.md); an out-of-range value is refused by
+    ffmpeg-skill itself as a TOOL_ERROR, not silently accepted."""
+    from color_grading.model import validate_parameters
+    assert validate_parameters("RETAG", {"target": "bt709"}, "x")["audio_stream"] == 0
+    doc = request_doc([op("r", "RETAG", "source", target="bt709", audio_stream=5)], source={"source_id": "a", "path": "sdr.mp4"})
+    code, d = run(doc)
+    assert d["ok"] is False and d["error"]["code"] == "TOOL_ERROR"
+
+
+def test_audio_stream_negative_rejected_at_request_boundary(workspace):
+    doc = request_doc([op("r", "RETAG", "source", target="bt709", audio_stream=-1)])
+    code, d = run(doc)
+    assert d["ok"] is False and d["error"]["code"] == "INVALID_REQUEST" and code == EXIT_CODES["INVALID_REQUEST"]
+
+
+def test_audio_stream_reaches_the_real_ffmpeg_invocation_for_lut_apply(workspace):
+    """LUT_APPLY always re-encodes, so ffmpeg-skill/color literally builds `-map 0:a:{audio_stream}?` into the
+    ffmpeg command it runs; tool_commands_observed (ffmpeg-skill's own record of what it actually ran, not this
+    skill's argv construction) is checked directly for that exact mapping."""
+    doc = request_doc([op("l", "LUT_APPLY", "source", lut_path="invert.cube", audio_stream=1)], source={"source_id": "a", "path": "multi_audio.mp4"})
+    code, d = run(doc)
+    assert code == 0 and d["ok"], full_error(d)
+    cmds = results(d)["op:l"]["tool_commands_observed"]
+    assert cmds and any("0:a:1" in c for c in cmds), cmds
+    _, _, out_channels = stream_counts(workspace / "out" / "main.mp4")
+    assert out_channels == 2
+
+
+def test_chained_pipeline_primary_correction_then_lut(workspace):
+    """Ordering guidance (docs/decisions.md): technical primary correction before a creative LUT -- expressed as
+    an ordinary two-node chain in the existing operation graph, not a new pipeline concept."""
+    doc = request_doc([op("c", "PRIMARY_CORRECTION", "source", exposure=0.3), op("l", "LUT_APPLY", "op:c", lut_path="invert.cube")])
+    code, d = run(doc)
+    assert code == 0 and d["ok"], full_error(d)
+    p = probe(workspace / "out" / "main.mp4")
+    assert p["pix_fmt"] == "yuv420p" and abs(p["duration"] - 3.0) < 0.2
+    assert [r["status"] for r in d["results"] if r["type"] != "SOURCE"] == ["completed", "completed"]
+    chain = d["outputs"][0]["provenance"]["operations"]
+    assert [c["type"] for c in chain] == ["LUT_APPLY", "PRIMARY_CORRECTION", "SOURCE"]
+
+
+def test_chained_pipeline_hdr_to_sdr_then_lut(workspace, capabilities):
+    if capabilities.get("filter:zscale") == "unsupported":
+        pytest.skip("filter:zscale not available in this ffmpeg build (needs libzimg; e.g. macOS Homebrew's plain 'ffmpeg' formula omits it)")
+    doc = request_doc([op("s", "HDR_TO_SDR", "source"), op("l", "LUT_APPLY", "op:s", lut_path="invert.cube")], source={"source_id": "a", "path": "hdr.mp4"})
+    code, d = run(doc)
+    assert code == 0 and d["ok"], full_error(d)
+    p = probe(workspace / "out" / "main.mp4")
+    assert p["pix_fmt"] == "yuv420p" and abs(p["duration"] - 2.0) < 0.2
+    assert [r["status"] for r in d["results"] if r["type"] != "SOURCE"] == ["completed", "completed"]
+    chain = d["outputs"][0]["provenance"]["operations"]
+    assert [c["type"] for c in chain] == ["LUT_APPLY", "HDR_TO_SDR", "SOURCE"]
+
+
+def test_output_format_must_match_source_container(workspace):
+    doc = request_doc([op("r", "RETAG", "source", target="bt709")], outputs=[{"output_id": "main", "operation": "op:r", "path": "out/main.mov", "format": "mov"}])
+    code, d = run(doc)
+    assert d["ok"] is False and d["error"]["code"] == "UNSUPPORTED_FORMAT"
+
+
+def test_dry_run_writes_nothing(workspace):
+    doc = request_doc([op("r", "RETAG", "source", target="bt709"), op("d", "STRIP_DOVI", "op:r")], source={"source_id": "a", "path": "hevc_sdr.mp4"})
+    code, out, _ = run_cli(["plan", "-", "--json"], json.dumps(doc))
+    d = one_json(out)
+    assert code == 0 and d["ok"] and d["dry_run"] is True
+    assert [s["tool"] for s in d["plan"]["steps"]] == ["ffmpeg-skill/color", "ffmpeg-skill/color"]
+    assert d["plan"]["required_capabilities"] and d["plan"]["plan_id"]
+    assert all(r["status"] == "planned" for r in d["results"])
+    assert not (workspace / "out").exists() and not (workspace / ".color-grading").exists()
+    code2, out2, _ = run_cli(["run", "-", "--json", "--dry-run"], json.dumps(doc))
+    assert one_json(out2)["plan"]["plan_id"] == d["plan"]["plan_id"]
+
+
+def test_rerun_reuses_intermediates_and_is_deterministic(workspace):
+    doc = request_doc([op("r", "RETAG", "source", target="bt601"), op("l", "LUT_APPLY", "op:r", lut_path="invert.cube")],
+                      outputs=[{"output_id": "main", "operation": "op:l", "path": "out/main.mp4", "format": "mp4", "overwrite": True}])
+    code, d1 = run(doc)
+    code, d2 = run(doc)
+    assert d1["ok"] and d2["ok"], full_error(d1) + full_error(d2)
+    assert [r["status"] for r in d2["results"] if r["type"] != "SOURCE"] == ["reused", "reused"]
+    assert [r["operation_id"] for r in d1["results"]] == [r["operation_id"] for r in d2["results"]]
+    assert d1["outputs"][0]["artifact"]["sha256"] == d2["outputs"][0]["artifact"]["sha256"]
+    code, d3 = run(doc, "--no-reuse")
+    assert [r["status"] for r in d3["results"] if r["type"] != "SOURCE"] == ["completed", "completed"]
+    assert d3["outputs"][0]["artifact"]["sha256"] == d1["outputs"][0]["artifact"]["sha256"]
+    # a tampered intermediate is not reused
+    inter = next(workspace.glob(".color-grading/p1/*.mp4"))
+    inter.write_bytes(inter.read_bytes()[:-100])
+    code, d4 = run(doc)
+    assert d4["ok"] and "completed" in [r["status"] for r in d4["results"] if r["type"] != "SOURCE"]
+
+
+def test_options_reuse_false(workspace):
+    doc = request_doc([op("r", "RETAG", "source", target="bt709")], outputs=[{"output_id": "main", "operation": "op:r", "path": "out/main.mp4", "format": "mp4", "overwrite": True}],
+                      options={"reuse_intermediates": False})
+    run(doc)
+    code, d = run(doc)
+    assert [r["status"] for r in d["results"] if r["type"] != "SOURCE"] == ["completed"]
+
+
+def test_invalid_inputs(workspace):
+    code, d = run(request_doc([], source={"source_id": "a", "path": "missing.mp4"}))
+    assert d["error"]["code"] == "INVALID_INPUT" and code == EXIT_CODES["INVALID_INPUT"]
+    code, d = run(request_doc([], source={"source_id": "a", "path": "text.txt"}))
+    assert d["error"]["code"] == "INVALID_INPUT"
+    code, d = run(request_doc([], source={"source_id": "a", "path": "audio.wav"}))
+    assert d["error"]["code"] == "INVALID_INPUT" and d["error"]["details"]["reason"] == "no_video_stream"
+
+
+def test_output_expectation_failure_removes_output(workspace):
+    doc = request_doc([op("r", "RETAG", "source", target="bt709")], outputs=[{"output_id": "main", "operation": "op:r", "path": "out/main.mp4", "format": "mp4", "expect": {"width": 999}}])
+    code, d = run(doc)
+    assert d["error"]["code"] == "VALIDATION_ERROR" and d["error"]["details"]["reason"] == "resolution_mismatch"
+    assert not (workspace / "out" / "main.mp4").exists()
+    assert d["outputs"][0]["status"] == "failed" and results(d)["op:r"]["status"] == "completed"
+
+
+def test_timeout_is_a_retryable_tool_error(workspace):
+    doc = request_doc([op("s", "HDR_TO_SDR", "source", force=True)])
+    code, out, _ = run_cli(["run", "-", "--json", "--timeout", "0.001"], json.dumps(doc))
+    d = one_json(out)
+    assert d["ok"] is False and d["error"]["code"] in ("TOOL_ERROR", "INVALID_INPUT")
+    if d["error"]["code"] == "TOOL_ERROR":
+        assert d["error"]["retryable"] is True and d["error"]["details"]["reason"] == "timeout"
+    assert not list(workspace.glob(".color-grading/p1/*.mp4")) and not (workspace / "out").exists()
+
+
+@pytest.mark.skipif(os.name == "nt", reason="a console signal cannot be delivered to one child on Windows without also hitting the test runner")
+def test_signal_cancellation_leaves_no_partial_output(workspace):
+    import signal
+    import time
+    doc = request_doc([op("r1", "RETAG", "source", target="bt709"), op("r2", "RETAG", "op:r1", target="bt601"), op("r3", "RETAG", "op:r2", target="bt709")])
+    env = dict(os.environ)
+    env["PYTHONPATH"] = str(Path(__file__).resolve().parent.parent / "src")
+    proc = subprocess.Popen([sys.executable, "-m", "color_grading.cli", "run", "-", "--json"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env)
+    proc.stdin.write(json.dumps(doc))
+    proc.stdin.close()
+    deadline = time.time() + 20
+    while time.time() < deadline and not (Path.cwd() / ".color-grading" / "p1").exists():
+        time.sleep(0.05)
+    time.sleep(0.2)
+    proc.send_signal(signal.SIGINT if os.name != "nt" else signal.CTRL_BREAK_EVENT)
+    out = proc.stdout.read()
+    proc.stderr.read()
+    proc.wait(timeout=30)
+    d = one_json(out)
+    assert d["ok"] is False and d["status"] == "cancelled" and d["error"]["code"] == "CANCELLED", d
+    assert proc.returncode == EXIT_CODES["CANCELLED"]
+    assert not (Path.cwd() / "out").exists()
+    for f in Path.cwd().glob(".color-grading/p1/*.mp4"):
+        assert f.with_suffix(f.suffix + ".json").exists(), "an intermediate without a manifest is a partial output"
+
+
+def test_cli_validate_and_exit_codes(workspace):
+    code, out, _ = run_cli(["validate", "-", "--json"], json.dumps(request_doc([op("r", "RETAG", "source", target="bt709")])))
+    d = one_json(out)
+    assert code == 0 and d["validation"]["ok"] and d["validation"]["graph"]["order"] == ["source", "op:r"]
+    code, out, _ = run_cli(["validate", "-", "--json"], json.dumps(request_doc([op("g", "ECHO", "source")])))
+    assert code == EXIT_CODES["UNSUPPORTED_OPERATION"] and one_json(out)["error"]["code"] == "UNSUPPORTED_OPERATION"
+    code, out, _ = run_cli(["run", "-"], json.dumps(request_doc([op("r", "RETAG", "source", target="bt709")])))
+    assert code == 0 and "op:r" in out and not out.strip().startswith("{")
