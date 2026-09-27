@@ -46,3 +46,8 @@ artemnovitckii/content-skills  viral-hooks
 # تدقيق الحقائق والمصادر (من أدوات الصحفيين)
 jamditis/claude-skills-journalism  journalism-core/skills/fact-check-workflow
 jamditis/claude-skills-journalism  journalism-core/skills/source-verification
+
+# مونتاج وموشن گرافيكس (Remotion)
+remotion-dev/skills  skills/remotion-best-practices
+Tarquished/motioner  .  motioner
+haidrrrry/claude-remotion-skill  remotion-motion-graphics
