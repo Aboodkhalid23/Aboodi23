@@ -89,3 +89,17 @@ def test_clean_video_matches_cuts_with_many_segments(tmp_path):
     assert total == pytest.approx(sum(e - s for s, e in cuts), abs=1e-6)
     info = probe(ep.clean_video)
     assert abs(info.duration - total) <= 1 / 30
+
+
+def test_drop_retakes_keeps_long_sentences_with_same_opener():
+    """I-2: two different long sentences that start alike are both real content."""
+    a = phrase("هاي الشركة كانت تبني بيوت بكل مدن الصين وتبيعها قبل ما تخلص", 0, 8)
+    b = phrase("هاي الشركة كانت عليها ديون أكثر من ميزانية دول كاملة", 10, 16)
+    assert len(drop_retakes([a, b])) == 2
+
+
+def test_drop_retakes_logs_dropped():
+    dropped = []
+    drop_retakes([phrase("شركة ايفرغراند كانت", 0, 2), phrase("شركة ايفرغراند كانت أكبر شركة", 3, 6)],
+                 dropped=dropped)
+    assert [" ".join(w.text for w in p) for p in dropped] == ["شركة ايفرغراند كانت"]

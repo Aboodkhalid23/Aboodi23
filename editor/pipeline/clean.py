@@ -31,18 +31,27 @@ def _key(p: list[Word], n: int) -> list[str]:
     return [normalize_ar(w.text) for w in p[:n]]
 
 
-def drop_retakes(phrases: list[list[Word]], window: float = 30.0, match: int = 3) -> list[list[Word]]:
+def _is_retake(a: list[Word], b: list[Word], match: int, max_retake: float, overlap: float) -> bool:
+    """B restarts A: same opening, and A is either short or mostly repeated inside B."""
+    ka, kb = _key(a, len(a)), _key(b, len(b))
+    if len(a) < match:
+        return kb[:len(ka)] == ka and b[0].start - a[-1].end <= 5.0
+    if ka[:match] != kb[:match]:
+        return False
+    shared = sum(1 for x, y in zip(ka, kb) if x == y)
+    return a[-1].end - a[0].start <= max_retake or shared / len(ka) >= overlap
+
+
+def drop_retakes(phrases: list[list[Word]], window: float = 30.0, match: int = 3,
+                 max_retake: float = 6.0, overlap: float = 0.6,
+                 dropped: list | None = None) -> list[list[Word]]:
     kept = []
     for i, a in enumerate(phrases):
-        retaken = False
-        for b in phrases[i + 1:]:
-            if b[0].start - a[-1].end > window:
-                break
-            ka, kb = _key(a, match), _key(b, match)
-            if (len(a) >= match and ka == kb) or (len(a) < match and kb[:len(ka)] == ka):
-                retaken = True
-                break
-        if not retaken:
+        later = [b for b in phrases[i + 1:] if b[0].start - a[-1].end <= window]
+        if any(_is_retake(a, b, match, max_retake, overlap) for b in later):
+            if dropped is not None:
+                dropped.append(a)
+        else:
             kept.append(a)
     return kept
 
@@ -89,7 +98,12 @@ def snap_to_frames(segments: list[tuple[float, float]]) -> list[tuple[float, flo
 def clean(ep: Episode) -> float:
     words = load_words(ep.transcript)
     duration = probe(ep.source).duration
-    segs = snap_to_frames(keep_segments(drop_retakes(split_phrases(words)), duration=duration))
+    dropped: list = []
+    kept = drop_retakes(split_phrases(words), dropped=dropped)
+    (ep.work / "retakes.json").write_text(json.dumps(
+        [{"start": p[0].start, "end": p[-1].end, "text": " ".join(w.text for w in p)} for p in dropped],
+        ensure_ascii=False, indent=1), encoding="utf-8")
+    segs = snap_to_frames(keep_segments(kept, duration=duration))
     ep.cuts.write_text(json.dumps(segs), encoding="utf-8")
     save_words(remap_words(words, segs), ep.clean_words)
 

@@ -47,7 +47,8 @@ PAGES = [page("File:Small.jpg", 800, "CC BY 4.0", "https://u/a.jpg"),
 def make_plan(n_images=1):
     beats = [Beat(0, 5, "body", "face")]
     for i in range(n_images):
-        beats += [Beat(5 + 10 * i, 10 + 10 * i, "body", "image", query="Evergrande"),
+        beats += [Beat(5 + 10 * i, 10 + 10 * i, "body", "image", query="Evergrande",
+                       caption="مقر إيفرغراند"),
                   Beat(10 + 10 * i, 15 + 10 * i, "body", "face")]
     return EditPlan({"primary": "vox", "sections": []}, "", [], beats)
 
@@ -62,7 +63,7 @@ def test_collect_falls_back_to_text_graphic(tmp_path):
     ep = Episode(tmp_path / "ep").ensure()
     plan = collect_images(make_plan(), ep, session=FakeSession([]))
     assert plan.beats[1].kind == "graphic"
-    assert plan.beats[1].graphic == {"type": "text", "text": "Evergrande"}
+    assert plan.beats[1].graphic == {"type": "text", "text": "مقر إيفرغراند"}  # I-3: Arabic caption, not the query
     assert len(json.loads(ep.fallbacks.read_text())) == 1
     assert load_plan(ep.plan).beats[1].kind == "graphic"
 

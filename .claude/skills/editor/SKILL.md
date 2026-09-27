@@ -21,7 +21,7 @@ description: المونتير الآلي — يحوّل فيديو خام (صا�
    ```json
    {"style": {"primary": "vox", "sections": []}, "style_reason": "…",
     "teaser": [[612.4, 614.3], [88.0, 90.1], [1302.5, 1304.6]],
-    "beats": [{"start": 0.0, "end": 1.9, "zone": "hook", "kind": "image", "query": "Evergrande headquarters Shenzhen"},
+    "beats": [{"start": 0.0, "end": 1.9, "zone": "hook", "kind": "image", "query": "Evergrande headquarters Shenzhen", "caption": "مقر إيفرغراند"},
               {"start": 1.9, "end": 3.8, "zone": "hook", "kind": "graphic", "graphic": {"type": "number", "value": 300000000000, "label": "دولار ديون"}}],
     "shorts": []}
    ```
@@ -29,7 +29,7 @@ description: المونتير الآلي — يحوّل فيديو خام (صا�
    - الوقت = teaser أول، بعده الفيديو المنظف كامل. beats تغطي الكل بلا فراغ.
    - **الهوك (أول 30 ث):** beats بين 1.5 و 2.5 ث، سريعة، أقوى الصور والأرقام. ما اكو مقدمة.
    - **الجسم:** beats بين 4 و 6 ث. الوجه (`face`, `face_zoom_in`, `face_zoom_out`, `face_framed`) بين 35% و 55%. ما يتكرر نفس النوع ورا بعض.
-   - `image`: لأي شخص أو شركة أو مكان أو حدث مذكور. `query` بالإنگليزي، محدد (اسم + سنة أو مكان).
+   - `image`: لأي شخص أو شركة أو مكان أو حدث مذكور. `query` بالإنگليزي، محدد (اسم + سنة أو مكان)، و`caption` عربي قصير ينكتب بالشاشة إذا ما انلگت صورة.
    - `graphic` حسب الكلام:
      - `number` `{value, label, prefix?}` لأي رقم.
      - `headline` `{outlet, title, highlight}` لخبر أو وثيقة.

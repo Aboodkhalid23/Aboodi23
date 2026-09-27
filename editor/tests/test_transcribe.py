@@ -18,18 +18,18 @@ class FakeModel:
         return iter([seg] if self.words else []), NS(language="ar")
 
 
-def test_transcribe_writes_words(tmp_path):
+def test_transcribe_writes_words(talking_video, tmp_path):
     ep = Episode(tmp_path / "ep").ensure()
-    ep.source.write_bytes(b"x")
+    ep.source.write_bytes(talking_video.read_bytes())
     words = transcribe(ep, model=FakeModel([(" شركة", 0.0, 0.4), (" ايفرغراند", 0.4, 1.0), (" كانت", 1.1, 1.4)]))
     assert words[0] == Word("شركة", 0.0, 0.4)
     assert load_words(ep.transcript) == words
     assert len(words) == 3
 
 
-def test_transcribe_empty_raises(tmp_path):
+def test_transcribe_empty_raises(talking_video, tmp_path):
     ep = Episode(tmp_path / "ep").ensure()
-    ep.source.write_bytes(b"x")
+    ep.source.write_bytes(talking_video.read_bytes())
     with pytest.raises(MediaError) as err:
         transcribe(ep, model=FakeModel([]))
     assert str(err.value) == "الصوت فارغ أو مو واضح"
@@ -43,3 +43,14 @@ def test_transcribe_real_model_smoke(talking_video, tmp_path):
     ep.source.write_bytes(talking_video.read_bytes())
     with pytest.raises(MediaError):  # a pure tone has no speech
         transcribe(ep, model_name="tiny")
+
+
+def test_transcribe_no_audio_track_raises(talking_video, tmp_path):
+    """I-1: a video without an audio stream gives the Arabic message, not a traceback."""
+    import subprocess
+    ep = Episode(tmp_path / "ep").ensure()
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(talking_video), "-an", "-c:v", "copy",
+                    str(ep.source)], check=True)
+    with pytest.raises(MediaError) as err:
+        transcribe(ep, model=FakeModel([("كلمة", 0, 1)]))
+    assert str(err.value) == "الصوت فارغ أو مو واضح"

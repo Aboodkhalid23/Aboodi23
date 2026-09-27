@@ -17,7 +17,7 @@ def build(hook=HOOK, body=BODY):
         for dur, kind in items:
             b = Beat(start=round(t, 2), end=round(t + dur, 2), zone=zone, kind=kind)
             if kind == "image":
-                b.query = "Evergrande headquarters"
+                b.query, b.caption = "Evergrande headquarters", "مقر إيفرغراند"
             if kind == "graphic":
                 b.graphic = {"type": "text", "text": "شركة"}
             beats.append(b)
@@ -101,3 +101,9 @@ def test_brief_has_no_json_and_one_line_per_phrase(tmp_path):
     lines = [ln for ln in text.splitlines() if ln.startswith("[")]
     assert lines == ["[00:00.0–00:01.0] شركة كبيرة", "[00:03.0–00:04.2] انهارت فجأة"]
     assert "{" not in text and "5.5" in text and "vox" in text
+
+
+def test_image_needs_arabic_caption():
+    plan, clean = build()
+    plan.beats[16].caption = None
+    assert errors_for(plan, clean).startswith("beat 16:")

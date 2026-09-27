@@ -3,7 +3,7 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from .media import MediaError
+from .media import MediaError, probe
 from .paths import Episode
 
 
@@ -24,6 +24,8 @@ def load_words(path: Path) -> list[Word]:
 
 
 def transcribe(ep: Episode, model_name: str = "large-v3-turbo", model=None) -> list[Word]:
+    if not probe(ep.source).has_audio:
+        raise MediaError("الصوت فارغ أو مو واضح")
     if model is None:
         from faster_whisper import WhisperModel
         model = WhisperModel(model_name, device="cpu", compute_type="int8")

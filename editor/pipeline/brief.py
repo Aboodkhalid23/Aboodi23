@@ -11,7 +11,7 @@ RULES = """القواعد:
 - beats تغطي (teaser + الفيديو المنظف) كامل، بلا فراغ ولا تداخل.
 - أول 30 ثانية zone=hook، كل beat بين 1.5 و 2.5 ث. بعدها zone=body، كل beat بين 4 و 6 ث.
 - ما يتكرر نفس kind مرتين ورا بعض. الوجه (face*) بين 35% و 55% من وقت الجسم.
-- الأنواع: face, face_zoom_in, face_zoom_out, face_framed, image (query بالإنگليزي لويكيميديا), graphic.
+- الأنواع: face, face_zoom_in, face_zoom_out, face_framed, image (query بالإنگليزي لويكيميديا + caption عربي ينكتب إذا ما انلگت صورة), graphic.
 - graphic.type: number, headline, quote, map, timeline, chart, text."""
 
 

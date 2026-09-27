@@ -79,7 +79,7 @@ def collect_images(plan: EditPlan, ep: Episode, session=None) -> EditPlan:
             reason = "no free image"
         if img is None:
             fallbacks.append({"beat": i, "query": b.query, "reason": reason})
-            b.kind, b.graphic = "graphic", {"type": "text", "text": b.query}
+            b.kind, b.graphic = "graphic", {"type": "text", "text": b.caption or b.query}
             continue
         used.add(img.title)
         b.treatment = b.treatment or treatment

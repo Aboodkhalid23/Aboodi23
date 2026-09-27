@@ -32,7 +32,7 @@ def test_cli_prep_and_render_end_to_end(talking_video, tmp_path):
     kinds = ["face", "face_zoom_in", "image", "face_zoom_out", "graphic", "face", "face_zoom_in", "face_framed"]
     beats = [Beat(2.0 * i, 2.0 * (i + 1), "hook", k) for i, k in enumerate(kinds)]
     beats[-1].end = 496 / 30
-    beats[2].query = "Evergrande Group headquarters"
+    beats[2].query, beats[2].caption = "Evergrande Group headquarters", "مقر إيفرغراند"
     beats[4].graphic = {"type": "number", "value": 300, "label": "مليار دولار"}
     save_plan(EditPlan({"primary": "vox", "sections": []}, "اختبار", [], beats), ep.plan)
     r = cli("render", ep.root)

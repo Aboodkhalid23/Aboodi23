@@ -22,6 +22,7 @@ class Beat:
     zone: str
     kind: str
     query: str | None = None
+    caption: str | None = None   # Arabic words for the screen if no image is found
     prompt: str | None = None
     treatment: str | None = None
     graphic: dict | None = None
@@ -98,8 +99,8 @@ def validate_plan(plan: EditPlan, clean_duration: float) -> list[str]:
             errs.append(f"beat {i}: طوله {b.duration:.2f} ثانية، لازم بين {lo:g} و {hi:g}")
         if i and beats[i - 1].kind == b.kind:
             errs.append(f"beat {i}: نفس نوع الي قبله ({b.kind})")
-        if b.kind == "image" and not b.query:
-            errs.append(f"beat {i}: صورة بدون query")
+        if b.kind == "image" and not (b.query and b.caption):
+            errs.append(f"beat {i}: صورة لازم بيها query (إنگليزي) و caption (عربي)")
         if b.kind == "graphic" and (not b.graphic or b.graphic.get("type") not in GRAPHIC_TYPES):
             errs.append(f"beat {i}: گرافيك لازم type من {', '.join(GRAPHIC_TYPES)}")
         prev_end = b.end
