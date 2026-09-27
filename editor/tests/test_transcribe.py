@@ -13,6 +13,7 @@ class FakeModel:
         self.words = words
 
     def transcribe(self, audio, **kwargs):
+        self.kwargs = kwargs
         assert kwargs["language"] == "ar" and kwargs["word_timestamps"] is True
         seg = NS(words=[NS(word=w, start=s, end=e) for w, s, e in self.words])
         return iter([seg] if self.words else []), NS(language="ar")
@@ -54,3 +55,13 @@ def test_transcribe_no_audio_track_raises(talking_video, tmp_path):
     with pytest.raises(MediaError) as err:
         transcribe(ep, model=FakeModel([("كلمة", 0, 1)]))
     assert str(err.value) == "الصوت فارغ أو مو واضح"
+
+
+def test_transcribe_passes_prompt_and_hotwords(talking_video, tmp_path):
+    ep = Episode(tmp_path / "ep").ensure()
+    ep.source.write_bytes(talking_video.read_bytes())
+    (ep.edit / "vocab.txt").write_text("إيفرغراند\nهوي كا يان\n", encoding="utf-8")
+    model = FakeModel([("شركة", 0, 1)])
+    transcribe(ep, model=model)
+    assert "إيفرغراند" in model.kwargs["hotwords"] and "هوي كا يان" in model.kwargs["hotwords"]
+    assert "شلون" in model.kwargs["initial_prompt"]

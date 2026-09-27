@@ -23,14 +23,20 @@ def load_words(path: Path) -> list[Word]:
     return [Word(d["t"], d["s"], d["e"]) for d in json.loads(Path(path).read_text(encoding="utf-8"))]
 
 
-def transcribe(ep: Episode, model_name: str = "large-v3-turbo", model=None) -> list[Word]:
+IRAQI_PROMPT = "هلا بيكم، اليوم راح نحچي عن قصة غريبة. شلون صار هيچ؟ خلي نشوف شنو الي صار بالضبط."
+
+
+def transcribe(ep: Episode, model_name: str = "large-v3", model=None) -> list[Word]:
     if not probe(ep.source).has_audio:
         raise MediaError("الصوت فارغ أو مو واضح")
     if model is None:
         from faster_whisper import WhisperModel
         model = WhisperModel(model_name, device="cpu", compute_type="int8")
+    vocab = ep.edit / "vocab.txt"
+    hotwords = " ".join(vocab.read_text(encoding="utf-8").split("\n")) if vocab.exists() else None
     segments, _info = model.transcribe(
         str(ep.source), language="ar", word_timestamps=True, vad_filter=True,
+        initial_prompt=IRAQI_PROMPT, hotwords=hotwords,
     )
     words = [
         Word(w.word.strip(), float(w.start), float(w.end))

@@ -5,6 +5,7 @@ import os
 import shutil
 import sys
 
+from .align import align, find_script
 from .brief import write_brief
 from .clean import clean
 from .compose import compose
@@ -36,6 +37,12 @@ def st_transcribe(ep, a):
         shutil.copyfile(fake, ep.transcript)
     else:
         transcribe(ep)
+    script = a.script or find_script(ep)
+    if script:
+        print(f"🗣️  أصحح اللهجة من السكربت: {script}", flush=True)
+        align(ep, script)
+    else:
+        print("   ما لگيت سكربت للحلقة، التفريغ يبقى بدون تصحيح")
 
 
 def st_clean(ep, a):
@@ -91,6 +98,7 @@ def main(argv=None):
     p.add_argument("stage", choices=STAGES)
     p.add_argument("episode")
     p.add_argument("--source")
+    p.add_argument("--script", help="سكربت الحلقة لتصحيح التفريغ")
     p.add_argument("--preview", action="store_true", help="نسخة معاينة سريعة 640×360")
     p.add_argument("--max-mb", type=float, help="اضغط الفيديو بس إذا عبر هذا الحجم")
     a = p.parse_args(argv)
