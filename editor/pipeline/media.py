@@ -17,6 +17,7 @@ class MediaInfo:
     fps: float
     has_audio: bool
     rotation: int
+    color_transfer: str = ""
 
 
 def _fps(rate: str) -> float:
@@ -51,6 +52,7 @@ def probe(path: Path) -> MediaInfo:
         fps=_fps(video.get("avg_frame_rate") or video.get("r_frame_rate", "0/1")),
         has_audio=any(s.get("codec_type") == "audio" for s in streams),
         rotation=rotation % 360,
+        color_transfer=video.get("color_transfer", ""),
     )
 
 

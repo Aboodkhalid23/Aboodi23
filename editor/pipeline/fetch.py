@@ -3,10 +3,15 @@ import re
 import shutil
 from pathlib import Path
 
-from .media import MediaError, run_ffmpeg
+from .fmt import decide_format, save_format
+from .media import MediaError, probe, run_ffmpeg
 from .paths import Episode
 
 VIDEO_EXTS = {".mp4", ".mov", ".mkv", ".m4v", ".avi", ".webm"}
+HDR_TRANSFERS = {"arib-std-b67", "smpte2084"}
+TONEMAP = ("zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=hable:desat=0,"
+           "zscale=t=bt709:m=bt709:r=tv")
+INTERMEDIATE = ["-c:v", "libx264", "-crf", "10", "-preset", "veryfast"]  # near-lossless working copy
 DRIVE_RE = re.compile(r"^https://(drive|docs)\.google\.com/")
 
 
@@ -44,12 +49,18 @@ def fetch(source: str, ep: Episode) -> Path:
         if local.resolve() != raw.resolve():
             shutil.copyfile(local, raw)
 
-    if ep.source.exists() and ep.source.stat().st_mtime >= raw.stat().st_mtime:
+    if ep.source.exists() and ep.source.stat().st_mtime >= raw.stat().st_mtime and ep.format_file.exists():
         return ep.source
-    # ffmpeg auto-rotates on decode; scale only down into a 1920x1080 box.
-    vf = ("scale=w='min(1920,iw)':h='min(1080,ih)':force_original_aspect_ratio=decrease"
-          ":force_divisible_by=2,fps=30,format=yuv420p")
-    run_ffmpeg(["-i", str(raw), "-vf", vf, "-c:v", "libx264", "-crf", "18", "-preset", "fast",
-                "-c:a", "aac", "-ar", "48000", "-b:a", "192k",
-                "-metadata:s:v", "rotate=0", str(ep.source)])
+    info = probe(raw)
+    fmt = decide_format(info)
+    # ffmpeg auto-rotates on decode. Only scale down to fit the canvas; never re-sample needlessly.
+    vf = [f"scale=w='min({fmt.width},iw)':h='min({fmt.height},ih)':force_original_aspect_ratio=decrease"
+          ":force_divisible_by=2"]
+    if info.color_transfer in HDR_TRANSFERS:
+        vf.insert(0, TONEMAP)
+    vf += [f"fps={fmt.fps}", "format=yuv420p"]
+    run_ffmpeg(["-i", str(raw), "-vf", ",".join(vf), *INTERMEDIATE,
+                "-color_primaries", "bt709", "-color_trc", "bt709", "-colorspace", "bt709",
+                "-c:a", "aac", "-ar", "48000", "-b:a", "192k", "-metadata:s:v", "rotate=0", str(ep.source)])
+    save_format(ep, fmt)
     return ep.source

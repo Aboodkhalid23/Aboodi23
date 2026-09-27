@@ -35,6 +35,8 @@ class Episode:
     @property
     def credits(self) -> Path: return self.edit / "credits.txt"
     @property
+    def format_file(self) -> Path: return self.work / "format.json"
+    @property
     def final(self) -> Path: return self.edit / "final.mp4"
 
     def ensure(self) -> "Episode":
