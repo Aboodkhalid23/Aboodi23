@@ -13,9 +13,11 @@ class Format:
     fps: int
 
 
-def decide_format(info: MediaInfo) -> Format:
+def decide_format(info: MediaInfo, max_height: int | None = None) -> Format:
     h = info.height if info.width >= info.height else 0
     height = 2160 if h >= 2160 else 1440 if h >= 1440 else 1080
+    if max_height:
+        height = max(1080, min(height, max_height))
     return Format(height * 16 // 9, height, 60 if info.fps >= 50 else 30)
 
 

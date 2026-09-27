@@ -103,3 +103,17 @@ def test_drop_retakes_logs_dropped():
     drop_retakes([phrase("شركة ايفرغراند كانت", 0, 2), phrase("شركة ايفرغراند كانت أكبر شركة", 3, 6)],
                  dropped=dropped)
     assert [" ".join(w.text for w in p) for p in dropped] == ["شركة ايفرغراند كانت"]
+
+
+def test_clean_with_script_drops_retake_then_corrects(talking_video, tmp_path):
+    """C1/I2: retakes are decided on heard words; the script only fixes the kept take's text."""
+    ep = Episode(tmp_path / "ep").ensure()
+    fetch(str(talking_video), ep)
+    save_words(phrase("شركه ايفر غراند كانت", 0, 2) + phrase("شركه ايفر غراند كانت اكبر شركه", 4, 9), ep.transcript)
+    script = tmp_path / "04-script.md"
+    script.write_text("شركة إيفرغراند كانت أكبر شركة", encoding="utf-8")
+    clean(ep, script=script)
+    cuts = json.loads(ep.cuts.read_text())
+    assert cuts[0][0] >= 3.8
+    assert [w.text for w in load_words(ep.clean_words)] == ["شركة", "إيفرغراند", "كانت", "أكبر", "شركة"]
+    assert json.loads((ep.work / "align.json").read_text())["ratio"] == 1.0

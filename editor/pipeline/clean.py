@@ -1,6 +1,7 @@
 """Stage 3: drop silences and retakes; build the cleaned video."""
 import json
 import re
+from pathlib import Path
 
 from .fmt import load_format
 from .media import probe, run_ffmpeg
@@ -92,7 +93,7 @@ def snap_to_frames(segments: list[tuple[float, float]], fps: int = 30) -> list[t
     return out
 
 
-def clean(ep: Episode) -> float:
+def clean(ep: Episode, script: Path | None = None) -> float:
     words = load_words(ep.transcript)
     duration = probe(ep.source).duration
     dropped: list = []
@@ -104,7 +105,11 @@ def clean(ep: Episode) -> float:
     spf = 48000 // fps
     segs = snap_to_frames(keep_segments(kept, duration=duration), fps)
     ep.cuts.write_text(json.dumps(segs), encoding="utf-8")
-    save_words(remap_words(words, segs), ep.clean_words)
+    kept_words = [w for p in kept for w in p]
+    if script:  # Iraqi dialect: correct the words we keep from the script the owner read
+        from .align import align_to_script
+        kept_words = align_to_script(ep, kept_words, script)
+    save_words(remap_words(kept_words, segs), ep.clean_words)
 
     parts, labels = [], []
     for i, (s, e) in enumerate(segs):
@@ -117,6 +122,6 @@ def clean(ep: Episode) -> float:
     script = ep.work / "clean_filter.txt"
     script.write_text(graph, encoding="utf-8")
     run_ffmpeg(["-i", str(ep.source), "-filter_complex_script", str(script),
-                "-map", "[v]", "-map", "[a]", "-r", str(fps), "-c:v", "libx264", "-crf", "10",
+                "-map", "[v]", "-map", "[a]", "-r", str(fps), "-c:v", "libx264", "-crf", "14",
                 "-preset", "veryfast", "-c:a", "aac", "-b:a", "192k", str(ep.clean_video)])
     return sum(e - s for s, e in segs)

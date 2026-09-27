@@ -5,7 +5,7 @@ import os
 import shutil
 import sys
 
-from .align import align, find_script
+from .align import find_script
 from .brief import write_brief
 from .chapters import write_chapters
 from .clean import clean
@@ -28,7 +28,7 @@ def st_fetch(ep, a):
     if not a.source:
         raise MediaError("لازم تنطي --source (رابط درايف أو مسار الفيديو)")
     print("⬇️  أسحب الفيديو وأوحّده…", flush=True)
-    fetch(a.source, ep)
+    fetch(a.source, ep, max_height=a.max_height)
 
 
 def st_transcribe(ep, a):
@@ -38,17 +38,13 @@ def st_transcribe(ep, a):
         shutil.copyfile(fake, ep.transcript)
     else:
         transcribe(ep)
-    script = a.script or find_script(ep)
-    if script:
-        print(f"🗣️  أصحح اللهجة من السكربت: {script}", flush=True)
-        align(ep, script)
-    else:
-        print("   ما لگيت سكربت للحلقة، التفريغ يبقى بدون تصحيح")
 
 
 def st_clean(ep, a):
     print("✂️  أشيل السكتات والإعادات…", flush=True)
-    print(f"   الفيديو صار {clean(ep):.1f} ثانية")
+    script = a.script or find_script(ep)
+    print(f"🗣️  أصحح اللهجة من السكربت: {script}" if script else "   ما لگيت سكربت، التفريغ يبقى بدون تصحيح")
+    print(f"   الفيديو صار {clean(ep, script=script):.1f} ثانية")
 
 
 def st_brief(ep, a):
@@ -103,6 +99,7 @@ def main(argv=None):
     p.add_argument("episode")
     p.add_argument("--source")
     p.add_argument("--script", help="سكربت الحلقة لتصحيح التفريغ")
+    p.add_argument("--max-height", type=int, choices=[1080, 1440, 2160], help="أعلى دقة (أصغر = أسرع)")
     p.add_argument("--preview", action="store_true", help="نسخة معاينة سريعة 640×360")
     p.add_argument("--max-mb", type=float, help="اضغط الفيديو بس إذا عبر هذا الحجم")
     a = p.parse_args(argv)

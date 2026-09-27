@@ -74,3 +74,21 @@ def test_fetch_tonemaps_hdr(tmp_path):
     trc = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v", "-show_entries", "stream=color_transfer",
                           "-of", "csv=p=0", str(out)], capture_output=True, text=True).stdout.strip()
     assert trc == "bt709"
+
+
+def test_fetch_refuses_when_disk_is_too_small(talking_video, tmp_path, monkeypatch):
+    """I4: stop early with an Arabic message instead of filling the disk for hours."""
+    import shutil
+    from collections import namedtuple
+    Usage = namedtuple("Usage", "total used free")
+    monkeypatch.setattr(shutil, "disk_usage", lambda p: Usage(10**9, 10**9, 10**6))
+    ep = Episode(tmp_path / "ep").ensure()
+    with pytest.raises(MediaError) as err:
+        fetch(str(talking_video), ep)
+    assert "مساحة" in str(err.value)
+
+
+def test_fetch_removes_raw_copy(talking_video, tmp_path):
+    ep = Episode(tmp_path / "ep").ensure()
+    fetch(str(talking_video), ep)
+    assert not list(ep.work.glob("raw*"))

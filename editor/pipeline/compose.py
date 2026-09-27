@@ -154,12 +154,10 @@ def compose(ep: Episode, preview: bool = False) -> Path:
 
     listing = cv.work / "concat.txt"
     listing.write_text("".join(f"file '{c.resolve()}'\n" for c in clips), encoding="utf-8")
-    video = cv.work / "video.mp4"
-    run_ffmpeg(["-f", "concat", "-safe", "0", "-i", str(listing), "-c", "copy", str(video)])
     audio = cv.work / "audio.m4a"
     total_frames = round(plan.beats[-1].end * cv.fps) - round(plan.beats[0].start * cv.fps)
     _build_audio(ep, teaser, total_frames / cv.fps, audio)
     final = ep.edit / "preview.mp4" if preview else ep.final
-    run_ffmpeg(["-i", str(video), "-i", str(audio), "-map", "0:v", "-map", "1:a",
+    run_ffmpeg(["-f", "concat", "-safe", "0", "-i", str(listing), "-i", str(audio), "-map", "0:v", "-map", "1:a",
                 "-c", "copy", "-movflags", "+faststart", str(final)])
     return final
