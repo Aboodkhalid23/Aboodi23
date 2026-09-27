@@ -17,7 +17,8 @@ def phrase(text, start, end):
 
 def speech(*spans):
     """One 1-second word per second inside each (start, end) span."""
-    return [w for a, b in spans for w in phrase(" ".join(["كلمة"] * int(b - a)), a, b)]
+    return [w for n, (a, b) in enumerate(spans)
+            for w in phrase(" ".join(f"كلمة{n}{i}" for i in range(int(b - a))), a, b)]
 
 
 def test_normalize_ar():
@@ -60,6 +61,7 @@ def test_clean_video_duration_matches_segments(talking_video, tmp_path):
     fetch(str(talking_video), ep)
     save_words(speech((0, 4), (7, 12), (13, 20)), ep.transcript)
     total = clean(ep)
+    assert total == pytest.approx(16.48, abs=0.01)
     cuts = json.loads(ep.cuts.read_text())
     assert total == pytest.approx(sum(e - s for s, e in cuts), abs=0.01)
     assert probe(ep.clean_video).duration == pytest.approx(total, abs=0.1)
