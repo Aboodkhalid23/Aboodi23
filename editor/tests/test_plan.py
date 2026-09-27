@@ -116,4 +116,4 @@ def test_brief_splits_long_phrases_into_short_lines(tmp_path):
     save_words([Word(f"ك{i}", i * 0.5, i * 0.5 + 0.45) for i in range(40)], ep.clean_words)
     lines = [ln for ln in write_brief(ep, "vox: x").read_text(encoding="utf-8").splitlines() if ln.startswith("[")]
     assert len(lines) == 4
-    assert lines[0].startswith("[00:00.0–00:04.9]")
+    assert lines[0].startswith("[00:00.0–00:05.0]")  # 4.95 s shown at 1 decimal
