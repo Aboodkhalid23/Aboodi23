@@ -1,6 +1,7 @@
 """Stage 5: free, properly licensed images from Wikimedia Commons."""
 import json
 import re
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -13,6 +14,19 @@ from .styles import load_style
 API = "https://commons.wikimedia.org/w/api.php"
 HEADERS = {"User-Agent": "Aboodi23-editor/0.1 (github.com/Aboodkhalid23/Aboodi23)"}
 MIN_WIDTH = 1280
+RETRIES = 4
+
+
+def _get(session, url, **kw):
+    """GET that honours Wikimedia's 429 Retry-After (shared cloud IPs hit the anonymous limit)."""
+    for attempt in range(RETRIES):
+        resp = session.get(url, headers=HEADERS, timeout=60, **kw)
+        if resp.status_code != 429:
+            resp.raise_for_status()
+            return resp
+        time.sleep(min(60, int(resp.headers.get("Retry-After", 5 * (attempt + 1)))))
+    resp.raise_for_status()
+    return resp
 
 
 @dataclass
@@ -42,8 +56,7 @@ def search_commons(query: str, limit: int = 8, session=None) -> list[CommonsImag
     params = {"action": "query", "generator": "search", "gsrsearch": query, "gsrnamespace": 6,
               "gsrlimit": limit, "prop": "imageinfo", "iiprop": "url|size|extmetadata",
               "iiurlwidth": 1920, "format": "json"}
-    resp = session.get(API, params=params, headers=HEADERS, timeout=30)
-    resp.raise_for_status()
+    resp = _get(session, API, params=params)
     pages = (resp.json().get("query") or {}).get("pages", {})
     out = []
     for p in sorted(pages.values(), key=lambda p: p.get("index", 0)):
@@ -70,8 +83,7 @@ def collect_images(plan: EditPlan, ep: Episode, session=None) -> EditPlan:
             img = next((c for c in search_commons(b.query, session=session) if c.title not in used), None)
             if img:
                 ext = Path(img.url.split("?")[0]).suffix.lower() or ".jpg"
-                data = session.get(img.url, headers=HEADERS, timeout=60)
-                data.raise_for_status()
+                data = _get(session, img.url)
                 (ep.assets / f"img_{i}{ext}").write_bytes(data.content)
         except requests.RequestException as exc:
             img, reason = None, f"network: {exc}"

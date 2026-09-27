@@ -18,6 +18,7 @@ def page(title, width, license_, url):
 class Resp:
     def __init__(self, data=None, content=b"img"):
         self._data, self.content = data, content
+        self.status_code, self.headers = 200, {}
 
     def json(self):
         return self._data
@@ -87,3 +88,27 @@ def test_no_duplicate_images(tmp_path):
     ep = Episode(tmp_path / "ep").ensure()
     plan = collect_images(make_plan(2), ep, session=FakeSession(PAGES))
     assert [b.kind for b in plan.beats if b.query] == ["image", "graphic"]
+
+
+class RateLimitedSession(FakeSession):
+    """First API call answers 429 with Retry-After, then behaves normally."""
+    def __init__(self, pages):
+        super().__init__(pages)
+        self.limited = True
+
+    def get(self, url, params=None, headers=None, timeout=None):
+        if params and self.limited:
+            self.limited = False
+            r = Resp()
+            r.status_code, r.headers = 429, {"Retry-After": "3"}
+            return r
+        return super().get(url, params, headers, timeout)
+
+
+def test_search_waits_and_retries_on_429(monkeypatch):
+    import editor.pipeline.wikimedia as wm
+    waits = []
+    monkeypatch.setattr(wm.time, "sleep", waits.append)
+    found = search_commons("Evergrande", session=RateLimitedSession(PAGES))
+    assert [i.title for i in found] == ["File:Good.jpg"]
+    assert 3 in waits
