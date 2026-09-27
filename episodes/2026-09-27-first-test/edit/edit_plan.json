@@ -1,0 +1,204 @@
+{
+ "style": {
+  "primary": "vox",
+  "sections": []
+ },
+ "style_reason": "اكتشاف علمي بيه صور وأرقام، يناسب ستايل Vox الهادئ الذكي",
+ "teaser": [
+  [
+   7.4,
+   9.4
+  ],
+  [
+   24.9,
+   27.2
+  ],
+  [
+   46.9,
+   48.95
+  ]
+ ],
+ "beats": [
+  {
+   "start": 0,
+   "end": 2.0,
+   "zone": "hook",
+   "kind": "face_zoom_in"
+  },
+  {
+   "start": 2.0,
+   "end": 4.3,
+   "zone": "hook",
+   "kind": "graphic",
+   "graphic": {
+    "type": "text",
+    "text": "مثل مفتاح الكهرباء؟"
+   }
+  },
+  {
+   "start": 4.3,
+   "end": 6.35,
+   "zone": "hook",
+   "kind": "face_zoom_out"
+  },
+  {
+   "start": 6.35,
+   "end": 8.6,
+   "zone": "hook",
+   "kind": "graphic",
+   "query": "Neuron",
+   "caption": "خلية عصبية",
+   "graphic": {
+    "type": "text",
+    "text": "خلية عصبية"
+   }
+  },
+  {
+   "start": 8.6,
+   "end": 10.6,
+   "zone": "hook",
+   "kind": "graphic",
+   "graphic": {
+    "type": "text",
+    "text": "قطة… لو كلب؟"
+   }
+  },
+  {
+   "start": 10.6,
+   "end": 12.6,
+   "zone": "hook",
+   "kind": "image",
+   "query": "Dog",
+   "caption": "كلب",
+   "treatment": "paper_cutout"
+  },
+  {
+   "start": 12.6,
+   "end": 14.6,
+   "zone": "hook",
+   "kind": "face_zoom_in"
+  },
+  {
+   "start": 14.6,
+   "end": 16.6,
+   "zone": "hook",
+   "kind": "graphic",
+   "graphic": {
+    "type": "number",
+    "value": 1,
+    "label": "خلية عصبية بس"
+   }
+  },
+  {
+   "start": 16.6,
+   "end": 18.6,
+   "zone": "hook",
+   "kind": "face"
+  },
+  {
+   "start": 18.6,
+   "end": 20.6,
+   "zone": "hook",
+   "kind": "image",
+   "query": "Hebrew University Jerusalem",
+   "caption": "الجامعة العبرية",
+   "treatment": "paper_cutout"
+  },
+  {
+   "start": 20.6,
+   "end": 22.6,
+   "zone": "hook",
+   "kind": "graphic",
+   "graphic": {
+    "type": "text",
+    "text": "قبل أسابيع بس"
+   }
+  },
+  {
+   "start": 22.6,
+   "end": 24.6,
+   "zone": "hook",
+   "kind": "face_zoom_out"
+  },
+  {
+   "start": 24.6,
+   "end": 26.6,
+   "zone": "hook",
+   "kind": "graphic",
+   "query": "Pyramidal neuron",
+   "caption": "الخلية العصبية",
+   "graphic": {
+    "type": "text",
+    "text": "الخلية العصبية"
+   }
+  },
+  {
+   "start": 26.6,
+   "end": 28.6,
+   "zone": "hook",
+   "kind": "face_zoom_in"
+  },
+  {
+   "start": 28.6,
+   "end": 30.6,
+   "zone": "hook",
+   "kind": "face"
+  },
+  {
+   "start": 30.6,
+   "end": 35.6,
+   "zone": "body",
+   "kind": "image",
+   "query": "Light switch",
+   "caption": "مفتاح كهرباء",
+   "treatment": "paper_cutout"
+  },
+  {
+   "start": 35.6,
+   "end": 40.6,
+   "zone": "body",
+   "kind": "face_framed"
+  },
+  {
+   "start": 40.6,
+   "end": 45.6,
+   "zone": "body",
+   "kind": "image",
+   "query": "Artificial neural network",
+   "caption": "شبكة عصبية اصطناعية",
+   "treatment": "paper_cutout"
+  },
+  {
+   "start": 45.6,
+   "end": 50.4,
+   "zone": "body",
+   "kind": "face_zoom_in"
+  },
+  {
+   "start": 50.4,
+   "end": 55.42,
+   "zone": "body",
+   "kind": "graphic",
+   "graphic": {
+    "type": "quote",
+    "text": "الخلية الحقيقية أعقد بكثير مما نتصور",
+    "who": "نتيجة التجربة"
+   }
+  }
+ ],
+ "shorts": [],
+ "chapters": [
+  {
+   "t": 0,
+   "title": "خلية وحدة؟"
+  },
+  {
+   "t": 12.0,
+   "title": "الاكتشاف"
+  },
+  {
+   "t": 24.9,
+   "title": "مو مجرد مفتاح كهرباء"
+  }
+ ]
+}
