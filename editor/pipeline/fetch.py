@@ -15,6 +15,14 @@ INTERMEDIATE = ["-c:v", "libx264", "-crf", "14", "-preset", "veryfast"]  # visua
 DRIVE_RE = re.compile(r"^https://(drive|docs)\.google\.com/")
 
 
+_DRIVE_ID = re.compile(r"(?:/d/|[?&]id=)([A-Za-z0-9_-]{20,})")
+
+
+def _drive_id(url: str) -> str | None:
+    m = _DRIVE_ID.search(url)
+    return m.group(1) if m else None
+
+
 def _download_drive(url: str, work: Path) -> Path:
     import gdown
 
@@ -25,7 +33,10 @@ def _download_drive(url: str, work: Path) -> Path:
             if not videos:
                 raise MediaError("الفولدر بدرايف ما بيه فيديو")
             return max(videos, key=lambda p: p.stat().st_size)
-        out = gdown.download(url=url, output=str(work / "raw_download"), quiet=True, fuzzy=True)
+        fid = _drive_id(url)
+        if not fid:
+            raise MediaError("ما گدرت أقرا رابط درايف. دز رابط الملف نفسه (Share ← Copy link)")
+        out = gdown.download(id=fid, output=str(work / "raw_download"), quiet=True, retries=3)
     except MediaError:
         raise
     except Exception as exc:  # gdown raises many types for 403/404

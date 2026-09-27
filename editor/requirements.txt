@@ -1,5 +1,5 @@
 faster-whisper==1.2.1
-gdown>=5
+gdown>=6
 PyYAML>=6
 requests>=2.31
 pytest>=8

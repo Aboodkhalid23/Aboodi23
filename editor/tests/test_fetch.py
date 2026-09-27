@@ -92,3 +92,12 @@ def test_fetch_removes_raw_copy(talking_video, tmp_path):
     ep = Episode(tmp_path / "ep").ensure()
     fetch(str(talking_video), ep)
     assert not list(ep.work.glob("raw*"))
+
+
+def test_drive_file_id_from_share_links():
+    """gdown 6 dropped fuzzy URL parsing, so we extract the file id ourselves."""
+    from editor.pipeline.fetch import _drive_id
+    fid = "1GL6NmrF47tWB08lc4vPwaxQ0-L4uhupk"
+    assert _drive_id(f"https://drive.google.com/file/d/{fid}/view?usp=drivesdk") == fid
+    assert _drive_id(f"https://drive.google.com/open?id={fid}") == fid
+    assert _drive_id(f"https://drive.google.com/uc?export=download&id={fid}") == fid
