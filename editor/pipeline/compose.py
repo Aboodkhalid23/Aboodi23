@@ -30,6 +30,16 @@ class Canvas:
         return f"scale={w}:{h}:force_original_aspect_ratio=decrease,pad={w}:{h}:(ow-iw)/2:(oh-ih)/2,setsar=1"
 
     @property
+    def face_fit(self) -> str:
+        """Fit the face video; if it is narrower than the canvas (vertical phone video), fill the
+        sides with a blurred, zoomed copy of the same frame instead of black bars."""
+        w, h = self.width, self.height
+        return (f"split=2[fg][bg];[bg]scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},"
+                f"boxblur=luma_radius=40:luma_power=2,eq=brightness=-0.08[bgb];"
+                f"[fg]scale={w}:{h}:force_original_aspect_ratio=decrease[fgs];"
+                f"[bgb][fgs]overlay=(W-w)/2:(H-h)/2,setsar=1")
+
+    @property
     def frame_box(self) -> tuple[int, int, int, int]:
         w, h = round(self.width * FRAME / 2) * 2, round(self.height * FRAME / 2) * 2
         return w, h, (self.width - w) // 2, (self.height - h) // 2
@@ -71,12 +81,12 @@ def _face_filter(kind: str, dur: float, cv: Canvas) -> str:
     if kind in ("face_zoom_in", "face_zoom_out"):
         z0, z1 = (1.0, 1.0 + ZOOM) if kind == "face_zoom_in" else (1.0 + ZOOM, 1.0)
         z = f"({z0}+({z1}-{z0})*t/{dur:.3f})"
-        return (f"{cv.fit},scale=w='trunc({W}*{z}/2)*2':h=-2:eval=frame,"
+        return (f"{cv.face_fit},scale=w='trunc({W}*{z}/2)*2':h=-2:eval=frame,"
                 f"crop={W}:{H}:(iw-{W})/2:(ih-{H})*{FOCUS_Y}")
     if kind == "face_framed":
         w, h, _, _ = cv.frame_box
         return f"scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h}"
-    return cv.fit
+    return cv.face_fit
 
 
 def _face_clip(ep: Episode, beat: Beat, frames: int, teaser, out: Path, frame_bg: Path | None,

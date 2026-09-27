@@ -130,3 +130,20 @@ def test_compose_4k_canvas(tmp_path):
     assert (info.width, info.height, info.fps) == (3840, 2160, 30)
     g = probe(ep.work / "beat_1.mp4")
     assert (g.width, g.height) == (3840, 2160)
+
+
+@pytest.mark.slow
+def test_portrait_face_has_blurred_sides_not_black(tmp_path):
+    """Vertical phone footage in a 16:9 episode: sides are a blurred copy, never black bars."""
+    from .test_fetch import synth
+    ep = Episode(tmp_path / "ep").ensure()
+    fetch(str(synth(tmp_path / "portrait.mp4", size="720x1280", dur=4)), ep)
+    save_words(speech((0, 4)), ep.transcript)
+    total = clean(ep)
+    save_plan(EditPlan({"primary": "vox", "sections": []}, "", [],
+                       [Beat(0, 2, "hook", "face"), Beat(2, round(total, 3), "hook", "face_zoom_in")]), ep.plan)
+    final = compose(ep)
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", "1", "-i", str(final), "-frames:v", "1",
+                          "-vf", "crop=200:1080:0:0,scale=1:1:flags=area", "-f", "rawvideo", "-pix_fmt", "gray", "-"],
+                         capture_output=True, check=True).stdout
+    assert raw[0] > 30  # left strip is picture, not a black bar
