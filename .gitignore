@@ -2,3 +2,15 @@
 .env
 **/.env
 *.key
+
+# المونتير: فيديوهات وملفات ثقيلة — ما تنرفع (الريبو عام)
+*.mp4
+*.mov
+*.wav
+*.m4a
+episodes/*/edit/assets/
+episodes/*/edit/work/
+editor/remotion/node_modules/
+editor/remotion/out/
+__pycache__/
+.pytest_cache/
