@@ -65,12 +65,19 @@ def st_images(ep, a):
 
 
 def st_compose(ep, a):
-    print("🎬 أركّب الفيديو النهائي…", flush=True)
+    if a.preview:
+        print("👀 أركّب نسخة معاينة سريعة (جودة واطية)…", flush=True)
+        print(f"📦 المعاينة جاهزة: {compose(ep, preview=True)}")
+        return
+    print("🎬 أركّب الفيديو النهائي بالجودة الكاملة…", flush=True)
     compose(ep)
 
 
 def st_deliver(ep, a):
-    print(f"📦 جاهز: {prepare_delivery(ep)}")
+    if a.preview:
+        return
+    out = prepare_delivery(ep, a.max_mb)
+    print(f"📦 جاهز: {out} ({out.stat().st_size / 1e6:.0f} ميگا)")
 
 
 STAGES = {"fetch": [st_fetch], "transcribe": [st_transcribe], "clean": [st_clean], "brief": [st_brief],
@@ -84,6 +91,8 @@ def main(argv=None):
     p.add_argument("stage", choices=STAGES)
     p.add_argument("episode")
     p.add_argument("--source")
+    p.add_argument("--preview", action="store_true", help="نسخة معاينة سريعة 640×360")
+    p.add_argument("--max-mb", type=float, help="اضغط الفيديو بس إذا عبر هذا الحجم")
     a = p.parse_args(argv)
     ep = Episode(a.episode).ensure()
     try:

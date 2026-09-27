@@ -56,7 +56,7 @@ def _remotion(cmd: str, comp: str, out: Path, props: dict, bundle: Path, extra: 
 
 
 def render_graphic(beat: Beat, style: Style, out: Path, public_dir: Path | None = None,
-                   index: int | None = None, bundle: Path | None = None) -> Path:
+                   index: int | None = None, bundle: Path | None = None, scale: float = 1.0) -> Path:
     """`image` beats read assets/img_<index>.* from `public_dir` (the episode's assets folder)."""
     props = {"style": _style_props(style), "durationSec": round(beat.duration, 3)}
     if beat.kind == "image":
@@ -72,9 +72,9 @@ def render_graphic(beat: Beat, style: Style, out: Path, public_dir: Path | None 
         comp = g.pop("type")
         props.update(g)
     return _remotion("render", comp, out, props, bundle or ensure_bundle(),
-                     ["--codec=h264", "--crf=18", "--concurrency=4", "--muted"])
+                     ["--codec=h264", "--crf=10", "--concurrency=4", "--muted", f"--scale={scale!r}"])
 
 
-def render_face_frame_bg(style: Style, out_png: Path, bundle: Path | None = None) -> Path:
+def render_face_frame_bg(style: Style, out_png: Path, bundle: Path | None = None, scale: float = 1.0) -> Path:
     props = {"style": _style_props(style), "durationSec": 1}
-    return _remotion("still", "face-frame-bg", out_png, props, bundle or ensure_bundle(), [])
+    return _remotion("still", "face-frame-bg", out_png, props, bundle or ensure_bundle(), [f"--scale={scale!r}"])

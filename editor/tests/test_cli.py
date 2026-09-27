@@ -78,3 +78,9 @@ def test_prepare_delivery_single_pass_fits(talking_video, tmp_path, monkeypatch)
     assert len(calls) == 1
     assert "veryfast" in calls[0]
     assert out.stat().st_size <= target * 1e6
+
+
+def test_delivery_untouched_by_default(talking_video, tmp_path):
+    ep = Episode(tmp_path / "ep").ensure()
+    shutil.copyfile(talking_video, ep.final)
+    assert prepare_delivery(ep, max_mb=None) == ep.final

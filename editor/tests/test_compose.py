@@ -92,3 +92,40 @@ def test_beat_outside_clean_video_raises(tmp_path):
     from editor.pipeline.media import MediaError
     with pytest.raises(MediaError):
         _face_clip(Episode(tmp_path), Beat(5, 5, "body", "face"), 0, [], tmp_path / "x.mp4", None)
+
+
+@pytest.mark.slow
+def test_preview_is_small_and_separate(composed):
+    ep, total = composed
+    full_clip = ep.work / "beat_0.mp4"
+    before = full_clip.stat().st_mtime
+    out = compose(ep, preview=True)
+    info = probe(out)
+    assert out == ep.edit / "preview.mp4"
+    assert (info.width, info.height) == (640, 360)
+    assert info.duration == pytest.approx(total, abs=0.1)
+    assert (ep.work / "preview" / "beat_0.mp4").exists()
+    assert full_clip.stat().st_mtime == before
+
+
+@pytest.mark.slow
+def test_final_is_single_high_quality_encode(composed):
+    ep, _ = composed
+    assert b"crf=16.0" in (ep.work / "beat_0.mp4").read_bytes()[:200000]
+    assert b"crf=10.0" in ep.clean_video.read_bytes()[:200000]
+
+
+@pytest.mark.slow
+def test_compose_4k_canvas(tmp_path):
+    from .test_fetch import synth
+    ep = Episode(tmp_path / "ep").ensure()
+    fetch(str(synth(tmp_path / "4k.mp4", dur=4)), ep)
+    save_words(speech((0, 4)), ep.transcript)
+    total = clean(ep)
+    beats = [Beat(0, 1.5, "hook", "face"), Beat(1.5, 3.0, "hook", "graphic", graphic={"type": "text", "text": "4K"}),
+             Beat(3.0, round(total, 3), "hook", "face_zoom_in")]
+    save_plan(EditPlan({"primary": "vox", "sections": []}, "", [], beats), ep.plan)
+    info = probe(compose(ep))
+    assert (info.width, info.height, info.fps) == (3840, 2160, 30)
+    g = probe(ep.work / "beat_1.mp4")
+    assert (g.width, g.height) == (3840, 2160)

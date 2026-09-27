@@ -2,6 +2,7 @@
 import json
 import re
 
+from .fmt import load_format
 from .media import probe, run_ffmpeg
 from .paths import Episode
 from .transcribe import Word, load_words, save_words
@@ -81,17 +82,13 @@ def remap_words(words: list[Word], segments: list[tuple[float, float]]) -> list[
     return out
 
 
-FPS = 30                   # fetch() normalizes to 30 fps / 48 kHz
-SAMPLES_PER_FRAME = 48000 // FPS
-
-
-def snap_to_frames(segments: list[tuple[float, float]]) -> list[tuple[float, float]]:
+def snap_to_frames(segments: list[tuple[float, float]], fps: int = 30) -> list[tuple[float, float]]:
     """Cut on frame boundaries so video and audio pieces are exactly the same length."""
     out = []
     for s, e in segments:
-        f0, f1 = round(s * FPS), round(e * FPS)
+        f0, f1 = round(s * fps), round(e * fps)
         if f1 > f0:
-            out.append((f0 / FPS, f1 / FPS))
+            out.append((f0 / fps, f1 / fps))
     return out
 
 
@@ -103,21 +100,23 @@ def clean(ep: Episode) -> float:
     (ep.work / "retakes.json").write_text(json.dumps(
         [{"start": p[0].start, "end": p[-1].end, "text": " ".join(w.text for w in p)} for p in dropped],
         ensure_ascii=False, indent=1), encoding="utf-8")
-    segs = snap_to_frames(keep_segments(kept, duration=duration))
+    fps = load_format(ep).fps  # fetch() normalized to this fps and 48 kHz audio
+    spf = 48000 // fps
+    segs = snap_to_frames(keep_segments(kept, duration=duration), fps)
     ep.cuts.write_text(json.dumps(segs), encoding="utf-8")
     save_words(remap_words(words, segs), ep.clean_words)
 
     parts, labels = [], []
     for i, (s, e) in enumerate(segs):
-        f0, f1 = round(s * FPS), round(e * FPS)
+        f0, f1 = round(s * fps), round(e * fps)
         parts.append(f"[0:v]trim=start_frame={f0}:end_frame={f1},setpts=PTS-STARTPTS[v{i}];"
-                     f"[0:a]atrim=start_sample={f0 * SAMPLES_PER_FRAME}:end_sample={f1 * SAMPLES_PER_FRAME},"
+                     f"[0:a]atrim=start_sample={f0 * spf}:end_sample={f1 * spf},"
                      f"asetpts=PTS-STARTPTS[a{i}];")
         labels.append(f"[v{i}][a{i}]")
     graph = "".join(parts) + "".join(labels) + f"concat=n={len(segs)}:v=1:a=1[v][a]"
     script = ep.work / "clean_filter.txt"
     script.write_text(graph, encoding="utf-8")
     run_ffmpeg(["-i", str(ep.source), "-filter_complex_script", str(script),
-                "-map", "[v]", "-map", "[a]", "-r", "30", "-c:v", "libx264", "-crf", "18",
-                "-preset", "fast", "-c:a", "aac", "-b:a", "192k", str(ep.clean_video)])
+                "-map", "[v]", "-map", "[a]", "-r", str(fps), "-c:v", "libx264", "-crf", "10",
+                "-preset", "veryfast", "-c:a", "aac", "-b:a", "192k", str(ep.clean_video)])
     return sum(e - s for s, e in segs)

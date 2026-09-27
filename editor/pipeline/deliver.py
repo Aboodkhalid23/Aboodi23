@@ -8,8 +8,9 @@ AUDIO_KBPS = 192
 SAFETY = 0.92  # container overhead + encoder overshoot
 
 
-def prepare_delivery(ep: Episode, max_mb: float = 1024) -> Path:
-    if ep.final.stat().st_size <= max_mb * 1e6:
+def prepare_delivery(ep: Episode, max_mb: float | None = None) -> Path:
+    """The original file is delivered untouched; re-encode only when a size limit is given."""
+    if max_mb is None or ep.final.stat().st_size <= max_mb * 1e6:
         return ep.final
     small = ep.edit / "final_small.mp4"
     seconds = probe(ep.final).duration
