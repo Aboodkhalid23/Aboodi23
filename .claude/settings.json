@@ -20,6 +20,16 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "tail -n 45 \"$CLAUDE_PROJECT_DIR\"/MEMORY.md 2>/dev/null || true",
+            "timeout": 10
+          }
+        ]
       }
     ]
   }
