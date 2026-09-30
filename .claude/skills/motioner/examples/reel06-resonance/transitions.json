@@ -1,0 +1,86 @@
+[
+ {
+  "name": "hum to ping (shock ring)",
+  "start": 114,
+  "end": 150,
+  "kind": "flash"
+ },
+ {
+  "name": "pings rewind into SOUND",
+  "start": 226,
+  "end": 316,
+  "kind": "seamless"
+ },
+ {
+  "name": "SOUND flood to blue",
+  "start": 358,
+  "end": 396,
+  "kind": "flash"
+ },
+ {
+  "name": "SOUND melts into MOTION",
+  "start": 390,
+  "end": 430,
+  "kind": "morph"
+ },
+ {
+  "name": "push through the O into the scope",
+  "start": 448,
+  "end": 520,
+  "kind": "zoom"
+ },
+ {
+  "name": "scope zooms out to the whole film",
+  "start": 598,
+  "end": 664,
+  "kind": "seamless"
+ },
+ {
+  "name": "waveform bends into a ring",
+  "start": 658,
+  "end": 724,
+  "kind": "morph"
+ },
+ {
+  "name": "ring opens onto the plate",
+  "start": 716,
+  "end": 752,
+  "kind": "zoom"
+ },
+ {
+  "name": "plate registers into colour separation",
+  "start": 840,
+  "end": 1080,
+  "kind": "flash"
+ },
+ {
+  "name": "first world: window opens out of the plate",
+  "start": 1076,
+  "end": 1130,
+  "kind": "morph"
+ },
+ {
+  "name": "worlds shrink into letters (recap)",
+  "start": 1105,
+  "end": 1325,
+  "kind": "morph"
+ },
+ {
+  "name": "the name falls into its full stop (dive)",
+  "start": 1452,
+  "end": 1524,
+  "kind": "zoom"
+ },
+ {
+  "name": "the ping is struck again (flood to paper)",
+  "start": 1556,
+  "end": 1600,
+  "kind": "flash"
+ },
+ {
+  "name": "rings rewind onto the wordmark",
+  "start": 1650,
+  "end": 1740,
+  "kind": "seamless"
+ }
+]

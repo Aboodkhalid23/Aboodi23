@@ -98,3 +98,6 @@ BayramAnnakov/remotion-video-director  .  remotion-video-director
 # ألوان وشورتس
 kajisho5/color-grading-skill  .  color-grading
 AgriciDaniel/claude-shorts  .  claude-shorts
+
+# ذاكرة بين الجلسات (توفير توكينز)
+ssupppp/claude-session-memory  skills/session-memory

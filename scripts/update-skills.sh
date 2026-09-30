@@ -68,10 +68,10 @@ while read -r repo path name; do
   rm -rf "${DEST:?}/$name"
   mkdir -p "$DEST/$name"
   # فيديوهات العرض والملفات الجبيرة ما نحتاجها (الريبو عام ولازم يبقى خفيف)؛ الخطوط تبقى.
-  (cd "$src/$path" && tar --exclude=.git --exclude=.github --exclude=node_modules --exclude=gallery --exclude=demos --exclude=showcase \
+  (cd "$src/$path" && tar --exclude=.git --exclude=.github --exclude=node_modules --exclude=gallery --exclude=demos --exclude=showcase --exclude=videos \
       --exclude='*.mp4' --exclude='*.mov' --exclude='*.webm' --exclude='*.mkv' --exclude='*.gif' \
       -cf - .) | tar -xf - -C "$DEST/$name"
-  find "$DEST/$name" -type f -size +3M ! -iname '*.ttf' ! -iname '*.otf' ! -iname '*.woff*' -delete
+  find "$DEST/$name" -type f -size +1M ! -iname '*.ttf' ! -iname '*.otf' ! -iname '*.woff*' -delete
   cp -a "$keep/." "$DEST/$name/"
   awk -v n="$name" '$1!=n' "$LOCK" > "$LOCK.tmp"
   echo "$name $repo $new" >> "$LOCK.tmp"
