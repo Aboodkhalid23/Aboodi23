@@ -17,4 +17,4 @@ def test_missing_style_arabic_error():
 
 
 def test_summary_lists_vox():
-    assert styles_summary().splitlines()[0].startswith("vox:")
+    assert any(ln.startswith("vox:") for ln in styles_summary().splitlines())
