@@ -31,10 +31,10 @@ description: المونتير الآلي — يحوّل فيديو خام (صا�
    - **الدقة والوقت (قرار صاحب القناة، اسأله أول مرة):** 4K لحلقة 30 دقيقة ياخذ ساعات طويلة (4K 60 فريم ممكن 10 ساعات) ويحتاج مساحة كبيرة. `--max-height 1080` أسرع بـ 4 مرات تقريباً. إذا المساحة ما تكفي، البرنامج يوگف ويگول.
    - تصحيح اللهجة من السكربت يصير بمرحلة `clean` (بعد شيل الإعادات)، ونسبته تنكتب بـ `edit/work/align.json`.
 4. **اقرا** `edit/work/plan_input.txt` بس. وإذا الحلقة بيها `02-draft.md` أو سكربت نهائي، اقرا منه قسم الهوك بس.
-5. **الستايل:** بالجزء 1 `vox` بس. گله سطر واحد: "الستايل: Vox، لأن …".
+5. **الستايل:** **`retro-collage` لكل الحلقات** (قرار صاحب القناة، مسجل بـ `studio/channel.md`). لا تغيّره إلا إذا هو طلب.
 6. **اكتب** `edit/edit_plan.json` بهذا الشكل:
    ```json
-   {"style": {"primary": "vox", "sections": []}, "style_reason": "…",
+   {"style": {"primary": "retro-collage", "sections": []}, "style_reason": "…",
     "teaser": [[612.4, 614.3], [88.0, 90.1], [1302.5, 1304.6]],
     "beats": [{"start": 0.0, "end": 1.9, "zone": "hook", "kind": "image", "query": "Evergrande headquarters Shenzhen", "caption": "مقر إيفرغراند"},
               {"start": 1.9, "end": 3.8, "zone": "hook", "kind": "graphic", "graphic": {"type": "number", "value": 300000000000, "label": "دولار ديون"}}],
