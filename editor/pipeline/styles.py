@@ -25,7 +25,7 @@ class Style:
 
 
 def _style_files() -> list[Path]:
-    return sorted(p for p in STYLES_DIR.glob("*.md") if p.name not in ("README.md", "performance.md"))
+    return sorted(p for p in STYLES_DIR.glob("*.md") if p.name not in ("README.md", "performance.md", "channel-system.md"))
 
 
 def load_style(name: str) -> Style:
