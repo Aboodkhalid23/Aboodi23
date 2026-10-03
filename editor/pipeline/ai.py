@@ -12,7 +12,7 @@ from .paths import Episode
 from .plan import AI_KINDS, load_plan
 from .styles import load_style
 
-IMAGE_MODEL, VIDEO_MODEL = "nano_banana", "veo3_1_lite"   # cheapest that look good (≈0.25 / 6 credits)
+IMAGE_MODEL, VIDEO_MODEL = "nano_banana", "veo3_1_lite"   # good and cheap: ≈1 credit per image, 6 per 4 s clip
 EXT = {"image/png": ".png", "image/jpeg": ".jpg", "image/webp": ".webp", "video/mp4": ".mp4",
        "video/quicktime": ".mov", "video/webm": ".webm"}
 

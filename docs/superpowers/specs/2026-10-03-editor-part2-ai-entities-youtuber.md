@@ -11,7 +11,7 @@
 - الـ beat بيه `prompt` (إنگليزي، وصف المشهد) و`caption` (عربي، بديل إذا ما تولّد).
 - الكود يضيف لكل وصف `ai_suffix` الستايل، حتى كل الصور تطلع بنفس العالم البصري.
 - `python -m editor.pipeline ai-jobs <ep>` يكتب `work/ai_jobs.json`: لكل مشهد: الوصف الكامل، والنسبة 16:9، والمدة، ووين ينحفظ (`assets/ai_<i>.png|mp4`)، وهل موجود.
-- Claude يولّد (الصور: `nano_banana` تقريباً ربع رصيد. الفيديو: `veo3_1_lite` أو `kling3_0` بين 6 و 7.5 رصيد) ويسجّل بـ `edit/ai_ledger.json`.
+- Claude يولّد (الصور: `nano_banana` رصيد واحد، أو `z_image` 0.15 رصيد لستايل مرسوم. الفيديو: `veo3_1_lite` 6 رصيد لـ 4 ثواني، أو `kling3_0` 7.5 لـ 5 ثواني) ويسجّل بـ `edit/ai_ledger.json`.
 - `python -m editor.pipeline ai-fetch <ep> --beat <i> --url <رابط>` ينزّل الناتج ويتأكد منه (ffprobe).
 - التركيب:
   - الصورة: تنعرض بـ Remotion بمعالجة الستايل (كولاج ورق، أو تقريب بطيء).

@@ -56,3 +56,11 @@
 - **Artlist** مربوط (تجربة: صورتين وفيديو واحد ببلاش). بيه Veo 3.1، وSora 2، وKling، ومكتبة موسيقى مرخصة. الدفع الرسمي يبقى Higgsfield.
 - **vidIQ** رصيده صفر لحد 2026-10-07.
 - **ناقص:** مرحلة مشاهد الذكاء الاصطناعي بالمونتير (الجزء 2) ما انبنت: الفاحص يرفض `ai_image`/`ai_video`، وتنزيل الناتج للجهاز ما انجرب. نحتاج تجربة توليد وحدة رخيصة بإذن صاحب القناة.
+
+## 2026-10-03 · الجزء 2 من المونتير انبنى (مدفوع للفرع)
+- **جديد:** `ai_image`/`ai_video` (ai-jobs ← توليد Claude بـ Higgsfield بموافقة ← ai-fetch ← ai-log، و`ai_budget` بالخطة)؛ `entities.json` ← صور حقيقية من Wikidata/Commons + بطاقة `entity`؛ `face_fx` (subscribe، tv، none + stickers)؛ `face_punch`؛ تقريب يتحرك 0.8 ث ويثبت؛ `transition` (zoom/flash/whip/glitch)؛ مؤثرات مولّدة بالكود (`editor/sfx/`)؛ تنظيف صوت؛ موسيقى اختيارية `assets/music.*` تنخفض وقت الكلام؛ معالجة `engraving_in_circle`؛ 19 خط.
+- **التفريغ:** الأسماء تروح لـ Whisper كـ hotwords، والسكربت يغلب الاسم الي انلفظ غلط (عتبة 0.3)، و`work/align_report.txt`.
+- **القناة:** `editor/channel.json` (Abood khalid • عبدالله خالد، @Abood.khaliid23). عدد المشتركين ما ينعرض.
+- **أسعار Higgsfield:** صورة nano_banana = 1 رصيد، z_image = 0.15، فيديو veo3_1_lite 4 ث = 6، kling3_0 5 ث = 7.5. الحساب مجاني (10 رصيد)، وgpt_image_2_5 يحتاج اشتراك.
+- **ناقص:** تجربة توليد حقيقية وتنزيل الناتج (النظام يطلب موافقة صاحب القناة قبل أي صرف رصيد). الشورتس (الجزء 3). باقي مكوّنات `channel-system.md` قسم 5 (ArticleCard، CRTFrame، YearCard…).
+- 118 اختبار ناجح (`pytest -m "slow or not slow"`). تجربة على مقطع الخلية العصبية انرسلت إله (بدون ذكاء اصطناعي).
