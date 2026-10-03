@@ -13,7 +13,7 @@
 | **الألوان** | `color-grading` (يطبّق، مثل HDR وLUT والتصحيح) · `color-motion` (يقرر) |
 | **الصوت** | `sound-design` · `sound-design-film` (Walter Murch) · `yt-clean-audio` · `yt-suggest-sfx` · `remotion-sfx` |
 | **الفحص** | `video-qa` |
-| **الذكاء الاصطناعي (الجزء 2)** | `visual-image-prompts` · `visual-video-prompts` |
+| **الذكاء الاصطناعي (شغّال)** | `visual-image-prompts` · `visual-video-prompts` (الوصف) + Higgsfield (التوليد، بموافقة صاحب القناة) |
 | **الشورتس (الجزء 3)** | `claude-shorts` |
 | **أدوات** | `ffmpeg-recipes` |
 
