@@ -146,4 +146,4 @@ def test_portrait_face_has_blurred_sides_not_black(tmp_path):
     raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", "1", "-i", str(final), "-frames:v", "1",
                           "-vf", "crop=200:1080:0:0,scale=1:1:flags=area", "-f", "rawvideo", "-pix_fmt", "gray", "-"],
                          capture_output=True, check=True).stdout
-    assert raw[0] > 30  # left strip is picture, not a black bar
+    assert raw[0] > 15  # left strip is picture (darkened a little by the vignette), not a black bar

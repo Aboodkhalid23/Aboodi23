@@ -64,7 +64,8 @@ def test_collect_falls_back_to_text_graphic(tmp_path):
     ep = Episode(tmp_path / "ep").ensure()
     plan = collect_images(make_plan(), ep, session=FakeSession([]))
     assert plan.beats[1].kind == "graphic"
-    assert plan.beats[1].graphic == {"type": "text", "text": "مقر إيفرغراند"}  # I-3: Arabic caption, not the query
+    assert plan.beats[1].graphic["text"] == "مقر إيفرغراند"  # I-3: Arabic caption, not the query
+    assert plan.beats[1].graphic["variant"]                    # and the text card gets a look from the rotation
     assert len(json.loads(ep.fallbacks.read_text())) == 1
     assert load_plan(ep.plan).beats[1].kind == "graphic"
 

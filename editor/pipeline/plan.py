@@ -3,6 +3,8 @@ import json
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
+from .grade import LOOKS
+
 KINDS = ("face", "face_zoom_in", "face_zoom_out", "face_framed", "face_punch", "face_fx",
          "image", "ai_image", "ai_video", "graphic", "entity")
 FACE_KINDS = KINDS[:6]
@@ -34,6 +36,7 @@ class Beat:
     fx: str | None = None           # face_fx wrapper: subscribe | tv | none
     stickers: list | None = None    # [{"type": "stamp", "text": "...", "at": 0.5}] on face_fx beats
     transition: str | None = None   # entry effect on this beat: zoom | flash | whip | glitch
+    grade: str | None = None        # colour look for this beat's footage (overrides the plan's)
 
     @property
     def duration(self) -> float:
@@ -49,6 +52,8 @@ class EditPlan:
     shorts: list = field(default_factory=list)
     chapters: list[dict] = field(default_factory=list)  # [{"t": cleaned-timeline seconds, "title": str}]
     ai_budget: float = 0.0   # Higgsfield credits this episode may spend (edit/ai_ledger.json)
+    grade: str | None = None  # colour look for the whole episode (default: the style's)
+    music: list[dict] = field(default_factory=list)  # [{"t": final-timeline s, "prompt": ..., "mood": ...}]
 
     def chapter_times(self) -> list[float]:
         """Chapter starts on the final timeline: the first covers the teaser, the rest shift by it."""
@@ -64,7 +69,8 @@ def load_plan(path: Path) -> EditPlan:
     return EditPlan(style=d["style"], style_reason=d.get("style_reason", ""),
                     teaser=[tuple(t) for t in d.get("teaser", [])],
                     beats=[Beat(**b) for b in d["beats"]], shorts=d.get("shorts", []),
-                    chapters=d.get("chapters", []), ai_budget=d.get("ai_budget", 0.0))
+                    chapters=d.get("chapters", []), ai_budget=d.get("ai_budget", 0.0),
+                    grade=d.get("grade"), music=d.get("music", []))
 
 
 def save_plan(plan: EditPlan, path: Path) -> None:
@@ -108,6 +114,8 @@ def validate_plan(plan: EditPlan, clean_duration: float, entities: set[str] | No
             if b.kind != "face_fx" or s.get("type") not in STICKERS:
                 errs.append(f"beat {i}: الملصقات بس على face_fx، ونوعها من {', '.join(STICKERS)}")
                 break
+        if b.grade and b.grade not in LOOKS:
+            errs.append(f"beat {i}: grade لازم من {', '.join(LOOKS)}")
         if b.transition and b.transition not in TRANSITIONS:
             errs.append(f"beat {i}: transition لازم من {', '.join(TRANSITIONS)}")
         if b.start > prev_end + TOL:
@@ -144,6 +152,15 @@ def validate_plan(plan: EditPlan, clean_duration: float, entities: set[str] | No
             if times[i] - times[i - 1] < 10:
                 errs.append(f"chapter {i}: لازم يبعد 10 ثواني أو أكثر عن الي قبله")
 
+    if plan.grade and plan.grade not in LOOKS:
+        errs.append(f"grade: لازم من {', '.join(LOOKS)}")
+    for k, m in enumerate(plan.music):
+        if not (0 <= m.get("t", -1) < total and m.get("prompt")):
+            errs.append(f"music {k}: لازم t داخل الفيديو و prompt")
+        elif k and m["t"] - plan.music[k - 1]["t"] < 20:
+            errs.append(f"music {k}: لازم يبعد 20 ثانية أو أكثر عن الي قبله")
+    if plan.music and plan.music[0]["t"] != 0:
+        errs.append("music 0: أول موسيقى لازم تبدي من 0")
     if ai_spent > plan.ai_budget + 1e-9:
         errs.append(f"ai: صرفنا {ai_spent:g} رصيد، والميزانية {plan.ai_budget:g}")
 

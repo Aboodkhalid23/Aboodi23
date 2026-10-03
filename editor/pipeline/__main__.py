@@ -7,6 +7,7 @@ import sys
 
 from .ai import ai_fetch, ai_jobs, log_spend, spent
 from .align import find_script
+from .check import check_source
 from .brief import write_brief
 from .chapters import write_chapters
 from .clean import clean
@@ -15,6 +16,7 @@ from .deliver import prepare_delivery
 from .entities import entities_file, fetch_entities, load_entities
 from .fetch import fetch
 from .media import MediaError
+from .music import music_fetch, music_jobs
 from .paths import Episode
 from .plan import load_plan, validate_plan
 from .styles import styles_summary
@@ -31,6 +33,34 @@ def st_fetch(ep, a):
         raise MediaError("لازم تنطي --source (رابط درايف أو مسار الفيديو)")
     print("⬇️  أسحب الفيديو وأوحّده…", flush=True)
     fetch(a.source, ep, max_height=a.max_height)
+
+
+def st_check(ep, a):
+    print("🔎 أتأكد من الفيديو الي انسحب…", flush=True)
+    d = check_source(ep, words=not a.no_words)
+    print(f"   الملف: {d['name'] or '—'}")
+    print(f"   الطول: {d['length']}  |  الدقة: {d['width']}×{d['height']}  |  {d['fps']:g} فريم  |  "
+          f"{d['size_mb'] or '?'} ميگا  |  صوت: {'اي' if d['has_audio'] else 'لا ❗'}")
+    if d.get("first_words"):
+        print(f"   أول كلام: {d['first_words'][:200]}")
+    print(f"   لقطات: {d['frames']}")
+
+
+def _final_duration(ep) -> float:
+    plan = load_plan(ep.plan)
+    return plan.teaser_total + _clean_duration(ep)
+
+
+def st_music_jobs(ep, a):
+    jobs = music_jobs(ep, _final_duration(ep))
+    todo = [j for j in jobs if not j["done"]]
+    print(f"🎵 مقاطع الموسيقى: {len(jobs)}، الناقص {len(todo)}. التفاصيل: {ep.work / 'music_jobs.json'}")
+
+
+def st_music_fetch(ep, a):
+    if a.cue is None or not a.url:
+        raise MediaError("لازم --cue و --url")
+    print(f"⬇️  نزلت: {music_fetch(ep, a.cue, a.url)}")
 
 
 def st_entities(ep, a):
@@ -123,9 +153,10 @@ def st_deliver(ep, a):
 
 STAGES = {"fetch": [st_fetch], "entities": [st_entities], "transcribe": [st_transcribe], "clean": [st_clean],
           "brief": [st_brief], "validate": [st_validate], "ai-jobs": [st_ai_jobs], "ai-fetch": [st_ai_fetch],
-          "ai-log": [st_ai_log], "images": [st_images], "compose": [st_compose], "deliver": [st_deliver]}
+          "ai-log": [st_ai_log], "check": [st_check], "music-jobs": [st_music_jobs], "music-fetch": [st_music_fetch], "images": [st_images], "compose": [st_compose], "deliver": [st_deliver]}
+STAGES["get"] = STAGES["fetch"] + STAGES["check"]   # download, then show the owner what came
 STAGES["prep"] = STAGES["fetch"] + STAGES["entities"] + STAGES["transcribe"] + STAGES["clean"] + STAGES["brief"]
-STAGES["render"] = (STAGES["validate"] + STAGES["ai-jobs"] + STAGES["images"] + STAGES["compose"]
+STAGES["render"] = (STAGES["validate"] + STAGES["ai-jobs"] + STAGES["music-jobs"] + STAGES["images"] + STAGES["compose"]
                     + STAGES["deliver"])
 
 
@@ -143,6 +174,8 @@ def main(argv=None):
     p.add_argument("--model", help="الموديل الي ولّد (ai-log)")
     p.add_argument("--credits", type=float, help="الرصيد الي انصرف (ai-log)")
     p.add_argument("--job", help="رقم المهمة بـ Higgsfield (ai-log)")
+    p.add_argument("--cue", type=int, help="رقم مقطع الموسيقى (music-fetch)")
+    p.add_argument("--no-words", action="store_true", help="check بدون تفريغ أول الكلام")
     a = p.parse_args(argv)
     ep = Episode(a.episode).ensure()
     try:

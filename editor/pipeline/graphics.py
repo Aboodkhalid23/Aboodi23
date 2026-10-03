@@ -48,8 +48,11 @@ def _remotion(cmd: str, comp: str, out: Path, props: dict, bundle: Path, extra: 
     props_file = out.with_suffix(".props.json")
     props_file.write_text(json.dumps(props, ensure_ascii=False), encoding="utf-8")
     args = ["npx", "remotion", cmd, str(bundle), comp, str(out), f"--props={props_file}",
-            f"--browser-executable={BROWSER}", "--log=error", *extra]
-    proc = subprocess.run(args, cwd=REMOTION_DIR, capture_output=True, text=True)
+            f"--browser-executable={BROWSER}", "--log=error", "--timeout=120000", *extra]
+    for _attempt in range(2):  # a busy machine can miss a frame deadline once; a real bug fails twice
+        proc = subprocess.run(args, cwd=REMOTION_DIR, capture_output=True, text=True)
+        if proc.returncode == 0 and out.exists():
+            break
     if proc.returncode != 0 or not out.exists():
         raise MediaError(f"فشل رسم الگرافيك ({comp}): {(proc.stderr or proc.stdout).strip()[-800:]}")
     return out
@@ -78,7 +81,8 @@ def render_graphic(beat: Beat, style: Style, out: Path, public_dir: Path | None 
         if src is None:
             raise MediaError(f"صورة الـ beat {index} مو موجودة")
         comp = "image"
-        props.update(src=_publish(bundle, src), treatment=beat.treatment or style.image_treatment)
+        props.update(src=_publish(bundle, src), treatment=beat.treatment or style.image_treatment,
+                     caption=beat.caption or "")
     elif beat.kind == "entity":
         comp = "entity"
         if src is not None:

@@ -1,6 +1,8 @@
 """Stage 1: get the raw footage (Drive link or local file) and normalize it."""
+import json
 import re
 import shutil
+import time
 from pathlib import Path
 
 from .fmt import decide_format, save_format
@@ -36,7 +38,8 @@ def _download_drive(url: str, work: Path) -> Path:
         fid = _drive_id(url)
         if not fid:
             raise MediaError("ما گدرت أقرا رابط درايف. دز رابط الملف نفسه (Share ← Copy link)")
-        out = gdown.download(id=fid, output=str(work / "raw_download"), quiet=True, retries=3)
+        # a folder path keeps the file's own name on Drive (shown to the owner to confirm the episode)
+        out = gdown.download(id=fid, output=str(work / "raw_download") + "/", quiet=True, retries=3)
     except MediaError:
         raise
     except Exception as exc:  # gdown raises many types for 403/404
@@ -69,9 +72,16 @@ def fetch(source: str, ep: Episode, max_height: int | None = None) -> Path:
         local = Path(source)
         if not local.exists():
             raise MediaError(f"الملف {source} مو موجود")
-    if ep.source.exists() and ep.format_file.exists() and (
+    record = ep.work / "source.json"
+    old = json.loads(record.read_text(encoding="utf-8")) if record.exists() else {}
+    same = old.get("source") == source or (local is None and old.get("drive_id") and old.get("drive_id") == _drive_id(source))
+    if ep.source.exists() and ep.format_file.exists() and same and (
             local is None or ep.source.stat().st_mtime >= local.stat().st_mtime):
-        return ep.source  # already prepared (hours of work at 4K) — reuse it
+        return ep.source  # same footage, already prepared (hours of work at 4K) — reuse it
+    if ep.source.exists() and not same:
+        print("🔁 هذا رابط جديد: أسحب الفيديو من جديد، وما أستخدم القديم")
+        for f in (ep.source, ep.clean_video, ep.format_file, ep.work / "grade.json"):
+            f.unlink(missing_ok=True)
 
     raw = _download_drive(source, ep.work) if local is None else local
     info = probe(raw)
@@ -89,8 +99,14 @@ def fetch(source: str, ep: Episode, max_height: int | None = None) -> Path:
                 "-c:a", "aac", "-ar", "48000", "-b:a", "192k", "-metadata:s:v", "rotate=0", str(partial)])
     partial.replace(ep.source)
     save_format(ep, fmt)
+    record.write_text(json.dumps({
+        "source": source, "drive_id": _drive_id(source) if local is None else None, "name": raw.name,
+        "raw_size_mb": round(raw.stat().st_size / 1e6), "raw_width": info.width, "raw_height": info.height,
+        "raw_fps": info.fps, "duration": round(info.duration, 1), "fetched_at": time.strftime("%Y-%m-%d %H:%M"),
+    }, ensure_ascii=False, indent=1), encoding="utf-8")
     if local is None:  # the Drive download is a copy we no longer need
         shutil.rmtree(ep.work / "drive", ignore_errors=True)
+        shutil.rmtree(ep.work / "raw_download", ignore_errors=True)
         for f in ep.work.glob("raw_download*"):
             f.unlink()
     return ep.source

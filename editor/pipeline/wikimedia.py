@@ -10,6 +10,7 @@ import requests
 from .paths import Episode
 from .plan import EditPlan, save_plan
 from .styles import load_style
+from .vary import assign_variety
 
 API = "https://commons.wikimedia.org/w/api.php"
 HEADERS = {"User-Agent": "Aboodi23-editor/0.1 (github.com/Aboodkhalid23/Aboodi23)"}
@@ -74,7 +75,7 @@ def search_commons(query: str, limit: int = 8, session=None) -> list[CommonsImag
 def collect_images(plan: EditPlan, ep: Episode, session=None) -> EditPlan:
     """Download one image per `image` beat to assets/img_<beat index>.<ext>; fall back to text."""
     session = session or requests.Session()
-    treatment = load_style(plan.style["primary"]).image_treatment
+    style = load_style(plan.style["primary"])
     used, fallbacks, credits = set(), [], []
     for i, b in enumerate(plan.beats):
         if b.kind != "image":
@@ -99,8 +100,8 @@ def collect_images(plan: EditPlan, ep: Episode, session=None) -> EditPlan:
             b.kind, b.graphic = "graphic", {"type": "text", "text": b.caption or b.query}
             continue
         used.add(img.title)
-        b.treatment = b.treatment or treatment
         credits.append(f"{img.title} — {img.artist} — {img.license} — {img.page_url}")
+    assign_variety(plan, style)
     ep.fallbacks.write_text(json.dumps(fallbacks, ensure_ascii=False, indent=1), encoding="utf-8")
     ent = ep.work / "entity_credits.json"
     credits += list(json.loads(ent.read_text(encoding="utf-8")).values()) if ent.exists() else []

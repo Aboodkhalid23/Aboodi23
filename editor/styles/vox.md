@@ -11,6 +11,9 @@ beat_seconds: 5
 music_mood: curious, light pizzicato, investigative
 sfx: [whoosh, paper, pop]
 ai_suffix: collage cutout style, halftone print texture, off-white paper background
+image_treatments: [paper_cutout, newspaper, polaroid, ken_burns]
+text_variants: [marker, highlight, ransom]
+grade: cinematic
 ---
 
 # ستايل Vox

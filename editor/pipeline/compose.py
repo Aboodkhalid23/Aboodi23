@@ -7,8 +7,10 @@ from pathlib import Path
 from .channel import channel_avatar, load_channel
 from .entities import entity_image, load_entities
 from .fmt import load_format
+from .grade import analyse, grade_filter
 from .graphics import _source_hash, ensure_bundle, render_face_fx, render_face_frame_bg, render_graphic
 from .media import MediaError, run_ffmpeg
+from .music import AUDIO_EXT, bed_filter, music_asset, segments
 from .paths import Episode
 from .plan import Beat, load_plan
 from .sfx import beat_cues, sfx_path
@@ -25,7 +27,7 @@ VIDEO_EXT = (".mp4", ".mov", ".webm")
 
 # Sounds inside special beats (seconds from the beat start); must match FaceFx.tsx / EntityCard.tsx.
 FX_CUES = {"fx:subscribe": [(0.0, "whoosh"), (1.6, "click"), (1.75, "ding")],
-           "fx:tv": [(0.0, "whoosh")],
+           "fx:tv": [(0.0, "whoosh"), (0.5, "switch")],
            "entity": [(0.0, "paper"), (0.45, "pop")]}
 SFX_GAIN = 0.4       # effects sit ~8 dB under the voice
 MUSIC_LUFS = -24     # music bed between sentences; the voice ducks it further
@@ -133,7 +135,7 @@ def _transition_filter(name: str | None, cv: Canvas) -> str:
 
 
 def _face_clip(ep: Episode, beat: Beat, frames: int, teaser, out: Path, frame_bg: Path | None,
-               cv: Canvas | None = None, encode: list[str] | None = None) -> None:
+               cv: Canvas | None = None, encode: list[str] | None = None, grade: str = "") -> None:
     ranges = source_ranges(beat.start, beat.end, teaser)
     if not ranges:
         raise MediaError(f"الـ beat ({beat.start}–{beat.end}) برا الفيديو المنظف")
@@ -143,7 +145,7 @@ def _face_clip(ep: Episode, beat: Beat, frames: int, teaser, out: Path, frame_bg
         labels += f"[{i}:v]"
     joined = (f"{labels}concat=n={len(ranges)}:v=1:a=0,fps={cv.fps}" if len(ranges) > 1
               else f"[0:v]fps={cv.fps}")
-    graph = f"{joined},setpts=PTS-STARTPTS,{_face_filter(beat.kind, beat.duration, cv)}"
+    graph = f"{joined},setpts=PTS-STARTPTS,{_face_filter(beat.kind, beat.duration, cv)}{grade}"
     if beat.kind == "face_framed":
         _, _, x, y = cv.frame_box
         args += ["-loop", "1", "-i", str(frame_bg)]
@@ -154,12 +156,12 @@ def _face_clip(ep: Episode, beat: Beat, frames: int, teaser, out: Path, frame_bg
 
 
 def _finish(raw: Path, frames: int, out: Path, cv: Canvas, transition: str | None, cover: bool = False,
-            loop: bool = False) -> None:
+            loop: bool = False, grade: str = "") -> None:
     """Bring a rendered/generated clip to the canvas: size, fps, exact frame count, entry effect."""
     w, h = cv.width, cv.height
     fit = (f"scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},setsar=1" if cover else cv.fit)
     run_ffmpeg([*(["-stream_loop", "-1"] if loop else []), "-i", str(raw), "-vf",
-                f"{fit},fps={cv.fps},setpts=PTS-STARTPTS{_transition_filter(transition, cv)},"
+                f"{fit},fps={cv.fps},setpts=PTS-STARTPTS{grade}{_transition_filter(transition, cv)},"
                 "tpad=stop_mode=clone:stop_duration=1",
                 "-frames:v", str(frames), "-an", *cv.encode, str(out)])
 
@@ -185,8 +187,9 @@ VOICE_CHAIN = ("highpass=f=80,afftdn=nr=8:nf=-50,"
 
 
 def _build_audio(ep: Episode, teaser, duration: float, out: Path,
-                 cues: list[tuple[float, str]] = (), music: Path | None = None) -> None:
-    """Voice (cleaned, -14 LUFS) + effects at their cue times + optional music ducked under the voice."""
+                 cues: list[tuple[float, str]] = (), music: list[tuple[int, Path, float, float]] = ()) -> None:
+    """Voice (cleaned, -14 LUFS) + effects at their cue times + music segments ducked under the voice.
+    `music`: (cue, file, start, end) on the final timeline."""
     args, labels = [], ""
     for i, (s, e) in enumerate(teaser):
         args += ["-ss", f"{s:.3f}", "-t", f"{e - s:.3f}", "-i", str(ep.clean_video)]
@@ -197,18 +200,19 @@ def _build_audio(ep: Episode, teaser, duration: float, out: Path,
     graph = (f"{labels}concat=n={n}:v=0:a=1,{VOICE_CHAIN},aformat=channel_layouts=stereo,"
              f"apad,atrim=0:{duration:.4f}")
     mix = []
-    if music is not None:
-        args += ["-stream_loop", "-1", "-i", str(music)]
-        graph += (f",asplit=2[voice][key];[{n}:a]atrim=0:{duration:.4f},aresample=48000,"
-                  f"aformat=channel_layouts=stereo,loudnorm=I={MUSIC_LUFS}:TP=-8,"
-                  f"afade=t=in:d=1.5,afade=t=out:st={max(0.0, duration - 2.5):.3f}:d=2.5[mus];"
-                  "[mus][key]sidechaincompress=threshold=0.02:ratio=6:attack=30:release=500[bed]")
+    if music:
+        margs, mgraph = bed_filter(list(music), n, MUSIC_LUFS)
+        args += margs
+        n += len(margs) // 2
+        graph += (f",asplit=2[voice][key];{mgraph};[mus]apad,atrim=0:{duration:.4f}[mus2];"
+                  "[mus2][key]sidechaincompress=threshold=0.02:ratio=6:attack=30:release=500[bed]")
         mix.append("[bed]")
-        n += 1
     else:
         graph += "[voice]"
+    used: dict[str, int] = {}
     for k, (t, name) in enumerate(c for c in cues if 0 <= c[0] < duration):
-        args += ["-i", str(sfx_path(name))]
+        args += ["-i", str(sfx_path(name, used.get(name, 0)))]   # rotate takes: no copy-paste repeats
+        used[name] = used.get(name, 0) + 1
         ms = round(t * 1000)
         graph += (f";[{n}:a]aformat=channel_layouts=stereo,adelay={ms}|{ms},volume={SFX_GAIN}[s{k}]")
         mix.append(f"[s{k}]")
@@ -243,11 +247,15 @@ def compose(ep: Episode, preview: bool = False) -> Path:
     avatar = channel_avatar(ep.work) if any(b.kind == "face_fx" for b in plan.beats) else None
 
     src_stamp = str(ep.clean_video.stat().st_mtime)
+    correct = analyse(ep)["correction"]
     design = _source_hash()   # a changed graphic design re-renders the clips that use it
     clips, missing = [], []
     for i, b in enumerate(plan.beats):
         # Frame-grid boundaries: the sum of clip lengths equals the timeline exactly (no drift).
         frames = round(b.end * cv.fps) - round(b.start * cv.fps)
+        look = b.grade or plan.grade or style.grade
+        footage_grade = grade_filter(correct, look)   # his camera: correct, then the look
+        ai_grade = grade_filter("", look)              # generated clips: the look only
         asset = None
         if b.kind == "ai_image":
             asset = _asset(ep.assets, f"ai_{i}", IMAGE_EXT)
@@ -261,13 +269,14 @@ def compose(ep: Episode, preview: bool = False) -> Path:
         stamp = cv.work / f"beat_{i}.hash"
         key = hashlib.sha1(json.dumps([asdict(b), style.name, teaser, src_stamp, frames, cv.encode, cv.width,
                                        _stamp(asset), entities.get(b.entity or ""), channel,
-                                       "" if b.kind.startswith("face") and b.kind != "face_fx" else design],
+                                       "" if b.kind.startswith("face") and b.kind != "face_fx" else design,
+                                       footage_grade],
                                       ensure_ascii=False, sort_keys=True).encode()).hexdigest()
         if not (out.exists() and stamp.exists() and stamp.read_text() == key):
             if b.kind in ("ai_image", "ai_video") and asset is None:
                 _graphic_clip(ep, _fallback_text(b), i, style, frames, out, bundle, cv)
             elif b.kind == "ai_video" and asset.suffix.lower() in VIDEO_EXT:
-                _finish(asset, frames, out, cv, b.transition, cover=True, loop=True)
+                _finish(asset, frames, out, cv, b.transition, cover=True, loop=True, grade=ai_grade)
             elif b.kind == "ai_video":  # only a still came back: animate it like an AI image
                 _graphic_clip(ep, replace(b, kind="ai_image"), i, style, frames, out, bundle, cv, src=asset)
             elif b.kind in ("image", "ai_image", "graphic"):
@@ -280,12 +289,12 @@ def compose(ep: Episode, preview: bool = False) -> Path:
             elif b.kind == "face_fx":
                 face = cv.work / f"face_{i}.mp4"
                 _face_clip(ep, replace(b, kind="face", transition=None), frames, teaser, face, None, cv,
-                           encode=[*INTERMEDIATE, "-r", str(cv.fps)])
+                           encode=[*INTERMEDIATE, "-r", str(cv.fps)], grade=footage_grade)
                 raw = render_face_fx(b, style, face, cv.work / f"fx_{i}.mp4", cv.fps, channel, bundle,
                                      scale=cv.remotion_scale, avatar=avatar)
                 _finish(raw, frames, out, cv, b.transition)
             else:
-                _face_clip(ep, b, frames, teaser, out, frame_bg, cv)
+                _face_clip(ep, b, frames, teaser, out, frame_bg, cv, grade=footage_grade)
             stamp.write_text(key)
         clips.append(out)
     if missing:
@@ -298,8 +307,19 @@ def compose(ep: Episode, preview: bool = False) -> Path:
     cues = beat_cues(plan.beats, FX_CUES)
     for b in plan.beats:
         cues += [(b.start + float(st.get("at", 0.3)), "pop") for st in (b.stickers or [])]
-    music = _asset(ep.assets, "music", (".mp3", ".wav", ".m4a", ".aac", ".flac", ".ogg"))
-    _build_audio(ep, teaser, total_frames / cv.fps, audio, sorted(cues), music)
+    duration = total_frames / cv.fps
+    music = []
+    if plan.music:
+        for k, start, end in segments(plan, duration):
+            path = music_asset(ep, k)
+            if path:
+                music.append((k, path, start, end))
+            else:
+                print(f"⚠️  موسيقى المقطع {k} ناقصة (ينسمع بدون موسيقى من {start:.0f} ث)")
+    else:
+        single = _asset(ep.assets, "music", AUDIO_EXT)
+        music = [(0, single, 0.0, duration)] if single else []
+    _build_audio(ep, teaser, duration, audio, sorted(cues), music)
     final = ep.edit / "preview.mp4" if preview else ep.final
     run_ffmpeg(["-f", "concat", "-safe", "0", "-i", str(listing), "-i", str(audio), "-map", "0:v", "-map", "1:a",
                 "-c", "copy", "-movflags", "+faststart", str(final)])

@@ -22,6 +22,9 @@ class Style:
     sfx: list[str]
     ai_suffix: str
     notes: str = ""
+    grade: str = "cinematic"                 # colour look for the footage (grade.LOOKS)
+    image_treatments: list[str] | None = None  # rotated over image beats so pictures never look the same
+    text_variants: list[str] | None = None     # rotated over text cards
 
 
 def _style_files() -> list[Path]:
