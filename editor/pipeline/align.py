@@ -49,25 +49,41 @@ def _no_pause(words: list[Word], gap: float = 0.5) -> bool:
     return all(b.start - a.end < gap for a, b in zip(words, words[1:]))
 
 
-def align_words(words: list[Word], script: list[str]) -> tuple[list[Word], float]:
+NAME_THRESHOLD = 0.3   # a name in the script wins even when he says it quite differently
+
+
+def align_words(words: list[Word], script: list[str], names: set[str] = frozenset(),
+                report: list[str] | None = None) -> tuple[list[Word], float]:
+    """`names`: normalised words of people/companies (entities.json). `report` collects the spans
+    that still differ from the script, for Claude to review."""
     a = [normalize_ar(w.text) for w in words]
     b = [normalize_ar(s) for s in script]
     out, matched = [], 0
     for op, i1, i2, j1, j2 in difflib.SequenceMatcher(None, a, b, autojunk=False).get_opcodes():
+        threshold = NAME_THRESHOLD if names.intersection(b[j1:j2]) else 0.5
         if op == "equal":
             out += [Word(script[j1 + k], w.start, w.end) for k, w in enumerate(words[i1:i2])]
             matched += i2 - i1
-        elif op == "replace" and _similar(a[i1:i2], b[j1:j2]) and _no_pause(words[i1:i2]):  # misheard words
+        elif (op == "replace" and _similar(a[i1:i2], b[j1:j2], threshold)
+              and _no_pause(words[i1:i2])):  # misheard words / mispronounced name
             out += _spread(words[i1:i2], script[j1:j2])
             matched += i2 - i1
         elif op in ("replace", "delete"):  # said, but not in the script (ad-lib): keep what was heard
             out += words[i1:i2]
+            if report is not None:
+                heard = " ".join(w.text for w in words[i1:i2])
+                wanted = " ".join(script[j1:j2]) or "—"
+                report.append(f"[{words[i1].start:.1f}] سمعت: {heard} | السكربت: {wanted}")
     return out, (matched / len(words) if words else 0.0)
 
 
 def align_to_script(ep: Episode, words: list[Word], script_path: Path) -> list[Word]:
     """Fix the text of the KEPT words (after retakes are dropped); timings and cuts never change."""
-    fixed, ratio = align_words(words, script_words(Path(script_path).read_text(encoding="utf-8")))
+    from .entities import entity_tokens
+    report: list[str] = []
+    fixed, ratio = align_words(words, script_words(Path(script_path).read_text(encoding="utf-8")),
+                               entity_tokens(ep), report)
+    (ep.work / "align_report.txt").write_text("\n".join(report) + "\n", encoding="utf-8")
     (ep.work / "align.json").write_text(json.dumps({"ratio": round(ratio, 3), "script": str(script_path)},
                                                    ensure_ascii=False), encoding="utf-8")
     print(f"   التطابق ويه السكربت: {ratio:.0%}")

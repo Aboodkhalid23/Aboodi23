@@ -55,24 +55,51 @@ def _remotion(cmd: str, comp: str, out: Path, props: dict, bundle: Path, extra: 
     return out
 
 
+def _publish(bundle: Path, src: Path, name: str | None = None) -> str:
+    """Copy a file into the bundle's public/ folder so a composition can staticFile() it."""
+    name = name or Path(src).name
+    shutil.copyfile(src, bundle / "public" / name)
+    return name
+
+
+VIDEO_FLAGS = ["--codec=h264", "--crf=10", "--concurrency=4", "--muted"]
+
+
 def render_graphic(beat: Beat, style: Style, out: Path, public_dir: Path | None = None,
-                   index: int | None = None, bundle: Path | None = None, scale: float = 1.0) -> Path:
-    """`image` beats read assets/img_<index>.* from `public_dir` (the episode's assets folder)."""
-    props = {"style": _style_props(style), "durationSec": round(beat.duration, 3)}
-    if beat.kind == "image":
-        src = next(Path(public_dir).glob(f"img_{index}.*"), None) if public_dir else None
+                   index: int | None = None, bundle: Path | None = None, scale: float = 1.0,
+                   src: Path | None = None, extra_props: dict | None = None) -> Path:
+    """Render an image / ai_image / entity / graphic beat. Pictures come from `src`, or for `image`
+    beats from assets/img_<index>.* in `public_dir` (the episode's assets folder)."""
+    bundle = bundle or ensure_bundle()
+    props = {"style": _style_props(style), "durationSec": round(beat.duration, 3), **(extra_props or {})}
+    if beat.kind in ("image", "ai_image"):
+        if src is None and public_dir is not None:
+            src = next(Path(public_dir).glob(f"img_{index}.*"), None)
         if src is None:
             raise MediaError(f"صورة الـ beat {index} مو موجودة")
-        bundle = bundle or ensure_bundle()
-        shutil.copyfile(src, bundle / "public" / src.name)
         comp = "image"
-        props.update(src=src.name, treatment=beat.treatment or style.image_treatment)
+        props.update(src=_publish(bundle, src), treatment=beat.treatment or style.image_treatment)
+    elif beat.kind == "entity":
+        comp = "entity"
+        if src is not None:
+            props["src"] = _publish(bundle, src)
     else:
         g = dict(beat.graphic or {})
         comp = g.pop("type")
         props.update(g)
-    return _remotion("render", comp, out, props, bundle or ensure_bundle(),
-                     ["--codec=h264", "--crf=10", "--concurrency=4", "--muted", f"--scale={scale!r}"])
+    return _remotion("render", comp, out, props, bundle, [*VIDEO_FLAGS, f"--scale={scale!r}"])
+
+
+def render_face_fx(beat: Beat, style: Style, face: Path, out: Path, fps: int, channel: dict,
+                   bundle: Path | None = None, scale: float = 1.0, avatar: Path | None = None) -> Path:
+    """The presenter's own footage (`face`, already canvas-sized) wrapped in a YouTube-style scene."""
+    bundle = bundle or ensure_bundle()
+    ch = dict(channel)
+    ch["avatar"] = _publish(bundle, avatar, "channel_avatar" + avatar.suffix) if avatar else None
+    props = {"style": _style_props(style), "durationSec": round(beat.duration, 3), "fps": fps,
+             "src": _publish(bundle, face), "fx": beat.fx or "none", "stickers": beat.stickers or [],
+             "channel": ch}
+    return _remotion("render", "face-fx", out, props, bundle, [*VIDEO_FLAGS, f"--scale={scale!r}"])
 
 
 def render_face_frame_bg(style: Style, out_png: Path, bundle: Path | None = None, scale: float = 1.0) -> Path:

@@ -112,3 +112,26 @@ def test_search_waits_and_retries_on_429(monkeypatch):
     found = search_commons("Evergrande", session=RateLimitedSession(PAGES))
     assert [i.title for i in found] == ["File:Good.jpg"]
     assert 3 in waits
+
+
+class FirstDownloadRefused(FakeSession):
+    """Search works, the first file is rate-limited (429 after retries), the second downloads."""
+    def get(self, url, params=None, headers=None, timeout=None):
+        if not params and url.startswith("https://u/c"):
+            raise requests.HTTPError("429 Too Many Requests")
+        return super().get(url, params, headers, timeout)
+
+
+def test_refused_download_tries_the_next_image(tmp_path):
+    ep = Episode(tmp_path / "ep").ensure()
+    pages = PAGES + [page("File:Also.jpg", 2400, "CC0", "https://u/d.jpg")]
+    plan = collect_images(make_plan(), ep, session=FirstDownloadRefused(pages))
+    assert plan.beats[1].kind == "image"
+    assert "File:Also.jpg" in ep.credits.read_text()
+
+
+def test_entity_credits_are_kept(tmp_path):
+    ep = Episode(tmp_path / "ep").ensure()
+    (ep.work / "entity_credits.json").write_text(json.dumps({"musk": "Musk.jpg — Gage — CC BY-SA 4.0 — url"}))
+    collect_images(make_plan(), ep, session=FakeSession(PAGES))
+    assert "Musk.jpg — Gage" in ep.credits.read_text()

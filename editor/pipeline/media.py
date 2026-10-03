@@ -46,7 +46,7 @@ def probe(path: Path) -> MediaInfo:
     if not rotation and "rotate" in video.get("tags", {}):
         rotation = int(video["tags"]["rotate"])
     return MediaInfo(
-        duration=float(data["format"]["duration"]),
+        duration=float(data["format"].get("duration") or 0.0),  # stills have none
         width=int(video["width"]),
         height=int(video["height"]),
         fps=_fps(video.get("avg_frame_rate") or video.get("r_frame_rate", "0/1")),

@@ -1,6 +1,4 @@
-import '@fontsource/cairo/400.css';
-import '@fontsource/cairo/700.css';
-import '@fontsource/cairo/900.css';
+import './fonts';
 import React, {useEffect, useState} from 'react';
 import {AbsoluteFill, continueRender, delayRender, Easing, interpolate, staticFile} from 'remotion';
 

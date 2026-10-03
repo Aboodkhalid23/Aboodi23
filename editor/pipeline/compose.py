@@ -1,19 +1,34 @@
 """Stage 6: build final.mp4 (or preview.mp4) — per-beat video clips + one continuous audio track."""
 import hashlib
 import json
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 
+from .channel import channel_avatar, load_channel
+from .entities import entity_image, load_entities
 from .fmt import load_format
-from .graphics import ensure_bundle, render_face_frame_bg, render_graphic
+from .graphics import _source_hash, ensure_bundle, render_face_fx, render_face_frame_bg, render_graphic
 from .media import MediaError, run_ffmpeg
 from .paths import Episode
 from .plan import Beat, load_plan
+from .sfx import beat_cues, sfx_path
 from .styles import Style, load_style
 
 ZOOM = 0.15          # face zoom: 1.0 <-> 1.15
 FOCUS_Y = 0.4        # keep the face (upper part of frame) in view while zooming
 FRAME = 0.6          # face_framed: face box is 60% of the canvas, centred (matches FaceFrame.tsx)
+PUNCH = 1.2          # face_punch: the YouTuber "cut-in" zoom, held still
+MOVE = 0.8           # zooms move for this long (ease-out), then hold — never a linear crawl
+TRANS = 0.25         # entry transitions last this long
+IMAGE_EXT = (".png", ".jpg", ".jpeg", ".webp")
+VIDEO_EXT = (".mp4", ".mov", ".webm")
+
+# Sounds inside special beats (seconds from the beat start); must match FaceFx.tsx / EntityCard.tsx.
+FX_CUES = {"fx:subscribe": [(0.0, "whoosh"), (1.6, "click"), (1.75, "ding")],
+           "fx:tv": [(0.0, "whoosh")],
+           "entity": [(0.0, "paper"), (0.45, "pop")]}
+SFX_GAIN = 0.4       # effects sit ~8 dB under the voice
+MUSIC_LUFS = -24     # music bed between sentences; the voice ducks it further
 
 
 @dataclass
@@ -51,6 +66,9 @@ class Canvas:
         return s if (1080 * s).is_integer() else 0.5
 
 
+INTERMEDIATE = ["-c:v", "libx264", "-crf", "12", "-preset", "veryfast", "-pix_fmt", "yuv420p"]
+
+
 def make_canvas(ep: Episode, preview: bool) -> Canvas:
     fmt = load_format(ep)
     common = ["-pix_fmt", "yuv420p", "-r", str(fmt.fps), "-video_track_timescale", "15360"]
@@ -76,21 +94,46 @@ def source_ranges(start: float, end: float, teaser: list[tuple[float, float]]) -
     return out
 
 
-def _face_filter(kind: str, dur: float, cv: Canvas) -> str:
+def _ease_out(t0: str = "t") -> str:
+    """0→1 over MOVE seconds, cubic ease-out, then 1 forever (ffmpeg expression)."""
+    return f"(1-pow(1-min({t0}/{MOVE},1),3))"
+
+
+def _zoom_crop(z: str, cv: Canvas, focus_y: float = FOCUS_Y) -> str:
     W, H = cv.width, cv.height
+    return (f"scale=w='trunc({W}*{z}/2)*2':h=-2:eval=frame,"
+            f"crop={W}:{H}:(iw-{W})/2:(ih-{H})*{focus_y}")
+
+
+def _face_filter(kind: str, dur: float, cv: Canvas) -> str:
     if kind in ("face_zoom_in", "face_zoom_out"):
         z0, z1 = (1.0, 1.0 + ZOOM) if kind == "face_zoom_in" else (1.0 + ZOOM, 1.0)
-        z = f"({z0}+({z1}-{z0})*t/{dur:.3f})"
-        return (f"{cv.face_fit},scale=w='trunc({W}*{z}/2)*2':h=-2:eval=frame,"
-                f"crop={W}:{H}:(iw-{W})/2:(ih-{H})*{FOCUS_Y}")
+        return f"{cv.face_fit},{_zoom_crop(f'({z0}+({z1}-{z0})*{_ease_out()})', cv)}"
+    if kind == "face_punch":
+        return f"{cv.face_fit},{_zoom_crop(str(PUNCH), cv)}"
     if kind == "face_framed":
         w, h, _, _ = cv.frame_box
         return f"scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h}"
     return cv.face_fit
 
 
+def _transition_filter(name: str | None, cv: Canvas) -> str:
+    """Entry effect on the first TRANS seconds of a clip (it only needs the incoming clip, so clips
+    stay independent and the final concat stays a stream copy)."""
+    if not name:
+        return ""
+    on = f"enable='lt(t,{TRANS})'"
+    punch = lambda amount: _zoom_crop(f"(1+{amount}*pow(1-min(t/{TRANS},1),3))", cv, 0.5)
+    return {
+        "flash": f",fade=t=in:st=0:d={TRANS}:color=white",
+        "zoom": f",{punch(0.25)}",
+        "whip": f",{punch(0.08)},gblur=sigma=45:sigmaV=0.5:{on}",
+        "glitch": f",rgbashift=rh=-18:bh=18:gv=6:{on},noise=alls=40:allf=t:{on}",
+    }[name]
+
+
 def _face_clip(ep: Episode, beat: Beat, frames: int, teaser, out: Path, frame_bg: Path | None,
-               cv: Canvas | None = None) -> None:
+               cv: Canvas | None = None, encode: list[str] | None = None) -> None:
     ranges = source_ranges(beat.start, beat.end, teaser)
     if not ranges:
         raise MediaError(f"الـ beat ({beat.start}–{beat.end}) برا الفيديو المنظف")
@@ -100,36 +143,87 @@ def _face_clip(ep: Episode, beat: Beat, frames: int, teaser, out: Path, frame_bg
         labels += f"[{i}:v]"
     joined = (f"{labels}concat=n={len(ranges)}:v=1:a=0,fps={cv.fps}" if len(ranges) > 1
               else f"[0:v]fps={cv.fps}")
-    graph = (f"{joined},setpts=PTS-STARTPTS,{_face_filter(beat.kind, beat.duration, cv)},"
-             "tpad=stop_mode=clone:stop_duration=1")
+    graph = f"{joined},setpts=PTS-STARTPTS,{_face_filter(beat.kind, beat.duration, cv)}"
     if beat.kind == "face_framed":
         _, _, x, y = cv.frame_box
         args += ["-loop", "1", "-i", str(frame_bg)]
-        graph += (f"[face];[{len(ranges)}:v]scale={cv.width}:{cv.height},setsar=1[bg];"
-                  f"[bg][face]overlay={x}:{y}")
-    run_ffmpeg([*args, "-filter_complex", graph, "-frames:v", str(frames), "-an", *cv.encode, str(out)])
+        graph += (f",tpad=stop_mode=clone:stop_duration=1[face];[{len(ranges)}:v]scale={cv.width}:{cv.height},"
+                  f"setsar=1[bg];[bg][face]overlay={x}:{y}:shortest=1")
+    graph += f"{_transition_filter(beat.transition, cv)},tpad=stop_mode=clone:stop_duration=1"
+    run_ffmpeg([*args, "-filter_complex", graph, "-frames:v", str(frames), "-an", *(encode or cv.encode), str(out)])
 
 
-def _graphic_clip(ep: Episode, beat: Beat, i: int, style: Style, frames: int, out: Path, bundle: Path,
-                  cv: Canvas) -> None:
-    raw = render_graphic(beat, style, cv.work / f"graphic_{i}.mp4", public_dir=ep.assets, index=i,
-                         bundle=bundle, scale=cv.remotion_scale)
-    run_ffmpeg(["-i", str(raw), "-vf", f"{cv.fit},fps={cv.fps},tpad=stop_mode=clone:stop_duration=1",
+def _finish(raw: Path, frames: int, out: Path, cv: Canvas, transition: str | None, cover: bool = False,
+            loop: bool = False) -> None:
+    """Bring a rendered/generated clip to the canvas: size, fps, exact frame count, entry effect."""
+    w, h = cv.width, cv.height
+    fit = (f"scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},setsar=1" if cover else cv.fit)
+    run_ffmpeg([*(["-stream_loop", "-1"] if loop else []), "-i", str(raw), "-vf",
+                f"{fit},fps={cv.fps},setpts=PTS-STARTPTS{_transition_filter(transition, cv)},"
+                "tpad=stop_mode=clone:stop_duration=1",
                 "-frames:v", str(frames), "-an", *cv.encode, str(out)])
 
 
-def _build_audio(ep: Episode, teaser, duration: float, out: Path) -> None:
+def _asset(folder: Path, stem: str, exts: tuple[str, ...]) -> Path | None:
+    return next((p for p in sorted(folder.glob(f"{stem}.*")) if p.suffix.lower() in exts), None)
+
+
+def _graphic_clip(ep: Episode, beat: Beat, i: int, style: Style, frames: int, out: Path, bundle: Path,
+                  cv: Canvas, src: Path | None = None, extra_props: dict | None = None) -> None:
+    raw = render_graphic(beat, style, cv.work / f"graphic_{i}.mp4", public_dir=ep.assets, index=i,
+                         bundle=bundle, scale=cv.remotion_scale, src=src, extra_props=extra_props)
+    _finish(raw, frames, out, cv, beat.transition)
+
+
+def _fallback_text(beat: Beat) -> Beat:
+    return replace(beat, kind="graphic", graphic={"type": "text", "text": beat.caption or beat.prompt or ""})
+
+
+VOICE_CHAIN = ("highpass=f=80,afftdn=nr=8:nf=-50,"
+               "acompressor=threshold=-20dB:ratio=2.5:attack=8:release=120:makeup=1.5,"
+               "loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000")
+
+
+def _build_audio(ep: Episode, teaser, duration: float, out: Path,
+                 cues: list[tuple[float, str]] = (), music: Path | None = None) -> None:
+    """Voice (cleaned, -14 LUFS) + effects at their cue times + optional music ducked under the voice."""
     args, labels = [], ""
-    parts = [*teaser]
-    for i, (s, e) in enumerate(parts):
+    for i, (s, e) in enumerate(teaser):
         args += ["-ss", f"{s:.3f}", "-t", f"{e - s:.3f}", "-i", str(ep.clean_video)]
         labels += f"[{i}:a]"
     args += ["-i", str(ep.clean_video)]
-    labels += f"[{len(parts)}:a]"
-    graph = (f"{labels}concat=n={len(parts) + 1}:v=0:a=1,"
-             f"loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000,"
+    labels += f"[{len(teaser)}:a]"
+    n = len(teaser) + 1
+    graph = (f"{labels}concat=n={n}:v=0:a=1,{VOICE_CHAIN},aformat=channel_layouts=stereo,"
              f"apad,atrim=0:{duration:.4f}")
+    mix = []
+    if music is not None:
+        args += ["-stream_loop", "-1", "-i", str(music)]
+        graph += (f",asplit=2[voice][key];[{n}:a]atrim=0:{duration:.4f},aresample=48000,"
+                  f"aformat=channel_layouts=stereo,loudnorm=I={MUSIC_LUFS}:TP=-8,"
+                  f"afade=t=in:d=1.5,afade=t=out:st={max(0.0, duration - 2.5):.3f}:d=2.5[mus];"
+                  "[mus][key]sidechaincompress=threshold=0.02:ratio=6:attack=30:release=500[bed]")
+        mix.append("[bed]")
+        n += 1
+    else:
+        graph += "[voice]"
+    for k, (t, name) in enumerate(c for c in cues if 0 <= c[0] < duration):
+        args += ["-i", str(sfx_path(name))]
+        ms = round(t * 1000)
+        graph += (f";[{n}:a]aformat=channel_layouts=stereo,adelay={ms}|{ms},volume={SFX_GAIN}[s{k}]")
+        mix.append(f"[s{k}]")
+        n += 1
+    if mix:
+        graph += (f";[voice]{''.join(mix)}amix=inputs={len(mix) + 1}:duration=first:normalize=0,"
+                  "alimiter=limit=0.89:level=false")
+    else:
+        graph = graph.removesuffix("[voice]")
+    graph += f",atrim=0:{duration:.4f}"
     run_ffmpeg([*args, "-filter_complex", graph, "-vn", "-c:a", "aac", "-b:a", "192k", str(out)])
+
+
+def _stamp(path: Path | None) -> str:
+    return f"{path.name}:{path.stat().st_mtime_ns}" if path else ""
 
 
 def compose(ep: Episode, preview: bool = False) -> Path:
@@ -144,29 +238,68 @@ def compose(ep: Episode, preview: bool = False) -> Path:
         frame_bg = cv.work / f"face_frame_{style.name}.png"
         if not frame_bg.exists():
             render_face_frame_bg(style, frame_bg, bundle, scale=cv.remotion_scale)
+    entities = load_entities(ep)
+    channel = load_channel()
+    avatar = channel_avatar(ep.work) if any(b.kind == "face_fx" for b in plan.beats) else None
 
     src_stamp = str(ep.clean_video.stat().st_mtime)
-    clips = []
+    design = _source_hash()   # a changed graphic design re-renders the clips that use it
+    clips, missing = [], []
     for i, b in enumerate(plan.beats):
         # Frame-grid boundaries: the sum of clip lengths equals the timeline exactly (no drift).
         frames = round(b.end * cv.fps) - round(b.start * cv.fps)
+        asset = None
+        if b.kind == "ai_image":
+            asset = _asset(ep.assets, f"ai_{i}", IMAGE_EXT)
+        elif b.kind == "ai_video":
+            asset = _asset(ep.assets, f"ai_{i}", VIDEO_EXT) or _asset(ep.assets, f"ai_{i}", IMAGE_EXT)
+        elif b.kind == "entity":
+            asset = entity_image(ep, b.entity)
+        if b.kind in ("ai_image", "ai_video") and asset is None:
+            missing.append(i)
         out = cv.work / f"beat_{i}.mp4"
         stamp = cv.work / f"beat_{i}.hash"
-        key = hashlib.sha1(json.dumps([asdict(b), style.name, teaser, src_stamp, frames, cv.encode, cv.width],
+        key = hashlib.sha1(json.dumps([asdict(b), style.name, teaser, src_stamp, frames, cv.encode, cv.width,
+                                       _stamp(asset), entities.get(b.entity or ""), channel,
+                                       "" if b.kind.startswith("face") and b.kind != "face_fx" else design],
                                       ensure_ascii=False, sort_keys=True).encode()).hexdigest()
         if not (out.exists() and stamp.exists() and stamp.read_text() == key):
-            if b.kind in ("image", "graphic"):
-                _graphic_clip(ep, b, i, style, frames, out, bundle, cv)
+            if b.kind in ("ai_image", "ai_video") and asset is None:
+                _graphic_clip(ep, _fallback_text(b), i, style, frames, out, bundle, cv)
+            elif b.kind == "ai_video" and asset.suffix.lower() in VIDEO_EXT:
+                _finish(asset, frames, out, cv, b.transition, cover=True, loop=True)
+            elif b.kind == "ai_video":  # only a still came back: animate it like an AI image
+                _graphic_clip(ep, replace(b, kind="ai_image"), i, style, frames, out, bundle, cv, src=asset)
+            elif b.kind in ("image", "ai_image", "graphic"):
+                _graphic_clip(ep, b, i, style, frames, out, bundle, cv, src=asset)
+            elif b.kind == "entity":
+                e = entities.get(b.entity) or {"name": b.entity, "kind": "person"}
+                _graphic_clip(ep, b, i, style, frames, out, bundle, cv, src=asset,
+                              extra_props={"name": e["name"], "role": e.get("role", ""),
+                                           "entityKind": e.get("kind", "person")})
+            elif b.kind == "face_fx":
+                face = cv.work / f"face_{i}.mp4"
+                _face_clip(ep, replace(b, kind="face", transition=None), frames, teaser, face, None, cv,
+                           encode=[*INTERMEDIATE, "-r", str(cv.fps)])
+                raw = render_face_fx(b, style, face, cv.work / f"fx_{i}.mp4", cv.fps, channel, bundle,
+                                     scale=cv.remotion_scale, avatar=avatar)
+                _finish(raw, frames, out, cv, b.transition)
             else:
                 _face_clip(ep, b, frames, teaser, out, frame_bg, cv)
             stamp.write_text(key)
         clips.append(out)
+    if missing:
+        print(f"⚠️  مشاهد ذكاء اصطناعي ناقصة (انكتب الـ caption بدالها): beats {missing}")
 
     listing = cv.work / "concat.txt"
     listing.write_text("".join(f"file '{c.resolve()}'\n" for c in clips), encoding="utf-8")
     audio = cv.work / "audio.m4a"
     total_frames = round(plan.beats[-1].end * cv.fps) - round(plan.beats[0].start * cv.fps)
-    _build_audio(ep, teaser, total_frames / cv.fps, audio)
+    cues = beat_cues(plan.beats, FX_CUES)
+    for b in plan.beats:
+        cues += [(b.start + float(st.get("at", 0.3)), "pop") for st in (b.stickers or [])]
+    music = _asset(ep.assets, "music", (".mp3", ".wav", ".m4a", ".aac", ".flac", ".ogg"))
+    _build_audio(ep, teaser, total_frames / cv.fps, audio, sorted(cues), music)
     final = ep.edit / "preview.mp4" if preview else ep.final
     run_ffmpeg(["-f", "concat", "-safe", "0", "-i", str(listing), "-i", str(audio), "-map", "0:v", "-map", "1:a",
                 "-c", "copy", "-movflags", "+faststart", str(final)])

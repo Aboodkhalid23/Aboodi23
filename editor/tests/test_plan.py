@@ -85,11 +85,82 @@ def test_face_share_too_low():
     assert "35" in errors_for(plan, clean)
 
 
-def test_ai_kind_rejected_in_part1():
+def test_ai_beat_needs_prompt_and_caption():
     body = list(BODY)
     body[1] = (5.0, "ai_image")
     plan, clean = build(body=body)
-    assert "الذكاء الاصطناعي مو مفعّل بعد (الجزء 2)" in errors_for(plan, clean)
+    assert "prompt" in errors_for(plan, clean)
+    plan.beats[16].prompt, plan.beats[16].caption = "1970s boardroom", "اجتماع الشركة"
+    assert validate_plan(plan, clean) == []
+
+
+def test_ai_budget_enforced():
+    plan, clean = build()
+    plan.ai_budget = 10
+    assert validate_plan(plan, clean, ai_spent=9.5) == []
+    assert errors_for_spent(plan, clean, 12).startswith("ai:")
+
+
+def errors_for_spent(plan, clean, spent):
+    errs = validate_plan(plan, clean, ai_spent=spent)
+    assert len(errs) == 1, errs
+    return errs[0]
+
+
+def test_entity_beat_must_exist_in_entities():
+    body = list(BODY)
+    body[1] = (5.0, "entity")
+    plan, clean = build(body=body)
+    assert "entity" in errors_for(plan, clean)
+    plan.beats[16].entity = "musk"
+    assert validate_plan(plan, clean, entities={"musk"}) == []
+    assert "entities.json" in validate_plan(plan, clean, entities={"jobs"})[0]
+
+
+def test_face_fx_counts_as_face_and_needs_fx():
+    body = list(BODY)
+    body[0] = (5.0, "face_fx")
+    plan, clean = build(body=body)
+    assert "fx" in errors_for(plan, clean)
+    plan.beats[15].fx = "subscribe"
+    plan.beats[15].stickers = [{"type": "stamp", "text": "حقيقي", "at": 1.0}]
+    assert validate_plan(plan, clean) == []
+    plan.beats[15].stickers = [{"type": "emoji"}]
+    assert "الملصقات" in errors_for(plan, clean)
+
+
+def test_stickers_only_on_face_fx_and_known_transitions():
+    plan, clean = build()
+    plan.beats[16].stickers = [{"type": "stamp", "text": "x"}]
+    assert "الملصقات" in errors_for(plan, clean)
+    plan.beats[16].stickers = None
+    plan.beats[16].transition = "spin"
+    assert "transition" in errors_for(plan, clean)
+    plan.beats[16].transition = "whip"
+    assert validate_plan(plan, clean) == []
+
+
+def test_old_plans_still_load(tmp_path):
+    plan, _ = build()
+    save_plan(plan, tmp_path / "p.json")
+    d = json.loads((tmp_path / "p.json").read_text())
+    d.pop("ai_budget")
+    (tmp_path / "p.json").write_text(json.dumps(d))
+    assert load_plan(tmp_path / "p.json").ai_budget == 0.0
+
+
+def test_brief_suggests_subscribe_and_greeting_moments(tmp_path):
+    ep = Episode(tmp_path / "ep").ensure()
+    ep.cuts.write_text(json.dumps([[0, 9]]))
+    save_words([Word("هلا", 0.0, 0.4), Word("بيكم", 0.4, 0.9), Word("شلونكم", 0.9, 1.5),
+                Word("لا", 4.0, 4.2), Word("تنسون", 4.2, 4.7), Word("تشتركون", 4.7, 5.3),
+                Word("اشتركوا", 7.0, 7.6), Word("بالقناة", 7.6, 8.3)], ep.clean_words)
+    (ep.edit / "entities.json").write_text(json.dumps(
+        [{"id": "musk", "name": "إيلون ماسك", "en": "Elon Musk", "kind": "person", "role": "مؤسس تسلا"}]))
+    text = write_brief(ep, "vox: ورق").read_text(encoding="utf-8")
+    assert "face_fx tv: هلا بيكم" in text
+    assert "face_fx subscribe: اشتركوا بالقناة" in text
+    assert "musk: إيلون ماسك (مؤسس تسلا)" in text
 
 
 def test_brief_has_no_json_and_one_line_per_phrase(tmp_path):

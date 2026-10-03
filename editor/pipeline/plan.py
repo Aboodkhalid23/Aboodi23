@@ -3,11 +3,14 @@ import json
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
-KINDS = ("face", "face_zoom_in", "face_zoom_out", "face_framed",
-         "image", "ai_image", "ai_video", "graphic")
-FACE_KINDS = KINDS[:4]
+KINDS = ("face", "face_zoom_in", "face_zoom_out", "face_framed", "face_punch", "face_fx",
+         "image", "ai_image", "ai_video", "graphic", "entity")
+FACE_KINDS = KINDS[:6]
 AI_KINDS = ("ai_image", "ai_video")
 GRAPHIC_TYPES = ("number", "headline", "quote", "map", "timeline", "chart", "text")
+FX_TYPES = ("subscribe", "tv", "none")        # face_fx wrappers; "none" = stickers only
+TRANSITIONS = ("zoom", "flash", "whip", "glitch")
+STICKERS = ("stamp", "arrow", "burst", "tape", "circle")
 
 HOOK_SECONDS = 30.0
 LIMITS = {"hook": (1.5, 2.5), "body": (4.0, 6.0)}
@@ -27,6 +30,10 @@ class Beat:
     treatment: str | None = None
     graphic: dict | None = None
     sfx: str | None = None
+    entity: str | None = None       # id in edit/entities.json (kind "entity")
+    fx: str | None = None           # face_fx wrapper: subscribe | tv | none
+    stickers: list | None = None    # [{"type": "stamp", "text": "...", "at": 0.5}] on face_fx beats
+    transition: str | None = None   # entry effect on this beat: zoom | flash | whip | glitch
 
     @property
     def duration(self) -> float:
@@ -41,6 +48,7 @@ class EditPlan:
     beats: list[Beat]
     shorts: list = field(default_factory=list)
     chapters: list[dict] = field(default_factory=list)  # [{"t": cleaned-timeline seconds, "title": str}]
+    ai_budget: float = 0.0   # Higgsfield credits this episode may spend (edit/ai_ledger.json)
 
     def chapter_times(self) -> list[float]:
         """Chapter starts on the final timeline: the first covers the teaser, the rest shift by it."""
@@ -56,7 +64,7 @@ def load_plan(path: Path) -> EditPlan:
     return EditPlan(style=d["style"], style_reason=d.get("style_reason", ""),
                     teaser=[tuple(t) for t in d.get("teaser", [])],
                     beats=[Beat(**b) for b in d["beats"]], shorts=d.get("shorts", []),
-                    chapters=d.get("chapters", []))
+                    chapters=d.get("chapters", []), ai_budget=d.get("ai_budget", 0.0))
 
 
 def save_plan(plan: EditPlan, path: Path) -> None:
@@ -66,7 +74,9 @@ def save_plan(plan: EditPlan, path: Path) -> None:
     Path(path).write_text(json.dumps(d, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
-def validate_plan(plan: EditPlan, clean_duration: float) -> list[str]:
+def validate_plan(plan: EditPlan, clean_duration: float, entities: set[str] | None = None,
+                  ai_spent: float = 0.0) -> list[str]:
+    """`entities`: ids known in entities.json (None = don't check). `ai_spent`: credits in the ledger."""
     errs: list[str] = []
     for i, (s, e) in enumerate(plan.teaser):
         if not (0 <= s < e <= clean_duration + TOL):
@@ -85,8 +95,21 @@ def validate_plan(plan: EditPlan, clean_duration: float) -> list[str]:
             errs.append(f"beat {i}: نوع غير معروف '{b.kind}'")
             prev_end = b.end
             continue
-        if b.kind in AI_KINDS:
-            errs.append(f"beat {i}: الذكاء الاصطناعي مو مفعّل بعد (الجزء 2)")
+        if b.kind in AI_KINDS and not (b.prompt and b.caption):
+            errs.append(f"beat {i}: مشهد الذكاء الاصطناعي لازم بيه prompt (إنگليزي) و caption (عربي)")
+        if b.kind == "entity":
+            if not b.entity:
+                errs.append(f"beat {i}: بطاقة الاسم لازم بيها entity")
+            elif entities is not None and b.entity not in entities:
+                errs.append(f"beat {i}: '{b.entity}' مو موجود بـ entities.json")
+        if b.kind == "face_fx" and b.fx not in FX_TYPES:
+            errs.append(f"beat {i}: face_fx لازم fx من {', '.join(FX_TYPES)}")
+        for s in b.stickers or []:
+            if b.kind != "face_fx" or s.get("type") not in STICKERS:
+                errs.append(f"beat {i}: الملصقات بس على face_fx، ونوعها من {', '.join(STICKERS)}")
+                break
+        if b.transition and b.transition not in TRANSITIONS:
+            errs.append(f"beat {i}: transition لازم من {', '.join(TRANSITIONS)}")
         if b.start > prev_end + TOL:
             errs.append(f"beat {i}: فراغ قبله ({prev_end:.2f}–{b.start:.2f})")
         elif b.start < prev_end - TOL:
@@ -120,6 +143,9 @@ def validate_plan(plan: EditPlan, clean_duration: float) -> list[str]:
         for i in range(1, len(times)):
             if times[i] - times[i - 1] < 10:
                 errs.append(f"chapter {i}: لازم يبعد 10 ثواني أو أكثر عن الي قبله")
+
+    if ai_spent > plan.ai_budget + 1e-9:
+        errs.append(f"ai: صرفنا {ai_spent:g} رصيد، والميزانية {plan.ai_budget:g}")
 
     body = [b for b in beats if b.zone == "body" and b.kind in KINDS]
     body_time = sum(b.duration for b in body)

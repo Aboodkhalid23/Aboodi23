@@ -79,16 +79,21 @@ def collect_images(plan: EditPlan, ep: Episode, session=None) -> EditPlan:
     for i, b in enumerate(plan.beats):
         if b.kind != "image":
             continue
+        img, reason = None, "no free image"
         try:
-            img = next((c for c in search_commons(b.query, session=session) if c.title not in used), None)
-            if img:
-                ext = Path(img.url.split("?")[0]).suffix.lower() or ".jpg"
-                data = _get(session, img.url)
-                (ep.assets / f"img_{i}{ext}").write_bytes(data.content)
+            candidates = [c for c in search_commons(b.query, session=session) if c.title not in used]
         except requests.RequestException as exc:
-            img, reason = None, f"network: {exc}"
-        else:
-            reason = "no free image"
+            candidates, reason = [], f"network: {exc}"
+        for c in candidates[:3]:  # one file refusing to download (rate limit) shouldn't lose the beat
+            try:
+                data = _get(session, c.url)
+            except requests.RequestException as exc:
+                reason = f"network: {exc}"
+                continue
+            ext = Path(c.url.split("?")[0]).suffix.lower() or ".jpg"
+            (ep.assets / f"img_{i}{ext}").write_bytes(data.content)
+            img = c
+            break
         if img is None:
             fallbacks.append({"beat": i, "query": b.query, "reason": reason})
             b.kind, b.graphic = "graphic", {"type": "text", "text": b.caption or b.query}
@@ -97,6 +102,8 @@ def collect_images(plan: EditPlan, ep: Episode, session=None) -> EditPlan:
         b.treatment = b.treatment or treatment
         credits.append(f"{img.title} — {img.artist} — {img.license} — {img.page_url}")
     ep.fallbacks.write_text(json.dumps(fallbacks, ensure_ascii=False, indent=1), encoding="utf-8")
+    ent = ep.work / "entity_credits.json"
+    credits += list(json.loads(ent.read_text(encoding="utf-8")).values()) if ent.exists() else []
     ep.credits.write_text("\n".join(credits) + ("\n" if credits else ""), encoding="utf-8")
     save_plan(plan, ep.plan)
     return plan

@@ -1,0 +1,43 @@
+// Every font the graphics may use, loaded once (Remotion waits for them before frame 0).
+// Arabic: Cairo, Changa, Tajawal, Lalezar, Reem Kufi, El Messiri, Rakkas, Noto Kufi, Amiri, Aref Ruqaa, Noto Naskh.
+// Latin: Oswald, Bebas Neue, Anton, Inter, Playfair Display, Montserrat, Caveat, Source Serif 4.
+import '@fontsource/cairo/400.css';
+import '@fontsource/cairo/700.css';
+import '@fontsource/cairo/900.css';
+import '@fontsource/changa/500.css';
+import '@fontsource/changa/700.css';
+import '@fontsource/changa/800.css';
+import '@fontsource/tajawal/400.css';
+import '@fontsource/tajawal/700.css';
+import '@fontsource/tajawal/900.css';
+import '@fontsource/lalezar/400.css';
+import '@fontsource/reem-kufi/400.css';
+import '@fontsource/reem-kufi/700.css';
+import '@fontsource/el-messiri/400.css';
+import '@fontsource/el-messiri/700.css';
+import '@fontsource/rakkas/400.css';
+import '@fontsource/noto-kufi-arabic/400.css';
+import '@fontsource/noto-kufi-arabic/700.css';
+import '@fontsource/noto-kufi-arabic/900.css';
+import '@fontsource/amiri/400.css';
+import '@fontsource/amiri/700.css';
+import '@fontsource/aref-ruqaa/400.css';
+import '@fontsource/aref-ruqaa/700.css';
+import '@fontsource/noto-naskh-arabic/400.css';
+import '@fontsource/noto-naskh-arabic/700.css';
+import '@fontsource/oswald/500.css';
+import '@fontsource/oswald/700.css';
+import '@fontsource/bebas-neue/400.css';
+import '@fontsource/anton/400.css';
+import '@fontsource/inter/400.css';
+import '@fontsource/inter/700.css';
+import '@fontsource/inter/900.css';
+import '@fontsource/playfair-display/400.css';
+import '@fontsource/playfair-display/700.css';
+import '@fontsource/playfair-display/900.css';
+import '@fontsource/montserrat/500.css';
+import '@fontsource/montserrat/800.css';
+import '@fontsource/caveat/400.css';
+import '@fontsource/caveat/700.css';
+import '@fontsource/source-serif-4/400.css';
+import '@fontsource/source-serif-4/700.css';

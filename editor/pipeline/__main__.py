@@ -5,12 +5,14 @@ import os
 import shutil
 import sys
 
+from .ai import ai_fetch, ai_jobs, log_spend, spent
 from .align import find_script
 from .brief import write_brief
 from .chapters import write_chapters
 from .clean import clean
 from .compose import compose
 from .deliver import prepare_delivery
+from .entities import entities_file, fetch_entities, load_entities
 from .fetch import fetch
 from .media import MediaError
 from .paths import Episode
@@ -29,6 +31,37 @@ def st_fetch(ep, a):
         raise MediaError("لازم تنطي --source (رابط درايف أو مسار الفيديو)")
     print("⬇️  أسحب الفيديو وأوحّده…", flush=True)
     fetch(a.source, ep, max_height=a.max_height)
+
+
+def st_entities(ep, a):
+    if not entities_file(ep).exists():
+        print("   ما اكو entities.json (أسماء أشخاص وشركات)، أكمل بدونها")
+        return
+    print("👤 أجيب صور حقيقية للأشخاص والشركات…", flush=True)
+    found, missing = fetch_entities(ep)
+    print(f"   لگيت {len(found)} صورة")
+    for m in missing:
+        print("⚠️ ", m)
+
+
+def st_ai_jobs(ep, a):
+    jobs = ai_jobs(ep)
+    todo = [j for j in jobs if not j.done]
+    print(f"🤖 مشاهد الذكاء الاصطناعي: {len(jobs)}، الناقص {len(todo)}. الصرف {spent(ep):g} من "
+          f"{load_plan(ep.plan).ai_budget:g} رصيد. التفاصيل: {ep.work / 'ai_jobs.json'}")
+
+
+def st_ai_fetch(ep, a):
+    if a.beat is None or not a.url:
+        raise MediaError("لازم --beat و --url")
+    print(f"⬇️  نزل: {ai_fetch(ep, a.beat, a.url)}")
+
+
+def st_ai_log(ep, a):
+    if a.beat is None or a.credits is None or not a.model:
+        raise MediaError("لازم --beat و --model و --credits")
+    total = log_spend(ep, a.beat, a.model, a.credits, a.job or "")
+    print(f"🧾 انسجل. المجموع {total:g} من {load_plan(ep.plan).ai_budget:g} رصيد")
 
 
 def st_transcribe(ep, a):
@@ -52,7 +85,8 @@ def st_brief(ep, a):
 
 
 def st_validate(ep, a):
-    errs = validate_plan(load_plan(ep.plan), _clean_duration(ep))
+    ents = set(load_entities(ep)) if entities_file(ep).exists() else None
+    errs = validate_plan(load_plan(ep.plan), _clean_duration(ep), entities=ents, ai_spent=spent(ep))
     for e in errs:
         print("❌", e)
     if errs:
@@ -87,10 +121,12 @@ def st_deliver(ep, a):
     print(f"📦 جاهز: {out} ({out.stat().st_size / 1e6:.0f} ميگا)")
 
 
-STAGES = {"fetch": [st_fetch], "transcribe": [st_transcribe], "clean": [st_clean], "brief": [st_brief],
-          "validate": [st_validate], "images": [st_images], "compose": [st_compose], "deliver": [st_deliver]}
-STAGES["prep"] = STAGES["fetch"] + STAGES["transcribe"] + STAGES["clean"] + STAGES["brief"]
-STAGES["render"] = STAGES["validate"] + STAGES["images"] + STAGES["compose"] + STAGES["deliver"]
+STAGES = {"fetch": [st_fetch], "entities": [st_entities], "transcribe": [st_transcribe], "clean": [st_clean],
+          "brief": [st_brief], "validate": [st_validate], "ai-jobs": [st_ai_jobs], "ai-fetch": [st_ai_fetch],
+          "ai-log": [st_ai_log], "images": [st_images], "compose": [st_compose], "deliver": [st_deliver]}
+STAGES["prep"] = STAGES["fetch"] + STAGES["entities"] + STAGES["transcribe"] + STAGES["clean"] + STAGES["brief"]
+STAGES["render"] = (STAGES["validate"] + STAGES["ai-jobs"] + STAGES["images"] + STAGES["compose"]
+                    + STAGES["deliver"])
 
 
 def main(argv=None):
@@ -102,6 +138,11 @@ def main(argv=None):
     p.add_argument("--max-height", type=int, choices=[1080, 1440, 2160], help="أعلى دقة (أصغر = أسرع)")
     p.add_argument("--preview", action="store_true", help="نسخة معاينة سريعة 640×360")
     p.add_argument("--max-mb", type=float, help="اضغط الفيديو بس إذا عبر هذا الحجم")
+    p.add_argument("--beat", type=int, help="رقم المشهد (ai-fetch / ai-log)")
+    p.add_argument("--url", help="رابط الناتج من Higgsfield (ai-fetch)")
+    p.add_argument("--model", help="الموديل الي ولّد (ai-log)")
+    p.add_argument("--credits", type=float, help="الرصيد الي انصرف (ai-log)")
+    p.add_argument("--job", help="رقم المهمة بـ Higgsfield (ai-log)")
     a = p.parse_args(argv)
     ep = Episode(a.episode).ensure()
     try:
