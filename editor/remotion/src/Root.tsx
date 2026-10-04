@@ -18,6 +18,8 @@ import {ShortTitle} from './graphics/ShortTitle';
 import {Timeline} from './graphics/Timeline';
 import {CUSTOM} from './custom/registry';
 import {HeadlineStorm, UnitChart} from './graphics/Update2';
+import {CutoutTitle} from './graphics/CutoutTitle';
+import {Thumbnail} from './graphics/Thumbnail';
 import {Stickers} from './graphics/Stickers';
 import {BaseProps, FPS} from './style';
 
@@ -42,6 +44,7 @@ const GRAPHICS: [string, React.FC<any>, Record<string, unknown>][] = [
   ['end-screen', EndScreen, {channel: {name: 'القناة', handle: '@channel'}}],
   ['entity', EntityCard, {name: 'إيلون ماسك', role: 'مؤسس تسلا', entityKind: 'person'}],
   ['headlines', HeadlineStorm, {items: [{outlet: 'Reuters', title: 'خبر'}, {title: 'خبر ثاني'}]}],
+  ['cutout-title', CutoutTitle, {text: 'الدماغ'}],
   ['units', UnitChart, {total: 100, highlight: 20, label: 'واحد من كل خمسة'}],
   ['face-fx', FaceFx, {src: 'face.mp4', fx: 'subscribe', stickers: [], channel: {name: 'القناة', handle: '@channel'}}],
   ...CUSTOM.map(([name, C]) => [`custom-${name}`, C, {}] as [string, React.FC<any>, Record<string, unknown>]),
@@ -66,6 +69,7 @@ export const Root: React.FC = () => (
     ))}
     <Still id="short-title" component={ShortTitle as React.FC<any>} width={1080} height={1920} defaultProps={{style, durationSec: 1, title: 'عنوان'}} />
     <Still id="cutout-bg" component={CutoutBg as React.FC<any>} width={1920} height={1080} defaultProps={{style, durationSec: 1}} />
+    <Still id="thumbnail" component={Thumbnail as React.FC<any>} width={1920} height={1080} defaultProps={{style, durationSec: 1, person: 'p.png', text: 'عنوان'}} />
     <Still id="face-frame-bg" component={FaceFrame as React.FC<any>} width={1920} height={1080} defaultProps={{style, durationSec: 1}} />
   </>
 );

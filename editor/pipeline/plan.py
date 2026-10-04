@@ -19,6 +19,7 @@ STICKERS = ("stamp", "arrow", "burst", "tape", "circle", "scribble_circle", "scr
 MARKABLE = ("face_fx", "image", "ai_image", "graphic", "entity", "footage")   # beats that can carry stickers
 
 HOOK_SECONDS = 30.0
+MIN_SHORTS, MIN_SHORTS_FROM = 5, 480.0   # owner: 5 reels at least from every long episode (8 min and up)
 LIMITS = {"hook": (1.5, 3.0), "body": (4.0, 6.0)}   # hook: quick, but not a flicker
 FACE_SHARE = (0.40, 0.65)   # channel-system: presenter on screen ≈57% (46–71%)
 TOL = 0.05
@@ -62,6 +63,7 @@ class EditPlan:
     grade: str | None = None  # colour look for the whole episode (default: the style's)
     music: list[dict] = field(default_factory=list)  # [{"t": final-timeline s, "prompt": ..., "mood": ...}]
     end_screen: float = 20.0  # seconds of YouTube end screen after the last beat (0 = none; YouTube allows 5–20)
+    thumbnail: dict = field(default_factory=dict)   # {"text": "2–4 words", "highlight": "one of them", "query"?: picture}
 
     def chapter_times(self) -> list[float]:
         """Chapter starts on the final timeline: the first covers the teaser, the rest shift by it."""
@@ -78,7 +80,8 @@ def load_plan(path: Path) -> EditPlan:
                     teaser=[tuple(t) for t in d.get("teaser", [])],
                     beats=[Beat(**b) for b in d["beats"]], shorts=d.get("shorts", []),
                     chapters=d.get("chapters", []), ai_budget=d.get("ai_budget", 0.0),
-                    grade=d.get("grade"), music=d.get("music", []), end_screen=d.get("end_screen", 20.0))
+                    grade=d.get("grade"), music=d.get("music", []), end_screen=d.get("end_screen", 20.0),
+                    thumbnail=d.get("thumbnail", {}))
 
 
 def save_plan(plan: EditPlan, path: Path) -> None:
@@ -126,6 +129,12 @@ def validate_plan(plan: EditPlan, clean_duration: float, entities: set[str] | No
             errs.append(f"beat {i}: grade لازم من {', '.join(LOOKS)}")
         if b.transition and b.transition not in TRANSITIONS:
             errs.append(f"beat {i}: transition لازم من {', '.join(TRANSITIONS)}")
+        if b.kind == "face_cutout" and b.treatment and b.treatment not in ("paper", "scene", "title"):
+            errs.append(f"beat {i}: face_cutout شكله paper (ورق القناة) أو scene (ينقله لمكان، يحتاج query) أو title (كلام ورا ظهره)")
+        elif b.kind == "face_cutout" and b.treatment == "scene" and not b.query:
+            errs.append(f"beat {i}: face_cutout scene يحتاج query (المكان الي ينتقل إله، مثل farm field)")
+        elif b.kind == "face_cutout" and b.treatment == "title" and not (b.title or b.caption):
+            errs.append(f"beat {i}: face_cutout title يحتاج title (الكلمة الي تطلع ورا ظهره)")
         if b.source and b.source not in ("archive", "stock"):
             errs.append(f"beat {i}: source لازم archive (تاريخ) أو stock (مشاهد حديثة) أو بدونه")
         if b.look:
@@ -186,6 +195,16 @@ def validate_plan(plan: EditPlan, clean_duration: float, entities: set[str] | No
         a, z = float(sh.get("from", -1)), float(sh.get("to", -1))
         if not (0 <= a < z <= total + TOL) or not 15 <= z - a <= 60 or not sh.get("title"):
             errs.append(f"short {k}: لازم from و to داخل الحلقة (15–60 ثانية) و title (هوك عربي قصير)")
+            continue
+        # owner's rule: a reel is edited too (pictures, motion graphics), not just his face talking
+        scenes = [(max(a, b.start), min(z, b.end)) for b in plan.beats if b.kind not in FACE_KINDS or b.kind == "face_fx"]
+        scenes = [(s, e) for s, e in scenes if e - s > 0.3]
+        if len(scenes) < 2 or sum(e - s for s, e in scenes) < 0.3 * (z - a):
+            errs.append(f"short {k}: لازم بيه مونتاج: مشهدين أو أكثر (صور، گرافيكس، أرشيف) و30% من وقته أقل شي")
+    if total >= MIN_SHORTS_FROM and len(plan.shorts) < MIN_SHORTS:
+        errs.append(f"shorts: الحلقة الطويلة لازم بيها {MIN_SHORTS} شورتس أقل شي (لليوتيوب شورتس والريلز والتيك توك)")
+    if plan.thumbnail and not (plan.thumbnail.get("text") and len(plan.thumbnail["text"].split()) <= 4):
+        errs.append("thumbnail: لازم text بيه 4 كلمات أو أقل (الصورة المصغرة تنقرا بنص ثانية)")
     if plan.end_screen and not 5 <= plan.end_screen <= 20:
         errs.append("end_screen: يوتيوب يقبل شاشة النهاية بين 5 و 20 ثانية (أو 0 بدونها)")
     if plan.grade and plan.grade not in LOOKS:

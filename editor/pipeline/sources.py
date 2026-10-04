@@ -282,7 +282,7 @@ def find(query: str, kind: str = "image", source: str | None = None, session=Non
 
 def download(f: Found, session) -> bytes:
     """The file's bytes (Wikimedia's polite retry on rate limits); raises requests errors."""
-    if f.provider == "Wikimedia Commons":
+    if f.provider == "Wikimedia Commons" or "wikimedia.org" in f.url:   # also Openverse results hosted there
         from .wikimedia import _get
         return _get(session, f.url).content
     r = session.get(f.url, headers=HEADERS, timeout=90)

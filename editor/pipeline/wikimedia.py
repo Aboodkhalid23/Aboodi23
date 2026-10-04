@@ -78,6 +78,14 @@ def search_commons(query: str, limit: int = 8, session=None) -> list[CommonsImag
     return sorted(out, key=drawing)
 
 
+def _has_people(path: Path) -> bool:
+    from .masks import person_cutout
+    cut = person_cutout(path, path.with_name(path.stem + "_people_check.png"))
+    if cut:
+        cut.unlink(missing_ok=True)
+    return cut is not None
+
+
 def collect_images(plan: EditPlan, ep: Episode, session=None) -> EditPlan:
     """Download one image per `image` beat to assets/img_<beat index>.<ext> from the best of all the
     libraries (sources.find); fall back to text."""
@@ -91,7 +99,7 @@ def collect_images(plan: EditPlan, ep: Episode, session=None) -> EditPlan:
         img, errors = None, []
         candidates = find(b.query, "image", b.source, session, used, errors)
         reason = "no free image" + (f" ({'; '.join(errors)})" if errors else "")
-        for c in candidates[:4]:  # one file refusing to download (rate limit) shouldn't lose the beat
+        for c in candidates[:8 if b.treatment == 'scene' else 4]:  # one file refusing to download (rate limit) shouldn't lose the beat
             if c.provider == "Library of Congress" and not loc_rights_ok(c, session):
                 continue
             try:
@@ -100,7 +108,12 @@ def collect_images(plan: EditPlan, ep: Episode, session=None) -> EditPlan:
                 reason = f"network: {exc}"
                 continue
             ext = Path(c.url.split("?")[0]).suffix.lower()
-            (ep.assets / f"img_{i}{ext if ext in ('.jpg', '.jpeg', '.png', '.webp') else '.jpg'}").write_bytes(data)
+            dest = ep.assets / f"img_{i}{ext if ext in ('.jpg', '.jpeg', '.png', '.webp') else '.jpg'}"
+            dest.write_bytes(data)
+            if b.kind == "face_cutout" and b.treatment == "scene" and _has_people(dest):
+                dest.unlink()                 # he is moved INTO this place: it must be empty of other people
+                reason = "every picture of the place had people in it"
+                continue
             img = c
             break
         if img is None and b.kind == "face_cutout":   # the cut-out simply shows its caption instead

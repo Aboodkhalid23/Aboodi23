@@ -85,9 +85,11 @@ def make_canvas(ep: Episode, preview: bool) -> Canvas:
         # 720p: sharp enough for the owner to judge on a phone, ~2x faster than the final
         return Canvas(1280, 720, fmt.fps, ep.work / "preview",
                       ["-c:v", "libx264", "-crf", "23", "-preset", "veryfast", *common])
-    # The beat clips ARE the final encode: one high-quality lossy generation, then stream copy.
+    # The beat clips ARE the final encode: one lossy generation, then stream copy. Owner's rule: the highest
+    # quality, file size no object (CRF 12 ≈ visually lossless; aq-mode 3 keeps dark gradients free of banding).
     return Canvas(fmt.width, fmt.height, fmt.fps, ep.work,
-                  ["-c:v", "libx264", "-crf", "16", "-preset", "fast", *common])
+                  ["-c:v", "libx264", "-crf", "12", "-preset", "medium", "-profile:v", "high",
+                   "-x264-params", "aq-mode=3", *common])
 
 
 def source_ranges(start: float, end: float, teaser: list[tuple[float, float]]) -> list[tuple[float, float]]:
@@ -267,7 +269,7 @@ def _build_audio(ep: Episode, teaser, duration: float, out: Path,
     else:
         graph = graph.removesuffix("[voice]")
     graph += f",atrim=0:{duration:.4f}"
-    run_ffmpeg([*args, "-filter_complex", graph, "-vn", "-c:a", "aac", "-b:a", "192k", str(out)])
+    run_ffmpeg([*args, "-filter_complex", graph, "-vn", "-c:a", "aac", "-b:a", "320k", str(out)])
 
 
 def _face_on_canvas(ep: Episode, cv: Canvas) -> tuple[float, float] | None:
@@ -285,22 +287,38 @@ def _face_on_canvas(ep: Episode, cv: Canvas) -> tuple[float, float] | None:
 
 def _cutout(ep: Episode, b: Beat, i: int, frames: int, teaser, style: Style, bundle: Path, cv: Canvas,
             grade: str, out: Path) -> None:
-    """He is cut out of the room and stands on the episode's world; caption (or the beat's picture) on the left."""
+    """He is cut out of his room (precise video matting) and: stands on the episode's paper world ("paper"),
+    is moved into the beat's picture ("scene"), or has big stretching words behind his back ("title")."""
     from .cutout import cutout_clip
     from .graphics import RenderJob, _publish, _style_props
     face = cv.work / f"face_{i}.mp4"
     _face_clip(ep, replace(b, kind="face", transition=None), frames, teaser, face, None, cv,
                encode=[*INTERMEDIATE, "-r", str(cv.fps)], grade=grade, plain=True)
-    shift = round(0.66 - cv.face[0], 3) if cv.face else 0.18
     fw = min(cv.width, round(cv.height * (cv.src_aspect or cv.width / cv.height)))
     region = ((cv.width - fw) // 2, (cv.width - fw) // 2 + fw)
     pic = _asset(ep.assets, f"img_{i}", IMAGE_EXT)
+    mode = b.treatment or "paper"
+    if mode == "scene" and not pic:      # no picture of the place came back: the paper look instead
+        mode = "paper"
+    vf = _transition_filter(b.transition, cv)
+    if mode == "scene":
+        cutout_clip(face, pic, out, cv.width, cv.height, cv.fps, frames, cv.encode, vf=vf, region=region, mode="scene")
+        return
+    if mode == "title":
+        words = RenderJob("cutout-title", {"style": _style_props(style), "durationSec": round(frames / cv.fps, 3),
+                                           "text": b.title or b.caption or ""}, cv.work / f"cutout_title_{i}.mp4",
+                          cv.remotion_scale)
+        render_batch([words], bundle)
+        accent = style.palette.get("accent", "#F7D046").lstrip("#")
+        cutout_clip(face, None, out, cv.width, cv.height, cv.fps, frames, cv.encode, vf=vf, region=region, mode="title",
+                    text=words.out, text_rgb=tuple(int(accent[k:k + 2], 16) for k in (0, 2, 4)))
+        return
+    shift = round(0.66 - cv.face[0], 3) if cv.face else 0.18
     props = {"style": _style_props(style), "durationSec": 1, "caption": b.caption or "", "personX": 0.66,
              **({"src": _publish(bundle, pic)} if pic else {})}
     bg = RenderJob("cutout-bg", props, cv.work / f"cutout_bg_{i}.png", cv.remotion_scale, still=True)
     render_batch([bg], bundle)
-    cutout_clip(face, bg.out, out, cv.width, cv.height, cv.fps, frames, cv.encode, shift,
-                vf=_transition_filter(b.transition, cv), region=region)
+    cutout_clip(face, bg.out, out, cv.width, cv.height, cv.fps, frames, cv.encode, shift, vf=vf, region=region)
 
 
 def _end_screen(plan, style: Style, cv: Canvas, bundle: Path, channel: dict, avatar: Path | None) -> Path:

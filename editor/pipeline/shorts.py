@@ -56,8 +56,8 @@ def make_short(ep: Episode, n: int, start: float, end: float, title: str, fps: i
         if frames < 1:
             continue
         run_ffmpeg(["-ss", f"{a:.3f}", "-i", str(final), "-frames:v", str(frames), "-filter_complex",
-                    f"[0:v]{crop_face if face else middle},setsar=1,fps={fps}", "-an", "-c:v", "libx264", "-crf", "16",
-                    "-preset", "fast", "-pix_fmt", "yuv420p", "-video_track_timescale", "15360", str(seg)])
+                    f"[0:v]{crop_face if face else middle},setsar=1,fps={fps}", "-an", "-c:v", "libx264", "-crf", "13",
+                    "-preset", "medium", "-pix_fmt", "yuv420p", "-video_track_timescale", "15360", str(seg)])
         segs.append(seg)
     if not segs:
         raise MediaError(f"الشورت {n}: ما بيه مشاهد بين {start} و {end}")
@@ -73,7 +73,7 @@ def make_short(ep: Episode, n: int, start: float, end: float, title: str, fps: i
     run_ffmpeg(["-f", "concat", "-safe", "0", "-i", str(listing), "-i", str(overlay.out), "-ss", f"{start:.3f}", "-t", f"{dur:.3f}",
                 "-i", str(final), "-filter_complex",
                 f"[0:v][1:v]overlay=0:0,format=yuv420p[v];[2:a]afade=t=in:d=0.15,afade=t=out:st={max(0, dur - 0.4):.3f}:d=0.4[a]",
-                "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-crf", "17", "-preset", "fast", "-c:a", "aac", "-b:a", "192k",
+                "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-crf", "14", "-preset", "medium", "-c:a", "aac", "-b:a", "320k",
                 "-t", f"{dur:.3f}", "-movflags", "+faststart", str(out)])
     return out
 

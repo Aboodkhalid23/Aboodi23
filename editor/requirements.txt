@@ -5,3 +5,4 @@ requests>=2.31
 pytest>=8
 opencv-python-headless>=4.10
 mediapipe==0.10.14
+onnxruntime>=1.17
