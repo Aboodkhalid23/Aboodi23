@@ -62,8 +62,11 @@ const Subscribe: React.FC<Props> = ({src, channel}) => {
   return (
     <AbsoluteFill style={{background: '#0F0F0F'}}>
       <AbsoluteFill style={{opacity: m}}>
-        <OffthreadVideo src={staticFile(src)} muted style={{width: '100%', height: '100%', objectFit: 'cover',
-          filter: 'blur(48px) brightness(.38) saturate(1.2)', transform: 'scale(1.15)'}} />
+        {/* blur a quarter-size copy, then scale it up: same look, 16x cheaper to render */}
+        <div style={{width: W / 4, height: H / 4, transform: 'scale(4.6) translate(-12px, -7px)', transformOrigin: '0 0', overflow: 'hidden'}}>
+          <OffthreadVideo src={staticFile(src)} muted style={{width: '100%', height: '100%', objectFit: 'cover',
+            filter: 'blur(12px) brightness(.38) saturate(1.2)'}} />
+        </div>
       </AbsoluteFill>
       <Footage src={src} rect={rect} radius={28 * m} shadow />
       <div style={{position: 'absolute', left: target[0], top: target[1] + target[3] + 26, width: target[2], height: 100,

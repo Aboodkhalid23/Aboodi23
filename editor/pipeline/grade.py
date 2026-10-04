@@ -1,5 +1,5 @@
-"""Colour: correct the footage first (levels, exposure, white balance), then a film look, then finish
-(vignette + fine grain). CRAFT.md §6: correction before style, skin never breaks."""
+"""Colour correction only: levels, exposure and white balance measured from the footage, then a light
+polish. Colours stay natural (owner's decision); skin never breaks (CRAFT.md §6)."""
 import json
 import re
 import subprocess
@@ -7,25 +7,12 @@ from pathlib import Path
 
 from .paths import Episode
 
-# Looks applied after correction. All keep skin warm (no hue shifts in the midtones' red channel).
-LOOKS = {
-    "clean": "",
-    # teal shadows, warm highlights, gentle S-curve: the "YouTube documentary" look
-    "cinematic": ("colorbalance=rs=-0.05:gs=-0.01:bs=0.06:rh=0.05:gh=0.015:bh=-0.05,"
-                  "curves=master='0/0.02 0.25/0.22 0.5/0.5 0.75/0.78 1/0.98',eq=saturation=1.04"),
-    # warm, soft, slightly faded blacks: stories, nostalgia
-    "warm": ("colorbalance=rs=0.03:bs=-0.03:rm=0.03:bm=-0.03:rh=0.02:bh=-0.03,"
-             "curves=master='0/0.04 0.5/0.52 1/0.97',eq=saturation=1.02"),
-    # film stock: lifted blacks, rolled highlights, muted colour, visible grain
-    "film": ("curves=master='0/0.06 0.3/0.29 0.7/0.73 1/0.93',"
-             "colorbalance=rs=0.02:bs=-0.02:rh=0.03:bh=-0.04,eq=saturation=0.86"),
-    # cold and tense: investigations, crime
-    "cold": ("colorbalance=rs=-0.04:bs=0.05:rm=-0.02:bm=0.03,"
-             "curves=master='0/0 0.25/0.2 0.75/0.8 1/1',eq=saturation=0.9"),
-    # black and white, punchy: flashbacks, archive moments
-    "noir": "hue=s=0,curves=master='0/0 0.3/0.22 0.7/0.8 1/1'",
-}
-GRAIN = {"film": 9, "noir": 10}   # other looks get a fine 4
+# The owner's rule (2026-10-04): natural colours only — correct the footage, never restyle it.
+# No film looks, no colour casts, no vignette, no grain.
+# "natural" = measured correction + a light polish (a touch of clarity and of colour in dull areas).
+# "none"    = the footage untouched.
+LOOKS = {"natural": "", "none": ""}
+POLISH = "vibrance=intensity=0.12,unsharp=5:5:0.35:5:5:0"   # vibrance lifts dull colours, leaves skin
 SAMPLES = 12
 
 
@@ -43,7 +30,7 @@ def _stats(video: Path) -> dict:
     return {k: round(sum(v) / len(v), 2) for k, v in sums.items()}
 
 
-def correction(stats: dict) -> str:
+def correction(stats: dict, face_luma: float | None = None) -> str:
     """Gentle automatic correction, bounded so a bad measurement can never wreck the picture."""
     if not stats:
         return ""
@@ -59,14 +46,19 @@ def correction(stats: dict) -> str:
     gamma = min(max(stretched / 0.45, 0.87), 1.15) ** 0.5
     if abs(gamma - 1) > 0.02:
         parts.append(f"eq=gamma={gamma:.3f}")
+    # backlit face (bright window behind, dark face): lift the midtones where the face sits,
+    # keep black black and white white, so the background never burns
+    if face_luma is not None:
+        face = min(max((face_luma - imin) / max(imax - imin, 0.1), 0.02), 0.98)
+        if face < 0.42:
+            target = min(face + 0.12, face * 1.35, 0.5)
+            parts.append(f"curves=master='0/0 {face:.3f}/{target:.3f} 1/1'")
     # white balance: undo half of any colour cast in the averages (U = blue-yellow, V = red-cyan)
     du, dv = stats["UAVG"] - 128, stats["VAVG"] - 128
     if abs(du) > 2 or abs(dv) > 2:
         rm = max(min(-dv * 0.006, 0.06), -0.06)
         bm = max(min(-du * 0.006, 0.06), -0.06)
         parts.append(f"colorbalance=rm={rm:.3f}:bm={bm:.3f}")
-    if stats.get("SATAVG", 20) < 10:   # washed out: lift the dull colours, leave saturated ones (skin) alone
-        parts.append("vibrance=intensity=0.18")
     return ",".join(parts)
 
 
@@ -75,19 +67,19 @@ def analyse(ep: Episode) -> dict:
     f = ep.work / "grade.json"
     if f.exists():
         return json.loads(f.read_text(encoding="utf-8"))
-    stats = _stats(ep.clean_video)
-    d = {"stats": stats, "correction": correction(stats)}
+    from .face import face_info
+    stats, face = _stats(ep.clean_video), face_info(ep)
+    d = {"stats": stats, "face": face, "correction": correction(stats, face["luma"] if face else None)}
     f.write_text(json.dumps(d, ensure_ascii=False, indent=1), encoding="utf-8")
     return d
 
 
 def grade_filter(correct: str, look: str | None) -> str:
     """',<filters>' to append to a chain (empty when there is nothing to do)."""
-    look = look or "clean"
+    look = look or "natural"
     if look not in LOOKS:
-        raise KeyError(f"لون '{look}' مو موجود. الموجود: {', '.join(LOOKS)}")
-    parts = [p for p in (correct, LOOKS[look]) if p]
-    if look != "clean":
-        parts.append("vignette=angle=PI/5:mode=forward")
-        parts.append(f"noise=alls={GRAIN.get(look, 4)}:allf=t")
-    return "," + ",".join(parts) if parts else ""
+        raise KeyError(f"'{look}' مو موجود. الموجود: {', '.join(LOOKS)}")
+    if look == "none":
+        return ""
+    parts = [p for p in (correct, POLISH) if p]
+    return "," + ",".join(parts)

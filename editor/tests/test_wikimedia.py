@@ -136,3 +136,12 @@ def test_entity_credits_are_kept(tmp_path):
     (ep.work / "entity_credits.json").write_text(json.dumps({"musk": "Musk.jpg — Gage — CC BY-SA 4.0 — url"}))
     collect_images(make_plan(), ep, session=FakeSession(PAGES))
     assert "Musk.jpg — Gage" in ep.credits.read_text()
+
+
+def test_photos_come_before_drawings_and_charts():
+    pages = [page("File:Network Example.png", 2000, "CC BY 4.0", "https://u/n.png"),
+             page("File:Neuron diagram.jpg", 2000, "CC BY 4.0", "https://u/d.jpg"),
+             page("File:Neuron under microscope.jpg", 2000, "CC0", "https://u/m.jpg")]
+    found = search_commons("neuron", session=FakeSession(pages))
+    assert [i.title for i in found][0] == "File:Neuron under microscope.jpg"
+    assert search_commons("neuron diagram", session=FakeSession(pages))[0].title == "File:Neuron diagram.jpg"

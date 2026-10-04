@@ -13,7 +13,7 @@ sfx: [paper, pop, typewriter, film-projector]
 ai_suffix: vintage engraving illustration, black ink cross-hatching, isolated on plain background, 19th-century etching style
 image_treatments: [engraving_in_circle, newspaper, polaroid, pinboard, crt, ken_burns]
 text_variants: [marker, ransom, highlight, typewriter]
-grade: cinematic
+grade: natural
 ---
 
 # ستايل Retro Collage

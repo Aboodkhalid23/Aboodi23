@@ -7,7 +7,7 @@ from editor.pipeline.transcribe import Word, save_words
 
 HOOK = [(2.0, "face_zoom_in" if i % 2 == 0 else "graphic") for i in range(15)]
 BODY = [(5.0, k) for k in ["face", "image", "face_zoom_in", "graphic", "face_zoom_out",
-                           "image", "face_framed", "graphic", "image", "graphic"]]
+                           "image", "face_framed", "graphic", "face_punch", "graphic"]]
 TEASER = [(10.0, 12.0), (20.0, 22.0), (40.0, 42.0)]
 
 
@@ -82,7 +82,7 @@ def test_face_share_too_low():
     body = [(5.0, k) for k in ["face", "image", "graphic", "image", "graphic",
                                "image", "graphic", "image", "graphic", "image"]]
     plan, clean = build(body=body)
-    assert "35" in errors_for(plan, clean)
+    assert "40%" in errors_for(plan, clean)
 
 
 def test_ai_beat_needs_prompt_and_caption():

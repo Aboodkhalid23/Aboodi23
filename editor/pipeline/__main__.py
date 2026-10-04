@@ -19,6 +19,7 @@ from .media import MediaError
 from .music import music_fetch, music_jobs
 from .paths import Episode
 from .plan import load_plan, validate_plan
+from .qa import qa
 from .styles import styles_summary
 from .transcribe import transcribe
 from .wikimedia import collect_images
@@ -141,6 +142,17 @@ def st_compose(ep, a):
     compose(ep)
 
 
+def st_qa(ep, a):
+    print("🔍 أفحص الفيديو قبل التسليم…", flush=True)
+    d = qa(ep, preview=a.preview)
+    print(f"   {d['size']} | {d['fps']:g} فريم | {d['duration']} ث | صوت {d['lufs']} LUFS، ذروة {d['peak']}")
+    for issue in d["issues"]:
+        print("⚠️ ", issue)
+    if not d["issues"]:
+        print("   ✅ الفحص التقني سليم")
+    print("   راجع لوحات المشاهد بعينك قبل الإرسال: " + "، ".join(d["sheets"]))
+
+
 def st_deliver(ep, a):
     if a.preview:
         return
@@ -153,11 +165,11 @@ def st_deliver(ep, a):
 
 STAGES = {"fetch": [st_fetch], "entities": [st_entities], "transcribe": [st_transcribe], "clean": [st_clean],
           "brief": [st_brief], "validate": [st_validate], "ai-jobs": [st_ai_jobs], "ai-fetch": [st_ai_fetch],
-          "ai-log": [st_ai_log], "check": [st_check], "music-jobs": [st_music_jobs], "music-fetch": [st_music_fetch], "images": [st_images], "compose": [st_compose], "deliver": [st_deliver]}
+          "ai-log": [st_ai_log], "check": [st_check], "music-jobs": [st_music_jobs], "music-fetch": [st_music_fetch], "qa": [st_qa], "images": [st_images], "compose": [st_compose], "deliver": [st_deliver]}
 STAGES["get"] = STAGES["fetch"] + STAGES["check"]   # download, then show the owner what came
 STAGES["prep"] = STAGES["fetch"] + STAGES["entities"] + STAGES["transcribe"] + STAGES["clean"] + STAGES["brief"]
 STAGES["render"] = (STAGES["validate"] + STAGES["ai-jobs"] + STAGES["music-jobs"] + STAGES["images"] + STAGES["compose"]
-                    + STAGES["deliver"])
+                    + STAGES["qa"] + STAGES["deliver"])
 
 
 def main(argv=None):

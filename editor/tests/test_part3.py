@@ -52,7 +52,7 @@ STATS = {"YLOW": 24.0, "YAVG": 104.0, "YHIGH": 201.0, "UAVG": 127.7, "VAVG": 128
 
 def test_correction_is_gentle_and_bounded():
     c = correction(STATS)
-    assert c.startswith("colorlevels=") and "vibrance" in c          # washed out footage gets colour back
+    assert c.startswith("colorlevels=")
     dark = correction({**STATS, "YAVG": 40.0, "YLOW": 16.0, "YHIGH": 120.0, "VAVG": 150.0})
     gamma = float(dark.split("eq=gamma=")[1].split(",")[0])
     assert gamma <= 1.15 ** 0.5 + 1e-3                                  # never a wild exposure jump
@@ -70,9 +70,9 @@ def test_every_look_runs(tmp_path, look):
 def test_unknown_look_is_rejected_by_validator():
     from .test_plan import build
     plan, clean = build()
-    plan.grade = "instagram"
+    plan.grade = "cinematic"                 # film looks are gone: natural colours only
     assert any(e.startswith("grade:") for e in validate_plan(plan, clean))
-    plan.grade, plan.beats[3].grade = None, "noir"
+    plan.grade, plan.beats[3].grade = None, "none"
     assert validate_plan(plan, clean) == []
 
 
@@ -169,3 +169,9 @@ def test_new_link_is_fetched_again_not_the_old_video(tmp_path):
     fetch(str(synth(tmp_path / "new.mp4", size="1280x720", dur=3)), ep)
     assert probe(ep.source).duration == pytest.approx(3, abs=0.1)
     assert json.loads((ep.work / "source.json").read_text())["name"] == "new.mp4"
+
+
+def test_natural_grade_has_no_vignette_grain_or_colour_cast():
+    f = grade_filter(correction(STATS), "natural")
+    assert "vignette" not in f and "noise" not in f and "colorbalance=rs" not in f and "curves" not in f
+    assert grade_filter(correction(STATS), "none") == ""

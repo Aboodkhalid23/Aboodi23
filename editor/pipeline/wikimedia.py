@@ -15,6 +15,7 @@ from .vary import assign_variety
 API = "https://commons.wikimedia.org/w/api.php"
 HEADERS = {"User-Agent": "Aboodi23-editor/0.1 (github.com/Aboodkhalid23/Aboodi23)"}
 MIN_WIDTH = 1280
+DRAWING_WORDS = ("diagram", "chart", "graph", "schema", "example", "logo", "icon", "map", "plot", "svg")
 RETRIES = 4
 
 
@@ -69,7 +70,12 @@ def search_commons(query: str, limit: int = 8, session=None) -> list[CommonsImag
         out.append(CommonsImage(p["title"], info.get("thumburl") or info["url"], info["width"],
                                 info["height"], lic, _strip_html(meta.get("Artist", {}).get("value", "")),
                                 info.get("descriptionurl", "")))
-    return out
+    # Real photographs first: drawings, charts and logos only when nothing else fits (or when asked for)
+    q = query.lower()
+    def drawing(img: CommonsImage) -> bool:
+        t = img.title.lower()
+        return not t.endswith((".jpg", ".jpeg")) or any(w in t and w not in q for w in DRAWING_WORDS)
+    return sorted(out, key=drawing)
 
 
 def collect_images(plan: EditPlan, ep: Episode, session=None) -> EditPlan:

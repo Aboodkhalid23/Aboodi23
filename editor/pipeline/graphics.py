@@ -4,6 +4,7 @@ import json
 import os
 import shutil
 import subprocess
+from dataclasses import dataclass
 from pathlib import Path
 
 from .media import MediaError
@@ -43,19 +44,37 @@ def ensure_bundle(out_dir: Path | None = None) -> Path:
     return out_dir
 
 
-def _remotion(cmd: str, comp: str, out: Path, props: dict, bundle: Path, extra: list[str]) -> Path:
-    out = Path(out).resolve()
-    props_file = out.with_suffix(".props.json")
-    props_file.write_text(json.dumps(props, ensure_ascii=False), encoding="utf-8")
-    args = ["npx", "remotion", cmd, str(bundle), comp, str(out), f"--props={props_file}",
-            f"--browser-executable={BROWSER}", "--log=error", "--timeout=120000", *extra]
-    for _attempt in range(2):  # a busy machine can miss a frame deadline once; a real bug fails twice
-        proc = subprocess.run(args, cwd=REMOTION_DIR, capture_output=True, text=True)
-        if proc.returncode == 0 and out.exists():
-            break
-    if proc.returncode != 0 or not out.exists():
-        raise MediaError(f"فشل رسم الگرافيك ({comp}): {(proc.stderr or proc.stdout).strip()[-800:]}")
-    return out
+@dataclass
+class RenderJob:
+    comp: str
+    props: dict
+    out: Path
+    scale: float = 1.0
+    still: bool = False
+
+
+def render_batch(jobs: list[RenderJob], bundle: Path) -> None:
+    """Render all jobs with one Node process and one browser (render-batch.mjs)."""
+    if not jobs:
+        return
+    spec = {"serveUrl": str(Path(bundle).resolve()), "browserExecutable": BROWSER, "concurrency": 4,
+            "items": [{"comp": j.comp, "props": j.props, "out": str(Path(j.out).resolve()), "scale": j.scale,
+                       "still": j.still} for j in jobs]}
+    spec_file = Path(jobs[0].out).resolve().parent / "render_jobs.json"
+    spec_file.write_text(json.dumps(spec, ensure_ascii=False), encoding="utf-8")
+    proc = subprocess.run(["node", "render-batch.mjs", str(spec_file)], cwd=REMOTION_DIR, capture_output=True, text=True)
+    errors = []
+    for line in proc.stdout.splitlines():
+        try:
+            d = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if "error" in d:
+            errors.append(f"{Path(d['error']).name}: {d['message']}")
+    missing = [j for j in jobs if not Path(j.out).exists()]
+    if errors or missing or proc.returncode not in (0, 2):
+        detail = "\n".join(errors) or (proc.stderr or proc.stdout).strip()[-800:]
+        raise MediaError(f"فشل رسم الگرافيكس ({len(errors) or len(missing)} من {len(jobs)}): {detail}")
 
 
 def _publish(bundle: Path, src: Path, name: str | None = None) -> str:
@@ -65,13 +84,10 @@ def _publish(bundle: Path, src: Path, name: str | None = None) -> str:
     return name
 
 
-VIDEO_FLAGS = ["--codec=h264", "--crf=10", "--concurrency=4", "--muted"]
-
-
-def render_graphic(beat: Beat, style: Style, out: Path, public_dir: Path | None = None,
-                   index: int | None = None, bundle: Path | None = None, scale: float = 1.0,
-                   src: Path | None = None, extra_props: dict | None = None) -> Path:
-    """Render an image / ai_image / entity / graphic beat. Pictures come from `src`, or for `image`
+def graphic_job(beat: Beat, style: Style, out: Path, public_dir: Path | None = None, index: int | None = None,
+                bundle: Path | None = None, scale: float = 1.0, src: Path | None = None,
+                extra_props: dict | None = None) -> RenderJob:
+    """Job for an image / ai_image / entity / graphic beat. Pictures come from `src`, or for `image`
     beats from assets/img_<index>.* in `public_dir` (the episode's assets folder)."""
     bundle = bundle or ensure_bundle()
     props = {"style": _style_props(style), "durationSec": round(beat.duration, 3), **(extra_props or {})}
@@ -91,11 +107,11 @@ def render_graphic(beat: Beat, style: Style, out: Path, public_dir: Path | None 
         g = dict(beat.graphic or {})
         comp = g.pop("type")
         props.update(g)
-    return _remotion("render", comp, out, props, bundle, [*VIDEO_FLAGS, f"--scale={scale!r}"])
+    return RenderJob(comp, props, Path(out), scale)
 
 
-def render_face_fx(beat: Beat, style: Style, face: Path, out: Path, fps: int, channel: dict,
-                   bundle: Path | None = None, scale: float = 1.0, avatar: Path | None = None) -> Path:
+def face_fx_job(beat: Beat, style: Style, face: Path, out: Path, fps: int, channel: dict,
+                bundle: Path | None = None, scale: float = 1.0, avatar: Path | None = None) -> RenderJob:
     """The presenter's own footage (`face`, already canvas-sized) wrapped in a YouTube-style scene."""
     bundle = bundle or ensure_bundle()
     ch = dict(channel)
@@ -103,9 +119,28 @@ def render_face_fx(beat: Beat, style: Style, face: Path, out: Path, fps: int, ch
     props = {"style": _style_props(style), "durationSec": round(beat.duration, 3), "fps": fps,
              "src": _publish(bundle, face), "fx": beat.fx or "none", "stickers": beat.stickers or [],
              "channel": ch}
-    return _remotion("render", "face-fx", out, props, bundle, [*VIDEO_FLAGS, f"--scale={scale!r}"])
+    return RenderJob("face-fx", props, Path(out), scale)
+
+
+def render_graphic(beat: Beat, style: Style, out: Path, public_dir: Path | None = None,
+                   index: int | None = None, bundle: Path | None = None, scale: float = 1.0,
+                   src: Path | None = None, extra_props: dict | None = None) -> Path:
+    bundle = bundle or ensure_bundle()
+    job = graphic_job(beat, style, out, public_dir, index, bundle, scale, src, extra_props)
+    render_batch([job], bundle)
+    return job.out
+
+
+def render_face_fx(beat: Beat, style: Style, face: Path, out: Path, fps: int, channel: dict,
+                   bundle: Path | None = None, scale: float = 1.0, avatar: Path | None = None) -> Path:
+    bundle = bundle or ensure_bundle()
+    job = face_fx_job(beat, style, face, out, fps, channel, bundle, scale, avatar)
+    render_batch([job], bundle)
+    return job.out
 
 
 def render_face_frame_bg(style: Style, out_png: Path, bundle: Path | None = None, scale: float = 1.0) -> Path:
-    props = {"style": _style_props(style), "durationSec": 1}
-    return _remotion("still", "face-frame-bg", out_png, props, bundle or ensure_bundle(), [f"--scale={scale!r}"])
+    bundle = bundle or ensure_bundle()
+    job = RenderJob("face-frame-bg", {"style": _style_props(style), "durationSec": 1}, Path(out_png), scale, still=True)
+    render_batch([job], bundle)
+    return job.out

@@ -8,7 +8,7 @@ from .channel import channel_avatar, load_channel
 from .entities import entity_image, load_entities
 from .fmt import load_format
 from .grade import analyse, grade_filter
-from .graphics import _source_hash, ensure_bundle, render_face_fx, render_face_frame_bg, render_graphic
+from .graphics import _source_hash, ensure_bundle, face_fx_job, graphic_job, render_batch, render_face_frame_bg
 from .media import MediaError, run_ffmpeg
 from .music import AUDIO_EXT, bed_filter, music_asset, segments
 from .paths import Episode
@@ -40,6 +40,8 @@ class Canvas:
     fps: int
     work: Path
     encode: list[str]
+    face: tuple[float, float] | None = None   # face centre on the canvas (fractions), for the zooms
+    src_aspect: float | None = None           # footage width/height; None = unknown (use the safe path)
 
     @property
     def fit(self) -> str:
@@ -51,8 +53,12 @@ class Canvas:
         """Fit the face video; if it is narrower than the canvas (vertical phone video), fill the
         sides with a blurred, zoomed copy of the same frame instead of black bars."""
         w, h = self.width, self.height
-        return (f"split=2[fg][bg];[bg]scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},"
-                f"boxblur=luma_radius=40:luma_power=2,eq=brightness=-0.08[bgb];"
+        if self.src_aspect and abs(self.src_aspect - w / h) < 0.01:   # footage fills the canvas: no blur work
+            return f"scale={w}:{h},setsar=1"
+        # blur a quarter-size copy and scale it back up: same look, ~16x less work than blurring at full size
+        bw, bh = w // 4 // 2 * 2, h // 4 // 2 * 2
+        return (f"split=2[fg][bg];[bg]scale={bw}:{bh}:force_original_aspect_ratio=increase,crop={bw}:{bh},"
+                f"boxblur=luma_radius=10:luma_power=2,eq=brightness=-0.08,scale={w}:{h}[bgb];"
                 f"[fg]scale={w}:{h}:force_original_aspect_ratio=decrease[fgs];"
                 f"[bgb][fgs]overlay=(W-w)/2:(H-h)/2,setsar=1")
 
@@ -79,7 +85,7 @@ def make_canvas(ep: Episode, preview: bool) -> Canvas:
                       ["-c:v", "libx264", "-crf", "28", "-preset", "ultrafast", *common])
     # The beat clips ARE the final encode: one high-quality lossy generation, then stream copy.
     return Canvas(fmt.width, fmt.height, fmt.fps, ep.work,
-                  ["-c:v", "libx264", "-crf", "16", "-preset", "medium", *common])
+                  ["-c:v", "libx264", "-crf", "16", "-preset", "fast", *common])
 
 
 def source_ranges(start: float, end: float, teaser: list[tuple[float, float]]) -> list[tuple[float, float]]:
@@ -102,9 +108,15 @@ def _ease_out(t0: str = "t") -> str:
 
 
 def _zoom_crop(z: str, cv: Canvas, focus_y: float = FOCUS_Y) -> str:
+    """Zoom by `z` and crop back to the canvas. With a known face (cv.face) the crop follows the face:
+    centred across, and placed a little above the middle (headroom), never past the frame edge."""
     W, H = cv.width, cv.height
-    return (f"scale=w='trunc({W}*{z}/2)*2':h=-2:eval=frame,"
-            f"crop={W}:{H}:(iw-{W})/2:(ih-{H})*{focus_y}")
+    if cv.face and focus_y == FOCUS_Y:
+        fx, fy = cv.face
+        x, y = f"min(max(iw*{fx}-{W}/2\\,0)\\,iw-{W})", f"min(max(ih*{fy}-{H}*0.42\\,0)\\,ih-{H})"
+    else:
+        x, y = f"(iw-{W})/2", f"(ih-{H})*{focus_y}"
+    return f"scale=w='trunc({W}*{z}/2)*2':h=-2:eval=frame,crop={W}:{H}:{x}:{y}"
 
 
 def _face_filter(kind: str, dur: float, cv: Canvas) -> str:
@@ -170,11 +182,10 @@ def _asset(folder: Path, stem: str, exts: tuple[str, ...]) -> Path | None:
     return next((p for p in sorted(folder.glob(f"{stem}.*")) if p.suffix.lower() in exts), None)
 
 
-def _graphic_clip(ep: Episode, beat: Beat, i: int, style: Style, frames: int, out: Path, bundle: Path,
-                  cv: Canvas, src: Path | None = None, extra_props: dict | None = None) -> None:
-    raw = render_graphic(beat, style, cv.work / f"graphic_{i}.mp4", public_dir=ep.assets, index=i,
-                         bundle=bundle, scale=cv.remotion_scale, src=src, extra_props=extra_props)
-    _finish(raw, frames, out, cv, beat.transition)
+def _graphic_job(ep: Episode, beat: Beat, i: int, style: Style, bundle: Path, cv: Canvas,
+                 src: Path | None = None, extra_props: dict | None = None):
+    return graphic_job(beat, style, cv.work / f"graphic_{i}.mp4", public_dir=ep.assets, index=i,
+                       bundle=bundle, scale=cv.remotion_scale, src=src, extra_props=extra_props)
 
 
 def _fallback_text(beat: Beat) -> Beat:
@@ -226,6 +237,19 @@ def _build_audio(ep: Episode, teaser, duration: float, out: Path,
     run_ffmpeg([*args, "-filter_complex", graph, "-vn", "-c:a", "aac", "-b:a", "192k", str(out)])
 
 
+def _face_on_canvas(ep: Episode, cv: Canvas) -> tuple[float, float] | None:
+    """The detected face centre, mapped through face_fit (narrow footage sits centred on the canvas)."""
+    from .face import face_info
+    from .media import probe
+    f = face_info(ep)
+    if not f:
+        return None
+    info = probe(ep.clean_video)
+    scale = min(cv.width / info.width, cv.height / info.height)
+    w, h = info.width * scale / cv.width, info.height * scale / cv.height
+    return round((1 - w) / 2 + f["cx"] * w, 3), round((1 - h) / 2 + f["cy"] * h, 3)
+
+
 def _stamp(path: Path | None) -> str:
     return f"{path.name}:{path.stat().st_mtime_ns}" if path else ""
 
@@ -242,6 +266,10 @@ def compose(ep: Episode, preview: bool = False) -> Path:
         frame_bg = cv.work / f"face_frame_{style.name}.png"
         if not frame_bg.exists():
             render_face_frame_bg(style, frame_bg, bundle, scale=cv.remotion_scale)
+    cv.face = _face_on_canvas(ep, cv)
+    from .media import probe
+    _info = probe(ep.clean_video)
+    cv.src_aspect = _info.width / _info.height
     entities = load_entities(ep)
     channel = load_channel()
     avatar = channel_avatar(ep.work) if any(b.kind == "face_fx" for b in plan.beats) else None
@@ -249,13 +277,13 @@ def compose(ep: Episode, preview: bool = False) -> Path:
     src_stamp = str(ep.clean_video.stat().st_mtime)
     correct = analyse(ep)["correction"]
     design = _source_hash()   # a changed graphic design re-renders the clips that use it
-    clips, missing = [], []
+    clips, missing, pending = [], [], []   # pending: Remotion renders, done together with one browser
     for i, b in enumerate(plan.beats):
         # Frame-grid boundaries: the sum of clip lengths equals the timeline exactly (no drift).
         frames = round(b.end * cv.fps) - round(b.start * cv.fps)
         look = b.grade or plan.grade or style.grade
-        footage_grade = grade_filter(correct, look)   # his camera: correct, then the look
-        ai_grade = grade_filter("", look)              # generated clips: the look only
+        footage_grade = grade_filter(correct, look)   # his camera: measured correction + light polish
+        ai_grade = ""                                  # generated clips are left as they came
         asset = None
         if b.kind == "ai_image":
             asset = _asset(ep.assets, f"ai_{i}", IMAGE_EXT)
@@ -267,36 +295,45 @@ def compose(ep: Episode, preview: bool = False) -> Path:
             missing.append(i)
         out = cv.work / f"beat_{i}.mp4"
         stamp = cv.work / f"beat_{i}.hash"
-        key = hashlib.sha1(json.dumps([asdict(b), style.name, teaser, src_stamp, frames, cv.encode, cv.width,
+        key = hashlib.sha1(json.dumps([asdict(b), style.name, teaser, src_stamp, frames, cv.encode, cv.width, cv.face,
                                        _stamp(asset), entities.get(b.entity or ""), channel,
                                        "" if b.kind.startswith("face") and b.kind != "face_fx" else design,
                                        footage_grade],
                                       ensure_ascii=False, sort_keys=True).encode()).hexdigest()
         if not (out.exists() and stamp.exists() and stamp.read_text() == key):
+            job = None
             if b.kind in ("ai_image", "ai_video") and asset is None:
-                _graphic_clip(ep, _fallback_text(b), i, style, frames, out, bundle, cv)
+                job = _graphic_job(ep, _fallback_text(b), i, style, bundle, cv)
             elif b.kind == "ai_video" and asset.suffix.lower() in VIDEO_EXT:
                 _finish(asset, frames, out, cv, b.transition, cover=True, loop=True, grade=ai_grade)
             elif b.kind == "ai_video":  # only a still came back: animate it like an AI image
-                _graphic_clip(ep, replace(b, kind="ai_image"), i, style, frames, out, bundle, cv, src=asset)
+                job = _graphic_job(ep, replace(b, kind="ai_image"), i, style, bundle, cv, src=asset)
             elif b.kind in ("image", "ai_image", "graphic"):
-                _graphic_clip(ep, b, i, style, frames, out, bundle, cv, src=asset)
+                job = _graphic_job(ep, b, i, style, bundle, cv, src=asset)
             elif b.kind == "entity":
                 e = entities.get(b.entity) or {"name": b.entity, "kind": "person"}
-                _graphic_clip(ep, b, i, style, frames, out, bundle, cv, src=asset,
-                              extra_props={"name": e["name"], "role": e.get("role", ""),
-                                           "entityKind": e.get("kind", "person")})
+                job = _graphic_job(ep, b, i, style, bundle, cv, src=asset,
+                                   extra_props={"name": e["name"], "role": e.get("role", ""),
+                                                "entityKind": e.get("kind", "person")})
             elif b.kind == "face_fx":
                 face = cv.work / f"face_{i}.mp4"
                 _face_clip(ep, replace(b, kind="face", transition=None), frames, teaser, face, None, cv,
                            encode=[*INTERMEDIATE, "-r", str(cv.fps)], grade=footage_grade)
-                raw = render_face_fx(b, style, face, cv.work / f"fx_{i}.mp4", cv.fps, channel, bundle,
-                                     scale=cv.remotion_scale, avatar=avatar)
-                _finish(raw, frames, out, cv, b.transition)
+                job = face_fx_job(b, style, face, cv.work / f"fx_{i}.mp4", cv.fps, channel, bundle,
+                                  scale=cv.remotion_scale, avatar=avatar)
             else:
                 _face_clip(ep, b, frames, teaser, out, frame_bg, cv, grade=footage_grade)
-            stamp.write_text(key)
+            if job is None:
+                stamp.write_text(key)
+            else:
+                pending.append((job, frames, out, b.transition, stamp, key))
         clips.append(out)
+    if pending:
+        print(f"   🎨 أرسم {len(pending)} گرافيك سوه…", flush=True)
+        render_batch([p[0] for p in pending], bundle)
+        for job, frames, out, transition, stamp, key in pending:
+            _finish(job.out, frames, out, cv, transition)
+            stamp.write_text(key)
     if missing:
         print(f"⚠️  مشاهد ذكاء اصطناعي ناقصة (انكتب الـ caption بدالها): beats {missing}")
 

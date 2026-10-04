@@ -9,8 +9,8 @@ from .transcribe import load_words
 RULES = """القواعد:
 - الوقت بالثواني على الفيديو المنظف. teaser = 3–4 لقطات (1.5–2.5 ث) من أقوى اللحظات، تنعرض أول شي.
 - beats تغطي (teaser + الفيديو المنظف) كامل، بلا فراغ ولا تداخل.
-- أول 30 ثانية zone=hook، كل beat بين 1.5 و 2.5 ث. بعدها zone=body، كل beat بين 4 و 6 ث.
-- ما يتكرر نفس kind مرتين ورا بعض. الوجه (face*) بين 35% و 55% من وقت الجسم.
+- أول 30 ثانية zone=hook، كل beat بين 1.5 و 3 ث. بعدها zone=body، كل beat بين 4 و 6 ث.
+- ما يتكرر نفس kind مرتين ورا بعض. الوجه (face*) بين 40% و 65% من وقت الجسم.
 - الأنواع: face, face_zoom_in, face_zoom_out, face_framed, face_punch (تقريب ثابت للتأكيد), face_fx,
   image (query بالإنگليزي لويكيميديا + caption عربي ينكتب إذا ما انلگت صورة), graphic,
   ai_image / ai_video (prompt إنگليزي يوصف المشهد + caption عربي بديل؛ الصور رخيصة والفيديو للحظات الكبيرة بس، وai_budget بالرصيد),

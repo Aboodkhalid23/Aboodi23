@@ -15,8 +15,8 @@ TRANSITIONS = ("zoom", "flash", "whip", "glitch")
 STICKERS = ("stamp", "arrow", "burst", "tape", "circle")
 
 HOOK_SECONDS = 30.0
-LIMITS = {"hook": (1.5, 2.5), "body": (4.0, 6.0)}
-FACE_SHARE = (0.35, 0.55)
+LIMITS = {"hook": (1.5, 3.0), "body": (4.0, 6.0)}   # hook: quick, but not a flicker
+FACE_SHARE = (0.40, 0.65)   # channel-system: presenter on screen ≈57% (46–71%)
 TOL = 0.05
 
 
@@ -169,5 +169,5 @@ def validate_plan(plan: EditPlan, clean_duration: float, entities: set[str] | No
     if body_time > 0:
         share = sum(b.duration for b in body if b.kind in FACE_KINDS) / body_time
         if not (FACE_SHARE[0] <= share <= FACE_SHARE[1]):
-            errs.append(f"beat {beats.index(body[0])}: الوجه {share:.0%} من الجسم، لازم بين 35% و 55%")
+            errs.append(f"beat {beats.index(body[0])}: الوجه {share:.0%} من الجسم، لازم بين 40% و 65%")
     return errs
