@@ -84,7 +84,7 @@ description: المونتير الآلي — يحوّل فيديو خام (صا�
      - `number` `{value, label, prefix?}` لأي رقم.
      - `headline` `{outlet, title, highlight}` لخبر أو وثيقة.
      - `quote` `{text, who}` لاقتباس.
-     - `map` `{country: "China" (الاسم الإنگليزي), label}` لما يذكر بلد.
+     - `map` لما يذكر بلد أو مكان أو رحلة: `{countries: ["China", "Japan"] (أسماء إنگليزية), pins: [{lon, lat, label: "شنجن"}], route: [[lon, lat], ...], label}`. الكاميرا تطير من العالم للمكان وتثبت، والمسار ينرسم، والدبابيس تنزل وحدة ورا الثانية. كلها اختيارية ما عدا وحدة منها.
      - `timeline` `{items: [{year, label}]}` لتسلسل تواريخ.
      - `chart` `{bars: [{label, value}], unit}` لمقارنة أرقام.
      - `text` `{text}` لجملة قوية.
