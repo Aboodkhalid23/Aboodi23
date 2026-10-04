@@ -40,7 +40,7 @@ PEAK_DB = -3.0
 
 # Sound that goes with each transition / special beat when the plan names none.
 TRANSITION_SFX = {"zoom": "whoosh", "whip": "swoosh", "flash": "hit", "glitch": "glitch", "tear": "paper",
-                  "burn": "whoosh"}
+                  "burn": "whoosh", "dive": "whoosh", "pan": "swoosh"}
 
 
 def variants(name: str) -> list[Path]:

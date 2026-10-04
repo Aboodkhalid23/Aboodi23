@@ -182,6 +182,35 @@ def _finish(raw: Path, frames: int, out: Path, cv: Canvas, transition: str | Non
                 "-frames:v", str(frames), "-an", *cv.encode, str(out)])
 
 
+STORM_FIRST = 0.15   # headline storm timing, same numbers as Update2.tsx (stormGap)
+
+
+def storm_gap(n: int, dur: float) -> float:
+    return min(0.6, max(0.25, dur * 0.55 / max(1, n)))
+
+
+def graphic_cues(b: Beat) -> list[tuple[float, str]]:
+    """Sounds inside the research-update scenes: a paper slap on every landing headline, a pop as the
+    people light up."""
+    g = b.graphic or {}
+    if b.kind != "graphic":
+        return []
+    if g.get("type") == "headlines":
+        n = len(g.get("items") or [])
+        return [(b.start + STORM_FIRST + k * storm_gap(n, b.duration), "paper") for k in range(n)]
+    if g.get("type") == "units":
+        return [(b.start + 1.0, "pop")]
+    return []
+
+
+def chapter_cues(plan) -> list[tuple[float, str]]:
+    """Long documentaries mark each new chapter with sound: a short riser into a heavy hit on its first frame."""
+    out = []
+    for t in plan.chapter_times()[1:]:
+        out += [(max(0.0, t - 1.2), "riser"), (t, "hit")]
+    return out
+
+
 def _asset(folder: Path, stem: str, exts: tuple[str, ...]) -> Path | None:
     return next((p for p in sorted(folder.glob(f"{stem}.*")) if p.suffix.lower() in exts), None)
 
@@ -407,6 +436,8 @@ def compose(ep: Episode, preview: bool = False) -> Path:
     cues = beat_cues(plan.beats, FX_CUES)
     for b in plan.beats:
         cues += [(b.start + float(st.get("at", 0.3)), "pop") for st in (b.stickers or [])]
+        cues += graphic_cues(b)
+    cues += chapter_cues(plan)
     duration = total_frames / cv.fps
     music = []
     if plan.music:

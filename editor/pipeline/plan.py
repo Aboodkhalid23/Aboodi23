@@ -9,10 +9,11 @@ KINDS = ("face", "face_zoom_in", "face_zoom_out", "face_framed", "face_punch", "
          "image", "ai_image", "ai_video", "graphic", "entity", "footage")
 FACE_KINDS = KINDS[:7]
 AI_KINDS = ("ai_image", "ai_video")
-GRAPHIC_TYPES = ("number", "headline", "quote", "map", "timeline", "chart", "text", "custom", "article")
+GRAPHIC_TYPES = ("number", "headline", "quote", "map", "timeline", "chart", "text", "custom", "article", "headlines",
+                 "units")
 CUSTOM_DIR = Path(__file__).resolve().parent.parent / "remotion" / "src" / "custom"
 FX_TYPES = ("subscribe", "tv", "none")        # face_fx wrappers; "none" = stickers only
-TRANSITIONS = ("zoom", "flash", "whip", "glitch", "tear", "burn")
+TRANSITIONS = ("zoom", "flash", "whip", "glitch", "tear", "burn", "dive", "pan")
 STICKERS = ("stamp", "arrow", "burst", "tape", "circle", "scribble_circle", "scribble_arrow", "scribble_underline",
             "censor", "name_tag")
 MARKABLE = ("face_fx", "image", "ai_image", "graphic", "entity", "footage")   # beats that can carry stickers
@@ -160,6 +161,12 @@ def validate_plan(plan: EditPlan, clean_duration: float, entities: set[str] | No
         elif b.kind == "graphic" and b.graphic["type"] == "article" and not (
                 b.graphic.get("url", "").startswith("http") and b.graphic.get("quote") and b.graphic.get("title")):
             errs.append(f"beat {i}: article لازم بيه url، و quote (الجملة بلغة المقالة)، و title (عربي، بديل إذا الموقع ما فتح)")
+        elif b.kind == "graphic" and b.graphic["type"] == "headlines" and not (
+                2 <= len(b.graphic.get("items") or []) <= 8 and all(x.get("title") for x in b.graphic["items"])):
+            errs.append(f"beat {i}: headlines لازم items من 2 لـ 8، وكل واحد بيه title (عربي)، و outlet اختياري")
+        elif b.kind == "graphic" and b.graphic["type"] == "units" and not (
+                1 <= (b.graphic.get("total") or 100) <= 200 and 0 <= (b.graphic.get("highlight") or -1) <= (b.graphic.get("total") or 100)):
+            errs.append(f"beat {i}: units لازم highlight (كم واحد يضوي) من total (أكثر شي 200)")
         elif b.kind == "graphic" and b.graphic["type"] == "custom" and not (
                 b.graphic.get("scene") and (CUSTOM_DIR / f"{b.graphic['scene']}.tsx").exists()):
             errs.append(f"beat {i}: المشهد المخصص '{b.graphic.get('scene')}' مو موجود بـ editor/remotion/src/custom")

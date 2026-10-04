@@ -50,9 +50,9 @@ def _solid(path, color, d=1.0):
 
 def test_tear_and_burn_wipe_the_new_shot_in_from_the_right(tmp_path):
     from editor.pipeline.media import probe
-    from editor.pipeline.wipes import DUR, WIPES, apply_wipe
+    from editor.pipeline.wipes import DUR, apply_wipe
     _solid(tmp_path / "old.mp4", "blue"); _solid(tmp_path / "new.mp4", "red")
-    for kind in WIPES:
+    for kind in ("tear", "burn"):
         out = apply_wipe(kind, tmp_path / "old.mp4", tmp_path / "new.mp4", tmp_path / f"{kind}.mp4", 320, 180, 30,
                          ["-c:v", "libx264", "-pix_fmt", "yuv420p"])
         assert abs(probe(out).duration - 1.0) < 0.05
@@ -93,3 +93,26 @@ def test_ai_look_replaces_the_world_suffix_and_is_validated():
     errs = " ".join(validate_plan(plan, 9.0))
     assert "beat 1: look" in errs and "beat 2: halftone_cutout" in errs and "beat 0: look" not in errs
     assert "pencil" in AI_LOOKS["pencil"]
+
+
+def test_camera_moves_dive_into_the_old_shot_and_pan_to_the_new_one(tmp_path):
+    from editor.pipeline.wipes import MOVE_DUR, apply_wipe
+    _solid(tmp_path / "old.mp4", "blue"); _solid(tmp_path / "new.mp4", "red")
+    enc = ["-c:v", "libx264", "-pix_fmt", "yuv420p"]
+    def frame(path, n):
+        cap = cv2.VideoCapture(str(path)); cap.set(cv2.CAP_PROP_POS_FRAMES, n); ok, f = cap.read(); assert ok; return f
+    dive = apply_wipe("dive", tmp_path / "old.mp4", tmp_path / "new.mp4", tmp_path / "dive.mp4", 320, 180, 30, enc)
+    assert frame(dive, 3)[90, 160][0] > 150 and frame(dive, int(MOVE_DUR * 30) + 2)[90, 160][2] > 150   # old, then new
+    pan = apply_wipe("pan", tmp_path / "old.mp4", tmp_path / "new.mp4", tmp_path / "pan.mp4", 320, 180, 30, enc)
+    mid = frame(pan, int(MOVE_DUR * 30 / 2) - 1)
+    assert mid[90, 5][2] > 150 and mid[90, 315][0] > 150          # new shot comes in from the left, old leaves right
+
+
+def test_headline_storm_has_a_paper_sound_per_landing_and_chapters_get_riser_and_hit():
+    from editor.pipeline.compose import chapter_cues, graphic_cues
+    from editor.pipeline.plan import Beat, EditPlan
+    b = Beat(10, 14, "body", "graphic", graphic={"type": "headlines", "items": [{"title": "أ"}, {"title": "ب"}, {"title": "ج"}]})
+    cues = graphic_cues(b)
+    assert [n for _, n in cues] == ["paper"] * 3 and cues[0][0] == 10.15
+    plan = EditPlan({"primary": "vox"}, "", [], [Beat(0, 60, "body", "face")], chapters=[{"t": 0, "title": "أ"}, {"t": 30, "title": "ب"}])
+    assert chapter_cues(plan) == [(28.8, "riser"), (30.0, "hit")]

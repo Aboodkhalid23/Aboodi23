@@ -1,6 +1,6 @@
 import './fonts';
 import React, {useEffect, useState} from 'react';
-import {AbsoluteFill, continueRender, delayRender, Easing, interpolate, staticFile} from 'remotion';
+import {AbsoluteFill, continueRender, delayRender, Easing, interpolate, staticFile, useCurrentFrame} from 'remotion';
 
 export type Palette = {paper: string; ink: string; accent: string};
 export type StyleProps = {palette: Palette; fonts: {title: string; body: string}; texture: string};
@@ -22,13 +22,18 @@ export const useFonts = () => {
 export const appear = (frame: number, start = 0, len = 12) =>
   interpolate(frame, [start, start + len], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: ease});
 
+/** Paper "boil" (research update): the paper grain jumps to a new spot ~4 times a second, so even a still
+ * paper scene breathes like hand-made animation. */
+export const boil = (f: number) => `${(Math.floor(f / 8) * 137) % 512}px ${(Math.floor(f / 8) * 71) % 512}px`;
+
 export const Background: React.FC<{style: StyleProps; children: React.ReactNode}> = ({style, children}) => {
   useFonts();
+  const f = useCurrentFrame();
   return (
     <AbsoluteFill style={{background: style.palette.paper, direction: 'rtl', fontFamily: style.fonts.body, color: style.palette.ink}}>
       {style.texture !== 'clean' && (
         <AbsoluteFill style={{backgroundImage: `url(${staticFile('paper-noise.png')})`, backgroundSize: '512px 512px',
-          mixBlendMode: 'multiply', opacity: style.texture === 'grain' ? 0.25 : 0.35}} />
+          mixBlendMode: 'multiply', opacity: style.texture === 'grain' ? 0.25 : 0.35, backgroundPosition: boil(f)}} />
       )}
       <AbsoluteFill style={{alignItems: 'center', justifyContent: 'center'}}>{children}</AbsoluteFill>
     </AbsoluteFill>
