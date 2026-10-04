@@ -1,4 +1,4 @@
-"""Stage 5: free, properly licensed images from Wikimedia Commons."""
+"""Stage 5: free, properly licensed images: Wikimedia Commons search here, and every other library in sources.py."""
 import json
 import re
 import time
@@ -79,36 +79,38 @@ def search_commons(query: str, limit: int = 8, session=None) -> list[CommonsImag
 
 
 def collect_images(plan: EditPlan, ep: Episode, session=None) -> EditPlan:
-    """Download one image per `image` beat to assets/img_<beat index>.<ext>; fall back to text."""
+    """Download one image per `image` beat to assets/img_<beat index>.<ext> from the best of all the
+    libraries (sources.find); fall back to text."""
+    from .sources import download, find, loc_rights_ok
     session = session or requests.Session()
     style = load_style(plan.style["primary"])
     used, fallbacks, credits = set(), [], []
     for i, b in enumerate(plan.beats):
         if b.kind != "image" and not (b.kind == "face_cutout" and b.query):
             continue
-        img, reason = None, "no free image"
-        try:
-            candidates = [c for c in search_commons(b.query, session=session) if c.title not in used]
-        except requests.RequestException as exc:
-            candidates, reason = [], f"network: {exc}"
-        for c in candidates[:3]:  # one file refusing to download (rate limit) shouldn't lose the beat
+        img, errors = None, []
+        candidates = find(b.query, "image", b.source, session, used, errors)
+        reason = "no free image" + (f" ({'; '.join(errors)})" if errors else "")
+        for c in candidates[:4]:  # one file refusing to download (rate limit) shouldn't lose the beat
+            if c.provider == "Library of Congress" and not loc_rights_ok(c, session):
+                continue
             try:
-                data = _get(session, c.url)
+                data = download(c, session)
             except requests.RequestException as exc:
                 reason = f"network: {exc}"
                 continue
-            ext = Path(c.url.split("?")[0]).suffix.lower() or ".jpg"
-            (ep.assets / f"img_{i}{ext}").write_bytes(data.content)
+            ext = Path(c.url.split("?")[0]).suffix.lower()
+            (ep.assets / f"img_{i}{ext if ext in ('.jpg', '.jpeg', '.png', '.webp') else '.jpg'}").write_bytes(data)
             img = c
             break
         if img is None and b.kind == "face_cutout":   # the cut-out simply shows its caption instead
             continue
         if img is None:
-            fallbacks.append({"beat": i, "query": b.query, "reason": reason})
+            fallbacks.append({"beat": i, "query": b.query, "reason": reason[:300]})
             b.kind, b.graphic = "graphic", {"type": "text", "text": b.caption or b.query}
             continue
-        used.add(img.title)
-        credits.append(f"{img.title} — {img.artist} — {img.license} — {img.page_url}")
+        used.add(img.url)
+        credits.append(img.credit)
     from .articles import collect_articles
     from .footage import collect_footage
     fallbacks += collect_articles(plan, ep)

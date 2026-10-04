@@ -1,5 +1,5 @@
-"""Real moving footage, free to use: Wikimedia Commons videos (free licences) and the Prelinger Archives
-on archive.org (old films, public domain). A `footage` beat gets a clip cut to its length into
+"""Real moving footage, free to use, from every library in sources.py (Pexels / Pixabay with a free key,
+archive.org public-domain films, NASA, Wikimedia Commons). A `footage` beat gets a clip cut to its length into
 assets/footage_<i>.mp4; if nothing is found it falls back to its caption card."""
 import hashlib
 import json
@@ -93,7 +93,8 @@ def cut(src: Path, seconds: float, out: Path) -> Path:
 
 
 def collect_footage(plan: EditPlan, ep: Episode, session=None) -> tuple[list[dict], list[str]]:
-    """Returns (fallbacks, credits). `source: "archive"` searches the old-film archive first."""
+    """Returns (fallbacks, credits). Searches every footage library (sources.find); `source` steers the order."""
+    from .sources import find
     session = session or requests.Session()
     fallbacks, credits, used = [], [], set()
     for i, b in enumerate(plan.beats):
@@ -104,30 +105,23 @@ def collect_footage(plan: EditPlan, ep: Episode, session=None) -> tuple[list[dic
         if out.exists() and meta.exists() and json.loads(meta.read_text())["query"] == b.query:
             credits.append(json.loads(meta.read_text())["credit"])
             continue
-        order = (search_prelinger, search_commons_video) if b.source == "archive" else (search_commons_video, search_prelinger)
-        got, reason = None, "no free footage"
-        for search in order:
+        errors = []
+        clips = find(b.query, "video", b.source, session, used, errors)
+        got, reason = None, "no free footage" + (f" ({'; '.join(errors)})" if errors else "")
+        for c in clips[:3]:
             try:
-                clips = [c for c in search(b.query, session) if c.url not in used]
-            except (requests.RequestException, ValueError) as exc:
-                reason = f"network: {exc}"
+                cut(_download(c.url, ep.work / "footage_cache", session), b.duration, out)
+            except (requests.RequestException, subprocess.CalledProcessError, MediaError) as exc:
+                reason = f"download: {exc}"
                 continue
-            for c in clips[:3]:
-                try:
-                    cut(_download(c.url, ep.work / "footage_cache", session), b.duration, out)
-                except (requests.RequestException, subprocess.CalledProcessError, MediaError) as exc:
-                    reason = f"download: {exc}"
-                    continue
-                got = c
-                break
-            if got:
-                break
+            got = c
+            break
         if got is None:
             fallbacks.append({"beat": i, "query": b.query, "reason": reason[:200]})
             b.kind, b.graphic = "graphic", {"type": "text", "text": b.caption or b.query}
             continue
         used.add(got.url)
-        credit = f"{got.title} — {got.artist} — {got.license} — {got.page}"
+        credit = got.credit
         meta.write_text(json.dumps({"query": b.query, "credit": credit}, ensure_ascii=False), encoding="utf-8")
         credits.append(credit)
     return fallbacks, credits

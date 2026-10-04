@@ -307,7 +307,7 @@ def test_footage_from_the_archive_is_cut_to_the_beat_and_credited(tmp_path):
                                                 Beat(4, 8, "body", "footage", query="factory", caption="مصنع")])
     fb, credits = collect_footage(plan, ep, session=Archive(film.read_bytes()))
     assert probe(ep.assets / "footage_0.mp4").duration == pytest.approx(4.5, abs=0.2)
-    assert credits[0].startswith("Old Film — Prelinger Archives — Public domain")
+    assert credits[0].startswith("Old Film — Internet Archive — Public domain")
     # the same film is not used twice in a row: the second beat falls back to its caption card
     assert fb[0]["beat"] == 1 and plan.beats[1].kind == "graphic" and plan.beats[1].graphic["text"] == "مصنع"
 

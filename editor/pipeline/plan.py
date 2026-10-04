@@ -40,7 +40,7 @@ class Beat:
     stickers: list | None = None    # [{"type": "stamp", "text": "...", "at": 0.5}] on face_fx beats
     transition: str | None = None   # entry effect on this beat: zoom | flash | whip | glitch
     grade: str | None = None        # colour look for this beat's footage (overrides the plan's)
-    source: str | None = None       # footage: "archive" = old films first (else Commons first)
+    source: str | None = None       # image / footage: "archive" (history first) or "stock" (modern scenes first)
     title: str | None = None        # cinematic_title / halftone_cutout: the giant word; desk: the stamp
     look: str | None = None         # ai_image / ai_video: a look from ai.AI_LOOKS instead of the world's
 
@@ -125,6 +125,8 @@ def validate_plan(plan: EditPlan, clean_duration: float, entities: set[str] | No
             errs.append(f"beat {i}: grade لازم من {', '.join(LOOKS)}")
         if b.transition and b.transition not in TRANSITIONS:
             errs.append(f"beat {i}: transition لازم من {', '.join(TRANSITIONS)}")
+        if b.source and b.source not in ("archive", "stock"):
+            errs.append(f"beat {i}: source لازم archive (تاريخ) أو stock (مشاهد حديثة) أو بدونه")
         if b.look:
             from .ai import AI_LOOKS
             if b.kind not in AI_KINDS or b.look not in AI_LOOKS:

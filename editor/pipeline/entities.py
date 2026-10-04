@@ -12,7 +12,7 @@ from urllib.parse import quote
 import requests
 
 from .paths import Episode
-from .wikimedia import HEADERS, _get, _strip_html, license_ok, search_commons
+from .wikimedia import HEADERS, _get, _strip_html, license_ok
 
 WIKIDATA = "https://www.wikidata.org/w/api.php"
 COMMONS = "https://commons.wikimedia.org/w/api.php"
@@ -102,15 +102,19 @@ def fetch_entities(ep: Episode, session=None) -> tuple[list[str], list[str]]:
             lic = file_license(title, session) if title else ("", "", "")
             if title and license_ok(lic[0]):
                 url = FILEPATH.format(quote(title.replace(" ", "_")))
-            else:
-                hit = next(iter(search_commons(e["en"], limit=5, session=session)), None)
-                title, url = (hit.title.removeprefix("File:"), hit.url) if hit else (None, None)
-                lic = (hit.license, hit.artist, hit.page_url) if hit else lic
-            if not url:
-                missing.append(f"{e.get('name', eid)} ({e['en']}): ما لگيت صورة حرة. حط qid من wikidata.org")
-                continue
-            resp = _get(session, url)
-            (ep.assets / f"entity_{eid}{_ext(resp, url)}").write_bytes(resp.content)
+                resp = _get(session, url)
+                content, ext = resp.content, _ext(resp, url)
+            else:   # no free portrait on Wikidata: every photo library, the full name must match
+                from .sources import download, find, relevance
+                hit = next((f for f in find(e["en"], "image", None, session) if relevance(e["en"], f.words or f.title) >= 0.99), None)
+                if not hit:
+                    missing.append(f"{e.get('name', eid)} ({e['en']}): ما لگيت صورة حرة. حط qid من wikidata.org")
+                    continue
+                title, lic = hit.title.removeprefix("File:"), (hit.license, hit.artist, hit.page)
+                content = download(hit, session)
+                ext = Path(hit.url.split("?")[0]).suffix.lower()
+                ext = ext if ext in (".jpg", ".jpeg", ".png", ".webp") else ".jpg"
+            (ep.assets / f"entity_{eid}{ext}").write_bytes(content)
         except requests.RequestException as exc:
             missing.append(f"{e.get('name', eid)}: مشكلة شبكة ({exc})")
             continue
