@@ -111,8 +111,8 @@ def test_preview_is_small_and_separate(composed):
 @pytest.mark.slow
 def test_final_is_single_high_quality_encode(composed):
     ep, _ = composed
-    assert b"crf=16.0" in (ep.work / "beat_0.mp4").read_bytes()[:200000]
-    assert b"crf=14.0" in ep.clean_video.read_bytes()[:200000]
+    assert b"crf=12.0" in (ep.work / "beat_0.mp4").read_bytes()[:200000]   # owner: top quality, size no object
+    assert b"crf=12.0" in ep.clean_video.read_bytes()[:200000]
     assert not (ep.work / "video.mp4").exists()
 
 
