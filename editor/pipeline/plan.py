@@ -9,7 +9,7 @@ KINDS = ("face", "face_zoom_in", "face_zoom_out", "face_framed", "face_punch", "
          "image", "ai_image", "ai_video", "graphic", "entity")
 FACE_KINDS = KINDS[:6]
 AI_KINDS = ("ai_image", "ai_video")
-GRAPHIC_TYPES = ("number", "headline", "quote", "map", "timeline", "chart", "text", "custom")
+GRAPHIC_TYPES = ("number", "headline", "quote", "map", "timeline", "chart", "text", "custom", "article")
 CUSTOM_DIR = Path(__file__).resolve().parent.parent / "remotion" / "src" / "custom"
 FX_TYPES = ("subscribe", "tv", "none")        # face_fx wrappers; "none" = stickers only
 TRANSITIONS = ("zoom", "flash", "whip", "glitch")
@@ -141,6 +141,9 @@ def validate_plan(plan: EditPlan, clean_duration: float, entities: set[str] | No
             errs.append(f"beat {i}: صورة لازم بيها query (إنگليزي) و caption (عربي)")
         if b.kind == "graphic" and (not b.graphic or b.graphic.get("type") not in GRAPHIC_TYPES):
             errs.append(f"beat {i}: گرافيك لازم type من {', '.join(GRAPHIC_TYPES)}")
+        elif b.kind == "graphic" and b.graphic["type"] == "article" and not (
+                b.graphic.get("url", "").startswith("http") and b.graphic.get("quote") and b.graphic.get("title")):
+            errs.append(f"beat {i}: article لازم بيه url، و quote (الجملة بلغة المقالة)، و title (عربي، بديل إذا الموقع ما فتح)")
         elif b.kind == "graphic" and b.graphic["type"] == "custom" and not (
                 b.graphic.get("scene") and (CUSTOM_DIR / f"{b.graphic['scene']}.tsx").exists()):
             errs.append(f"beat {i}: المشهد المخصص '{b.graphic.get('scene')}' مو موجود بـ editor/remotion/src/custom")

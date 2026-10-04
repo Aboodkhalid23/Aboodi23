@@ -17,7 +17,7 @@ RULES = """القواعد:
   entity (entity = id من entities.json: صورة حقيقية للشخص أو شعار الشركة، أول مرة ينذكر الاسم).
 - face_fx: fx = subscribe (لحظة "اشتركوا") أو tv (بعد الهوك والسلام) أو none؛ و stickers اختيارية: قائمة، كل ملصق بيه type (stamp|arrow|burst|tape|circle) و text و at (ثانية من بداية المشهد).
 - transition اختياري على أي beat: zoom, flash, whip, glitch (بحدود، عند تغيير فكرة أو صدمة). sfx اختياري: whoosh, pop, click, ding, hit, riser, paper, glitch.
-- graphic.type: number, headline, quote, map (countries/pins/route), timeline, chart, text, custom (مشهد مخصص بالكود: scene + props)."""
+- graphic.type: number, headline, quote, map (countries/pins/route), timeline, chart, text, custom (مشهد مخصص بالكود: scene + props), article (مقالة حقيقية: url + quote حرفي + title عربي بديل)."""
 
 MOMENTS = {
     "subscribe": ("اشترك", "اشتركو", "الاشتراك", "لايك", "الجرس", "فعلو", "تفعيل"),

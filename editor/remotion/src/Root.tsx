@@ -1,5 +1,6 @@
 import React from 'react';
 import {CalculateMetadataFunction, Composition, Still} from 'remotion';
+import {ArticleShot} from './graphics/ArticleShot';
 import {BigText} from './graphics/BigText';
 import {Chart} from './graphics/Chart';
 import {EntityCard} from './graphics/EntityCard';
@@ -30,6 +31,7 @@ const GRAPHICS: [string, React.FC<any>, Record<string, unknown>][] = [
   ['timeline', Timeline, {items: [{year: '1996', label: 'التأسيس'}]}],
   ['chart', Chart, {bars: [{label: '2021', value: 300}], unit: 'مليار'}],
   ['image', ImageCard, {src: 'img.png', treatment: 'paper_cutout'}],
+  ['article', ArticleShot, {src: 'article.png', rects: []}],
   ['entity', EntityCard, {name: 'إيلون ماسك', role: 'مؤسس تسلا', entityKind: 'person'}],
   ['face-fx', FaceFx, {src: 'face.mp4', fx: 'subscribe', stickers: [], channel: {name: 'القناة', handle: '@channel'}}],
   ...CUSTOM.map(([name, C]) => [`custom-${name}`, C, {}] as [string, React.FC<any>, Record<string, unknown>]),

@@ -131,6 +131,10 @@ def graphic_job(beat: Beat, style: Style, out: Path, public_dir: Path | None = N
         comp = g.pop("type")
         if comp == "custom":
             comp = f"custom-{g.pop('scene')}"
+        if comp == "article":
+            meta = json.loads(Path(src).with_suffix(".json").read_text(encoding="utf-8"))
+            g = {"src": _publish(bundle, src), "rects": meta["rects"], "rtl": meta.get("rtl", False),
+                 "site": g.get("outlet") or meta.get("site", ""), "date": meta.get("date", "")}
         props.update(g)
     return RenderJob(comp, props, Path(out), scale)
 

@@ -292,6 +292,10 @@ def compose(ep: Episode, preview: bool = False) -> Path:
             asset = _asset(ep.assets, f"ai_{i}", VIDEO_EXT) or _asset(ep.assets, f"ai_{i}", IMAGE_EXT)
         elif b.kind == "entity":
             asset = entity_image(ep, b.entity)
+        elif b.kind == "graphic" and (b.graphic or {}).get("type") == "article":
+            asset = ep.assets / f"article_{i}.png"
+            if not asset.exists():
+                raise MediaError(f"beat {i}: لقطة المقالة ناقصة، شغّل مرحلة images أول")
         if b.kind in ("ai_image", "ai_video") and asset is None:
             missing.append(i)
         out = cv.work / f"beat_{i}.mp4"

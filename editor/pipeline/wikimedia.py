@@ -107,6 +107,8 @@ def collect_images(plan: EditPlan, ep: Episode, session=None) -> EditPlan:
             continue
         used.add(img.title)
         credits.append(f"{img.title} — {img.artist} — {img.license} — {img.page_url}")
+    from .articles import collect_articles
+    fallbacks += collect_articles(plan, ep)
     assign_variety(plan, style)
     ep.fallbacks.write_text(json.dumps(fallbacks, ensure_ascii=False, indent=1), encoding="utf-8")
     ent = ep.work / "entity_credits.json"

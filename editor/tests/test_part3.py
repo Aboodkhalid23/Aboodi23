@@ -217,3 +217,35 @@ def test_custom_scene_must_exist_and_maps_to_its_composition(tmp_path):
     (bundle / "public").mkdir(parents=True)
     job = graphic_job(plan.beats[18], load_style("vox"), tmp_path / "x.mp4", bundle=bundle)
     assert job.comp == "custom-StepFlow" and job.props["steps"] == ["أ", "ب"] and "scene" not in job.props
+
+
+# ---------- real articles ----------
+
+def test_article_beat_needs_url_quote_and_fallback_title():
+    from .test_plan import build
+    plan, clean = build()
+    plan.beats[18].graphic = {"type": "article", "url": "https://x.com/a", "quote": "the line"}
+    assert any("article" in e for e in validate_plan(plan, clean))
+    plan.beats[18].graphic["title"] = "عنوان الخبر"
+    assert validate_plan(plan, clean) == []
+
+
+def test_article_screenshot_or_headline_fallback(tmp_path, monkeypatch):
+    from editor.pipeline import articles
+    ep = Episode(tmp_path / "ep").ensure()
+    beats = [Beat(0, 5, "body", "graphic", graphic={"type": "article", "url": "https://ok.com/a", "quote": "q", "title": "ع"}),
+             Beat(5, 10, "body", "graphic", graphic={"type": "article", "url": "https://blocked.com/b", "quote": "q",
+                                                     "title": "عنوان", "outlet": "Reuters"})]
+    plan = EditPlan({"primary": "vox"}, "", [], beats)
+
+    def fake_shoot(url, quote, out):
+        if "blocked" in url:
+            return {"error": "net::ERR_BLOCKED"}
+        out.write_bytes(b"png")
+        return {"ok": True, "found": True, "rects": [[320, 200, 640, 40]], "width": 3200, "height": 2000, "site": "ok.com"}
+    monkeypatch.setattr(articles, "shoot", fake_shoot)
+    fb = articles.collect_articles(plan, ep)
+    meta = json.loads((ep.assets / "article_0.json").read_text())
+    assert meta["rects"] == [[0.1, 0.1, 0.2, 0.02]] and meta["url"] == "https://ok.com/a"
+    assert fb[0]["beat"] == 1 and plan.beats[1].graphic == {"type": "headline", "outlet": "Reuters", "title": "عنوان",
+                                                              "highlight": ""}
