@@ -292,6 +292,10 @@ def compose(ep: Episode, preview: bool = False) -> Path:
             asset = _asset(ep.assets, f"ai_{i}", VIDEO_EXT) or _asset(ep.assets, f"ai_{i}", IMAGE_EXT)
         elif b.kind == "entity":
             asset = entity_image(ep, b.entity)
+        elif b.kind == "footage":
+            asset = ep.assets / f"footage_{i}.mp4"
+            if not asset.exists():
+                raise MediaError(f"beat {i}: مقطع الأرشيف ناقص، شغّل مرحلة images أول")
         elif b.kind == "graphic" and (b.graphic or {}).get("type") == "article":
             asset = ep.assets / f"article_{i}.png"
             if not asset.exists():
@@ -309,6 +313,10 @@ def compose(ep: Episode, preview: bool = False) -> Path:
             job = None
             if b.kind in ("ai_image", "ai_video") and asset is None:
                 job = _graphic_job(ep, _fallback_text(b), i, style, bundle, cv)
+            elif b.kind == "footage" and b.treatment == "full":
+                _finish(asset, frames, out, cv, b.transition, cover=True, loop=True)
+            elif b.kind == "footage":
+                job = _graphic_job(ep, b, i, style, bundle, cv, src=asset)
             elif b.kind == "ai_video" and asset.suffix.lower() in VIDEO_EXT:
                 _finish(asset, frames, out, cv, b.transition, cover=True, loop=True, grade=ai_grade)
             elif b.kind == "ai_video":  # only a still came back: animate it like an AI image

@@ -6,6 +6,7 @@ import {Chart} from './graphics/Chart';
 import {EntityCard} from './graphics/EntityCard';
 import {FaceFrame} from './graphics/FaceFrame';
 import {FaceFx} from './graphics/FaceFx';
+import {FootageCard} from './graphics/FootageCard';
 import {Headline} from './graphics/Headline';
 import {ImageCard} from './graphics/ImageCard';
 import {MapZoom} from './graphics/MapZoom';
@@ -32,6 +33,7 @@ const GRAPHICS: [string, React.FC<any>, Record<string, unknown>][] = [
   ['chart', Chart, {bars: [{label: '2021', value: 300}], unit: 'مليار'}],
   ['image', ImageCard, {src: 'img.png', treatment: 'paper_cutout'}],
   ['article', ArticleShot, {src: 'article.png', rects: []}],
+  ['footage', FootageCard, {src: 'footage.mp4', treatment: 'crt'}],
   ['entity', EntityCard, {name: 'إيلون ماسك', role: 'مؤسس تسلا', entityKind: 'person'}],
   ['face-fx', FaceFx, {src: 'face.mp4', fx: 'subscribe', stickers: [], channel: {name: 'القناة', handle: '@channel'}}],
   ...CUSTOM.map(([name, C]) => [`custom-${name}`, C, {}] as [string, React.FC<any>, Record<string, unknown>]),

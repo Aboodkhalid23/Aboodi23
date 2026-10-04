@@ -4,6 +4,7 @@ from .plan import EditPlan
 from .styles import Style
 
 PICTURE_KINDS = ("image", "ai_image")
+FOOTAGE_LOOKS = ["crt", "full", "paper"]   # archive film on an old TV, full screen, torn paper print
 
 
 def _cycle(options: list[str]):
@@ -29,12 +30,18 @@ def assign_variety(plan: EditPlan, style: Style) -> EditPlan:
     Choices the plan made itself are kept, and the rotation steps around them."""
     pic_next, pic_mark = _cycle(style.image_treatments or [style.image_treatment])
     txt_next, txt_mark = _cycle(style.text_variants or ["marker"])
+    vid_next, vid_mark = _cycle(FOOTAGE_LOOKS)
     for b in plan.beats:
         if b.kind in PICTURE_KINDS:
             if b.treatment:
                 pic_mark(b.treatment)
             else:
                 b.treatment = pic_next()
+        elif b.kind == "footage":
+            if b.treatment:
+                vid_mark(b.treatment)
+            else:
+                b.treatment = vid_next()
         elif b.kind == "graphic" and (b.graphic or {}).get("type") == "text":
             if b.graphic.get("variant"):
                 txt_mark(b.graphic["variant"])

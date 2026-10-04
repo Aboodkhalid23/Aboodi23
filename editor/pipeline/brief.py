@@ -14,6 +14,7 @@ RULES = """القواعد:
 - الأنواع: face, face_zoom_in, face_zoom_out, face_framed, face_punch (تقريب ثابت للتأكيد), face_fx,
   image (query بالإنگليزي لويكيميديا + caption عربي ينكتب إذا ما انلگت صورة), graphic,
   ai_image / ai_video (prompt إنگليزي يوصف المشهد + caption عربي بديل؛ الصور رخيصة والفيديو للحظات الكبيرة بس، وai_budget بالرصيد),
+  footage (فيديو حقيقي من الأرشيف: query إنگليزي + caption عربي، source=archive للأفلام القديمة),
   entity (entity = id من entities.json: صورة حقيقية للشخص أو شعار الشركة، أول مرة ينذكر الاسم).
 - face_fx: fx = subscribe (لحظة "اشتركوا") أو tv (بعد الهوك والسلام) أو none؛ و stickers اختيارية: قائمة، كل ملصق بيه type (stamp|arrow|burst|tape|circle) و text و at (ثانية من بداية المشهد).
 - transition اختياري على أي beat: zoom, flash, whip, glitch (بحدود، عند تغيير فكرة أو صدمة). sfx اختياري: whoosh, pop, click, ding, hit, riser, paper, glitch.

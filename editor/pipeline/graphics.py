@@ -122,6 +122,10 @@ def graphic_job(beat: Beat, style: Style, out: Path, public_dir: Path | None = N
         comp = "image"
         props.update(src=_publish(bundle, src), treatment=beat.treatment or style.image_treatment,
                      caption=beat.caption or "")
+    elif beat.kind == "footage":
+        comp = "footage"
+        props.update(src=_publish(bundle, src, f"footage_{index}{Path(src).suffix}" if index is not None else None),
+                     treatment=beat.treatment or "crt", caption=beat.caption or "")
     elif beat.kind == "entity":
         comp = "entity"
         if src is not None:

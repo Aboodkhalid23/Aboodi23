@@ -249,3 +249,64 @@ def test_article_screenshot_or_headline_fallback(tmp_path, monkeypatch):
     assert meta["rects"] == [[0.1, 0.1, 0.2, 0.02]] and meta["url"] == "https://ok.com/a"
     assert fb[0]["beat"] == 1 and plan.beats[1].graphic == {"type": "headline", "outlet": "Reuters", "title": "عنوان",
                                                               "highlight": ""}
+
+
+# ---------- archive footage ----------
+
+class Archive:
+    """Fake archive.org: one film, served as a real small mp4."""
+    def __init__(self, video: bytes, commons_down=True):
+        self.video, self.commons_down = video, commons_down
+
+    def get(self, url, params=None, headers=None, timeout=None, stream=False):
+        import requests
+        if "commons.wikimedia.org" in url:
+            if self.commons_down:
+                raise requests.ConnectionError("429")
+        if "advancedsearch" in url:
+            return Data({"response": {"docs": [{"identifier": "oldfilm", "title": "Old Film"}]}})
+        if "/metadata/" in url:
+            return Data({"metadata": {}, "files": [{"name": "oldfilm.mp4", "format": "h.264", "size": "1000"}]})
+        return Stream(self.video)
+
+
+class Data:
+    def __init__(self, d):
+        self._d = d
+
+    def json(self):
+        return self._d
+
+    def raise_for_status(self):
+        pass
+
+
+class Stream(Data):
+    def __init__(self, content):
+        super().__init__(None)
+        self.content = content
+
+    def iter_content(self, n):
+        yield self.content
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        return False
+
+
+def test_footage_from_the_archive_is_cut_to_the_beat_and_credited(tmp_path):
+    from editor.pipeline.footage import collect_footage
+    from editor.pipeline.media import probe
+    film = tmp_path / "film.mp4"
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "testsrc2=s=640x480:r=24:d=12", "-pix_fmt", "yuv420p",
+                    str(film)], check=True)
+    ep = Episode(tmp_path / "ep").ensure()
+    plan = EditPlan({"primary": "vox"}, "", [], [Beat(0, 4, "body", "footage", query="factory", caption="مصنع"),
+                                                Beat(4, 8, "body", "footage", query="factory", caption="مصنع")])
+    fb, credits = collect_footage(plan, ep, session=Archive(film.read_bytes()))
+    assert probe(ep.assets / "footage_0.mp4").duration == pytest.approx(4.5, abs=0.2)
+    assert credits[0].startswith("Old Film — Prelinger Archives — Public domain")
+    # the same film is not used twice in a row: the second beat falls back to its caption card
+    assert fb[0]["beat"] == 1 and plan.beats[1].kind == "graphic" and plan.beats[1].graphic["text"] == "مصنع"

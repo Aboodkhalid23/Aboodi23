@@ -6,7 +6,7 @@ from pathlib import Path
 from .grade import LOOKS
 
 KINDS = ("face", "face_zoom_in", "face_zoom_out", "face_framed", "face_punch", "face_fx",
-         "image", "ai_image", "ai_video", "graphic", "entity")
+         "image", "ai_image", "ai_video", "graphic", "entity", "footage")
 FACE_KINDS = KINDS[:6]
 AI_KINDS = ("ai_image", "ai_video")
 GRAPHIC_TYPES = ("number", "headline", "quote", "map", "timeline", "chart", "text", "custom", "article")
@@ -38,6 +38,7 @@ class Beat:
     stickers: list | None = None    # [{"type": "stamp", "text": "...", "at": 0.5}] on face_fx beats
     transition: str | None = None   # entry effect on this beat: zoom | flash | whip | glitch
     grade: str | None = None        # colour look for this beat's footage (overrides the plan's)
+    source: str | None = None       # footage: "archive" = old films first (else Commons first)
 
     @property
     def duration(self) -> float:
@@ -137,6 +138,8 @@ def validate_plan(plan: EditPlan, clean_duration: float, entities: set[str] | No
             errs.append(f"beat {i}: طوله {b.duration:.2f} ثانية، لازم بين {lo:g} و {hi:g}")
         if i and beats[i - 1].kind == b.kind:
             errs.append(f"beat {i}: نفس نوع الي قبله ({b.kind})")
+        if b.kind == "footage" and not (b.query and b.caption):
+            errs.append(f"beat {i}: footage لازم بيه query (إنگليزي) و caption (عربي)")
         if b.kind == "image" and not (b.query and b.caption):
             errs.append(f"beat {i}: صورة لازم بيها query (إنگليزي) و caption (عربي)")
         if b.kind == "graphic" and (not b.graphic or b.graphic.get("type") not in GRAPHIC_TYPES):
