@@ -199,3 +199,21 @@ def test_long_phrases_split_into_short_lines():
     words = [Word("كلمة" + str(i), i * 0.3, i * 0.3 + 0.28) for i in range(40)]
     out = cues(words)
     assert len(out) > 3 and all(len(t) <= MAX_CHARS for _, _, t in out)
+
+
+# ---------- custom scenes ----------
+
+def test_custom_scene_must_exist_and_maps_to_its_composition(tmp_path):
+    from editor.pipeline.graphics import custom_scenes, graphic_job, write_registry, CUSTOM_DIR
+    from .test_plan import build
+    plan, clean = build()
+    plan.beats[18].graphic = {"type": "custom", "scene": "NoSuchScene"}
+    assert any("NoSuchScene" in e for e in validate_plan(plan, clean))
+    plan.beats[18].graphic = {"type": "custom", "scene": "StepFlow", "steps": ["أ", "ب"]}
+    assert validate_plan(plan, clean) == []
+    write_registry()
+    assert "StepFlow" in custom_scenes() and "['StepFlow'" in (CUSTOM_DIR / "registry.ts").read_text()
+    bundle = tmp_path / "b"
+    (bundle / "public").mkdir(parents=True)
+    job = graphic_job(plan.beats[18], load_style("vox"), tmp_path / "x.mp4", bundle=bundle)
+    assert job.comp == "custom-StepFlow" and job.props["steps"] == ["أ", "ب"] and "scene" not in job.props

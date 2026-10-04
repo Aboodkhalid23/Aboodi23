@@ -11,6 +11,7 @@ import {MapZoom} from './graphics/MapZoom';
 import {NumberCount} from './graphics/Number';
 import {Quote} from './graphics/Quote';
 import {Timeline} from './graphics/Timeline';
+import {CUSTOM} from './custom/registry';
 import {BaseProps, FPS} from './style';
 
 const style = {palette: {paper: '#F2EBDD', ink: '#1A1A1A', accent: '#FFD400'}, fonts: {title: 'Cairo', body: 'Cairo'}, texture: 'paper'};
@@ -31,6 +32,7 @@ const GRAPHICS: [string, React.FC<any>, Record<string, unknown>][] = [
   ['image', ImageCard, {src: 'img.png', treatment: 'paper_cutout'}],
   ['entity', EntityCard, {name: 'إيلون ماسك', role: 'مؤسس تسلا', entityKind: 'person'}],
   ['face-fx', FaceFx, {src: 'face.mp4', fx: 'subscribe', stickers: [], channel: {name: 'القناة', handle: '@channel'}}],
+  ...CUSTOM.map(([name, C]) => [`custom-${name}`, C, {}] as [string, React.FC<any>, Record<string, unknown>]),
 ];
 
 export const Root: React.FC = () => (

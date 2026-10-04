@@ -5,6 +5,8 @@ import {AbsoluteFill, continueRender, delayRender, Easing, interpolate, staticFi
 export type Palette = {paper: string; ink: string; accent: string};
 export type StyleProps = {palette: Palette; fonts: {title: string; body: string}; texture: string};
 export type BaseProps = {style: StyleProps; durationSec: number};
+/** Props every custom scene (src/custom) receives, plus its own. */
+export type CustomProps = BaseProps;
 
 export const FPS = 30;
 export const ease = Easing.bezier(0.22, 1, 0.36, 1);

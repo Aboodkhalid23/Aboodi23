@@ -154,6 +154,29 @@ def st_qa(ep, a):
     print("   راجع لوحات المشاهد بعينك قبل الإرسال: " + "، ".join(d["sheets"]))
 
 
+def st_scene_check(ep, a):
+    """Render one custom scene (props from the first beat that uses it, or --props) and show 4 frames."""
+    import subprocess
+    from .graphics import ensure_bundle, render_graphic
+    from .plan import Beat
+    from .styles import load_style
+    if not a.scene:
+        raise MediaError("لازم --scene <Name>")
+    plan = load_plan(ep.plan) if ep.plan.exists() else None
+    beat = next((b for b in (plan.beats if plan else []) if b.kind == "graphic"
+                 and (b.graphic or {}).get("scene") == a.scene), None)
+    if beat is None:
+        beat = Beat(0, 5, "body", "graphic", graphic={"type": "custom", "scene": a.scene, **json.loads(a.props or "{}")})
+    style = load_style(plan.style["primary"] if plan else "retro-collage")
+    out = render_graphic(beat, style, ep.work / f"scene_{a.scene}.mp4", bundle=ensure_bundle(ep.work / "bundle"), scale=0.5)
+    sheet = ep.work / f"scene_{a.scene}.jpg"
+    d = beat.duration
+    picks = "+".join(f"eq(n\\,{int(d * 30 * q) - 1})" for q in (0.25, 0.5, 0.75, 1.0))
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(out), "-vf", f"select='{picks}',scale=640:-2,tile=2x2",
+                    "-frames:v", "1", str(sheet)], check=True)
+    print(f"🖼️  لقطات المشهد (ربع، نص، ثلاث أرباع، آخر): {sheet}")
+
+
 def st_deliver(ep, a):
     if a.preview:
         return
@@ -167,7 +190,7 @@ def st_deliver(ep, a):
 
 STAGES = {"fetch": [st_fetch], "entities": [st_entities], "transcribe": [st_transcribe], "clean": [st_clean],
           "brief": [st_brief], "validate": [st_validate], "ai-jobs": [st_ai_jobs], "ai-fetch": [st_ai_fetch],
-          "ai-log": [st_ai_log], "check": [st_check], "music-jobs": [st_music_jobs], "music-fetch": [st_music_fetch], "qa": [st_qa], "images": [st_images], "compose": [st_compose], "deliver": [st_deliver]}
+          "ai-log": [st_ai_log], "check": [st_check], "music-jobs": [st_music_jobs], "music-fetch": [st_music_fetch], "qa": [st_qa], "scene-check": [st_scene_check], "images": [st_images], "compose": [st_compose], "deliver": [st_deliver]}
 STAGES["get"] = STAGES["fetch"] + STAGES["check"]   # download, then show the owner what came
 STAGES["prep"] = STAGES["fetch"] + STAGES["entities"] + STAGES["transcribe"] + STAGES["clean"] + STAGES["brief"]
 STAGES["render"] = (STAGES["validate"] + STAGES["ai-jobs"] + STAGES["music-jobs"] + STAGES["images"] + STAGES["compose"]
@@ -190,6 +213,8 @@ def main(argv=None):
     p.add_argument("--job", help="رقم المهمة بـ Higgsfield (ai-log)")
     p.add_argument("--cue", type=int, help="رقم مقطع الموسيقى (music-fetch)")
     p.add_argument("--no-words", action="store_true", help="check بدون تفريغ أول الكلام")
+    p.add_argument("--scene", help="اسم المشهد المخصص (scene-check)")
+    p.add_argument("--props", help="props المشهد بصيغة JSON (scene-check)")
     a = p.parse_args(argv)
     ep = Episode(a.episode).ensure()
     try:
