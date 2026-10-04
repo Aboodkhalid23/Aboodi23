@@ -148,7 +148,8 @@ def _transition_filter(name: str | None, cv: Canvas) -> str:
 
 
 def _face_clip(ep: Episode, beat: Beat, frames: int, teaser, out: Path, frame_bg: Path | None,
-               cv: Canvas | None = None, encode: list[str] | None = None, grade: str = "") -> None:
+               cv: Canvas | None = None, encode: list[str] | None = None, grade: str = "", plain: bool = False) -> None:
+    """`plain`: fit with black bars instead of the blurred fill (for the cut-out, which must see only him)."""
     ranges = source_ranges(beat.start, beat.end, teaser)
     if not ranges:
         raise MediaError(f"الـ beat ({beat.start}–{beat.end}) برا الفيديو المنظف")
@@ -158,7 +159,8 @@ def _face_clip(ep: Episode, beat: Beat, frames: int, teaser, out: Path, frame_bg
         labels += f"[{i}:v]"
     joined = (f"{labels}concat=n={len(ranges)}:v=1:a=0,fps={cv.fps}" if len(ranges) > 1
               else f"[0:v]fps={cv.fps}")
-    graph = f"{joined},setpts=PTS-STARTPTS,{_face_filter(beat.kind, beat.duration, cv)}{grade}"
+    fit = cv.fit if plain else _face_filter(beat.kind, beat.duration, cv)
+    graph = f"{joined},setpts=PTS-STARTPTS,{fit}{grade}"
     if beat.kind == "face_framed":
         _, _, x, y = cv.frame_box
         args += ["-loop", "1", "-i", str(frame_bg)]
@@ -249,6 +251,26 @@ def _face_on_canvas(ep: Episode, cv: Canvas) -> tuple[float, float] | None:
     scale = min(cv.width / info.width, cv.height / info.height)
     w, h = info.width * scale / cv.width, info.height * scale / cv.height
     return round((1 - w) / 2 + f["cx"] * w, 3), round((1 - h) / 2 + f["cy"] * h, 3)
+
+
+def _cutout(ep: Episode, b: Beat, i: int, frames: int, teaser, style: Style, bundle: Path, cv: Canvas,
+            grade: str, out: Path) -> None:
+    """He is cut out of the room and stands on the episode's world; caption (or the beat's picture) on the left."""
+    from .cutout import cutout_clip
+    from .graphics import RenderJob, _publish, _style_props
+    face = cv.work / f"face_{i}.mp4"
+    _face_clip(ep, replace(b, kind="face", transition=None), frames, teaser, face, None, cv,
+               encode=[*INTERMEDIATE, "-r", str(cv.fps)], grade=grade, plain=True)
+    shift = round(0.66 - cv.face[0], 3) if cv.face else 0.18
+    fw = min(cv.width, round(cv.height * (cv.src_aspect or cv.width / cv.height)))
+    region = ((cv.width - fw) // 2, (cv.width - fw) // 2 + fw)
+    pic = _asset(ep.assets, f"img_{i}", IMAGE_EXT)
+    props = {"style": _style_props(style), "durationSec": 1, "caption": b.caption or "", "personX": 0.66,
+             **({"src": _publish(bundle, pic)} if pic else {})}
+    bg = RenderJob("cutout-bg", props, cv.work / f"cutout_bg_{i}.png", cv.remotion_scale, still=True)
+    render_batch([bg], bundle)
+    cutout_clip(face, bg.out, out, cv.width, cv.height, cv.fps, frames, cv.encode, shift,
+                vf=_transition_filter(b.transition, cv), region=region)
 
 
 def _end_screen(plan, style: Style, cv: Canvas, bundle: Path, channel: dict, avatar: Path | None) -> Path:
@@ -345,6 +367,8 @@ def compose(ep: Episode, preview: bool = False) -> Path:
                 job = _graphic_job(ep, b, i, style, bundle, cv, src=asset,
                                    extra_props={"name": e["name"], "role": e.get("role", ""),
                                                 "entityKind": e.get("kind", "person")})
+            elif b.kind == "face_cutout":
+                _cutout(ep, b, i, frames, teaser, style, bundle, cv, footage_grade, out)
             elif b.kind == "face_fx":
                 face = cv.work / f"face_{i}.mp4"
                 _face_clip(ep, replace(b, kind="face", transition=None), frames, teaser, face, None, cv,

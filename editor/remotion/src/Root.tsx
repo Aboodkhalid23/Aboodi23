@@ -2,6 +2,7 @@ import React from 'react';
 import {CalculateMetadataFunction, Composition, Still} from 'remotion';
 import {ArticleShot} from './graphics/ArticleShot';
 import {BigText} from './graphics/BigText';
+import {CutoutBg} from './graphics/CutoutBg';
 import {Chart} from './graphics/Chart';
 import {EntityCard} from './graphics/EntityCard';
 import {EndScreen} from './graphics/EndScreen';
@@ -47,6 +48,7 @@ export const Root: React.FC = () => (
       <Composition key={id} id={id} component={C} width={1920} height={1080} fps={FPS} durationInFrames={60}
         defaultProps={{style, durationSec: 2, ...defaults}} calculateMetadata={meta} />
     ))}
+    <Still id="cutout-bg" component={CutoutBg as React.FC<any>} width={1920} height={1080} defaultProps={{style, durationSec: 1}} />
     <Still id="face-frame-bg" component={FaceFrame as React.FC<any>} width={1920} height={1080} defaultProps={{style, durationSec: 1}} />
   </>
 );

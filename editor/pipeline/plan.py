@@ -5,9 +5,9 @@ from pathlib import Path
 
 from .grade import LOOKS
 
-KINDS = ("face", "face_zoom_in", "face_zoom_out", "face_framed", "face_punch", "face_fx",
+KINDS = ("face", "face_zoom_in", "face_zoom_out", "face_framed", "face_punch", "face_fx", "face_cutout",
          "image", "ai_image", "ai_video", "graphic", "entity", "footage")
-FACE_KINDS = KINDS[:6]
+FACE_KINDS = KINDS[:7]
 AI_KINDS = ("ai_image", "ai_video")
 GRAPHIC_TYPES = ("number", "headline", "quote", "map", "timeline", "chart", "text", "custom", "article")
 CUSTOM_DIR = Path(__file__).resolve().parent.parent / "remotion" / "src" / "custom"

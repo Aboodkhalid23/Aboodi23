@@ -342,3 +342,23 @@ def test_end_screen_is_appended_with_sound_running_to_the_end(tmp_path):
     d = stream_durations(compose(ep))
     assert d["video"] == pytest.approx(total + 5, abs=0.1) and abs(d["video"] - d["audio"]) <= 0.1
     assert probe(ep.work / "end_screen.mp4").duration == pytest.approx(5, abs=0.05)
+
+
+# ---------- presenter cut-out ----------
+
+@pytest.mark.slow
+def test_cutout_puts_the_scene_behind_and_keeps_length(tmp_path):
+    """No person in a test pattern: the whole frame must become the background scene, at the right length."""
+    from editor.pipeline.cutout import cutout_clip
+    from editor.pipeline.media import probe
+    face, bg, out = tmp_path / "f.mp4", tmp_path / "bg.png", tmp_path / "o.mp4"
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "testsrc2=s=640x360:r=30:d=1", "-pix_fmt", "yuv420p",
+                    str(face)], check=True)
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "color=c=0x2060C0:s=640x360", "-frames:v", "1",
+                    str(bg)], check=True)
+    cutout_clip(face, bg, out, 640, 360, 30, 45, ["-c:v", "libx264", "-pix_fmt", "yuv420p"], shift=0.1)
+    assert probe(out).duration == pytest.approx(1.5, abs=0.05)          # held the last frame to fill 45 frames
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", "0.5", "-i", str(out), "-frames:v", "1", "-vf",
+                          "scale=1:1:flags=area", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True).stdout
+    r, g, b = raw[:3]
+    assert b > 150 and r < 80   # mostly the blue background scene

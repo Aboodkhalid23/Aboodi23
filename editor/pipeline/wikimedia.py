@@ -84,7 +84,7 @@ def collect_images(plan: EditPlan, ep: Episode, session=None) -> EditPlan:
     style = load_style(plan.style["primary"])
     used, fallbacks, credits = set(), [], []
     for i, b in enumerate(plan.beats):
-        if b.kind != "image":
+        if b.kind != "image" and not (b.kind == "face_cutout" and b.query):
             continue
         img, reason = None, "no free image"
         try:
@@ -101,6 +101,8 @@ def collect_images(plan: EditPlan, ep: Episode, session=None) -> EditPlan:
             (ep.assets / f"img_{i}{ext}").write_bytes(data.content)
             img = c
             break
+        if img is None and b.kind == "face_cutout":   # the cut-out simply shows its caption instead
+            continue
         if img is None:
             fallbacks.append({"beat": i, "query": b.query, "reason": reason})
             b.kind, b.graphic = "graphic", {"type": "text", "text": b.caption or b.query}
