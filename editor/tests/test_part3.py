@@ -175,3 +175,27 @@ def test_natural_grade_has_no_vignette_grain_or_colour_cast():
     f = grade_filter(correction(STATS), "natural")
     assert "vignette" not in f and "noise" not in f and "colorbalance=rs" not in f and "curves" not in f
     assert grade_filter(correction(STATS), "none") == ""
+
+
+# ---------- subtitles ----------
+
+def test_srt_follows_the_final_timeline_with_teaser_first(tmp_path):
+    from editor.pipeline.subtitles import write_srt
+    from editor.pipeline.transcribe import Word, save_words
+    ep = Episode(tmp_path / "ep").ensure()
+    save_words([Word("شركة", 0.0, 0.5), Word("كبيرة", 0.5, 1.0), Word("انهارت", 3.0, 3.6), Word("فجأة", 3.6, 4.2)],
+               ep.clean_words)
+    save_plan(EditPlan({"primary": "vox"}, "", [(3.0, 4.2)], [Beat(0, 5.4, "hook", "face")]), ep.plan)
+    text = write_srt(ep).read_text(encoding="utf-8")
+    blocks = [b.splitlines() for b in text.strip().split("\n\n")]
+    assert blocks[0][1:] == ["00:00:00,000 --> 00:00:01,200", "انهارت فجأة"]          # the teaser shot
+    assert blocks[1][1:] == ["00:00:01,200 --> 00:00:02,200", "شركة كبيرة"]           # then the episode
+    assert blocks[2][1] == "00:00:04,200 --> 00:00:05,400"
+
+
+def test_long_phrases_split_into_short_lines():
+    from editor.pipeline.subtitles import MAX_CHARS, cues
+    from editor.pipeline.transcribe import Word
+    words = [Word("كلمة" + str(i), i * 0.3, i * 0.3 + 0.28) for i in range(40)]
+    out = cues(words)
+    assert len(out) > 3 and all(len(t) <= MAX_CHARS for _, _, t in out)

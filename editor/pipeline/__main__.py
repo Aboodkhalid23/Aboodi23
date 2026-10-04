@@ -21,6 +21,7 @@ from .paths import Episode
 from .plan import load_plan, validate_plan
 from .qa import qa
 from .styles import styles_summary
+from .subtitles import write_srt
 from .transcribe import transcribe
 from .wikimedia import collect_images
 
@@ -159,6 +160,7 @@ def st_deliver(ep, a):
     plan = load_plan(ep.plan)
     if plan.chapters:
         print(f"📑 فصول يوتيوب (انسخها للوصف): {write_chapters(plan, ep.edit / 'chapters.txt')}")
+    print(f"💬 ملف الترجمة ليوتيوب (يترفع لحاله، ما يطلع على الفيديو): {write_srt(ep)}")
     out = prepare_delivery(ep, a.max_mb)
     print(f"📦 جاهز: {out} ({out.stat().st_size / 1e6:.0f} ميگا)")
 
@@ -179,7 +181,7 @@ def main(argv=None):
     p.add_argument("--source")
     p.add_argument("--script", help="سكربت الحلقة لتصحيح التفريغ")
     p.add_argument("--max-height", type=int, choices=[1080, 1440, 2160], help="أعلى دقة (أصغر = أسرع)")
-    p.add_argument("--preview", action="store_true", help="نسخة معاينة سريعة 640×360")
+    p.add_argument("--preview", action="store_true", help="نسخة معاينة 1280×720 (أسرع من النهائية)")
     p.add_argument("--max-mb", type=float, help="اضغط الفيديو بس إذا عبر هذا الحجم")
     p.add_argument("--beat", type=int, help="رقم المشهد (ai-fetch / ai-log)")
     p.add_argument("--url", help="رابط الناتج من Higgsfield (ai-fetch)")

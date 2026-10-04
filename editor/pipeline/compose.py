@@ -81,8 +81,9 @@ def make_canvas(ep: Episode, preview: bool) -> Canvas:
     fmt = load_format(ep)
     common = ["-pix_fmt", "yuv420p", "-r", str(fmt.fps), "-video_track_timescale", "15360"]
     if preview:
-        return Canvas(640, 360, fmt.fps, ep.work / "preview",
-                      ["-c:v", "libx264", "-crf", "28", "-preset", "ultrafast", *common])
+        # 720p: sharp enough for the owner to judge on a phone, ~2x faster than the final
+        return Canvas(1280, 720, fmt.fps, ep.work / "preview",
+                      ["-c:v", "libx264", "-crf", "23", "-preset", "veryfast", *common])
     # The beat clips ARE the final encode: one high-quality lossy generation, then stream copy.
     return Canvas(fmt.width, fmt.height, fmt.fps, ep.work,
                   ["-c:v", "libx264", "-crf", "16", "-preset", "fast", *common])

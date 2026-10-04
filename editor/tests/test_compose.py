@@ -102,7 +102,7 @@ def test_preview_is_small_and_separate(composed):
     out = compose(ep, preview=True)
     info = probe(out)
     assert out == ep.edit / "preview.mp4"
-    assert (info.width, info.height) == (640, 360)
+    assert (info.width, info.height) == (1280, 720)
     assert info.duration == pytest.approx(total, abs=0.1)
     assert (ep.work / "preview" / "beat_0.mp4").exists()
     assert full_clip.stat().st_mtime == before
