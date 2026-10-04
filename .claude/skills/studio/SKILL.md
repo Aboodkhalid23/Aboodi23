@@ -20,7 +20,7 @@ description: استوديو المحتوى — يشغّل فريق كامل (م�
 | محرر اللهجة | `dialect-editor` | `04-script.md` |
 | التغليف والسيو | `packager` | `05-package.md` |
 | منسق المنصات | `platform-strategist` | `06-distribution.md` |
-| مصمم الأغلفة | `designer` | `design/grid.jpg` ثم `final-youtube.jpg` و`final-reels.jpg` |
+| مصمم الأغلفة | `designer` | `design/thumb-A.jpg` و`thumb-B.jpg` و`thumb-C.jpg` و`compare.jpg`، وبعدها `final-reels.jpg` |
 | محلل النمو | `growth-analyst` | `studio/growth/<التاريخ>.md` |
 
 **المراجع المشتركة:** بمجلد `studio/references/`:
@@ -91,10 +91,10 @@ python3 -c "import sys;print(len(open(sys.argv[1],encoding='utf-8').read().split
 
 ### 8b. الأغلفة ← `designer`
 بعد ما يخلص `packager` (المصمم يحتاج `05-package.md`):
-1. اسأل صاحب القناة بـ AskUserQuestion **مرة وحدة**: "المصمم راح يولّد 4 مشاهد ويحفظ لوحة التنزيل بـ Canva حتى ينزّلها. موافق؟" واحفظ جوابه.
-2. شغّل `designer` على مجلد الحلقة، وانطيه بالتعليمات جوابه: "موافقة لوحة التنزيل: نعم" أو "موافقة لوحة التنزيل: لا". يرجعلك `design/grid.jpg` ووصف 4 أفكار.
-3. دز `grid.jpg` لصاحب القناة بأداة SendUserFile، واسأله يختار (A أو B أو C أو D).
-4. كمّل انت الخطوتين 8 و9 من `.claude/skills/designer/SKILL.md` (الغلاف الطولي والتسليم).
+1. اسأل صاحب القناة بـ AskUserQuestion **مرة وحدة**: "المصمم راح يولّد 3 مشاهد بوجهك بـ Higgsfield (6 نقاط مجانية). وإذا الرصيد ما كفى، يكمّل بـ Canva ويحفظ لوحة التنزيل حتى ينزّلها. موافق؟" واحفظ جوابه.
+2. شغّل `designer` على مجلد الحلقة، وانطيه بالتعليمات جوابه: "موافقة لوحة التنزيل: نعم" أو "موافقة لوحة التنزيل: لا". يرجعلك 3 أغلفة و`design/compare.jpg` ووصف الأفكار الثلاثة.
+3. كمّل انت الخطوة 7 من `.claude/skills/designer/SKILL.md`: دز الأغلفة الثلاثة لصاحب القناة لاختبار يوتيوب "اختبار ومقارنة".
+4. كمّل الخطوتين 8 و9 (الغلاف الطولي والحفظ).
 
 ### 9. التسليم
 1. ضيف سطر بـ `episodes/log.md`: التاريخ | الموضوع | الفئة | نوع الهوك | العنوان الموصى به | عدد الكلمات | المجلد.

@@ -52,7 +52,7 @@
  "stroke": {"color": "#0B0B0F", "width": 0.1}, "shadow": true, "rotate": 5}
 ```
 
-**المشهد الكامل (الأساسي):** Canva يولّد المشهد والمقدم داخله، والكود يضيف الكتابة واللمسة الأخيرة:
+**المشهد الكامل (الأساسي):** Higgsfield (أو Canva احتياط) يولّد المشهد والمقدم داخله بوجهه الحقيقي، والكود يضيف الكتابة واللمسة الأخيرة:
 ```json
 {"image": "scene-A.png", "contrast": 1.12, "saturation": 1.2, "sharpen": 1, "vignette": 0.35}
 ```
@@ -65,7 +65,8 @@
 
 ## القواعد الثابتة
 - المقدم **داخل المشهد**: وجهه بس هو الثابت. **التعبير والملابس والمشهد يتغيرون** حسب الموضوع بكل غلاف. تعبيره قوي ويباوع للكاميرا.
-- **ممنوع صورته المقصوصة الملصوقة** (نفس الملابس ونفس التعبير). صاحب القناة رفضها.
+- **ممنوع صورته الأصلية ملصوقة** (نفس الملابس ونفس التعبير). صاحب القناة رفضها. الذكاء الاصطناعي ياخذ صورته كمرجع ويعيد رسم وجهه بنفس الملامح وتعبير جديد.
+- **كل فيديو 3 أغلفة مختلفة** (قصة وتعبير ولون) لاختبار يوتيوب "اختبار ومقارنة".
 - الكتابة سطرين، 2-3 كلمات (4 بالأكثر)، وتنتهي بـ "!" أو "؟"، وما تكرر العنوان.
 - 3 عناصر بالأكثر: المقدم، واللغز، والكتابة.
 - ماكو أسهم ولا دوائر ولا صناديق ملونة، ولا حد أبيض حول المقدم.
@@ -77,7 +78,25 @@
   - أعلى 12.5% وأوطى 25% وآخر 15% من اليمين فارغة من الكتابة.
   - الوجه والكتابة داخل الإطار الأزرق بملف الفحص (هذا قص شبكة إنستگرام).
 
-## وصفة أوامر المشهد لـ Canva (بالإنگليزي، داخلياً)
+## وصفة أوامر المشهد لـ Higgsfield Nano Banana Pro (المحرك الأساسي، بالإنگليزي، داخلياً)
+جربناها بـ 4 تشرين الأول 2026 على حلقة إيفرغراند، والوجه طلع يشبهه بالثلاث مشاهد.
+```
+Cinematic photorealistic YouTube thumbnail photo. Main subject: the man in the reference image.
+Preserve his exact facial identity: face shape, eyes, eyebrows, nose, thin black mustache, short trimmed beard,
+short dark hair with faded sides, skin tone. Change only his expression, clothes, pose and lighting.
+He stands on the right third of the frame, chest-up and large (his head and shoulders fill about 40% of the frame width),
+looking straight into the camera. He wears <زي الموضوع>. Expression: <التعبير بالتفصيل: الحواجب، الحلگ، العيون>.
+<شنو ماسك أو يسوي>. Behind him and filling the left side: <المكان والشي البطل>.
+<اللون المسيطر> dominant color, <لون ضو الحافة> rim light on his face and shoulders, high contrast,
+vivid saturated colors, sharp detailed skin texture, background slightly darker and softer than his face.
+Keep the upper-left third of the frame <dark empty sky / dark and simple> for a headline.
+No text, no letters, no captions, no logos, no watermark.
+```
+- **يوتيوب:** `aspect_ratio: "16:9"`، و`resolution: "2k"` (2 نقطة للمشهد).
+- **الطولي:** `aspect_ratio: "9:16"`، وبدّل `on the right third` بـ `in the lower middle`، و`upper-left third` بـ `upper third`.
+- **الإيد القريبة:** ضيف `wide-angle lens close-up` و`holds <الشي> toward the camera with forced perspective, so his hand looks big in the foreground`.
+
+## وصفة أوامر المشهد لـ Canva (احتياط، بالإنگليزي، داخلياً)
 ```
 Cinematic YouTube thumbnail scene without any text: <the man from the reference photo | a young man>
 wearing <زي الموضوع>, <تعبير> expression looking at the camera, on the right third of the frame,
@@ -94,4 +113,6 @@ no text, no letters, no logos, no watermark
 <!-- كل ملاحظة يگولها (عجبني/ما عجبني) تنكتب هنا بتاريخها -->
 - **(25 أيلول 2026)** دز 5 أغلفة وگال: "هيج التصميم أحب يكون". الوصفة كاملة بـ `studio/style-references.md`.
 - **(25 أيلول 2026)** غلاف تجريبي بصورته المقصوصة فوق مشهد مصنوع بالكود: **ما عجبه أبد.** گال: "بكل صورة تاخذ وجهي بس، وتغيّر ملامح وجهي حسب المشهد، وتغيّر الملابس حسب المشهد، وما أريد نفس المشهد. أريد الوضوح والدقة والتفاصيل مثل الأغلفة الي دزيتها."
-- **(25 أيلول 2026)** "حالياً ما أريد شي مدفوع لحد ما أوصل لنتيجة." يعني Canva بس، لحد ما يقرر هو.
+- **(25 أيلول 2026)** "حالياً ما أريد شي مدفوع لحد ما أوصل لنتيجة." يعني الأدوات المجانية بس، لحد ما يقرر هو.
+- **(25 أيلول 2026)** تجربة Canva بوجه مو وجهه: رفضها. "أريد وجهي الحقيقي بس."
+- **(4 تشرين الأول 2026)** دز مجلد 44 غلاف ليوتيوبرية مشهورين، وگال: "أريد هيج نتيجة". طلب: وجهه الحقيقي، والذكاء الاصطناعي يغيّر تعبيره حسب المشهد، والفكرة تنكتب من الصفر لكل فيديو، و**3 أغلفة مختلفة** يرفعهن لاختبار يوتيوب. ربط Higgsfield وArtlist حتى نستخدمهن.

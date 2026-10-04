@@ -6,7 +6,9 @@
 # المصمم: صور الوجه والمراجع ما تنرفع (الريبو عام)
 designer/faces/
 designer/references/
-# المصمم: صور المشاهد موجودة بحسابه بـ Canva، ما تنرفع حتى ما يكبر الريبو
-episodes/*/design/scene-*.png
-designs/*/scene-*.png
+# المصمم: كل صور مجلدات التصميم (المشاهد والأغلفة) بيها وجهه، فما تنرفع (الريبو عام)
+episodes/*/design/*.png
+episodes/*/design/*.jpg
+designs/*/*.png
+designs/*/*.jpg
 __pycache__/

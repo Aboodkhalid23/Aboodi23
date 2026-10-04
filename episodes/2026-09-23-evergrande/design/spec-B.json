@@ -1,0 +1,9 @@
+{
+  "size": "youtube",
+  "background": {"image": "scene-B.png", "contrast": 1.08, "saturation": 1.08, "sharpen": 1, "vignette": 0.3},
+  "layers": [
+    {"type": "text", "text": "الخزنة\nفارغة!", "font": "Baloo", "x": 0.25, "y": 0.36, "size": 0.19,
+     "line_spacing": 0.64, "line_colors": ["#FFFFFF", ["#FFC400", "#FF6A00"]],
+     "stroke": {"color": "#0B0B0F", "width": 0.1}, "shadow": true, "rotate": 4}
+  ]
+}

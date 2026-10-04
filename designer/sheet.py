@@ -26,10 +26,15 @@ LIGHT_ROW_Y = GRID_H + GAP // 2
 DARK_ROW_Y = GRID_H + GAP + MINI[1] + GAP
 
 
+def default_labels(paths: list) -> list:
+    """اسم الملف القصير (A) يبقى، والطويل (thumb-A) يتبدل برقم الصورة، لأن الدائرة تساع حرفين بس."""
+    return [Path(p).stem if len(Path(p).stem) <= 2 else str(i + 1) for i, p in enumerate(paths)]
+
+
 def make_sheet(paths: list, labels: list | None = None) -> Image.Image:
     if not 1 <= len(paths) <= 4:
         raise ValueError("ورقة المقارنة تاخذ من 1 لـ 4 صور")
-    labels = labels or [Path(p).stem for p in paths]
+    labels = labels or default_labels(paths)
     sheet = Image.new("RGB", SHEET_SIZE, (40, 40, 40))
     d = ImageDraw.Draw(sheet)
     big = load_font(FONT, 34)

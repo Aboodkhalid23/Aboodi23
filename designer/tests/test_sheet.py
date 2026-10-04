@@ -50,6 +50,10 @@ class SheetTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "من 1 لـ 4"):
             sheet.make_sheet(self.paths)
 
+    def test_default_labels_short_names_kept_long_names_numbered(self):
+        self.assertEqual(sheet.default_labels(["A.jpg", "B.png"]), ["A", "B"])
+        self.assertEqual(sheet.default_labels(["x/thumb-A.jpg", "B.jpg", "thumb-C.jpg"]), ["1", "B", "3"])
+
     def test_cli_writes_file(self):
         out = self.dir / "grid.jpg"
         buf = io.StringIO()
