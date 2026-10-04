@@ -56,6 +56,7 @@ class EditPlan:
     ai_budget: float = 0.0   # Higgsfield credits this episode may spend (edit/ai_ledger.json)
     grade: str | None = None  # colour look for the whole episode (default: the style's)
     music: list[dict] = field(default_factory=list)  # [{"t": final-timeline s, "prompt": ..., "mood": ...}]
+    end_screen: float = 20.0  # seconds of YouTube end screen after the last beat (0 = none; YouTube allows 5–20)
 
     def chapter_times(self) -> list[float]:
         """Chapter starts on the final timeline: the first covers the teaser, the rest shift by it."""
@@ -72,7 +73,7 @@ def load_plan(path: Path) -> EditPlan:
                     teaser=[tuple(t) for t in d.get("teaser", [])],
                     beats=[Beat(**b) for b in d["beats"]], shorts=d.get("shorts", []),
                     chapters=d.get("chapters", []), ai_budget=d.get("ai_budget", 0.0),
-                    grade=d.get("grade"), music=d.get("music", []))
+                    grade=d.get("grade"), music=d.get("music", []), end_screen=d.get("end_screen", 20.0))
 
 
 def save_plan(plan: EditPlan, path: Path) -> None:
@@ -162,6 +163,8 @@ def validate_plan(plan: EditPlan, clean_duration: float, entities: set[str] | No
             if times[i] - times[i - 1] < 10:
                 errs.append(f"chapter {i}: لازم يبعد 10 ثواني أو أكثر عن الي قبله")
 
+    if plan.end_screen and not 5 <= plan.end_screen <= 20:
+        errs.append("end_screen: يوتيوب يقبل شاشة النهاية بين 5 و 20 ثانية (أو 0 بدونها)")
     if plan.grade and plan.grade not in LOOKS:
         errs.append(f"grade: لازم من {', '.join(LOOKS)}")
     for k, m in enumerate(plan.music):

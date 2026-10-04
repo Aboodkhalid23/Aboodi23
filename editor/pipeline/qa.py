@@ -68,7 +68,7 @@ def qa(ep: Episode, preview: bool = False) -> dict:
     video = ep.edit / "preview.mp4" if preview else ep.final
     plan = load_plan(ep.plan)
     info = probe(video)
-    expected = plan.beats[-1].end
+    expected = plan.beats[-1].end + plan.end_screen
     lufs, peak = _loudness(video) if info.has_audio else (None, None)
     issues = []
     if abs(info.duration - expected) > 0.2:

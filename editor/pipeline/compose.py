@@ -251,6 +251,23 @@ def _face_on_canvas(ep: Episode, cv: Canvas) -> tuple[float, float] | None:
     return round((1 - w) / 2 + f["cx"] * w, 3), round((1 - h) / 2 + f["cy"] * h, 3)
 
 
+def _end_screen(plan, style: Style, cv: Canvas, bundle: Path, channel: dict, avatar: Path | None) -> Path:
+    """The last seconds: room for YouTube's end-screen elements (next video + subscribe)."""
+    from .graphics import RenderJob, _publish, _style_props
+    out = cv.work / "end_screen.mp4"
+    stamp = out.with_suffix(".hash")
+    key = hashlib.sha1(json.dumps([plan.end_screen, style.name, channel, cv.encode, cv.width, _stamp(avatar),
+                                   _source_hash()]).encode()).hexdigest()
+    if not (out.exists() and stamp.exists() and stamp.read_text() == key):
+        ch = dict(channel, avatar=_publish(bundle, avatar, "channel_avatar" + avatar.suffix) if avatar else None)
+        job = RenderJob("end-screen", {"style": _style_props(style), "durationSec": plan.end_screen, "channel": ch},
+                        cv.work / "end_screen_raw.mp4", cv.remotion_scale)
+        render_batch([job], bundle)
+        _finish(job.out, round(plan.end_screen * cv.fps), out, cv, None)
+        stamp.write_text(key)
+    return out
+
+
 def _stamp(path: Path | None) -> str:
     return f"{path.name}:{path.stat().st_mtime_ns}" if path else ""
 
@@ -350,10 +367,14 @@ def compose(ep: Episode, preview: bool = False) -> Path:
     if missing:
         print(f"⚠️  مشاهد ذكاء اصطناعي ناقصة (انكتب الـ caption بدالها): beats {missing}")
 
+    if plan.end_screen:
+        clips.append(_end_screen(plan, style, cv, bundle, channel, avatar or channel_avatar(ep.work)))
+
     listing = cv.work / "concat.txt"
     listing.write_text("".join(f"file '{c.resolve()}'\n" for c in clips), encoding="utf-8")
     audio = cv.work / "audio.m4a"
-    total_frames = round(plan.beats[-1].end * cv.fps) - round(plan.beats[0].start * cv.fps)
+    total_frames = (round(plan.beats[-1].end * cv.fps) - round(plan.beats[0].start * cv.fps)
+                    + round(plan.end_screen * cv.fps))
     cues = beat_cues(plan.beats, FX_CUES)
     for b in plan.beats:
         cues += [(b.start + float(st.get("at", 0.3)), "pop") for st in (b.stickers or [])]

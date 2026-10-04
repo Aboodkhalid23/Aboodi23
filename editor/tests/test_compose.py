@@ -39,7 +39,7 @@ def composed(tmp_path_factory):
     beats = [Beat(0, 4, "hook", "face"), Beat(4, 8, "hook", "face_zoom_in"),
              Beat(8, 11, "hook", "graphic", graphic={"type": "text", "text": "شركة"}),
              Beat(11, 15, "hook", "face_zoom_out"), Beat(15, round(total, 3), "hook", "face_framed")]
-    save_plan(EditPlan({"primary": "vox", "sections": []}, "", [(2.0, 4.0), (9.0, 11.0)], beats), ep.plan)
+    save_plan(EditPlan({"primary": "vox", "sections": []}, "", [(2.0, 4.0), (9.0, 11.0)], beats, end_screen=0), ep.plan)
     compose(ep)
     return ep, total
 
@@ -125,7 +125,7 @@ def test_compose_4k_canvas(tmp_path):
     total = clean(ep)
     beats = [Beat(0, 1.5, "hook", "face"), Beat(1.5, 3.0, "hook", "graphic", graphic={"type": "text", "text": "4K"}),
              Beat(3.0, round(total, 3), "hook", "face_zoom_in")]
-    save_plan(EditPlan({"primary": "vox", "sections": []}, "", [], beats), ep.plan)
+    save_plan(EditPlan({"primary": "vox", "sections": []}, "", [], beats, end_screen=0), ep.plan)
     info = probe(compose(ep))
     assert (info.width, info.height, info.fps) == (3840, 2160, 30)
     g = probe(ep.work / "beat_1.mp4")
@@ -141,7 +141,7 @@ def test_portrait_face_has_blurred_sides_not_black(tmp_path):
     save_words(speech((0, 4)), ep.transcript)
     total = clean(ep)
     save_plan(EditPlan({"primary": "vox", "sections": []}, "", [],
-                       [Beat(0, 2, "hook", "face"), Beat(2, round(total, 3), "hook", "face_zoom_in")]), ep.plan)
+                       [Beat(0, 2, "hook", "face"), Beat(2, round(total, 3), "hook", "face_zoom_in")], end_screen=0), ep.plan)
     final = compose(ep)
     raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", "1", "-i", str(final), "-frames:v", "1",
                           "-vf", "crop=200:1080:0:0,scale=1:1:flags=area", "-f", "rawvideo", "-pix_fmt", "gray", "-"],

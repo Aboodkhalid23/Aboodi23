@@ -4,6 +4,7 @@ import {ArticleShot} from './graphics/ArticleShot';
 import {BigText} from './graphics/BigText';
 import {Chart} from './graphics/Chart';
 import {EntityCard} from './graphics/EntityCard';
+import {EndScreen} from './graphics/EndScreen';
 import {FaceFrame} from './graphics/FaceFrame';
 import {FaceFx} from './graphics/FaceFx';
 import {FootageCard} from './graphics/FootageCard';
@@ -34,6 +35,7 @@ const GRAPHICS: [string, React.FC<any>, Record<string, unknown>][] = [
   ['image', ImageCard, {src: 'img.png', treatment: 'paper_cutout'}],
   ['article', ArticleShot, {src: 'article.png', rects: []}],
   ['footage', FootageCard, {src: 'footage.mp4', treatment: 'crt'}],
+  ['end-screen', EndScreen, {channel: {name: 'القناة', handle: '@channel'}}],
   ['entity', EntityCard, {name: 'إيلون ماسك', role: 'مؤسس تسلا', entityKind: 'person'}],
   ['face-fx', FaceFx, {src: 'face.mp4', fx: 'subscribe', stickers: [], channel: {name: 'القناة', handle: '@channel'}}],
   ...CUSTOM.map(([name, C]) => [`custom-${name}`, C, {}] as [string, React.FC<any>, Record<string, unknown>]),

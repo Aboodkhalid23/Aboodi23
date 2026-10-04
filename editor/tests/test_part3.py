@@ -310,3 +310,35 @@ def test_footage_from_the_archive_is_cut_to_the_beat_and_credited(tmp_path):
     assert credits[0].startswith("Old Film — Prelinger Archives — Public domain")
     # the same film is not used twice in a row: the second beat falls back to its caption card
     assert fb[0]["beat"] == 1 and plan.beats[1].kind == "graphic" and plan.beats[1].graphic["text"] == "مصنع"
+
+
+
+# ---------- end screen ----------
+
+def test_end_screen_length_is_validated():
+    from .test_plan import build
+    plan, clean = build()
+    plan.end_screen = 30
+    assert any(e.startswith("end_screen") for e in validate_plan(plan, clean))
+    plan.end_screen = 0
+    assert validate_plan(plan, clean) == []
+
+
+@pytest.mark.slow
+def test_end_screen_is_appended_with_sound_running_to_the_end(tmp_path):
+    from editor.pipeline.clean import clean
+    from editor.pipeline.compose import compose
+    from editor.pipeline.fetch import fetch
+    from editor.pipeline.media import probe
+    from editor.pipeline.transcribe import save_words
+    from .conftest import make_talking_video
+    from .test_clean import speech
+    from .test_compose import stream_durations
+    ep = Episode(tmp_path / "ep").ensure()
+    fetch(str(make_talking_video(tmp_path / "t.mp4")), ep)
+    save_words(speech((0, 4)), ep.transcript)
+    total = round(clean(ep), 3)
+    save_plan(EditPlan({"primary": "retro-collage"}, "", [], [Beat(0, total, "hook", "face")], end_screen=5), ep.plan)
+    d = stream_durations(compose(ep))
+    assert d["video"] == pytest.approx(total + 5, abs=0.1) and abs(d["video"] - d["audio"]) <= 0.1
+    assert probe(ep.work / "end_screen.mp4").duration == pytest.approx(5, abs=0.05)

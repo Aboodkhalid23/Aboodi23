@@ -255,7 +255,7 @@ def part2(tmp_path_factory):
              Beat(8, 10, "hook", "ai_image", prompt="p", caption="ناقصة"),
              Beat(10, 12, "hook", "entity", entity="musk"),
              Beat(12, total, "hook", "face_fx", fx="subscribe", stickers=[{"type": "stamp", "text": "حقيقي", "at": 0.5}])]
-    save_plan(EditPlan({"primary": "retro-collage", "sections": []}, "", [], beats), ep.plan)
+    save_plan(EditPlan({"primary": "retro-collage", "sections": []}, "", [], beats, end_screen=0), ep.plan)
     compose(ep)
     return ep, total
 
