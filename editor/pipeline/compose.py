@@ -15,6 +15,7 @@ from .paths import Episode
 from .plan import Beat, load_plan
 from .sfx import beat_cues, sfx_path
 from .styles import Style, load_style
+from .wipes import WIPES, apply_wipe
 
 ZOOM = 0.15          # face zoom: 1.0 <-> 1.15
 FOCUS_Y = 0.4        # keep the face (upper part of frame) in view while zooming
@@ -135,7 +136,7 @@ def _face_filter(kind: str, dur: float, cv: Canvas) -> str:
 def _transition_filter(name: str | None, cv: Canvas) -> str:
     """Entry effect on the first TRANS seconds of a clip (it only needs the incoming clip, so clips
     stay independent and the final concat stays a stream copy)."""
-    if not name:
+    if not name or name in WIPES:   # wipes need the clip before: done after all clips exist (wipes.py)
         return ""
     on = f"enable='lt(t,{TRANS})'"
     punch = lambda amount: _zoom_crop(f"(1+{amount}*pow(1-min(t/{TRANS},1),3))", cv, 0.5)
@@ -388,6 +389,10 @@ def compose(ep: Episode, preview: bool = False) -> Path:
         for job, frames, out, transition, stamp, key in pending:
             _finish(job.out, frames, out, cv, transition)
             stamp.write_text(key)
+    for i, b in enumerate(plan.beats):
+        if b.transition in WIPES and i > 0:
+            clips[i] = apply_wipe(b.transition, clips[i - 1], clips[i], cv.work / f"beat_{i}_{b.transition}.mp4",
+                                  cv.width, cv.height, cv.fps, cv.encode)
     if missing:
         print(f"⚠️  مشاهد ذكاء اصطناعي ناقصة (انكتب الـ caption بدالها): beats {missing}")
 

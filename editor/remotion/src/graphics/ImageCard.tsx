@@ -1,15 +1,18 @@
 import React from 'react';
 import {AbsoluteFill, Img, interpolate, random, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {appear, Background, BaseProps, ease, FPS, StyleProps} from '../style';
+import {Desk, HalftoneCutout, Silhouette} from './Update1';
 
 const TORN = 'polygon(0% 2%, 6% 0%, 13% 2%, 21% 0%, 30% 1.5%, 40% 0%, 52% 2%, 63% 0%, 74% 1.5%, 86% 0%, 100% 2%, 99% 20%, 100% 41%, 98.5% 63%, 100% 84%, 99% 100%, 88% 98%, 76% 100%, 64% 98.5%, 51% 100%, 39% 98%, 27% 100%, 15% 98%, 5% 100%, 0% 98%, 1% 76%, 0% 55%, 1.5% 33%, 0% 14%)';
 // People's heads sit in the upper part of photos: crop from there, never through the face.
 const FOCUS = '50% 22%';
 const HALFTONE = 'radial-gradient(rgba(0,0,0,.55) 28%, transparent 30%)';
 
-type Props = BaseProps & {src: string; treatment: string; caption?: string; fg?: string; title?: string; titleY?: number; titleFront?: boolean};
+type Props = BaseProps & {src: string; treatment: string; caption?: string; fg?: string; title?: string; titleY?: number; titleFront?: boolean;
+  parts?: string[]; face?: number[] | null};
 type Inner = {style: StyleProps; src: string; caption: string; f: number; fps: number; dur: number; fg?: string; title?: string;
-  titleY?: number; titleFront?: boolean};
+  titleY?: number; titleFront?: boolean; parts?: string[];
+  face?: number[] | null};
 const pal = (s: StyleProps) => s.palette as Record<string, string>;
 
 /** Grid paper (grid-collage world) behind every paper treatment. */
@@ -212,16 +215,16 @@ const Parallax: React.FC<Inner> = ({src, fg, f, fps, dur}) => {
 };
 
 const TREATMENTS: Record<string, React.FC<Inner>> = {
-  cinematic_title: CinematicTitle, parallax: Parallax,
+  cinematic_title: CinematicTitle, parallax: Parallax, halftone_cutout: HalftoneCutout, desk: Desk, silhouette: Silhouette,
   engraving_in_circle: Circle, newspaper: Newspaper, polaroid: Polaroid, crt: Crt, pinboard: Pinboard, paper_cutout: PaperCutout,
 };
 
-export const ImageCard: React.FC<Props> = ({style, durationSec, src, treatment, caption = '', fg, title, titleY, titleFront}) => {
+export const ImageCard: React.FC<Props> = ({style, durationSec, src, treatment, caption = '', fg, title, titleY, titleFront, parts, face}) => {
   const f = useCurrentFrame();
   const {fps} = useVideoConfig();
   const T = TREATMENTS[treatment];
   if (T) return <T style={style} src={src} caption={caption} f={f} fps={fps} dur={durationSec} fg={fg} title={title}
-    titleY={titleY} titleFront={titleFront} />;
+    titleY={titleY} titleFront={titleFront} parts={parts} face={face} />;
   // ken_burns / film_grain: the picture fills the screen and drifts slowly
   const kb = interpolate(f, [0, durationSec * FPS], [1, 1.08]);
   return (

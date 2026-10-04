@@ -13,6 +13,15 @@ from .plan import AI_KINDS, load_plan
 from .styles import load_style
 
 IMAGE_MODEL, VIDEO_MODEL = "nano_banana", "veo3_1_lite"   # good and cheap: ≈1 credit per image, 6 per 4 s clip
+# Looks from the owner's references (style update 1, style د and و): replace the world's suffix for one beat.
+AI_LOOKS = {
+    "cinematic": ("cinematic film still, dark moody room lit by warm practical lamps and window light, shallow depth of "
+                  "field, 35mm, rich shadows, realistic, leave empty space behind the subject for a big title"),
+    "caricature_3d": ("3D caricature render, big expressive head, soft clay-like materials, playful, bright studio light, "
+                      "clean background with soft clouds, Pixar-like but editorial"),
+    "pencil": "detailed graphite pencil sketch on cream paper, hatching, visible pencil strokes, documentary illustration",
+    "blueprint": "technical blueprint drawing, white precise lines on deep blue paper, labels and measurements, engineering plan",
+}
 EXT = {"image/png": ".png", "image/jpeg": ".jpg", "image/webp": ".webp", "video/mp4": ".mp4",
        "video/quicktime": ".mov", "video/webm": ".webm"}
 
@@ -61,7 +70,7 @@ def ai_jobs(ep: Episode) -> list[AiJob]:
             continue
         video = b.kind == "ai_video"
         have = _existing(ep, i)
-        jobs.append(AiJob(i, b.kind, f"{b.prompt.rstrip('. ')}. {suffix}", VIDEO_MODEL if video else IMAGE_MODEL,
+        jobs.append(AiJob(i, b.kind, f"{b.prompt.rstrip('. ')}. {AI_LOOKS.get(b.look or '', suffix)}", VIDEO_MODEL if video else IMAGE_MODEL,
                           "16:9", (4 if b.duration <= 4.5 else 6) if video else 0,
                           str(have or ep.assets / f"ai_{i}.{'mp4' if video else 'png'}"), have is not None))
     (ep.work / "ai_jobs.json").write_text(json.dumps([asdict(j) for j in jobs], ensure_ascii=False, indent=1),

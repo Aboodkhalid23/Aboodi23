@@ -126,10 +126,18 @@ def graphic_job(beat: Beat, style: Style, out: Path, public_dir: Path | None = N
         props.update(src=_publish(bundle, src), treatment=treatment, caption=beat.caption or "")
         if beat.title:
             props["title"] = beat.title
-        from .masks import FULL_BLEED, image_layout, person_cutout, place_on_face
-        cut = person_cutout(Path(src)) if treatment in ("cinematic_title", "parallax") else None
-        if cut:                                            # the person cut out: text behind him / 2.5D depth
+        from .masks import FULL_BLEED, image_layout, person_cutout, person_parts, place_on_face
+        cut = person_cutout(Path(src)) if treatment in ("cinematic_title", "parallax", "halftone_cutout") else None
+        if treatment == "silhouette":                      # one white silhouette per person, revealed in turn
+            props["parts"] = [_publish(bundle, part) for part in person_parts(Path(src))]
+        if cut and treatment == "halftone_cutout":        # printed black and white with the accent paper edge
+            from .masks import halftone_cutout
+            accent = style.palette.get("accent", "#F2C230").lstrip("#")
+            props["fg"] = _publish(bundle, halftone_cutout(cut, tuple(int(accent[k:k + 2], 16) for k in (0, 2, 4))))
+        elif cut:                                          # the person cut out: text behind him / 2.5D depth
             props["fg"] = _publish(bundle, cut)
+        if treatment == "halftone_cutout" and cut:          # the accent disc sits behind his head and shoulders
+            props["face"] = image_layout(Path(src), cut)["face"]
         if treatment in FULL_BLEED and (treatment == "cinematic_title" or beat.stickers):
             lay = image_layout(Path(src), cut)
             props.update(titleY=lay["titleY"], titleFront=lay["titleFront"])

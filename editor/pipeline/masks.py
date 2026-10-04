@@ -29,6 +29,99 @@ def person_cutout(src: Path, out: Path | None = None) -> Path | None:
     return out
 
 
+def halftone_cutout(cut: Path, edge_rgb: tuple[int, int, int], out: Path | None = None) -> Path:
+    """The cut-out person printed in black and white with halftone dots and a paper edge of `edge_rgb`
+    (done once here: the same look drawn live in the browser costs minutes per scene)."""
+    import cv2
+    out = Path(out or Path(cut).with_name(Path(cut).stem + "_halftone.png"))
+    if out.exists() and out.stat().st_mtime >= Path(cut).stat().st_mtime:
+        return out
+    rgba = cv2.imread(str(cut), cv2.IMREAD_UNCHANGED)
+    h, w = rgba.shape[:2]
+    gray = cv2.cvtColor(rgba[:, :, :3], cv2.COLOR_BGR2GRAY).astype(np.float32) / 255
+    gray = np.clip((gray - 0.5) * 1.45 + 0.53, 0, 1)                          # punchy print contrast
+    cell = max(4, round(w / 270))                                            # ~7 px dots at 1920
+    yy, xx = np.mgrid[0:h, 0:w]
+    u, v = (xx + yy) / cell, (xx - yy) / cell                                # 45° screen like newsprint
+    dist = np.hypot(u - np.round(u), v - np.round(v)) / 0.7071               # 0 at a dot centre → 1 between
+    ink = (dist < np.sqrt(np.clip(1 - gray, 0, 1)) * 0.9).astype(np.float32)
+    ink = cv2.GaussianBlur(ink, (0, 0), 0.6)
+    printed = np.clip(gray * 0.55 + (1 - ink) * 0.45, 0, 1)                  # tone + dots, still a readable face
+    a = rgba[:, :, 3].astype(np.float32) / 255
+    hard = (a > 0.5).astype(np.uint8)                                        # keep real people, drop specks
+    n, labels, stats, _ = cv2.connectedComponentsWithStats(hard)
+    keep = [k for k in range(1, n) if stats[k, cv2.CC_STAT_AREA] >= 0.02 * hard.size] or \
+        ([int(np.argmax(stats[1:, cv2.CC_STAT_AREA])) + 1] if n > 1 else [])
+    a = a * np.isin(labels, keep)
+    r = max(3, round(w / 210))
+    ring = cv2.dilate((a > 0.5).astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * r + 1,) * 2))
+    ring = cv2.GaussianBlur(ring.astype(np.float32), (0, 0), 1.0)
+    body = (printed * 255)[..., None].repeat(3, 2)
+    edge = np.array(edge_rgb[::-1], np.float32)[None, None, :]
+    color = body * a[..., None] + edge * (1 - a[..., None])
+    alpha = np.maximum(a, ring)
+    cv2.imwrite(str(out), np.dstack([color.clip(0, 255).astype(np.uint8), (alpha * 255).astype(np.uint8)]))
+    return out
+
+
+MAX_PARTS = 5
+PART_AREA = 0.012            # a silhouette smaller than 1.2% of the picture is noise, not a person
+
+
+def _faces(img, min_frac: float = 1 / 30):
+    import cv2
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    det = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+    m = max(20, round(gray.shape[1] * min_frac))
+    return det.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=7, minSize=(m, m))
+
+
+def person_parts(src: Path) -> list[Path]:
+    """One white-silhouette PNG per person in `src`, right → left as Arabic reads, for the archive
+    "who is who" reveal. People standing close merge in the mask, so the mask is split between the
+    faces found on it (each pixel goes to the nearest face, mostly by column); blobs without a face
+    count as one person each. Empty when nobody is found."""
+    import cv2
+    cut = person_cutout(src)
+    if cut is None:
+        return []
+    rgba = cv2.imread(str(cut), cv2.IMREAD_UNCHANGED)
+    alpha = rgba[:, :, 3]
+    hard = (alpha > 127).astype(np.uint8)
+    h, w = hard.shape
+    found = sorted(_faces(rgba[:, :, :3]), key=lambda f: -f[2])
+    faces = []                                             # real faces: not tiny next to the biggest, not overlapping
+    for x, y, fw, fh in found:
+        c = (x + fw / 2, y + fh / 2)
+        if fw >= 0.35 * found[0][2] and all(abs(c[0] - o[0]) > fw * 0.8 for o in faces):
+            faces.append(c)
+    n, labels, stats, _ = cv2.connectedComponentsWithStats(hard)
+    owner = np.zeros((h, w), np.int32)                     # 0 = nobody, g = person g
+    yy, xx = np.mgrid[0:h, 0:w]
+    for k in range(1, n):
+        if stats[k, cv2.CC_STAT_AREA] < PART_AREA * hard.size:
+            continue
+        blob = labels == k
+        mine = [(fx, fy) for fx, fy in faces if labels[int(fy), int(fx)] == k]
+        if len(mine) < 2:                                  # one person (or no face seen): the whole blob
+            owner[blob] = owner.max() + 1
+            continue
+        dist = np.stack([np.hypot(xx - fx, (yy - fy) * 0.25) for fx, fy in mine])
+        base = owner.max()
+        owner[blob] = base + 1 + dist.argmin(0)[blob]
+    groups = [g for g in range(1, owner.max() + 1) if (owner == g).sum() >= PART_AREA * hard.size]
+    groups = sorted(groups, key=lambda g: -(owner == g).sum())[:MAX_PARTS]
+    groups.sort(key=lambda g: -np.nonzero(owner == g)[1].mean())
+    out = []
+    for i, g in enumerate(groups):
+        part = Path(src).with_name(f"{Path(src).stem}_sil{i}.png")
+        mine = cv2.dilate((owner == g).astype(np.uint8), np.ones((5, 5), np.uint8)) > 0   # keep the soft edge
+        a = np.where(mine, alpha, 0).astype(np.uint8)
+        cv2.imwrite(str(part), np.dstack([np.full((h, w, 3), 248, np.uint8), a]))
+        out.append(part)
+    return out
+
+
 FRAME = (1920, 1080)
 FOCUS = (0.5, 0.22)          # objectPosition of the full-bleed picture treatments (ImageCard.tsx FOCUS)
 FULL_BLEED = ("cinematic_title", "parallax", "ken_burns", "film_grain")

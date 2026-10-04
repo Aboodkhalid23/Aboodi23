@@ -12,7 +12,7 @@ AI_KINDS = ("ai_image", "ai_video")
 GRAPHIC_TYPES = ("number", "headline", "quote", "map", "timeline", "chart", "text", "custom", "article")
 CUSTOM_DIR = Path(__file__).resolve().parent.parent / "remotion" / "src" / "custom"
 FX_TYPES = ("subscribe", "tv", "none")        # face_fx wrappers; "none" = stickers only
-TRANSITIONS = ("zoom", "flash", "whip", "glitch")
+TRANSITIONS = ("zoom", "flash", "whip", "glitch", "tear", "burn")
 STICKERS = ("stamp", "arrow", "burst", "tape", "circle", "scribble_circle", "scribble_arrow", "scribble_underline",
             "censor", "name_tag")
 MARKABLE = ("face_fx", "image", "ai_image", "graphic", "entity", "footage")   # beats that can carry stickers
@@ -41,7 +41,8 @@ class Beat:
     transition: str | None = None   # entry effect on this beat: zoom | flash | whip | glitch
     grade: str | None = None        # colour look for this beat's footage (overrides the plan's)
     source: str | None = None       # footage: "archive" = old films first (else Commons first)
-    title: str | None = None        # cinematic_title: the giant word behind the person
+    title: str | None = None        # cinematic_title / halftone_cutout: the giant word; desk: the stamp
+    look: str | None = None         # ai_image / ai_video: a look from ai.AI_LOOKS instead of the world's
 
     @property
     def duration(self) -> float:
@@ -124,6 +125,12 @@ def validate_plan(plan: EditPlan, clean_duration: float, entities: set[str] | No
             errs.append(f"beat {i}: grade لازم من {', '.join(LOOKS)}")
         if b.transition and b.transition not in TRANSITIONS:
             errs.append(f"beat {i}: transition لازم من {', '.join(TRANSITIONS)}")
+        if b.look:
+            from .ai import AI_LOOKS
+            if b.kind not in AI_KINDS or b.look not in AI_LOOKS:
+                errs.append(f"beat {i}: look على ai_image و ai_video بس، ومن {', '.join(AI_LOOKS)}")
+        if b.treatment in ("cinematic_title", "halftone_cutout") and not (b.title or b.caption):
+            errs.append(f"beat {i}: {b.treatment} يحتاج title (الكلمة أو الرقم الضخم)")
         if b.start > prev_end + TOL:
             errs.append(f"beat {i}: فراغ قبله ({prev_end:.2f}–{b.start:.2f})")
         elif b.start < prev_end - TOL:
