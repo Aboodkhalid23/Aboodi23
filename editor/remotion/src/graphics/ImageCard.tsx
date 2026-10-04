@@ -7,8 +7,9 @@ const TORN = 'polygon(0% 2%, 6% 0%, 13% 2%, 21% 0%, 30% 1.5%, 40% 0%, 52% 2%, 63
 const FOCUS = '50% 22%';
 const HALFTONE = 'radial-gradient(rgba(0,0,0,.55) 28%, transparent 30%)';
 
-type Props = BaseProps & {src: string; treatment: string; caption?: string};
-type Inner = {style: StyleProps; src: string; caption: string; f: number; fps: number; dur: number};
+type Props = BaseProps & {src: string; treatment: string; caption?: string; fg?: string; title?: string; titleY?: number; titleFront?: boolean};
+type Inner = {style: StyleProps; src: string; caption: string; f: number; fps: number; dur: number; fg?: string; title?: string;
+  titleY?: number; titleFront?: boolean};
 const pal = (s: StyleProps) => s.palette as Record<string, string>;
 
 /** Grid paper (grid-collage world) behind every paper treatment. */
@@ -168,15 +169,59 @@ const PaperCutout: React.FC<Inner> = ({style, src, f, fps, dur}) => {
   );
 };
 
+/** In-scene title: a huge glowing word stands BEHIND the person (the person is cut out and laid on top).
+ * `titleY` is the band where the person hides only a little of it (found in Python, masks.image_layout);
+ * `titleFront` when he fills the frame: the word then sits in front, on the least covered band. */
+const CinematicTitle: React.FC<Inner> = ({src, fg, title, caption, f, fps, dur, titleY = 0.5, titleFront = false}) => {
+  const kb = interpolate(f, [0, dur * fps], [1.02, 1.1]);
+  const word = title || caption;
+  const rise = spring({frame: f - Math.round(0.25 * fps), fps, config: {damping: 18, stiffness: 90}});
+  const pic: React.CSSProperties = {position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
+    objectPosition: FOCUS, transform: `scale(${kb})`};
+  const text = (
+    <div style={{position: 'absolute', left: 0, right: 0, top: `${titleY * 100}%`, display: 'flex', justifyContent: 'center',
+      transform: `translateY(-50%) translateY(${(1 - rise) * 60}px) scale(${0.94 + 0.06 * rise})`, opacity: rise}}>
+      <div style={{fontFamily: 'Blaka, Badeen Display, Lalezar', fontSize: word.length > 8 ? 210 : 300, lineHeight: 1.05, color: '#F7D046',
+        direction: 'rtl', whiteSpace: 'nowrap',
+        textShadow: '0 0 30px rgba(247,208,70,.65), 0 0 90px rgba(247,160,40,.45), 0 10px 30px rgba(0,0,0,.6)'}}>{word}</div>
+    </div>
+  );
+  return (
+    <AbsoluteFill style={{background: '#000', overflow: 'hidden'}}>
+      <Img src={staticFile(src)} style={{...pic, filter: 'brightness(.82) contrast(1.08)'}} />
+      {!titleFront && text}
+      {fg && !titleFront && <Img src={staticFile(fg)} style={pic} />}
+      <AbsoluteFill style={{background: 'radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.5) 100%)'}} />
+      {titleFront && text}
+    </AbsoluteFill>
+  );
+};
+
+/** Vox 2.5D: the person (cut out) drifts and grows faster than the background, so the photo gains depth. */
+const Parallax: React.FC<Inner> = ({src, fg, f, fps, dur}) => {
+  const t = interpolate(f, [0, dur * fps], [0, 1], {easing: ease});
+  const bg = 1.04 + 0.04 * t, front = 1.04 + 0.14 * t;
+  const pic = (scale: number, x: number, extra: React.CSSProperties = {}): React.CSSProperties => ({position: 'absolute', inset: 0,
+    width: '100%', height: '100%', objectFit: 'cover', objectPosition: FOCUS, transform: `translateX(${x}px) scale(${scale})`, ...extra});
+  return (
+    <AbsoluteFill style={{background: '#000', overflow: 'hidden'}}>
+      <Img src={staticFile(src)} style={pic(bg, 20 * t, fg ? {filter: 'blur(2px) brightness(.9)'} : {})} />
+      {fg && <Img src={staticFile(fg)} style={pic(front, -30 * t, {filter: 'drop-shadow(0 20px 30px rgba(0,0,0,.45))'})} />}
+    </AbsoluteFill>
+  );
+};
+
 const TREATMENTS: Record<string, React.FC<Inner>> = {
+  cinematic_title: CinematicTitle, parallax: Parallax,
   engraving_in_circle: Circle, newspaper: Newspaper, polaroid: Polaroid, crt: Crt, pinboard: Pinboard, paper_cutout: PaperCutout,
 };
 
-export const ImageCard: React.FC<Props> = ({style, durationSec, src, treatment, caption = ''}) => {
+export const ImageCard: React.FC<Props> = ({style, durationSec, src, treatment, caption = '', fg, title, titleY, titleFront}) => {
   const f = useCurrentFrame();
   const {fps} = useVideoConfig();
   const T = TREATMENTS[treatment];
-  if (T) return <T style={style} src={src} caption={caption} f={f} fps={fps} dur={durationSec} />;
+  if (T) return <T style={style} src={src} caption={caption} f={f} fps={fps} dur={durationSec} fg={fg} title={title}
+    titleY={titleY} titleFront={titleFront} />;
   // ken_burns / film_grain: the picture fills the screen and drifts slowly
   const kb = interpolate(f, [0, durationSec * FPS], [1, 1.08]);
   return (

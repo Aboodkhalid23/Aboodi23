@@ -17,6 +17,7 @@ import {Quote} from './graphics/Quote';
 import {ShortTitle} from './graphics/ShortTitle';
 import {Timeline} from './graphics/Timeline';
 import {CUSTOM} from './custom/registry';
+import {Stickers} from './graphics/Stickers';
 import {BaseProps, FPS} from './style';
 
 const style = {palette: {paper: '#F2EBDD', ink: '#1A1A1A', accent: '#FFD400'}, fonts: {title: 'Cairo', body: 'Cairo'}, texture: 'paper'};
@@ -43,10 +44,21 @@ const GRAPHICS: [string, React.FC<any>, Record<string, unknown>][] = [
   ...CUSTOM.map(([name, C]) => [`custom-${name}`, C, {}] as [string, React.FC<any>, Record<string, unknown>]),
 ];
 
+// Any scene can carry hand-drawn marks, stamps, censor bars and name tags on top (props.stickers).
+const withMarks = (C: React.FC<any>): React.FC<any> => {
+  const Marked: React.FC<any> = (props) => (
+    <>
+      <C {...props} />
+      {props.stickers?.length ? <Stickers stickers={props.stickers} style={props.style} W={1920} H={1080} /> : null}
+    </>
+  );
+  return Marked;
+};
+
 export const Root: React.FC = () => (
   <>
     {GRAPHICS.map(([id, C, defaults]) => (
-      <Composition key={id} id={id} component={C} width={1920} height={1080} fps={FPS} durationInFrames={60}
+      <Composition key={id} id={id} component={id === 'face-fx' ? C : withMarks(C)} width={1920} height={1080} fps={FPS} durationInFrames={60}
         defaultProps={{style, durationSec: 2, ...defaults}} calculateMetadata={meta} />
     ))}
     <Still id="short-title" component={ShortTitle as React.FC<any>} width={1080} height={1920} defaultProps={{style, durationSec: 1, title: 'عنوان'}} />

@@ -114,14 +114,27 @@ def graphic_job(beat: Beat, style: Style, out: Path, public_dir: Path | None = N
     beats from assets/img_<index>.* in `public_dir` (the episode's assets folder)."""
     bundle = bundle or ensure_bundle()
     props = {"style": _style_props(style), "durationSec": round(beat.duration, 3), **(extra_props or {})}
+    if beat.stickers:
+        props["stickers"] = beat.stickers
     if beat.kind in ("image", "ai_image"):
         if src is None and public_dir is not None:
             src = next(Path(public_dir).glob(f"img_{index}.*"), None)
         if src is None:
             raise MediaError(f"صورة الـ beat {index} مو موجودة")
         comp = "image"
-        props.update(src=_publish(bundle, src), treatment=beat.treatment or style.image_treatment,
-                     caption=beat.caption or "")
+        treatment = beat.treatment or style.image_treatment
+        props.update(src=_publish(bundle, src), treatment=treatment, caption=beat.caption or "")
+        if beat.title:
+            props["title"] = beat.title
+        from .masks import FULL_BLEED, image_layout, person_cutout, place_on_face
+        cut = person_cutout(Path(src)) if treatment in ("cinematic_title", "parallax") else None
+        if cut:                                            # the person cut out: text behind him / 2.5D depth
+            props["fg"] = _publish(bundle, cut)
+        if treatment in FULL_BLEED and (treatment == "cinematic_title" or beat.stickers):
+            lay = image_layout(Path(src), cut)
+            props.update(titleY=lay["titleY"], titleFront=lay["titleFront"])
+            if beat.stickers:                              # censor bar on the eyes, name under the chin
+                props["stickers"] = place_on_face(beat.stickers, lay["face"])
     elif beat.kind == "footage":
         comp = "footage"
         props.update(src=_publish(bundle, src, f"footage_{index}{Path(src).suffix}" if index is not None else None),

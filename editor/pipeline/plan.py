@@ -13,7 +13,9 @@ GRAPHIC_TYPES = ("number", "headline", "quote", "map", "timeline", "chart", "tex
 CUSTOM_DIR = Path(__file__).resolve().parent.parent / "remotion" / "src" / "custom"
 FX_TYPES = ("subscribe", "tv", "none")        # face_fx wrappers; "none" = stickers only
 TRANSITIONS = ("zoom", "flash", "whip", "glitch")
-STICKERS = ("stamp", "arrow", "burst", "tape", "circle")
+STICKERS = ("stamp", "arrow", "burst", "tape", "circle", "scribble_circle", "scribble_arrow", "scribble_underline",
+            "censor", "name_tag")
+MARKABLE = ("face_fx", "image", "ai_image", "graphic", "entity", "footage")   # beats that can carry stickers
 
 HOOK_SECONDS = 30.0
 LIMITS = {"hook": (1.5, 3.0), "body": (4.0, 6.0)}   # hook: quick, but not a flicker
@@ -39,6 +41,7 @@ class Beat:
     transition: str | None = None   # entry effect on this beat: zoom | flash | whip | glitch
     grade: str | None = None        # colour look for this beat's footage (overrides the plan's)
     source: str | None = None       # footage: "archive" = old films first (else Commons first)
+    title: str | None = None        # cinematic_title: the giant word behind the person
 
     @property
     def duration(self) -> float:
@@ -114,8 +117,8 @@ def validate_plan(plan: EditPlan, clean_duration: float, entities: set[str] | No
         if b.kind == "face_fx" and b.fx not in FX_TYPES:
             errs.append(f"beat {i}: face_fx لازم fx من {', '.join(FX_TYPES)}")
         for s in b.stickers or []:
-            if b.kind != "face_fx" or s.get("type") not in STICKERS:
-                errs.append(f"beat {i}: الملصقات بس على face_fx، ونوعها من {', '.join(STICKERS)}")
+            if b.kind not in MARKABLE or s.get("type") not in STICKERS:
+                errs.append(f"beat {i}: الملصقات على {', '.join(MARKABLE)} بس، ونوعها من {', '.join(STICKERS)}")
                 break
         if b.grade and b.grade not in LOOKS:
             errs.append(f"beat {i}: grade لازم من {', '.join(LOOKS)}")

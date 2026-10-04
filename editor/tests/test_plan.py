@@ -129,10 +129,13 @@ def test_face_fx_counts_as_face_and_needs_fx():
     assert "الملصقات" in errors_for(plan, clean)
 
 
-def test_stickers_only_on_face_fx_and_known_transitions():
+def test_stickers_on_scenes_not_on_plain_face_and_known_transitions():
     plan, clean = build()
-    plan.beats[16].stickers = [{"type": "stamp", "text": "x"}]
+    plan.beats[15].stickers = [{"type": "stamp", "text": "x"}]            # a plain face shot: no
     assert "الملصقات" in errors_for(plan, clean)
+    plan.beats[15].stickers = None
+    plan.beats[16].stickers = [{"type": "scribble_circle", "x": 0.4, "y": 0.3}, {"type": "censor", "text": "ليش؟"}]
+    assert validate_plan(plan, clean) == []                                # a picture: yes
     plan.beats[16].stickers = None
     plan.beats[16].transition = "spin"
     assert "transition" in errors_for(plan, clean)
