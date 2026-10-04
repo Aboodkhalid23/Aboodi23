@@ -49,9 +49,11 @@ def test_every_sfx_renders_at_the_same_peak():
         assert -4.5 <= peak <= -1.5, (name, peak)
 
 
-def test_unknown_sfx_is_a_clear_error():
+def test_unknown_sfx_is_a_clear_error(monkeypatch):
+    import editor.pipeline.free_audio as fa
+    monkeypatch.setattr(fa, "fetch_sfx", lambda *a, **k: [])     # nothing free online either (and no network in tests)
     with pytest.raises(KeyError):
-        sfx_path("explosion")
+        sfx_path("explosion_that_nobody_recorded")
 
 
 def test_beat_cues_from_sfx_transitions_and_special_beats():

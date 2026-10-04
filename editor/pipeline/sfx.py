@@ -1,5 +1,5 @@
-"""Sound effects: CC0 recordings in editor/sfx/library/<name>/ (Kenney) and sounds synthesised with
-ffmpeg for what the library lacks. No copyright on either. Normalised copies are cached as wav."""
+"""Sound effects: CC0 recordings in editor/sfx/library/<name>/ (Kenney, plus Freesound CC0 fetched the first
+time a plan names a sound we don't have) and sounds synthesised with ffmpeg. No copyright on either. Normalised copies are cached as wav."""
 import re
 import subprocess
 from pathlib import Path
@@ -56,6 +56,9 @@ def names() -> list[str]:
 def sfx_path(name: str, variant: int = 0) -> Path:
     """Normalised wav of `name`: recorded take number `variant` (wrapping), else the synthesised one."""
     takes = variants(name)
+    if not takes and name not in RECIPES:   # a sound we don't have yet: free CC0 recordings, kept for next time
+        from .free_audio import fetch_sfx
+        takes = fetch_sfx(name, LIBRARY) and variants(name)
     if not takes and name not in RECIPES:
         raise KeyError(f"صوت '{name}' مو موجود. الموجود: {', '.join(names())}")
     take = takes[variant % len(takes)] if takes else None

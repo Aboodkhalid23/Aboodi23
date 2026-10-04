@@ -1,4 +1,5 @@
-"""Music made by AI (no copyright claims): the plan names music cues, Claude generates each one with
+"""Music. Free first (free_audio.music-free, owner's rule); a cue nothing free fits can be made by AI:
+Claude generates it with
 Artlist (Lyria 3 Pro, instrumental), `music-fetch` downloads it, compose lays the bed under the voice.
 
 plan.music = [{"t": 0, "prompt": "slow mysterious pulse, light piano", "genre": "cinematic", "mood": "mysterious",
@@ -52,7 +53,7 @@ def music_jobs(ep: Episode, total: float) -> list[dict]:
         have = music_asset(ep, k)
         jobs.append({
             "cue": k, "start": round(start, 2), "seconds": round(need, 1), "model_id": MODEL_ID,
-            "prompt": f"{m['prompt'].rstrip('. ')}. Background score for a documentary voice-over: {mood}. "
+            "prompt": f"{(m.get('prompt') or m.get('search', '')).rstrip('. ')}. Background score for a documentary voice-over: {mood}. "
                       "Instrumental, no vocals, steady, leaves room for speech.",
             "settings": {"song_type": "instrumental", "song_theme": "documentary",
                          "duration": str(next((d for d in DURATIONS if d >= need), DURATIONS[-1])),

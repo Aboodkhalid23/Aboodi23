@@ -105,6 +105,10 @@ def collect_images(plan: EditPlan, ep: Episode, session=None) -> EditPlan:
             break
         if img is None and b.kind == "face_cutout":   # the cut-out simply shows its caption instead
             continue
+        if img is None and b.prompt:      # no real picture exists: generate it (owner's rule: AI only then)
+            fallbacks.append({"beat": i, "query": b.query, "reason": reason[:300], "now": "ai_image"})
+            b.kind = "ai_image"
+            continue
         if img is None:
             fallbacks.append({"beat": i, "query": b.query, "reason": reason[:300]})
             b.kind, b.graphic = "graphic", {"type": "text", "text": b.caption or b.query}
@@ -121,6 +125,8 @@ def collect_images(plan: EditPlan, ep: Episode, session=None) -> EditPlan:
     ep.fallbacks.write_text(json.dumps(fallbacks, ensure_ascii=False, indent=1), encoding="utf-8")
     ent = ep.work / "entity_credits.json"
     credits += list(json.loads(ent.read_text(encoding="utf-8")).values()) if ent.exists() else []
+    mus = ep.work / "music_credits.json"
+    credits += [c["credit"] for c in json.loads(mus.read_text(encoding="utf-8")).values()] if mus.exists() else []
     ep.credits.write_text("\n".join(credits) + ("\n" if credits else ""), encoding="utf-8")
     save_plan(plan, ep.plan)
     return plan

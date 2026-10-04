@@ -116,6 +116,10 @@ def collect_footage(plan: EditPlan, ep: Episode, session=None) -> tuple[list[dic
                 continue
             got = c
             break
+        if got is None and b.prompt:      # no real footage: an AI still that moves (cheaper than AI video)
+            fallbacks.append({"beat": i, "query": b.query, "reason": reason[:200], "now": "ai_image"})
+            b.kind = "ai_image"
+            continue
         if got is None:
             fallbacks.append({"beat": i, "query": b.query, "reason": reason[:200]})
             b.kind, b.graphic = "graphic", {"type": "text", "text": b.caption or b.query}

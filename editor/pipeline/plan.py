@@ -184,8 +184,8 @@ def validate_plan(plan: EditPlan, clean_duration: float, entities: set[str] | No
     if plan.grade and plan.grade not in LOOKS:
         errs.append(f"grade: لازم من {', '.join(LOOKS)}")
     for k, m in enumerate(plan.music):
-        if not (0 <= m.get("t", -1) < total and m.get("prompt")):
-            errs.append(f"music {k}: لازم t داخل الفيديو و prompt")
+        if not (0 <= m.get("t", -1) < total and (m.get("prompt") or m.get("search"))):
+            errs.append(f"music {k}: لازم t داخل الفيديو، و search (للموسيقى المجانية) أو prompt")
         elif k and m["t"] - plan.music[k - 1]["t"] < 20:
             errs.append(f"music {k}: لازم يبعد 20 ثانية أو أكثر عن الي قبله")
     if plan.music and plan.music[0]["t"] != 0:

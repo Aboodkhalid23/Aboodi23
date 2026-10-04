@@ -59,6 +59,12 @@ def st_music_jobs(ep, a):
     print(f"🎵 مقاطع الموسيقى: {len(jobs)}، الناقص {len(todo)}. التفاصيل: {ep.work / 'music_jobs.json'}")
 
 
+def st_music_free(ep, a):
+    from .free_audio import free_music
+    missing = free_music(ep, _final_duration(ep))
+    print("🎵 موسيقى مجانية: " + ("كلها تمام" if not missing else f"ما لگيت لـ {', '.join(missing)} (تبقى بدون أو بآرتلست بموافقته)"))
+
+
 def st_music_fetch(ep, a):
     if a.cue is None or not a.url:
         raise MediaError("لازم --cue و --url")
@@ -201,11 +207,12 @@ def st_deliver(ep, a):
 
 STAGES = {"fetch": [st_fetch], "entities": [st_entities], "transcribe": [st_transcribe], "clean": [st_clean],
           "brief": [st_brief], "validate": [st_validate], "ai-jobs": [st_ai_jobs], "ai-fetch": [st_ai_fetch],
-          "ai-log": [st_ai_log], "check": [st_check], "music-jobs": [st_music_jobs], "music-fetch": [st_music_fetch], "qa": [st_qa], "scene-check": [st_scene_check], "shorts": [st_shorts], "images": [st_images], "compose": [st_compose], "deliver": [st_deliver]}
+          "ai-log": [st_ai_log], "check": [st_check], "music-free": [st_music_free], "music-jobs": [st_music_jobs], "music-fetch": [st_music_fetch], "qa": [st_qa], "scene-check": [st_scene_check], "shorts": [st_shorts], "images": [st_images], "compose": [st_compose], "deliver": [st_deliver]}
 STAGES["get"] = STAGES["fetch"] + STAGES["check"]   # download, then show the owner what came
 STAGES["prep"] = STAGES["fetch"] + STAGES["entities"] + STAGES["transcribe"] + STAGES["clean"] + STAGES["brief"]
-STAGES["render"] = (STAGES["validate"] + STAGES["ai-jobs"] + STAGES["music-jobs"] + STAGES["images"] + STAGES["compose"]
-                    + STAGES["qa"] + STAGES["deliver"])
+# Real pictures and free music first; what is still missing after that becomes an AI job (owner's rule).
+STAGES["render"] = (STAGES["validate"] + STAGES["music-free"] + STAGES["images"] + STAGES["ai-jobs"] + STAGES["music-jobs"]
+                    + STAGES["compose"] + STAGES["qa"] + STAGES["deliver"])
 
 
 def main(argv=None):
