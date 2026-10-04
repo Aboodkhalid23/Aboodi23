@@ -362,3 +362,24 @@ def test_cutout_puts_the_scene_behind_and_keeps_length(tmp_path):
                           "scale=1:1:flags=area", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True).stdout
     r, g, b = raw[:3]
     assert b > 150 and r < 80   # mostly the blue background scene
+
+
+
+# ---------- shorts ----------
+
+def test_shorts_are_validated():
+    from .test_plan import build
+    plan, clean = build()
+    plan.shorts = [{"from": 10, "to": 20, "title": "هوك"}]           # too short for a Short
+    assert any(e.startswith("short 1") for e in validate_plan(plan, clean))
+    plan.shorts = [{"from": 10, "to": 40}]                          # no title
+    assert any(e.startswith("short 1") for e in validate_plan(plan, clean))
+    plan.shorts = [{"from": 10, "to": 40, "title": "هوك"}]
+    assert validate_plan(plan, clean) == []
+
+
+def test_short_pieces_crop_faces_and_frame_graphics():
+    from editor.pipeline.shorts import _pieces
+    beats = [Beat(0, 5, "body", "face"), Beat(5, 10, "body", "graphic"), Beat(10, 15, "body", "face_punch"),
+             Beat(15, 20, "body", "face_fx", fx="subscribe")]
+    assert _pieces(beats, 3, 17) == [(3, 5, True), (5, 10, False), (10, 15, True), (15, 17, False)]

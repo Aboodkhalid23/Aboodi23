@@ -163,6 +163,10 @@ def validate_plan(plan: EditPlan, clean_duration: float, entities: set[str] | No
             if times[i] - times[i - 1] < 10:
                 errs.append(f"chapter {i}: لازم يبعد 10 ثواني أو أكثر عن الي قبله")
 
+    for k, sh in enumerate(plan.shorts, 1):
+        a, z = float(sh.get("from", -1)), float(sh.get("to", -1))
+        if not (0 <= a < z <= total + TOL) or not 15 <= z - a <= 60 or not sh.get("title"):
+            errs.append(f"short {k}: لازم from و to داخل الحلقة (15–60 ثانية) و title (هوك عربي قصير)")
     if plan.end_screen and not 5 <= plan.end_screen <= 20:
         errs.append("end_screen: يوتيوب يقبل شاشة النهاية بين 5 و 20 ثانية (أو 0 بدونها)")
     if plan.grade and plan.grade not in LOOKS:

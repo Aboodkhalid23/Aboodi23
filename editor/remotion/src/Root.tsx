@@ -14,6 +14,7 @@ import {ImageCard} from './graphics/ImageCard';
 import {MapZoom} from './graphics/MapZoom';
 import {NumberCount} from './graphics/Number';
 import {Quote} from './graphics/Quote';
+import {ShortTitle} from './graphics/ShortTitle';
 import {Timeline} from './graphics/Timeline';
 import {CUSTOM} from './custom/registry';
 import {BaseProps, FPS} from './style';
@@ -48,6 +49,7 @@ export const Root: React.FC = () => (
       <Composition key={id} id={id} component={C} width={1920} height={1080} fps={FPS} durationInFrames={60}
         defaultProps={{style, durationSec: 2, ...defaults}} calculateMetadata={meta} />
     ))}
+    <Still id="short-title" component={ShortTitle as React.FC<any>} width={1080} height={1920} defaultProps={{style, durationSec: 1, title: 'عنوان'}} />
     <Still id="cutout-bg" component={CutoutBg as React.FC<any>} width={1920} height={1080} defaultProps={{style, durationSec: 1}} />
     <Still id="face-frame-bg" component={FaceFrame as React.FC<any>} width={1920} height={1080} defaultProps={{style, durationSec: 1}} />
   </>

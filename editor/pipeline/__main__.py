@@ -177,6 +177,17 @@ def st_scene_check(ep, a):
     print(f"🖼️  لقطات المشهد (ربع، نص، ثلاث أرباع، آخر): {sheet}")
 
 
+def st_shorts(ep, a):
+    from .shorts import make_shorts
+    plan = load_plan(ep.plan)
+    if not plan.shorts:
+        print("   ما اكو shorts بالخطة")
+        return
+    print(f"📱 أسوي {len(plan.shorts)} شورت عمودي…", flush=True)
+    for out in make_shorts(ep):
+        print(f"   ✅ {out}")
+
+
 def st_deliver(ep, a):
     if a.preview:
         return
@@ -190,7 +201,7 @@ def st_deliver(ep, a):
 
 STAGES = {"fetch": [st_fetch], "entities": [st_entities], "transcribe": [st_transcribe], "clean": [st_clean],
           "brief": [st_brief], "validate": [st_validate], "ai-jobs": [st_ai_jobs], "ai-fetch": [st_ai_fetch],
-          "ai-log": [st_ai_log], "check": [st_check], "music-jobs": [st_music_jobs], "music-fetch": [st_music_fetch], "qa": [st_qa], "scene-check": [st_scene_check], "images": [st_images], "compose": [st_compose], "deliver": [st_deliver]}
+          "ai-log": [st_ai_log], "check": [st_check], "music-jobs": [st_music_jobs], "music-fetch": [st_music_fetch], "qa": [st_qa], "scene-check": [st_scene_check], "shorts": [st_shorts], "images": [st_images], "compose": [st_compose], "deliver": [st_deliver]}
 STAGES["get"] = STAGES["fetch"] + STAGES["check"]   # download, then show the owner what came
 STAGES["prep"] = STAGES["fetch"] + STAGES["entities"] + STAGES["transcribe"] + STAGES["clean"] + STAGES["brief"]
 STAGES["render"] = (STAGES["validate"] + STAGES["ai-jobs"] + STAGES["music-jobs"] + STAGES["images"] + STAGES["compose"]
