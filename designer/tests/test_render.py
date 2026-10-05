@@ -383,6 +383,42 @@ class RenderTest(unittest.TestCase):
                 os.chdir(old_cwd)
             self.assertEqual(found, base / "img.png")
 
+    # الإصدار الثالث: سطر عربي وإنگليزي بخطين
+    def test_font_latin_draws_latin_word_in_second_font(self):
+        layer = self.text("نهاية BILLION", font="Cairo", font_latin="Anton")
+        font, px, placed = render._layout_text(layer, 1280, 720)
+        latin = [p for p in placed if p[2] == "BILLION"][0]
+        arab = [p for p in placed if p[2] == "نهاية"][0]
+        self.assertIn("Anton", latin[6].path)
+        self.assertIs(arab[6], font)
+        # نفس الخط الأساسي (baseline)
+        self.assertAlmostEqual(latin[1] + latin[6].getmetrics()[0], arab[1] + font.getmetrics()[0], delta=1)
+
+    def test_without_font_latin_every_word_uses_main_font(self):
+        font, px, placed = render._layout_text(self.text("نهاية BILLION", font="Cairo"), 1280, 720)
+        self.assertTrue(all(p[6] is font for p in placed))
+
+    def test_font_latin_keeps_warnings(self):
+        plain = self.text("نهاية BILLION", font="Cairo")
+        mixed = self.text("نهاية BILLION", font="Cairo", font_latin="Anton")
+        img1, w1 = self.render({"background": GRADIENT, "layers": [plain]})
+        img2, w2 = self.render({"background": GRADIENT, "layers": [mixed]})
+        self.assertEqual(w1, [])
+        self.assertEqual(w2, [])
+        self.assertTrue(img1.tobytes() != img2.tobytes(), "الكلمة اللاتينية ما تغير خطها")
+
+    def test_unknown_font_latin(self):
+        with self.assertRaisesRegex(SpecError, "خط مو معروف"):
+            self.render({"background": GRADIENT, "layers": [self.text("نهاية BILLION", font_latin="Nope")]})
+
+    def test_arabic_text_in_latin_only_font_warns(self):
+        _, warnings = self.render({"background": GRADIENT, "layers": [self.text("نهاية", font="Anton")]})
+        self.assertTrue(any("Anton" in w and "عربية" in w for w in warnings), warnings)
+
+    def test_latin_text_in_latin_only_font_no_warning(self):
+        _, warnings = self.render({"background": GRADIENT, "layers": [self.text("300 BILLION", font="Anton")]})
+        self.assertEqual(warnings, [])
+
 
 class RenderUHDTest(unittest.TestCase):
     """نسخة 4K ونسخة الموبايل (الإصدار الثاني)."""
@@ -421,7 +457,7 @@ class RenderUHDTest(unittest.TestCase):
                                    self.dir)
         self.assertEqual(w_small, w_big)
         # الرقعة نفس الشكل: نسبة البكسلات الفاتحة متقاربة بالمقاسين
-        frac = [sum(1 for v in im.convert("L").resize((320, 180)).getdata() if v > 150) / (320 * 180)
+        frac = [sum(im.convert("L").resize((320, 180)).histogram()[151:]) / (320 * 180)
                 for im in (small, big)]
         self.assertAlmostEqual(frac[0], frac[1], delta=0.02)
 

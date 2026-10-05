@@ -15,7 +15,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageOps, UnidentifiedImageError
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from arabic import load_font, shape_word, visual_words  # noqa: E402
+from arabic import is_rtl, load_font, shape_word, visual_words  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 FONTS_DIR = Path(__file__).resolve().parent / "fonts"
@@ -224,17 +224,23 @@ def _image_layer(canvas: Image.Image, layer: dict, base_dir: Path) -> list[str]:
     return warnings
 
 
+def _font(name: str, px: int):
+    if name not in FONTS:
+        raise SpecError(f"خط مو معروف: {name}. المتوفر: {', '.join(FONTS)}")
+    return load_font(FONTS_DIR / FONTS[name], px)
+
+
 def _layout_text(layer: dict, W: int, H: int):
-    """يرجع الخط وحجمه ومكان كل كلمة: [(x، y، النص، معاملات، اللون، رقم السطر)].
+    """يرجع الخط وحجمه ومكان كل كلمة: [(x، y، النص، معاملات، اللون، رقم السطر، خط الكلمة)].
 
     اللون نص مثل "#FFFFFF"، أو تدرج عمودي [لون فوق، لون جوه].
+    إذا اكو font_latin، الكلمات الي مو عربية تنرسم بيه، وخطها الأساسي (baseline) نفس العربي.
     """
-    font_name = layer.get("font", "Baloo")
-    if font_name not in FONTS:
-        raise SpecError(f"خط مو معروف: {font_name}. المتوفر: {', '.join(FONTS)}")
     px = max(8, int(layer.get("size", 0.14) * H))
-    font = load_font(FONTS_DIR / FONTS[font_name], px)
+    font = _font(layer.get("font", "Baloo"), px)
+    latin = _font(layer["font_latin"], px) if layer.get("font_latin") else None
     ascent, descent = font.getmetrics()
+    lift = ascent - latin.getmetrics()[0] if latin else 0
     line_h = int((ascent + descent) * layer.get("line_spacing", 0.95))
     space = font.getlength(" ")
     color = layer.get("color", "#FFFFFF")
@@ -248,7 +254,8 @@ def _layout_text(layer: dict, W: int, H: int):
         words = []
         for word in visual_words(line):
             text, kw = shape_word(word)
-            words.append((word, text, kw, font.getlength(text, **kw)))
+            wf = latin if latin and not is_rtl(word) else font
+            words.append((word, text, kw, wf.getlength(text, **kw), wf))
         width = sum(w[3] for w in words) + space * max(0, len(words) - 1)
         lines.append((words, width))
     x, y = layer.get("x", 0.5) * W, layer.get("y", 0.5) * H
@@ -266,9 +273,9 @@ def _layout_text(layer: dict, W: int, H: int):
             raise SpecError(f"align مو معروف: {align}. المسموح: center، right، left")
         ly = top + i * line_h
         base = line_colors[i] if i < len(line_colors) else color
-        for word, text, kw, wlen in words:
+        for word, text, kw, wlen, wf in words:
             fill = hl.get("color", "#FFD400") if word.strip(PUNCT) in hl_words else base
-            placed.append((lx, ly, text, kw, fill, i))
+            placed.append((lx, ly + (lift if wf is latin else 0), text, kw, fill, i, wf))
             lx += wlen + space
     return font, px, placed
 
@@ -333,11 +340,11 @@ def _text_layer(canvas: Image.Image, layer: dict) -> tuple[tuple[int, int, int, 
     M = int(0.25 * max(W, H))
     size = (W + 2 * M, H + 2 * M)
     font, px, placed = _layout_text(layer, W, H)
-    placed = [(x + M, y + M, t, kw, fill, line) for x, y, t, kw, fill, line in placed]
+    placed = [(x + M, y + M, t, kw, fill, line, wf) for x, y, t, kw, fill, line, wf in placed]
     stroke = layer.get("stroke")
     sw = int(stroke.get("width", 0.08) * px) if stroke else 0
     probe = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
-    boxes = [probe.textbbox((p[0], p[1]), p[2], font=font, anchor="la", stroke_width=sw, **p[3]) for p in placed]
+    boxes = [probe.textbbox((p[0], p[1]), p[2], font=p[6], anchor="la", stroke_width=sw, **p[3]) for p in placed]
     bbox = (min(b[0] for b in boxes), min(b[1] for b in boxes),
             max(b[2] for b in boxes), max(b[3] for b in boxes))
     line_span = {}
@@ -349,8 +356,8 @@ def _text_layer(canvas: Image.Image, layer: dict) -> tuple[tuple[int, int, int, 
         shadow = Image.new("RGBA", size)
         d = ImageDraw.Draw(shadow)
         off = 0.05 * px
-        for x, y, t, kw, *_ in placed:
-            d.text((x + off, y + off), t, font=font, anchor="la", fill=(0, 0, 0, 200),
+        for x, y, t, kw, _, _, wf in placed:
+            d.text((x + off, y + off), t, font=wf, anchor="la", fill=(0, 0, 0, 200),
                    stroke_width=sw, stroke_fill=(0, 0, 0, 200), **kw)
         out.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(0.06 * px)))
     if "box" in layer:
@@ -365,11 +372,11 @@ def _text_layer(canvas: Image.Image, layer: dict) -> tuple[tuple[int, int, int, 
     if stroke:
         d = ImageDraw.Draw(out)
         sc = hex_rgba(stroke["color"])
-        for x, y, t, kw, *_ in placed:
-            d.text((x, y), t, font=font, anchor="la", fill=sc, stroke_width=sw, stroke_fill=sc, **kw)
-    for x, y, t, kw, fill, line in placed:
+        for x, y, t, kw, _, _, wf in placed:
+            d.text((x, y), t, font=wf, anchor="la", fill=sc, stroke_width=sw, stroke_fill=sc, **kw)
+    for x, y, t, kw, fill, line, wf in placed:
         mask = Image.new("L", size)
-        ImageDraw.Draw(mask).text((x, y), t, font=font, anchor="la", fill=255, **kw)
+        ImageDraw.Draw(mask).text((x, y), t, font=wf, anchor="la", fill=255, **kw)
         out.paste(_fill_image(fill, *line_span[line], size), (0, 0), mask)
     angle = layer.get("rotate", 0)
     if angle:
@@ -463,6 +470,10 @@ def render(spec: dict, base_dir) -> tuple[Image.Image, list[str]]:
                     raise SpecError(f"الطبقة {i}: الكتابة فارغة")
                 bbox, ink_mask = _text_layer(canvas, layer)
                 words += len(layer["text"].split())
+                font_name = layer.get("font", "Baloo")
+                if font_name in LATIN_FONTS and is_rtl(text):
+                    warnings.append(f"الخط {font_name} ما بيه حروف عربية، والكتابة العربية راح تطلع مربعات. "
+                                    f"استخدم خط عربي، وحط {font_name} بـ font_latin.")
                 warned_zones = set()
                 for name, x0, y0, x1, y1 in zones:
                     zone_px = (int(x0 * W), int(y0 * H), int(x1 * W), int(y1 * H))
