@@ -24,7 +24,28 @@ FONTS = {
     "Rubik": "Rubik-Black.ttf",
     "Cairo": "Cairo-Black.ttf",
     "Lalezar": "Lalezar-Regular.ttf",
+    # الإصدار الثالث (شوف جدول "الخطوط حسب الجو" بـ studio/brand.md)
+    "Tajawal": "Tajawal-Black.ttf",
+    "Almarai": "Almarai-ExtraBold.ttf",
+    "Changa": "Changa-Variable.ttf",
+    "NotoKufi": "NotoKufiArabic-Variable.ttf",
+    "Readex": "ReadexPro-Variable.ttf",
+    "Kufam": "Kufam-Variable.ttf",
+    "ReemKufi": "ReemKufi-Variable.ttf",
+    "Lemonada": "Lemonada-Variable.ttf",
+    "Marhey": "Marhey-Variable.ttf",
+    "Rakkas": "Rakkas-Regular.ttf",
+    "ElMessiri": "ElMessiri-Variable.ttf",
+    "ArefRuqaa": "ArefRuqaa-Bold.ttf",
+    "Anton": "Anton-Regular.ttf",
+    "Bebas": "BebasNeue-Regular.ttf",
+    "Bangers": "Bangers-Regular.ttf",
+    "ArchivoBlack": "ArchivoBlack-Regular.ttf",
+    "Montserrat": "Montserrat-Variable.ttf",
+    "Oswald": "Oswald-Variable.ttf",
 }
+# خطوط بيها حروف لاتينية بس (ماكو عربي)
+LATIN_FONTS = frozenset({"Anton", "Bebas", "Bangers", "ArchivoBlack", "Montserrat", "Oswald"})
 CANVAS = {"youtube": (1280, 720), "youtube4k": (3840, 2160), "reels": (1080, 1920)}
 # المناطق الي تغطيها واجهة التطبيق: (اسم، x0، y0، x1، y1) كنسب من العرض والارتفاع
 UNSAFE = {

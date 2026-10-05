@@ -12,8 +12,20 @@ def is_rtl(text: str) -> bool:
 
 
 def load_font(path, px: int) -> ImageFont.FreeTypeFont:
+    """يفتح الخط. الخط المتغير (بيه محاور) ينحط على أعلى وزن، والمحاور الثانية على الافتراضي."""
     engine = ImageFont.Layout.RAQM if RAQM else ImageFont.Layout.BASIC
-    return ImageFont.truetype(str(path), px, layout_engine=engine)
+    font = ImageFont.truetype(str(path), px, layout_engine=engine)
+    try:
+        axes = font.get_variation_axes()
+    except OSError:  # خط ثابت
+        return font
+    values = []
+    for axis in axes:
+        name = axis.get("name", b"")
+        name = name.decode("latin-1") if isinstance(name, bytes) else name
+        values.append(axis["maximum"] if name == "Weight" else axis["default"])
+    font.set_variation_by_axes(values)
+    return font
 
 
 def shape_word(word: str) -> tuple[str, dict]:
