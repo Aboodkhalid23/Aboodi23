@@ -1,7 +1,15 @@
+import contextlib
 import copy
+import io
+import json
+import shutil
+import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
+
+from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import concepts  # noqa: E402
@@ -219,6 +227,111 @@ class PromptTest(unittest.TestCase):
         self.assertEqual(concepts.color_name("#E3262B"), "red")
         self.assertEqual(concepts.color_name("#2EC4FF"), "cyan")
         self.assertEqual(concepts.color_name("#FFC400"), "yellow")
+
+
+def six_cards():
+    return [
+        card("n1", 10, "metaphor", "calm", "#8B0000"),
+        card("n2", 9, "scale", "worried", "#003366"),
+        card("n3", 7, "mystery", "smirk", "#004D00"),
+        card("t1", 8, "villain", "angry", "#4B0082", text="نهاية\n300 BILLION", font="Kufam", font_latin="Anton"),
+        card("t2", 6, "pov", "shocked", "#663300", text="انت\nالهدف!"),
+        card("n4", 9.5, "metaphor", "doubt", "#330066"),
+    ]
+
+
+class SketchTest(unittest.TestCase):
+    def test_sketch_size_and_no_crash_without_text(self):
+        img = concepts.draw_sketch(card(), 80.0)
+        self.assertEqual(img.size, (1280, 720))
+        self.assertEqual(img.mode, "RGB")
+
+    def test_sketch_with_text_differs(self):
+        plain = concepts.draw_sketch(card(), 80.0)
+        texted = concepts.draw_sketch(card(text="نهاية\nالعالم؟"), 80.0)
+        self.assertTrue(plain.tobytes() != texted.tobytes())
+
+    def test_sketch_every_layout(self):
+        for face in concepts.FACE_POS:
+            for hero in concepts.HERO_POS:
+                for camera in concepts.CAMERAS:
+                    c = card(camera=camera)
+                    c["layout"].update(face=face, hero=hero)
+                    self.assertEqual(concepts.draw_sketch(c, 50.0).size, (1280, 720))
+
+    def test_board_rows(self):
+        cards = [card(f"c{i}", angle="scale") for i in range(9)]
+        board = concepts.draw_board(cards, {"c0", "c3"})
+        rows = 3
+        self.assertEqual(board.size, (4 * concepts.TILE[0] + 5 * concepts.GAP,
+                                      concepts.BOARD_HEADER + rows * (concepts.TILE[1] + concepts.GAP) + concepts.GAP))
+
+
+class CliTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.dir = Path(self.tmp.name)
+        self.json = self.dir / "concepts.json"
+        self.json.write_text(json.dumps(six_cards(), ensure_ascii=False), encoding="utf-8")
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def run_cli(self, *args):
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(buf):
+            code = concepts.main([str(a) for a in args])
+        return code, buf.getvalue()
+
+    def test_cli_writes_outputs(self):
+        code, out = self.run_cli(self.json, "-o", self.dir)
+        self.assertEqual(code, 0, out)
+        picked = json.loads((self.dir / "picked.json").read_text(encoding="utf-8"))
+        self.assertEqual([p["id"] for p in picked["picked"]], ["n1", "n2", "t1"])
+        self.assertEqual(picked["notes"], [])
+        for p in picked["picked"]:
+            self.assertIn("No text, no letters", p["prompt"])
+            with Image.open(self.dir / f"sketch-{p['id']}.jpg") as im:
+                self.assertEqual(im.size, (1280, 720))
+        with Image.open(self.dir / "board.jpg") as im:
+            im.load()
+        self.assertIn("الدرجة", out)
+        self.assertIn("✓", out)
+
+    def test_cli_creates_missing_out_dir(self):
+        out_dir = self.dir / "new" / "deep"
+        code, out = self.run_cli(self.json, "-o", out_dir)
+        self.assertEqual(code, 0, out)
+        self.assertTrue((out_dir / "picked.json").exists())
+
+    def test_cli_bad_inputs(self):
+        bad_syntax = self.dir / "bad.json"
+        bad_syntax.write_text("[{", encoding="utf-8")
+        not_list = self.dir / "obj.json"
+        not_list.write_text("{}", encoding="utf-8")
+        empty = self.dir / "empty.json"
+        empty.write_text("[]", encoding="utf-8")
+        for path in (self.dir / "missing.json", bad_syntax, not_list, empty):
+            with self.subTest(path=path.name):
+                code, out = self.run_cli(path, "-o", self.dir / "out")
+                self.assertEqual(code, 1)
+                self.assertIn("✗ خطأ:", out)
+                self.assertNotIn("Traceback", out)
+
+
+@unittest.skipUnless(shutil.which("git"), "git مو موجود")
+class GitignoreTest(unittest.TestCase):
+    def ignored(self, path: str) -> bool:
+        root = Path(__file__).resolve().parents[2]
+        return subprocess.run(["git", "check-ignore", "-q", path], cwd=root).returncode == 0
+
+    def test_sketches_not_ignored(self):
+        for folder in ("designs/x", "episodes/x/design"):
+            with self.subTest(folder=folder):
+                self.assertFalse(self.ignored(f"{folder}/sketch-A1.jpg"))
+                self.assertFalse(self.ignored(f"{folder}/board.jpg"))
+                self.assertTrue(self.ignored(f"{folder}/scene-A.png"))
+                self.assertTrue(self.ignored(f"{folder}/thumb-A.jpg"))
 
 
 if __name__ == "__main__":

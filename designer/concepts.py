@@ -5,14 +5,20 @@
 الاختيار: 2 بدون كتابة + 1 بكتابة، بزوايا وتعابير وألوان مختلفة.
 صيغة البطاقة والزوايا الـ 12 بـ studio/thumbnail-angles.md.
 """
+import argparse
 import colorsys
 import itertools
+import json
+import math
 import re
 import sys
 from pathlib import Path
 
+from PIL import Image, ImageDraw
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from render import FONTS  # noqa: E402
+from arabic import is_rtl, load_font, shape_word, visual_words  # noqa: E402
+from render import FONTS, FONTS_DIR  # noqa: E402
 
 ANGLES = {
     "metaphor": "التشبيه البصري",
@@ -38,6 +44,8 @@ MIN_HUE_GAP = 30
 GRAY_SATURATION = 0.15
 HEX = re.compile(r"^#[0-9A-Fa-f]{6}$")
 REQUIRED_TEXT = ("idea", "hero", "setting", "why")
+# وصف عربي اختياري يبين بالمخطط (لأن hero وexpression بالإنگليزي للأمر)
+ARABIC_LABELS = ("hero_ar", "expression_ar")
 SUBJECT_FIELDS = ("outfit", "expression", "action")
 LABELS = "ABC"
 
@@ -132,6 +140,9 @@ def _check_card(c, n: int) -> None:
         need(layout["text_zone"] is not None, "layout.text_zone", "لازم مكان للكتابة (البطاقة بيها كتابة)")
     else:
         need(layout["text_zone"] is None, "layout.text_zone", "لازم null (البطاقة بدون كتابة)")
+    for field in ARABIC_LABELS:
+        if field in c:
+            need(isinstance(c[field], str) and c[field].strip(), field, "لازم كتابة، أو احذفه")
     for field in ("font", "font_latin"):
         if field in c:
             need(c[field] in FONTS, field, f"خط مو معروف: {c[field]}. المتوفر: {', '.join(FONTS)}")
@@ -251,3 +262,241 @@ def build_prompt(card: dict) -> str:
         lines.append(f"Keep the {ZONE_NAMES[layout['text_zone']]} part of the frame dark and empty for a headline.")
     lines.append(NO_TEXT)
     return "\n".join(lines)
+
+
+# ---------------- المخطط واللوحة ----------------
+SKETCH = (1280, 720)
+TILE = (320, 180)
+GAP = 16
+COLS = 4
+BOARD_HEADER = 80
+CAIRO = FONTS_DIR / FONTS["Cairo"]
+CAMERA_AR = {"wide_close": "عدسة عريضة قريبة", "standard": "كاميرا عادية", "top_down": "من فوق"}
+FACE_X = {"right": 0.75, "left": 0.25, "center": 0.5}
+HERO_BOX = {
+    "left": (0.04, 0.22, 0.46, 0.84),
+    "right": (0.54, 0.22, 0.96, 0.84),
+    "center": (0.3, 0.2, 0.7, 0.8),
+    "foreground": (0.18, 0.62, 0.82, 0.9),
+}
+ZONE_BOX = {"top_left": (0.03, 0.12, 0.5, 0.5), "top_right": (0.5, 0.12, 0.97, 0.5),
+            "bottom_left": (0.03, 0.52, 0.5, 0.86)}
+LINE_COLORS = ("#FFFFFF", "#FF9A00")
+GOLD = "#FFC400"
+
+
+def _cut(text: str, n: int) -> str:
+    return text if len(text) <= n else text[:n - 1].rstrip() + "…"
+
+
+def _words(line: str, font, latin=None) -> list:
+    """كلمات السطر بترتيب الرسم: [(النص، المعاملات، الخط، العرض)]."""
+    out = []
+    for word in visual_words(line):
+        text, kw = shape_word(word)
+        f = latin if latin and not is_rtl(word) else font
+        out.append((text, kw, f, f.getlength(text, **kw)))
+    return out
+
+
+def _line_width(words, space: float) -> float:
+    return sum(w[3] for w in words) + space * max(0, len(words) - 1)
+
+
+def _draw_words(d, words, x: float, y: float, fill, stroke=0, space=None, ascent=None):
+    """يرسم الكلمات من x (يسار). y = أعلى السطر بالخط الأساسي. الكلمة اللاتينية تنزل لنفس الخط الأساسي."""
+    space = space if space is not None else words[0][2].getlength(" ")
+    ascent = ascent if ascent is not None else words[0][2].getmetrics()[0]
+    for text, kw, f, width in words:
+        d.text((x, y + ascent - f.getmetrics()[0]), text, font=f, fill=fill, anchor="la",
+               stroke_width=stroke, stroke_fill="#0B0B0F", **kw)
+        x += width + space
+
+
+def _label(d, text: str, cx: float, cy: float, px: int, fill="#FFFFFF", stroke=2) -> None:
+    """كتابة عربية بسطر واحد، بالنص حول (cx، cy)."""
+    font = load_font(CAIRO, px)
+    words = _words(text, font)
+    space = font.getlength(" ")
+    width = _line_width(words, space)
+    ascent, descent = font.getmetrics()
+    _draw_words(d, words, cx - width / 2, cy - (ascent + descent) / 2, fill, stroke, space, ascent)
+
+
+def _label_right(d, text: str, right: float, top: float, px: int, fill="#FFFFFF") -> None:
+    font = load_font(CAIRO, px)
+    words = _words(text, font)
+    space = font.getlength(" ")
+    _draw_words(d, words, right - _line_width(words, space), top, fill, 0, space)
+
+
+def _dashed_rect(d, box, color, width=4, dash=22) -> None:
+    x0, y0, x1, y1 = box
+    for ax, ay, bx, by in ((x0, y0, x1, y0), (x1, y0, x1, y1), (x1, y1, x0, y1), (x0, y1, x0, y0)):
+        length = math.hypot(bx - ax, by - ay)
+        n = max(1, int(length // (2 * dash)))
+        for i in range(n + 1):
+            t0, t1 = 2 * i * dash / length, min(1.0, (2 * i + 1) * dash / length)
+            if t0 >= 1:
+                break
+            d.line((ax + (bx - ax) * t0, ay + (by - ay) * t0, ax + (bx - ax) * t1, ay + (by - ay) * t1),
+                   fill=color, width=width)
+
+
+def _headline(d, card: dict, box) -> None:
+    """الكتابة نفسها بخط البطاقة، بأكبر حجم يساع المنطقة."""
+    x0, y0, x1, y1 = box
+    lines = card["text"].split("\n")
+    font_path = FONTS_DIR / FONTS[card.get("font", "Baloo")]
+    latin_path = FONTS_DIR / FONTS[card["font_latin"]] if card.get("font_latin") else None
+    px = int((y1 - y0) / (len(lines) * 1.25))
+    while True:
+        font = load_font(font_path, px)
+        latin = load_font(latin_path, px) if latin_path else None
+        space = font.getlength(" ")
+        rows = [_words(line, font, latin) for line in lines]
+        if max(_line_width(r, space) for r in rows) <= (x1 - x0) * 0.9 or px <= 16:
+            break
+        px = int(px * 0.9)
+    ascent, descent = font.getmetrics()
+    line_h = (ascent + descent) * 0.9
+    top = (y0 + y1) / 2 - line_h * len(rows) / 2
+    for i, row in enumerate(rows):
+        width = _line_width(row, space)
+        _draw_words(d, row, (x0 + x1) / 2 - width / 2, top + i * line_h, LINE_COLORS[min(i, 1)],
+                    max(2, int(px * 0.08)), space, ascent)
+
+
+def _rgba(color: str, alpha: int) -> tuple:
+    return (*_rgb(color), alpha)
+
+
+def draw_sketch(card: dict, score_value: float) -> Image.Image:
+    """المخطط 📐: أماكن الوجه والشي البطل والكتابة والألوان، بدون أي صورة."""
+    W, H = SKETCH
+    palette, layout = card["palette"], card["layout"]
+    r, g, b = _rgb(palette[0])
+    if (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.35:
+        r, g, b = int(r * 0.6), int(g * 0.6), int(b * 0.6)
+    img = Image.new("RGBA", SKETCH, (r, g, b, 255))
+    over = Image.new("RGBA", SKETCH)
+    d = ImageDraw.Draw(over)
+    for i in (1, 2):
+        d.line((W * i / 3, 0, W * i / 3, H), fill=(255, 255, 255, 35), width=2)
+        d.line((0, H * i / 3, W, H * i / 3), fill=(255, 255, 255, 35), width=2)
+
+    def hero():
+        bx = HERO_BOX[layout["hero"]]
+        box = (bx[0] * W, bx[1] * H, bx[2] * W, bx[3] * H)
+        d.rounded_rectangle(box, radius=18, fill=_rgba(palette[1], 120), outline=_rgba(palette[1], 255), width=5)
+        _label(d, "الشي البطل", (box[0] + box[2]) / 2, (box[1] + box[3]) / 2 - 24, 34)
+        if card.get("hero_ar"):
+            _label(d, _cut(card["hero_ar"], 34), (box[0] + box[2]) / 2, (box[1] + box[3]) / 2 + 24, 26)
+
+    if layout["hero"] != "foreground":
+        hero()
+    cx, cy, rx, ry = FACE_X[layout["face"]] * W, 0.6 * H, 0.17 * W, 0.3 * H
+    glow = palette[-1]
+    d.ellipse((cx - rx, cy - ry, cx + rx, cy + ry), fill=_rgba(glow, 70), outline=_rgba(glow, 255), width=6)
+    _label(d, "وجهك", cx, cy - 26, 46)
+    if card.get("expression_ar"):
+        _label(d, _cut(card["expression_ar"], 30), cx, cy + 30, 26)
+    if layout["hero"] == "foreground":
+        hero()
+    if layout["text_zone"]:
+        zb = ZONE_BOX[layout["text_zone"]]
+        box = (zb[0] * W, zb[1] * H, zb[2] * W, zb[3] * H)
+        _dashed_rect(d, box, (255, 255, 255, 230))
+        _headline(d, card, box)
+    # فوق: الزاوية والدرجة والكاميرا
+    d.rectangle((0, 0, W, 64), fill=(0, 0, 0, 170))
+    _label_right(d, ANGLES[card["angle"]], W - 24, 6, 34)
+    _label(d, f"{score_value:g}/100", W / 2, 32, 34, fill=GOLD, stroke=0)
+    _label(d, CAMERA_AR[card["camera"]], 150, 32, 26, fill="#DDDDDD", stroke=0)
+    # جوه: الفكرة والألوان
+    d.rectangle((0, H - 60, W, H), fill=(0, 0, 0, 170))
+    _label_right(d, _cut(card["idea"], 60), W - 24, H - 54, 28)
+    for i, color in enumerate(palette):
+        x = 24 + i * 64
+        d.rectangle((x, H - 46, x + 52, H - 14), fill=_rgba(color, 255), outline=(255, 255, 255, 200), width=2)
+    img.alpha_composite(over)
+    return img.convert("RGB")
+
+
+def draw_board(cards: list, picked) -> Image.Image:
+    """لوحة كل الأفكار مرتبة بالدرجة. picked: أرقام المختارة (set) أو {الرقم: الحرف}."""
+    labels = picked if isinstance(picked, dict) else {cid: "" for cid in picked}
+    ranked = sorted(cards, key=lambda c: -score(c))
+    rows = math.ceil(len(ranked) / COLS)
+    W = COLS * TILE[0] + (COLS + 1) * GAP
+    H = BOARD_HEADER + rows * (TILE[1] + GAP) + GAP
+    board = Image.new("RGB", (W, H), (24, 24, 30))
+    d = ImageDraw.Draw(board)
+    _label(d, f"لوحة الأفكار: {len(cards)} فكرة، والمختارة بإطار ذهبي", W / 2, BOARD_HEADER / 2, 34, stroke=0)
+    for i, c in enumerate(ranked):
+        x = GAP + (i % COLS) * (TILE[0] + GAP)
+        y = BOARD_HEADER + (i // COLS) * (TILE[1] + GAP)
+        board.paste(draw_sketch(c, score(c)).resize(TILE, Image.LANCZOS), (x, y))
+        d.rectangle((x, y + TILE[1] - 34, x + TILE[0], y + TILE[1]), fill=(0, 0, 0))
+        _label_right(d, ANGLES[c["angle"]], x + TILE[0] - 8, y + TILE[1] - 34, 20)
+        d.text((x + 8, y + TILE[1] - 30), f"{c['id']}  {score(c):g}", font=load_font(CAIRO, 20), fill=GOLD)
+        if c["id"] in labels:
+            d.rectangle((x - 4, y - 4, x + TILE[0] + 3, y + TILE[1] + 3), outline=GOLD, width=6)
+            if labels[c["id"]]:
+                d.ellipse((x + 8, y + 8, x + 52, y + 52), fill=GOLD)
+                d.text((x + 30, y + 30), labels[c["id"]], font=load_font(CAIRO, 28), fill="#000000", anchor="mm")
+    return board
+
+
+def _table(cards: list, labels: dict) -> str:
+    rows = ["الترتيب | الرقم | الزاوية | الدرجة | الكتابة"]
+    for rank, c in enumerate(sorted(cards, key=lambda c: -score(c)), 1):
+        mark = f"  ★ {labels[c['id']]}" if c["id"] in labels else ""
+        kind = "بكتابة" if c.get("text") else "بدون"
+        rows.append(f"{rank} | {c['id']} | {ANGLES[c['angle']]} | {score(c):g} | {kind}{mark}")
+    return "\n".join(rows)
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser(description="يختار 3 أغلفة من بطاقات الأفكار ويرسم مخططاتها")
+    ap.add_argument("concepts", help="ملف concepts.json")
+    ap.add_argument("-o", "--out", required=True, help="مجلد النتائج")
+    args = ap.parse_args(argv)
+    path = Path(args.concepts)
+    try:
+        cards = json.loads(path.read_text(encoding="utf-8"))
+        validate(cards)
+        picked, notes = select(cards)
+    except FileNotFoundError:
+        print(f"✗ خطأ: ملف الأفكار مو موجود: {path}")
+        return 1
+    except json.JSONDecodeError as e:
+        print(f"✗ خطأ: ملف الأفكار بيه غلط بالصيغة (سطر {e.lineno}): {path}")
+        return 1
+    except UnicodeDecodeError:
+        print(f"✗ خطأ: ملف الأفكار لازم يكون نص UTF-8: {path}")
+        return 1
+    except (ConceptError, OSError) as e:
+        print(f"✗ خطأ: {e}")
+        return 1
+    labels = {p["id"]: p["label"] for p in picked}
+    print(_table(cards, labels))
+    for note in notes:
+        print(note)
+    out = Path(args.out)
+    try:
+        out.mkdir(parents=True, exist_ok=True)
+        result = {"notes": notes, "picked": [dict(p, prompt=build_prompt(p)) for p in picked]}
+        (out / "picked.json").write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        for p in picked:
+            draw_sketch(p, p["score"]).save(out / f"sketch-{p['id']}.jpg", quality=90)
+        draw_board(cards, labels).save(out / "board.jpg", quality=90)
+    except OSError as e:
+        print(f"✗ خطأ: ما گدرت أكتب النتائج بـ {out} ({e})")
+        return 1
+    print(f"✓ انكتب picked.json و{len(picked)} مخططات وboard.jpg بـ {out}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
