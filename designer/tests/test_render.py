@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFilter
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import render  # noqa: E402
@@ -382,6 +382,69 @@ class RenderTest(unittest.TestCase):
             finally:
                 os.chdir(old_cwd)
             self.assertEqual(found, base / "img.png")
+
+
+class RenderUHDTest(unittest.TestCase):
+    """نسخة 4K ونسخة الموبايل (الإصدار الثاني)."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.dir = Path(self.tmp.name)
+        self.addCleanup(self.tmp.cleanup)
+
+    def test_px_scale(self):
+        self.assertEqual([render.px_scale(s) for s in ((1280, 720), (1080, 1920), (3840, 2160))], [1.0, 1.0, 3.0])
+
+    def test_youtube4k_canvas(self):
+        img, _ = render.render({"size": "youtube4k", "background": {"color": "#000000"}, "layers": []}, self.dir)
+        self.assertEqual(img.size, (3840, 2160))
+
+    def test_same_warnings_youtube_and_4k(self):
+        layer = {"type": "text", "text": "نهاية\nالكون!", "font": "Baloo", "x": 0.12, "y": 0.9, "size": 0.2}
+        w = [render.render({"size": s, "background": {"color": "#000000"}, "layers": [layer]}, self.dir)[1]
+             for s in ("youtube", "youtube4k")]
+        self.assertEqual(w[0], w[1])
+        self.assertTrue(w[0])
+
+    def test_sharpen_radius_scales(self):
+        with mock.patch.object(render.ImageFilter, "UnsharpMask", wraps=ImageFilter.UnsharpMask) as um:
+            render.render({"size": "youtube4k", "background": {"color": "#333333", "sharpen": 1}, "layers": []},
+                          self.dir)
+        self.assertAlmostEqual(um.call_args.kwargs["radius"], 6.0)
+
+    def test_paper_box_at_4k(self):
+        layer = {"type": "text", "text": "إحنا مش\nلوحدنا!", "font": "Rubik", "x": 0.27, "y": 0.52, "size": 0.13,
+                 "line_spacing": 0.9, "color": "#141414", "box": {"style": "paper", "pad": 0.3}, "rotate": -4}
+        small, w_small = render.render({"size": "youtube", "background": {"color": "#202020"}, "layers": [layer]},
+                                       self.dir)
+        big, w_big = render.render({"size": "youtube4k", "background": {"color": "#202020"}, "layers": [layer]},
+                                   self.dir)
+        self.assertEqual(w_small, w_big)
+        # الرقعة نفس الشكل: نسبة البكسلات الفاتحة متقاربة بالمقاسين
+        frac = [sum(1 for v in im.convert("L").resize((320, 180)).getdata() if v > 150) / (320 * 180)
+                for im in (small, big)]
+        self.assertAlmostEqual(frac[0], frac[1], delta=0.02)
+
+    def test_main_4k_writes_mobile_copy(self):
+        spec = self.dir / "spec.json"
+        spec.write_text(json.dumps({"size": "youtube4k", "background": {"gradient": ["#06121A", "#0F3A44"]},
+                                    "layers": []}), encoding="utf-8")
+        out = self.dir / "thumb.jpg"
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            code = render.main([str(spec), "-o", str(out)])
+        self.assertEqual(code, 0)
+        mobile = self.dir / "thumb-mobile.jpg"
+        with Image.open(out) as a, Image.open(mobile) as b:
+            self.assertEqual((a.size, b.size), ((3840, 2160), (1280, 720)))
+        self.assertLessEqual(mobile.stat().st_size, render.MOBILE_MAX_BYTES)
+        self.assertIn("نسخة الموبايل", buf.getvalue())
+
+    def test_save_mobile_fits_2mb_for_noise(self):
+        noise = Image.frombytes("RGB", (3840, 2160), os.urandom(3840 * 2160 * 3))
+        p = render.save_mobile(noise, self.dir / "n.jpg")
+        self.assertEqual(p.name, "n-mobile.jpg")
+        self.assertLessEqual(p.stat().st_size, render.MOBILE_MAX_BYTES)
 
 
 if __name__ == "__main__":

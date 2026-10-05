@@ -25,7 +25,7 @@ FONTS = {
     "Cairo": "Cairo-Black.ttf",
     "Lalezar": "Lalezar-Regular.ttf",
 }
-CANVAS = {"youtube": (1280, 720), "reels": (1080, 1920)}
+CANVAS = {"youtube": (1280, 720), "youtube4k": (3840, 2160), "reels": (1080, 1920)}
 # المناطق الي تغطيها واجهة التطبيق: (اسم، x0، y0، x1، y1) كنسب من العرض والارتفاع
 UNSAFE = {
     "youtube": [
@@ -38,13 +38,22 @@ UNSAFE = {
         ("أزرار اليمين", 0.85, 0.0, 1.0, 1.0),
     ],
 }
+UNSAFE["youtube4k"] = UNSAFE["youtube"]
 MAX_WORDS = 4
 YOUTUBE_MAX_BYTES = 2 * 1024 * 1024
+MOBILE_SIZE = (1280, 720)
+MOBILE_MAX_BYTES = 2 * 1024 * 1024
+UHD_MAX_BYTES = 50 * 1024 * 1024
 PUNCT = "؟?!.,،:؛\"'«»()"
 
 
 class SpecError(ValueError):
     """خطأ بملف الطبقات، رسالته بالعربي."""
+
+
+def px_scale(size) -> float:
+    """كم مرة المقاس أعرض من 1280 (الي انضبطت عليه القيم الثابتة بالبكسل). ما ينزل تحت 1."""
+    return max(1.0, size[0] / 1280)
 
 
 def load_spec(path) -> dict:
@@ -126,7 +135,8 @@ def _background(bg: dict, size, base_dir: Path) -> Image.Image:
     if bg.get("saturation"):
         img = ImageEnhance.Color(img).enhance(bg["saturation"])
     if bg.get("sharpen"):
-        img = img.filter(ImageFilter.UnsharpMask(radius=2, percent=int(120 * bg["sharpen"]), threshold=3))
+        img = img.filter(ImageFilter.UnsharpMask(radius=2 * px_scale(size), percent=int(120 * bg["sharpen"]),
+                                                 threshold=3))
     img = img.convert("RGBA")
     if bg.get("vignette"):
         mask = Image.radial_gradient("L").resize(size)
@@ -264,9 +274,10 @@ def _fill_image(fill, y0: float, y1: float, size) -> Image.Image:
 def _paper(target: Image.Image, box, color: str, seed: str) -> None:
     """رقعة ورق ممزق الأطراف خلف الكتابة، مع ظل خفيف."""
     rnd = random.Random(seed)
+    s = px_scale(target.size)
     x0, y0, x1, y1 = box
     jit = (y1 - y0) * 0.05
-    step = max(8.0, (x1 - x0) / 20)
+    step = max(8.0 * s, (x1 - x0) / 20)
     pts = []
     for ax, ay, bx, by in ((x0, y0, x1, y0), (x1, y0, x1, y1), (x1, y1, x0, y1), (x0, y1, x0, y0)):
         n = max(2, int(math.hypot(bx - ax, by - ay) / step))
@@ -280,8 +291,10 @@ def _paper(target: Image.Image, box, color: str, seed: str) -> None:
     shadow = Image.new("RGBA", target.size, (0, 0, 0, 0))
     shadow.putalpha(shadow_mask.point(lambda a: a * 150 // 255).filter(ImageFilter.GaussianBlur(max(1.0, jit))))
     target.alpha_composite(shadow)
-    paper = Image.blend(Image.new("RGB", target.size, hex_rgba(color)[:3]),
-                        Image.effect_noise(target.size, 60).convert("RGB"), 0.10).convert("RGBA")
+    # الضوضاء تنولد بمقاس 1280 وتتكبر، حتى الحبيبات تبقى بنفس الحجم النسبي بـ 4K
+    small = (max(1, round(target.width / s)), max(1, round(target.height / s)))
+    noise = Image.effect_noise(small, 60).resize(target.size, Image.BICUBIC).convert("RGB")
+    paper = Image.blend(Image.new("RGB", target.size, hex_rgba(color)[:3]), noise, 0.10).convert("RGBA")
     paper.putalpha(mask)
     target.alpha_composite(paper)
 
@@ -473,13 +486,27 @@ def draw_guides(img: Image.Image, name) -> Image.Image:
     return out
 
 
-def save(img: Image.Image, out: Path) -> None:
+def save(img: Image.Image, out: Path, quality: int = 92) -> None:
     out = Path(out)
     out.parent.mkdir(parents=True, exist_ok=True)
     if out.suffix.lower() in (".jpg", ".jpeg"):
-        img.convert("RGB").save(out, quality=92, optimize=True)
+        img.convert("RGB").save(out, quality=quality, optimize=True)
     else:
         img.save(out)
+
+
+def save_mobile(img: Image.Image, out: Path) -> Path:
+    """نسخة 1280×720 للرفع من التلفون (حد يوتيوب 2MB). الجودة تنزل خطوة خطوة لحد ما يصير الحجم أقل."""
+    out = Path(out)
+    path = out.with_name(out.stem + "-mobile.jpg")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    small = img.convert("RGB").resize(MOBILE_SIZE, Image.LANCZOS)
+    quality = 92
+    while True:
+        small.save(path, quality=quality, optimize=True)
+        if path.stat().st_size <= MOBILE_MAX_BYTES or quality - 6 < 50:
+            return path
+        quality -= 6
 
 
 def main(argv=None) -> int:
@@ -500,16 +527,26 @@ def main(argv=None) -> int:
         return 1
     if args.guides:
         img = draw_guides(img, size_name(spec))
+    uhd = size_name(spec) == "youtube4k"
+    mobile = None
     try:
-        save(img, out)
+        save(img, out, quality=95 if uhd else 92)
+        if uhd:
+            mobile = save_mobile(img, out)
     except OSError as e:
         print(f"✗ خطأ: ما گدرت أحفظ الصورة ({e})")
         return 1
     if size_name(spec) == "youtube" and out.stat().st_size > YOUTUBE_MAX_BYTES:
         warnings.append("حجم الملف أكبر من 2MB ويوتيوب ما يقبله. احفظه .jpg")
+    if uhd and out.stat().st_size > UHD_MAX_BYTES:
+        warnings.append("حجم نسخة 4K أكبر من 50MB ويوتيوب ما يقبلها.")
+    if mobile and mobile.stat().st_size > MOBILE_MAX_BYTES:
+        warnings.append("نسخة الموبايل أكبر من 2MB.")
     for w in warnings:
         print(f"⚠️ {w}")
     print(f"✓ انحفظ: {out}")
+    if mobile:
+        print(f"✓ نسخة الموبايل: {mobile}")
     return 0
 
 
