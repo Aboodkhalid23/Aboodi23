@@ -1,6 +1,7 @@
 """الموديلات المجانية الي يحتاجها المصمم: تنزل مرة وحدة لـ designer/models/ (يتجاهله git)،
 والكود يتأكد من بصمتها (sha256) قبل ما يستعملها."""
 import hashlib
+import http.client
 import urllib.request
 from pathlib import Path
 
@@ -44,7 +45,7 @@ def ensure_model(name: str) -> Path:
     try:
         with urllib.request.urlopen(info["url"], timeout=120) as r:
             part.write_bytes(r.read())
-    except OSError as e:
+    except (OSError, http.client.HTTPException) as e:  # HTTPException: تنزيل انقطع بالنص (IncompleteRead)
         part.unlink(missing_ok=True)
         raise ModelError(f"ما گدرت أنزّل الموديل {name} ({e}).")
     if _sha256(part) != info["sha256"]:

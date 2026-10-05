@@ -38,6 +38,18 @@ class UpscaleTest(unittest.TestCase):
         np.testing.assert_allclose(upscale.tile_apply(arr, nearest4, 4), nearest4(arr), atol=1e-6)
 
     @unittest.skipUnless(HAS_NP, "numpy ماكو")
+    def test_tile_apply_hides_bad_tile_edges(self):
+        # الموديل الحقيقي يغلط بحواف كل قطعة؛ الدمج لازم يعطي حواف القطع وزن صغير حتى ما تبين خطوط
+        def bad_edges(t):
+            r = nearest4(t)
+            r[:8], r[-8:], r[:, :8], r[:, -8:] = 0, 0, 0, 0
+            return r
+        arr = np.full((300, 500, 3), 0.5, np.float32)
+        out = upscale.tile_apply(arr, bad_edges, 4)
+        inner = out[64:-64, 64:-64]  # حواف الصورة نفسها ماكو قطعة ثانية تغطيها
+        self.assertLess(float(np.abs(inner - 0.5).max()), 0.05)
+
+    @unittest.skipUnless(HAS_NP, "numpy ماكو")
     def test_tile_apply_small_image(self):
         arr = np.zeros((60, 100, 3), np.float32)
         self.assertEqual(upscale.tile_apply(arr, nearest4, 4).shape, (240, 400, 3))
@@ -54,6 +66,19 @@ class UpscaleTest(unittest.TestCase):
         with mock.patch.object(upscale.models, "ensure_model", side_effect=no_model):
             img, method = upscale.upscale(Image.new("RGB", (1680, 944)))
         self.assertEqual((img.size, method), ((3840, 2160), "fallback"))
+
+    def test_model_runtime_error_of_any_type_falls_back(self):
+        Fail = type("Fail", (Exception,), {})  # onnxruntime errors don't inherit RuntimeError
+
+        def broken(tile):
+            raise Fail("[ONNXRuntimeError] FAIL")
+        with mock.patch.object(upscale, "_onnx_model_fn", return_value=broken):
+            img, method = upscale.upscale(Image.new("RGB", (640, 360)))
+        self.assertEqual((img.size, method), ((3840, 2160), "fallback"))
+
+    def test_face_mask_survives_detector_crash(self):
+        with mock.patch.object(upscale.face, "detect_faces", side_effect=ValueError("cv2.error")):
+            self.assertIsNone(upscale.face_mask(Image.new("RGB", (64, 36))))
 
     @unittest.skipUnless(HAS_NP, "numpy ماكو")
     def test_detail_transfer_keeps_colors(self):

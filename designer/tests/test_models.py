@@ -1,4 +1,5 @@
 import hashlib
+import http.client
 import io
 import sys
 import tempfile
@@ -56,6 +57,15 @@ class ModelsTest(unittest.TestCase):
         with mock.patch("urllib.request.urlopen", side_effect=OSError("blocked")):
             with self.assertRaisesRegex(models.ModelError, "ما گدرت أنزّل"):
                 models.ensure_model("tiny")
+
+    def test_cut_off_download_is_arabic(self):
+        cut = mock.MagicMock()
+        cut.read.side_effect = http.client.IncompleteRead(b"hel")
+        with mock.patch("urllib.request.urlopen",
+                        return_value=mock.MagicMock(__enter__=lambda s: cut, __exit__=lambda *a: False)):
+            with self.assertRaisesRegex(models.ModelError, "ما گدرت أنزّل"):
+                models.ensure_model("tiny")
+        self.assertFalse((self.dir / "tiny.bin.part").exists())
 
     def test_unknown_model(self):
         with self.assertRaisesRegex(models.ModelError, "مو معروف"):

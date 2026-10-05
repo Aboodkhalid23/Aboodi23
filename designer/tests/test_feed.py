@@ -131,6 +131,15 @@ class FeedTest(unittest.TestCase):
         s.assert_called_once()
         self.assertTrue((self.dir / "search.json").exists())
 
+    def test_search_cached_never_mixes_topics(self):
+        # "كأس العالم 2026" و"انتخابات 2026" ينطون نفس المجلد (2026)، فلازم الكاش يعرف البحث
+        a = [{"id": "aaaaaaaaaaa", "title": "كأس", "channel": "c", "views": 5, "duration": 60}]
+        b = [{"id": "bbbbbbbbbbb", "title": "انتخابات", "channel": "c", "views": 5, "duration": 60}]
+        with mock.patch.object(feed, "search", side_effect=[a, b]) as s:
+            self.assertEqual(feed.search_cached("كأس العالم 2026", 6, self.dir), a)
+            self.assertEqual(feed.search_cached("انتخابات 2026", 6, self.dir), b)
+        self.assertEqual(s.call_count, 2)
+
     def test_search_cached_ignores_broken_cache(self):
         (self.dir / "search.json").write_text("{broken", encoding="utf-8")
         with mock.patch.object(feed, "search", return_value=[]) as s:

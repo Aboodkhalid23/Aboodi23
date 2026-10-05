@@ -271,10 +271,11 @@ def _fill_image(fill, y0: float, y1: float, size) -> Image.Image:
     return col.resize(size, Image.NEAREST)
 
 
-def _paper(target: Image.Image, box, color: str, seed: str) -> None:
-    """رقعة ورق ممزق الأطراف خلف الكتابة، مع ظل خفيف."""
+def _paper(target: Image.Image, box, color: str, seed: str, scale: float = 1.0) -> None:
+    """رقعة ورق ممزق الأطراف خلف الكتابة، مع ظل خفيف. scale = px_scale للغلاف نفسه
+    (مو للوحة الرسم الأوسع)، حتى شكل الورق بـ 1280 يبقى مثل ما جان."""
     rnd = random.Random(seed)
-    s = px_scale(target.size)
+    s = scale
     x0, y0, x1, y1 = box
     jit = (y1 - y0) * 0.05
     step = max(8.0 * s, (x1 - x0) / 20)
@@ -336,7 +337,7 @@ def _text_layer(canvas: Image.Image, layer: dict) -> tuple[tuple[int, int, int, 
         pad = int(b.get("pad", 0.18) * px)
         box = (bbox[0] - pad, bbox[1] - pad, bbox[2] + pad, bbox[3] + pad)
         if b.get("style") == "paper":
-            _paper(out, box, b.get("color", "#E9E1D2"), layer["text"])
+            _paper(out, box, b.get("color", "#E9E1D2"), layer["text"], scale=px_scale((W, H)))
         else:
             ImageDraw.Draw(out).rounded_rectangle(
                 box, radius=int(b.get("radius", 0.1) * px), fill=hex_rgba(b.get("color", "#E50914")))

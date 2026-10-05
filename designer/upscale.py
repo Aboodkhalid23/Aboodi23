@@ -34,21 +34,42 @@ def fit_16x9(img: Image.Image) -> Image.Image:
     return img.crop((x0, y0, x0 + cw, y0 + ch))
 
 
+def _edge_weights(n: int, ramp: int, open_start: bool, open_end: bool):
+    """أوزان قطعة على محور واحد: الجهة الي تتداخل ويا قطعة ثانية تبدي بوزن صغير ويكبر تدريجياً،
+    وجهة حافة الصورة وزنها 1 (ماكو قطعة ثانية تغطيها)."""
+    import numpy as np
+    w = np.ones(n, np.float32)
+    r = min(ramp, n // 2)
+    if r > 0:
+        up = ((np.arange(r, dtype=np.float32) + 1) / (r + 1)) ** 2  # تربيعي: الحواف الخربانة تختفي حتى بالزوايا
+        if open_start:
+            w[:r] = up
+        if open_end:
+            w[n - r:] = np.minimum(w[n - r:], up[::-1])
+    return w
+
+
 def tile_apply(arr, fn, scale: int, tile: int = 256, overlap: int = 16):
-    """يطبّق fn (تكبير ×scale) على المصفوفة قطعة قطعة، والتداخل بين القطع ينحسب معدّل."""
+    """يطبّق fn (تكبير ×scale) على المصفوفة قطعة قطعة. بمناطق التداخل، القطع تندمج بأوزان متدرجة،
+    فأغلاط الموديل بحواف كل قطعة ما تطلع خطوط بالصورة."""
     import numpy as np
     H, W, C = arr.shape
     t = min(tile, H, W)
     stride = max(1, t - 2 * overlap)
+    ramp = 2 * overlap * scale
     out = np.zeros((H * scale, W * scale, C), np.float32)
     weight = np.zeros((H * scale, W * scale, 1), np.float32)
     ys = sorted({min(y, H - t) for y in range(0, H, stride)})
     xs = sorted({min(x, W - t) for x in range(0, W, stride)})
+    n = t * scale
     for y0 in ys:
+        wy = _edge_weights(n, ramp, y0 > 0, y0 + t < H)
         for x0 in xs:
+            wx = _edge_weights(n, ramp, x0 > 0, x0 + t < W)
+            w = (wy[:, None] * wx[None, :])[..., None]
             r = fn(arr[y0:y0 + t, x0:x0 + t])
-            out[y0 * scale:(y0 + t) * scale, x0 * scale:(x0 + t) * scale] += r
-            weight[y0 * scale:(y0 + t) * scale, x0 * scale:(x0 + t) * scale] += 1
+            out[y0 * scale:(y0 + t) * scale, x0 * scale:(x0 + t) * scale] += r * w
+            weight[y0 * scale:(y0 + t) * scale, x0 * scale:(x0 + t) * scale] += w
     return out / weight
 
 
@@ -78,7 +99,7 @@ def face_mask(img: Image.Image) -> Image.Image | None:
     """قناع أبيض ناعم على الوجوه، أو None إذا ماكو وجوه أو الكاشف ما اشتغل."""
     try:
         boxes = face.detect_faces(img)
-    except face.FaceUnavailable:
+    except Exception:  # FaceUnavailable أو خطأ داخلي من OpenCV: نكمّل بدون حماية الوجه، المهم الشغل ما يوقف
         return None
     if not boxes:
         return None
@@ -122,7 +143,7 @@ def upscale(img: Image.Image, size=TARGET, strength=DEFAULT_STRENGTH,
         return classic_upscale(img, size), "classic"
     try:
         return ai_upscale(img, size, strength), "ai"
-    except (ImportError, models.ModelError, OSError, RuntimeError):
+    except Exception:  # أخطاء onnxruntime ما ترث RuntimeError؛ المكبّر ما يوقف الشغل أبداً (التصميم، القسم 7)
         return classic_upscale(img, size), "fallback"
 
 

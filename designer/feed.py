@@ -91,14 +91,16 @@ def search_cached(query: str, limit: int, cache_dir: Path) -> list[dict]:
     cache = Path(cache_dir) / "search.json"
     try:
         cached = json.loads(cache.read_text(encoding="utf-8"))
-        if cached.get("limit", 0) >= limit and isinstance(cached.get("results"), list):
+        # المجلد ممكن ينشارك بين بحثين (مثلاً "كأس العالم 2026" و"انتخابات 2026" ← 2026)، فالكاش لازم يطابق البحث نفسه
+        if (cached.get("query") == query and cached.get("limit", 0) >= limit
+                and isinstance(cached.get("results"), list)):
             return cached["results"][:limit]
     except (OSError, ValueError, AttributeError):
         pass
     results = search(query, limit)
     if results:
         cache.parent.mkdir(parents=True, exist_ok=True)
-        cache.write_text(json.dumps({"limit": limit, "results": results}, ensure_ascii=False, indent=1),
+        cache.write_text(json.dumps({"query": query, "limit": limit, "results": results}, ensure_ascii=False, indent=1),
                          encoding="utf-8")
     return results
 

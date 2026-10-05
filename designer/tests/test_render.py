@@ -425,6 +425,17 @@ class RenderUHDTest(unittest.TestCase):
                 for im in (small, big)]
         self.assertAlmostEqual(frac[0], frac[1], delta=0.02)
 
+    def test_paper_scale_comes_from_canvas_not_padded_surface(self):
+        # الرسم يصير على لوحة أوسع (هامش)، فالمقياس لازم ينحسب من الغلاف حتى شكل الورق بـ 1280 ما يتغير
+        layer = {"type": "text", "text": "إحنا مش\nلوحدنا!", "font": "Rubik", "x": 0.27, "y": 0.52, "size": 0.13,
+                 "color": "#141414", "box": {"style": "paper", "pad": 0.3}}
+        scales = {}
+        for size in ("youtube", "reels", "youtube4k"):
+            with mock.patch.object(render, "_paper", wraps=render._paper) as paper:
+                render.render({"size": size, "background": {"color": "#202020"}, "layers": [layer]}, self.dir)
+            scales[size] = paper.call_args.kwargs["scale"]
+        self.assertEqual(scales, {"youtube": 1.0, "reels": 1.0, "youtube4k": 3.0})
+
     def test_main_4k_writes_mobile_copy(self):
         spec = self.dir / "spec.json"
         spec.write_text(json.dumps({"size": "youtube4k", "background": {"gradient": ["#06121A", "#0F3A44"]},
