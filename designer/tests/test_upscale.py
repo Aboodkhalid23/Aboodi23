@@ -81,7 +81,6 @@ class UpscaleTest(unittest.TestCase):
             self.assertIsNone(upscale.face_mask(Image.new("RGB", (64, 36))))
 
     @unittest.skipUnless(HAS_NP, "numpy ماكو")
-    @unittest.skipUnless(HAS_NP, "numpy ماكو")
     def test_ai_upscale_base_and_up_from_same_crop(self):
         stripes = Image.new("RGB", (1001, 500), (0, 0, 0))
         for x in range(0, 1001, 6):
@@ -103,6 +102,7 @@ class UpscaleTest(unittest.TestCase):
         self.assertEqual(method, "ai")
         ai.assert_called_once()
 
+    @unittest.skipUnless(HAS_NP, "numpy ماكو")
     def test_detail_transfer_keeps_colors(self):
         base = Image.new("RGB", (400, 225), (120, 80, 60))
         up = ImageEnhance.Brightness(Image.effect_noise((400, 225), 40).convert("RGB")).enhance(1.4)
