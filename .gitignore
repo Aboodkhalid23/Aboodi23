@@ -6,6 +6,7 @@
 # المصمم: صور الوجه والمراجع ما تنرفع (الريبو عام)
 designer/faces/
 designer/references/
+designer/models/
 # المصمم: كل صور مجلدات التصميم (المشاهد والأغلفة) بيها وجهه، فما تنرفع (الريبو عام)
 episodes/*/design/*.png
 episodes/*/design/*.jpg
