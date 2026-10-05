@@ -5,10 +5,9 @@ keeps a memory of the previous frames, so the edge is steady and hair is soft, n
 downloaded once into ~/.cache/aboodi-models (not the repo). If it can't be had, MediaPipe selfie segmentation
 (the old way) takes over.
 
-Three looks (`treatment` on a face_cutout beat):
+Two looks (`treatment` on a face_cutout beat). (Moving his whole body into a photo of a place was tried and
+dropped by the owner: it looks fake. He goes into story scenes as a drawn character instead: avatar.py.)
   paper  he stands on the episode's paper world with a white paper-cut edge (the collage look), caption beside him
-  scene  he is moved into a real place (the beat's picture fills the frame: a farm, a factory, a city), softly
-         defocused and drifting behind him, the edge of his body lit by it — no outline, it should look shot there
   title  big words stand BEHIND him in his own room and stretch out as they appear (the text-behind-the-back look)
 """
 import subprocess
@@ -22,7 +21,7 @@ SMOOTH = 0.55      # MediaPipe fallback only: temporal smoothing of the mask
 OUTLINE = 9        # px of white "paper cut" edge at 1080p
 MODEL_DIR = Path.home() / ".cache" / "aboodi-models"
 RVM_URL = "https://github.com/PeterL1n/RobustVideoMatting/releases/download/v1.0.0/rvm_mobilenetv3_fp32.onnx"
-MODES = ("paper", "scene", "title")
+MODES = ("paper", "title")
 
 
 def rvm_model() -> Path | None:
@@ -122,35 +121,20 @@ def _frames(path: Path, width: int, height: int, n: int):
         proc.wait()
 
 
-def _scene_frame(bg: np.ndarray, t: float):
-    """The place behind him: drifts closer slowly (1.00 → 1.06) and is gently out of focus, like a real lens."""
-    import cv2
-    h, w = bg.shape[:2]
-    s = 1.0 + 0.06 * t
-    m = np.float32([[s, 0, (1 - s) * w / 2], [0, s, (1 - s) * h / 2]])
-    return cv2.GaussianBlur(cv2.warpAffine(bg, m, (w, h), borderMode=cv2.BORDER_REFLECT), (0, 0), max(1.0, w / 640))
-
-
 def cutout_clip(face: Path, background: Path, out: Path, width: int, height: int, fps: int, frames: int,
                 encode: list[str], shift: float = 0.18, vf: str = "", region: tuple[int, int] | None = None,
                 mode: str = "paper", text: Path | None = None, text_rgb: tuple[int, int, int] = (247, 208, 70),
                 matter: Matter | None = None) -> Path:
     """`face`: canvas-sized footage (black outside the camera picture). `background`: for "paper" the scene PNG
-    behind him, for "scene" the place he is moved into. `text` ("title"): a video of white words on black — the
+    behind him. `text` ("title"): a video of white words on black — the
     words are laid between his room and him. `region`: x range of the real camera picture (narrow for phone
     video) — he is found there only. "paper" moves him right by `shift` × width to free the left side."""
     import cv2
     bg = None
-    if mode in ("paper", "scene"):
+    if mode == "paper":
         img = cv2.imread(str(background), cv2.IMREAD_COLOR)
         if img is None:
             raise MediaError(f"خلفية القص مو موجودة: {background}")
-        if mode == "scene":   # cover the frame, no bars
-            ih, iw = img.shape[:2]
-            s = max(width / iw, height / ih)
-            img = cv2.resize(img, (round(iw * s), round(ih * s)))
-            y0, x0 = (img.shape[0] - height) // 4, (img.shape[1] - width) // 2
-            img = img[y0:y0 + height, x0:x0 + width]
         bg = cv2.resize(img, (width, height))[:, :, ::-1].astype(np.float32)
     dx = int(round(shift * width)) if mode == "paper" else 0
     edge = max(2, round(OUTLINE * height / 1080))
@@ -159,12 +143,6 @@ def cutout_clip(face: Path, background: Path, out: Path, width: int, height: int
     writer = subprocess.Popen(["ffmpeg", "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{width}x{height}",
                                "-r", str(fps), "-i", "-", *(["-vf", vf.lstrip(",")] if vf else []), "-frames:v", str(frames),
                                "-an", *encode, str(out)], stdin=subprocess.PIPE)
-    side_fade = None
-    if mode == "scene":
-        x0, x1 = region or (0, width)
-        ramp = max(8, (x1 - x0) // 10)
-        xs = np.arange(width, dtype=np.float32)
-        side_fade = np.clip(np.minimum(xs - x0, x1 - 1 - xs) / ramp, 0, 1)[None, :]
     own = matter is None
     matter = matter or Matter()
     try:
@@ -172,8 +150,6 @@ def cutout_clip(face: Path, background: Path, out: Path, width: int, height: int
             x0, x1 = region or (0, width)
             mask = np.zeros((height, width), np.float32)
             mask[:, x0:x1] = matter.clean(matter(np.ascontiguousarray(img[:, x0:x1])))
-            if mode == "scene" and (x0 > 0 or x1 < width):
-                mask *= side_fade   # the phone picture cut his shoulders: let them fade, not end on a hard line
             m3 = mask[..., None]
             person = img.astype(np.float32)
             if mode == "paper":
@@ -185,12 +161,6 @@ def cutout_clip(face: Path, background: Path, out: Path, width: int, height: int
                     ring = np.roll(ring, dx, axis=1); ring[:, :dx] = 0
                 ring = cv2.GaussianBlur(ring, (3, 3), 0)[..., None]
                 frame = bg * (1 - ring) + 250.0 * ring                     # white paper edge
-            elif mode == "scene":
-                place = _scene_frame(bg, n / max(1, frames - 1))
-                # light wrap: the place's light spills a little over his edges, so he sits in it
-                band = (m3[..., 0] - cv2.erode(m3[..., 0], np.ones((9, 9), np.uint8)))[..., None]
-                person = person * (1 - 0.35 * band) + cv2.GaussianBlur(place, (0, 0), 12) * 0.35 * band
-                frame = place
             else:   # title: his room, a little darker, the words, then him
                 frame = person * 0.8
                 if words is not None:

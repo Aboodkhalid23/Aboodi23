@@ -59,9 +59,24 @@ def st_music_jobs(ep, a):
     print(f"🎵 مقاطع الموسيقى: {len(jobs)}، الناقص {len(todo)}. التفاصيل: {ep.work / 'music_jobs.json'}")
 
 
-def st_thumbnail(ep, a):
-    from .thumbnail import make_thumbnails
-    print("🖼️  الصور المصغرة: " + "، ".join(str(p) for p in make_thumbnails(ep)))
+def st_face_ref(ep, a):
+    from .face_ref import face_crops
+    print("🙂 صور الوجه للشخصية: " + "، ".join(str(p) for p in face_crops(ep.clean_video, ep.assets)))
+
+
+def st_character_jobs(ep, a):
+    from .avatar import character_jobs
+    plan = load_plan(ep.plan)
+    jobs = character_jobs(ep, [b.look for b in plan.beats if b.kind == "avatar" and b.look])
+    print(f"🎨 شخصيات لازم تتسوى: {len(jobs)}. التفاصيل: {ep.work / 'character_jobs.json'}")
+
+
+def st_avatar_register(ep, a):
+    from .avatar import register
+    if not (a.look and a.element):
+        raise MediaError("لازم --look و --element")
+    register(a.look, a.element)
+    print(f"✅ انحفظت شخصية '{a.look}'")
 
 
 def st_music_free(ep, a):
@@ -97,7 +112,7 @@ def st_ai_jobs(ep, a):
 def st_ai_fetch(ep, a):
     if a.beat is None or not a.url:
         raise MediaError("لازم --beat و --url")
-    print(f"⬇️  نزل: {ai_fetch(ep, a.beat, a.url)}")
+    print(f"⬇️  نزل: {ai_fetch(ep, a.beat, a.url, part=a.part or '')}")
 
 
 def st_ai_log(ep, a):
@@ -212,7 +227,7 @@ def st_deliver(ep, a):
 
 STAGES = {"fetch": [st_fetch], "entities": [st_entities], "transcribe": [st_transcribe], "clean": [st_clean],
           "brief": [st_brief], "validate": [st_validate], "ai-jobs": [st_ai_jobs], "ai-fetch": [st_ai_fetch],
-          "ai-log": [st_ai_log], "check": [st_check], "music-free": [st_music_free], "thumbnail": [st_thumbnail], "music-jobs": [st_music_jobs], "music-fetch": [st_music_fetch], "qa": [st_qa], "scene-check": [st_scene_check], "shorts": [st_shorts], "images": [st_images], "compose": [st_compose], "deliver": [st_deliver]}
+          "ai-log": [st_ai_log], "check": [st_check], "music-free": [st_music_free], "face-ref": [st_face_ref], "character-jobs": [st_character_jobs], "avatar-register": [st_avatar_register], "music-jobs": [st_music_jobs], "music-fetch": [st_music_fetch], "qa": [st_qa], "scene-check": [st_scene_check], "shorts": [st_shorts], "images": [st_images], "compose": [st_compose], "deliver": [st_deliver]}
 STAGES["get"] = STAGES["fetch"] + STAGES["check"]   # download, then show the owner what came
 STAGES["prep"] = STAGES["fetch"] + STAGES["entities"] + STAGES["transcribe"] + STAGES["clean"] + STAGES["brief"]
 # Real pictures and free music first; what is still missing after that becomes an AI job (owner's rule).
@@ -230,6 +245,9 @@ def main(argv=None):
     p.add_argument("--preview", action="store_true", help="نسخة معاينة 1280×720 (أسرع من النهائية)")
     p.add_argument("--max-mb", type=float, help="اضغط الفيديو بس إذا عبر هذا الحجم")
     p.add_argument("--beat", type=int, help="رقم المشهد (ai-fetch / ai-log)")
+    p.add_argument("--part", help="ai-fetch: fg = الشخصية مقصوصة من مشهد avatar")
+    p.add_argument("--look", help="avatar-register: شكل الشخصية (cartoon، paper، anime، sketch، comic، clay)")
+    p.add_argument("--element", help="avatar-register: رقم الشخصية المحفوظة بـ Higgsfield")
     p.add_argument("--url", help="رابط الناتج من Higgsfield (ai-fetch)")
     p.add_argument("--model", help="الموديل الي ولّد (ai-log)")
     p.add_argument("--credits", type=float, help="الرصيد الي انصرف (ai-log)")

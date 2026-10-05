@@ -29,12 +29,10 @@ def test_a_long_episode_needs_five_reels_with_editing_in_them():
 
 def test_cutout_looks_are_checked():
     p = long_plan([])
-    p.beats[0] = Beat(0, 5, "body", "face_cutout", treatment="scene", caption="مزرعة")
     p.beats[1] = Beat(5, 10, "body", "face_cutout", treatment="title")
-    p.beats[2] = Beat(10, 15, "body", "face_cutout", treatment="space")
+    p.beats[2] = Beat(10, 15, "body", "face_cutout", treatment="scene")
     e = errs(p)
-    assert "beat 0: face_cutout scene يحتاج query" in e and "beat 1: face_cutout title يحتاج title" in e
-    assert "beat 2: face_cutout شكله" in e
+    assert "beat 1: face_cutout title يحتاج title" in e and "beat 2: face_cutout شكله" in e
 
 
 def test_stray_bits_of_the_room_are_dropped_from_the_matte():
@@ -65,7 +63,7 @@ def _video(path, color, d=0.5, s="320x180"):
                     "-pix_fmt", "yuv420p", str(path)], check=True)
 
 
-def test_words_go_behind_him_and_scene_puts_him_in_the_place(tmp_path):
+def test_words_go_behind_him(tmp_path):
     from editor.pipeline.cutout import cutout_clip
     _video(tmp_path / "face.mp4", "blue")
     _video(tmp_path / "words.mp4", "white")            # the words cover the whole frame here
@@ -74,16 +72,3 @@ def test_words_go_behind_him_and_scene_puts_him_in_the_place(tmp_path):
                       text=tmp_path / "words.mp4", text_rgb=(255, 0, 0), matter=Box())
     ok, f = cv2.VideoCapture(str(out)).read()
     assert f[90, 20][2] > 200 and f[90, 160][0] > 200        # red words at the side, he (blue) in front of them
-    cv2.imwrite(str(tmp_path / "farm.png"), np.full((180, 320, 3), (0, 200, 0), np.uint8))
-    out = cutout_clip(tmp_path / "face.mp4", tmp_path / "farm.png", tmp_path / "s.mp4", 320, 180, 30, 15, enc,
-                      mode="scene", matter=Box())
-    ok, f = cv2.VideoCapture(str(out)).read()
-    assert f[90, 20][1] > 150 and f[90, 160][0] > 150        # the green place around him, he stays himself
-
-
-def test_thumbnail_words_are_few():
-    p = long_plan([{"from": 30.0 * k + 10, "to": 30.0 * k + 40, "title": "هوك"} for k in range(5)])
-    p.thumbnail = {"text": "سر الخلية العصبية الي محد يعرفه"}
-    assert "thumbnail:" in errs(p)
-    p.thumbnail = {"text": "سر الخلية", "highlight": "سر"}
-    assert "thumbnail:" not in errs(p)

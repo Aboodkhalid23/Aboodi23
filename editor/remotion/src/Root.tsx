@@ -19,7 +19,6 @@ import {Timeline} from './graphics/Timeline';
 import {CUSTOM} from './custom/registry';
 import {HeadlineStorm, UnitChart} from './graphics/Update2';
 import {CutoutTitle} from './graphics/CutoutTitle';
-import {Thumbnail} from './graphics/Thumbnail';
 import {Stickers} from './graphics/Stickers';
 import {BaseProps, FPS} from './style';
 
@@ -69,7 +68,6 @@ export const Root: React.FC = () => (
     ))}
     <Still id="short-title" component={ShortTitle as React.FC<any>} width={1080} height={1920} defaultProps={{style, durationSec: 1, title: 'عنوان'}} />
     <Still id="cutout-bg" component={CutoutBg as React.FC<any>} width={1920} height={1080} defaultProps={{style, durationSec: 1}} />
-    <Still id="thumbnail" component={Thumbnail as React.FC<any>} width={1920} height={1080} defaultProps={{style, durationSec: 1, person: 'p.png', text: 'عنوان'}} />
     <Still id="face-frame-bg" component={FaceFrame as React.FC<any>} width={1920} height={1080} defaultProps={{style, durationSec: 1}} />
   </>
 );

@@ -36,6 +36,7 @@ class AiJob:
     duration: int      # seconds of video to ask for (0 for images)
     asset: str         # where ai-fetch saves it
     done: bool
+    note: str = ""     # avatar: what to do first / next (character missing, cut-out, start image)
 
 
 def ledger_file(ep: Episode) -> Path:
@@ -68,8 +69,11 @@ def ai_jobs(ep: Episode) -> list[AiJob]:
     for i, b in enumerate(plan.beats):
         if b.kind not in AI_KINDS:
             continue
-        video = b.kind == "ai_video"
         have = _existing(ep, i)
+        if b.kind == "avatar":
+            jobs += _avatar_jobs(ep, i, b, have)
+            continue
+        video = b.kind == "ai_video"
         jobs.append(AiJob(i, b.kind, f"{b.prompt.rstrip('. ')}. {AI_LOOKS.get(b.look or '', suffix)}", VIDEO_MODEL if video else IMAGE_MODEL,
                           "16:9", (4 if b.duration <= 4.5 else 6) if video else 0,
                           str(have or ep.assets / f"ai_{i}.{'mp4' if video else 'png'}"), have is not None))
@@ -78,7 +82,27 @@ def ai_jobs(ep: Episode) -> list[AiJob]:
     return jobs
 
 
-def ai_fetch(ep: Episode, beat: int, url: str, session=None) -> Path:
+def _avatar_jobs(ep: Episode, i: int, b, have: Path | None) -> list[AiJob]:
+    """The scene drawn with his character in it; then (animate "ai") the drawing moved by a video model, or
+    (default) his figure cut out of it for the layered motion."""
+    from . import avatar
+    el = avatar.element(b.look)
+    still = ep.assets / f"ai_{i}.png"
+    first = AiJob(i, "avatar", avatar.scene_prompt(b.look, b.prompt, el or "CHARACTER"), avatar.IMAGE_MODEL, "16:9", 0,
+                  str(still), still.exists() or (have is not None and have.suffix in (".mp4", ".mov", ".webm")),
+                  "" if el else f"شخصية '{b.look}' مو مسوية: شغّل character-jobs أول")
+    if b.animate == "ai":
+        clip = ep.assets / f"ai_{i}.mp4"
+        return [first, AiJob(i, "avatar_video", f"{b.prompt.rstrip('. ')}. Gentle, natural motion of the character "
+                             "acting out the moment, slow camera push-in, keep the drawing style and the character's "
+                             "face exactly.", avatar.VIDEO_MODEL, "16:9", 5, str(clip), clip.exists(),
+                             f"start_image = ناتج صورة المشهد {i}، و<<<{el or 'CHARACTER'}>>> بالـ prompt، generate_audio false")]
+    fg = ep.assets / f"ai_{i}_fg.png"
+    return [first, AiJob(i, "avatar_fg", "remove_background on the scene image", "remove_background", "16:9", 0, str(fg),
+                         fg.exists(), "اختياري: بدونه الكود يقص الشخصية بنفسه")]
+
+
+def ai_fetch(ep: Episode, beat: int, url: str, session=None, part: str = "") -> Path:
     """Download a generated result for `beat` and make sure it really is a picture / video."""
     session = session or requests.Session()
     try:
@@ -88,9 +112,10 @@ def ai_fetch(ep: Episode, beat: int, url: str, session=None) -> Path:
         raise MediaError(f"ما گدرت أنزّل ناتج الذكاء الاصطناعي: {exc}") from exc
     ctype = resp.headers.get("Content-Type", "").split(";")[0].strip()
     ext = EXT.get(ctype) or Path(url.split("?")[0]).suffix.lower() or ".bin"
-    for old in ep.assets.glob(f"ai_{beat}.*"):
+    stem = f"ai_{beat}_{part}" if part else f"ai_{beat}"   # part "fg": his figure cut out of an avatar scene
+    for old in ep.assets.glob(f"{stem}.*"):
         old.unlink()
-    out = ep.assets / f"ai_{beat}{ext}"
+    out = ep.assets / f"{stem}{ext}"
     out.write_bytes(resp.content)
     try:
         probe(out)

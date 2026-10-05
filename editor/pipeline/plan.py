@@ -6,9 +6,9 @@ from pathlib import Path
 from .grade import LOOKS
 
 KINDS = ("face", "face_zoom_in", "face_zoom_out", "face_framed", "face_punch", "face_fx", "face_cutout",
-         "image", "ai_image", "ai_video", "graphic", "entity", "footage")
+         "image", "ai_image", "ai_video", "graphic", "entity", "footage", "avatar")
 FACE_KINDS = KINDS[:7]
-AI_KINDS = ("ai_image", "ai_video")
+AI_KINDS = ("ai_image", "ai_video", "avatar")   # avatar: him as a drawn character in the scene (avatar.py)
 GRAPHIC_TYPES = ("number", "headline", "quote", "map", "timeline", "chart", "text", "custom", "article", "headlines",
                  "units")
 CUSTOM_DIR = Path(__file__).resolve().parent.parent / "remotion" / "src" / "custom"
@@ -16,7 +16,7 @@ FX_TYPES = ("subscribe", "tv", "none")        # face_fx wrappers; "none" = stick
 TRANSITIONS = ("zoom", "flash", "whip", "glitch", "tear", "burn", "dive", "pan")
 STICKERS = ("stamp", "arrow", "burst", "tape", "circle", "scribble_circle", "scribble_arrow", "scribble_underline",
             "censor", "name_tag")
-MARKABLE = ("face_fx", "image", "ai_image", "graphic", "entity", "footage")   # beats that can carry stickers
+MARKABLE = ("face_fx", "image", "ai_image", "graphic", "entity", "footage", "avatar")   # beats that can carry stickers
 
 HOOK_SECONDS = 30.0
 MIN_SHORTS, MIN_SHORTS_FROM = 5, 480.0   # owner: 5 reels at least from every long episode (8 min and up)
@@ -44,7 +44,8 @@ class Beat:
     grade: str | None = None        # colour look for this beat's footage (overrides the plan's)
     source: str | None = None       # image / footage: "archive" (history first) or "stock" (modern scenes first)
     title: str | None = None        # cinematic_title / halftone_cutout: the giant word; desk: the stamp
-    look: str | None = None         # ai_image / ai_video: a look from ai.AI_LOOKS instead of the world's
+    look: str | None = None         # ai_image / ai_video: ai.AI_LOOKS; avatar: avatar.LOOKS (his character's style)
+    animate: str | None = None      # avatar: "code" (layered motion, default) or "ai" (a video model moves the drawing)
 
     @property
     def duration(self) -> float:
@@ -63,7 +64,6 @@ class EditPlan:
     grade: str | None = None  # colour look for the whole episode (default: the style's)
     music: list[dict] = field(default_factory=list)  # [{"t": final-timeline s, "prompt": ..., "mood": ...}]
     end_screen: float = 20.0  # seconds of YouTube end screen after the last beat (0 = none; YouTube allows 5–20)
-    thumbnail: dict = field(default_factory=dict)   # {"text": "2–4 words", "highlight": "one of them", "query"?: picture}
 
     def chapter_times(self) -> list[float]:
         """Chapter starts on the final timeline: the first covers the teaser, the rest shift by it."""
@@ -80,8 +80,7 @@ def load_plan(path: Path) -> EditPlan:
                     teaser=[tuple(t) for t in d.get("teaser", [])],
                     beats=[Beat(**b) for b in d["beats"]], shorts=d.get("shorts", []),
                     chapters=d.get("chapters", []), ai_budget=d.get("ai_budget", 0.0),
-                    grade=d.get("grade"), music=d.get("music", []), end_screen=d.get("end_screen", 20.0),
-                    thumbnail=d.get("thumbnail", {}))
+                    grade=d.get("grade"), music=d.get("music", []), end_screen=d.get("end_screen", 20.0))
 
 
 def save_plan(plan: EditPlan, path: Path) -> None:
@@ -129,15 +128,19 @@ def validate_plan(plan: EditPlan, clean_duration: float, entities: set[str] | No
             errs.append(f"beat {i}: grade لازم من {', '.join(LOOKS)}")
         if b.transition and b.transition not in TRANSITIONS:
             errs.append(f"beat {i}: transition لازم من {', '.join(TRANSITIONS)}")
-        if b.kind == "face_cutout" and b.treatment and b.treatment not in ("paper", "scene", "title"):
-            errs.append(f"beat {i}: face_cutout شكله paper (ورق القناة) أو scene (ينقله لمكان، يحتاج query) أو title (كلام ورا ظهره)")
-        elif b.kind == "face_cutout" and b.treatment == "scene" and not b.query:
-            errs.append(f"beat {i}: face_cutout scene يحتاج query (المكان الي ينتقل إله، مثل farm field)")
+        if b.kind == "face_cutout" and b.treatment and b.treatment not in ("paper", "title"):
+            errs.append(f"beat {i}: face_cutout شكله paper (ورق القناة) أو title (كلام ورا ظهره)")
         elif b.kind == "face_cutout" and b.treatment == "title" and not (b.title or b.caption):
             errs.append(f"beat {i}: face_cutout title يحتاج title (الكلمة الي تطلع ورا ظهره)")
         if b.source and b.source not in ("archive", "stock"):
             errs.append(f"beat {i}: source لازم archive (تاريخ) أو stock (مشاهد حديثة) أو بدونه")
-        if b.look:
+        if b.kind == "avatar":
+            from .avatar import LOOKS as AVATAR_LOOKS
+            if b.look not in AVATAR_LOOKS:
+                errs.append(f"beat {i}: avatar لازم look (شكل شخصيته) من {', '.join(AVATAR_LOOKS)}")
+            if b.animate not in (None, "code", "ai"):
+                errs.append(f"beat {i}: animate لازم code (الكود يحركها) أو ai (فيديو بالذكاء الاصطناعي)")
+        elif b.look:
             from .ai import AI_LOOKS
             if b.kind not in AI_KINDS or b.look not in AI_LOOKS:
                 errs.append(f"beat {i}: look على ai_image و ai_video بس، ومن {', '.join(AI_LOOKS)}")
@@ -203,8 +206,6 @@ def validate_plan(plan: EditPlan, clean_duration: float, entities: set[str] | No
             errs.append(f"short {k}: لازم بيه مونتاج: مشهدين أو أكثر (صور، گرافيكس، أرشيف) و30% من وقته أقل شي")
     if total >= MIN_SHORTS_FROM and len(plan.shorts) < MIN_SHORTS:
         errs.append(f"shorts: الحلقة الطويلة لازم بيها {MIN_SHORTS} شورتس أقل شي (لليوتيوب شورتس والريلز والتيك توك)")
-    if plan.thumbnail and not (plan.thumbnail.get("text") and len(plan.thumbnail["text"].split()) <= 4):
-        errs.append("thumbnail: لازم text بيه 4 كلمات أو أقل (الصورة المصغرة تنقرا بنص ثانية)")
     if plan.end_screen and not 5 <= plan.end_screen <= 20:
         errs.append("end_screen: يوتيوب يقبل شاشة النهاية بين 5 و 20 ثانية (أو 0 بدونها)")
     if plan.grade and plan.grade not in LOOKS:

@@ -288,7 +288,7 @@ def _face_on_canvas(ep: Episode, cv: Canvas) -> tuple[float, float] | None:
 def _cutout(ep: Episode, b: Beat, i: int, frames: int, teaser, style: Style, bundle: Path, cv: Canvas,
             grade: str, out: Path) -> None:
     """He is cut out of his room (precise video matting) and: stands on the episode's paper world ("paper"),
-    is moved into the beat's picture ("scene"), or has big stretching words behind his back ("title")."""
+    or has big stretching words behind his back ("title")."""
     from .cutout import cutout_clip
     from .graphics import RenderJob, _publish, _style_props
     face = cv.work / f"face_{i}.mp4"
@@ -298,12 +298,7 @@ def _cutout(ep: Episode, b: Beat, i: int, frames: int, teaser, style: Style, bun
     region = ((cv.width - fw) // 2, (cv.width - fw) // 2 + fw)
     pic = _asset(ep.assets, f"img_{i}", IMAGE_EXT)
     mode = b.treatment or "paper"
-    if mode == "scene" and not pic:      # no picture of the place came back: the paper look instead
-        mode = "paper"
     vf = _transition_filter(b.transition, cv)
-    if mode == "scene":
-        cutout_clip(face, pic, out, cv.width, cv.height, cv.fps, frames, cv.encode, vf=vf, region=region, mode="scene")
-        return
     if mode == "title":
         words = RenderJob("cutout-title", {"style": _style_props(style), "durationSec": round(frames / cv.fps, 3),
                                            "text": b.title or b.caption or ""}, cv.work / f"cutout_title_{i}.mp4",
@@ -375,7 +370,7 @@ def compose(ep: Episode, preview: bool = False) -> Path:
         asset = None
         if b.kind == "ai_image":
             asset = _asset(ep.assets, f"ai_{i}", IMAGE_EXT)
-        elif b.kind == "ai_video":
+        elif b.kind in ("ai_video", "avatar"):   # avatar: the moving drawing if made, else the still drawing
             asset = _asset(ep.assets, f"ai_{i}", VIDEO_EXT) or _asset(ep.assets, f"ai_{i}", IMAGE_EXT)
         elif b.kind == "entity":
             asset = entity_image(ep, b.entity)
@@ -387,19 +382,24 @@ def compose(ep: Episode, preview: bool = False) -> Path:
             asset = ep.assets / f"article_{i}.png"
             if not asset.exists():
                 raise MediaError(f"beat {i}: لقطة المقالة ناقصة، شغّل مرحلة images أول")
-        if b.kind in ("ai_image", "ai_video") and asset is None:
+        if b.kind in ("ai_image", "ai_video", "avatar") and asset is None:
             missing.append(i)
         out = cv.work / f"beat_{i}.mp4"
         stamp = cv.work / f"beat_{i}.hash"
         key = hashlib.sha1(json.dumps([asdict(b), style.name, teaser, src_stamp, frames, cv.encode, cv.width, cv.face,
-                                       _stamp(asset), entities.get(b.entity or ""), channel,
+                                       _stamp(asset), _stamp(_asset(ep.assets, f"ai_{i}_fg", IMAGE_EXT)),
+                                       entities.get(b.entity or ""), channel,
                                        "" if b.kind.startswith("face") and b.kind != "face_fx" else design,
                                        footage_grade],
                                       ensure_ascii=False, sort_keys=True).encode()).hexdigest()
         if not (out.exists() and stamp.exists() and stamp.read_text() == key):
             job = None
-            if b.kind in ("ai_image", "ai_video") and asset is None:
+            if b.kind in ("ai_image", "ai_video", "avatar") and asset is None:
                 job = _graphic_job(ep, _fallback_text(b), i, style, bundle, cv)
+            elif b.kind == "avatar" and asset.suffix.lower() in VIDEO_EXT:
+                _finish(asset, frames, out, cv, b.transition, cover=True, loop=True)
+            elif b.kind == "avatar":   # the drawing, alive in layers (Update3.tsx)
+                job = _graphic_job(ep, replace(b, kind="ai_image", treatment="avatar"), i, style, bundle, cv, src=asset)
             elif b.kind == "footage" and b.treatment == "full":
                 _finish(asset, frames, out, cv, b.transition, cover=True, loop=True)
             elif b.kind == "footage":

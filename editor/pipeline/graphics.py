@@ -128,8 +128,14 @@ def graphic_job(beat: Beat, style: Style, out: Path, public_dir: Path | None = N
             props["title"] = beat.title
         from .masks import FULL_BLEED, image_layout, person_cutout, person_parts, place_on_face
         cut = person_cutout(Path(src)) if treatment in ("cinematic_title", "parallax", "halftone_cutout") else None
+        if treatment == "avatar":   # his drawn figure: the cut-out Higgsfield made (ai_<i>_fg.png), else our own
+            own = Path(src).with_name(Path(src).stem + "_fg.png")
+            cut = own if own.exists() else person_cutout(Path(src))
         if treatment == "silhouette":                      # one white silhouette per person, revealed in turn
             props["parts"] = [_publish(bundle, part) for part in person_parts(Path(src))]
+        if cut and treatment == "avatar":                 # the scene without him, so his layer can move freely
+            from .masks import clean_plate
+            props["src"] = _publish(bundle, clean_plate(Path(src), cut))
         if cut and treatment == "halftone_cutout":        # printed black and white with the accent paper edge
             from .masks import halftone_cutout
             accent = style.palette.get("accent", "#F2C230").lstrip("#")

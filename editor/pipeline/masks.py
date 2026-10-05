@@ -219,3 +219,27 @@ def place_on_face(stickers: list[dict], face: list[float] | None) -> list[dict]:
                 st.setdefault("h", round(min(0.9, fh * 1.3), 3))
         out.append(st)
     return out
+
+
+def clean_plate(src: Path, cut: Path, out: Path | None = None) -> Path:
+    """The scene with the figure painted out (OpenCV inpainting under a slightly grown mask), so his separate
+    layer can move without a second copy of him showing behind it."""
+    import cv2
+    out = Path(out or Path(src).with_name(Path(src).stem + "_plate.png"))
+    if out.exists() and out.stat().st_mtime >= max(Path(src).stat().st_mtime, Path(cut).stat().st_mtime):
+        return out
+    img = cv2.imread(str(src), cv2.IMREAD_COLOR)
+    a = cv2.imread(str(cut), cv2.IMREAD_UNCHANGED)
+    alpha = a[:, :, 3] if a is not None and a.ndim == 3 and a.shape[2] == 4 else None
+    if img is None or alpha is None:
+        return Path(src)
+    alpha = cv2.resize(alpha, (img.shape[1], img.shape[0]))
+    grow = max(9, img.shape[1] // 90) | 1
+    hole = cv2.dilate((alpha > 25).astype(np.uint8) * 255, np.ones((grow, grow), np.uint8))
+    scale = 0.5                                   # inpaint at half size (fast), then put back only the hole
+    small = cv2.inpaint(cv2.resize(img, None, fx=scale, fy=scale), cv2.resize(hole, None, fx=scale, fy=scale), 9,
+                        cv2.INPAINT_TELEA)
+    filled = cv2.resize(small, (img.shape[1], img.shape[0]))
+    m = cv2.GaussianBlur(hole.astype(np.float32) / 255, (0, 0), grow / 3)[..., None]
+    cv2.imwrite(str(out), (img * (1 - m) + filled * m).astype(np.uint8))
+    return out
