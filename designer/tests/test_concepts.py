@@ -113,6 +113,10 @@ class ValidateTest(unittest.TestCase):
         self.assertInvalid([card(text="نهاية\nالعالم؟", font="Nope")], "Nope")
         self.assertInvalid([card(text="نهاية\nالعالم؟", font="Cairo", font_latin="Nope")], "Nope")
 
+    def test_arabic_text_in_latin_only_font(self):
+        self.assertInvalid([card(text="نهاية\nالعالم؟", font="Anton")], "Anton", "font_latin")
+        concepts.validate([card(text="300\nBILLION", font="Anton")])
+
     def test_not_a_list(self):
         self.assertInvalid({"id": "A1"}, "قائمة")
         self.assertInvalid([], "فارغ")
@@ -222,6 +226,27 @@ class PromptTest(unittest.TestCase):
             self.assertIn(value, p)
         self.assertIn("red", p)
         self.assertIn("right third", p)
+
+    def test_color_name_grays_and_light_colors(self):
+        self.assertEqual(concepts.color_name("#2A2A2A"), "charcoal")
+        self.assertEqual(concepts.color_name("#C9D1D9"), "silver")
+        self.assertEqual(concepts.color_name("#111111"), "black")
+        self.assertEqual(concepts.color_name("#9BE7FF"), "light blue")
+        self.assertEqual(concepts.color_name("#00FF9C"), "spring green")
+        self.assertEqual(concepts.color_name("#0B1A2A"), "dark navy")
+
+    def test_offscreen_prompt_looks_away(self):
+        p = concepts.build_prompt(card(angle="offscreen"))
+        self.assertNotIn("into the camera", p)
+        self.assertIn("outside the frame", p)
+        self.assertIn("into the camera", concepts.build_prompt(card(angle="metaphor")))
+
+    def test_wide_close_foreground_only_when_hero_in_foreground(self):
+        side = card(camera="wide_close")
+        self.assertNotIn("foreground", concepts.build_prompt(side))
+        front = card(camera="wide_close")
+        front["layout"]["hero"] = "foreground"
+        self.assertIn("foreground", concepts.build_prompt(front))
 
     def test_color_name(self):
         self.assertEqual(concepts.color_name("#E3262B"), "red")

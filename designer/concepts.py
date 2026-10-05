@@ -18,7 +18,7 @@ from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from arabic import is_rtl, load_font, shape_word, visual_words  # noqa: E402
-from render import FONTS, FONTS_DIR  # noqa: E402
+from render import FONTS, FONTS_DIR, LATIN_FONTS  # noqa: E402
 
 ANGLES = {
     "metaphor": "التشبيه البصري",
@@ -55,6 +55,9 @@ IDENTITY = (
     "short dark hair with faded sides, skin tone. Change only his expression, clothes, pose and lighting."
 )
 NO_TEXT = "No text, no letters, no captions, no logos, no watermark."
+GAZE_CAMERA = "looking straight into the camera"
+# زاوية offscreen: يباوع لشي برا الصورة، فما يباوع للكاميرا
+GAZE_OFFSCREEN = "looking off to the side at something outside the frame that we cannot see"
 FACE_LINES = {
     "right": "He is on the right third of the frame",
     "left": "He is on the left third of the frame",
@@ -67,18 +70,19 @@ HERO_LINES = {
     "foreground": "In the foreground, large and close to the camera: {}.",
 }
 CAMERA_LINES = {
-    "wide_close": "Shot with a wide-angle lens very close to the subject, slight fisheye perspective, "
-                  "the main object big in the foreground.",
+    "wide_close": "Shot with a wide-angle lens very close to the subject, slight fisheye perspective.",
     "standard": "",
     "top_down": "Top-down camera angle, looking down at him and the scene from above.",
 }
 ZONE_NAMES = {"top_left": "upper-left", "top_right": "upper-right", "bottom_left": "lower-left"}
+# الألوان الرمادية (تشبع أقل من GRAY_SATURATION) تاخذ اسمها من سلّم الإضاءة بس
+GRAYS = ((0.1, "black"), (0.22, "charcoal"), (0.4, "dark gray"), (0.65, "gray"), (0.88, "silver"), (1.01, "white"))
 COLORS = {
-    "black": (12, 12, 14), "white": (245, 245, 245), "gray": (128, 128, 128),
     "red": (220, 30, 30), "orange": (255, 120, 0), "yellow": (255, 210, 0), "gold": (212, 175, 55),
     "green": (40, 170, 60), "toxic green": (130, 255, 40), "teal": (0, 128, 128), "cyan": (0, 200, 255),
     "blue": (30, 90, 220), "navy": (15, 30, 75), "purple": (120, 40, 170), "magenta": (230, 30, 170),
     "pink": (255, 130, 180), "brown": (110, 60, 25), "beige": (225, 205, 170),
+    "light blue": (150, 220, 255), "spring green": (0, 255, 150),
     # الخلفيات الغامقة (أغلب الألوان المسيطرة)
     "dark navy": (11, 26, 45), "dark red": (90, 10, 12), "dark green": (10, 50, 25), "dark purple": (40, 12, 60),
 }
@@ -146,6 +150,9 @@ def _check_card(c, n: int) -> None:
     for field in ("font", "font_latin"):
         if field in c:
             need(c[field] in FONTS, field, f"خط مو معروف: {c[field]}. المتوفر: {', '.join(FONTS)}")
+    font = c.get("font", "Baloo")
+    need(not (font in LATIN_FONTS and text and is_rtl(text)), "font",
+         f"الخط {font} ما بيه حروف عربية، والكتابة عربية. حط خط عربي بـ font، و{font} بـ font_latin")
 
 
 def validate(cards) -> None:
@@ -231,7 +238,10 @@ def select(cards: list) -> tuple[list[dict], list[str]]:
 
 
 def color_name(color: str) -> str:
-    """أقرب اسم لون إنگليزي (للأمر)."""
+    """أقرب اسم لون إنگليزي (للأمر). الرمادي ينسمى حسب إضاءته، والملوّن من جدول COLORS."""
+    _, sat, val = _hsv(color)
+    if sat < GRAY_SATURATION:
+        return next(name for limit, name in GRAYS if val < limit)
     r, g, b = _rgb(color)
     return min(COLORS, key=lambda n: (COLORS[n][0] - r) ** 2 + (COLORS[n][1] - g) ** 2 + (COLORS[n][2] - b) ** 2)
 
@@ -248,7 +258,7 @@ def build_prompt(card: dict) -> str:
     lines = [
         IDENTITY,
         f"{FACE_LINES[layout['face']]}, chest-up and large (his head and shoulders fill about 40% of the frame "
-        f"width), looking straight into the camera. He wears {s['outfit']}. "
+        f"width), {GAZE_OFFSCREEN if card['angle'] == 'offscreen' else GAZE_CAMERA}. He wears {s['outfit']}. "
         f"Expression: {s['expression']}, natural and believable, not exaggerated. Pose: {_clause(s['action'])}.",
         HERO_LINES[layout["hero"]].format(card["hero"]),
         f"Setting: {_clause(card['setting'])}.",
@@ -258,6 +268,8 @@ def build_prompt(card: dict) -> str:
     ]
     if CAMERA_LINES[card["camera"]]:
         lines.append(CAMERA_LINES[card["camera"]])
+    if card["camera"] == "wide_close" and layout["hero"] == "foreground":
+        lines.append("The main object is big in the foreground, close to the lens.")
     if layout["text_zone"]:
         lines.append(f"Keep the {ZONE_NAMES[layout['text_zone']]} part of the frame dark and empty for a headline.")
     lines.append(NO_TEXT)
