@@ -26,6 +26,19 @@ description: استوديو المحتوى — يشغّل فريق كامل (م�
 | مصمم الأغلفة | `designer` | `design/thumb-A.jpg` و`thumb-B.jpg` و`thumb-C.jpg` و`compare.jpg`، وبعدها `final-reels.jpg` |
 | محلل النمو | `growth-analyst` | `studio/growth/<التاريخ>.md` |
 
+**❗ الفريق صار قسمين (التفاصيل بـ`studio/style/magic-formula.md`):**
+- **قسم الهوك (5):** `hook-miner` ← `hook-architect` ← `hook-psychologist` ← `hook-tester` ← `hook-director`. يطلّعون `hook/01-raw.md` لحد `hook/05-final.md`. الهدف: 80% بقاء محاكى.
+- **قسم السكربت (20):** الموجودين فوق + `source-hunter` (`01c-sources.md`)، `arabic-coverage-scout` (`01d-arabic-coverage.md`)، `timeline-builder` (`01e-timeline.md`)، `phenomenon-analyst` (`01f-phenomenon.md`، بحلقات الترند والإشاعات بس)، `tone-director` (`01g-tone.md`)، `analogy-maker` (`02b-analogies.md`)، `source-verifier` (`03d-verify.md`)، `balance-reviewer` (`03e-balance.md`)، `legal-risk-reviewer` (`03f-legal.md`)، `chief-editor` (`04-script.md` النهائي).
+
+**الترتيب الجديد:**
+1. البحث بالتوازي: `researcher` + `source-hunter` + `arabic-coverage-scout` (+ `phenomenon-analyst` إذا الحلقة ترند/ظاهرة)، وبعدها `timeline-builder`.
+2. `creative-director` ثم `tone-director`.
+3. **قسم الهوك كامل** (5 بالتسلسل).
+4. `script-writer` (يستخدم الهوك النهائي والجسر وبطاقة الرتم) ثم `analogy-maker`.
+5. المراجعة بالتوازي: `fact-checker` + `source-verifier` + `balance-reviewer` + `legal-risk-reviewer` + `tension-auditor` + `viewer-panel`.
+6. `dialect-editor` ثم `chief-editor` ثم `delivery-tester`.
+7. `packager` و`platform-strategist` و`designer`.
+
 **❗ البصمة:** كل الفريق يقرا `studio/style/magic-formula.md` (الخلطة السحرية) قبل ما يشتغل. هي أعلى من أي مرجع أسلوبي ثاني، وبعدها `studio/script-rules.md`.
 **مراجع الأسلوب:** `studio/style/arabic-channels.md` و`foreign-channels.md` و`process-and-tools.md`.
 
