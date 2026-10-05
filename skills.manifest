@@ -61,3 +61,8 @@ social-media-skills/skills  skills/engagement-routine
 social-media-skills/skills  skills/tiktok-growth
 social-media-skills/skills  skills/youtube-shorts
 social-media-skills/skills  skills/experimentation-and-ab-testing
+
+# تصميم الأغلفة
+pottertech/claude-skills  youtube/thumbnail-design
+# موقوف لحد ما ينضاف مفتاح Google (GEMINI_API_KEY) بإعدادات البيئة. شيل # من أول السطر الجاي حتى يتفعل:
+# aabrole/claude-video-thumbnail-skill  skills/video-thumbnail

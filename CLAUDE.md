@@ -19,6 +19,7 @@
 | **سكربت، حلقة، أفكار مواضيع، ترند** | **`studio`** (يشغّل الفريق الكامل بـ `.claude/agents/`) |
 | **نشر ريلز/تيك توك/شورتس، "انشر"، استهداف الجمهور، ترويج، نمو الحساب** | **`social-manager`** (مدير الأعمال، يوزّع الشغل على 13 سكيل نمو) |
 | قص ريل من ملف فيديو | `scripts/make-reel.sh` |
+| **غلاف يوتيوب، صورة مصغرة، كفر ريلز أو تيك توك، أغلفة تعجبه** | **`designer`** (3 أغلفة لكل فيديو بوجهه الحقيقي: Higgsfield وCanva و`thumbnail-design` و`titles-and-thumbnails`) |
 | تحليل ليش فيديو ما نجح | `retention-audit`، `channel-formula` |
 | أي كود أو تعديل | `karpathy-guidelines` |
 | فكرة أو ميزة جديدة | `superpowers-brainstorming` ← `writing-plans` ← `executing-plans` |

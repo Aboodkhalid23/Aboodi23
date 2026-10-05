@@ -1,0 +1,5 @@
+{
+  "size": [3840, 2160],
+  "background": {"image": "scene-A.png", "contrast": 1.06, "saturation": 1.08, "vignette": 0.25},
+  "layers": []
+}
