@@ -1,0 +1,9 @@
+{
+  "size": "youtube",
+  "background": {"gradient": ["#06121A", "#0F3A44"], "vignette": 0.5},
+  "layers": [
+    {"type": "text", "text": "نهاية\nالكون!", "font": "Baloo", "x": 0.27, "y": 0.47, "size": 0.2,
+     "line_spacing": 0.62, "line_colors": ["#FFFFFF", ["#FFC400", "#FF6A00"]],
+     "stroke": {"color": "#0B0B0F", "width": 0.1}, "shadow": true, "rotate": 5}
+  ]
+}

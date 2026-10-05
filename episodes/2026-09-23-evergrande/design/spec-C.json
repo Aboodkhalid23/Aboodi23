@@ -1,0 +1,34 @@
+{
+ "size": "youtube",
+ "background": {
+  "image": "scene-C.png",
+  "contrast": 1.06,
+  "saturation": 1.1,
+  "sharpen": 1,
+  "vignette": 0.25
+ },
+ "layers": [
+  {
+   "type": "text",
+   "text": "دفعوا\nوما استلموا!",
+   "font": "Baloo",
+   "x": 0.205,
+   "y": 0.25,
+   "size": 0.135,
+   "line_spacing": 0.66,
+   "line_colors": [
+    "#FFFFFF",
+    [
+     "#FFC400",
+     "#FF6A00"
+    ]
+   ],
+   "stroke": {
+    "color": "#0B0B0F",
+    "width": 0.1
+   },
+   "shadow": true,
+   "rotate": 4
+  }
+ ]
+}

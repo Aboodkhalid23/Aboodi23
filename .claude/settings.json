@@ -8,6 +8,11 @@
             "type": "command",
             "command": "\"$CLAUDE_PROJECT_DIR\"/scripts/update-skills.sh >/dev/null 2>&1 || true",
             "timeout": 120
+          },
+          {
+            "type": "command",
+            "command": "pip install -q -r \"$CLAUDE_PROJECT_DIR\"/designer/requirements.txt >/dev/null 2>&1 || true",
+            "timeout": 180
           }
         ]
       }
