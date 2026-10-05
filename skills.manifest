@@ -46,3 +46,18 @@ artemnovitckii/content-skills  viral-hooks
 # تدقيق الحقائق والمصادر (من أدوات الصحفيين)
 jamditis/claude-skills-journalism  journalism-core/skills/fact-check-workflow
 jamditis/claude-skills-journalism  journalism-core/skills/source-verification
+
+# نمو السوشيال ميديا — social-media-skills (مفحوصة: ملفات تعليمات بس، بدون كود)
+social-media-skills/skills  skills/instagram-growth
+social-media-skills/skills  skills/instagram-seo
+social-media-skills/skills  skills/reels-script
+social-media-skills/skills  skills/hook-writer
+social-media-skills/skills  skills/audience-research
+social-media-skills/skills  skills/profile-optimization
+social-media-skills/skills  skills/viral-reverse-engineering
+social-media-skills/skills  skills/captions-and-clipping
+social-media-skills/skills  skills/collabs-and-cross-promotion
+social-media-skills/skills  skills/engagement-routine
+social-media-skills/skills  skills/tiktok-growth
+social-media-skills/skills  skills/youtube-shorts
+social-media-skills/skills  skills/experimentation-and-ab-testing

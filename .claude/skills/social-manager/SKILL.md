@@ -27,7 +27,26 @@ description: مدير أعمال صاحب القناة على السوشيال �
 | إعلانات مدفوعة | Adspirer (لازم يكون مربوط، ولا تصرف بدون موافقة صريحة على المبلغ) |
 | ملفات المقاطع | Google Drive: فولدر `جاهز للنشر` و `ريلز قديمة` |
 
+| قص ريل من ملف فيديو (مجاني، محلي) | `scripts/make-reel.sh <فيديو> <بداية> <نهاية> <ناتج.mp4> [ترجمة.srt]` (عمودي 1080x1920 + صوت مضبوط + ترجمة عربية) |
+
 شيك `vidiq_balance` قبل أي شي يكلف كريدت.
+
+## الفريق (سكيلزات تستدعيها حسب الشغلة)
+| الشغلة | السكيل |
+|---|---|
+| تشخيص ليش الحساب ما يكبر | `instagram-growth`، `tiktok-growth` |
+| فهم الجمهور ولغته | `audience-research` (النتيجة تنكتب بـ `studio/growth/audience.md`) |
+| البايو والتثبيت والهايلايت | `profile-optimization` |
+| سكربت ريل قصير | `reels-script`، `youtube-shorts` |
+| أول 3 ثواني | `hook-writer`، `viral-hooks`، `storytelling-hooks` |
+| كابشن يطلع بالبحث | `instagram-seo` |
+| قص حلقة طويلة لمقاطع | `captions-and-clipping` |
+| ليش ريل غيرنا انتشر | `viral-reverse-engineering` |
+| تعاون ويا صناع قصص | `collabs-and-cross-promotion` |
+| روتين التعليقات اليومي | `engagement-routine` |
+| تجربة هوكين ونشوف الأقوى | `experimentation-and-ab-testing` |
+
+ملاحظة: هالسكيلزات تذكر أداة نشر اسمها WoopSocial؛ إحنا ما نستخدمها. النشر عدنا بـ vidIQ (انستگرام) وHiggsfield (تيك توك).
 
 ## الخطوات لكل مقطع
 
