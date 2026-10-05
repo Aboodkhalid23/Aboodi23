@@ -7,6 +7,7 @@
 """
 import argparse
 import hashlib
+import http.cookiejar
 import json
 import re
 import sys
@@ -15,7 +16,8 @@ import urllib.request
 from pathlib import Path
 
 OUT_DIR = Path(__file__).resolve().parent / "references" / "pinterest"
-SEARCH_URL = "https://www.pinterest.com/resource/BaseSearchResource/get/"
+SITE = "https://www.pinterest.com"
+SEARCH_URL = SITE + "/resource/BaseSearchResource/get/"
 UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
 MAX_DOWNLOAD_BYTES = 15 * 1024 * 1024
 
@@ -71,22 +73,38 @@ def parse_results(payload: dict, limit: int) -> list[dict]:
     return pins
 
 
+def session_headers(jar: http.cookiejar.CookieJar) -> dict:
+    """هيدرات طلب النتائج. Pinterest يرفض الطلب (403) بدون رمز csrftoken من جلسة مفتوحة."""
+    headers = {"User-Agent": UA, "Accept": "application/json", "X-Requested-With": "XMLHttpRequest",
+               "X-Pinterest-PWS-Handler": "www/search/[scope].js", "X-Pinterest-AppState": "active",
+               "Referer": SITE + "/"}
+    for cookie in jar:
+        if cookie.name == "csrftoken":
+            headers["X-CSRFToken"] = cookie.value
+    return headers
+
+
 def fetch_json(url: str) -> dict:
-    req = urllib.request.Request(url, headers={
-        "User-Agent": UA, "Accept": "application/json", "X-Requested-With": "XMLHttpRequest"})
-    with urllib.request.urlopen(req, timeout=30) as r:
+    """يفتح صفحة البحث أول (حتى ياخذ كوكيز الجلسة)، وبعدها يطلب النتائج بنفس الجلسة."""
+    jar = http.cookiejar.CookieJar()
+    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
+    source = urllib.parse.parse_qs(urllib.parse.urlparse(url).query).get("source_url", ["/"])[0]
+    with opener.open(urllib.request.Request(SITE + source, headers={"User-Agent": UA}), timeout=30) as r:
+        r.read()
+    with opener.open(urllib.request.Request(url, headers=session_headers(jar)), timeout=30) as r:
         return json.load(r)
 
 
-def download(url: str, dest: Path) -> None:
-    """ينزّل صورة من pinimg.com بس، وبحد أقصى 15MB. أي رابط ثاني (http أو
-    موقع غير Pinterest) يترك بصمت حتى ما نفتح على مصدر غريب."""
+def download(url: str, dest: Path) -> bool:
+    """ينزّل صورة من pinimg.com بس، وبحد أقصى 15MB، ويرجع True إذا نزلت. أي رابط ثاني
+    (http أو موقع غير Pinterest) يترك بصمت ويرجع False حتى ما نفتح على مصدر غريب."""
     parsed = urllib.parse.urlparse(url)
     if parsed.scheme != "https" or not (parsed.hostname or "").endswith("pinimg.com"):
-        return
+        return False
     req = urllib.request.Request(url, headers={"User-Agent": UA})
     with urllib.request.urlopen(req, timeout=30) as r:
         dest.write_bytes(r.read(MAX_DOWNLOAD_BYTES))
+    return True
 
 
 def main(argv=None) -> int:
@@ -116,7 +134,8 @@ def main(argv=None) -> int:
         for i, pin in enumerate(pins, 1):
             name = f"{i:02d}-{pin['id']}.jpg"
             try:
-                download(pin["image"], out / name)
+                if not download(pin["image"], out / name):
+                    continue
             except OSError:
                 continue
             pin["file"] = name

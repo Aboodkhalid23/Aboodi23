@@ -1,4 +1,5 @@
 import contextlib
+import http.cookiejar
 import io
 import json
 import sys
@@ -91,10 +92,10 @@ class PinterestTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             dest = Path(td) / "out.jpg"
             with mock.patch.object(pinterest.urllib.request, "urlopen") as urlopen_mock:
-                pinterest.download("http://i.pinimg.com/originals/a.jpg", dest)
-                pinterest.download("https://evil.example.com/a.jpg", dest)
-                pinterest.download("file:///etc/passwd", dest)
+                results = [pinterest.download(u, dest) for u in (
+                    "http://i.pinimg.com/originals/a.jpg", "https://evil.example.com/a.jpg", "file:///etc/passwd")]
             urlopen_mock.assert_not_called()
+            self.assertEqual(results, [False, False, False])
             self.assertFalse(dest.exists())
 
     def test_download_allows_https_pinimg(self):
@@ -104,8 +105,9 @@ class PinterestTest(unittest.TestCase):
             fake_resp.read.return_value = b"data"
             fake_resp.__enter__.return_value = fake_resp
             with mock.patch.object(pinterest.urllib.request, "urlopen", return_value=fake_resp) as urlopen_mock:
-                pinterest.download("https://i.pinimg.com/originals/a.jpg", dest)
+                ok = pinterest.download("https://i.pinimg.com/originals/a.jpg", dest)
             urlopen_mock.assert_called_once()
+            self.assertTrue(ok)
             self.assertEqual(dest.read_bytes(), b"data")
 
     def test_main_happy_path_writes_index_with_file_field_and_continues_on_error(self):
@@ -118,6 +120,7 @@ class PinterestTest(unittest.TestCase):
             if "222" in url:
                 raise OSError("boom")
             dest.write_bytes(b"fake")
+            return True
 
         with tempfile.TemporaryDirectory() as td:
             out_dir = Path(td)
@@ -133,6 +136,51 @@ class PinterestTest(unittest.TestCase):
             self.assertEqual(data[0]["file"], "01-111.jpg")
             self.assertNotIn("file", data[1])
             self.assertIn("انحفظت", buf.getvalue())
+
+    def test_skipped_download_has_no_file_field(self):
+        payload = {"resource_response": {"data": {"results": [
+            {"id": "111", "title": "A", "images": {"orig": {"url": "https://evil.example.com/111.jpg"}}},
+            {"id": "222", "title": "B", "images": {"orig": {"url": "https://i.pinimg.com/originals/222.jpg"}}},
+            {"id": "333", "title": "C", "images": {"orig": {"url": "https://i.pinimg.com/originals/333.jpg"}}},
+        ]}}}
+        with tempfile.TemporaryDirectory() as td:
+            out_dir = Path(td)
+            buf = io.StringIO()
+            with mock.patch.object(pinterest, "fetch_json", return_value=payload), \
+                    mock.patch.object(pinterest, "download", side_effect=lambda u, d: "pinimg" in u), \
+                    mock.patch.object(pinterest, "OUT_DIR", out_dir), \
+                    contextlib.redirect_stdout(buf):
+                code = pinterest.main(["skip query"])
+            self.assertEqual(code, 0)
+            data = json.loads((out_dir / pinterest.slug("skip query") / "index.json").read_text(encoding="utf-8"))
+            self.assertNotIn("file", data[0])
+            self.assertEqual(data[1]["file"], "02-222.jpg")
+            self.assertIn("انحفظت 2 صورة", buf.getvalue())
+
+    def test_session_headers_carry_csrf(self):
+        jar = http.cookiejar.CookieJar()
+        jar.set_cookie(http.cookiejar.Cookie(
+            0, "csrftoken", "abc", None, False, ".pinterest.com", True, True, "/", True, True, None, True,
+            None, None, {}))
+        headers = pinterest.session_headers(jar)
+        self.assertEqual(headers["X-CSRFToken"], "abc")
+        self.assertIn("X-Pinterest-PWS-Handler", headers)
+
+    def test_fetch_json_opens_search_page_before_api(self):
+        opened = []
+
+        class FakeOpener:
+            def open(self, req, timeout=None):
+                opened.append(req.full_url)
+                body = b"<html></html>" if len(opened) == 1 else b'{"resource_response": {}}'
+                return mock.MagicMock(__enter__=lambda s: io.BytesIO(body), __exit__=lambda *a: False)
+
+        url = pinterest.search_url("youtube thumbnail", 5)
+        with mock.patch.object(pinterest.urllib.request, "build_opener", return_value=FakeOpener()):
+            data = pinterest.fetch_json(url)
+        self.assertEqual(data, {"resource_response": {}})
+        self.assertEqual(opened[0], "https://www.pinterest.com/search/pins/?q=youtube%20thumbnail")
+        self.assertEqual(opened[1], url)
 
     def test_main_write_error_gives_arabic_error(self):
         buf = io.StringIO()
