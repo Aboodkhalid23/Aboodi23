@@ -165,6 +165,18 @@ class FeedTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("✗ خطأ", buf.getvalue())
 
+    def test_cli_without_ours_shows_competitors_only(self):
+        """قبل الأفكار: المصمم يشوف أغلفة المنافسين بس (بدون أغلفتنا)."""
+        comps = [{"id": f"abcdefghij{i}", "title": "منافس", "channel": "قناة", "views": 1000, "duration": 600}
+                 for i in range(4)]
+        out = self.dir / "before.jpg"
+        buf = io.StringIO()
+        with mock.patch.object(feed, "search_cached", return_value=comps), \
+                mock.patch.object(feed, "fetch_thumb", return_value=self.thumb), contextlib.redirect_stdout(buf):
+            code = feed.main(["evergrande", "--title", "ع", "-o", str(out)])
+        self.assertEqual(code, 0, buf.getvalue())
+        self.assertTrue(out.exists())
+
 
 if __name__ == "__main__":
     unittest.main()

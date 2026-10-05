@@ -254,7 +254,7 @@ def make_feed(ours: list, title: str, competitors: list[dict], cache_dir: Path,
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="يحاكي صفحة يوتيوب ويا أغلفة المنافسين")
     ap.add_argument("query")
-    ap.add_argument("--ours", nargs="+", required=True)
+    ap.add_argument("--ours", nargs="*", default=[], help="أغلفتنا (بدونها: أغلفة المنافسين بس، قبل الأفكار)")
     ap.add_argument("--title", required=True)
     ap.add_argument("-o", "--out", required=True)
     ap.add_argument("--limit", type=int, default=6)
