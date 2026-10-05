@@ -1,0 +1,474 @@
+[
+  {
+    "id": "W01",
+    "angle": "before_disaster",
+    "idea": "إصبع روبوت ينزل على زر نووي أحمر، و3 أعلام صغيرة جنبه",
+    "text": null,
+    "subject": {
+      "outfit": "olive military shirt",
+      "expression": "tense, holding his breath, mouth closed",
+      "action": "leans over the operations table toward the camera, gripping its edge"
+    },
+    "hero": "a metal robotic finger descending onto a red nuclear launch button, three tiny flags of the USA, China and Russia beside it",
+    "setting": "dark military operations room with cold blue world-map screens",
+    "camera": "wide_close",
+    "layout": {
+      "face": "right",
+      "hero": "foreground",
+      "text_zone": null
+    },
+    "palette": [
+      "#0B1A2A",
+      "#E3262B",
+      "#2EC4FF"
+    ],
+    "scores": {
+      "clarity": 9,
+      "curiosity": 8,
+      "emotion": 9,
+      "novelty": 5,
+      "honesty": 8,
+      "producible": 8,
+      "face": 8
+    },
+    "why": "زر نووي = حرب، إصبع روبوت = الآلة هي الي تقرر. (نفس فكرة غلاف أمس)",
+    "hero_ar": "إصبع روبوت فوق زر نووي، و3 أعلام",
+    "expression_ar": "متوتر، حابس نفسه"
+  },
+  {
+    "id": "W02",
+    "angle": "metaphor",
+    "idea": "إيد روبوت ماسكة خيوط 3 دمى جنود: أمريكي وصيني وروسي",
+    "text": null,
+    "subject": {
+      "outfit": "dark charcoal turtleneck",
+      "expression": "calm and suspicious, one eyebrow slightly raised, mouth closed",
+      "action": "looks straight into the camera while the puppets hang beside him"
+    },
+    "hero": "a giant chrome robotic hand above the frame holding marionette strings attached to three small puppet soldiers in American, Chinese and Russian uniforms",
+    "setting": "dark minimal studio with a deep teal backdrop and thin cyan light lines",
+    "camera": "standard",
+    "layout": {
+      "face": "right",
+      "hero": "left",
+      "text_zone": null
+    },
+    "palette": [
+      "#062A24",
+      "#C9D1D9",
+      "#00E5FF"
+    ],
+    "scores": {
+      "clarity": 8,
+      "curiosity": 8,
+      "emotion": 7,
+      "novelty": 9,
+      "honesty": 8,
+      "producible": 6,
+      "face": 8
+    },
+    "why": "الدول الكبيرة صارت دمى، والذكاء الاصطناعي هو الي يحرك الخيوط",
+    "hero_ar": "إيد روبوت تحرك 3 دمى جنود",
+    "expression_ar": "هادي وشاك، حاجب مرفوع"
+  },
+  {
+    "id": "W03",
+    "angle": "mystery",
+    "idea": "حقيبة الزر النووي السوداء، وقفلها شريحة ذكاء اصطناعي تتوهج",
+    "text": null,
+    "subject": {
+      "outfit": "black suit with an earpiece, like a secret service agent",
+      "expression": "serious and determined, mouth closed",
+      "action": "holds the briefcase close to the camera with both hands"
+    },
+    "hero": "a black leather nuclear football briefcase whose lock is a glowing green AI microchip",
+    "setting": "dark empty corridor of a government building, dim cold light",
+    "camera": "wide_close",
+    "layout": {
+      "face": "right",
+      "hero": "foreground",
+      "text_zone": null
+    },
+    "palette": [
+      "#101010",
+      "#00FF9C",
+      "#FFB000"
+    ],
+    "scores": {
+      "clarity": 7,
+      "curiosity": 9,
+      "emotion": 7,
+      "novelty": 9,
+      "honesty": 7,
+      "producible": 8,
+      "face": 8
+    },
+    "why": "شنو جوه الحقيبة؟ ومنو عنده الشفرة: الرئيس لو الآلة؟",
+    "hero_ar": "حقيبة نووية قفلها شريحة تتوهج",
+    "expression_ar": "جدي وحازم"
+  },
+  {
+    "id": "W04",
+    "angle": "two_objects",
+    "idea": "بإيد شريحة ذكاء اصطناعي، وبالثانية صاروخ صغير، ويوازنهم",
+    "text": "السلاح\nالجديد!",
+    "subject": {
+      "outfit": "dark navy bomber jacket",
+      "expression": "calm and confident, slight frown, mouth closed",
+      "action": "holds both objects toward the camera like a balance scale"
+    },
+    "hero": "a glowing golden AI microchip in his right hand and a small grey missile in his left hand, both big in the foreground",
+    "setting": "dark purple studio with soft smoke and a cyan rim light",
+    "camera": "wide_close",
+    "layout": {
+      "face": "right",
+      "hero": "foreground",
+      "text_zone": "top_left"
+    },
+    "palette": [
+      "#1E0F33",
+      "#FFC400",
+      "#33E1FF"
+    ],
+    "scores": {
+      "clarity": 9,
+      "curiosity": 7,
+      "emotion": 6,
+      "novelty": 8,
+      "honesty": 9,
+      "producible": 8,
+      "face": 8
+    },
+    "why": "الشريحة هي السلاح الجديد، أخطر من الصاروخ",
+    "hero_ar": "شريحة ذكاء اصطناعي ضد صاروخ",
+    "expression_ar": "هادي وواثق، عابس شوية",
+    "font": "Kufam"
+  },
+  {
+    "id": "W05",
+    "angle": "villain",
+    "idea": "شكل إنسان من دوائر كهربائية مضيئة قاعد براس طاولة الحرب، وكراسي الجنرالات فارغة",
+    "text": "منو\nيقرر؟",
+    "subject": {
+      "outfit": "plain black shirt",
+      "expression": "worried, looking at the camera, lips pressed",
+      "action": "stands at the near end of the war table"
+    },
+    "hero": "a faceless humanoid figure made of glowing purple circuit lines sitting at the head of a long war table with empty generals' chairs",
+    "setting": "dark war council room, long table, empty leather chairs",
+    "camera": "standard",
+    "layout": {
+      "face": "right",
+      "hero": "foreground",
+      "text_zone": "top_left"
+    },
+    "palette": [
+      "#14102A",
+      "#8A5CFF",
+      "#00D1FF"
+    ],
+    "scores": {
+      "clarity": 8,
+      "curiosity": 8,
+      "emotion": 8,
+      "novelty": 8,
+      "honesty": 7,
+      "producible": 7,
+      "face": 7
+    },
+    "why": "الشرير مو دولة، الشرير الآلة الي قعدت مكان القادة",
+    "hero_ar": "آلة قاعدة براس طاولة الحرب",
+    "expression_ar": "قلقان، شافته مضمومة",
+    "font": "Changa"
+  },
+  {
+    "id": "W06",
+    "angle": "scale",
+    "idea": "سرب آلاف الدرونات بالسما مشكّل جمجمة كبيرة فوق المدينة",
+    "text": "حرب\nبلا بشر؟",
+    "subject": {
+      "outfit": "dark grey hoodie",
+      "expression": "afraid but controlled, mouth closed",
+      "action": "looks into the camera with the swarm behind him"
+    },
+    "hero": "a swarm of thousands of tiny glowing drones in the night sky forming the shape of a giant skull above a city",
+    "setting": "rooftop at night above a dark city skyline",
+    "camera": "standard",
+    "layout": {
+      "face": "right",
+      "hero": "foreground",
+      "text_zone": "top_left"
+    },
+    "palette": [
+      "#0A0F1E",
+      "#9BE7FF",
+      "#FF2D55"
+    ],
+    "scores": {
+      "clarity": 8,
+      "curiosity": 8,
+      "emotion": 9,
+      "novelty": 8,
+      "honesty": 6,
+      "producible": 7,
+      "face": 7
+    },
+    "why": "الحرب الجاية بلا بشر: آلاف الآلات بقرار وحد",
+    "hero_ar": "سرب درونات بشكل جمجمة",
+    "expression_ar": "خايف بس ماسك نفسه",
+    "font": "Kufam"
+  },
+  {
+    "id": "W07",
+    "angle": "pov",
+    "idea": "المقدم بملجأ تحت الأرض يمد كمامة غاز للكاميرا (للمشاهد)",
+    "text": null,
+    "subject": {
+      "outfit": "worn olive field jacket",
+      "expression": "urgent and serious, mouth closed",
+      "action": "reaches toward the camera handing a gas mask to the viewer"
+    },
+    "hero": "a black gas mask held out toward the camera, big in the foreground",
+    "setting": "underground concrete bunker lit by a red emergency light",
+    "camera": "wide_close",
+    "layout": {
+      "face": "right",
+      "hero": "foreground",
+      "text_zone": null
+    },
+    "palette": [
+      "#2A0A0A",
+      "#FF2A2A",
+      "#FFD166"
+    ],
+    "scores": {
+      "clarity": 8,
+      "curiosity": 6,
+      "emotion": 8,
+      "novelty": 7,
+      "honesty": 7,
+      "producible": 8,
+      "face": 8
+    },
+    "why": "انت الي بالملجأ: الحرب مو بعيدة عنك",
+    "hero_ar": "كمامة غاز ممدودة للمشاهد",
+    "expression_ar": "مستعجل وجدي"
+  },
+  {
+    "id": "W08",
+    "angle": "wrong_detail",
+    "idea": "غرفة عمليات عادية، بس كل الجنرالات روبوتات، والمقدم الإنسان الوحيد",
+    "text": null,
+    "subject": {
+      "outfit": "olive military uniform",
+      "expression": "uneasy, glancing at the camera, mouth closed",
+      "action": "sits among the robots at the map table"
+    },
+    "hero": "robot generals in military caps standing around a glowing map table",
+    "setting": "military command room with green tactical screens",
+    "camera": "standard",
+    "layout": {
+      "face": "center",
+      "hero": "left",
+      "text_zone": null
+    },
+    "palette": [
+      "#16281C",
+      "#7CFF4F",
+      "#FF5E3A"
+    ],
+    "scores": {
+      "clarity": 7,
+      "curiosity": 8,
+      "emotion": 7,
+      "novelty": 8,
+      "honesty": 7,
+      "producible": 6,
+      "face": 7
+    },
+    "why": "التفصيل الغلط يوگف العين: وين البشر؟",
+    "hero_ar": "جنرالات روبوتات حول خريطة",
+    "expression_ar": "مو مرتاح، يباوع للكاميرا"
+  },
+  {
+    "id": "W09",
+    "angle": "offscreen",
+    "idea": "المقدم يباوع لضو أحمر قوي جاي من برا الصورة، ووجهه نصه أحمر ونصه أزرق",
+    "text": null,
+    "subject": {
+      "outfit": "black t-shirt",
+      "expression": "shocked but silent, eyes wide, mouth closed",
+      "action": "turns his head toward a blinding red light coming from outside the frame"
+    },
+    "hero": "the shadow of a military drone on the wall behind him",
+    "setting": "dark bedroom at night with a window",
+    "camera": "standard",
+    "layout": {
+      "face": "center",
+      "hero": "left",
+      "text_zone": null
+    },
+    "palette": [
+      "#0D1321",
+      "#FF3B30",
+      "#4CC9F0"
+    ],
+    "scores": {
+      "clarity": 6,
+      "curiosity": 8,
+      "emotion": 8,
+      "novelty": 7,
+      "honesty": 7,
+      "producible": 8,
+      "face": 9
+    },
+    "why": "شنو الي شافه؟ المشاهد لازم ينقر حتى يعرف",
+    "hero_ar": "ظل درون على الحايط",
+    "expression_ar": "مصدوم بصمت"
+  },
+  {
+    "id": "W10",
+    "angle": "miniature",
+    "idea": "خريطة عالم مصغّرة على طاولة بيها جيوش صغيرة، وذراع روبوت تحرك القطع",
+    "text": null,
+    "subject": {
+      "outfit": "dark green military sweater",
+      "expression": "focused and worried, mouth closed",
+      "action": "leans over the table toward the camera watching the robot arm"
+    },
+    "hero": "a miniature 3D world map with tiny American, Chinese and Russian armies and a robotic arm moving a tiny tank",
+    "setting": "dark room with warm orange desk light and blue screen glow",
+    "camera": "wide_close",
+    "layout": {
+      "face": "right",
+      "hero": "foreground",
+      "text_zone": null
+    },
+    "palette": [
+      "#1A1410",
+      "#FF7A00",
+      "#3DDCFF"
+    ],
+    "scores": {
+      "clarity": 8,
+      "curiosity": 8,
+      "emotion": 7,
+      "novelty": 8,
+      "honesty": 8,
+      "producible": 7,
+      "face": 8
+    },
+    "why": "العالم صار رقعة شطرنج، والآلة هي الي تلعب",
+    "hero_ar": "خريطة عالم مصغرة وذراع روبوت",
+    "expression_ar": "مركّز وقلقان"
+  },
+  {
+    "id": "W11",
+    "angle": "icon_twist",
+    "idea": "ساعة يوم القيامة، وعقاربها أصابع روبوت على دقيقة قبل 12",
+    "text": null,
+    "subject": {
+      "outfit": "dark coat",
+      "expression": "grim and serious, mouth closed",
+      "action": "stands beside the giant clock looking at the camera"
+    },
+    "hero": "a giant Doomsday Clock with hands made of robotic fingers pointing one minute to midnight",
+    "setting": "dark smoky background with dim red light",
+    "camera": "standard",
+    "layout": {
+      "face": "right",
+      "hero": "left",
+      "text_zone": null
+    },
+    "palette": [
+      "#1C0A0A",
+      "#D4AF37",
+      "#FF3B30"
+    ],
+    "scores": {
+      "clarity": 7,
+      "curiosity": 8,
+      "emotion": 8,
+      "novelty": 6,
+      "honesty": 7,
+      "producible": 6,
+      "face": 7
+    },
+    "why": "رمز معروف للنهاية، والآلة هي الي تحرك الوقت",
+    "hero_ar": "ساعة يوم القيامة بعقارب روبوت",
+    "expression_ar": "متجهم وجدي"
+  },
+  {
+    "id": "W12",
+    "angle": "before_after",
+    "idea": "الصورة نصين: مدينة هادية بالنهار، ونفس المدينة بالليل ودرونات بالسما",
+    "text": null,
+    "subject": {
+      "outfit": "white shirt",
+      "expression": "sad and thoughtful, mouth closed",
+      "action": "stands in the middle where the two halves meet"
+    },
+    "hero": "the same city split in half: peaceful daytime on one side, night war with drones on the other",
+    "setting": "a city street split down the middle",
+    "camera": "standard",
+    "layout": {
+      "face": "center",
+      "hero": "left",
+      "text_zone": null
+    },
+    "palette": [
+      "#1B2A3A",
+      "#FF8C00",
+      "#7FDBFF"
+    ],
+    "scores": {
+      "clarity": 7,
+      "curiosity": 6,
+      "emotion": 7,
+      "novelty": 5,
+      "honesty": 8,
+      "producible": 6,
+      "face": 7
+    },
+    "why": "قبل الذكاء الاصطناعي وبعده بنفس اللقطة",
+    "hero_ar": "مدينة نصها سلام ونصها حرب",
+    "expression_ar": "حزين ومفكّر"
+  },
+  {
+    "id": "W13",
+    "angle": "metaphor",
+    "idea": "الكرة الأرضية على شكل قنبلة كرتونية، وإيد روبوت تشعل الفتيل",
+    "text": "العد\nبدأ!",
+    "subject": {
+      "outfit": "black leather jacket",
+      "expression": "calm, cold stare, mouth closed",
+      "action": "watches the fuse burn, close to the camera"
+    },
+    "hero": "planet Earth shaped like a round cartoon bomb with a burning fuse, lit by a robotic hand holding a lighter",
+    "setting": "dark space-like studio with stars and a cold rim light",
+    "camera": "wide_close",
+    "layout": {
+      "face": "right",
+      "hero": "foreground",
+      "text_zone": "top_left"
+    },
+    "palette": [
+      "#0B0B1A",
+      "#FF6A00",
+      "#5CE1E6"
+    ],
+    "scores": {
+      "clarity": 9,
+      "curiosity": 7,
+      "emotion": 8,
+      "novelty": 7,
+      "honesty": 7,
+      "producible": 8,
+      "face": 7
+    },
+    "why": "الأرض قنبلة، والي ماسك الولاعة آلة",
+    "hero_ar": "الأرض قنبلة والفتيل يشتعل",
+    "expression_ar": "هادي ونظرته باردة",
+    "font": "Kufam"
+  }
+]

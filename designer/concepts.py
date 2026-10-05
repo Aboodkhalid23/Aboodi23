@@ -398,9 +398,10 @@ def draw_sketch(card: dict, score_value: float) -> Image.Image:
     cx, cy, rx, ry = FACE_X[layout["face"]] * W, 0.6 * H, 0.17 * W, 0.3 * H
     glow = palette[-1]
     d.ellipse((cx - rx, cy - ry, cx + rx, cy + ry), fill=_rgba(glow, 70), outline=_rgba(glow, 255), width=6)
-    _label(d, "وجهك", cx, cy - 26, 46)
+    # الكلام بالنص الفوگاني من الدائرة، حتى الشي البطل بالمقدمة ما يغطيه
+    _label(d, "وجهك", cx, cy - 0.15 * H, 46)
     if card.get("expression_ar"):
-        _label(d, _cut(card["expression_ar"], 30), cx, cy + 30, 26)
+        _label(d, _cut(card["expression_ar"], 30), cx, cy - 0.15 * H + 54, 26)
     if layout["hero"] == "foreground":
         hero()
     if layout["text_zone"]:

@@ -9,7 +9,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageChops
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import concepts  # noqa: E402
@@ -258,6 +258,16 @@ class SketchTest(unittest.TestCase):
                     c = card(camera=camera)
                     c["layout"].update(face=face, hero=hero)
                     self.assertEqual(concepts.draw_sketch(c, 50.0).size, (1280, 720))
+
+    def test_face_labels_visible_above_foreground_hero(self):
+        def white(img):
+            r, g, b = img.crop((700, 66, 1280, 660)).split()
+            return sum(ImageChops.darker(ImageChops.darker(r, g), b).histogram()[236:])
+        base = card(camera="wide_close")
+        base["layout"]["hero"] = "foreground"
+        labelled = dict(base, expression_ar="هادي وواثق، عابس شوية")
+        gained = white(concepts.draw_sketch(labelled, 80.0)) - white(concepts.draw_sketch(base, 80.0))
+        self.assertGreater(gained, 900)
 
     def test_board_rows(self):
         cards = [card(f"c{i}", angle="scale") for i in range(9)]
