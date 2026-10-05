@@ -111,6 +111,9 @@ no text, no letters, no logos, no watermark
 - **الطولي:** `aspectRatio: PORTRAIT_9_16`، وبدّل `on the right third` بـ `in the lower middle`، و`empty ... left third` بـ `empty space in the upper third`.
 - **صور وجهه:** ضيف رقم صورته (من `designer/faces.json`) بـ `imageReferences`، واكتب `the man from the reference photo` بالأمر.
 
+## شنو يفوز ويا جمهورنا
+تنكتب هنا خلاصة كل 3 نتائج من `studio/thumbnail-tests.md`. لحد هسه ماكو نتائج.
+
 ## تفضيلات صاحب القناة
 <!-- كل ملاحظة يگولها (عجبني/ما عجبني) تنكتب هنا بتاريخها -->
 - **(25 أيلول 2026)** دز 5 أغلفة وگال: "هيج التصميم أحب يكون". الوصفة كاملة بـ `studio/style-references.md`.
