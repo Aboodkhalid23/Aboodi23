@@ -10,12 +10,12 @@ KINDS = ("face", "face_zoom_in", "face_zoom_out", "face_framed", "face_punch", "
 FACE_KINDS = KINDS[:7]
 AI_KINDS = ("ai_image", "ai_video", "avatar")   # avatar: him as a drawn character in the scene (avatar.py)
 GRAPHIC_TYPES = ("number", "headline", "quote", "map", "timeline", "chart", "text", "custom", "article", "headlines",
-                 "units")
+                 "units", "kinetic")
 CUSTOM_DIR = Path(__file__).resolve().parent.parent / "remotion" / "src" / "custom"
 FX_TYPES = ("subscribe", "tv", "none")        # face_fx wrappers; "none" = stickers only
-TRANSITIONS = ("zoom", "flash", "whip", "glitch", "tear", "burn", "dive", "pan")
+TRANSITIONS = ("zoom", "flash", "whip", "glitch", "tear", "burn", "dive", "pan", "shutter", "slide")
 STICKERS = ("stamp", "arrow", "burst", "tape", "circle", "scribble_circle", "scribble_arrow", "scribble_underline",
-            "censor", "name_tag", "emoji", "icon")   # emoji: animated Noto emoji; icon: Iconify "set:name" (kits.py)
+            "censor", "name_tag", "emoji", "icon", "bubble", "label")   # emoji: Noto animated; icon: Iconify; bubble: comic speech; label: red box typing
 MARKABLE = ("face_fx", "image", "ai_image", "graphic", "entity", "footage", "avatar")   # beats that can carry stickers
 
 HOOK_SECONDS = 30.0
@@ -183,6 +183,8 @@ def validate_plan(plan: EditPlan, clean_duration: float, entities: set[str] | No
         elif b.kind == "graphic" and b.graphic["type"] == "units" and not (
                 1 <= (b.graphic.get("total") or 100) <= 200 and 0 <= (b.graphic.get("highlight") or -1) <= (b.graphic.get("total") or 100)):
             errs.append(f"beat {i}: units لازم highlight (كم واحد يضوي) من total (أكثر شي 200)")
+        elif b.kind == "graphic" and b.graphic["type"] == "kinetic" and not (1 <= len(str(b.graphic.get("text", "")).split()) <= 10):
+            errs.append(f"beat {i}: kinetic لازم text (الجملة نفسها الي ينگال، 1–10 كلمات)")
         elif b.kind == "graphic" and b.graphic["type"] == "custom" and not (
                 b.graphic.get("scene") and (CUSTOM_DIR / f"{b.graphic['scene']}.tsx").exists()):
             errs.append(f"beat {i}: المشهد المخصص '{b.graphic.get('scene')}' مو موجود بـ editor/remotion/src/custom")

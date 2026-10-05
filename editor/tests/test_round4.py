@@ -72,3 +72,21 @@ def test_words_go_behind_him(tmp_path):
                       text=tmp_path / "words.mp4", text_rgb=(255, 0, 0), matter=Box())
     ok, f = cv2.VideoCapture(str(out)).read()
     assert f[90, 20][2] > 200 and f[90, 160][0] > 200        # red words at the side, he (blue) in front of them
+
+
+def test_reel_pieces_kinetic_timing_and_new_transitions(tmp_path):
+    import numpy as np
+    from editor.pipeline.compose import kinetic_times
+    from editor.pipeline.paths import Episode
+    from editor.pipeline.transcribe import Word, save_words
+    from editor.pipeline.wipes import move_frame
+    ep = Episode(tmp_path / "ep").ensure()
+    save_words([Word("هيچ", 10.2, 10.5), Word("إهانة", 10.6, 11.0), Word("وحدة", 11.1, 11.4)], ep.clean_words)
+    p = EditPlan({"primary": "vox"}, "", [], [Beat(10, 13, "body", "graphic", graphic={"type": "kinetic", "text": "هيچ اهانه وحده غيرت"})])
+    assert kinetic_times(ep, p, p.beats[0]) == [0.2, 0.6, 1.1, None]
+    assert "kinetic" not in " ".join(validate_plan(p, 13.0))
+    old, new = np.zeros((40, 60, 3), np.uint8), np.full((40, 60, 3), 200, np.uint8)
+    closed = move_frame("shutter", old, new, 0.4, 0.05)
+    assert closed.mean() > 60 and move_frame("shutter", old, new, 1.0, 0.05).mean() > 190   # metal, then the new shot
+    half = move_frame("slide", old, new, 0.5, 0.05)
+    assert half[-1].mean() > 190 and half[0].mean() < 50                                 # new sheet from the bottom

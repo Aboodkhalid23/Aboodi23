@@ -4,7 +4,7 @@ from .plan import EditPlan
 from .styles import Style
 
 PICTURE_KINDS = ("image", "ai_image")
-FOOTAGE_LOOKS = ["crt", "full", "paper"]   # archive film on an old TV, full screen, torn paper print
+FOOTAGE_LOOKS = ["crt", "full", "paper", "rounded"]   # old TV, full screen, torn paper print, rounded frame on black
 
 
 def _cycle(options: list[str]):

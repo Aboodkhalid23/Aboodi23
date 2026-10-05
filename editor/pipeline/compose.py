@@ -205,6 +205,24 @@ def graphic_cues(b: Beat) -> list[tuple[float, str]]:
     return []
 
 
+def kinetic_times(ep: Episode, plan, b: Beat) -> list[float | None]:
+    """When each word of a kinetic sentence is said (seconds from the beat's start), from the cleaned transcript;
+    a word not found gets None (the scene spaces it evenly)."""
+    from .clean import normalize_ar, same
+    from .transcribe import load_words
+    words = (b.graphic or {}).get("text", "").split()
+    if not ep.clean_words.exists() or b.start < plan.teaser_total:
+        return [None] * len(words)
+    cs = b.start - plan.teaser_total
+    heard = [w for w in load_words(ep.clean_words) if cs - 0.3 <= w.start < cs + b.duration]
+    out, j = [], 0
+    for w in words:
+        k = next((k for k in range(j, min(len(heard), j + 4)) if same(normalize_ar(w), normalize_ar(heard[k].text))), None)
+        out.append(round(max(0.0, heard[k].start - cs), 3) if k is not None else None)
+        j = k + 1 if k is not None else j
+    return out
+
+
 def chapter_cues(plan) -> list[tuple[float, str]]:
     """Long documentaries mark each new chapter with sound: a short riser into a heavy hit on its first frame."""
     out = []
@@ -408,6 +426,8 @@ def compose(ep: Episode, preview: bool = False) -> Path:
                 _finish(asset, frames, out, cv, b.transition, cover=True, loop=True, grade=ai_grade)
             elif b.kind == "ai_video":  # only a still came back: animate it like an AI image
                 job = _graphic_job(ep, replace(b, kind="ai_image"), i, style, bundle, cv, src=asset)
+            elif b.kind == "graphic" and (b.graphic or {}).get("type") == "kinetic":
+                job = _graphic_job(ep, b, i, style, bundle, cv, extra_props={"times": kinetic_times(ep, plan, b)})
             elif b.kind in ("image", "ai_image", "graphic"):
                 job = _graphic_job(ep, b, i, style, bundle, cv, src=asset)
             elif b.kind == "entity":

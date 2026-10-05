@@ -6,19 +6,19 @@ import {Lottie, LottieAnimationData} from '@remotion/lottie';
 import {ScribbleCircle, ScribbleLine, useDraw} from './HandDrawn';
 
 export type Sticker = {type: 'stamp' | 'arrow' | 'burst' | 'tape' | 'circle' | 'scribble_circle' | 'scribble_arrow'
-  | 'scribble_underline' | 'censor' | 'name_tag' | 'emoji' | 'icon'; text?: string; data?: LottieAnimationData; src?: string; at?: number; x?: number; y?: number; rotate?: number;
+  | 'scribble_underline' | 'censor' | 'name_tag' | 'emoji' | 'icon' | 'bubble' | 'label'; text?: string; data?: LottieAnimationData; src?: string; at?: number; x?: number; y?: number; rotate?: number;
   w?: number; h?: number; to?: [number, number]; color?: string};
 
 type Spots = Record<Sticker['type'], [number, number]>;
 // Default spots (fraction of the frame) that keep stickers off the presenter's face (centre-top)…
 export const FACE_SPOTS: Spots = {
   stamp: [0.8, 0.72], arrow: [0.27, 0.42], burst: [0.18, 0.25], tape: [0.5, 0.86], circle: [0.5, 0.36],
-  scribble_circle: [0.5, 0.4], scribble_arrow: [0.25, 0.5], scribble_underline: [0.5, 0.75], censor: [0.5, 0.35], name_tag: [0.5, 0.8], emoji: [0.86, 0.17], icon: [0.14, 0.17],
+  scribble_circle: [0.5, 0.4], scribble_arrow: [0.25, 0.5], scribble_underline: [0.5, 0.75], censor: [0.5, 0.35], name_tag: [0.5, 0.8], emoji: [0.86, 0.17], icon: [0.14, 0.17], bubble: [0.3, 0.22], label: [0.5, 0.78],
 };
 // …and, in the subscribe / TV scenes, off the shrunken player and the channel bar.
 export const SCENE_SPOTS: Spots = {
   stamp: [0.9, 0.3], arrow: [0.1, 0.55], burst: [0.1, 0.28], tape: [0.5, 0.95], circle: [0.5, 0.33],
-  scribble_circle: [0.5, 0.4], scribble_arrow: [0.25, 0.5], scribble_underline: [0.5, 0.75], censor: [0.5, 0.35], name_tag: [0.5, 0.8], emoji: [0.88, 0.2], icon: [0.12, 0.2],
+  scribble_circle: [0.5, 0.4], scribble_arrow: [0.25, 0.5], scribble_underline: [0.5, 0.75], censor: [0.5, 0.35], name_tag: [0.5, 0.8], emoji: [0.88, 0.2], icon: [0.12, 0.2], bubble: [0.3, 0.22], label: [0.5, 0.78],
 };
 
 const BURST = Array.from({length: 24}, (_, i) => {
@@ -78,6 +78,26 @@ const One: React.FC<{s: Sticker; style: StyleProps; W: number; H: number; spots:
       const w = (s.w ?? 0.1) * W;
       return s.src ? <div style={{...base, width: w, height: w, filter: 'drop-shadow(0 10px 14px rgba(0,0,0,.3))'}}>
         <Img src={staticFile(s.src)} style={{width: '100%', height: '100%'}} /></div> : null;
+    }
+    case 'bubble': {  // comic speech bubble: what the person in the picture says (tail points down-right to him)
+      const w = (s.w ?? 0.26) * W, ar = /[\u0600-\u06FF]/.test(s.text ?? '');
+      return <div style={{...base, width: w, transform: `translate(-50%, -50%) scale(${k}) rotate(${s.rotate ?? -3}deg)`}}>
+        <svg width={w} height={w * 0.62} viewBox="0 0 100 62" style={{position: 'absolute', inset: 0, overflow: 'visible',
+          filter: 'drop-shadow(0 6px 8px rgba(0,0,0,.3))'}}>
+          <path d="M50 2 C 80 2 98 12 98 27 C 98 42 80 52 58 52 L 70 62 L 46 52 C 20 52 2 42 2 27 C 2 12 20 2 50 2 Z" fill="#fff" stroke="#111" strokeWidth={2.2} />
+        </svg>
+        <div style={{position: 'relative', width: w, height: w * 0.52, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          textAlign: 'center', padding: `0 ${w * 0.12}px`, fontFamily: ar ? 'Lalezar' : 'Archivo Black', fontSize: w * (ar ? 0.11 : 0.085),
+          lineHeight: 1.15, color: '#111', direction: ar ? 'rtl' : 'ltr', textTransform: ar ? 'none' : 'uppercase'}}>{s.text}</div>
+      </div>;
+    }
+    case 'label': {   // red box, bold yellow words typing in (a lower third that states the point)
+      const ar = /[\u0600-\u06FF]/.test(s.text ?? ''), txt = s.text ?? '';
+      const n = Math.min(txt.length, Math.floor(((f - start) / fps) * 18));
+      return <div style={{position: 'absolute', left: x, top: y, transform: `translate(-50%, -50%) scale(${0.9 + 0.1 * k}) rotate(${s.rotate ?? -2}deg)`,
+        background: '#A8161B', border: '4px solid #F7D046', padding: '14px 40px', minWidth: W * 0.18, minHeight: 90, color: '#F7D046',
+        fontFamily: ar ? 'Lalezar' : 'Archivo Black', fontSize: 72, lineHeight: 1.1, direction: ar ? 'rtl' : 'ltr', textAlign: 'center',
+        boxShadow: '0 12px 24px rgba(0,0,0,.4)', opacity: Math.min(1, k * 2)}}>{txt.slice(0, n)}</div>;
     }
     case 'name_tag':
       return <div style={{position: 'absolute', left: x, top: y, transform: `translate(-50%, -50%) rotate(${s.rotate ?? -3}deg) scale(${k})`,

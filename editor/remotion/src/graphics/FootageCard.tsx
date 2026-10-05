@@ -1,8 +1,9 @@
 import React from 'react';
+import {RoundedFootage} from './Update4';
 import {AbsoluteFill, interpolate, OffthreadVideo, random, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {Background, BaseProps} from '../style';
 
-type Props = BaseProps & {src: string; treatment?: 'crt' | 'paper'; caption?: string};
+type Props = BaseProps & {src: string; treatment?: 'crt' | 'paper' | 'rounded'; caption?: string};
 
 const TORN = 'polygon(0% 2%, 6% 0%, 13% 2%, 21% 0%, 30% 1.5%, 40% 0%, 52% 2%, 63% 0%, 74% 1.5%, 86% 0%, 100% 2%, 99% 20%, 100% 41%, 98.5% 63%, 100% 84%, 99% 100%, 88% 98%, 76% 100%, 64% 98.5%, 51% 100%, 39% 98%, 27% 100%, 15% 98%, 5% 100%, 0% 98%, 1% 76%, 0% 55%, 1.5% 33%, 0% 14%)';
 
@@ -13,6 +14,7 @@ export const FootageCard: React.FC<Props> = ({style, src, treatment = 'crt', cap
   const video = (filter: string) => (
     <OffthreadVideo src={staticFile(src)} muted style={{width: '100%', height: '100%', objectFit: 'cover', filter}} />
   );
+  if (treatment === 'rounded') return <RoundedFootage style={style} durationSec={0} src={src} caption={caption} />;
   if (treatment === 'paper') {
     const k = spring({frame: f, fps, config: {damping: 15, stiffness: 120}});
     return (

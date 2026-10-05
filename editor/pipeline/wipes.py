@@ -8,7 +8,11 @@ Camera moves (from the research update, 2026-10-04-research.md), drawn frame by 
           arrives still magnified and settles. One log-zoom curve across both, so the speed never drops at
           the cut; zoom blur from sub-frame supersampling (the faster, the more samples).
   `pan`   whip-pan: both shots on one strip, the camera whips to the next (new shot enters from the left,
-          the way the eye moves reading Arabic), blur only along the travel, strongest at the fastest frame."""
+          the way the eye moves reading Arabic), blur only along the travel, strongest at the fastest frame.
+  `shutter` (reference reel, update 4) a metal garage shutter rattles down over the old shot, then rolls up on
+          the new one: a motivated reveal for "behind closed doors", a workshop, a launch.
+  `slide`   (reference reel) the new shot is a sheet of paper pushed up over the old one, its top edge casting a
+          shadow; the old shot darkens a little underneath."""
 import hashlib
 from pathlib import Path
 
@@ -16,8 +20,8 @@ import numpy as np
 
 from .media import run_ffmpeg
 
-WIPES = ("tear", "burn", "dive", "pan")
-MOVES = ("dive", "pan")
+WIPES = ("tear", "burn", "dive", "pan", "shutter", "slide")
+MOVES = ("dive", "pan", "shutter", "slide")
 MOVE_DUR = 0.6     # seconds of a camera move
 DIVE_ZOOM = (2.4, 1.9)   # old shot leaves at 2.4x, new shot arrives at 1.9x
 DUR = 0.5          # seconds the edge takes to cross the frame
@@ -106,6 +110,10 @@ def move_frame(kind: str, old, new, p: float, step: float):
         if p < cut:
             return _zoomed(old.astype(np.float32), l0, l1)
         return _zoomed(new.astype(np.float32), total - l0, total - l1)   # arrives at 1.9x, settles to 1x
+    if kind == "shutter":
+        return _shutter_frame(old, new, p)
+    if kind == "slide":
+        return _slide_frame(old, new, p)
     h, w = old.shape[:2]
     x0, x1 = w * _whip(max(0.0, p - step * 0.5)), w * _whip(p)
     x = int(round(x1))
@@ -114,6 +122,56 @@ def move_frame(kind: str, old, new, p: float, step: float):
     strip[:, :x] = new[:, w - x:] if x > 0 else 0           # …new shot follows from the left
     k = int(abs(x1 - x0) * 0.8)
     return cv2.blur(strip, (k, 1)) if k > 2 else strip
+
+
+def _shutter(h: int, w: int) -> np.ndarray:
+    """A corrugated metal shutter (grey ribs with light and shade), drawn once."""
+    y = np.arange(h, dtype=np.float32)
+    rib = 0.5 + 0.5 * np.sin(y / max(4.0, h / 46) * np.pi)            # ~23 ribs on screen
+    tone = (70 + 95 * rib)[:, None, None] * np.ones((1, w, 3), np.float32)
+    tone[:, :, 2] *= 1.04                                              # a cold steel tint (RGB: blue a bit up)
+    grit = np.random.default_rng(7).normal(0, 6, (h, w, 1)).astype(np.float32)
+    return np.clip(tone + grit, 0, 255)
+
+
+_SHUTTER: dict = {}
+
+
+def _shutter_frame(old, new, p: float):
+    """0–0.35 the shutter drops over the old shot (fast, a little bounce), 0.45–1 it rolls up on the new one."""
+    h, w = old.shape[:2]
+    if (h, w) not in _SHUTTER:
+        _SHUTTER[(h, w)] = _shutter(h, w)
+    metal = _SHUTTER[(h, w)]
+    if p < 0.35:
+        q = p / 0.35
+        bottom = h * min(1.0, q * q * 1.08)                            # accelerating fall
+        below = old.astype(np.float32)
+    elif p < 0.45:
+        bottom, below = h, new.astype(np.float32)                      # closed: hold, swap behind it
+    else:
+        bottom, below = h * (1 - _whip((p - 0.45) / 0.55)), new.astype(np.float32)
+    b = int(round(bottom))
+    out = below.copy()
+    if b > 0:
+        out[:b] = metal[h - b:]                                        # the shutter's lower part shows
+        edge = min(h, b + max(4, h // 60))
+        out[b:edge] *= 0.55                                            # its shadow on what is below
+        out[max(0, b - 6):b] = 40                                      # the bottom bar
+    return out
+
+
+def _slide_frame(old, new, p: float):
+    h, w = old.shape[:2]
+    top = int(round(h * (1 - _whip(p))))
+    out = old.astype(np.float32) * (1 - 0.35 * p)
+    if top < h:
+        out[top:] = new[: h - top]
+        shade = max(6, h // 40)
+        a = max(0, top - shade)
+        if top > 0:
+            out[a:top] *= np.linspace(1.0, 0.6, top - a, dtype=np.float32)[:, None, None]
+    return out
 
 
 def _cut_point(share: float) -> float:
@@ -129,7 +187,7 @@ def _camera_move(kind: str, last: Path, clip: Path, out: Path, width: int, heigh
     import subprocess
     import cv2
     old = cv2.resize(cv2.imread(str(last), cv2.IMREAD_COLOR)[:, :, ::-1], (width, height))
-    n_move = max(2, round(MOVE_DUR * fps))
+    n_move = max(2, round((0.9 if kind == "shutter" else MOVE_DUR) * fps))
     size = width * height * 3
     reader = subprocess.Popen(["ffmpeg", "-v", "error", "-i", str(clip), "-vf", f"scale={width}:{height}",
                                "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], stdout=subprocess.PIPE)

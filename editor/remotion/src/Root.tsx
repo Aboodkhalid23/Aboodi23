@@ -19,6 +19,7 @@ import {Timeline} from './graphics/Timeline';
 import {CUSTOM} from './custom/registry';
 import {HeadlineStorm, UnitChart} from './graphics/Update2';
 import {CutoutTitle} from './graphics/CutoutTitle';
+import {KineticType} from './graphics/Update4';
 import {Stickers} from './graphics/Stickers';
 import {BaseProps, FPS} from './style';
 
@@ -44,6 +45,7 @@ const GRAPHICS: [string, React.FC<any>, Record<string, unknown>][] = [
   ['entity', EntityCard, {name: 'إيلون ماسك', role: 'مؤسس تسلا', entityKind: 'person'}],
   ['headlines', HeadlineStorm, {items: [{outlet: 'Reuters', title: 'خبر'}, {title: 'خبر ثاني'}]}],
   ['cutout-title', CutoutTitle, {text: 'الدماغ'}],
+  ['kinetic', KineticType, {text: 'هيچ إهانة وحدة غيرت التاريخ'}],
   ['units', UnitChart, {total: 100, highlight: 20, label: 'واحد من كل خمسة'}],
   ['face-fx', FaceFx, {src: 'face.mp4', fx: 'subscribe', stickers: [], channel: {name: 'القناة', handle: '@channel'}}],
   ...CUSTOM.map(([name, C]) => [`custom-${name}`, C, {}] as [string, React.FC<any>, Record<string, unknown>]),

@@ -3,6 +3,7 @@ import {AbsoluteFill, Img, interpolate, random, spring, staticFile, useCurrentFr
 import {appear, Background, BaseProps, ease, FPS, StyleProps} from '../style';
 import {Desk, HalftoneCutout, Silhouette} from './Update1';
 import {AvatarScene} from './Update3';
+import {BandScene} from './Update4';
 
 const TORN = 'polygon(0% 2%, 6% 0%, 13% 2%, 21% 0%, 30% 1.5%, 40% 0%, 52% 2%, 63% 0%, 74% 1.5%, 86% 0%, 100% 2%, 99% 20%, 100% 41%, 98.5% 63%, 100% 84%, 99% 100%, 88% 98%, 76% 100%, 64% 98.5%, 51% 100%, 39% 98%, 27% 100%, 15% 98%, 5% 100%, 0% 98%, 1% 76%, 0% 55%, 1.5% 33%, 0% 14%)';
 // People's heads sit in the upper part of photos: crop from there, never through the face.
@@ -217,7 +218,7 @@ const Parallax: React.FC<Inner> = ({src, fg, f, fps, dur}) => {
 
 const TREATMENTS: Record<string, React.FC<Inner>> = {
   cinematic_title: CinematicTitle, parallax: Parallax, halftone_cutout: HalftoneCutout, desk: Desk, silhouette: Silhouette,
-  avatar: AvatarScene as React.FC<Inner>,
+  avatar: AvatarScene as React.FC<Inner>, band: BandScene as React.FC<Inner>,
   engraving_in_circle: Circle, newspaper: Newspaper, polaroid: Polaroid, crt: Crt, pinboard: Pinboard, paper_cutout: PaperCutout,
 };
 
