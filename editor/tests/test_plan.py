@@ -125,7 +125,7 @@ def test_face_fx_counts_as_face_and_needs_fx():
     plan.beats[15].fx = "subscribe"
     plan.beats[15].stickers = [{"type": "stamp", "text": "حقيقي", "at": 1.0}]
     assert validate_plan(plan, clean) == []
-    plan.beats[15].stickers = [{"type": "emoji"}]
+    plan.beats[15].stickers = [{"type": "hologram"}]
     assert "الملصقات" in errors_for(plan, clean)
 
 

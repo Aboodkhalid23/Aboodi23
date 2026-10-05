@@ -15,11 +15,10 @@ import requests
 ROOT = Path(__file__).resolve().parents[2]
 PACKAGES = {"faster_whisper": "faster-whisper", "cv2": "opencv-python-headless", "mediapipe": "mediapipe",
             "onnxruntime": "onnxruntime", "numpy": "numpy", "requests": "requests", "yaml": "PyYAML", "gdown": "gdown"}
-SOURCES = {"Openverse (صور وموسيقى وأصوات)": "https://api.openverse.org/v1/images/?q=test&page_size=1",
-           "أرشيف الإنترنت (أفلام)": "https://archive.org/advancedsearch.php?q=prelinger&rows=1&output=json",
-           "مكتبة الكونگرس": "https://www.loc.gov/photos/?q=test&fo=json&c=1",
-           "ناسا": "https://images-api.nasa.gov/search?q=moon&media_type=image",
-           "ويكيميديا": "https://commons.wikimedia.org/w/api.php?action=query&format=json"}
+def _linked_sources() -> dict[str, str]:
+    """Every source the pipeline searches by itself (from the catalog), name -> URL to ask."""
+    from .catalog import load
+    return {s["name"]: s["check"] for s in load()["sources"] if s["use"] == "linked" or s["use"].startswith("linked (sticker")}
 
 
 def _line(ok: bool | None, text: str) -> tuple[bool | None, str]:
@@ -51,12 +50,17 @@ def check(full: bool = False, fix: bool = True) -> list[tuple[bool | None, str]]
     out.append(_line(rvm_model() is not None, "موديل قص الشخص الدقيق"))
     free = shutil.disk_usage(ROOT).free / 1e9
     out.append(_line(free > 15 if free > 5 else False, f"المساحة الفاضية {free:.0f} گيگا"))
-    for name, url in SOURCES.items():
+    from concurrent.futures import ThreadPoolExecutor
+
+    def ask(item):
+        name, url = item
         try:
-            ok = requests.get(url, timeout=8, headers={"User-Agent": "Aboodi23-editor/0.1"}).status_code < 500
+            return name, requests.get(url, timeout=8, headers={"User-Agent": "Aboodi23-editor/0.1"}).status_code < 500
         except requests.RequestException:
-            ok = False
-        out.append(_line(ok if ok else None, f"مصدر: {name}"))
+            return name, False
+    with ThreadPoolExecutor(8) as pool:
+        for name, ok in pool.map(ask, _linked_sources().items()):
+            out.append(_line(ok if ok else None, f"مصدر: {name}"))
     keys = [k for k in ("PEXELS_API_KEY", "PIXABAY_API_KEY") if os.environ.get(k)]
     out.append(_line(True if keys else None, "مفاتيح الصور الحديثة: " + ("موجودة" if keys else "مو موجودة (اختيارية)")))
     if full:

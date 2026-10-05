@@ -48,3 +48,51 @@ def test_keyed_libraries_stay_quiet_without_a_key(monkeypatch):
     monkeypatch.delenv("PIXABAY_API_KEY", raising=False)
     for f in (S.pexels_images, S.pixabay_images, S.pexels_videos, S.pixabay_videos):
         assert f("city", session=None) == []
+
+
+class Fake:
+    def __init__(self, data):
+        self.data = data
+    def get(self, url, params=None, headers=None, timeout=None):
+        d = self.data
+        class R:
+            status_code = 200
+            def raise_for_status(self): pass
+            def json(self): return d
+        return R()
+
+
+def test_museum_and_archive_sources_keep_only_free_licences():
+    eu = Fake({"items": [{"title": ["Refinery"], "rights": ["http://creativecommons.org/licenses/by/4.0/"], "edmIsShownBy": ["https://e/1.jpg"], "guid": "g"},
+                         {"title": ["Closed"], "rights": ["http://creativecommons.org/licenses/by-nc/4.0/"], "edmIsShownBy": ["https://e/2.jpg"]}]})
+    assert [f.title for f in S.europeana_images("refinery", eu)] == ["Refinery"]
+    wel = Fake({"results": [{"thumbnail": {"url": "https://iiif/x/info.json", "license": {"id": "cc-by-nc"}}, "source": {"title": "a"}},
+                            {"thumbnail": {"url": "https://iiif/y/info.json", "license": {"id": "pdm"}}, "source": {"title": "b", "id": "z"}}]})
+    got = S.wellcome_images("x", wel)
+    assert [f.title for f in got] == ["b"] and got[0].url.endswith("/full/1600,/0/default.jpg")
+    art = Fake({"config": {"iiif_url": "https://iiif"}, "data": [{"id": 1, "title": "Mill", "image_id": "abc", "is_public_domain": True,
+                                                              "thumbnail": {"width": 3000, "height": 2000}},
+                                                             {"id": 2, "title": "Modern", "image_id": "d", "is_public_domain": False}]})
+    assert [f.url for f in S.artic_images("mill", art)] == ["https://iiif/abc/full/1686,/0/default.jpg"]
+
+
+def test_newspaper_searches_old_newspapers_first():
+    assert S.IMAGE_ORDER["newspaper"][0] is S.loc_newspapers
+    assert S.find("x", "video", "newspaper", session=Fake({}))  == []      # video falls back to the archive order
+
+
+def test_kits_emoji_codes_and_free_icon_sets_only(monkeypatch):
+    from editor.pipeline import kits
+    assert kits.emoji_code("🔥") == "1f525" and kits.emoji_code("❤️") == "2764"
+    assert kits.icon_svg("someone-paid:logo") is None
+    monkeypatch.setattr(kits, "emoji_lottie", lambda c, session=None: None)
+    monkeypatch.setattr(kits, "icon_svg", lambda n, session=None: None)
+    out = kits.prepare_stickers([{"type": "emoji", "text": "🔥"}, {"type": "icon", "text": "mdi:x", "label": "مصنع"}], str)
+    assert [s["type"] for s in out] == ["burst", "stamp"]          # never a broken frame
+
+
+def test_catalog_lists_every_source_with_its_licence():
+    from editor.pipeline.catalog import load, markdown
+    d = load()
+    assert len(d["sources"]) >= 30 and all(s["licence"] and s["check"].startswith("https://") for s in d["sources"])
+    assert "| [Openverse]" in markdown(d) and any(s["use"] == "blocked" for s in d["sources"])

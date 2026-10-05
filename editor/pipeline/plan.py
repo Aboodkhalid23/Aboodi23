@@ -15,7 +15,7 @@ CUSTOM_DIR = Path(__file__).resolve().parent.parent / "remotion" / "src" / "cust
 FX_TYPES = ("subscribe", "tv", "none")        # face_fx wrappers; "none" = stickers only
 TRANSITIONS = ("zoom", "flash", "whip", "glitch", "tear", "burn", "dive", "pan")
 STICKERS = ("stamp", "arrow", "burst", "tape", "circle", "scribble_circle", "scribble_arrow", "scribble_underline",
-            "censor", "name_tag")
+            "censor", "name_tag", "emoji", "icon")   # emoji: animated Noto emoji; icon: Iconify "set:name" (kits.py)
 MARKABLE = ("face_fx", "image", "ai_image", "graphic", "entity", "footage", "avatar")   # beats that can carry stickers
 
 HOOK_SECONDS = 30.0
@@ -121,6 +121,10 @@ def validate_plan(plan: EditPlan, clean_duration: float, entities: set[str] | No
         if b.kind == "face_fx" and b.fx not in FX_TYPES:
             errs.append(f"beat {i}: face_fx لازم fx من {', '.join(FX_TYPES)}")
         for s in b.stickers or []:
+            if s.get("type") == "icon":
+                from .kits import ICON_SETS
+                if str(s.get("text", "")).split(":", 1)[0] not in ICON_SETS:
+                    errs.append(f"beat {i}: icon لازم text بشكل set:name من مجموعات رخصتها حرة ({', '.join(ICON_SETS)})")
             if b.kind not in MARKABLE or s.get("type") not in STICKERS:
                 errs.append(f"beat {i}: الملصقات على {', '.join(MARKABLE)} بس، ونوعها من {', '.join(STICKERS)}")
                 break
@@ -132,8 +136,8 @@ def validate_plan(plan: EditPlan, clean_duration: float, entities: set[str] | No
             errs.append(f"beat {i}: face_cutout شكله paper (ورق القناة) أو title (كلام ورا ظهره)")
         elif b.kind == "face_cutout" and b.treatment == "title" and not (b.title or b.caption):
             errs.append(f"beat {i}: face_cutout title يحتاج title (الكلمة الي تطلع ورا ظهره)")
-        if b.source and b.source not in ("archive", "stock"):
-            errs.append(f"beat {i}: source لازم archive (تاريخ) أو stock (مشاهد حديثة) أو بدونه")
+        if b.source and b.source not in ("archive", "stock", "newspaper"):
+            errs.append(f"beat {i}: source لازم archive (تاريخ) أو stock (مشاهد حديثة) أو newspaper (جرايد قديمة) أو بدونه")
         if b.kind == "avatar":
             from .avatar import LOOKS as AVATAR_LOOKS
             if b.look not in AVATAR_LOOKS:

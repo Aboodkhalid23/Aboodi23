@@ -1,22 +1,24 @@
 import React from 'react';
 import {interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
 import {ease, StyleProps} from '../style';
+import {Img, staticFile} from 'remotion';
+import {Lottie, LottieAnimationData} from '@remotion/lottie';
 import {ScribbleCircle, ScribbleLine, useDraw} from './HandDrawn';
 
 export type Sticker = {type: 'stamp' | 'arrow' | 'burst' | 'tape' | 'circle' | 'scribble_circle' | 'scribble_arrow'
-  | 'scribble_underline' | 'censor' | 'name_tag'; text?: string; at?: number; x?: number; y?: number; rotate?: number;
+  | 'scribble_underline' | 'censor' | 'name_tag' | 'emoji' | 'icon'; text?: string; data?: LottieAnimationData; src?: string; at?: number; x?: number; y?: number; rotate?: number;
   w?: number; h?: number; to?: [number, number]; color?: string};
 
 type Spots = Record<Sticker['type'], [number, number]>;
 // Default spots (fraction of the frame) that keep stickers off the presenter's face (centre-top)…
 export const FACE_SPOTS: Spots = {
   stamp: [0.8, 0.72], arrow: [0.27, 0.42], burst: [0.18, 0.25], tape: [0.5, 0.86], circle: [0.5, 0.36],
-  scribble_circle: [0.5, 0.4], scribble_arrow: [0.25, 0.5], scribble_underline: [0.5, 0.75], censor: [0.5, 0.35], name_tag: [0.5, 0.8],
+  scribble_circle: [0.5, 0.4], scribble_arrow: [0.25, 0.5], scribble_underline: [0.5, 0.75], censor: [0.5, 0.35], name_tag: [0.5, 0.8], emoji: [0.86, 0.17], icon: [0.14, 0.17],
 };
 // …and, in the subscribe / TV scenes, off the shrunken player and the channel bar.
 export const SCENE_SPOTS: Spots = {
   stamp: [0.9, 0.3], arrow: [0.1, 0.55], burst: [0.1, 0.28], tape: [0.5, 0.95], circle: [0.5, 0.33],
-  scribble_circle: [0.5, 0.4], scribble_arrow: [0.25, 0.5], scribble_underline: [0.5, 0.75], censor: [0.5, 0.35], name_tag: [0.5, 0.8],
+  scribble_circle: [0.5, 0.4], scribble_arrow: [0.25, 0.5], scribble_underline: [0.5, 0.75], censor: [0.5, 0.35], name_tag: [0.5, 0.8], emoji: [0.88, 0.2], icon: [0.12, 0.2],
 };
 
 const BURST = Array.from({length: 24}, (_, i) => {
@@ -67,6 +69,15 @@ const One: React.FC<{s: Sticker; style: StyleProps; W: number; H: number; spots:
       return <div style={{...at(w, h), width: w, height: h, background: '#0A0A0A', transform: `rotate(${s.rotate ?? -2}deg) scaleX(${k})`,
         display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontFamily: 'Archivo Black, Blaka', fontSize: h * 0.62,
         direction: /[\u0600-\u06FF]/.test(s.text ?? '') ? 'rtl' : 'ltr', letterSpacing: 1}}>{s.text}</div>;
+    }
+    case 'emoji': {   // Google Noto animated emoji (Lottie): it moves by itself, the spring pops it in
+      const w = (s.w ?? 0.12) * W;
+      return s.data ? <div style={{...base, width: w, height: w}}><Lottie animationData={s.data} loop style={{width: w, height: w}} /></div> : null;
+    }
+    case 'icon': {    // Iconify SVG (free-licence sets only, kits.py)
+      const w = (s.w ?? 0.1) * W;
+      return s.src ? <div style={{...base, width: w, height: w, filter: 'drop-shadow(0 10px 14px rgba(0,0,0,.3))'}}>
+        <Img src={staticFile(s.src)} style={{width: '100%', height: '100%'}} /></div> : null;
     }
     case 'name_tag':
       return <div style={{position: 'absolute', left: x, top: y, transform: `translate(-50%, -50%) rotate(${s.rotate ?? -3}deg) scale(${k})`,

@@ -115,7 +115,8 @@ def graphic_job(beat: Beat, style: Style, out: Path, public_dir: Path | None = N
     bundle = bundle or ensure_bundle()
     props = {"style": _style_props(style), "durationSec": round(beat.duration, 3), **(extra_props or {})}
     if beat.stickers:
-        props["stickers"] = beat.stickers
+        from .kits import prepare_stickers
+        props["stickers"] = prepare_stickers(beat.stickers, lambda f: _publish(bundle, f))
     if beat.kind in ("image", "ai_image"):
         if src is None and public_dir is not None:
             src = next(Path(public_dir).glob(f"img_{index}.*"), None)
@@ -148,7 +149,7 @@ def graphic_job(beat: Beat, style: Style, out: Path, public_dir: Path | None = N
             lay = image_layout(Path(src), cut)
             props.update(titleY=lay["titleY"], titleFront=lay["titleFront"])
             if beat.stickers:                              # censor bar on the eyes, name under the chin
-                props["stickers"] = place_on_face(beat.stickers, lay["face"])
+                props["stickers"] = place_on_face(props["stickers"], lay["face"])
     elif beat.kind == "footage":
         comp = "footage"
         props.update(src=_publish(bundle, src, f"footage_{index}{Path(src).suffix}" if index is not None else None),
@@ -173,11 +174,13 @@ def graphic_job(beat: Beat, style: Style, out: Path, public_dir: Path | None = N
 def face_fx_job(beat: Beat, style: Style, face: Path, out: Path, fps: int, channel: dict,
                 bundle: Path | None = None, scale: float = 1.0, avatar: Path | None = None) -> RenderJob:
     """The presenter's own footage (`face`, already canvas-sized) wrapped in a YouTube-style scene."""
+    from .kits import prepare_stickers
     bundle = bundle or ensure_bundle()
     ch = dict(channel)
     ch["avatar"] = _publish(bundle, avatar, "channel_avatar" + avatar.suffix) if avatar else None
     props = {"style": _style_props(style), "durationSec": round(beat.duration, 3), "fps": fps,
-             "src": _publish(bundle, face), "fx": beat.fx or "none", "stickers": beat.stickers or [],
+             "src": _publish(bundle, face), "fx": beat.fx or "none",
+             "stickers": prepare_stickers(beat.stickers or [], lambda f: _publish(bundle, f)),
              "channel": ch}
     return RenderJob("face-fx", props, Path(out), scale)
 

@@ -135,6 +135,86 @@ def pixabay_images(q, session):
                   h.get("tags") or "") for h in d.get("hits", [])]
 
 
+def artic_images(q, session):
+    """Art Institute of Chicago: public-domain works (paintings, prints, old photographs), full IIIF images."""
+    d = _json(session, "https://api.artic.edu/api/v1/artworks/search", q=q, limit=12,
+              fields="id,title,image_id,is_public_domain,artist_title,thumbnail")
+    base = (d.get("config") or {}).get("iiif_url", "https://www.artic.edu/iiif/2")
+    out = []
+    for r in d.get("data", []):
+        th = r.get("thumbnail") or {}
+        if not (r.get("is_public_domain") and r.get("image_id")):
+            continue
+        w, h = th.get("width") or 1686, th.get("height") or 1000
+        out.append(Found("Art Institute of Chicago", r.get("title") or q, f"{base}/{r['image_id']}/full/1686,/0/default.jpg",
+                         min(w, 1686), int(h * min(1, 1686 / max(1, w))), "Public domain (CC0)", r.get("artist_title") or "",
+                         f"https://www.artic.edu/artworks/{r['id']}", f"{r.get('title') or ''} {th.get('alt_text') or ''}"))
+    return out
+
+
+def cleveland_images(q, session):
+    """Cleveland Museum of Art open access: CC0 objects and photographs."""
+    d = _json(session, "https://openaccess-api.clevelandart.org/api/artworks/", q=q, has_image=1, cc0=1, limit=12)
+    out = []
+    for r in d.get("data", []):
+        img = (r.get("images") or {}).get("print") or (r.get("images") or {}).get("web") or {}
+        if img.get("url"):
+            out.append(Found("Cleveland Museum of Art", r.get("title") or q, img["url"], int(img.get("width") or 0),
+                             int(img.get("height") or 0), "CC0", ", ".join(c.get("description", "") for c in r.get("creators") or []),
+                             r.get("url") or "", _words(r.get("title"), r.get("description"), r.get("type"))))
+    return out
+
+
+EUROPEANA_OK = ("publicdomain", "/by/", "zero")
+
+
+def europeana_images(q, session):
+    """Europeana: European museums, archives and libraries (only CC0 / public domain / CC BY). Public demo key unless
+    EUROPEANA_KEY is set."""
+    d = _json(session, "https://api.europeana.eu/record/v2/search.json", wskey=os.environ.get("EUROPEANA_KEY", "api2demo"),
+              query=q, rows=12, reusability="open", media="true", qf="TYPE:IMAGE")
+    out = []
+    for r in d.get("items", []):
+        rights = " ".join(r.get("rights") or [])
+        shown = (r.get("edmIsShownBy") or [None])[0]
+        if not shown or not any(k in rights for k in EUROPEANA_OK):
+            continue
+        title = (r.get("title") or [q])[0]
+        out.append(Found("Europeana", title, shown, 1600, 1000, rights.rsplit("/licenses/", 1)[-1] or "open", 
+                         (r.get("dataProvider") or [""])[0], r.get("guid") or "", _words(title, r.get("dcDescription"))))
+    return out
+
+
+def wellcome_images(q, session):
+    """Wellcome Collection: medicine, science, history (CC BY / CC0 / public domain only)."""
+    d = _json(session, "https://api.wellcomecollection.org/catalogue/v2/images", query=q, pageSize=12)
+    out = []
+    for r in d.get("results", []):
+        th = r.get("thumbnail") or {}
+        lic = (th.get("license") or {}).get("id", "")
+        if lic not in ("cc-by", "cc-0", "pdm") or not th.get("url"):
+            continue
+        url = th["url"].replace("/info.json", "/full/1600,/0/default.jpg")
+        title = (r.get("source") or {}).get("title") or q
+        out.append(Found("Wellcome Collection", title, url, 1600, 1100, {"cc-by": "CC BY 4.0", "cc-0": "CC0"}.get(lic, "Public domain"),
+                         "Wellcome Collection", f"https://wellcomecollection.org/works/{(r.get('source') or {}).get('id', '')}", title))
+    return out
+
+
+def loc_newspapers(q, session):
+    """Old newspaper pages (Library of Congress, Chronicling America: public domain): real front pages for the
+    newspaper scenes."""
+    d = _json(session, "https://www.loc.gov/collections/chronicling-america/", q=q, fo="json", c=12)
+    out = []
+    for r in d.get("results", []):
+        jpgs = [u.split("#")[0] for u in r.get("image_url") or [] if ".jpg" in u]
+        if jpgs:
+            out.append(Found("Library of Congress (newspapers)", r.get("title") or q, jpgs[-1], 1200, 1600,
+                             "Public domain (Chronicling America)", "Library of Congress", r.get("url") or "",
+                             _words(r.get("title"), r.get("description"))))
+    return out
+
+
 # ---------- footage ----------
 
 def pexels_videos(q, session):
@@ -228,9 +308,12 @@ def commons_videos(q, session):
 # ---------- choosing ----------
 
 IMAGE_ORDER = {
-    "auto": (commons_images, openverse_images, pexels_images, pixabay_images, loc_images, nasa_images),
-    "archive": (loc_images, commons_images, openverse_images, nasa_images),
+    "auto": (commons_images, openverse_images, pexels_images, pixabay_images, europeana_images, loc_images, nasa_images,
+             wellcome_images),
+    "archive": (loc_images, commons_images, europeana_images, openverse_images, artic_images, cleveland_images,
+                wellcome_images, nasa_images),
     "stock": (pexels_images, pixabay_images, openverse_images, commons_images),
+    "newspaper": (loc_newspapers, europeana_images, commons_images),
 }
 VIDEO_ORDER = {
     "auto": (pexels_videos, pixabay_videos, commons_videos, archive_videos, nasa_videos),
@@ -257,7 +340,8 @@ def find(query: str, kind: str = "image", source: str | None = None, session=Non
     """Candidates from every library for `query`, best first: on-topic matches first, then the
     preferred libraries for this kind of beat, then bigger files. Failing libraries are skipped."""
     session = session or requests.Session()
-    order = (IMAGE_ORDER if kind == "image" else VIDEO_ORDER)[guess_source(query, source)]
+    src = guess_source(query, source)
+    order = IMAGE_ORDER[src] if kind == "image" else VIDEO_ORDER.get(src, VIDEO_ORDER["archive"])
     min_w = MIN_IMAGE_WIDTH if kind == "image" else MIN_VIDEO_WIDTH
     scored = []
     for rank, search in enumerate(order):
