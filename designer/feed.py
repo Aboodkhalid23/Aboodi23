@@ -23,7 +23,7 @@ from pinterest import slug  # noqa: E402
 ROOT = Path(__file__).resolve().parent.parent
 CACHE_ROOT = ROOT / "designer/references/competitors"
 FONT = Path(__file__).resolve().parent / "fonts" / "Cairo-Black.ttf"
-VIDEO_ID = re.compile(r"^[A-Za-z0-9_-]{11}$")
+VIDEO_ID = re.compile(r"^[A-Za-z0-9_-]{11}\Z")
 THUMB = (720, 405)
 TOP_BAR = 24
 ITEM_H = THUMB[1] + 150
@@ -107,7 +107,7 @@ def search_cached(query: str, limit: int, cache_dir: Path) -> list[dict]:
 
 def fetch_thumb(video_id: str, cache_dir: Path) -> Path:
     """ينزّل غلاف الفيديو من i.ytimg.com (أو ياخذه من الكاش) ويحفظه 16:9."""
-    if not VIDEO_ID.match(video_id):
+    if not VIDEO_ID.fullmatch(video_id):
         raise FeedError(f"رقم فيديو مو صحيح: {video_id}")
     cache_dir = Path(cache_dir)
     path = cache_dir / f"{video_id}.jpg"
@@ -260,6 +260,9 @@ def main(argv=None) -> int:
     ap.add_argument("--limit", type=int, default=6)
     ap.add_argument("--duration", default="25:00")
     args = ap.parse_args(argv)
+    if Path(args.out).suffix.lower() not in (".jpg", ".jpeg", ".png"):
+        print("✗ خطأ: اسم الملف لازم ينتهي بـ .jpg أو .png")
+        return 1
     try:
         cache = CACHE_ROOT / slug(args.query)
         comps = search_cached(args.query, args.limit, cache)
@@ -277,6 +280,9 @@ def main(argv=None) -> int:
     except OSError as e:
         print(f"✗ خطأ: ما گدرت أحفظ الصورة ({e})")
         return 1
+    if not img.info["competitors"]:
+        print(f"⚠️ انحفظ {out} بس ماكو ولا منافس (البحث ما رجّع نتائج). جرّب كلمة بحث ثانية.")
+        return 0
     print(f"✓ انحفظ: {out} ({img.info['competitors']} منافس)")
     return 0
 

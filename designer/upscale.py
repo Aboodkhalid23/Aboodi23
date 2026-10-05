@@ -131,7 +131,7 @@ def ai_upscale(img: Image.Image, size=TARGET, strength=DEFAULT_STRENGTH, model_f
     src = fit_16x9(img.convert("RGB"))
     big = tile_apply(np.asarray(src, np.float32) / 255, run, 4)
     up = ImageOps.fit(Image.fromarray((np.clip(big, 0, 1) * 255).round().astype(np.uint8)), size, Image.LANCZOS)
-    base = ImageOps.fit(img.convert("RGB"), size, Image.LANCZOS)
+    base = ImageOps.fit(src, size, Image.LANCZOS)  # نفس القصة (src)، حتى التفاصيل تنطبق بالبكسل
     return detail_transfer(base, up, strength, face_mask(base))
 
 
@@ -139,7 +139,9 @@ def upscale(img: Image.Image, size=TARGET, strength=DEFAULT_STRENGTH,
             force_ai=False) -> tuple[Image.Image, str]:
     """يختار الطريقة حسب حجم الصورة، ويرجع (الصورة، الطريقة)."""
     img = img.convert("RGB")
-    if img.width >= MIN_AI_WIDTH and not force_ai:
+    # الطريقة العادية تكفي إذا التكبير المطلوب (حتى تغطي الصورة الهدف) صغير
+    cover = max(size[0] / img.width, size[1] / img.height)
+    if cover <= size[0] / MIN_AI_WIDTH and not force_ai:
         return classic_upscale(img, size), "classic"
     try:
         return ai_upscale(img, size, strength), "ai"

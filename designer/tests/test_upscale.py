@@ -81,6 +81,28 @@ class UpscaleTest(unittest.TestCase):
             self.assertIsNone(upscale.face_mask(Image.new("RGB", (64, 36))))
 
     @unittest.skipUnless(HAS_NP, "numpy ماكو")
+    @unittest.skipUnless(HAS_NP, "numpy ماكو")
+    def test_ai_upscale_base_and_up_from_same_crop(self):
+        stripes = Image.new("RGB", (1001, 500), (0, 0, 0))
+        for x in range(0, 1001, 6):
+            stripes.paste((255, 255, 255), (x, 0, x + 3, 500))
+        seen = {}
+
+        def capture(base, up, strength, mask):
+            seen["base"], seen["up"] = base, up
+            return base
+        with mock.patch.object(upscale, "detail_transfer", side_effect=capture), \
+                mock.patch.object(upscale, "face_mask", return_value=None):
+            upscale.ai_upscale(stripes, (1280, 720), model_fn=nearest4)
+        diff = np.abs(np.asarray(seen["base"], np.float32) - np.asarray(seen["up"], np.float32)).mean()
+        self.assertLess(diff, 20)
+
+    def test_wide_short_image_uses_ai(self):
+        with mock.patch.object(upscale, "ai_upscale", return_value=Image.new("RGB", (3840, 2160))) as ai:
+            _, method = upscale.upscale(Image.new("RGB", (2752, 1000)))
+        self.assertEqual(method, "ai")
+        ai.assert_called_once()
+
     def test_detail_transfer_keeps_colors(self):
         base = Image.new("RGB", (400, 225), (120, 80, 60))
         up = ImageEnhance.Brightness(Image.effect_noise((400, 225), 40).convert("RGB")).enhance(1.4)

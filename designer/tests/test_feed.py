@@ -177,6 +177,24 @@ class FeedTest(unittest.TestCase):
         self.assertEqual(code, 0, buf.getvalue())
         self.assertTrue(out.exists())
 
+    def test_cli_zero_competitors_warns(self):
+        buf = io.StringIO()
+        with mock.patch.object(feed, "search_cached", return_value=[]), contextlib.redirect_stdout(buf):
+            code = feed.main(["evergrande", "--ours", str(self.thumb), "--title", "ع", "-o", str(self.dir / "f.jpg")])
+        self.assertEqual(code, 0)
+        self.assertIn("⚠️", buf.getvalue())
+        self.assertNotIn("✓", buf.getvalue())
+
+    def test_video_id_rejects_trailing_newline(self):
+        self.assertIsNone(feed.VIDEO_ID.match("abcdefghijk\n"))
+
+    def test_cli_bad_out_extension_arabic(self):
+        buf = io.StringIO()
+        with mock.patch.object(feed, "search_cached", return_value=[]), contextlib.redirect_stdout(buf):
+            code = feed.main(["evergrande", "--ours", str(self.thumb), "--title", "ع", "-o", str(self.dir / "f")])
+        self.assertEqual(code, 1)
+        self.assertIn("✗ خطأ", buf.getvalue())
+
 
 if __name__ == "__main__":
     unittest.main()

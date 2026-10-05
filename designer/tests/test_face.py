@@ -14,6 +14,14 @@ HAS_CV = importlib.util.find_spec("cv2") is not None and importlib.util.find_spe
 FACE = ROOT / "designer/faces/abood-face-crop.jpg"  # محلي بس، ما ينرفع للريبو
 
 
+def detect_or_skip(test, img):
+    """إذا الموديل ما ينزل (بدون إنترنت)، الاختبار يتخطى بدل ما يفشل."""
+    try:
+        return face.detect_faces(img)
+    except face.FaceUnavailable as e:
+        test.skipTest(f"موديل الوجه ما متوفر: {e}")
+
+
 class FaceTest(unittest.TestCase):
     def test_missing_cv2_raises_arabic(self):
         with mock.patch.dict(sys.modules, {"cv2": None}):
@@ -27,12 +35,12 @@ class FaceTest(unittest.TestCase):
 
     @unittest.skipUnless(HAS_CV, "OpenCV ماكو")
     def test_blank_image_has_no_faces(self):
-        self.assertEqual(face.detect_faces(Image.new("RGB", (640, 360), (120, 120, 120))), [])
+        self.assertEqual(detect_or_skip(self, Image.new("RGB", (640, 360), (120, 120, 120))), [])
 
     @unittest.skipUnless(HAS_CV and FACE.exists(), "صورة الوجه المحلية ماكو")
     def test_owner_face_found_and_big(self):
         img = Image.open(FACE)
-        boxes = face.detect_faces(img)
+        boxes = detect_or_skip(self, img)
         self.assertGreaterEqual(len(boxes), 1)
         self.assertGreater(boxes[0][3], 0.2 * img.height)
 
@@ -40,8 +48,8 @@ class FaceTest(unittest.TestCase):
     def test_boxes_are_in_original_pixels_for_big_images(self):
         small = Image.open(FACE).convert("RGB")
         big = small.resize((small.width * 3, small.height * 3))
-        b_small = face.detect_faces(small)[0]
-        b_big = face.detect_faces(big)[0]
+        b_small = detect_or_skip(self, small)[0]
+        b_big = detect_or_skip(self, big)[0]
         self.assertAlmostEqual(b_big[3] / b_small[3], 3, delta=0.3)
 
 

@@ -9,7 +9,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from PIL import Image, ImageChops
+from PIL import Image, ImageChops, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import concepts  # noqa: E402
@@ -117,6 +117,23 @@ class ValidateTest(unittest.TestCase):
         self.assertInvalid([card(text="نهاية\nالعالم؟", font="Anton")], "Anton", "font_latin")
         concepts.validate([card(text="300\nBILLION", font="Anton")])
 
+    def test_wrong_types_give_arabic_error(self):
+        bad = [card(angle=["metaphor"]), card(camera=["standard"]), card(text="نهاية\nالعالم؟", font=["Kufam"]),
+               card(text="نهاية\nالعالم؟", font="Cairo", font_latin={"x": 1}), card(text=5), card(subject="x")]
+        c = card()
+        c["layout"]["face"] = ["right"]
+        bad.append(c)
+        for b in bad:
+            with self.subTest(card=str(b)[:60]):
+                with self.assertRaises(ConceptError):
+                    concepts.validate([b])
+
+    def test_unsafe_or_case_duplicate_ids(self):
+        for cid in ("T/1", "../x", "a b", "وجه", "x" * 31):
+            with self.subTest(cid=cid):
+                self.assertInvalid([card(cid)], "id")
+        self.assertInvalid([card("a1"), card("A1", angle="scale")], "مكرر")
+
     def test_not_a_list(self):
         self.assertInvalid({"id": "A1"}, "قائمة")
         self.assertInvalid([], "فارغ")
@@ -184,6 +201,21 @@ class SelectTest(unittest.TestCase):
         ]
         picked, _ = concepts.select(cards)
         self.assertEqual(self.ids(picked), ["n1", "t1", "n3"])
+
+    def test_tie_prefers_earliest_card(self):
+        def scored(cid, total_tweak, angle, expression, color, text=None):
+            c = card(cid, 8, angle, expression, color, text=text)
+            c["scores"].update(total_tweak)
+            return c
+        cards = [
+            scored("P1", {"clarity": 9}, "metaphor", "calm", "#8B0000"),            # 81.8
+            scored("P2", {"clarity": 9}, "scale", "worried", "#003366"),            # 81.8
+            scored("P3", {"face": 0}, "mystery", "smirk", "#004D00"),               # 72.7
+            scored("P4", {k: 9 for k in concepts.WEIGHTS} | {"face": 10}, "scale", "calm", "#663300"),  # 90.9
+            scored("T", {"clarity": 9}, "villain", "angry", "#4B0082", text="نهاية\nالعالم؟"),       # 81.8
+        ]
+        picked, _ = concepts.select(cards)
+        self.assertEqual(self.ids(picked), ["P1", "P2", "T"])
 
     def test_not_enough_no_text_cards(self):
         cards = [card("n1"), card("t1", angle="scale", text="نهاية\nالعالم؟"),
@@ -294,6 +326,22 @@ class SketchTest(unittest.TestCase):
         gained = white(concepts.draw_sketch(labelled, 80.0)) - white(concepts.draw_sketch(base, 80.0))
         self.assertGreater(gained, 900)
 
+    def test_headline_fits_zone(self):
+        for zone, (x0, y0, x1, y1) in concepts.ZONE_BOX.items():
+            for font in ("Lemonada", "Baloo", "ArefRuqaa"):
+                with self.subTest(zone=zone, font=font):
+                    c = card(text="نهاية\nالعالم؟", font=font)
+                    c["layout"]["text_zone"] = zone
+                    W, H = concepts.SKETCH
+                    box = (x0 * W, y0 * H, x1 * W, y1 * H)
+                    layer = Image.new("RGBA", concepts.SKETCH)
+                    concepts._headline(layer, c, box)
+                    ink = layer.getchannel("A").getbbox()
+                    self.assertGreaterEqual(ink[1], box[1] - 2)
+                    self.assertLessEqual(ink[3], box[3] + 2)
+                    self.assertGreaterEqual(ink[0], box[0] - 2)
+                    self.assertLessEqual(ink[2], box[2] + 2)
+
     def test_board_rows(self):
         cards = [card(f"c{i}", angle="scale") for i in range(9)]
         board = concepts.draw_board(cards, {"c0", "c3"})
@@ -338,6 +386,31 @@ class CliTest(unittest.TestCase):
         code, out = self.run_cli(self.json, "-o", out_dir)
         self.assertEqual(code, 0, out)
         self.assertTrue((out_dir / "picked.json").exists())
+
+    def test_cli_accepts_bom(self):
+        self.json.write_text(json.dumps(six_cards(), ensure_ascii=False), encoding="utf-8-sig")
+        code, out = self.run_cli(self.json, "-o", self.dir)
+        self.assertEqual(code, 0, out)
+
+    def test_cli_errors_have_no_errno(self):
+        code, out = self.run_cli(self.dir, "-o", self.dir / "out")
+        self.assertEqual(code, 1)
+        self.assertIn("✗ خطأ:", out)
+        self.assertNotIn("Errno", out)
+        blocker = self.dir / "file.txt"
+        blocker.write_text("x")
+        code, out = self.run_cli(self.json, "-o", blocker)
+        self.assertEqual(code, 1)
+        self.assertIn("✗ خطأ:", out)
+        self.assertNotIn("Errno", out)
+
+    def test_cli_rerun_removes_stale_sketches(self):
+        (self.dir / "sketch-OLD.jpg").write_bytes(b"x")
+        (self.dir / "scene-A.png").write_bytes(b"x")
+        code, out = self.run_cli(self.json, "-o", self.dir)
+        self.assertEqual(code, 0, out)
+        self.assertFalse((self.dir / "sketch-OLD.jpg").exists())
+        self.assertTrue((self.dir / "scene-A.png").exists())
 
     def test_cli_bad_inputs(self):
         bad_syntax = self.dir / "bad.json"

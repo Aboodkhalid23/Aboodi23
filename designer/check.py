@@ -138,6 +138,9 @@ def main(argv=None) -> int:
     if not args.images or not args.out:
         print("✗ خطأ: انطيني صور الأغلفة و -o check.jpg")
         return 1
+    if Path(args.out).suffix.lower() not in (".jpg", ".jpeg", ".png"):
+        print("✗ خطأ: اسم ملف الفحص لازم ينتهي بـ .jpg أو .png")
+        return 1
     stats = load_stats()
     for p in args.images:
         try:

@@ -43,6 +43,7 @@ MAX_WORDS = 4
 MIN_HUE_GAP = 30
 GRAY_SATURATION = 0.15
 HEX = re.compile(r"^#[0-9A-Fa-f]{6}$")
+SAFE_ID = re.compile(r"[A-Za-z0-9_-]{1,30}")
 REQUIRED_TEXT = ("idea", "hero", "setting", "why")
 # وصف عربي اختياري يبين بالمخطط (لأن hero وexpression بالإنگليزي للأمر)
 ARABIC_LABELS = ("hero_ar", "expression_ar")
@@ -104,31 +105,34 @@ def _check_card(c, n: int) -> None:
     if not isinstance(c, dict):
         raise ConceptError(f"البطاقة رقم {n}: لازم تكون كائن {{}}")
     cid = c.get("id")
-    if not isinstance(cid, str) or not cid.strip():
-        raise ConceptError(f"البطاقة رقم {n}: ناقصها id (رقم مثل \"A1\")")
+    if not isinstance(cid, str) or not SAFE_ID.fullmatch(cid):
+        raise ConceptError(f"البطاقة رقم {n}: id لازم حروف إنگليزية وأرقام بس (مثل \"A1\")، 30 حرف بالأكثر")
     where = f"البطاقة {cid}"
 
     def need(cond, field, msg):
         if not cond:
             raise ConceptError(f"{where}: {field} {msg}")
 
-    need(c.get("angle") in ANGLES, "angle", f"مو معروفة. المسموح: {', '.join(ANGLES)}")
+    def pick(value, allowed) -> bool:
+        return isinstance(value, (str, type(None))) and value in allowed
+
+    need(pick(c.get("angle"), ANGLES), "angle", f"مو معروفة. المسموح: {', '.join(ANGLES)}")
     for field in REQUIRED_TEXT:
         need(isinstance(c.get(field), str) and c[field].strip(), field, "ناقص أو فارغ")
     subject = c.get("subject")
     need(isinstance(subject, dict), "subject", "ناقص (لازم outfit وexpression وaction)")
     for field in SUBJECT_FIELDS:
         need(isinstance(subject.get(field), str) and subject[field].strip(), f"subject.{field}", "ناقص أو فارغ")
-    need(c.get("camera") in CAMERAS, "camera", f"مو معروفة. المسموح: {', '.join(CAMERAS)}")
+    need(pick(c.get("camera"), CAMERAS), "camera", f"مو معروفة. المسموح: {', '.join(CAMERAS)}")
     layout = c.get("layout")
     need(isinstance(layout, dict), "layout", "ناقص (لازم face وhero وtext_zone)")
-    need(layout.get("face") in FACE_POS, "layout.face", f"مو معروف. المسموح: {', '.join(FACE_POS)}")
-    need(layout.get("hero") in HERO_POS, "layout.hero", f"مو معروف. المسموح: {', '.join(HERO_POS)}")
-    need("text_zone" in layout and layout["text_zone"] in TEXT_ZONES, "layout.text_zone",
+    need(pick(layout.get("face"), FACE_POS), "layout.face", f"مو معروف. المسموح: {', '.join(FACE_POS)}")
+    need(pick(layout.get("hero"), HERO_POS), "layout.hero", f"مو معروف. المسموح: {', '.join(HERO_POS)}")
+    need("text_zone" in layout and pick(layout["text_zone"], TEXT_ZONES), "layout.text_zone",
          "مو معروف. المسموح: null، top_left، top_right، bottom_left")
     palette = c.get("palette")
     need(isinstance(palette, list) and 2 <= len(palette) <= 4
-         and all(isinstance(p, str) and HEX.match(p) for p in palette),
+         and all(isinstance(p, str) and HEX.fullmatch(p) for p in palette),
          "palette", "لازم 2-4 ألوان بصيغة #RRGGBB")
     scores = c.get("scores")
     need(isinstance(scores, dict), "scores", f"ناقص (لازم {', '.join(WEIGHTS)})")
@@ -149,7 +153,7 @@ def _check_card(c, n: int) -> None:
             need(isinstance(c[field], str) and c[field].strip(), field, "لازم كتابة، أو احذفه")
     for field in ("font", "font_latin"):
         if field in c:
-            need(c[field] in FONTS, field, f"خط مو معروف: {c[field]}. المتوفر: {', '.join(FONTS)}")
+            need(pick(c[field], FONTS), field, f"خط مو معروف: {c[field]}. المتوفر: {', '.join(FONTS)}")
     font = c.get("font", "Baloo")
     need(not (font in LATIN_FONTS and text and is_rtl(text)), "font",
          f"الخط {font} ما بيه حروف عربية، والكتابة عربية. حط خط عربي بـ font، و{font} بـ font_latin")
@@ -164,9 +168,9 @@ def validate(cards) -> None:
     seen = set()
     for n, c in enumerate(cards, 1):
         _check_card(c, n)
-        if c["id"] in seen:
+        if c["id"].lower() in seen:
             raise ConceptError(f"البطاقة {c['id']}: الرقم مكرر، كل بطاقة لازم رقمها غير")
-        seen.add(c["id"])
+        seen.add(c["id"].lower())
 
 
 def score(card: dict) -> float:
@@ -227,7 +231,7 @@ def select(cards: list) -> tuple[list[dict], list[str]]:
                 trio = (*pair, t)
                 if not _ok(trio, rules):
                     continue
-                key = (sum(score(c) for c in trio), [-order[id(c)] for c in trio])
+                key = (round(sum(score(c) for c in trio), 1), [-order[id(c)] for c in trio])
                 if best is None or key > best[0]:
                     best = (key, trio)
         if best:
@@ -355,28 +359,36 @@ def _dashed_rect(d, box, color, width=4, dash=22) -> None:
                    fill=color, width=width)
 
 
-def _headline(d, card: dict, box) -> None:
-    """الكتابة نفسها بخط البطاقة، بأكبر حجم يساع المنطقة."""
+def _headline(target: Image.Image, card: dict, box) -> None:
+    """الكتابة نفسها بخط البطاقة، بأكبر حجم يساع المنطقة (يقيس الحبر الحقيقي ويا الحد)، بنص المنطقة."""
     x0, y0, x1, y1 = box
     lines = card["text"].split("\n")
     font_path = FONTS_DIR / FONTS[card.get("font", "Baloo")]
     latin_path = FONTS_DIR / FONTS[card["font_latin"]] if card.get("font_latin") else None
-    px = int((y1 - y0) / (len(lines) * 1.25))
+    px = int((y1 - y0) / (len(lines) * 1.1))
     while True:
         font = load_font(font_path, px)
         latin = load_font(latin_path, px) if latin_path else None
         space = font.getlength(" ")
-        rows = [_words(line, font, latin) for line in lines]
-        if max(_line_width(r, space) for r in rows) <= (x1 - x0) * 0.9 or px <= 16:
+        ascent, descent = font.getmetrics()
+        line_h = (ascent + descent) * 0.9
+        layer = Image.new("RGBA", target.size)
+        d = ImageDraw.Draw(layer)
+        for i, line in enumerate(lines):
+            row = _words(line, font, latin)
+            width = _line_width(row, space)
+            _draw_words(d, row, (x0 + x1) / 2 - width / 2, y0 + i * line_h, LINE_COLORS[min(i, 1)],
+                        max(2, int(px * 0.08)), space, ascent)
+        ink = layer.getchannel("A").getbbox()
+        fits = ink and ink[2] - ink[0] <= (x1 - x0) * 0.92 and ink[3] - ink[1] <= (y1 - y0) * 0.9
+        if fits or px <= 14:
             break
-        px = int(px * 0.9)
-    ascent, descent = font.getmetrics()
-    line_h = (ascent + descent) * 0.9
-    top = (y0 + y1) / 2 - line_h * len(rows) / 2
-    for i, row in enumerate(rows):
-        width = _line_width(row, space)
-        _draw_words(d, row, (x0 + x1) / 2 - width / 2, top + i * line_h, LINE_COLORS[min(i, 1)],
-                    max(2, int(px * 0.08)), space, ascent)
+        px = int(px * 0.92)
+    if not ink:
+        return
+    dx = (x0 + x1) / 2 - (ink[0] + ink[2]) / 2
+    dy = (y0 + y1) / 2 - (ink[1] + ink[3]) / 2
+    target.alpha_composite(layer.transform(layer.size, Image.AFFINE, (1, 0, -dx, 0, 1, -dy)))
 
 
 def _rgba(color: str, alpha: int) -> tuple:
@@ -420,7 +432,7 @@ def draw_sketch(card: dict, score_value: float) -> Image.Image:
         zb = ZONE_BOX[layout["text_zone"]]
         box = (zb[0] * W, zb[1] * H, zb[2] * W, zb[3] * H)
         _dashed_rect(d, box, (255, 255, 255, 230))
-        _headline(d, card, box)
+        _headline(over, card, box)
     # فوق: الزاوية والدرجة والكاميرا
     d.rectangle((0, 0, W, 64), fill=(0, 0, 0, 170))
     _label_right(d, ANGLES[card["angle"]], W - 24, 6, 34)
@@ -477,7 +489,7 @@ def main(argv=None) -> int:
     args = ap.parse_args(argv)
     path = Path(args.concepts)
     try:
-        cards = json.loads(path.read_text(encoding="utf-8"))
+        cards = json.loads(path.read_text(encoding="utf-8-sig"))
         validate(cards)
         picked, notes = select(cards)
     except FileNotFoundError:
@@ -489,7 +501,13 @@ def main(argv=None) -> int:
     except UnicodeDecodeError:
         print(f"✗ خطأ: ملف الأفكار لازم يكون نص UTF-8: {path}")
         return 1
-    except (ConceptError, OSError) as e:
+    except IsADirectoryError:
+        print(f"✗ خطأ: هذا مجلد مو ملف أفكار: {path}")
+        return 1
+    except OSError:
+        print(f"✗ خطأ: ما گدرت أقرا ملف الأفكار: {path}")
+        return 1
+    except ConceptError as e:
         print(f"✗ خطأ: {e}")
         return 1
     labels = {p["id"]: p["label"] for p in picked}
@@ -500,12 +518,14 @@ def main(argv=None) -> int:
     try:
         out.mkdir(parents=True, exist_ok=True)
         result = {"notes": notes, "picked": [dict(p, prompt=build_prompt(p)) for p in picked]}
+        for old in out.glob("sketch-*.jpg"):
+            old.unlink()
         (out / "picked.json").write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         for p in picked:
             draw_sketch(p, p["score"]).save(out / f"sketch-{p['id']}.jpg", quality=90)
         draw_board(cards, labels).save(out / "board.jpg", quality=90)
-    except OSError as e:
-        print(f"✗ خطأ: ما گدرت أكتب النتائج بـ {out} ({e})")
+    except OSError:
+        print(f"✗ خطأ: ما گدرت أكتب النتائج بـ {out} (تأكد إنه مجلد مو ملف، وإنه ينكتب بيه)")
         return 1
     print(f"✓ انكتب picked.json و{len(picked)} مخططات وboard.jpg بـ {out}")
     return 0
