@@ -1,3 +1,4 @@
+anti-ai-writing artemnovitckii/content-skills 1c6e909
 audience-research social-media-skills/skills 6e30eeb
 captions-and-clipping social-media-skills/skills 6e30eeb
 caveman JuliusBrussee/caveman 6571943
@@ -13,7 +14,7 @@ executing-plans obra/superpowers 8ca22db
 experimentation-and-ab-testing social-media-skills/skills 6e30eeb
 fact-check-workflow jamditis/claude-skills-journalism e3e2172
 finishing-a-development-branch obra/superpowers 8ca22db
-frontend-design anthropics/skills 8a1541c
+frontend-design anthropics/skills 683bc88
 hook-writer social-media-skills/skills 6e30eeb
 instagram-growth social-media-skills/skills 6e30eeb
 instagram-seo social-media-skills/skills 6e30eeb
@@ -26,6 +27,7 @@ reels-script social-media-skills/skills 6e30eeb
 requesting-code-review obra/superpowers 8ca22db
 retention-audit yaxeen/storytelling-skills 24ef3c1
 source-verification jamditis/claude-skills-journalism e3e2172
+storytelling artemnovitckii/content-skills 1c6e909
 storytelling-hooks yaxeen/storytelling-skills 24ef3c1
 subagent-driven-development obra/superpowers 8ca22db
 superpowers-brainstorming obra/superpowers 8ca22db
@@ -38,6 +40,10 @@ using-git-worktrees obra/superpowers 8ca22db
 verification-before-completion obra/superpowers 8ca22db
 viral-hooks artemnovitckii/content-skills 1c6e909
 viral-reverse-engineering social-media-skills/skills 6e30eeb
-webapp-testing anthropics/skills 8a1541c
+webapp-testing anthropics/skills 683bc88
 writing-plans obra/superpowers 8ca22db
+youtube-script-writer SkillMedev/creator-studio 21980fd
 youtube-shorts social-media-skills/skills 6e30eeb
+youtube-virality-gate ravsau/youtuber-skills 603367b
+yt-edit Jakeschincariol/youtube-agent-skill a2feb21
+yt-retention Jakeschincariol/youtube-agent-skill a2feb21
