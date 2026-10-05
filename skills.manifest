@@ -66,3 +66,11 @@ social-media-skills/skills  skills/experimentation-and-ab-testing
 pottertech/claude-skills  youtube/thumbnail-design
 # موقوف لحد ما ينضاف مفتاح Google (GEMINI_API_KEY) بإعدادات البيئة. شيل # من أول السطر الجاي حتى يتفعل:
 # aabrole/claude-video-thumbnail-skill  skills/video-thumbnail
+
+# كتابة واحتفاظ — إضافات (مفحوصة 2026/10/5: تعليمات بس أو بايثون بمكتبات أساسية، ماكو إنترنت ولا مفاتيح)
+Jakeschincariol/youtube-agent-skill  skills/yt-retention
+Jakeschincariol/youtube-agent-skill  skills/yt-edit
+ravsau/youtuber-skills               skills/youtube-virality-gate
+artemnovitckii/content-skills        storytelling
+artemnovitckii/content-skills        anti-ai-writing
+SkillMedev/creator-studio            skills/youtube-script-writer
