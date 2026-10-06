@@ -125,6 +125,7 @@ python3 -c "import sys;print(len(open(sys.argv[1],encoding='utf-8').read().split
 4. كمّل الخطوتين 8 و9 (الغلاف الطولي والحفظ).
 
 ### 9. التسليم
+0. شغّل `python3 scripts/script-check.py <المجلد>/04-script.md --strict` (لازم 0 🔴)، و`python3 scripts/teleprompter.py <المجلد>/04-script.md`.
 1. ضيف سطر بـ `episodes/log.md`: التاريخ | الموضوع | الفئة | نوع الهوك | العنوان الموصى به | عدد الكلمات | المجلد.
 2. سوّ commit وpush.
 3. رد على صاحب القناة بالعراقي، **باختصار**:
