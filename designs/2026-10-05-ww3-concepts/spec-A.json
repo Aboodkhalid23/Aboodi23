@@ -1,0 +1,12 @@
+{
+  "source": "W01",
+  "size": "youtube4k",
+  "background": {
+    "image": "scene-A-4k.png",
+    "contrast": 1.12,
+    "saturation": 1.2,
+    "sharpen": 0.5,
+    "vignette": 0.35
+  },
+  "layers": []
+}

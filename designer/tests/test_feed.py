@@ -165,6 +165,36 @@ class FeedTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("✗ خطأ", buf.getvalue())
 
+    def test_cli_without_ours_shows_competitors_only(self):
+        """قبل الأفكار: المصمم يشوف أغلفة المنافسين بس (بدون أغلفتنا)."""
+        comps = [{"id": f"abcdefghij{i}", "title": "منافس", "channel": "قناة", "views": 1000, "duration": 600}
+                 for i in range(4)]
+        out = self.dir / "before.jpg"
+        buf = io.StringIO()
+        with mock.patch.object(feed, "search_cached", return_value=comps), \
+                mock.patch.object(feed, "fetch_thumb", return_value=self.thumb), contextlib.redirect_stdout(buf):
+            code = feed.main(["evergrande", "--title", "ع", "-o", str(out)])
+        self.assertEqual(code, 0, buf.getvalue())
+        self.assertTrue(out.exists())
+
+    def test_cli_zero_competitors_warns(self):
+        buf = io.StringIO()
+        with mock.patch.object(feed, "search_cached", return_value=[]), contextlib.redirect_stdout(buf):
+            code = feed.main(["evergrande", "--ours", str(self.thumb), "--title", "ع", "-o", str(self.dir / "f.jpg")])
+        self.assertEqual(code, 0)
+        self.assertIn("⚠️", buf.getvalue())
+        self.assertNotIn("✓", buf.getvalue())
+
+    def test_video_id_rejects_trailing_newline(self):
+        self.assertIsNone(feed.VIDEO_ID.match("abcdefghijk\n"))
+
+    def test_cli_bad_out_extension_arabic(self):
+        buf = io.StringIO()
+        with mock.patch.object(feed, "search_cached", return_value=[]), contextlib.redirect_stdout(buf):
+            code = feed.main(["evergrande", "--ours", str(self.thumb), "--title", "ع", "-o", str(self.dir / "f")])
+        self.assertEqual(code, 1)
+        self.assertIn("✗ خطأ", buf.getvalue())
+
 
 if __name__ == "__main__":
     unittest.main()

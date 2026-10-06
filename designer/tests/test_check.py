@@ -106,6 +106,16 @@ class CheckTest(unittest.TestCase):
         sheet = check.squint_sheet(paths)
         self.assertEqual(sheet.size, (3 * 320 + 4 * 20, 2 * (180 + 20) + 20))
 
+    @unittest.skipUnless(HAS_NP, "numpy ماكو")
+    def test_cli_bad_out_extension_arabic(self):
+        p = self.dir / "t.jpg"
+        Image.new("RGB", (1280, 720), (90, 60, 40)).save(p)
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            code = check.main([str(p), "-o", str(self.dir / "check")])
+        self.assertEqual(code, 1)
+        self.assertIn("✗ خطأ", buf.getvalue())
+
     def test_cli_missing_file(self):
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
