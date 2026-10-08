@@ -1,0 +1,929 @@
+<title>غرفة المونتاج</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;600;800&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* An editing suite for one episode: monitor + side panel (scene / requests / templates / reels) on top,
+   a left-to-right timeline under it. Everything on the timeline is placed with CSS variables (--s start, --d length,
+   --pps pixels per second), so zooming changes one number and dragging touches only the clips that move. */
+:root{
+  --bg:#ECEAE4; --panel:#F8F7F3; --sunk:#DEDAD1; --line:#C9C3B6; --fg:#1E1C18; --mute:#6C665B; --on-accent:#fff;
+  --accent:#D9481E; --soft:rgba(217,72,30,.14); --flag:#E3B21B; --done:#3E9B5A; --queued:#2F6F8F;
+  --k-face:#8C7B5E; --k-img:#2F6F8F; --k-gfx:#B07A12; --k-ai:#7A4FA3; --k-arch:#5E6B3A; --k-cut:#A8432C;
+  --demo-a:#2F6F8F; --demo-b:#D9A441;
+  --display:"Alexandria","Noto Kufi Arabic",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#17161A; --panel:#211F25; --sunk:#0F0E12; --line:#36333C; --fg:#EDEAE3; --mute:#9A94A3; --on-accent:#fff;
+  --accent:#FF6A3D; --soft:rgba(255,106,61,.18); --flag:#F2C230; --done:#56B872; --queued:#4C9DC4;
+  --k-face:#A8946E; --k-img:#4C9DC4; --k-gfx:#E0A22C; --k-ai:#A57BD1; --k-arch:#8A9A55; --k-cut:#D45E44;
+  --demo-a:#4C9DC4; --demo-b:#E0A22C; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#17161A; --panel:#211F25; --sunk:#0F0E12; --line:#36333C; --fg:#EDEAE3; --mute:#9A94A3; --on-accent:#fff;
+  --accent:#FF6A3D; --soft:rgba(255,106,61,.18); --flag:#F2C230; --done:#56B872; --queued:#4C9DC4;
+  --k-face:#A8946E; --k-img:#4C9DC4; --k-gfx:#E0A22C; --k-ai:#A57BD1; --k-arch:#8A9A55; --k-cut:#D45E44;
+  --demo-a:#4C9DC4; --demo-b:#E0A22C; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--display);direction:rtl;padding-inline:16px;padding-block:12px;margin:0}
+.app{max-width:1440px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-size:20px;margin:0;font-weight:800;text-wrap:balance}
+h1 small{font-weight:400;color:var(--mute);font-size:13px;margin-inline-start:8px}
+.status{font-size:13px;color:var(--mute);display:flex;align-items:center;gap:8px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--mute)}
+.dot.ok{background:var(--done)}.dot.dirty{background:var(--accent)}
+button,select,input,textarea{font-family:inherit;font-size:14px;color:var(--fg)}
+button{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 11px;cursor:pointer;min-height:38px;touch-action:manipulation}
+button:hover{border-color:var(--fg)}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+button.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+button:disabled{opacity:.45;cursor:default}
+.top{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:10px;align-items:start}
+@media (max-width:900px){.top{grid-template-columns:1fr}}
+.monitor{background:#000;border-radius:10px;overflow:hidden;position:relative;aspect-ratio:16/9;max-width:100%;margin-inline:auto;width:min(100%,calc(52vh * 16 / 9))}
+.monitor video{width:100%;height:100%;display:block;object-fit:contain;background:#000}
+.monitor.vertical{aspect-ratio:9/16;width:min(100%,calc(68vh * 9 / 16))}
+.monitor.vertical video{object-fit:cover}
+.monitor .badge{position:absolute;top:8px;inset-inline-start:8px;background:rgba(0,0,0,.6);color:#fff;font-size:12px;padding:4px 8px;border-radius:6px}
+.side{background:var(--panel);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;min-width:0;max-height:max(52vh,340px)}
+@media (max-width:900px){.side{max-height:none}.side .pane{max-height:60vh}
+  /* phone: picture, buttons and timeline together on top, the panel under them */
+  .top{display:contents}.app>header{order:0}.monitor{order:1}.transport{order:2}.tl-wrap{order:3}.side{order:4}.legend{order:5}.help{order:6}}
+.tabs{display:flex;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{border:0;border-radius:0;background:none;flex:1 0 auto;padding:10px 12px;font-weight:600;color:var(--mute);border-bottom:3px solid transparent}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.tabs .count{display:inline-block;min-width:18px;padding:0 5px;margin-inline-start:4px;border-radius:9px;background:var(--flag);color:#1E1C18;font-size:11px;line-height:18px}
+.pane{padding:12px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;min-height:0}
+.pane h3{font-size:13px;margin:4px 0 0;color:var(--mute);font-weight:600}
+.empty{color:var(--mute);font-size:14px;line-height:1.7;margin:0}
+label{font-size:12px;color:var(--mute);display:flex;flex-direction:column;gap:4px}
+select,input,textarea{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px;min-width:0}
+textarea{min-height:60px;resize:vertical}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row>*{flex:1 1 130px;min-width:0}
+.times{font-family:var(--mono);font-size:13px;color:var(--mute);direction:ltr;text-align:left;font-variant-numeric:tabular-nums}
+.said{font-size:13px;line-height:1.7;background:var(--bg);border-radius:8px;padding:8px 10px;color:var(--fg)}
+.said:empty{display:none}
+/* transitions, each with a moving preview */
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.tile{display:flex;flex-direction:column;gap:4px;padding:5px;text-align:center;font-size:12px;min-height:0}
+.tile.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--soft)}
+.demo{position:relative;aspect-ratio:16/9;overflow:hidden;border-radius:5px;background:var(--demo-a)}
+.demo i{position:absolute;inset:0;display:block}
+.demo .a{background:var(--demo-a)}
+.demo .b{background:var(--demo-b)}
+.demo .a::after,.demo .b::after{content:"";position:absolute;left:25%;top:30%;width:22%;height:40%;border-radius:50%;background:rgba(255,255,255,.55)}
+.demo .b::after{left:55%;border-radius:3px}
+.demo .x{pointer-events:none}
+.tgrid .demo *{animation-duration:2.2s;animation-iteration-count:infinite;animation-timing-function:cubic-bezier(.65,0,.35,1)}
+.t-cut .b{animation-name:t-cut;animation-timing-function:steps(1,end)}
+@keyframes t-cut{0%,45%{opacity:0}46%,100%{opacity:1}}
+.t-zoom .b{animation-name:t-zoom}
+@keyframes t-zoom{0%,30%{opacity:0;transform:scale(1.8)}65%,100%{opacity:1;transform:scale(1)}}
+.t-flash .b{animation-name:t-cut;animation-timing-function:steps(1,end)}
+.t-flash .x{background:#fff;animation-name:t-flash}
+@keyframes t-flash{0%,38%{opacity:0}46%{opacity:1}70%,100%{opacity:0}}
+.t-whip .b{animation-name:t-whip}
+@keyframes t-whip{0%,30%{transform:translateX(105%);filter:blur(6px)}60%{filter:blur(0)}60%,100%{transform:translateX(0)}}
+.t-glitch .b{animation-name:t-glitch;animation-timing-function:steps(8,end)}
+@keyframes t-glitch{0%,35%{opacity:0}40%{opacity:1;transform:translate(6px,-2px);filter:hue-rotate(90deg)}45%{opacity:0}50%{opacity:1;transform:translate(-5px,2px)}55%{transform:translate(3px,0);filter:none}60%,100%{opacity:1;transform:none}}
+.t-tear .b{animation-name:t-tear}
+@keyframes t-tear{0%,30%{clip-path:polygon(0 0,0 0,0 20%,0 45%,0 70%,0 100%,0 100%)}70%,100%{clip-path:polygon(0 0,100% 0,108% 20%,96% 45%,110% 70%,100% 100%,0 100%)}}
+.t-burn .b{animation-name:t-burn}
+.t-burn .x{border-radius:50%;box-shadow:0 0 0 3px #F28C28,0 0 12px 4px #C4382E;animation-name:t-burnring;inset:auto;left:50%;top:50%;width:0;height:0}
+@keyframes t-burn{0%,30%{clip-path:circle(0% at 50% 50%)}75%,100%{clip-path:circle(75% at 50% 50%)}}
+@keyframes t-burnring{0%,30%{width:0;height:0;margin:0;opacity:1}75%{width:150%;height:260%;margin:-65% 0 0 -75%;opacity:.8}76%,100%{opacity:0}}
+.t-dive .a{animation-name:t-divea}
+.t-dive .b{animation-name:t-diveb}
+@keyframes t-divea{0%,25%{transform:scale(1);opacity:1}60%,100%{transform:scale(3.2);opacity:0}}
+@keyframes t-diveb{0%,35%{transform:scale(.3);opacity:0}70%,100%{transform:scale(1);opacity:1}}
+.t-pan .a{animation-name:t-pana}
+.t-pan .b{animation-name:t-panb}
+@keyframes t-pana{0%,30%{transform:translateX(0)}70%,100%{transform:translateX(-100%)}}
+@keyframes t-panb{0%,30%{transform:translateX(100%)}70%,100%{transform:translateX(0)}}
+.t-shutter .b{animation-name:t-cut;animation-timing-function:steps(1,end)}
+.t-shutter .x{background:repeating-linear-gradient(180deg,#8D8A84 0 5px,#6E6B66 5px 7px);animation-name:t-shutter}
+@keyframes t-shutter{0%,15%{transform:translateY(-100%)}45%{transform:translateY(0)}50%{transform:translateY(0)}85%,100%{transform:translateY(-100%)}}
+.t-slide .b{animation-name:t-slide;box-shadow:0 -6px 12px rgba(0,0,0,.35)}
+@keyframes t-slide{0%,30%{transform:translateY(105%) rotate(2deg)}70%,100%{transform:translateY(0) rotate(0)}}
+/* alternatives */
+.cgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.cand{padding:0;border-radius:7px;overflow:hidden;position:relative;aspect-ratio:4/3;background:var(--sunk)}
+.cand img{width:100%;height:100%;object-fit:cover;display:block}
+.cand.sel{outline:3px solid var(--accent);outline-offset:-3px}
+.cand .src{position:absolute;bottom:0;inset-inline:0;background:rgba(0,0,0,.55);color:#fff;font-size:10px;padding:2px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cand.sel::after{content:"✓";position:absolute;top:4px;inset-inline-end:4px;background:var(--accent);color:var(--on-accent);width:20px;height:20px;border-radius:50%;font-size:13px;line-height:20px}
+/* requests */
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{font-size:12px;min-height:30px;padding:4px 9px;border-radius:15px}
+.where{font-size:13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.where b{font-family:var(--mono);direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;border-radius:0;min-height:32px;font-size:12px}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.reqs{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
+.req{border:1px solid var(--line);border-radius:9px;padding:9px 10px;display:flex;flex-direction:column;gap:6px;background:var(--bg)}
+.req.hl{border-color:var(--accent);box-shadow:0 0 0 2px var(--soft)}
+.req .meta{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mute);flex-wrap:wrap}
+.req .at{font-family:var(--mono);direction:ltr;unicode-bidi:isolate;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:2px 6px;min-height:0;font-size:12px;font-variant-numeric:tabular-nums}
+.req .txt{font-size:14px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
+.req .reply{font-size:13px;line-height:1.6;border-inline-start:3px solid var(--done);padding-inline-start:8px}
+.req audio{width:100%;height:36px}
+.req .x{margin-inline-start:auto;min-height:28px;padding:2px 8px;font-size:12px}
+.st{font-size:11px;border-radius:10px;padding:2px 8px;color:#fff}
+.st.new{background:var(--accent)}.st.queued{background:var(--queued)}.st.done{background:var(--done)}.st.note{background:var(--mute)}
+.banner{background:var(--soft);border:1px solid var(--accent);border-radius:9px;padding:10px;font-size:14px;line-height:1.7}
+.rec{display:inline-flex;align-items:center;gap:6px}
+.rec.live{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+/* templates */
+.tpl{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.tpl button{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:start;padding:10px;touch-action:none}
+.tpl b{font-size:14px}.tpl span{font-size:12px;color:var(--mute);line-height:1.5}
+.tpl .ic{font-size:20px}
+.ghost{position:fixed;z-index:30;pointer-events:none;background:var(--fg);color:var(--bg);padding:6px 10px;border-radius:8px;font-size:13px;transform:translate(-50%,-130%)}
+/* reels */
+.reel{border:1px solid var(--line);border-radius:9px;padding:9px;display:flex;flex-direction:column;gap:6px;background:var(--bg)}
+.reel.sel{border-color:var(--accent)}
+.reel .warn{font-size:12px;color:var(--accent)}
+/* transport */
+.transport{display:flex;align-items:center;gap:6px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 9px}
+.transport .tc{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:15px;direction:ltr;min-width:96px;text-align:center}
+.transport .grow{flex:1}
+.zoom{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--mute)}
+.zoom input{width:110px;padding:0}
+.ib{min-width:38px;padding-inline:8px}
+/* timeline */
+.tl-wrap{background:var(--sunk);border:1px solid var(--line);border-radius:10px;overflow-x:auto;overflow-y:hidden;direction:ltr;position:relative;overscroll-behavior-x:contain}
+.tl{position:relative;--pps:70;width:calc(var(--dur) * var(--pps) * 1px + 60px);min-width:100%}
+.lane{position:relative;border-bottom:1px solid var(--line)}
+.lbl{position:sticky;left:0;z-index:4;display:inline-block;font-size:10px;color:var(--mute);background:var(--sunk);padding:2px 6px;border-bottom-right-radius:6px;direction:rtl;pointer-events:none}
+.it{position:absolute;left:calc(var(--s) * var(--pps) * 1px);width:calc(var(--d) * var(--pps) * 1px)}
+.ruler{height:26px;cursor:pointer;touch-action:none}
+.ruler .lbl{display:none}
+.tick{position:absolute;top:0;height:100%;left:calc(var(--s) * var(--pps) * 1px);border-left:1px solid var(--line);font-family:var(--mono);font-size:10px;color:var(--mute);padding-left:3px;padding-top:5px;pointer-events:none}
+.chap{position:absolute;top:2px;left:calc(var(--s) * var(--pps) * 1px);font-size:10px;background:var(--fg);color:var(--bg);border-radius:4px;padding:1px 5px;direction:rtl;white-space:nowrap;pointer-events:none;transform:translateX(2px)}
+.marks{height:28px;touch-action:none;cursor:crosshair}
+.flag{position:absolute;top:4px;height:20px;left:calc(var(--s) * var(--pps) * 1px);min-width:20px;width:calc(max(var(--d) * var(--pps) * 1px, 20px));border-radius:5px;background:var(--flag);color:#1E1C18;font-size:11px;padding:1px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;direction:rtl;cursor:pointer;border:1px solid rgba(0,0,0,.15)}
+.flag.queued{background:var(--queued);color:#fff}.flag.done{background:var(--done);color:#fff}.flag.note{background:var(--panel);color:var(--fg);border-color:var(--line)}
+.video{height:92px}
+.orig{height:40px;display:none}
+.tl.compare .orig{display:block}
+.orig .clip{height:30px;top:5px;opacity:.6}
+.clip{position:absolute;top:4px;height:84px;border-radius:7px;overflow:hidden;border:2px solid transparent;cursor:grab;display:flex;flex-direction:column;user-select:none;-webkit-user-select:none;contain:layout paint}
+.clip>img{height:48px;width:100%;object-fit:cover;opacity:.92;pointer-events:none;background:rgba(0,0,0,.2)}
+.clip .cap{font-size:11px;color:#fff;padding:2px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;direction:rtl;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.clip .kind{font-size:10px;color:rgba(255,255,255,.85);padding:0 6px;white-space:nowrap;overflow:hidden;direction:rtl}
+.clip.sel{border-color:var(--fg);box-shadow:0 0 0 2px var(--accent)}
+.clip.drop{outline:2px dashed var(--fg);outline-offset:-4px}
+.tl.compare .clip.chg::before{content:"";position:absolute;top:4px;right:4px;width:10px;height:10px;border-radius:50%;background:var(--flag);border:1px solid #000;z-index:1}
+.k-face{background:var(--k-face)}.k-img{background:var(--k-img)}.k-gfx{background:var(--k-gfx)}.k-ai{background:var(--k-ai)}.k-arch{background:var(--k-arch)}.k-cut{background:var(--k-cut)}
+.handle{position:absolute;top:0;width:12px;height:100%;cursor:ew-resize;z-index:2;touch-action:none}
+.handle::after{content:"";position:absolute;top:30%;bottom:30%;left:5px;width:2px;border-radius:2px;background:rgba(255,255,255,.8)}
+.handle.l{left:-2px}.handle.r{right:-2px}
+@media (pointer:coarse){.handle{width:22px}.handle::after{left:10px}.handle.l{left:-4px}.handle.r{right:-4px}}
+.texts{height:26px}
+.chip{position:absolute;top:3px;height:20px;border-radius:5px;background:var(--panel);border:1px solid var(--line);font-size:11px;padding:1px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;direction:rtl;cursor:pointer}
+.audio{height:26px}
+.fxm{position:absolute;top:3px;height:20px;font-size:10px;background:var(--panel);border:1px solid var(--line);border-radius:5px;padding:1px 5px;white-space:nowrap;direction:rtl;transform:translateX(-50%);left:calc(var(--s) * var(--pps) * 1px);cursor:pointer}
+.words{height:30px}
+.w{position:absolute;top:5px;height:20px;font-size:12px;line-height:20px;color:var(--fg);direction:rtl;white-space:nowrap;overflow:hidden;text-align:center;border-radius:4px;cursor:pointer}
+.w:hover{background:var(--panel)}
+.w.now{background:var(--fg);color:var(--bg)}
+.reels{height:28px}
+.rbar{position:absolute;top:4px;height:20px;border-radius:5px;background:var(--k-ai);color:#fff;font-size:11px;padding:1px 14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;direction:rtl;cursor:pointer}
+.rbar.sel{box-shadow:0 0 0 2px var(--accent)}
+.rbar .handle::after{top:20%;bottom:20%}
+.playhead{position:absolute;top:0;bottom:0;left:0;width:2px;background:var(--accent);pointer-events:none;z-index:6;will-change:transform}
+.playhead::before{content:"";position:absolute;top:0;left:-6px;border:7px solid transparent;border-top-color:var(--accent)}
+.range{position:absolute;top:0;bottom:0;left:calc(var(--s) * var(--pps) * 1px);width:calc(var(--d) * var(--pps) * 1px);background:var(--soft);border-inline:2px solid var(--accent);pointer-events:none;z-index:5}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--mute)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.help{font-size:13px;color:var(--mute);line-height:1.8;margin:0}
+.help b{color:var(--fg)}
+.toast{position:fixed;inset-inline:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));margin:auto;max-width:440px;background:var(--fg);color:var(--bg);padding:10px 14px;border-radius:10px;font-size:14px;text-align:center;z-index:40}
+@media (prefers-reduced-motion:reduce){.tgrid .demo *{animation:none!important}.t-cut .b,.t-zoom .b,.t-whip .b,.t-slide .b{opacity:1}}
+</style>
+
+<div class="app">
+  <header>
+    <h1>غرفة المونتاج <small id="epname">…</small></h1>
+    <div class="status"><span class="dot" id="dot"></span><span id="status">دا أحمّل…</span></div>
+  </header>
+
+  <div class="top">
+    <div class="monitor" id="monitor">
+      <video id="video" src="preview.mp4" playsinline preload="auto"></video>
+      <div class="badge" id="vbadge" hidden>ريل طولي</div>
+    </div>
+
+    <section class="side" aria-label="لوحة التعديل">
+      <div class="tabs" role="tablist">
+        <button role="tab" data-tab="scene" aria-selected="true">المشهد</button>
+        <button role="tab" data-tab="reqs" aria-selected="false">الطلبات<span class="count" id="reqCount" hidden>0</span></button>
+        <button role="tab" data-tab="tpl" aria-selected="false">قوالب</button>
+        <button role="tab" data-tab="reels" aria-selected="false">الريلز</button>
+      </div>
+
+      <div class="pane" id="p-scene">
+        <p class="empty" id="noSel">دوس على أي مشهد بالخط الزمني حتى تعدله.</p>
+        <div id="form" hidden style="display:flex;flex-direction:column;gap:10px">
+          <div class="times" id="selTimes"></div>
+          <div class="said" id="said"></div>
+          <div class="row">
+            <label>نوع المشهد<select id="fKind"></select></label>
+            <label>مؤثر صوتي<select id="fSfx"></select></label>
+          </div>
+          <label>النص أو الكلمة الي تطلع<textarea id="fText"></textarea></label>
+          <div id="altBox">
+            <h3>صور حقيقية بديلة</h3>
+            <div class="cgrid" id="cands"></div>
+            <p class="empty" id="candNote" hidden></p>
+          </div>
+          <label>شنو ندوّر عليه (للصور والأرشيف)<input id="fQuery" type="text"></label>
+          <h3>الانتقال لهالمشهد</h3>
+          <div class="tgrid" id="trans"></div>
+          <div class="row">
+            <button id="bLeft" type="button">→ بدّله ويه الي قبله</button>
+            <button id="bRight" type="button">بدّله ويه الي بعده ←</button>
+          </div>
+          <div class="row">
+            <button id="bSplit" type="button">قص عند المؤشر</button>
+            <button id="bDel" type="button">احذف المشهد</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="pane" id="p-reqs" hidden>
+        <div class="where"><span id="whereTxt">على الثانية</span> <b id="whereAt">00:00.00</b>
+          <span class="seg"><button type="button" id="mPoint" aria-pressed="true">ثانية</button><button type="button" id="mRange" aria-pressed="false">من لـ</button></span>
+        </div>
+        <div class="row" id="rangeBtns" hidden>
+          <button type="button" id="bIn">علّم البداية هنا</button>
+          <button type="button" id="bOut">علّم النهاية هنا</button>
+        </div>
+        <div class="said" id="reqSaid"></div>
+        <div class="chips" id="quick"></div>
+        <textarea id="reqText" placeholder="مثلاً: هنا حط صورة المصنع القديم، وسوّي انتقال باب كراج"></textarea>
+        <div class="row">
+          <button type="button" id="bRec" class="rec">🎙 سجّل صوتك</button>
+          <span class="seg" style="flex:0 0 auto"><button type="button" id="tReq" aria-pressed="true">طلب لClaude</button><button type="button" id="tNote" aria-pressed="false">ملاحظة للفريق</button></span>
+        </div>
+        <input type="file" id="audioFile" accept="audio/*" capture hidden>
+        <div id="recState" class="empty" hidden></div>
+        <button type="button" id="bSend" class="primary">أضف الطلب على التايم لاين</button>
+        <div class="banner" id="runBanner" hidden></div>
+        <div class="row">
+          <button type="button" id="bRun">نفّذ كل الطلبات</button>
+        </div>
+        <ul class="reqs" id="reqList"></ul>
+        <p class="empty" id="noReqs">ما اكو طلبات بعد. وگّف الفيديو بأي مكان واكتب شنو تريد.</p>
+      </div>
+
+      <div class="pane" id="p-tpl" hidden>
+        <p class="empty">دوس على قالب حتى ينطبق على المشهد المختار، أو اسحبه وذبه فوگ أي مشهد بالتايم لاين.</p>
+        <div class="tpl" id="tpl"></div>
+      </div>
+
+      <div class="pane" id="p-reels" hidden>
+        <p class="empty" id="reelInfo"></p>
+        <div class="row">
+          <button type="button" id="bAddReel">أضف ريل من المؤشر</button>
+          <button type="button" id="bVert">شوف طولي</button>
+        </div>
+        <div id="reelList" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="transport">
+    <button id="bPlay" type="button">▶ شغّل</button>
+    <button id="bBack" type="button" class="ib" aria-label="رجّع ثانيتين">⟲ ٢</button>
+    <button id="bFwd" type="button" class="ib" aria-label="قدّم ثانيتين">٢ ⟳</button>
+    <div class="tc" id="tc">00:00.00</div>
+    <button id="bUndo" type="button" disabled>↶ تراجع</button>
+    <button id="bRedo" type="button" disabled>↷ رجّعه</button>
+    <button id="bMark" type="button">⚑ طلب هنا</button>
+    <button id="bCmp" type="button" aria-pressed="false">قبل وبعد</button>
+    <div class="grow"></div>
+    <div class="zoom"><button type="button" class="ib" id="zOut" aria-label="صغّر">−</button><input id="zoom" type="range" min="12" max="300" value="70" aria-label="تكبير الخط الزمني"><button type="button" class="ib" id="zIn" aria-label="كبّر">+</button></div>
+    <button id="bSave" class="primary" type="button" disabled>احفظ</button>
+  </div>
+
+  <div class="tl-wrap" id="wrap">
+    <div class="tl" id="tl">
+      <div class="lane ruler" id="ruler"></div>
+      <div class="lane marks" id="marks"><span class="lbl">الطلبات</span></div>
+      <div class="lane orig" id="orig"><span class="lbl">قبل التعديل</span></div>
+      <div class="lane video" id="track"><span class="lbl">المشاهد</span></div>
+      <div class="lane texts" id="texts"><span class="lbl">الكتابة</span></div>
+      <div class="lane audio" id="audio"><span class="lbl">انتقالات وأصوات</span></div>
+      <div class="lane words" id="words"><span class="lbl">كلامك</span></div>
+      <div class="lane reels" id="reels"><span class="lbl">الريلز</span></div>
+      <div class="range" id="range" hidden></div>
+      <div class="playhead" id="ph"></div>
+    </div>
+  </div>
+
+  <div class="legend" id="legend"></div>
+  <p class="help" id="help"><b>صوتك ثابت</b>، والمشاهد فوگه: تطوّل مشهد، الي يمه يقصر. اسحب على خط <b>الطلبات</b> حتى تحدد قطعة. التعديلات تنحفظ وحدها.</p>
+</div>
+<div class="toast" id="toast" hidden role="status"></div>
+<div class="ghost" id="ghost" hidden></div>
+
+<script>
+const KINDS = {
+  face:["وجهك","face"], face_zoom_in:["وجهك، تقريب","face"], face_zoom_out:["وجهك، تبعيد","face"],
+  face_punch:["وجهك، تقريب قوي","face"], face_framed:["وجهك بإطار","face"], face_fx:["وجهك بمشهد يوتيوب","face"],
+  face_cutout:["وجهك مقصوص","cut"], image:["صورة حقيقية","img"], footage:["فيديو أرشيف","arch"],
+  graphic:["موشن جرافك","gfx"], entity:["بطاقة شخص","img"], ai_image:["صورة ذكاء اصطناعي","ai"],
+  ai_video:["فيديو ذكاء اصطناعي","ai"], avatar:["شخصيتك المرسومة","ai"]};
+const TRANS = {"":"قطع مباشر", zoom:"تقريب", flash:"وميض", whip:"سحبة سريعة", glitch:"تشويش", tear:"ورق ينشگ", burn:"ورق يحترق",
+  dive:"غوص بالمشهد", pan:"سحبة كاميرا", shutter:"باب كراج", slide:"ورقة تنسحب"};
+const SFX = {"":"بدون", whoosh:"هوا", swoosh:"هوا سريع", pop:"فرقعة", click:"كليك", ding:"جرس", hit:"ضربة", riser:"صوت يتصاعد", paper:"ورق", glitch:"تشويش"};
+const TEMPLATES = [
+  {name:"هوك قوي", ic:"⚡", d:"تقريب قوي على وجهك، ويه وميض وضربة", p:{kind:"face_punch", transition:"flash", sfx:"hit"}},
+  {name:"كلمة تنطبع", ic:"✍", d:"الجملة تطلع كلمة كلمة وهي تنگال", p:{kind:"graphic", graphic:{type:"kinetic"}}},
+  {name:"رقم كبير", ic:"🔢", d:"رقم يعد قدامك ويه وصفه", p:{kind:"graphic", graphic:{type:"number", value:100}}},
+  {name:"صورة وورقة", ic:"🖼", d:"صورة فوگ، وورقة تنطبع عليها جملة", p:{kind:"image", treatment:"band", transition:"slide"}},
+  {name:"صورة مقصوصة", ic:"✂", d:"صورة حقيقية مقصوصة على ورق", p:{kind:"image", treatment:"paper_cutout"}},
+  {name:"مشهد أرشيف", ic:"🎞", d:"فيلم قديم بإطار مدوّر، والجملة تنطبع صفرة", p:{kind:"footage", source:"archive", treatment:"rounded", transition:"shutter"}},
+  {name:"جريدة قديمة", ic:"📰", d:"صفحة من جرايد قديمة حقيقية", p:{kind:"image", source:"newspaper", treatment:"paper_cutout"}},
+  {name:"مطر عناوين", ic:"🗞", d:"عناوين أخبار تنزل وحدة ورا الثانية", p:{kind:"graphic", graphic:{type:"headlines"}}},
+  {name:"شخصيتك المرسومة", ic:"🎨", d:"إنت مرسوم داخل مشهد القصة", p:{kind:"avatar", look:"cartoon", animate:"code"}},
+  {name:"رجّع وجهك", ic:"🙂", d:"وجهك بدون إضافات", p:{kind:"face", transition:null, treatment:null, graphic:null}},
+];
+const QUICK = ["حط صورة هنا", "حط فيديو أرشيف", "سوّي انتقال احترافي", "خلي الكلمة تنطبع", "شيل هالقطعة", "خليه أسرع", "حط مؤثر صوتي", "حط موسيقى أقوى"];
+const MIN = 0.5, REEL_MIN = 15, REEL_MAX = 60, LONG = 480;
+const $ = (id) => document.getElementById(id);
+const video = $("video"), tl = $("tl"), wrap = $("wrap");
+
+let base = [], beats = [], reels = [], words = [], cands = {}, chapters = [], duration = 0, episode = "";
+let sel = -1, selReel = -1, pps = 70, undo = [], redo = [], dirty = false;
+let db = null, assets = null, user = null, me = null, requests = [], names = {};
+let range = null, mode = "point", reqType = "request", pendingAudio = null, uidN = 0;
+let clipEls = [], chipEls = [], fxEls = [], wordEls = [];
+
+/* ---------- helpers ---------- */
+const group = (k) => (KINDS[k] || KINDS.face)[1];
+const kname = (k) => (KINDS[k] || [k])[0];
+function fmt(t){ t = Math.max(0, t || 0); const m = Math.floor(t / 60), s = (t % 60).toFixed(2).padStart(5, "0"); return `${String(m).padStart(2, "0")}:${s}`; }
+function textOf(b){ return b.caption || (b.graphic && (b.graphic.text || b.graphic.label || b.graphic.title)) || b.title || ""; }
+function setText(b, v){
+  if (b.graphic && ("text" in b.graphic || b.graphic.type === "kinetic" || b.graphic.type === "quote")) b.graphic.text = v;
+  else if (b.graphic && (b.graphic.type === "number" || "label" in b.graphic)) b.graphic.label = v;
+  else b.caption = v;
+}
+function said(a, b){ return words.filter(w => w[2] > a && w[1] < b).map(w => w[0]).join(" "); }
+function toast(msg){ const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => t.hidden = true, 2800); }
+function esc(s){ return String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function el(tag, cls, html){ const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+function pos(e, s, d){ e.style.setProperty("--s", s); if (d != null) e.style.setProperty("--d", d); }
+function timeAt(x){ const r = tl.getBoundingClientRect(); return Math.max(0, Math.min(duration, (x - r.left) / pps)); }
+const thumbOf = (b) => (b.pick && b.pick.img) || b.thumb || "";
+
+/* ---------- history + saving ---------- */
+const state = () => JSON.stringify({beats, reels});
+function snapshot(){ undo.push(state()); if (undo.length > 80) undo.shift(); redo = []; syncHist(); }
+function restore(s){ const d = JSON.parse(s); beats = d.beats; reels = d.reels; sel = Math.min(sel, beats.length - 1); buildAll(); changed(); }
+function syncHist(){ $("bUndo").disabled = !undo.length; $("bRedo").disabled = !redo.length; }
+function changed(){
+  dirty = true; $("dot").className = "dot dirty"; $("status").textContent = db ? "دا أحفظ بعد شوية…" : "تعديلاتك بهالصفحة بس (الحفظ مسكّر بهالعرض)";
+  $("bSave").disabled = !db; clearTimeout(changed.h); if (db) changed.h = setTimeout(save, 2500);
+}
+async function save(){
+  if (!db || !dirty) return;
+  clearTimeout(changed.h); $("bSave").disabled = true; $("status").textContent = "دا أحفظ…";
+  try {
+    const clean = beats.map(({thumb, ...b}) => b);
+    await db.doc("edits/current").set({beats: clean, reels, savedAt: new Date().toISOString(), episode});
+    dirty = false; $("dot").className = "dot ok"; $("status").textContent = "كل شي محفوظ";
+  } catch (err){
+    $("bSave").disabled = false;
+    $("status").textContent = err && err.code === "not_granted" ? "ما عندك صلاحية تعديل بهالصفحة" : "ما انحفظ، راح أحاول مرة ثانية";
+    if (!err || err.code !== "not_granted") changed.h = setTimeout(save, 6000);
+  }
+}
+
+/* ---------- timeline: build once, then move single pieces ---------- */
+function buildRuler(){
+  const r = $("ruler"); r.textContent = "";
+  const step = pps > 160 ? 1 : pps > 70 ? 2 : pps > 35 ? 5 : pps > 18 ? 10 : 30;
+  const f = document.createDocumentFragment();
+  for (let t = 0; t <= duration; t += step){ const d = el("div", "tick", fmt(t).slice(0, 5)); pos(d, t); f.appendChild(d); }
+  chapters.forEach(c => { const d = el("div", "chap"); d.textContent = c.title; pos(d, c.t); f.appendChild(d); });
+  r.appendChild(f);
+}
+function clipNode(b, i, cls){
+  const c = el("div", `clip it k-${group(b.kind)}${cls || ""}`);
+  c.dataset.i = i; pos(c, b.start, b.end - b.start);
+  const img = thumbOf(b); if (img){ const im = el("img"); im.alt = ""; im.decoding = "async"; im.loading = "lazy"; im.src = img; c.appendChild(im); }
+  const cap = el("div", "cap"); cap.textContent = textOf(b) || kname(b.kind); c.appendChild(cap);
+  const k = el("div", "kind"); k.textContent = kname(b.kind); c.appendChild(k);
+  return c;
+}
+function changedFrom(b){
+  const o = base.find(x => x.uid === b.uid); if (!o) return true;
+  return ["start","end","kind","transition","sfx","query","treatment","source"].some(k => (o[k] ?? "") !== (b[k] ?? "")) ||
+    textOf(o) !== textOf(b) || JSON.stringify(o.pick || null) !== JSON.stringify(b.pick || null);
+}
+function buildBeats(){
+  const track = $("track"), texts = $("texts"), audio = $("audio");
+  [track, texts, audio].forEach(l => l.querySelectorAll(".it,.fxm").forEach(n => n.remove()));
+  clipEls = []; chipEls = []; fxEls = [];
+  const ft = document.createDocumentFragment(), fx = document.createDocumentFragment(), fa = document.createDocumentFragment();
+  beats.forEach((b, i) => {
+    const c = clipNode(b, i, (i === sel ? " sel" : "") + (changedFrom(b) ? " chg" : ""));
+    c.insertAdjacentHTML("beforeend", '<div class="handle l" data-h="l"></div><div class="handle r" data-h="r"></div>');
+    ft.appendChild(c); clipEls.push(c);
+    let chip = null;
+    const t = textOf(b);
+    if (t && !b.kind.startsWith("face") || (t && b.kind === "face_cutout")){ chip = el("div", "chip it"); chip.textContent = t; chip.dataset.i = i; pos(chip, b.start, b.end - b.start); fx.appendChild(chip); }
+    chipEls.push(chip);
+    let m = null;
+    const parts = [];
+    if (b.transition) parts.push("↔ " + (TRANS[b.transition] || b.transition));
+    if (b.sfx) parts.push("♪ " + (SFX[b.sfx] || b.sfx));
+    if (parts.length){ m = el("div", "fxm"); m.textContent = parts.join("  "); m.dataset.i = i; pos(m, b.start); fa.appendChild(m); }
+    fxEls.push(m);
+  });
+  track.appendChild(ft); texts.appendChild(fx); audio.appendChild(fa);
+  const changes = beats.filter(changedFrom).length + base.filter(o => !beats.some(b => b.uid === o.uid)).length;
+  $("bCmp").textContent = changes ? `قبل وبعد (${changes})` : "قبل وبعد";
+}
+function moveBeat(i){
+  const b = beats[i], d = b.end - b.start;
+  pos(clipEls[i], b.start, d); if (chipEls[i]) pos(chipEls[i], b.start, d); if (fxEls[i]) pos(fxEls[i], b.start);
+}
+function buildOrig(){
+  const o = $("orig"); o.querySelectorAll(".clip").forEach(n => n.remove());
+  const f = document.createDocumentFragment(); base.forEach((b, i) => f.appendChild(clipNode(b, i))); o.appendChild(f);
+}
+function buildWords(){
+  const w = $("words"); w.querySelectorAll(".w").forEach(n => n.remove()); wordEls = [];
+  const f = document.createDocumentFragment();
+  words.forEach((x, i) => { const d = el("div", "w it"); d.textContent = x[0]; d.dataset.t = x[1]; pos(d, x[1], Math.max(0.05, x[2] - x[1])); f.appendChild(d); wordEls.push(d); });
+  w.appendChild(f);
+}
+function buildMarks(){
+  const m = $("marks"); m.querySelectorAll(".flag").forEach(n => n.remove());
+  const f = document.createDocumentFragment();
+  requests.forEach(r => {
+    const d = el("div", `flag ${r.type === "note" ? "note" : r.status || "new"}`);
+    d.textContent = (r.audio && !r.text ? "🎙 " : "") + (r.text || "رسالة صوتية");
+    d.dataset.id = r.id; d.title = r.text || ""; pos(d, r.t, r.t2 ? r.t2 - r.t : 0); f.appendChild(d);
+  });
+  m.appendChild(f);
+}
+function buildReels(){
+  const l = $("reels"); l.querySelectorAll(".rbar").forEach(n => n.remove());
+  reels.forEach((r, i) => {
+    const d = el("div", "rbar it" + (i === selReel ? " sel" : "")); d.dataset.i = i;
+    d.textContent = `${i + 1}. ${r.title || "ريل"}`; pos(d, r.from, r.to - r.from);
+    d.insertAdjacentHTML("beforeend", '<div class="handle l" data-h="l"></div><div class="handle r" data-h="r"></div>');
+    l.appendChild(d);
+  });
+  renderReelList();
+}
+function setZoom(v){
+  const t = video.currentTime, x = t * pps - wrap.scrollLeft;   // keep the playhead where it is on screen
+  pps = Math.max(12, Math.min(300, v)); $("zoom").value = pps; tl.style.setProperty("--pps", pps);
+  buildRuler(); wrap.scrollLeft = t * pps - x; drawHead(true);
+}
+function buildAll(){ buildBeats(); buildReels(); inspect(); }
+
+/* ---------- playhead, cheap: one transform per changed frame ---------- */
+let lastT = -1, lastWord = -1;
+function drawHead(force){
+  const t = video.currentTime || 0;
+  if (!force && t === lastT) return; lastT = t;
+  $("ph").style.transform = `translateX(${t * pps}px)`;
+  $("tc").textContent = fmt(t);
+  let lo = 0, hi = words.length - 1, wi = -1;      // spoken word now (binary search)
+  while (lo <= hi){ const m = (lo + hi) >> 1; if (words[m][1] <= t){ wi = m; lo = m + 1; } else hi = m - 1; }
+  if (wi >= 0 && t > words[wi][2] + 0.25) wi = -1;
+  if (wi !== lastWord){ if (lastWord >= 0 && wordEls[lastWord]) wordEls[lastWord].classList.remove("now"); if (wi >= 0) wordEls[wi].classList.add("now"); lastWord = wi; }
+  if (!video.paused){
+    const i = beats.findIndex(b => t >= b.start && t < b.end); if (i >= 0 && i !== sel) select(i, false);
+    const x = t * pps - wrap.scrollLeft;
+    if (x > wrap.clientWidth * 0.85 || x < 0) wrap.scrollLeft = t * pps - wrap.clientWidth * 0.25;
+    const r = reels[playReel]; if (r && t >= r.to){ video.pause(); playReel = -1; }
+  }
+  if (mode === "point" && !$("p-reqs").hidden) whereLabel();
+}
+let playReel = -1;
+(function tick(){ drawHead(); requestAnimationFrame(tick); })();
+
+/* ---------- selection + inspector ---------- */
+function select(i, seek = true){
+  if (clipEls[sel]) clipEls[sel].classList.remove("sel");
+  sel = i; if (clipEls[sel]) clipEls[sel].classList.add("sel");
+  if (seek && beats[i]) video.currentTime = beats[i].start + 0.01;
+  inspect();
+}
+function inspect(){
+  const b = beats[sel];
+  $("noSel").hidden = !!b; $("form").hidden = !b; $("form").style.display = b ? "flex" : "none";
+  if (!b) return;
+  $("selTimes").textContent = `${fmt(b.start)} → ${fmt(b.end)}   (${(b.end - b.start).toFixed(1)} ث)`;
+  const s = said(b.start, b.end); $("said").textContent = s ? `تگول هنا: «${s}»` : "";
+  $("fKind").value = b.kind in KINDS ? b.kind : "face"; $("fSfx").value = b.sfx || "";
+  if (document.activeElement !== $("fText")) $("fText").value = textOf(b);
+  if (document.activeElement !== $("fQuery")) $("fQuery").value = b.query || "";
+  document.querySelectorAll("#trans .tile").forEach(t => t.classList.toggle("sel", t.dataset.v === (b.transition || "")));
+  $("bLeft").disabled = sel === 0; $("bRight").disabled = sel === beats.length - 1;
+  renderCands(b);
+}
+function renderCands(b){
+  const box = $("cands"), note = $("candNote"), list = (b.query && cands[b.query]) || [];
+  box.textContent = "";
+  $("altBox").hidden = !b.query && !list.length && !["image","face_cutout","entity"].includes(b.kind);
+  if (!list.length){
+    note.hidden = false;
+    note.textContent = b.query ? "ما عندي صور جاهزة لهالكلمة بعد. Claude يجيبهن بالتنفيذ الجاي." : "اكتب جوه شنو ندوّر عليه، وClaude يجيب صور حقيقية.";
+    return;
+  }
+  note.hidden = true;
+  list.forEach((c) => {
+    const btn = el("button", "cand" + (b.pick && b.pick.url === c.url ? " sel" : "")); btn.type = "button";
+    btn.title = `${c.title} — ${c.provider} — ${c.license}`;
+    btn.innerHTML = `<img alt="" loading="lazy" decoding="async" src="${esc(c.img)}"><span class="src"></span>`;
+    btn.querySelector(".src").textContent = c.provider;
+    btn.onclick = () => { snapshot(); const cur = beats[sel]; cur.pick = cur.pick && cur.pick.url === c.url ? undefined : {...c}; buildBeats(); inspect(); changed(); };
+    box.appendChild(btn);
+  });
+  const more = el("button", "", "مو عاجبتني، جيب غيرهن"); more.type = "button"; more.style.gridColumn = "1 / -1";
+  more.onclick = () => addRequest({t: b.start, t2: b.end, text: `جيب صور ثانية لـ «${b.query}»`, type: "request"});
+  box.appendChild(more);
+}
+function fill(sel_, map){ for (const [v, l] of Object.entries(map)){ const o = el("option"); o.value = v; o.textContent = Array.isArray(l) ? l[0] : l; sel_.appendChild(o); } }
+fill($("fKind"), KINDS); fill($("fSfx"), SFX);
+for (const [v, n] of Object.entries(TRANS)){
+  const b = el("button", "tile"); b.type = "button"; b.dataset.v = v;
+  b.innerHTML = `<div class="demo t-${v || "cut"}"><i class="a"></i><i class="b"></i><i class="x"></i></div><span></span>`;
+  b.querySelector("span").textContent = n;
+  b.onclick = () => { if (!beats[sel]) return; snapshot(); beats[sel].transition = v || undefined; buildBeats(); inspect(); changed(); };
+  $("trans").appendChild(b);
+}
+$("fKind").onchange = (e) => { snapshot(); const b = beats[sel]; b.kind = e.target.value; if (b.kind === "graphic" && !b.graphic) b.graphic = {type:"text", text: textOf(b)}; buildBeats(); inspect(); changed(); };
+$("fSfx").onchange = (e) => { snapshot(); beats[sel].sfx = e.target.value || undefined; buildBeats(); changed(); };
+$("fText").onchange = (e) => { snapshot(); setText(beats[sel], e.target.value); buildBeats(); changed(); };
+$("fQuery").onchange = (e) => { snapshot(); const b = beats[sel]; b.query = e.target.value.trim() || undefined; delete b.pick; inspect(); changed(); };
+
+function swap(i, j){
+  if (j < 0 || j >= beats.length) return;
+  const keep = (x) => ({start: x.start, end: x.end, zone: x.zone});
+  const a = beats[i], b = beats[j];
+  beats[i] = Object.assign({}, b, keep(a)); beats[j] = Object.assign({}, a, keep(b));
+  sel = j; buildBeats(); inspect(); changed();
+}
+$("bLeft").onclick = () => { snapshot(); swap(sel, sel - 1); };
+$("bRight").onclick = () => { snapshot(); swap(sel, sel + 1); };
+$("bSplit").onclick = () => {
+  const t = video.currentTime, b = beats[sel];
+  if (!b || t <= b.start + MIN || t >= b.end - MIN){ toast("حط المؤشر داخل المشهد المختار، بعيد عن أطرافه"); return; }
+  snapshot(); const c = JSON.parse(JSON.stringify(b)); c.start = +t.toFixed(2); b.end = c.start; delete c.transition; c.uid = "n" + (++uidN);
+  beats.splice(sel + 1, 0, c); buildBeats(); inspect(); changed();
+};
+$("bDel").onclick = () => {
+  if (beats.length < 2) return; snapshot();
+  const b = beats[sel];
+  if (sel > 0) beats[sel - 1].end = b.end; else beats[1].start = b.start;
+  beats.splice(sel, 1); sel = Math.max(0, sel - 1); buildBeats(); inspect(); changed();
+};
+$("bUndo").onclick = () => { if (!undo.length) return; redo.push(state()); restore(undo.pop()); syncHist(); };
+$("bRedo").onclick = () => { if (!redo.length) return; undo.push(state()); restore(redo.pop()); syncHist(); };
+$("bSave").onclick = save;
+
+/* ---------- tabs ---------- */
+function tab(name){
+  document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === name));
+  ["scene","reqs","tpl","reels"].forEach(n => $("p-" + n).hidden = n !== name);
+  if (name === "reqs") whereLabel();
+}
+document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => tab(b.dataset.tab));
+
+/* ---------- transport ---------- */
+$("bPlay").onclick = () => { if (video.paused){ playReel = -1; video.play().catch(() => toast("ما گدرت أشغّل الفيديو")); } else video.pause(); };
+video.onplay = () => $("bPlay").textContent = "❚❚ وگّف";
+video.onpause = () => $("bPlay").textContent = "▶ شغّل";
+$("bBack").onclick = () => video.currentTime = Math.max(0, video.currentTime - 2);
+$("bFwd").onclick = () => video.currentTime = Math.min(duration, video.currentTime + 2);
+$("zoom").oninput = (e) => setZoom(+e.target.value);
+$("zIn").onclick = () => setZoom(pps * 1.4); $("zOut").onclick = () => setZoom(pps / 1.4);
+wrap.addEventListener("wheel", (e) => { if (e.ctrlKey || e.metaKey){ e.preventDefault(); setZoom(pps * (e.deltaY < 0 ? 1.15 : 1 / 1.15)); } }, {passive: false});
+$("bCmp").onclick = () => { const on = tl.classList.toggle("compare"); $("bCmp").classList.toggle("on", on); $("bCmp").setAttribute("aria-pressed", on); if (on) toast("الخط الفوگاني هو قبل التعديل، والنقطة الصفرة على كل مشهد تغيّر"); };
+$("bMark").onclick = () => { video.pause(); setMode("point"); tab("reqs"); $("reqText").focus(); };
+document.addEventListener("keydown", (e) => {
+  if (e.target.matches("input,textarea,select")) return;
+  const k = e.key.toLowerCase();
+  if ((e.ctrlKey || e.metaKey) && k === "z"){ e.preventDefault(); (e.shiftKey ? $("bRedo") : $("bUndo")).click(); }
+  else if (e.key === " "){ e.preventDefault(); $("bPlay").click(); }
+  else if (e.key === "ArrowLeft" || e.key === "ArrowRight"){ e.preventDefault(); const s = (e.shiftKey ? 1 : 1 / 25) * (e.key === "ArrowLeft" ? -1 : 1); video.currentTime = Math.max(0, Math.min(duration, video.currentTime + s)); }
+  else if (k === "s" || k === "س"){ $("bSplit").click(); }
+  else if (k === "m" || k === "ة"){ e.preventDefault(); $("bMark").click(); }
+  else if (e.key === "Delete"){ $("bDel").click(); }
+});
+
+/* scrubbing: seek to the nearest keyframe while dragging (instant), exactly on release */
+let scrub = false, scrubT = null;
+function seekTo(t, exact){ if (!exact && video.fastSeek) video.fastSeek(t); else video.currentTime = t; }
+function scrubLoop(){ if (scrubT != null){ seekTo(scrubT, false); scrubT = null; } if (scrub) requestAnimationFrame(scrubLoop); }
+$("ruler").addEventListener("pointerdown", (e) => { scrub = true; $("ruler").setPointerCapture(e.pointerId); video.currentTime = timeAt(e.clientX); scrubLoop(); });
+$("ruler").addEventListener("pointermove", (e) => { if (scrub) scrubT = timeAt(e.clientX); });
+$("ruler").addEventListener("pointerup", (e) => { scrub = false; seekTo(timeAt(e.clientX), true); });
+$("words").addEventListener("click", (e) => { const w = e.target.closest(".w"); if (w) video.currentTime = +w.dataset.t; });
+$("texts").addEventListener("click", (e) => { const c = e.target.closest(".chip"); if (c){ select(+c.dataset.i); tab("scene"); } });
+$("audio").addEventListener("click", (e) => { const c = e.target.closest(".fxm"); if (c){ select(+c.dataset.i); tab("scene"); } });
+
+/* ---------- dragging scenes: edges move the cut between two scenes, a mouse drag swaps two scenes ---------- */
+let drag = null, raf = 0;
+$("track").addEventListener("pointerdown", (e) => {
+  const c = e.target.closest(".clip"); if (!c) return;
+  const i = +c.dataset.i, h = e.target.dataset.h || null;
+  select(i);
+  if (!h && e.pointerType === "touch") return;          // a finger on a scene scrolls the timeline; swapping is in the panel
+  e.preventDefault();
+  drag = {i, h, x0: e.clientX, x: e.clientX, before: state(), s0: beats[i].start, e0: beats[i].end,
+          lo: i > 0 ? beats[i - 1].start : 0, hi: i < beats.length - 1 ? beats[i + 1].end : duration};
+  c.setPointerCapture(e.pointerId);
+});
+$("track").addEventListener("pointermove", (e) => {
+  if (!drag) return; drag.x = e.clientX; drag.ev = e;
+  if (!raf) raf = requestAnimationFrame(dragFrame);
+});
+function dragFrame(){
+  raf = 0; if (!drag) return;
+  const {i, h} = drag, dx = (drag.x - drag.x0) / pps;
+  if (h === "l" && i > 0){
+    const t = Math.min(drag.e0 - MIN, Math.max(drag.lo + MIN, drag.s0 + dx));
+    beats[i].start = beats[i - 1].end = +t.toFixed(2); moveBeat(i); moveBeat(i - 1); seekTo(t, false); drag.moved = true;
+  } else if (h === "r" && i < beats.length - 1){
+    const t = Math.max(drag.s0 + MIN, Math.min(drag.hi - MIN, drag.e0 + dx));
+    beats[i].end = beats[i + 1].start = +t.toFixed(2); moveBeat(i); moveBeat(i + 1); seekTo(t, false); drag.moved = true;
+  } else if (!h && Math.abs(drag.x - drag.x0) > 4){
+    const over = document.elementsFromPoint(drag.x, drag.ev.clientY).find(n => n.classList && n.classList.contains("clip") && n.parentNode.id === "track" && +n.dataset.i !== i);
+    const t = over ? +over.dataset.i : null;
+    if (t !== drag.target){ if (drag.target != null && clipEls[drag.target]) clipEls[drag.target].classList.remove("drop"); if (t != null) clipEls[t].classList.add("drop"); drag.target = t; }
+  }
+  if (h) inspect();
+}
+$("track").addEventListener("pointerup", () => {
+  if (!drag) return;
+  if (raf){ cancelAnimationFrame(raf); dragFrame(); }   // the last move hasn't been drawn yet
+  const d = drag; drag = null; raf = 0;
+  if (d.target != null){ undo.push(d.before); redo = []; syncHist(); clipEls[d.target].classList.remove("drop"); swap(d.i, d.target); toast("تبدّل مكان المشهدين"); }
+  else if (d.moved){ undo.push(d.before); redo = []; syncHist(); buildBeats(); inspect(); changed(); }
+});
+$("track").addEventListener("pointercancel", () => { if (drag && drag.moved) restore(drag.before); drag = null; });
+
+/* ---------- templates: tap = selected scene, drag = the scene it lands on ---------- */
+function applyTpl(t, i){
+  const b = beats[i]; if (!b) return;
+  snapshot();
+  const text = textOf(b);
+  for (const [k, v] of Object.entries(t.p)){ if (v === null) delete b[k]; else b[k] = typeof v === "object" ? JSON.parse(JSON.stringify(v)) : v; }
+  if (b.graphic){ if (b.graphic.type === "number") b.graphic.label = text; else if (b.graphic.type === "headlines") b.graphic.items = text ? [text] : []; else b.graphic.text = text; }
+  else if (text && !b.kind.startsWith("face")) b.caption = text;
+  if (b.kind !== "image" && b.kind !== "face_cutout") delete b.pick;
+  select(i, false); buildBeats(); inspect(); changed(); toast(`انطبق «${t.name}»`);
+}
+TEMPLATES.forEach((t) => {
+  const b = el("button"); b.type = "button";
+  b.innerHTML = `<span class="ic"></span><b></b><span></span>`;
+  b.children[0].textContent = t.ic; b.children[1].textContent = t.name; b.children[2].textContent = t.d;
+  let g = null;
+  b.addEventListener("pointerdown", (e) => { g = {x: e.clientX, y: e.clientY, on: false}; b.setPointerCapture(e.pointerId); });
+  b.addEventListener("pointermove", (e) => {
+    if (!g) return;
+    if (!g.on && Math.hypot(e.clientX - g.x, e.clientY - g.y) > 8){ g.on = true; $("ghost").textContent = t.ic + " " + t.name; $("ghost").hidden = false; }
+    if (g.on){ const gh = $("ghost"); gh.style.left = e.clientX + "px"; gh.style.top = e.clientY + "px";
+      const over = document.elementsFromPoint(e.clientX, e.clientY).find(n => n.classList && n.classList.contains("clip") && n.parentNode.id === "track");
+      document.querySelectorAll("#track .clip.drop").forEach(n => n !== over && n.classList.remove("drop")); if (over) over.classList.add("drop"); g.over = over; }
+  });
+  b.addEventListener("pointerup", () => {
+    if (!g) return; $("ghost").hidden = true;
+    if (g.on){ if (g.over){ g.over.classList.remove("drop"); applyTpl(t, +g.over.dataset.i); } }
+    else if (beats[sel]) applyTpl(t, sel); else toast("اختار مشهد أول");
+    g = null;
+  });
+  b.addEventListener("pointercancel", () => { $("ghost").hidden = true; g = null; });
+  $("tpl").appendChild(b);
+});
+
+/* ---------- requests ---------- */
+function setMode(m){
+  mode = m; $("mPoint").setAttribute("aria-pressed", m === "point"); $("mRange").setAttribute("aria-pressed", m === "range");
+  $("rangeBtns").hidden = m !== "range";
+  if (m === "range" && !range){ const t = video.currentTime; range = {a: t, b: Math.min(duration, t + 3)}; }
+  if (m === "point") range = null;
+  drawRange(); whereLabel();
+}
+function drawRange(){ const r = $("range"); r.hidden = !range; if (range){ const a = Math.min(range.a, range.b), b = Math.max(range.a, range.b); pos(r, a, b - a); } }
+let lastWhere = "";
+function whereLabel(){
+  let txt, at, a, b;
+  if (range){ a = Math.min(range.a, range.b); b = Math.max(range.a, range.b); txt = "من لـ"; at = `${fmt(a)} → ${fmt(b)}`; }
+  else { a = video.currentTime; b = a + 0.01; txt = "على الثانية"; at = fmt(a); }
+  const key = txt + at; if (key === lastWhere) return; lastWhere = key;
+  $("whereTxt").textContent = txt; $("whereAt").textContent = at;
+  const s = range ? said(a, b) : said(a - 1.5, a + 1.5);
+  $("reqSaid").textContent = s ? `الكلام هنا: «${s}»` : "";
+}
+$("mPoint").onclick = () => setMode("point"); $("mRange").onclick = () => setMode("range");
+$("bIn").onclick = () => { range = {a: video.currentTime, b: range ? Math.max(range.a, range.b) : video.currentTime + 3}; drawRange(); whereLabel(); };
+$("bOut").onclick = () => { range = {a: range ? Math.min(range.a, range.b) : Math.max(0, video.currentTime - 3), b: video.currentTime}; drawRange(); whereLabel(); };
+$("tReq").onclick = () => { reqType = "request"; $("tReq").setAttribute("aria-pressed", true); $("tNote").setAttribute("aria-pressed", false); };
+$("tNote").onclick = () => { reqType = "note"; $("tReq").setAttribute("aria-pressed", false); $("tNote").setAttribute("aria-pressed", true); };
+QUICK.forEach(q => { const b = el("button"); b.type = "button"; b.textContent = q; b.onclick = () => { const t = $("reqText"); t.value = (t.value ? t.value.trimEnd() + "، " : "") + q; t.focus(); }; $("quick").appendChild(b); });
+
+/* the marks lane: tap = a point, drag = a stretch */
+let mdrag = null;
+$("marks").addEventListener("pointerdown", (e) => {
+  const f = e.target.closest(".flag");
+  if (f){ const r = requests.find(x => x.id === f.dataset.id); if (r){ video.currentTime = r.t; tab("reqs"); highlightReq(r.id); } return; }
+  const t = timeAt(e.clientX); mdrag = {a: t}; $("marks").setPointerCapture(e.pointerId); video.pause();
+});
+$("marks").addEventListener("pointermove", (e) => {
+  if (!mdrag) return; const t = timeAt(e.clientX);
+  if (Math.abs(t - mdrag.a) * pps > 6){ range = {a: mdrag.a, b: t}; mode = "range"; drawRange(); }
+});
+$("marks").addEventListener("pointerup", (e) => {
+  if (!mdrag) return; const t = timeAt(e.clientX), a = mdrag.a; mdrag = null;
+  if (range && mode === "range" && Math.abs(t - a) * pps > 6){ setMode("range"); }
+  else { setMode("point"); video.currentTime = a; }
+  tab("reqs"); $("reqText").focus({preventScroll: true});
+});
+
+function highlightReq(id){
+  document.querySelectorAll(".req.hl").forEach(n => n.classList.remove("hl"));
+  const n = document.querySelector(`.req[data-id="${CSS.escape(id)}"]`); if (n){ n.classList.add("hl"); n.scrollIntoView({block: "nearest", behavior: "smooth"}); }
+}
+const ST = {new: "جديد", queued: "بانتظار Claude", done: "انسوّى"};
+async function renderReqs(){
+  const list = $("reqList"); list.textContent = "";
+  const open = requests.filter(r => r.type !== "note" && r.status !== "done").length;
+  $("reqCount").hidden = !open; $("reqCount").textContent = open;
+  $("noReqs").hidden = requests.length > 0;
+  $("bRun").disabled = !requests.some(r => r.type !== "note" && r.status === "new");
+  const ids = [...new Set(requests.map(r => r.author).filter(Boolean))];
+  if (user && ids.some(id => !(id in names))){ try { const ps = await user.profiles(ids); for (const id of ids) names[id] = (ps[id] && ps[id].name) || ""; } catch (_) {} }
+  [...requests].sort((a, b) => a.t - b.t).forEach(r => {
+    const li = el("li", "req"); li.dataset.id = r.id;
+    const meta = el("div", "meta");
+    const at = el("button", "at"); at.type = "button"; at.textContent = fmt(r.t) + (r.t2 ? " → " + fmt(r.t2) : ""); at.onclick = () => { video.currentTime = r.t; };
+    const st = el("span", "st " + (r.type === "note" ? "note" : r.status || "new")); st.textContent = r.type === "note" ? "ملاحظة" : ST[r.status || "new"];
+    meta.append(at, st);
+    const who = names[r.author]; if (who){ const w = el("span"); w.textContent = who; meta.appendChild(w); }
+    if (r.status !== "done"){ const x = el("button", "x"); x.type = "button"; x.textContent = "امسح"; x.onclick = () => delRequest(r.id); meta.appendChild(x); }
+    li.appendChild(meta);
+    if (r.text){ const t = el("div", "txt"); t.textContent = r.text; li.appendChild(t); }
+    if (r.audio){ const a = el("audio"); a.controls = true; a.preload = "none"; a.src = "/_blob/" + r.audio; li.appendChild(a); }
+    if (r.reply){ const p = el("div", "reply"); p.textContent = "Claude: " + r.reply; li.appendChild(p); }
+    list.appendChild(li);
+  });
+}
+async function addRequest(r){
+  const doc = {t: +(+r.t).toFixed(2), text: r.text || "", type: r.type || "request", status: "new", createdAt: new Date().toISOString()};
+  if (r.t2 != null) doc.t2 = +(+r.t2).toFixed(2);
+  if (r.audio) doc.audio = r.audio;
+  if (me) doc.author = me;
+  if (!db){ requests.push({...doc, id: "local" + Date.now()}); buildMarks(); renderReqs(); toast("انضاف بهالصفحة بس (الحفظ مسكّر بهالعرض)"); return; }
+  try { await db.collection("requests").add(doc); toast(doc.type === "note" ? "انضافت الملاحظة" : "انضاف الطلب على التايم لاين"); }
+  catch (err){ toast(err && err.code === "not_granted" ? "ما عندك صلاحية تضيف طلبات" : "ما انضاف، جرّب مرة ثانية"); throw err; }
+}
+async function delRequest(id){
+  if (!db || id.startsWith("local")){ requests = requests.filter(r => r.id !== id); buildMarks(); renderReqs(); return; }
+  try { await db.doc("requests/" + id).delete(); } catch (_){ toast("ما انمسح"); }
+}
+$("bSend").onclick = async () => {
+  const text = $("reqText").value.trim();
+  if (!text && !pendingAudio){ toast("اكتب طلبك أو سجّل صوتك"); $("reqText").focus(); return; }
+  const a = range ? Math.min(range.a, range.b) : video.currentTime, b = range ? Math.max(range.a, range.b) : null;
+  $("bSend").disabled = true;
+  try {
+    await addRequest({t: a, t2: b, text, type: reqType, audio: pendingAudio});
+    $("reqText").value = ""; pendingAudio = null; $("recState").hidden = true; setMode("point");
+  } catch (_) {} finally { $("bSend").disabled = false; }
+};
+$("bRun").onclick = async () => {
+  const todo = requests.filter(r => r.type !== "note" && r.status === "new");
+  if (!todo.length) return;
+  $("bRun").disabled = true;
+  try {
+    if (db){
+      for (const r of todo) await db.doc("requests/" + r.id).update({status: "queued"});
+      dirty = true; await save();
+      await db.doc("jobs/latest").set({at: new Date().toISOString(), count: todo.length});
+    }
+    const bn = $("runBanner"); bn.hidden = false;
+    bn.textContent = `جاهزين ${todo.length} طلبات. هسة روح للمحادثة وياي واكتب: «نفّذ طلباتي». أول ما أخلص، كل طلب يصير أخضر هنا.`;
+  } catch (_){ toast("ما گدرت أرسلهن، جرّب مرة ثانية"); $("bRun").disabled = false; }
+};
+
+/* voice: the phone's microphone if this view allows it, otherwise a recording from the phone's files */
+let rec = null, chunks = [];
+$("bRec").onclick = async () => {
+  if (rec && rec.state === "recording"){ rec.stop(); return; }
+  if (!assets){ toast("الرسائل الصوتية ما تشتغل بهالعرض. اكتب طلبك."); return; }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+    chunks = []; rec = new MediaRecorder(stream);
+    rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+    rec.onstop = () => { stream.getTracks().forEach(t => t.stop()); $("bRec").classList.remove("live"); $("bRec").textContent = "🎙 سجّل صوتك"; upload(new Blob(chunks, {type: rec.mimeType || "audio/webm"})); };
+    rec.start(); $("bRec").classList.add("live"); $("bRec").textContent = "■ وگّف التسجيل";
+  } catch (_){ $("audioFile").click(); }
+};
+$("audioFile").onchange = (e) => { const f = e.target.files[0]; if (f) upload(f); e.target.value = ""; };
+async function upload(blob){
+  const s = $("recState"); s.hidden = false; s.textContent = "دا أرفع الصوت…";
+  try { const r = await assets.upload(blob); pendingAudio = r.id; s.textContent = "✓ الصوت جاهز. دوس «أضف الطلب»."; }
+  catch (err){ pendingAudio = null; s.textContent = err && err.code === "too_large" ? "الصوت طويل هواية، خليه أقصر" : "ما انرفع الصوت. اكتب طلبك بداله."; }
+}
+
+/* ---------- reels ---------- */
+function renderReelList(){
+  const box = $("reelList"); box.textContent = "";
+  const need = duration >= LONG ? 5 : 0;
+  $("reelInfo").textContent = (reels.length ? `عندك ${reels.length} ريلز.` : "ما اكو ريلز بعد.") + (need ? ` الحلقة الطويلة تحتاج ${need} أقل شي.` : "") + " كل ريل بين 15 و60 ثانية، وتگدر تسحب أطرافه بخط الريلز جوه.";
+  reels.forEach((r, i) => {
+    const d = el("div", "reel" + (i === selReel ? " sel" : ""));
+    const len = r.to - r.from;
+    d.innerHTML = `<div class="times"></div><label>الهوك (أول جملة تجذب)<input type="text"></label><div class="warn" hidden></div><div class="row"><button type="button">▶ شغّله</button><button type="button">امسح</button></div>`;
+    d.querySelector(".times").textContent = `${fmt(r.from)} → ${fmt(r.to)}   (${len.toFixed(0)} ث)`;
+    const inp = d.querySelector("input"); inp.value = r.title || "";
+    inp.onchange = () => { snapshot(); r.title = inp.value.trim(); buildReels(); changed(); };
+    const w = d.querySelector(".warn");
+    const bad = len < REEL_MIN ? "قصير، لازم 15 ثانية أقل شي" : len > REEL_MAX ? "طويل، لازم 60 ثانية أكثر شي" : !r.title ? "يحتاج هوك" : "";
+    w.hidden = !bad; w.textContent = bad;
+    const [play, del] = d.querySelectorAll(".row button");
+    play.onclick = () => { selReel = i; vertical(true); playReel = i; video.currentTime = r.from; video.play().catch(() => {}); buildReels(); };
+    del.onclick = () => { snapshot(); reels.splice(i, 1); selReel = -1; buildReels(); changed(); };
+    d.onclick = (e) => { if (e.target.closest("button,input")) return; selReel = i; video.currentTime = r.from; buildReels(); };
+    box.appendChild(d);
+  });
+}
+function vertical(on){ $("monitor").classList.toggle("vertical", on); $("vbadge").hidden = !on; $("bVert").classList.toggle("on", on); $("bVert").textContent = on ? "رجّع عرضي" : "شوف طولي"; }
+$("bVert").onclick = () => vertical(!$("monitor").classList.contains("vertical"));
+$("bAddReel").onclick = () => {
+  const from = Math.max(0, Math.min(video.currentTime, duration - REEL_MIN)), to = Math.min(duration, from + 30);
+  if (to - from < REEL_MIN){ toast("الحلقة أقصر من ريل كامل"); return; }
+  snapshot(); reels.push({from: +from.toFixed(2), to: +to.toFixed(2), title: ""}); selReel = reels.length - 1; buildReels(); changed(); tab("reels");
+};
+let rdrag = null;
+$("reels").addEventListener("pointerdown", (e) => {
+  const bar = e.target.closest(".rbar"); if (!bar) return;
+  const i = +bar.dataset.i, h = e.target.dataset.h || null; selReel = i;
+  if (!h){ video.currentTime = reels[i].from; tab("reels"); buildReels(); return; }
+  e.preventDefault(); rdrag = {i, h, x0: e.clientX, r0: {...reels[i]}, before: state(), el: bar}; bar.setPointerCapture(e.pointerId);
+});
+$("reels").addEventListener("pointermove", (e) => {
+  if (!rdrag) return; const {i, h, r0} = rdrag, dx = (e.clientX - rdrag.x0) / pps, r = reels[i];
+  if (h === "l") r.from = +Math.max(0, Math.min(r0.to - REEL_MIN, r0.from + dx)).toFixed(2);
+  else r.to = +Math.min(duration, Math.max(r0.from + REEL_MIN, r0.to + dx)).toFixed(2);
+  if (r.to - r.from > REEL_MAX){ if (h === "l") r.from = +(r.to - REEL_MAX).toFixed(2); else r.to = +(r.from + REEL_MAX).toFixed(2); }
+  pos(rdrag.el, r.from, r.to - r.from); seekTo(h === "l" ? r.from : r.to, false);
+});
+$("reels").addEventListener("pointerup", () => { if (!rdrag) return; undo.push(rdrag.before); redo = []; syncHist(); rdrag = null; buildReels(); changed(); });
+
+/* ---------- start ---------- */
+const legend = [["وجهك","--k-face"],["صورة","--k-img"],["موشن جرافك","--k-gfx"],["أرشيف","--k-arch"],["ذكاء اصطناعي","--k-ai"],["مقصوص","--k-cut"],["طلب جديد","--flag"],["بانتظار Claude","--queued"],["انسوّى","--done"]];
+$("legend").innerHTML = legend.map(([n, v]) => `<span><i style="background:var(${v})"></i>${n}</span>`).join("");
+
+async function boot(){
+  const data = await fetch("data.json").then(r => r.json());
+  episode = data.episode; $("epname").textContent = episode; duration = data.duration;
+  base = data.beats.map((b, i) => ({...b, uid: "b" + i}));
+  beats = JSON.parse(JSON.stringify(base)); words = data.words || []; cands = data.candidates || {};
+  chapters = data.chapters || []; reels = (data.shorts || []).map(s => ({from: s.from, to: s.to, title: s.title || ""}));
+  tl.style.setProperty("--dur", duration); tl.style.setProperty("--pps", pps);
+  sel = 0; buildRuler(); buildOrig(); buildWords(); buildAll(); buildMarks(); renderReqs();
+  $("status").textContent = "نسخة الحلقة الأصلية";
+  const use = window.claude && window.claude.use ? (n) => window.claude.use(n).catch(() => null) : async () => null;
+  [db, assets, user] = await Promise.all([use("db"), use("assets"), use("user")]);
+  if (user){ try { me = await user.id(); } catch (_) {} }
+  if (!db){ $("status").textContent = "تگدر تجرب، بس الحفظ والطلبات مسكّرة بهالعرض"; return; }
+  try {
+    const saved = await db.doc("edits/current").get();
+    if (saved.exists){
+      const d = saved.data(), thumbs = Object.fromEntries(base.map(b => [b.uid, b.thumb]));
+      if (Array.isArray(d.beats) && d.beats.length){
+        beats = d.beats.map(b => ({...b, thumb: thumbs[b.uid] || nearestThumb(b)}));
+        uidN = Math.max(0, ...beats.map(b => b.uid && b.uid[0] === "n" ? +b.uid.slice(1) : 0));
+      }
+      if (Array.isArray(d.reels)) reels = d.reels;
+      buildAll(); $("dot").className = "dot ok"; $("status").textContent = "آخر تعديلات محفوظة";
+    }
+  } catch (_) {}
+  db.collection("requests").onSnapshot((snap) => {
+    requests = snap.docs.map(d => ({id: d.id, ...d.data()})).filter(r => typeof r.t === "number");
+    buildMarks(); renderReqs();
+  }, () => toast("ما گدرت أقرا الطلبات"));
+}
+function nearestThumb(b){ const m = (b.start + b.end) / 2; const o = base.find(x => m >= x.start && m < x.end); return o ? o.thumb : ""; }
+window.addEventListener("beforeunload", () => { if (dirty) save(); });
+boot().catch(() => { $("status").textContent = "ما گدرت أحمّل الحلقة"; });
+</script>

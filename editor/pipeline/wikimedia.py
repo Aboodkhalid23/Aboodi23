@@ -81,7 +81,7 @@ def search_commons(query: str, limit: int = 8, session=None) -> list[CommonsImag
 def collect_images(plan: EditPlan, ep: Episode, session=None) -> EditPlan:
     """Download one image per `image` beat to assets/img_<beat index>.<ext> from the best of all the
     libraries (sources.find); fall back to text."""
-    from .sources import download, find, loc_rights_ok
+    from .sources import Found, download, find, loc_rights_ok
     session = session or requests.Session()
     style = load_style(plan.style["primary"])
     used, fallbacks, credits = set(), [], []
@@ -90,6 +90,9 @@ def collect_images(plan: EditPlan, ep: Episode, session=None) -> EditPlan:
             continue
         img, errors = None, []
         candidates = find(b.query, "image", b.source, session, used, errors)
+        if b.pick and b.pick.get("url"):   # chosen by the owner on the suite page: that one first
+            fields = Found.__dataclass_fields__
+            candidates = [Found(**{k: v for k, v in b.pick.items() if k in fields})] + candidates
         reason = "no free image" + (f" ({'; '.join(errors)})" if errors else "")
         for c in candidates[:4]:  # one file refusing to download (rate limit) shouldn't lose the beat
             if c.provider == "Library of Congress" and not loc_rights_ok(c, session):

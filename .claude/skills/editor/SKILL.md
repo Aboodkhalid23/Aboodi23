@@ -170,3 +170,8 @@ description: المونتير الآلي — يحوّل فيديو خام (صا�
 - الرسايل تطلع بالعربي من الكود. اشرحها إله ببساطة، وصلّح الي تگدر عليه بنفسك.
 - **فحص وتصليح تلقائي:** `python -m editor.pipeline.doctor` (يشتغل بداية كل جلسة ويطلّع المشاكل بس). إذا صار خطأ غريب: `python -m editor.pipeline.doctor --full` (يجمع المشاهد ويشغل الاختبارات) وصلّح بنفسك.
 - لإعادة مرحلة وحدة: `python -m editor.pipeline <fetch|check|entities|transcribe|clean|brief|validate|ai-jobs|music-free|music-jobs|images|compose|deliver> episodes/<الحلقة>`. التركيب يعيد بس الـ beats الي تغيرت.
+
+## غرفة المونتاج (صفحة التعديل)
+- `python -m editor.pipeline.suite build <الحلقة> --name "<اسمها>"` يسوي `edit/work/suite/`: الصفحة (`editor/suite/index.html`)، نسخة خفيفة (مفتاح كل 12 فريم، فالتنقل فوري)، صورة لكل مشهد، الكلام بأوقاته، و6 صور حقيقية بديلة لكل `query`.
+- تنتشر كـ Artifact بنفس الرابط (`url`) ويه ملفات المجلد، والقدرات: `db`، `assets` (رسائل صوتية)، `user` بـ `scopes: ["profile"]`.
+- لما يگول "نفّذ طلباتي": اقرا بـ ArtifactData `edits/current` ومجموعة `requests` (والصوت بـ Artifact read path=رقم الصوت، وفرّغه)، احفظهن بملف `{"edits":…, "requests":[…]}`، وشغّل `python -m editor.pipeline.suite apply <الحلقة> <الملف>` (يرجع المشاهد والصور المختارة `pick` والريلز للخطة، ويطبع الطلبات المفتوحة). نفّذ الطلبات، طلّع المونتاج، وحدّث كل طلب `status: "done"` و`reply` قصير بالعربي.

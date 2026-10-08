@@ -46,6 +46,7 @@ class Beat:
     title: str | None = None        # cinematic_title / halftone_cutout: the giant word; desk: the stamp
     look: str | None = None         # ai_image / ai_video: ai.AI_LOOKS; avatar: avatar.LOOKS (his character's style)
     animate: str | None = None      # avatar: "code" (layered motion, default) or "ai" (a video model moves the drawing)
+    pick: dict | None = None        # image: the picture the owner chose on the suite page (sources.Found fields)
 
     @property
     def duration(self) -> float:
