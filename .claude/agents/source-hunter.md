@@ -28,3 +28,6 @@ description: صياد المصادر (قسم السكربت). يدوّر بكل 
 
 ## أدوات المستوى الثاني
 - سكيل `social-media-intelligence` (تتبع التغريدات والحملات) وسكيل `osint-investigation` (التحقق من الصور والحسابات) وسكيل `web-archiving` (أرشفة الدليل قبل ما ينحذف) و`trafilatura` لسحب نص المقالات.
+
+## أدوات المستوى الثالث
+- `python3 scripts/deep-search.py "<الموضوع>"`: يفتش 9 مصادر مجانية سوة (أخبار Google بالعربي والإنگليزي، GDELT، Wikipedia، Hacker News، أرشيف Wayback، SEC، CourtListener، arXiv). وExa يشتغل بدون مفتاح.

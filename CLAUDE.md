@@ -27,6 +27,8 @@
 | ترندات Google، فيديوهات منافسين ناجحة | `google-trends`، `yt-viral` |
 | بحث موثق، أرشيف، تغريدات، تحقق صور | `verified-research`، `web-archiving`، `social-media-intelligence`، `osint-investigation` |
 | تلخيص فيديو أو بودكاست | `audio-tldr` |
+| بحث بـ9 مصادر مجانية سوة (أخبار، أرشيف، محاكم، أبحاث) | `python3 scripts/deep-search.py "<الموضوع>"` |
+| تشويق وبرد افتتاحي وسرد وثائقي | `cw-hitchcock`، `cold-open-writer`، `documentary-narration-writer`، `beat-sheet-builder` |
 | **غلاف يوتيوب، صورة مصغرة، كفر ريلز أو تيك توك، أغلفة تعجبه** | **`designer`** (3 أغلفة لكل فيديو بوجهه الحقيقي: Higgsfield وCanva و`thumbnail-design` و`titles-and-thumbnails`) |
 | تحليل ليش فيديو ما نجح | `retention-audit`، `channel-formula` |
 | أي كود أو تعديل | `karpathy-guidelines` |

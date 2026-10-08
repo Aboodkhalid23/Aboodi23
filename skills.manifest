@@ -86,3 +86,11 @@ Jakeschincariol/youtube-agent-skill  skills/yt-viral
 Jakeschincariol/youtube-agent-skill  skills/yt-script
 Jakeschincariol/youtube-agent-skill  skills/yt-chapters
 AugustusW/audio-tldr-skill           skills/audio-tldr
+
+# المستوى الثالث — التشويق والسرد الوثائقي (مفحوصة 2026/10/8: تعليمات بس، MIT)
+EveryInc/compound-writing        skills/cw-hitchcock
+EveryInc/compound-writing        skills/cw-sorkin
+ur-grue/autopunk-media-skills    skills/writing/broadcast/cold-open-writer
+ur-grue/autopunk-media-skills    skills/radio-audio/scripting/documentary-narration-writer
+ur-grue/autopunk-media-skills    skills/writing/broadcast/transition-narration-writer
+ur-grue/autopunk-media-skills    skills/screenwriting/development/beat-sheet-builder
