@@ -211,15 +211,19 @@ RELAX = [
 ]
 
 
-def select(cards: list) -> tuple[list[dict], list[str]]:
-    """يختار 2 بدون كتابة + 1 بكتابة، بأعلى مجموع درجات يطابق الشروط.
+def select(cards: list, no_text: bool = False) -> tuple[list[dict], list[str]]:
+    """يختار 2 بدون كتابة + 1 بكتابة (أو 3 بدون كتابة إذا no_text)، بأعلى مجموع درجات يطابق الشروط.
 
     إذا الشروط ما تنطبق، ينزل الأضعف أول (اللون، بعده التعبير، بعده الزاوية) ويكتب ملاحظة.
     يرجع (المختارة مرتبة بالدرجة ووياها label وscore، الملاحظات).
     """
     plain = [c for c in cards if c.get("text") is None]
     texted = [c for c in cards if c.get("text") is not None]
-    if len(plain) < 2:
+    if no_text:
+        if len(plain) < 3:
+            raise ConceptError(f"لازم 3 أفكار بدون كتابة على الأقل، والموجود {len(plain)}")
+        texted = plain
+    elif len(plain) < 2:
         raise ConceptError(f"لازم فكرتين بدون كتابة على الأقل، والموجود {len(plain)}")
     if not texted:
         raise ConceptError("لازم فكرة وحدة بكتابة على الأقل، والموجود 0")
@@ -228,6 +232,8 @@ def select(cards: list) -> tuple[list[dict], list[str]]:
         best = None
         for pair in itertools.combinations(plain, 2):
             for t in texted:
+                if t is pair[0] or t is pair[1] or (no_text and order[id(t)] < order[id(pair[1])]):
+                    continue
                 trio = (*pair, t)
                 if not _ok(trio, rules):
                     continue
@@ -486,12 +492,13 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="يختار 3 أغلفة من بطاقات الأفكار ويرسم مخططاتها")
     ap.add_argument("concepts", help="ملف concepts.json")
     ap.add_argument("-o", "--out", required=True, help="مجلد النتائج")
+    ap.add_argument("--no-text", action="store_true", help="3 أغلفة كلها بدون كتابة (إذا صاحب القناة طلب)")
     args = ap.parse_args(argv)
     path = Path(args.concepts)
     try:
         cards = json.loads(path.read_text(encoding="utf-8-sig"))
         validate(cards)
-        picked, notes = select(cards)
+        picked, notes = select(cards, no_text=args.no_text)
     except FileNotFoundError:
         print(f"✗ خطأ: ملف الأفكار مو موجود: {path}")
         return 1

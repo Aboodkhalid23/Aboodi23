@@ -5,5 +5,12 @@
     "local": "designer/faces/abood-face-crop.jpg",
     "expression": "عادي",
     "looks": "camera"
+  },
+  "barca-2026": {
+    "higgsfield_id": "73f77e87-03b4-4df6-8fdf-070c3083377a",
+    "canva_id": null,
+    "local": "designer/faces/abood-barca.jpg",
+    "expression": "جدي وحاجب مرفوع، يأشر على صدره",
+    "looks": "camera"
   }
 }
