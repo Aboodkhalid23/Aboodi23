@@ -217,6 +217,15 @@ class SelectTest(unittest.TestCase):
         picked, _ = concepts.select(cards)
         self.assertEqual(self.ids(picked), ["P1", "P2", "T"])
 
+    def test_no_text_mode_picks_three_plain(self):
+        cards = [card("n1", 10, "metaphor", "calm", "#8B0000"), card("n2", 9, "scale", "worried", "#003366"),
+                 card("n3", 7, "mystery", "smirk", "#004D00"),
+                 card("t1", 9.9, "villain", "angry", "#4B0082", text="نهاية\nالعالم؟")]
+        picked, notes = concepts.select(cards, no_text=True)
+        self.assertEqual(self.ids(picked), ["n1", "n2", "n3"])
+        with self.assertRaisesRegex(ConceptError, "بدون كتابة"):
+            concepts.select(cards[:2], no_text=True)
+
     def test_not_enough_no_text_cards(self):
         cards = [card("n1"), card("t1", angle="scale", text="نهاية\nالعالم؟"),
                  card("t2", angle="pov", text="انت\nالهدف!")]

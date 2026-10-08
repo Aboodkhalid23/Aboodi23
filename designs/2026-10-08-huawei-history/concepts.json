@@ -1,0 +1,434 @@
+[
+  {
+    "id": "H01",
+    "angle": "miniature",
+    "idea": "ورشة 1987 مصغرة على الطاولة: غرفة صغيرة وعمال صغار نايمين على فرش، ووراها مدينة أبراج حمرة عملاقة",
+    "text": null,
+    "subject": {
+      "outfit": "dark blazer over a black t-shirt",
+      "expression": "calm and proud, one eyebrow slightly raised, mouth closed",
+      "action": "leans over the table toward the camera, pointing at the tiny workshop"
+    },
+    "hero": "a detailed miniature 1987 workshop diorama on the table: a tiny cramped room with old telephone switch boxes and tiny workers sleeping on thin mattresses under desks",
+    "setting": "behind him a giant futuristic red-lit tech campus with glass towers, slightly blurred",
+    "camera": "wide_close",
+    "layout": {
+      "face": "right",
+      "hero": "foreground",
+      "text_zone": null
+    },
+    "palette": [
+      "#1A0A0C",
+      "#E0141E",
+      "#FFB547"
+    ],
+    "scores": {
+      "clarity": 8,
+      "curiosity": 9,
+      "emotion": 7,
+      "novelty": 9,
+      "honesty": 9,
+      "producible": 7,
+      "face": 8
+    },
+    "why": "البداية الصغيرة جداً قدام الإمبراطورية: تاريخ تأسيس بلقطة وحدة",
+    "hero_ar": "ورشة 1987 مصغرة وعمال على فرش",
+    "expression_ar": "هادي وفخور، حاجب مرفوع"
+  },
+  {
+    "id": "H02",
+    "angle": "before_after",
+    "idea": "بإيد تلفون أرضي قديم من الثمانينات، وبالثانية تلفون ذكي حديث يتوهج",
+    "text": null,
+    "subject": {
+      "outfit": "black turtleneck",
+      "expression": "confident, slight smile, mouth closed",
+      "action": "holds both objects toward the camera"
+    },
+    "hero": "an old beige 1980s office telephone with a coiled cord in his left hand and a sleek modern glowing smartphone in his right hand, both big in the foreground",
+    "setting": "dark studio with a deep red backdrop and soft smoke",
+    "camera": "wide_close",
+    "layout": {
+      "face": "center",
+      "hero": "foreground",
+      "text_zone": null
+    },
+    "palette": [
+      "#2A0508",
+      "#F2E6D0",
+      "#FF3B3B"
+    ],
+    "scores": {
+      "clarity": 9,
+      "curiosity": 7,
+      "emotion": 6,
+      "novelty": 6,
+      "honesty": 9,
+      "producible": 9,
+      "face": 8
+    },
+    "why": "من بيع بدالات التلفون لأقوى تلفونات العالم",
+    "hero_ar": "تلفون قديم ضد تلفون حديث",
+    "expression_ar": "واثق وابتسامة خفيفة"
+  },
+  {
+    "id": "H03",
+    "angle": "metaphor",
+    "idea": "وردة حمرة عملاقة تطلع من صندوق بدالة تلفون قديم مكسور",
+    "text": null,
+    "subject": {
+      "outfit": "dark green field jacket",
+      "expression": "curious and amazed but calm, mouth closed",
+      "action": "looks into the camera, one hand on the old box"
+    },
+    "hero": "a huge glowing red flower with eight petals growing out of a cracked dusty old 1980s telephone switch box",
+    "setting": "dark minimal room with a cold blue background",
+    "camera": "standard",
+    "layout": {
+      "face": "right",
+      "hero": "left",
+      "text_zone": null
+    },
+    "palette": [
+      "#0A1424",
+      "#E0141E",
+      "#7FDBFF"
+    ],
+    "scores": {
+      "clarity": 8,
+      "curiosity": 8,
+      "emotion": 7,
+      "novelty": 9,
+      "honesty": 8,
+      "producible": 7,
+      "face": 8
+    },
+    "why": "شي صغير قديم صار شي ضخم ومشهور (الوردة الحمرة شكل معروف للشركة)",
+    "hero_ar": "وردة حمرة تطلع من بدالة قديمة",
+    "expression_ar": "مستغرب بهدوء"
+  },
+  {
+    "id": "H04",
+    "angle": "scale",
+    "idea": "كومة صغيرة جداً من الفلوس القديمة جنب جبل ذهب عملاق",
+    "text": null,
+    "subject": {
+      "outfit": "white shirt with rolled sleeves",
+      "expression": "serious, studying the camera, mouth closed",
+      "action": "holds the tiny stack of old banknotes between two fingers toward the camera"
+    },
+    "hero": "a tiny thin stack of old Chinese banknotes held up close, and behind him a gigantic mountain of gold bars",
+    "setting": "dark vault with warm golden light",
+    "camera": "wide_close",
+    "layout": {
+      "face": "right",
+      "hero": "foreground",
+      "text_zone": null
+    },
+    "palette": [
+      "#1A1408",
+      "#D4AF37",
+      "#E0141E"
+    ],
+    "scores": {
+      "clarity": 8,
+      "curiosity": 8,
+      "emotion": 7,
+      "novelty": 6,
+      "honesty": 8,
+      "producible": 8,
+      "face": 8
+    },
+    "why": "بدت بـ 21 ألف يوان (حوالي 3 آلاف دولار) وصارت بمئات المليارات",
+    "hero_ar": "فلوس قليلة قدام جبل ذهب",
+    "expression_ar": "جدي يدرس الكاميرا"
+  },
+  {
+    "id": "H05",
+    "angle": "pov",
+    "idea": "المقدم بدور مهندس سنة 1987 بغرفة ضيقة بيها بدالات قديمة وفرشة على الأرض",
+    "text": null,
+    "subject": {
+      "outfit": "old faded olive military-style shirt from the 1980s",
+      "expression": "determined and tired, mouth closed",
+      "action": "sits on the edge of a thin mattress on the floor, holding a screwdriver"
+    },
+    "hero": "old metal telephone switch boxes stacked against the wall with tangled wires",
+    "setting": "cramped dim 1980s workshop room, single hanging bulb, warm sepia tones",
+    "camera": "standard",
+    "layout": {
+      "face": "right",
+      "hero": "left",
+      "text_zone": null
+    },
+    "palette": [
+      "#2B1E12",
+      "#FFB547",
+      "#C0392B"
+    ],
+    "scores": {
+      "clarity": 7,
+      "curiosity": 7,
+      "emotion": 7,
+      "novelty": 8,
+      "honesty": 9,
+      "producible": 8,
+      "face": 7
+    },
+    "why": "انت بمكان المؤسس: أول يوم بالشركة",
+    "hero_ar": "بدالات قديمة وأسلاك",
+    "expression_ar": "حازم وتعبان"
+  },
+  {
+    "id": "H06",
+    "angle": "two_objects",
+    "idea": "بإيد شريحة إلكترونية حمرة، وبالثانية برغي قديم صدي",
+    "text": null,
+    "subject": {
+      "outfit": "black hoodie",
+      "expression": "focused, slight frown, mouth closed",
+      "action": "holds both objects close to the camera"
+    },
+    "hero": "a glowing red microchip in one hand and an old rusty screw in the other hand",
+    "setting": "dark tech lab with cyan lights",
+    "camera": "wide_close",
+    "layout": {
+      "face": "center",
+      "hero": "foreground",
+      "text_zone": null
+    },
+    "palette": [
+      "#05161C",
+      "#E0141E",
+      "#00E5FF"
+    ],
+    "scores": {
+      "clarity": 6,
+      "curiosity": 6,
+      "emotion": 5,
+      "novelty": 7,
+      "honesty": 7,
+      "producible": 8,
+      "face": 8
+    },
+    "why": "من التجميع اليدوي لصناعة الشرائح",
+    "hero_ar": "شريحة حمرة ضد برغي صدي",
+    "expression_ar": "مركّز وعابس شوية"
+  },
+  {
+    "id": "H07",
+    "angle": "wrong_detail",
+    "idea": "مكتب من الثمانينات كله أجهزة قديمة، وبنصه تلفون قابل للطي من المستقبل يتوهج",
+    "text": null,
+    "subject": {
+      "outfit": "brown 1980s sweater",
+      "expression": "suspicious, one eyebrow raised, mouth closed",
+      "action": "points at the glowing phone on the desk"
+    },
+    "hero": "a futuristic glowing foldable smartphone lying on an old wooden 1980s desk full of rotary phones and typewriters",
+    "setting": "1980s office with yellowed walls and warm lamp light",
+    "camera": "standard",
+    "layout": {
+      "face": "right",
+      "hero": "left",
+      "text_zone": null
+    },
+    "palette": [
+      "#3A2A14",
+      "#00E5FF",
+      "#FF8C00"
+    ],
+    "scores": {
+      "clarity": 7,
+      "curiosity": 8,
+      "emotion": 6,
+      "novelty": 8,
+      "honesty": 8,
+      "producible": 7,
+      "face": 8
+    },
+    "why": "التفصيل الغلط يوگف العين: شلون وصلوا من هناك لهنا؟",
+    "hero_ar": "تلفون مستقبلي على مكتب قديم",
+    "expression_ar": "شاك، حاجب مرفوع"
+  },
+  {
+    "id": "H08",
+    "angle": "offscreen",
+    "idea": "المقدم يباوع لضو أحمر قوي جاي من برا الصورة، ووجهه يلمع أحمر",
+    "text": null,
+    "subject": {
+      "outfit": "black jacket",
+      "expression": "awed, eyes wide, mouth closed",
+      "action": "turns his head toward a strong red light outside the frame"
+    },
+    "hero": "red light rays and reflections on his face and on a dark glass wall",
+    "setting": "dark glass corridor at night",
+    "camera": "standard",
+    "layout": {
+      "face": "center",
+      "hero": "left",
+      "text_zone": null
+    },
+    "palette": [
+      "#140508",
+      "#E0141E",
+      "#FFFFFF"
+    ],
+    "scores": {
+      "clarity": 5,
+      "curiosity": 7,
+      "emotion": 7,
+      "novelty": 7,
+      "honesty": 6,
+      "producible": 8,
+      "face": 9
+    },
+    "why": "شنو الشي العملاق الي يشوفه؟",
+    "hero_ar": "ضو أحمر من برا الصورة",
+    "expression_ar": "منبهر بصمت"
+  },
+  {
+    "id": "H09",
+    "angle": "mystery",
+    "idea": "صندوق كارتون قديم مقفول مكتوب عليه بالأحمر، وضو أحمر يطلع من فتحته",
+    "text": null,
+    "subject": {
+      "outfit": "plain dark shirt",
+      "expression": "curious, mouth closed",
+      "action": "slowly opens the box toward the camera"
+    },
+    "hero": "an old taped cardboard shipping box with red light glowing from the gap of its lid",
+    "setting": "dark warehouse",
+    "camera": "wide_close",
+    "layout": {
+      "face": "right",
+      "hero": "foreground",
+      "text_zone": null
+    },
+    "palette": [
+      "#101010",
+      "#E0141E",
+      "#FFB547"
+    ],
+    "scores": {
+      "clarity": 6,
+      "curiosity": 9,
+      "emotion": 6,
+      "novelty": 7,
+      "honesty": 6,
+      "producible": 8,
+      "face": 8
+    },
+    "why": "شنو جوه أول صندوق باعته الشركة؟",
+    "hero_ar": "صندوق قديم يطلع منه ضو أحمر",
+    "expression_ar": "فضولي"
+  },
+  {
+    "id": "H10",
+    "angle": "icon_twist",
+    "idea": "وردة الشركة الحمرة مصنوعة من أسلاك تلفون قديمة ملفوفة",
+    "text": null,
+    "subject": {
+      "outfit": "dark navy suit",
+      "expression": "calm, confident, mouth closed",
+      "action": "stands beside it looking into the camera"
+    },
+    "hero": "a large red flower with eight petals built entirely from coiled old red telephone cords",
+    "setting": "dark navy studio background",
+    "camera": "standard",
+    "layout": {
+      "face": "right",
+      "hero": "left",
+      "text_zone": null
+    },
+    "palette": [
+      "#0B1A2A",
+      "#E0141E",
+      "#C9D1D9"
+    ],
+    "scores": {
+      "clarity": 7,
+      "curiosity": 7,
+      "emotion": 6,
+      "novelty": 9,
+      "honesty": 8,
+      "producible": 6,
+      "face": 7
+    },
+    "why": "الرمز المعروف بس مبني من ماضيها",
+    "hero_ar": "وردة من أسلاك تلفون",
+    "expression_ar": "هادي وواثق"
+  },
+  {
+    "id": "H11",
+    "angle": "before_disaster",
+    "idea": "المؤسس قدام باب ورشة صغيرة سنة 1987 ومعاه شنطة، يدخل أول يوم",
+    "text": null,
+    "subject": {
+      "outfit": "1980s jacket",
+      "expression": "determined, mouth closed",
+      "action": "stands at the door of a small workshop holding an old suitcase"
+    },
+    "hero": "an old wooden door of a tiny workshop with a hand-painted sign and peeling paint",
+    "setting": "narrow Shenzhen street in 1987, warm evening light",
+    "camera": "standard",
+    "layout": {
+      "face": "right",
+      "hero": "left",
+      "text_zone": null
+    },
+    "palette": [
+      "#2E1A0E",
+      "#FF8C00",
+      "#4CC9F0"
+    ],
+    "scores": {
+      "clarity": 5,
+      "curiosity": 6,
+      "emotion": 6,
+      "novelty": 7,
+      "honesty": 7,
+      "producible": 6,
+      "face": 7
+    },
+    "why": "اللحظة الي قبل ما يبدي كلشي",
+    "hero_ar": "باب ورشة صغيرة",
+    "expression_ar": "حازم"
+  },
+  {
+    "id": "H12",
+    "angle": "villain",
+    "idea": "إيد كبيرة سودة تحاول تطفي وردة حمرة صغيرة",
+    "text": null,
+    "subject": {
+      "outfit": "black suit",
+      "expression": "worried, mouth closed",
+      "action": "shields the small flower with his hand"
+    },
+    "hero": "a giant dark shadowy hand reaching down toward a small glowing red flower",
+    "setting": "dark stormy background",
+    "camera": "standard",
+    "layout": {
+      "face": "right",
+      "hero": "left",
+      "text_zone": null
+    },
+    "palette": [
+      "#0D0D14",
+      "#E0141E",
+      "#8A5CFF"
+    ],
+    "scores": {
+      "clarity": 6,
+      "curiosity": 7,
+      "emotion": 7,
+      "novelty": 7,
+      "honesty": 5,
+      "producible": 7,
+      "face": 7
+    },
+    "why": "الحرب على الشركة (بس الموضوع التأسيس، فما نبالغ)",
+    "hero_ar": "إيد سودة ووردة حمرة",
+    "expression_ar": "قلقان"
+  }
+]

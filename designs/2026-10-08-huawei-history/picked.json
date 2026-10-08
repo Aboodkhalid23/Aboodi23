@@ -1,0 +1,122 @@
+{
+  "notes": [],
+  "picked": [
+    {
+      "id": "H01",
+      "angle": "miniature",
+      "idea": "ورشة 1987 مصغرة على الطاولة: غرفة صغيرة وعمال صغار نايمين على فرش، ووراها مدينة أبراج حمرة عملاقة",
+      "text": null,
+      "subject": {
+        "outfit": "dark blazer over a black t-shirt",
+        "expression": "calm and proud, one eyebrow slightly raised, mouth closed",
+        "action": "leans over the table toward the camera, pointing at the tiny workshop"
+      },
+      "hero": "a detailed miniature 1987 workshop diorama on the table: a tiny cramped room with old telephone switch boxes and tiny workers sleeping on thin mattresses under desks",
+      "setting": "behind him a giant futuristic red-lit tech campus with glass towers, slightly blurred",
+      "camera": "wide_close",
+      "layout": {
+        "face": "right",
+        "hero": "foreground",
+        "text_zone": null
+      },
+      "palette": [
+        "#1A0A0C",
+        "#E0141E",
+        "#FFB547"
+      ],
+      "scores": {
+        "clarity": 8,
+        "curiosity": 9,
+        "emotion": 7,
+        "novelty": 9,
+        "honesty": 9,
+        "producible": 7,
+        "face": 8
+      },
+      "why": "البداية الصغيرة جداً قدام الإمبراطورية: تاريخ تأسيس بلقطة وحدة",
+      "hero_ar": "ورشة 1987 مصغرة وعمال على فرش",
+      "expression_ar": "هادي وفخور، حاجب مرفوع",
+      "label": "A",
+      "score": 82.7,
+      "prompt": "Cinematic photorealistic YouTube thumbnail photo. Main subject: the man in the reference image.\nPreserve his exact facial identity: face shape, eyes, eyebrows, nose, thin black mustache, short trimmed beard, short dark hair with faded sides, skin tone. Change only his expression, clothes, pose and lighting.\nHe is on the right third of the frame, chest-up and large (his head and shoulders fill about 40% of the frame width), looking straight into the camera. He wears dark blazer over a black t-shirt. Expression: calm and proud, one eyebrow slightly raised, mouth closed, natural and believable, not exaggerated. Pose: leans over the table toward the camera, pointing at the tiny workshop.\nIn the foreground, large and close to the camera: a detailed miniature 1987 workshop diorama on the table: a tiny cramped room with old telephone switch boxes and tiny workers sleeping on thin mattresses under desks.\nSetting: behind him a giant futuristic red-lit tech campus with glass towers, slightly blurred.\nColors: dark navy dominant, red as the one strong accent color, gold rim light on his face and shoulders, high contrast, vivid saturated colors, sharp detailed skin texture, background slightly darker and softer than his face.\nShot with a wide-angle lens very close to the subject, slight fisheye perspective.\nThe main object is big in the foreground, close to the lens.\nNo text, no letters, no captions, no logos, no watermark."
+    },
+    {
+      "id": "H03",
+      "angle": "metaphor",
+      "idea": "وردة حمرة عملاقة تطلع من صندوق بدالة تلفون قديم مكسور",
+      "text": null,
+      "subject": {
+        "outfit": "dark green field jacket",
+        "expression": "curious and amazed but calm, mouth closed",
+        "action": "looks into the camera, one hand on the old box"
+      },
+      "hero": "a huge glowing red flower with eight petals growing out of a cracked dusty old 1980s telephone switch box",
+      "setting": "dark minimal room with a cold blue background",
+      "camera": "standard",
+      "layout": {
+        "face": "right",
+        "hero": "left",
+        "text_zone": null
+      },
+      "palette": [
+        "#0A1424",
+        "#E0141E",
+        "#7FDBFF"
+      ],
+      "scores": {
+        "clarity": 8,
+        "curiosity": 8,
+        "emotion": 7,
+        "novelty": 9,
+        "honesty": 8,
+        "producible": 7,
+        "face": 8
+      },
+      "why": "شي صغير قديم صار شي ضخم ومشهور (الوردة الحمرة شكل معروف للشركة)",
+      "hero_ar": "وردة حمرة تطلع من بدالة قديمة",
+      "expression_ar": "مستغرب بهدوء",
+      "label": "B",
+      "score": 79.1,
+      "prompt": "Cinematic photorealistic YouTube thumbnail photo. Main subject: the man in the reference image.\nPreserve his exact facial identity: face shape, eyes, eyebrows, nose, thin black mustache, short trimmed beard, short dark hair with faded sides, skin tone. Change only his expression, clothes, pose and lighting.\nHe is on the right third of the frame, chest-up and large (his head and shoulders fill about 40% of the frame width), looking straight into the camera. He wears dark green field jacket. Expression: curious and amazed but calm, mouth closed, natural and believable, not exaggerated. Pose: looks into the camera, one hand on the old box.\nOn the left side of the frame: a huge glowing red flower with eight petals growing out of a cracked dusty old 1980s telephone switch box.\nSetting: dark minimal room with a cold blue background.\nColors: dark navy dominant, red as the one strong accent color, light blue rim light on his face and shoulders, high contrast, vivid saturated colors, sharp detailed skin texture, background slightly darker and softer than his face.\nNo text, no letters, no captions, no logos, no watermark."
+    },
+    {
+      "id": "H04",
+      "angle": "scale",
+      "idea": "كومة صغيرة جداً من الفلوس القديمة جنب جبل ذهب عملاق",
+      "text": null,
+      "subject": {
+        "outfit": "white shirt with rolled sleeves",
+        "expression": "serious, studying the camera, mouth closed",
+        "action": "holds the tiny stack of old banknotes between two fingers toward the camera"
+      },
+      "hero": "a tiny thin stack of old Chinese banknotes held up close, and behind him a gigantic mountain of gold bars",
+      "setting": "dark vault with warm golden light",
+      "camera": "wide_close",
+      "layout": {
+        "face": "right",
+        "hero": "foreground",
+        "text_zone": null
+      },
+      "palette": [
+        "#1A1408",
+        "#D4AF37",
+        "#E0141E"
+      ],
+      "scores": {
+        "clarity": 8,
+        "curiosity": 8,
+        "emotion": 7,
+        "novelty": 6,
+        "honesty": 8,
+        "producible": 8,
+        "face": 8
+      },
+      "why": "بدت بـ 21 ألف يوان (حوالي 3 آلاف دولار) وصارت بمئات المليارات",
+      "hero_ar": "فلوس قليلة قدام جبل ذهب",
+      "expression_ar": "جدي يدرس الكاميرا",
+      "label": "C",
+      "score": 75.9,
+      "prompt": "Cinematic photorealistic YouTube thumbnail photo. Main subject: the man in the reference image.\nPreserve his exact facial identity: face shape, eyes, eyebrows, nose, thin black mustache, short trimmed beard, short dark hair with faded sides, skin tone. Change only his expression, clothes, pose and lighting.\nHe is on the right third of the frame, chest-up and large (his head and shoulders fill about 40% of the frame width), looking straight into the camera. He wears white shirt with rolled sleeves. Expression: serious, studying the camera, mouth closed, natural and believable, not exaggerated. Pose: holds the tiny stack of old banknotes between two fingers toward the camera.\nIn the foreground, large and close to the camera: a tiny thin stack of old Chinese banknotes held up close, and behind him a gigantic mountain of gold bars.\nSetting: dark vault with warm golden light.\nColors: dark green dominant, gold as the one strong accent color, red rim light on his face and shoulders, high contrast, vivid saturated colors, sharp detailed skin texture, background slightly darker and softer than his face.\nShot with a wide-angle lens very close to the subject, slight fisheye perspective.\nThe main object is big in the foreground, close to the lens.\nNo text, no letters, no captions, no logos, no watermark."
+    }
+  ]
+}
