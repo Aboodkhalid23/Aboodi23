@@ -270,7 +270,7 @@ textarea{min-height:60px;resize:vertical}
         <textarea id="reqText" placeholder="مثلاً: هنا حط صورة المصنع القديم، وسوّي انتقال باب كراج"></textarea>
         <div class="row">
           <button type="button" id="bRec" class="rec">🎙 سجّل صوتك</button>
-          <span class="seg" style="flex:0 0 auto"><button type="button" id="tReq" aria-pressed="true">طلب لClaude</button><button type="button" id="tNote" aria-pressed="false">ملاحظة للفريق</button></span>
+          <span class="seg" style="flex:0 0 auto"><button type="button" id="tReq" aria-pressed="true">طلب لكلود</button><button type="button" id="tNote" aria-pressed="false">ملاحظة للفريق</button></span>
         </div>
         <input type="file" id="audioFile" accept="audio/*" capture hidden>
         <div id="recState" class="empty" hidden></div>
@@ -543,7 +543,7 @@ function renderCands(b){
   $("altBox").hidden = !b.query && !list.length && !["image","face_cutout","entity"].includes(b.kind);
   if (!list.length){
     note.hidden = false;
-    note.textContent = b.query ? "ما عندي صور جاهزة لهالكلمة بعد. Claude يجيبهن بالتنفيذ الجاي." : "اكتب جوه شنو ندوّر عليه، وClaude يجيب صور حقيقية.";
+    note.textContent = b.query ? "ما عندي صور جاهزة لهالكلمة بعد. كلود يجيبهن بالتنفيذ الجاي." : "اكتب جوه شنو ندوّر عليه، وكلود يجيب صور حقيقية.";
     return;
   }
   note.hidden = true;
@@ -762,7 +762,7 @@ function highlightReq(id){
   document.querySelectorAll(".req.hl").forEach(n => n.classList.remove("hl"));
   const n = document.querySelector(`.req[data-id="${CSS.escape(id)}"]`); if (n){ n.classList.add("hl"); n.scrollIntoView({block: "nearest", behavior: "smooth"}); }
 }
-const ST = {new: "جديد", queued: "بانتظار Claude", done: "انسوّى"};
+const ST = {new: "جديد", queued: "بانتظار كلود", done: "انسوّى"};
 async function renderReqs(){
   const list = $("reqList"); list.textContent = "";
   const open = requests.filter(r => r.type !== "note" && r.status !== "done").length;
@@ -782,7 +782,7 @@ async function renderReqs(){
     li.appendChild(meta);
     if (r.text){ const t = el("div", "txt"); t.textContent = r.text; li.appendChild(t); }
     if (r.audio){ const a = el("audio"); a.controls = true; a.preload = "none"; a.src = "/_blob/" + r.audio; li.appendChild(a); }
-    if (r.reply){ const p = el("div", "reply"); p.textContent = "Claude: " + r.reply; li.appendChild(p); }
+    if (r.reply){ const p = el("div", "reply"); p.textContent = "كلود: " + r.reply; li.appendChild(p); }
     list.appendChild(li);
   });
 }
@@ -890,7 +890,7 @@ $("reels").addEventListener("pointermove", (e) => {
 $("reels").addEventListener("pointerup", () => { if (!rdrag) return; undo.push(rdrag.before); redo = []; syncHist(); rdrag = null; buildReels(); changed(); });
 
 /* ---------- start ---------- */
-const legend = [["وجهك","--k-face"],["صورة","--k-img"],["موشن جرافك","--k-gfx"],["أرشيف","--k-arch"],["ذكاء اصطناعي","--k-ai"],["مقصوص","--k-cut"],["طلب جديد","--flag"],["بانتظار Claude","--queued"],["انسوّى","--done"]];
+const legend = [["وجهك","--k-face"],["صورة","--k-img"],["موشن جرافك","--k-gfx"],["أرشيف","--k-arch"],["ذكاء اصطناعي","--k-ai"],["مقصوص","--k-cut"],["طلب جديد","--flag"],["بانتظار كلود","--queued"],["انسوّى","--done"]];
 $("legend").innerHTML = legend.map(([n, v]) => `<span><i style="background:var(${v})"></i>${n}</span>`).join("");
 
 async function boot(){
