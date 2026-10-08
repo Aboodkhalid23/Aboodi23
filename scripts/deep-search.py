@@ -66,7 +66,7 @@ def http_get(url, params=None, headers=None, retries=3, backoff=4.0, as_json=Tru
         try:
             if requests:
                 r = requests.get(url, headers=h, timeout=TIMEOUT)
-                code, text = r.status_code, r.text
+                code, text = r.status_code, r.content.decode("utf-8", "replace")
             else:
                 ctx = ssl.create_default_context(
                     cafile=os.environ.get("SSL_CERT_FILE") or os.environ.get("REQUESTS_CA_BUNDLE"))
@@ -112,14 +112,15 @@ def parse_xml(text):
     return ET.fromstring(text)
 
 
-def shrink(query):
-    """إذا ماكو نتائج، نشيل آخر كلمة ونعيد (لحد كلمتين)."""
+def shrink(query, quote=False):
+    """إذا ماكو نتائج، نشيل آخر كلمة ونعيد (لحد كلمتين).
+    quote=True: كل محاولة تنحط بين علامات تنصيص (عبارة حرفية) حتى ما تطلع نتائج غلط."""
     words = query.split()
     out = [query]
     while len(words) > 2:
         words = words[:-1]
         out.append(" ".join(words))
-    return out
+    return [f'"{x}"' for x in out] if quote else out
 
 
 # ---------------------------------------------------------------- المصادر
@@ -133,7 +134,7 @@ def src_exa(q, limit, **_):
         r = requests.post(url, json=body, headers=hdr, timeout=60)
         if r.status_code >= 400:
             raise Fail(f"HTTP {r.status_code}")
-        raw = r.text
+        raw = r.content.decode("utf-8", "replace")
     else:
         req = urllib.request.Request(url, data=json.dumps(body).encode(), headers=hdr)
         ctx = ssl.create_default_context(cafile=os.environ.get("SSL_CERT_FILE"))
@@ -165,7 +166,8 @@ def src_gdelt(q, limit, langs=("english", "arabic"), timespan="6m", **_):
         for qq in shrink(core)[:2]:
             data = http_get("https://api.gdeltproject.org/api/v2/doc/doc", {
                 "query": f"{qq} sourcelang:{lang}", "mode": "artlist", "format": "json",
-                "maxrecords": limit, "timespan": timespan, "sort": "hybridrel"}, backoff=6)
+                "maxrecords": limit, "timespan": timespan, "sort": "hybridrel"},
+                retries=4, backoff=8)
             got = data.get("articles", []) if isinstance(data, dict) else []
             if got:
                 break
@@ -241,8 +243,11 @@ def src_reddit(q, limit, **_):
 
 def src_edgar(q, limit, **_):
     hits = []
-    for qq in shrink(q):
-        data = http_get("https://efts.sec.gov/LATEST/search-index", {"q": f'"{qq}"'})
+    # SEC تطلب هوية فيها وسيلة تواصل؛ غيّرها بمتغير SEC_UA إذا تحب
+    sec_ua = os.environ.get("SEC_UA", "Aboodi23 research-script research@example.org")
+    for qq in shrink(q, quote=True):
+        data = http_get("https://efts.sec.gov/LATEST/search-index", {"q": qq},
+                        headers={"User-Agent": sec_ua})
         hits = data.get("hits", {}).get("hits", [])
         if hits:
             break
@@ -260,7 +265,7 @@ def src_edgar(q, limit, **_):
 
 def src_court(q, limit, **_):
     res = []
-    for qq in shrink(q):
+    for qq in shrink(q, quote=True):
         data = http_get("https://www.courtlistener.com/api/rest/v4/search/",
                         {"q": qq, "type": "o", "order_by": "score desc"})
         res = data.get("results", [])
