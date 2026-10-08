@@ -96,6 +96,7 @@ def http_get(url, params=None, headers=None, retries=3, backoff=4.0, as_json=Tru
 
 
 def item(source, date, title, url, extra=""):
+    date = "" if not date or not date[:1].isdigit() else date
     return {
         "source": source,
         "date": (date or "")[:10],
@@ -158,27 +159,31 @@ def src_gdelt(q, limit, langs=("english", "arabic"), timespan="6m", **_):
     # GDELT يرفض الكلمات الأقصر من 3 حروف، ويسمح بطلب واحد كل 5 ثواني
     words = [w for w in q.split() if len(w) >= 3]
     core = " ".join(words) if words else q
-    out, notes = [], []
+    out, failed = [], []
     for i, lang in enumerate(langs):
         if i:
             time.sleep(6)
         got = []
-        for qq in shrink(core)[:2]:
-            data = http_get("https://api.gdeltproject.org/api/v2/doc/doc", {
-                "query": f"{qq} sourcelang:{lang}", "mode": "artlist", "format": "json",
-                "maxrecords": limit, "timespan": timespan, "sort": "hybridrel"},
-                retries=4, backoff=8)
-            got = data.get("articles", []) if isinstance(data, dict) else []
-            if got:
-                break
-            time.sleep(6)
-        if not got:
-            notes.append(lang)
+        try:
+            for qq in shrink(core)[:2]:
+                data = http_get("https://api.gdeltproject.org/api/v2/doc/doc", {
+                    "query": f"{qq} sourcelang:{lang}", "mode": "artlist", "format": "json",
+                    "maxrecords": limit, "timespan": timespan, "sort": "hybridrel"},
+                    retries=3, backoff=7)
+                got = data.get("articles", []) if isinstance(data, dict) else []
+                if got:
+                    break
+                time.sleep(6)
+        except Fail as e:
+            failed.append(f"{lang}: {e}")
+            continue
         for a in got[:limit]:
             sd = a.get("seendate", "")
             date = f"{sd[:4]}-{sd[4:6]}-{sd[6:8]}" if len(sd) >= 8 else ""
             out.append(item(f"gdelt:{lang[:2]}", date, a.get("title"), a.get("url"),
                             a.get("domain", "")))
+    if failed and not out:
+        raise Fail("; ".join(failed))
     return out
 
 
@@ -267,7 +272,7 @@ def src_court(q, limit, **_):
     res = []
     for qq in shrink(q, quote=True):
         data = http_get("https://www.courtlistener.com/api/rest/v4/search/",
-                        {"q": qq, "type": "o", "order_by": "score desc"})
+                        {"q": qq, "type": "o", "order_by": "score desc"}, retries=2)
         res = data.get("results", [])
         if res:
             break
@@ -335,8 +340,9 @@ def main():
     seen, merged = set(), []
     for r in results:
         key = r["url"].split("#")[0].rstrip("/")
-        if key and key not in seen:
-            seen.add(key)
+        tkey = re.sub(r"\W+", "", r["title"].lower())[:70]
+        if key and key not in seen and tkey not in seen:
+            seen.update({key, tkey})
             merged.append(r)
     merged.sort(key=lambda r: r["date"] or "0000", reverse=True)
 
@@ -353,6 +359,9 @@ def main():
     print(f"# {a.query}  ({len(merged)} unique results, {time.time() - t0:.0f}s)\n")
     for s in chosen:
         print(f"  {s:7} {status.get(s, '-')}")
+    if any("429" in v for v in status.values()):
+        print("\n  (429 = the site is rate-limiting this machine; wait a few minutes and rerun"
+              " with --sources for the failed ones)")
     print()
     for r in merged:
         print(f"[{r['source']:9}] {r['date'] or '----------'}  {r['title'][:110]}")
