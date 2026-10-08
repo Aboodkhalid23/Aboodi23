@@ -13,6 +13,11 @@
             "type": "command",
             "command": "pip install -q -r \"$CLAUDE_PROJECT_DIR\"/designer/requirements.txt >/dev/null 2>&1 || true",
             "timeout": 180
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/scripts/setup-tools.sh >/dev/null 2>&1 || true",
+            "timeout": 300
           }
         ]
       }
