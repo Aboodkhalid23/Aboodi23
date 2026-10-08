@@ -36,7 +36,7 @@ description: استوديو المحتوى — يشغّل فريق كامل (م�
 3. **قسم الهوك كامل:** `hook-miner` ← `hook-architect` ← `suspense-director` (برود افتتاحية) ← `hook-psychologist` ← `hook-tester` ← `hook-director`. المرجع: `studio/style/nerve-engine.md`.
 4. `script-writer` (يستخدم الهوك النهائي والجسر وبطاقة الرتم) ثم `analogy-maker`.
 5. المراجعة بالتوازي: `fact-checker` + `source-verifier` + `balance-reviewer` + `legal-risk-reviewer` + `tension-auditor` + `viewer-panel`.
-6. `dialect-editor` ثم `chief-editor` ثم `delivery-tester`.
+6. `dialect-editor` ثم `human-voice-editor` (يخلي السكربت يبين إنسان مو ذكاء اصطناعي) ثم `chief-editor` ثم `delivery-tester`.
 7. `packager` و`platform-strategist` و`designer`.
 
 **❗ البصمة:** كل الفريق يقرا `studio/style/magic-formula.md` (الخلطة السحرية) قبل ما يشتغل. هي أعلى من أي مرجع أسلوبي ثاني، وبعدها `studio/script-rules.md`.
