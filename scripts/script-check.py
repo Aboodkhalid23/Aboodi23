@@ -17,6 +17,8 @@ MAX_LINE_WORDS = 12
 WARN_LINE_WORDS = 10
 WORDS_PER_MIN = 140
 DEAD_ZONE = 200
+MAX_DATES = 5
+MAX_TIME_REFS = 10
 
 AR = r"؀-ۿ"
 
@@ -81,6 +83,16 @@ def main():
             red.append(f"سطر {i}: تاريخ بالحروف، لازم بالأرقام (2026/6/18): {ln.strip()[:60]}")
         if BAD_NUM_DATE.search(ln):
             red.append(f"سطر {i}: تاريخ بصيغة يوم/شهر/سنة، لازم سنة/شهر/يوم: {ln.strip()[:60]}")
+
+    # 3b. عدد التواريخ الكاملة (حد أقصى 5 مختلفة)
+    full_dates = re.findall(r"(?<!\d)\d{4}/\d{1,2}(?:/\d{1,2})?(?!\d)", text)
+    uniq = sorted(set(full_dates))
+    if len(uniq) > MAX_DATES:
+        red.append(f"تواريخ كاملة هواي: {len(uniq)} تاريخ مختلف (الحد {MAX_DATES}). حوّل الباقي لزمن نسبي (بعدها بـ10 أيام): {', '.join(uniq)}")
+
+    all_time = re.findall(r"(?<!\d)(?:19|20)\d{2}(?:/\d{1,2}){0,2}(?!\d)", text)
+    if len(all_time) > MAX_TIME_REFS:
+        yellow.append(f"ذكر سنوات وتواريخ {len(all_time)} مرة (الأفضل {MAX_TIME_REFS} أو أقل). المشاهد يضيع: استبدل قسم منها بـ\"بعدها بـ...\".")
 
     # 4. الأسماء المعرّبة
     for ar, en in ARABIZED.items():
