@@ -19,6 +19,7 @@ WORDS_PER_MIN = 140
 DEAD_ZONE = 200
 MAX_DATES = 5
 MAX_TIME_REFS = 10
+REWIND = ["خلي أرجعك شوية لورا", "نرجع للمطار", "نرجع لأول القصة", "خلي نرجع للبداية", "نرجع للمشهد"]
 
 AR = r"؀-ۿ"
 
@@ -93,6 +94,11 @@ def main():
     all_time = re.findall(r"(?<!\d)(?:19|20)\d{2}(?:/\d{1,2}){0,2}(?!\d)", text)
     if len(all_time) > MAX_TIME_REFS:
         yellow.append(f"ذكر سنوات وتواريخ {len(all_time)} مرة (الأفضل {MAX_TIME_REFS} أو أقل). المشاهد يضيع: استبدل قسم منها بـ\"بعدها بـ...\".")
+
+    # 3c. الرجوع لمشهد البداية بالنص (ممنوع)
+    for i, ln in enumerate(lines, 1):
+        if any(r in ln for r in REWIND):
+            red.append(f"سطر {i}: رجوع لورا بنص الحلقة (ممنوع، التسلسل لگدام بس): {ln.strip()[:60]}")
 
     # 4. الأسماء المعرّبة
     for ar, en in ARABIZED.items():
