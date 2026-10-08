@@ -31,9 +31,9 @@ description: استوديو المحتوى — يشغّل فريق كامل (م�
 - **قسم السكربت (20):** الموجودين فوق + `source-hunter` (`01c-sources.md`)، `arabic-coverage-scout` (`01d-arabic-coverage.md`)، `timeline-builder` (`01e-timeline.md`)، `phenomenon-analyst` (`01f-phenomenon.md`، بحلقات الترند والإشاعات بس)، `tone-director` (`01g-tone.md`)، `analogy-maker` (`02b-analogies.md`)، `source-verifier` (`03d-verify.md`)، `balance-reviewer` (`03e-balance.md`)، `legal-risk-reviewer` (`03f-legal.md`)، `chief-editor` (`04-script.md` النهائي).
 
 **الترتيب الجديد:**
-1. البحث بالتوازي: `researcher` + `source-hunter` + `arabic-coverage-scout` (+ `phenomenon-analyst` إذا الحلقة ترند/ظاهرة)، وبعدها `timeline-builder`.
+1. البحث بالتوازي: `researcher` + `source-hunter` + `arabic-coverage-scout` + `theory-analyst` (+ `phenomenon-analyst` إذا الحلقة ترند/ظاهرة)، وبعدها `timeline-builder` و`claim-ledger-keeper` (ما يدخل السكربت إلا المؤكد أو المنسوب).
 2. `creative-director` ثم `tone-director`.
-3. **قسم الهوك كامل** (5 بالتسلسل).
+3. **قسم الهوك كامل:** `hook-miner` ← `hook-architect` ← `suspense-director` (برود افتتاحية) ← `hook-psychologist` ← `hook-tester` ← `hook-director`. المرجع: `studio/style/nerve-engine.md`.
 4. `script-writer` (يستخدم الهوك النهائي والجسر وبطاقة الرتم) ثم `analogy-maker`.
 5. المراجعة بالتوازي: `fact-checker` + `source-verifier` + `balance-reviewer` + `legal-risk-reviewer` + `tension-auditor` + `viewer-panel`.
 6. `dialect-editor` ثم `chief-editor` ثم `delivery-tester`.
