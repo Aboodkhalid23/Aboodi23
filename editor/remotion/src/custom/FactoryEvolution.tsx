@@ -47,7 +47,7 @@ const Stamp: React.FC<{text: string; start: number; color: string}> = ({text, st
 /** The picture inside the card: slow push toward the point of interest, film grain for the archive. */
 const Picture: React.FC<{shot: Shot; t: number; archive: boolean}> = ({shot, t, archive}) => {
   const [fx, fy] = shot.focus;
-  const scale = 1.02 + 0.13 * t;
+  const scale = shot.video ? 1 + 0.06 * t : 1.02 + 0.13 * t;   // old film is soft: push in less
   const look: React.CSSProperties = archive ? {filter: 'grayscale(1) sepia(.25) contrast(1.12) brightness(1.02)'} : {filter: 'saturate(1.08) contrast(1.04)'};
   const common: React.CSSProperties = {width: '100%', height: '100%', objectFit: 'cover', transformOrigin: `${fx * 100}% ${fy * 100}%`,
     transform: `scale(${scale})`, ...look};
