@@ -12,7 +12,7 @@ import random
 import sys
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageOps, UnidentifiedImageError
+from PIL import Image, ImageChops, ImageDraw, ImageEnhance, ImageFilter, ImageOps, UnidentifiedImageError
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from arabic import is_rtl, load_font, shape_word, visual_words  # noqa: E402
@@ -43,9 +43,14 @@ FONTS = {
     "ArchivoBlack": "ArchivoBlack-Regular.ttf",
     "Montserrat": "Montserrat-Variable.ttf",
     "Oswald": "Oswald-Variable.ttf",
+    # الإصدار الرابع
+    "Alexandria": "Alexandria-Variable.ttf",
+    "Blaka": "Blaka-Regular.ttf",
+    "NotoSans": "NotoSansArabic-Variable.ttf",
+    "RussoOne": "RussoOne-Regular.ttf",
 }
 # خطوط بيها حروف لاتينية بس (ماكو عربي)
-LATIN_FONTS = frozenset({"Anton", "Bebas", "Bangers", "ArchivoBlack", "Montserrat", "Oswald"})
+LATIN_FONTS = frozenset({"Anton", "Bebas", "Bangers", "ArchivoBlack", "Montserrat", "Oswald", "RussoOne"})
 CANVAS = {"youtube": (1280, 720), "youtube4k": (3840, 2160), "reels": (1080, 1920)}
 # المناطق الي تغطيها واجهة التطبيق: (اسم، x0، y0، x1، y1) كنسب من العرض والارتفاع
 UNSAFE = {
@@ -66,6 +71,17 @@ MOBILE_SIZE = (1280, 720)
 MOBILE_MAX_BYTES = 2 * 1024 * 1024
 UHD_MAX_BYTES = 50 * 1024 * 1024
 PUNCT = "؟?!.,،:؛\"'«»()"
+
+
+# فلاتر الألوان (look): لون الظلال ولون الإضاءات، مثل تلوين الأفلام
+LOOKS = {
+    "teal_orange": ("#00546B", "#FF9A3C"),   # سينمائي: ظلال تيل وبشرة دافية
+    "cold_blue": ("#0A2A5E", "#BFE3FF"),     # بارد: تقنية، غموض، فضاء
+    "warm_gold": ("#3A1F00", "#FFD27A"),     # دافي ذهبي: فلوس، فخامة، تاريخ
+    "red_noir": ("#2A0000", "#FF4A3A"),      # أحمر غامق: جريمة، حرب، خطر
+    "green_toxic": ("#002A12", "#9CFF7A"),   # أخضر سام: أوبئة، تجسس، ماتركس
+    "vintage": ("#3B2A1A", "#F2D9A6"),       # قديم: الثمانينات، أرشيف، تأسيس شركة
+}
 
 
 class SpecError(ValueError):
@@ -158,12 +174,48 @@ def _background(bg: dict, size, base_dir: Path) -> Image.Image:
     if bg.get("sharpen"):
         img = img.filter(ImageFilter.UnsharpMask(radius=2 * px_scale(size), percent=int(120 * bg["sharpen"]),
                                                  threshold=3))
+    if bg.get("look"):
+        img = _look(img, bg["look"], float(bg.get("look_strength", 0.35)))
+    if bg.get("glow"):
+        img = _glow(img, float(bg["glow"]), size)
+    if bg.get("grain"):
+        img = _grain(img, float(bg["grain"]), size)
     img = img.convert("RGBA")
     if bg.get("vignette"):
         mask = Image.radial_gradient("L").resize(size)
         mask = mask.point(lambda v: int(v * bg["vignette"]))
         img = Image.composite(Image.new("RGBA", size, (0, 0, 0, 255)), img, mask)
     return img
+
+
+def _look(img: Image.Image, name: str, strength: float) -> Image.Image:
+    """تلوين: الظلال تاخذ لون والإضاءات لون ثاني (soft light)، بقوة من 0 لـ 1."""
+    if name not in LOOKS:
+        raise SpecError(f"look مو معروف: {name}. المسموح: {', '.join(LOOKS)}")
+    shadow, light = LOOKS[name]
+    lum = img.convert("L")
+    tint = Image.composite(Image.new("RGB", img.size, hex_rgba(light)[:3]),
+                           Image.new("RGB", img.size, hex_rgba(shadow)[:3]), lum)
+    graded = ImageChops.soft_light(img, tint)
+    if name == "vintage":
+        graded = ImageEnhance.Color(graded).enhance(0.8)
+    return Image.blend(img, graded, max(0.0, min(1.0, strength)))
+
+
+def _glow(img: Image.Image, strength: float, size) -> Image.Image:
+    """توهج: الأماكن الفاتحة تنتشر بضو ناعم (screen)."""
+    bright = img.point(lambda v: 0 if v < 170 else int((v - 170) * 255 / 85))
+    bloom = bright.filter(ImageFilter.GaussianBlur(0.025 * size[1]))
+    return Image.blend(img, ImageChops.screen(img, bloom), max(0.0, min(1.0, strength)))
+
+
+def _grain(img: Image.Image, strength: float, size) -> Image.Image:
+    """حبيبات فيلم خفيفة، بحجم نسبي ثابت (تنولد بمقاس 1280 وتتكبر)."""
+    s = px_scale(size)
+    small = (max(1, round(size[0] / s)), max(1, round(size[1] / s)))
+    noise = Image.effect_noise(small, 64).resize(size, Image.BICUBIC).convert("RGB")
+    overlay = ImageChops.overlay(img, noise)
+    return Image.blend(img, overlay, max(0.0, min(1.0, strength)) * 0.5)
 
 
 def _silhouette(alpha: Image.Image, grow: float, color: str) -> Image.Image:

@@ -33,17 +33,19 @@ class MakeError(Exception):
     """خطأ بالمجلد، رسالته بالعربي."""
 
 
-MEASURE = (640, 360)  # القياس بنسخة صغيرة (كل الأرقام نسبية)، أسرع بهواية
+MEASURE = {"youtube": (640, 360), "reels": (360, 640)}  # القياس بنسخة صغيرة (كل الأرقام نسبية)، أسرع بهواية
+# الريلز والتيك توك: الكتابة بالثلث الفوگاني، بعيدة عن أعلى الشاشة والكابشن وأزرار اليمين
+REELS_BOX = (0.08, 0.14, 0.82, 0.38)
 
 
-def _ink(layer: dict) -> tuple:
+def _ink(layer: dict, canvas: str = "youtube") -> tuple:
     """حدود حبر الكتابة بنسب الغلاف (x0، y0، x1، y1)، ويا الميلان والظل.
 
     القياس بدون ميلان (الميلان على لوحة كبيرة بطيء)، وبعدين زوايا المستطيل تندار حسابياً حول مركزه
     (المركّب يدير حول نفس المركز)، فالنتيجة أكبر شوية من الحبر الحقيقي، يعني أأمن.
     """
-    W, H = MEASURE
-    box, _ = render._text_layer(Image.new("RGBA", MEASURE), dict(layer, shadow=False, rotate=0))
+    W, H = MEASURE[canvas]
+    box, _ = render._text_layer(Image.new("RGBA", (W, H)), dict(layer, shadow=False, rotate=0))
     x0, y0, x1, y1 = box
     if layer.get("shadow"):  # الظل: إزاحة 0.05 من حجم الخط وتغبيش 0.06 (شوف _text_layer)
         grow = 0.11 * layer.get("size", 0.14) * H
@@ -57,34 +59,37 @@ def _ink(layer: dict) -> tuple:
     return x0 / W, y0 / H, x1 / W, y1 / H
 
 
-def _placed(layer: dict, zone: str) -> tuple[dict, bool]:
-    """يوسّط حبر الكتابة بالمنطقة، ويرجع (الطبقة، تساع المنطقة وبعيدة عن زوايا يوتيوب؟)."""
-    zx0, zy0, zx1, zy1 = ZONE_BOX[zone]
+def _placed(layer: dict, box: tuple, canvas: str) -> tuple[dict, bool]:
+    """يوسّط حبر الكتابة بالمنطقة، ويرجع (الطبقة، تساع المنطقة وبعيدة عن المناطق المغطاة؟)."""
+    zx0, zy0, zx1, zy1 = box
     for _ in range(2):  # الميلان والحد يزحزحون الحبر عن المركز
-        x0, y0, x1, y1 = _ink(layer)
+        x0, y0, x1, y1 = _ink(layer, canvas)
         layer = dict(layer, x=round(layer["x"] + (zx0 + zx1) / 2 - (x0 + x1) / 2, 4),
                      y=round(layer["y"] + (zy0 + zy1) / 2 - (y0 + y1) / 2, 4))
-    x0, y0, x1, y1 = _ink(layer)
+    x0, y0, x1, y1 = _ink(layer, canvas)
     tol = 0.005
     inside = x0 >= zx0 - tol and x1 <= zx1 + tol and y0 >= zy0 - tol and y1 <= zy1 + tol
     on_image = x0 >= 0 and y0 >= 0 and x1 <= 1 and y1 <= 1
     clear = all(x1 <= ux0 or x0 >= ux1 or y1 <= uy0 or y0 >= uy1
-                for _, ux0, uy0, ux1, uy1 in render.UNSAFE["youtube"])
+                for _, ux0, uy0, ux1, uy1 in render.UNSAFE[canvas])
     return layer, inside and on_image and clear
 
 
-def fit_text(layer: dict, zone: str) -> dict:
-    """أكبر حجم (لحد 0.2) يخلي الكتابة داخل منطقتها بالمخطط وبعيدة عن زوايا يوتيوب، وبنص المنطقة."""
-    zx0, zy0, zx1, zy1 = ZONE_BOX[zone]
+def fit_text(layer: dict, zone, canvas: str = "youtube") -> dict:
+    """أكبر حجم يخلي الكتابة داخل منطقتها (اسم منطقة بالمخطط، أو صندوق نسب) وبعيدة عن المناطق
+    المغطاة، وبنص المنطقة."""
+    box = ZONE_BOX[zone] if isinstance(zone, str) else zone
+    zx0, zy0, zx1, zy1 = box
+    top = MAX_SIZE if canvas == "youtube" else 0.11  # الطولي: الحجم نسبة من الارتفاع الأطول
     base = dict(layer, x=(zx0 + zx1) / 2, y=(zy0 + zy1) / 2)
-    best, ok = _placed(dict(base, size=MAX_SIZE), zone)
+    best, ok = _placed(dict(base, size=top), box, canvas)
     if ok:
         return best
-    lo, hi = MIN_SIZE, MAX_SIZE
-    best = _placed(dict(base, size=MIN_SIZE), zone)[0]
+    lo, hi = MIN_SIZE / 2 if canvas != "youtube" else MIN_SIZE, top
+    best = _placed(dict(base, size=lo), box, canvas)[0]
     for _ in range(7):  # بحث ثنائي على الحجم
         mid = round((lo + hi) / 2, 4)
-        cand, ok = _placed(dict(base, size=mid), zone)
+        cand, ok = _placed(dict(base, size=mid), box, canvas)
         if ok:
             best, lo = cand, mid
         else:
@@ -92,12 +97,15 @@ def fit_text(layer: dict, zone: str) -> dict:
     return best
 
 
-def auto_spec(card: dict, scene: str | None = None) -> dict:
+def auto_spec(card: dict, scene: str | None = None, reels: bool = False) -> dict:
     """ملف طبقات 4K من بطاقة مختارة: المشهد + اللمسة الأخيرة، والكتابة (إذا اكو) بقالب brand.md،
     بحجم يساع منطقتها بالمخطط. source = رقم البطاقة، حتى ما ينستخدم لبطاقة ثانية بالغلط."""
     stem = Path(scene).stem if scene else f"scene-{card['label']}"
-    spec = {"source": card.get("id"), "size": "youtube4k",
-            "background": {"image": f"{stem}-4k.png", **FINISH}, "layers": []}
+    image = f"{stem}.png" if reels else f"{stem}-4k.png"
+    spec = {"source": card.get("id"), "size": "reels" if reels else "youtube4k",
+            "background": {"image": image, **FINISH}, "layers": []}
+    if card.get("look"):
+        spec["background"]["look"] = card["look"]
     text = card.get("text")
     if text:
         latin_line = any(line.strip() and not is_rtl(line) for line in text.split("\n"))
@@ -105,7 +113,10 @@ def auto_spec(card: dict, scene: str | None = None) -> dict:
                  "line_spacing": 0.85 if latin_line else 0.62, **TEXT_STYLE}
         if card.get("font_latin"):
             layer["font_latin"] = card["font_latin"]
-        spec["layers"].append(fit_text(layer, card["layout"]["text_zone"]))
+        if reels:
+            spec["layers"].append(fit_text(layer, REELS_BOX, "reels"))
+        else:
+            spec["layers"].append(fit_text(layer, card["layout"]["text_zone"]))
     return spec
 
 
@@ -114,6 +125,7 @@ def _load_picked(folder: Path) -> list:
     try:
         data = json.loads(path.read_text(encoding="utf-8-sig"))
         picked = data["picked"]
+        reels = data.get("reels")
         if not isinstance(picked, list) or not all(isinstance(c, dict) and "label" in c for c in picked):
             raise TypeError
     except FileNotFoundError:
@@ -126,7 +138,7 @@ def _load_picked(folder: Path) -> list:
     if not 1 <= len(picked) <= 4 or len(set(labels)) != len(labels) or \
             not all(isinstance(lb, str) and LABEL.fullmatch(lb) for lb in labels):
         raise MakeError("picked.json لازم بيه 1-4 أغلفة بحروف A-D مختلفة. أعد تشغيل concepts.py.")
-    return picked
+    return picked, reels if isinstance(reels, dict) else None
 
 
 def scene_for(folder: Path, card: dict) -> Path | None:
@@ -182,6 +194,23 @@ def build_one(folder: Path, card: dict, scene: Path) -> list[str]:
     return warnings
 
 
+def build_reels(folder: Path, card: dict) -> list[str]:
+    """غلاف الريلز والتيك توك (واحد بس) من scene-reels.png: spec-reels.json وthumb-reels.jpg (1080×1920)."""
+    warnings = []
+    spec_path = folder / "spec-reels.json"
+    if spec_path.exists():
+        old = render.load_spec(spec_path)
+        if isinstance(old, dict) and old.get("source") not in (None, card.get("id")):
+            warnings.append(f"ملف طبقات الريلز القديم كان لفكرة ثانية ({old.get('source')})، سويت واحد جديد.")
+            spec_path.unlink()
+    if not spec_path.exists():
+        spec = auto_spec(card, "scene-reels.png", reels=True)
+        spec_path.write_text(json.dumps(spec, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    img, render_warnings = render.render(render.load_spec(spec_path), folder)
+    render.save(img, folder / "thumb-reels.jpg")
+    return warnings + render_warnings
+
+
 def _check(paths: list) -> tuple[dict, str | None]:
     """تحذيرات فحص الغلاف لكل نسخة موبايل (وملاحظات الوجه)، وملاحظة إذا الفحص ما اشتغل."""
     try:
@@ -205,7 +234,7 @@ def main(argv=None) -> int:
     args = ap.parse_args(argv)
     folder = Path(args.folder)
     try:
-        picked = _load_picked(folder)
+        picked, reels = _load_picked(folder)
     except MakeError as e:
         print(f"✗ خطأ: {e}")
         return 1
@@ -245,6 +274,12 @@ def main(argv=None) -> int:
         print("\n".join(lines))
         print("✗ خطأ: ما گدرت أحفظ compare.jpg.")
         return 1
+    if reels and (folder / "scene-reels.png").exists():
+        try:
+            rw = build_reels(folder, reels)
+            lines.append("✓ reels (thumb-reels.jpg)" + "".join(f" ⚠️ {w}" for w in rw))
+        except (render.SpecError, UnidentifiedImageError, OSError) as e:
+            lines.append(f"✗ reels: {e}")
     print("\n".join(lines))
     print(f"✓ compare.jpg ({len(mobiles)} أغلفة)")
     return 0

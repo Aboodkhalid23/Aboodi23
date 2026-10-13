@@ -33,10 +33,10 @@ def license_name(file_name: str) -> str:
 
 
 class FontsTest(unittest.TestCase):
-    def test_registry_has_22_fonts(self):
-        self.assertEqual(len(render.FONTS), 22)
+    def test_registry_has_26_fonts(self):
+        self.assertEqual(len(render.FONTS), 26)
         self.assertEqual(render.LATIN_FONTS,
-                         frozenset({"Anton", "Bebas", "Bangers", "ArchivoBlack", "Montserrat", "Oswald"}))
+                         frozenset({"Anton", "Bebas", "Bangers", "ArchivoBlack", "Montserrat", "Oswald", "RussoOne"}))
         self.assertTrue(render.LATIN_FONTS <= set(render.FONTS))
 
     def test_every_registered_font_opens(self):

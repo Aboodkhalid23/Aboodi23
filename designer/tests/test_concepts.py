@@ -289,6 +289,19 @@ class PromptTest(unittest.TestCase):
         front["layout"]["hero"] = "foreground"
         self.assertIn("foreground", concepts.build_prompt(front))
 
+    def test_vertical_prompt(self):
+        p = concepts.build_prompt(card(text="نهاية\nالعالم؟"), vertical=True)
+        self.assertIn("vertical 9:16", p)
+        self.assertIn("lower middle", p)
+        self.assertIn("upper third", p)
+        self.assertNotIn("right third", p)
+        self.assertTrue(p.endswith("No text, no letters, no captions, no logos, no watermark."))
+
+    def test_card_look_validated(self):
+        concepts.validate([card(look="teal_orange")])
+        with self.assertRaises(ConceptError):
+            concepts.validate([card(look="nope")])
+
     def test_color_name(self):
         self.assertEqual(concepts.color_name("#E3262B"), "red")
         self.assertEqual(concepts.color_name("#2EC4FF"), "cyan")
@@ -389,6 +402,14 @@ class CliTest(unittest.TestCase):
             im.load()
         self.assertIn("الدرجة", out)
         self.assertIn("✓", out)
+
+    def test_cli_writes_single_reels_cover_from_top_pick(self):
+        code, out = self.run_cli(self.json, "-o", self.dir)
+        self.assertEqual(code, 0, out)
+        picked = json.loads((self.dir / "picked.json").read_text(encoding="utf-8"))
+        reels = picked["reels"]
+        self.assertEqual(reels["id"], picked["picked"][0]["id"])
+        self.assertIn("vertical 9:16", reels["prompt"])
 
     def test_cli_creates_missing_out_dir(self):
         out_dir = self.dir / "new" / "deep"

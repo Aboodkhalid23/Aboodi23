@@ -419,6 +419,36 @@ class RenderTest(unittest.TestCase):
         _, warnings = self.render({"background": GRADIENT, "layers": [self.text("300 BILLION", font="Anton")]})
         self.assertEqual(warnings, [])
 
+    # الإصدار الرابع: فلاتر الألوان والتوهج والحبيبات
+    def test_every_look_changes_colors(self):
+        base, _ = self.render({"background": {"image": "noise.png"}})
+        for look in render.LOOKS:
+            with self.subTest(look=look):
+                img, warnings = self.render({"background": {"image": "noise.png", "look": look}})
+                self.assertEqual(img.size, (1280, 720))
+                self.assertEqual(warnings, [])
+                self.assertTrue(img.tobytes() != base.tobytes())
+
+    def test_teal_orange_warms_highlights_cools_shadows(self):
+        grad = {"gradient": ["#FFFFFF", "#000000"], "look": "teal_orange", "look_strength": 1}
+        img, _ = self.render({"background": grad})
+        r, g, b, _ = img.getpixel((640, 40))      # فاتح فوق
+        self.assertGreater(r, b)
+        r, g, b, _ = img.getpixel((640, 690))     # غامق جوه
+        self.assertGreaterEqual(b, r)
+
+    def test_unknown_look(self):
+        with self.assertRaisesRegex(SpecError, "look"):
+            self.render({"background": {"color": "#808080", "look": "nope"}})
+
+    def test_glow_and_grain(self):
+        grad = {"gradient": ["#FFFFFF", "#000000"]}
+        plain, _ = self.render({"background": grad})
+        glow, _ = self.render({"background": dict(grad, glow=1)})
+        self.assertGreater(glow.getpixel((640, 200))[0], plain.getpixel((640, 200))[0])
+        grain, _ = self.render({"background": {"color": "#808080", "grain": 0.6}})
+        self.assertGreater(len(set(grain.crop((0, 0, 60, 60)).tobytes())), 8)
+
 
 class RenderUHDTest(unittest.TestCase):
     """نسخة 4K ونسخة الموبايل (الإصدار الثاني)."""

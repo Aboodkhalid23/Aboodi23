@@ -18,7 +18,7 @@ from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from arabic import is_rtl, load_font, shape_word, visual_words  # noqa: E402
-from render import FONTS, FONTS_DIR, LATIN_FONTS  # noqa: E402
+from render import FONTS, FONTS_DIR, LATIN_FONTS, LOOKS  # noqa: E402
 
 ANGLES = {
     "metaphor": "التشبيه البصري",
@@ -151,6 +151,8 @@ def _check_card(c, n: int) -> None:
     for field in ARABIC_LABELS:
         if field in c:
             need(isinstance(c[field], str) and c[field].strip(), field, "لازم كتابة، أو احذفه")
+    if "look" in c:
+        need(pick(c["look"], LOOKS), "look", f"مو معروف. المسموح: {', '.join(LOOKS)}")
     for field in ("font", "font_latin"):
         if field in c:
             need(pick(c[field], FONTS), field, f"خط مو معروف: {c[field]}. المتوفر: {', '.join(FONTS)}")
@@ -260,17 +262,25 @@ def _clause(text: str) -> str:
     return text.strip().rstrip(".")
 
 
-def build_prompt(card: dict) -> str:
-    """أمر التوليد الإنگليزي (Nano Banana Pro) من البطاقة."""
+VERTICAL_HERO = {
+    "left": "In the upper part of the frame: {}.", "right": "In the upper part of the frame: {}.",
+    "center": "In the upper part of the frame: {}.", "foreground": "In the foreground, large and close to the camera: {}.",
+}
+
+
+def build_prompt(card: dict, vertical: bool = False) -> str:
+    """أمر التوليد الإنگليزي (Nano Banana Pro) من البطاقة. vertical: نسخة 9:16 للريلز والتيك توك."""
     s, layout, palette = card["subject"], card["layout"], card["palette"]
     dominant, accent = color_name(palette[0]), color_name(palette[1])
     rim = color_name(palette[2]) if len(palette) > 2 else accent
     lines = [
         IDENTITY,
-        f"{FACE_LINES[layout['face']]}, chest-up and large (his head and shoulders fill about 40% of the frame "
-        f"width), {GAZE_OFFSCREEN if card['angle'] == 'offscreen' else GAZE_CAMERA}. He wears {s['outfit']}. "
+        ("Composition: vertical 9:16. He is in the lower middle of the frame, chest-up and large (his head and "
+         "shoulders fill about 60% of the frame width)," if vertical else
+         f"{FACE_LINES[layout['face']]}, chest-up and large (his head and shoulders fill about 40% of the frame "
+         f"width),") + f" {GAZE_OFFSCREEN if card['angle'] == 'offscreen' else GAZE_CAMERA}. He wears {s['outfit']}. "
         f"Expression: {s['expression']}, natural and believable, not exaggerated. Pose: {_clause(s['action'])}.",
-        HERO_LINES[layout["hero"]].format(card["hero"]),
+        (VERTICAL_HERO if vertical else HERO_LINES)[layout["hero"]].format(card["hero"]),
         f"Setting: {_clause(card['setting'])}.",
         f"Colors: {dominant} dominant, {accent} as the one strong accent color, {rim} rim light on his face and "
         f"shoulders, high contrast, vivid saturated colors, sharp detailed skin texture, background slightly "
@@ -281,7 +291,10 @@ def build_prompt(card: dict) -> str:
     if card["camera"] == "wide_close" and layout["hero"] == "foreground":
         lines.append("The main object is big in the foreground, close to the lens.")
     if layout["text_zone"]:
-        lines.append(f"Keep the {ZONE_NAMES[layout['text_zone']]} part of the frame dark and empty for a headline.")
+        zone = "upper third" if vertical else f"{ZONE_NAMES[layout['text_zone']]} part"
+        lines.append(f"Keep the {zone} of the frame dark and empty for a headline.")
+    if vertical:
+        lines.append("Keep the bottom quarter and the right edge simple, without important details.")
     lines.append(NO_TEXT)
     return "\n".join(lines)
 
@@ -524,7 +537,9 @@ def main(argv=None) -> int:
     out = Path(args.out)
     try:
         out.mkdir(parents=True, exist_ok=True)
-        result = {"notes": notes, "picked": [dict(p, prompt=build_prompt(p)) for p in picked]}
+        top = picked[0]  # الريلز والتيك توك: غلاف واحد بس، من أقوى فكرة
+        result = {"notes": notes, "picked": [dict(p, prompt=build_prompt(p)) for p in picked],
+                  "reels": dict(top, label="R", prompt=build_prompt(top, vertical=True))}
         for old in out.glob("sketch-*.jpg"):
             old.unlink()
         (out / "picked.json").write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

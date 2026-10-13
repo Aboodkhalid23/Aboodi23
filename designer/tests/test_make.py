@@ -172,6 +172,26 @@ class BuildTest(unittest.TestCase):
                 self.assertEqual(code, 1)
                 self.assertIn("✗ خطأ", out)
 
+    def test_reels_cover_built_once(self):
+        self.scenes()
+        data = json.loads((self.dir / "picked.json").read_text(encoding="utf-8"))
+        data["reels"] = dict(picked_card("A", "السلاح\nالجديد!", "top_left", "Kufam"), label="R")
+        (self.dir / "picked.json").write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+        Image.new("RGB", (1536, 2752), (30, 60, 90)).save(self.dir / "scene-reels.png")
+        code, out = self.run_make()
+        self.assertEqual(code, 0, out)
+        with Image.open(self.dir / "thumb-reels.jpg") as im:
+            self.assertEqual(im.size, (1080, 1920))
+        spec = json.loads((self.dir / "spec-reels.json").read_text(encoding="utf-8"))
+        self.assertEqual(spec["size"], "reels")
+        _, warnings = render.render(spec, self.dir)
+        self.assertEqual(warnings, [])
+        self.assertIn("reels", out)
+
+    def test_card_look_goes_to_background(self):
+        spec = make.auto_spec(dict(picked_card("A"), look="vintage"))
+        self.assertEqual(spec["background"]["look"], "vintage")
+
     def test_no_scenes_is_error(self):
         code, out = self.run_make()
         self.assertEqual(code, 1)
