@@ -8,7 +8,8 @@ from .channel import channel_avatar, load_channel
 from .entities import entity_image, load_entities
 from .fmt import load_format
 from .grade import analyse, grade_filter
-from .graphics import _source_hash, ensure_bundle, face_fx_job, graphic_job, render_batch, render_face_frame_bg
+from .graphics import (_source_hash, ensure_bundle, face_fx_job, face_paper_job, graphic_job, render_batch,
+                       render_face_frame_bg)
 from .media import MediaError, run_ffmpeg
 from .music import AUDIO_EXT, bed_filter, music_asset, segments
 from .paths import Episode
@@ -189,6 +190,22 @@ STORM_FIRST = 0.15   # headline storm timing, same numbers as Update2.tsx (storm
 
 def storm_gap(n: int, dur: float) -> float:
     return min(0.6, max(0.25, dur * 0.55 / max(1, n)))
+
+
+def paper_images(ep: Episode, i: int, b: Beat) -> dict:
+    """Pictures downloaded for the papers of beat i (assets/paper_<i>_<k>.*)."""
+    if b.kind != "face_paper":
+        return {}
+    return {k: a for k in range(len(b.papers or [])) if (a := _asset(ep.assets, f"paper_{i}_{k}", IMAGE_EXT))}
+
+
+def paper_cues(b: Beat) -> list[tuple[float, str]]:
+    """A paper slap as each paper lands beside him (same timing as FacePaper.tsx)."""
+    if b.kind != "face_paper":
+        return []
+    n = len(b.papers or [])
+    return [(b.start + float(p.get("at", 0.25 + k * max(1.6, (b.duration - 1) / max(1, n)))), "paper")
+            for k, p in enumerate(b.papers or [])]
 
 
 def graphic_cues(b: Beat) -> list[tuple[float, str]]:
@@ -407,7 +424,8 @@ def compose(ep: Episode, preview: bool = False) -> Path:
         key = hashlib.sha1(json.dumps([asdict(b), style.name, teaser, src_stamp, frames, cv.encode, cv.width, cv.face,
                                        _stamp(asset), _stamp(_asset(ep.assets, f"ai_{i}_fg", IMAGE_EXT)),
                                        entities.get(b.entity or ""), channel,
-                                       "" if b.kind.startswith("face") and b.kind != "face_fx" else design,
+                                       "" if b.kind.startswith("face") and b.kind not in ("face_fx", "face_paper") else design,
+                                       [_stamp(x) for x in paper_images(ep, i, b).values()],
                                        footage_grade],
                                       ensure_ascii=False, sort_keys=True).encode()).hexdigest()
         if not (out.exists() and stamp.exists() and stamp.read_text() == key):
@@ -437,6 +455,23 @@ def compose(ep: Episode, preview: bool = False) -> Path:
                                                 "entityKind": e.get("kind", "person")})
             elif b.kind == "face_cutout":
                 _cutout(ep, b, i, frames, teaser, style, bundle, cv, footage_grade, out)
+            elif b.kind == "face_paper":
+                face = cv.work / f"face_{i}.mp4"
+                _face_clip(ep, replace(b, kind="face", transition=None), frames, teaser, face, None, cv,
+                           encode=[*INTERMEDIATE, "-r", str(cv.fps)], grade=footage_grade, plain=True)
+                pic_w = min(1.0, cv.height * (cv.src_aspect or cv.width / cv.height) / cv.width)
+                behind = b.treatment == "behind" and pic_w > 0.9   # phone footage has no room to slip behind
+                job = face_paper_job(replace(b, treatment="overlay") if behind else
+                                     (replace(b, treatment=None) if b.treatment == "behind" else b),
+                                     style, face, cv.work / f"paper_{i}.{'mov' if behind else 'mp4'}", cv.fps, bundle,
+                                     scale=cv.remotion_scale, images=paper_images(ep, i, b), pic_w=pic_w,
+                                     face_x=cv.face[0] if cv.face else None, layer_only=behind)
+                if behind:   # the papers come out from behind his shoulder: room → papers → him (precise matting)
+                    from .cutout import cutout_clip
+                    render_batch([job], bundle)
+                    cutout_clip(face, None, out, cv.width, cv.height, cv.fps, frames, cv.encode,
+                                vf=_transition_filter(b.transition, cv), mode="layer", text=job.out)
+                    job = None
             elif b.kind == "face_fx":
                 face = cv.work / f"face_{i}.mp4"
                 _face_clip(ep, replace(b, kind="face", transition=None), frames, teaser, face, None, cv,
@@ -474,7 +509,7 @@ def compose(ep: Episode, preview: bool = False) -> Path:
     cues = beat_cues(plan.beats, FX_CUES)
     for b in plan.beats:
         cues += [(b.start + float(st.get("at", 0.3)), "pop") for st in (b.stickers or [])]
-        cues += graphic_cues(b)
+        cues += graphic_cues(b) + paper_cues(b)
     cues += chapter_cues(plan)
     duration = total_frames / cv.fps
     music = []

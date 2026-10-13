@@ -119,6 +119,28 @@ def collect_images(plan: EditPlan, ep: Episode, session=None) -> EditPlan:
             continue
         used.add(img.url)
         credits.append(img.credit)
+    for i, b in enumerate(plan.beats):   # face_paper: a real picture for every paper that asks for one
+        for k, p in enumerate(b.papers or [] if b.kind == "face_paper" else []):
+            if not p.get("query"):
+                continue
+            src = p.get("source") or ("newspaper" if p.get("type") == "page" else None)
+            got = None
+            for c in find(p["query"], "image", src, session, used)[:4]:
+                if c.provider == "Library of Congress" and not loc_rights_ok(c, session):
+                    continue
+                try:
+                    data = download(c, session)
+                except requests.RequestException:
+                    continue
+                ext = Path(c.url.split("?")[0]).suffix.lower()
+                (ep.assets / f"paper_{i}_{k}{ext if ext in ('.jpg', '.jpeg', '.png', '.webp') else '.jpg'}").write_bytes(data)
+                got = c
+                break
+            if got:
+                used.add(got.url)
+                credits.append(got.credit)
+            else:
+                fallbacks.append({"beat": i, "paper": k, "query": p["query"], "reason": "no free image"})
     from .articles import collect_articles
     from .footage import collect_footage
     fallbacks += collect_articles(plan, ep)

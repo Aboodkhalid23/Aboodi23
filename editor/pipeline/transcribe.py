@@ -1,5 +1,6 @@
 """Stage 2: speech → words with timestamps (faster-whisper, CPU)."""
 import json
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -35,7 +36,12 @@ def hotwords(ep: Episode) -> str | None:
     return " ".join(dict.fromkeys(w for w in words if w)) or None
 
 
-def transcribe(ep: Episode, model_name: str = "large-v3", model=None) -> list[Word]:
+# large-v3-turbo: ~4x faster than large-v3 on the CPU with the same Iraqi text on our test talk (2026-10-13:
+# 50 s of talk in 20 s instead of 83 s). ABOODI_WHISPER=large-v3 brings back the slower model if a talk needs it.
+WHISPER_MODEL = os.environ.get("ABOODI_WHISPER", "large-v3-turbo")
+
+
+def transcribe(ep: Episode, model_name: str = WHISPER_MODEL, model=None) -> list[Word]:
     if not probe(ep.source).has_audio:
         raise MediaError("الصوت فارغ أو مو واضح")
     if model is None:

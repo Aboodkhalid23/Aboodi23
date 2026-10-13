@@ -8,6 +8,7 @@ import {EntityCard} from './graphics/EntityCard';
 import {EndScreen} from './graphics/EndScreen';
 import {FaceFrame} from './graphics/FaceFrame';
 import {FaceFx} from './graphics/FaceFx';
+import {FacePaper} from './graphics/FacePaper';
 import {FootageCard} from './graphics/FootageCard';
 import {Headline} from './graphics/Headline';
 import {ImageCard} from './graphics/ImageCard';
@@ -47,6 +48,7 @@ const GRAPHICS: [string, React.FC<any>, Record<string, unknown>][] = [
   ['cutout-title', CutoutTitle, {text: 'الدماغ'}],
   ['kinetic', KineticType, {text: 'هيچ إهانة وحدة غيرت التاريخ'}],
   ['units', UnitChart, {total: 100, highlight: 20, label: 'واحد من كل خمسة'}],
+  ['face-paper', FacePaper, {src: 'face.mp4', side: 'right', papers: [{type: 'newspaper', title: 'عنوان الجريدة', outlet: 'الجريدة'}]}],
   ['face-fx', FaceFx, {src: 'face.mp4', fx: 'subscribe', stickers: [], channel: {name: 'القناة', handle: '@channel'}}],
   ...CUSTOM.map(([name, C]) => [`custom-${name}`, C, {}] as [string, React.FC<any>, Record<string, unknown>]),
 ];

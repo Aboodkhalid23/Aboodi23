@@ -47,9 +47,16 @@ def _words(*parts) -> str:
 
 
 def _json(session, url, **params):
-    r = session.get(url, params=params, headers=HEADERS, timeout=45)
-    r.raise_for_status()
-    return r.json()
+    """One polite retry when a library is busy (429 / 5xx: loc.gov has short outages)."""
+    for attempt in range(2):
+        r = session.get(url, params=params, headers=HEADERS, timeout=45)
+        if getattr(r, "status_code", 200) in (429, 500, 502, 503, 504) and attempt == 0:
+            import time
+            wait = str(getattr(r, "headers", {}).get("Retry-After", ""))
+            time.sleep(min(5.0, float(wait)) if wait.isdigit() else 2.0)
+            continue
+        r.raise_for_status()
+        return r.json()
 
 
 # ---------- pictures ----------

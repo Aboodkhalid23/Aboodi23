@@ -1,7 +1,7 @@
 // Render many compositions with ONE browser (graphics.py → render_batch). Starting node + Chromium
 // for every beat cost ~5 s each; a 20-minute episode has hundreds of graphics.
 //   node render-batch.mjs jobs.json
-// jobs.json: {serveUrl, browserExecutable, concurrency, items: [{comp, props, out, scale, still}]}
+// jobs.json: {serveUrl, browserExecutable, concurrency, items: [{comp, props, out, scale, still, alpha}]}
 // Prints one JSON line per item: {"ok": out} or {"error": out, "message": "..."}.
 import fs from 'node:fs';
 import {openBrowser, renderMedia, renderStill, selectComposition} from '@remotion/renderer';
@@ -19,7 +19,10 @@ for (const it of job.items) {
       if (it.still) {
         await renderStill({...common, composition, output: it.out, scale: it.scale ?? 1, overwrite: true});
       } else {
-        await renderMedia({...common, composition, codec: 'h264', crf: 10, outputLocation: it.out, muted: true,
+        const enc = it.alpha   // a transparent layer (papers that go behind him): ProRes 4444 keeps the alpha
+          ? {codec: 'prores', proResProfile: '4444', imageFormat: 'png', pixelFormat: 'yuva444p10le'}
+          : {codec: 'h264', crf: 10};
+        await renderMedia({...common, composition, ...enc, outputLocation: it.out, muted: true,
           concurrency, scale: it.scale ?? 1, overwrite: true});
       }
       console.log(JSON.stringify({ok: it.out}));

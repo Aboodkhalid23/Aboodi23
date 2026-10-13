@@ -6,12 +6,15 @@ from pathlib import Path
 from .grade import LOOKS
 
 KINDS = ("face", "face_zoom_in", "face_zoom_out", "face_framed", "face_punch", "face_fx", "face_cutout",
-         "image", "ai_image", "ai_video", "graphic", "entity", "footage", "avatar")
+         "image", "ai_image", "ai_video", "graphic", "entity", "footage", "avatar", "face_paper")
 FACE_KINDS = KINDS[:7]
 AI_KINDS = ("ai_image", "ai_video", "avatar")   # avatar: him as a drawn character in the scene (avatar.py)
 GRAPHIC_TYPES = ("number", "headline", "quote", "map", "timeline", "chart", "text", "custom", "article", "headlines",
                  "units", "kinetic")
 CUSTOM_DIR = Path(__file__).resolve().parent.parent / "remotion" / "src" / "custom"
+PAPER_TYPES = ("newspaper", "document", "photo", "quote", "number", "page")   # face_paper: papers landing beside him
+PAPER_LAYOUTS = ("overlay", "desk", "behind")   # overlay: he stays full frame; desk: his picture becomes a taped
+# photo on paper; behind: full frame and the papers slip out from behind his shoulder (precise matting, landscape footage)
 FX_TYPES = ("subscribe", "tv", "none")        # face_fx wrappers; "none" = stickers only
 TRANSITIONS = ("zoom", "flash", "whip", "glitch", "tear", "burn", "dive", "pan", "shutter", "slide")
 STICKERS = ("stamp", "arrow", "burst", "tape", "circle", "scribble_circle", "scribble_arrow", "scribble_underline",
@@ -21,6 +24,7 @@ MARKABLE = ("face_fx", "image", "ai_image", "graphic", "entity", "footage", "ava
 HOOK_SECONDS = 30.0
 MIN_SHORTS, MIN_SHORTS_FROM = 5, 480.0   # owner: 5 reels at least from every long episode (8 min and up)
 LIMITS = {"hook": (1.5, 3.0), "body": (4.0, 6.0)}   # hook: quick, but not a flicker
+PAPER_LIMITS = {"hook": (2.0, 6.0), "body": (4.0, 10.0)}   # face_paper changes inside (a new paper every ~2–3 s)
 FACE_SHARE = (0.40, 0.65)   # channel-system: presenter on screen ≈57% (46–71%)
 TOL = 0.05
 
@@ -47,6 +51,7 @@ class Beat:
     look: str | None = None         # ai_image / ai_video: ai.AI_LOOKS; avatar: avatar.LOOKS (his character's style)
     animate: str | None = None      # avatar: "code" (layered motion, default) or "ai" (a video model moves the drawing)
     pick: dict | None = None        # image: the picture the owner chose on the suite page (sources.Found fields)
+    papers: list | None = None      # face_paper: [{"type": "newspaper", "at": 0.3, "title": ..., "query": ...}] (FacePaper.tsx)
 
     @property
     def duration(self) -> float:
@@ -91,6 +96,37 @@ def save_plan(plan: EditPlan, path: Path) -> None:
     Path(path).write_text(json.dumps(d, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
+def paper_errors(b: "Beat") -> list[str]:
+    """The papers of one face_paper beat."""
+    papers = b.papers or []
+    if not 1 <= len(papers) <= 4:
+        return ["face_paper لازم papers من 1 لـ 4 (جريدة، وثيقة، صورة، اقتباس، رقم، صفحة)"]
+    errs = []
+    if b.treatment and b.treatment not in PAPER_LAYOUTS:
+        errs.append(f"face_paper شكله (treatment) من {', '.join(PAPER_LAYOUTS)}")
+    need = {"newspaper": ("title",), "document": ("title",), "photo": ("query",), "quote": ("text",),
+            "number": ("value", "label"), "page": ("query",)}
+    last = -1.0
+    for k, p in enumerate(papers):
+        t = p.get("type")
+        if t not in PAPER_TYPES:
+            errs.append(f"paper {k}: type لازم من {', '.join(PAPER_TYPES)}")
+            continue
+        miss = [f for f in need[t] if p.get(f) in (None, "")]
+        if t == "document" and not (p.get("lines") or p.get("text")):
+            miss.append("lines")
+        if miss:
+            errs.append(f"paper {k} ({t}): ناقص {', '.join(miss)}")
+        at = p.get("at")
+        if at is not None:
+            if not 0 <= float(at) <= b.duration - 0.8:
+                errs.append(f"paper {k}: at لازم بين 0 و {b.duration - 0.8:.1f} (ثواني من بداية المشهد)")
+            elif float(at) - last < 1.2:
+                errs.append(f"paper {k}: لازم يبعد 1.2 ثانية أو أكثر عن الورقة الي قبله")
+            last = float(at)
+    return errs
+
+
 def validate_plan(plan: EditPlan, clean_duration: float, entities: set[str] | None = None,
                   ai_spent: float = 0.0) -> list[str]:
     """`entities`: ids known in entities.json (None = don't check). `ai_spent`: credits in the ledger."""
@@ -119,6 +155,8 @@ def validate_plan(plan: EditPlan, clean_duration: float, entities: set[str] | No
                 errs.append(f"beat {i}: بطاقة الاسم لازم بيها entity")
             elif entities is not None and b.entity not in entities:
                 errs.append(f"beat {i}: '{b.entity}' مو موجود بـ entities.json")
+        if b.kind == "face_paper":
+            errs += [f"beat {i}: {e}" for e in paper_errors(b)]
         if b.kind == "face_fx" and b.fx not in FX_TYPES:
             errs.append(f"beat {i}: face_fx لازم fx من {', '.join(FX_TYPES)}")
         for s in b.stickers or []:
@@ -162,7 +200,7 @@ def validate_plan(plan: EditPlan, clean_duration: float, entities: set[str] | No
         zone = "hook" if b.start < HOOK_SECONDS - TOL else "body"
         if b.zone != zone:
             errs.append(f"beat {i}: المنطقة لازم تكون {zone}")
-        lo, hi = LIMITS[zone]
+        lo, hi = (PAPER_LIMITS if b.kind == "face_paper" else LIMITS)[zone]
         if last:
             lo = min(lo, 1.5)  # the final beat absorbs whatever time is left
         if not (lo - TOL <= b.duration <= hi + TOL):
@@ -230,7 +268,9 @@ def validate_plan(plan: EditPlan, clean_duration: float, entities: set[str] | No
     body = [b for b in beats if b.zone == "body" and b.kind in KINDS]
     body_time = sum(b.duration for b in body)
     if body_time > 0:
-        share = sum(b.duration for b in body if b.kind in FACE_KINDS) / body_time
+        # face_paper: he is on screen, but so are the papers — half of it counts as his face
+        share = sum(b.duration * (0.5 if b.kind == "face_paper" else 1) for b in body
+                    if b.kind in FACE_KINDS or b.kind == "face_paper") / body_time
         if not (FACE_SHARE[0] <= share <= FACE_SHARE[1]):
             errs.append(f"beat {beats.index(body[0])}: الوجه {share:.0%} من الجسم، لازم بين 40% و 65%")
     return errs

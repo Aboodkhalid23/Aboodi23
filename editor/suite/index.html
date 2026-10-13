@@ -340,11 +340,12 @@ const KINDS = {
   face_punch:["وجهك، تقريب قوي","face"], face_framed:["وجهك بإطار","face"], face_fx:["وجهك بمشهد يوتيوب","face"],
   face_cutout:["وجهك مقصوص","cut"], image:["صورة حقيقية","img"], footage:["فيديو أرشيف","arch"],
   graphic:["موشن جرافك","gfx"], entity:["بطاقة شخص","img"], ai_image:["صورة ذكاء اصطناعي","ai"],
-  ai_video:["فيديو ذكاء اصطناعي","ai"], avatar:["شخصيتك المرسومة","ai"]};
+  ai_video:["فيديو ذكاء اصطناعي","ai"], avatar:["شخصيتك المرسومة","ai"], face_paper:["وجهك ويمك أوراق","cut"]};
 const TRANS = {"":"قطع مباشر", zoom:"تقريب", flash:"وميض", whip:"سحبة سريعة", glitch:"تشويش", tear:"ورق ينشگ", burn:"ورق يحترق",
   dive:"غوص بالمشهد", pan:"سحبة كاميرا", shutter:"باب كراج", slide:"ورقة تنسحب"};
 const SFX = {"":"بدون", whoosh:"هوا", swoosh:"هوا سريع", pop:"فرقعة", click:"كليك", ding:"جرس", hit:"ضربة", riser:"صوت يتصاعد", paper:"ورق", glitch:"تشويش"};
 const TEMPLATES = [
+  {name:"أوراق يمّي", ic:"🗂", d:"تبقى بالكادر، وجريدة أو وثيقة تطلع يمّك", p:{kind:"face_paper", papers:[{type:"newspaper"}]}},
   {name:"هوك قوي", ic:"⚡", d:"تقريب قوي على وجهك، ويه وميض وضربة", p:{kind:"face_punch", transition:"flash", sfx:"hit"}},
   {name:"كلمة تنطبع", ic:"✍", d:"الجملة تطلع كلمة كلمة وهي تنگال", p:{kind:"graphic", graphic:{type:"kinetic"}}},
   {name:"رقم كبير", ic:"🔢", d:"رقم يعد قدامك ويه وصفه", p:{kind:"graphic", graphic:{type:"number", value:100}}},
@@ -371,8 +372,10 @@ let clipEls = [], chipEls = [], fxEls = [], wordEls = [];
 const group = (k) => (KINDS[k] || KINDS.face)[1];
 const kname = (k) => (KINDS[k] || [k])[0];
 function fmt(t){ t = Math.max(0, t || 0); const m = Math.floor(t / 60), s = (t % 60).toFixed(2).padStart(5, "0"); return `${String(m).padStart(2, "0")}:${s}`; }
-function textOf(b){ return b.caption || (b.graphic && (b.graphic.text || b.graphic.label || b.graphic.title)) || b.title || ""; }
+function textOf(b){ const p0 = b.papers && b.papers[0];
+  return b.caption || (b.graphic && (b.graphic.text || b.graphic.label || b.graphic.title)) || (p0 && (p0.title || p0.text || p0.label)) || b.title || ""; }
 function setText(b, v){
+  if (b.kind === "face_paper" && b.papers && b.papers.length){ const p = b.papers[0]; if (p.type === "quote") p.text = v; else if (p.type === "number") p.label = v; else p.title = v; return; }
   if (b.graphic && ("text" in b.graphic || b.graphic.type === "kinetic" || b.graphic.type === "quote")) b.graphic.text = v;
   else if (b.graphic && (b.graphic.type === "number" || "label" in b.graphic)) b.graphic.label = v;
   else b.caption = v;
@@ -441,7 +444,7 @@ function buildBeats(){
     ft.appendChild(c); clipEls.push(c);
     let chip = null;
     const t = textOf(b);
-    if (t && !b.kind.startsWith("face") || (t && b.kind === "face_cutout")){ chip = el("div", "chip it"); chip.textContent = t; chip.dataset.i = i; pos(chip, b.start, b.end - b.start); fx.appendChild(chip); }
+    if (t && (!b.kind.startsWith("face") || b.kind === "face_cutout" || b.kind === "face_paper")){ chip = el("div", "chip it"); chip.textContent = t; chip.dataset.i = i; pos(chip, b.start, b.end - b.start); fx.appendChild(chip); }
     chipEls.push(chip);
     let m = null;
     const parts = [];
@@ -686,7 +689,8 @@ function applyTpl(t, i){
   snapshot();
   const text = textOf(b);
   for (const [k, v] of Object.entries(t.p)){ if (v === null) delete b[k]; else b[k] = typeof v === "object" ? JSON.parse(JSON.stringify(v)) : v; }
-  if (b.graphic){ if (b.graphic.type === "number") b.graphic.label = text; else if (b.graphic.type === "headlines") b.graphic.items = text ? [text] : []; else b.graphic.text = text; }
+  if (b.kind === "face_paper"){ (b.papers || []).forEach(p => { if (!p.title && !p.text) p.title = text || "عنوان"; }); delete b.graphic; }
+  else if (b.graphic){ if (b.graphic.type === "number") b.graphic.label = text; else if (b.graphic.type === "headlines") b.graphic.items = text ? [text] : []; else b.graphic.text = text; }
   else if (text && !b.kind.startsWith("face")) b.caption = text;
   if (b.kind !== "image" && b.kind !== "face_cutout") delete b.pick;
   select(i, false); buildBeats(); inspect(); changed(); toast(`انطبق «${t.name}»`);

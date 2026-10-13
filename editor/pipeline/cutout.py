@@ -21,7 +21,7 @@ SMOOTH = 0.55      # MediaPipe fallback only: temporal smoothing of the mask
 OUTLINE = 9        # px of white "paper cut" edge at 1080p
 MODEL_DIR = Path.home() / ".cache" / "aboodi-models"
 RVM_URL = "https://github.com/PeterL1n/RobustVideoMatting/releases/download/v1.0.0/rvm_mobilenetv3_fp32.onnx"
-MODES = ("paper", "title")
+MODES = ("paper", "title", "layer")   # layer: a transparent video (papers) slips between his room and him
 
 
 def rvm_model() -> Path | None:
@@ -101,11 +101,12 @@ class Matter:
             self.gate.close()
 
 
-def _frames(path: Path, width: int, height: int, n: int):
-    """Raw RGB frames of a video scaled to width×height (a still image repeats)."""
+def _frames(path: Path, width: int, height: int, n: int, channels: int = 3):
+    """Raw RGB (or RGBA, channels=4) frames of a video scaled to width×height (a still image repeats)."""
+    fmt = "rgba" if channels == 4 else "rgb24"
     proc = subprocess.Popen(["ffmpeg", "-v", "error", "-i", str(path), "-frames:v", str(n), "-vf",
-                             f"scale={width}:{height}", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], stdout=subprocess.PIPE)
-    size, last = width * height * 3, None
+                             f"scale={width}:{height}", "-f", "rawvideo", "-pix_fmt", fmt, "-"], stdout=subprocess.PIPE)
+    size, last = width * height * channels, None
     try:
         for _ in range(n):
             buf = proc.stdout.read(size)
@@ -114,7 +115,7 @@ def _frames(path: Path, width: int, height: int, n: int):
                     raise MediaError(f"الملف فارغ: {path}")
                 yield last
                 continue
-            last = np.frombuffer(buf, np.uint8).reshape(height, width, 3)
+            last = np.frombuffer(buf, np.uint8).reshape(height, width, channels)
             yield last
     finally:
         proc.stdout.close()
@@ -127,7 +128,7 @@ def cutout_clip(face: Path, background: Path, out: Path, width: int, height: int
                 matter: Matter | None = None) -> Path:
     """`face`: canvas-sized footage (black outside the camera picture). `background`: for "paper" the scene PNG
     behind him. `text` ("title"): a video of white words on black — the
-    words are laid between his room and him. `region`: x range of the real camera picture (narrow for phone
+    words are laid between his room and him; ("layer"): a video with alpha (ProRes 4444) laid the same way. `region`: x range of the real camera picture (narrow for phone
     video) — he is found there only. "paper" moves him right by `shift` × width to free the left side."""
     import cv2
     bg = None
@@ -140,6 +141,7 @@ def cutout_clip(face: Path, background: Path, out: Path, width: int, height: int
     edge = max(2, round(OUTLINE * height / 1080))
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * edge + 1, 2 * edge + 1))
     words = _frames(text, width, height, frames) if mode == "title" and text else None
+    layer = _frames(text, width, height, frames, channels=4) if mode == "layer" and text else None
     writer = subprocess.Popen(["ffmpeg", "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{width}x{height}",
                                "-r", str(fps), "-i", "-", *(["-vf", vf.lstrip(",")] if vf else []), "-frames:v", str(frames),
                                "-an", *encode, str(out)], stdin=subprocess.PIPE)
@@ -161,6 +163,12 @@ def cutout_clip(face: Path, background: Path, out: Path, width: int, height: int
                     ring = np.roll(ring, dx, axis=1); ring[:, :dx] = 0
                 ring = cv2.GaussianBlur(ring, (3, 3), 0)[..., None]
                 frame = bg * (1 - ring) + 250.0 * ring                     # white paper edge
+            elif mode == "layer":   # his room, the transparent layer (papers), then him in front
+                frame = person.copy()
+                if layer is not None:
+                    lf = next(layer).astype(np.float32)
+                    a = lf[..., 3:4] / 255.0
+                    frame = frame * (1 - a) + lf[..., :3] * a
             else:   # title: his room, a little darker, the words, then him
                 frame = person * 0.8
                 if words is not None:

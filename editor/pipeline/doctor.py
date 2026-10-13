@@ -25,6 +25,24 @@ def _line(ok: bool | None, text: str) -> tuple[bool | None, str]:
     return ok, ("✅ " if ok else "⚠️ " if ok is None else "❌ ") + text
 
 
+def _whisper_ready(download: bool) -> bool | None:
+    """The speech model is on the disk (1.6 GB, downloaded once: --full fetches it so the first episode doesn't wait)."""
+    from .transcribe import WHISPER_MODEL
+    cache = Path.home() / ".cache" / "huggingface" / "hub" / f"models--Systran--faster-whisper-{WHISPER_MODEL}"
+    if not cache.is_dir() and "turbo" in WHISPER_MODEL:
+        cache = cache.with_name("models--mobiuslabsgmbh--faster-whisper-large-v3-turbo")
+    if cache.is_dir():
+        return True
+    if download:
+        try:
+            from faster_whisper import WhisperModel
+            WhisperModel(WHISPER_MODEL, device="cpu", compute_type="int8")
+            return True
+        except Exception:
+            return False
+    return None   # downloads itself on the first transcription
+
+
 def check(full: bool = False, fix: bool = True) -> list[tuple[bool | None, str]]:
     out = []
     for tool in ("ffmpeg", "ffprobe", "node", "npx"):
@@ -48,6 +66,7 @@ def check(full: bool = False, fix: bool = True) -> list[tuple[bool | None, str]]
     out.append(_line(Path(BROWSER).exists(), "المتصفح الي يرسم المشاهد"))
     from .cutout import rvm_model
     out.append(_line(rvm_model() is not None, "موديل قص الشخص الدقيق"))
+    out.append(_line(_whisper_ready(fix and full), "موديل تفريغ الكلام (سريع)"))
     free = shutil.disk_usage(ROOT).free / 1e9
     out.append(_line(free > 15 if free > 5 else False, f"المساحة الفاضية {free:.0f} گيگا"))
     from concurrent.futures import ThreadPoolExecutor

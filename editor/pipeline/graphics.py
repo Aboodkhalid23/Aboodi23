@@ -74,6 +74,7 @@ class RenderJob:
     out: Path
     scale: float = 1.0
     still: bool = False
+    alpha: bool = False   # transparent video (ProRes 4444), e.g. papers that go behind him
 
 
 def render_batch(jobs: list[RenderJob], bundle: Path) -> None:
@@ -82,7 +83,7 @@ def render_batch(jobs: list[RenderJob], bundle: Path) -> None:
         return
     spec = {"serveUrl": str(Path(bundle).resolve()), "browserExecutable": BROWSER, "concurrency": 4,
             "items": [{"comp": j.comp, "props": j.props, "out": str(Path(j.out).resolve()), "scale": j.scale,
-                       "still": j.still} for j in jobs]}
+                       "still": j.still, "alpha": j.alpha} for j in jobs]}
     spec_file = Path(jobs[0].out).resolve().parent / "render_jobs.json"
     spec_file.write_text(json.dumps(spec, ensure_ascii=False), encoding="utf-8")
     proc = subprocess.run(["node", "render-batch.mjs", str(spec_file)], cwd=REMOTION_DIR, capture_output=True, text=True)
@@ -183,6 +184,31 @@ def face_fx_job(beat: Beat, style: Style, face: Path, out: Path, fps: int, chann
              "stickers": prepare_stickers(beat.stickers or [], lambda f: _publish(bundle, f)),
              "channel": ch}
     return RenderJob("face-fx", props, Path(out), scale)
+
+
+def face_paper_job(beat: Beat, style: Style, face: Path, out: Path, fps: int, bundle: Path | None = None,
+                   scale: float = 1.0, images: dict | None = None, pic_w: float = 1.0,
+                   face_x: float | None = None, layer_only: bool = False) -> RenderJob:
+    """His footage (`face`, canvas-sized) with the story's papers landing beside him (FacePaper.tsx).
+    `images`: paper index → downloaded picture. The papers go to the emptier side of the frame; when there is no
+    room beside him (face in the middle), his picture becomes a taped photo on the paper desk. `layer_only`: just
+    the papers on a transparent background, to be laid between his room and him (treatment "behind")."""
+    bundle = bundle or ensure_bundle()
+    images = images or {}
+    fx = 0.5 if face_x is None else face_x
+    side = "right" if fx <= 0.5 else "left"
+    room = (1 - fx) if side == "right" else fx
+    layout = {"behind": "overlay"}.get(beat.treatment, beat.treatment) or ("overlay" if room >= 0.62 and pic_w > 0.9 else "desk")
+    papers = []
+    for k, p in enumerate(beat.papers or []):
+        q = {key: v for key, v in p.items() if key not in ("query", "source")}
+        if k in images:
+            q["img"] = _publish(bundle, images[k])
+        papers.append(q)
+    props = {"style": _style_props(style), "durationSec": round(beat.duration, 3), "fps": fps,
+             "src": _publish(bundle, face), "side": side, "layout": layout, "picW": round(pic_w, 4),
+             "faceX": fx, "papers": papers, "layerOnly": layer_only}
+    return RenderJob("face-paper", props, Path(out), scale, alpha=layer_only)
 
 
 def render_graphic(beat: Beat, style: Style, out: Path, public_dir: Path | None = None,

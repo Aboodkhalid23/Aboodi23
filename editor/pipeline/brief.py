@@ -6,19 +6,24 @@ from .clean import split_phrases
 from .paths import Episode
 from .transcribe import load_words
 
-RULES = """القواعد:
+def rules() -> str:
+    """The plan rules, built from plan.py so the brief never falls behind the code."""
+    from .plan import GRAPHIC_TYPES, KINDS, PAPER_TYPES, STICKERS, TRANSITIONS
+    return f"""القواعد:
 - الوقت بالثواني على الفيديو المنظف. teaser = 3–4 لقطات (1.5–2.5 ث) من أقوى اللحظات، تنعرض أول شي.
 - beats تغطي (teaser + الفيديو المنظف) كامل، بلا فراغ ولا تداخل.
-- أول 30 ثانية zone=hook، كل beat بين 1.5 و 3 ث. بعدها zone=body، كل beat بين 4 و 6 ث.
-- ما يتكرر نفس kind مرتين ورا بعض. الوجه (face*) بين 40% و 65% من وقت الجسم.
-- الأنواع: face, face_zoom_in, face_zoom_out, face_framed, face_punch (تقريب ثابت للتأكيد), face_fx, face_cutout (هو مقصوص فوگ ورق القناة + caption أو صورة query),
-  image (query بالإنگليزي لويكيميديا + caption عربي ينكتب إذا ما انلگت صورة), graphic,
-  ai_image / ai_video (prompt إنگليزي يوصف المشهد + caption عربي بديل؛ الصور رخيصة والفيديو للحظات الكبيرة بس، وai_budget بالرصيد),
-  footage (فيديو حقيقي من الأرشيف: query إنگليزي + caption عربي، source=archive للأفلام القديمة),
-  entity (entity = id من entities.json: صورة حقيقية للشخص أو شعار الشركة، أول مرة ينذكر الاسم).
-- face_fx: fx = subscribe (لحظة "اشتركوا") أو tv (بعد الهوك والسلام) أو none؛ و stickers اختيارية: قائمة، كل ملصق بيه type (stamp|arrow|burst|tape|circle) و text و at (ثانية من بداية المشهد).
-- transition اختياري على أي beat: zoom, flash, whip, glitch (بحدود، عند تغيير فكرة أو صدمة). sfx اختياري: whoosh, pop, click, ding, hit, riser, paper, glitch.
-- graphic.type: number, headline, quote, map (countries/pins/route), timeline, chart, text, custom (مشهد مخصص بالكود: scene + props), article (مقالة حقيقية: url + quote حرفي + title عربي بديل)."""
+- أول 30 ثانية zone=hook، كل beat بين 1.5 و 3 ث (face_paper 2–6). بعدها zone=body، كل beat بين 4 و 6 ث (face_paper 4–10).
+- ما يتكرر نفس kind مرتين ورا بعض. الوجه (face*) بين 40% و 65% من وقت الجسم (face_paper ينحسب نصه وجه).
+- الأنواع: {', '.join(KINDS)}.
+- face_paper (الأساس لما يذكر خبر أو وثيقة أو رقم أو تصريح): هو يبقى بالكادر والأوراق تطلع يمّه. papers 1–4، type من {', '.join(PAPER_TYPES)}،
+  و at (ثانية من بداية المشهد، ورقة كل 2–3 ث). newspaper (title, highlight, query?)، document (title, lines, highlight?, stamp?)، photo (query)، quote (text, who)، number (value, label)، page (query).
+- image / footage: query إنگليزي قصير + caption عربي (+ prompt إنگليزي إذا ممكن ما تنلگى صورة حقيقية: يتحول ai_image لحاله).
+- ai_image / ai_video / avatar: prompt إنگليزي + caption عربي؛ الحقيقي أول، وai_budget بالرصيد.
+- entity: id من entities.json، أول مرة ينذكر الاسم.
+- face_fx: fx = subscribe | tv | none؛ stickers من {', '.join(STICKERS)} (كل واحد type و text و at).
+- transition (بحدود، عند تغيير فكرة أو صدمة): {', '.join(TRANSITIONS)}. sfx اختياري: whoosh, pop, click, ding, hit, riser, paper, glitch.
+- graphic.type: {', '.join(GRAPHIC_TYPES)}."""
+
 
 MOMENTS = {
     "subscribe": ("اشترك", "اشتركو", "الاشتراك", "لايك", "الجرس", "فعلو", "تفعيل"),
@@ -44,24 +49,42 @@ def _chunks(phrases, max_seconds: float = 5.0):
             yield line
 
 
+# Where a paper beside him fits (face_paper): news, documents, what someone said, numbers and years.
+PAPER_HINTS = {
+    "newspaper": ("جريدة", "جرايد", "صحيفة", "خبر", "اخبار", "عنوان", "نشرت", "نشروا", "مجلة"),
+    "document": ("تقرير", "وثيقة", "وثايق", "دراسة", "بحث", "رسالة", "عقد", "قانون", "ورقة", "سجل", "براءة"),
+    "quote": ("گال", "قال", "صرح", "تصريح", "كتب", "يگول", "يقول"),
+}
+
+
 def find_moments(phrases) -> list[str]:
-    """Where he asks to subscribe or greets the viewers: hints for face_fx subscribe / tv beats."""
+    """Hints for Claude: subscribe / greeting moments (face_fx) and moments for a paper beside him (face_paper)."""
+    import re
     from .clean import normalize_ar
     out = []
     keys = {fx: [normalize_ar(k) for k in ks] for fx, ks in MOMENTS.items()}
+    papers = {t: [normalize_ar(k) for k in ks] for t, ks in PAPER_HINTS.items()}
     for p in phrases:
-        text = " ".join(normalize_ar(w.text) for w in p)
-        for fx, ks in keys.items():
-            if any(k in text for k in ks):
-                out.append(f"[{_ts(p[0].start)}] face_fx {fx}: " + " ".join(w.text for w in p))
-                break
+        words = [normalize_ar(w.text) for w in p]
+        text = " ".join(words)
+        said = " ".join(w.text for w in p)
+        hit = next((fx for fx, ks in keys.items() if any(k in text for k in ks)), None)
+        if hit:
+            out.append(f"[{_ts(p[0].start)}] face_fx {hit}: " + said)
+            continue
+        kind = next((t for t, ks in papers.items() if any(w.startswith(k) or w.startswith("ال" + k) or
+                                                           w.startswith("و" + k) for w in words for k in ks)), None)
+        if kind is None and any(re.fullmatch(r"[0-9٠-٩][0-9٠-٩,.٫]+%?", w.text.strip("،,.؟!")) for w in p):
+            kind = "number"
+        if kind:
+            out.append(f"[{_ts(p[0].start)}] face_paper {kind}: " + said)
     return out
 
 
 def write_brief(ep: Episode, styles_summary: str) -> Path:
     cuts = json.loads(ep.cuts.read_text(encoding="utf-8"))
     duration = round(sum(e - s for s, e in cuts), 2)
-    lines = [f"مدة الفيديو المنظف: {duration} ثانية", RULES, "", "الستايلات:", styles_summary]
+    lines = [f"مدة الفيديو المنظف: {duration} ثانية", rules(), "", "الستايلات:", styles_summary]
     from .entities import load_entities
     ents = load_entities(ep)
     if ents:

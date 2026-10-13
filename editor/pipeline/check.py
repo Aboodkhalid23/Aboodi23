@@ -42,7 +42,8 @@ def first_words(ep: Episode, seconds: float = 40.0, model=None) -> str:
                     "-ar", "16000", str(clip)], check=True)
     if model is None:
         from faster_whisper import WhisperModel
-        model = WhisperModel("large-v3", device="cpu", compute_type="int8")
+        from .transcribe import WHISPER_MODEL
+        model = WhisperModel(WHISPER_MODEL, device="cpu", compute_type="int8")
     segs, _ = model.transcribe(str(clip), language="ar", vad_filter=True)
     text = " ".join(s.text.strip() for s in segs).strip()
     clip.unlink()
