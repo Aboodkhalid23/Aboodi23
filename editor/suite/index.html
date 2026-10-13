@@ -7,7 +7,7 @@
    --pps pixels per second), so zooming changes one number and dragging touches only the clips that move. */
 :root{
   --bg:#ECEAE4; --panel:#F8F7F3; --sunk:#DEDAD1; --line:#C9C3B6; --fg:#1E1C18; --mute:#6C665B; --on-accent:#fff;
-  --accent:#D9481E; --soft:rgba(217,72,30,.14); --flag:#E3B21B; --done:#3E9B5A; --queued:#2F6F8F;
+  --accent:#D9481E; --soft:rgba(217,72,30,.14); --dull:#C4382E; --flag:#E3B21B; --done:#3E9B5A; --queued:#2F6F8F;
   --k-face:#8C7B5E; --k-img:#2F6F8F; --k-gfx:#B07A12; --k-ai:#7A4FA3; --k-arch:#5E6B3A; --k-cut:#A8432C;
   --demo-a:#2F6F8F; --demo-b:#D9A441;
   --display:"Alexandria","Noto Kufi Arabic",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
@@ -15,12 +15,12 @@
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#17161A; --panel:#211F25; --sunk:#0F0E12; --line:#36333C; --fg:#EDEAE3; --mute:#9A94A3; --on-accent:#fff;
-  --accent:#FF6A3D; --soft:rgba(255,106,61,.18); --flag:#F2C230; --done:#56B872; --queued:#4C9DC4;
+  --accent:#FF6A3D; --soft:rgba(255,106,61,.18); --dull:#E0604A; --flag:#F2C230; --done:#56B872; --queued:#4C9DC4;
   --k-face:#A8946E; --k-img:#4C9DC4; --k-gfx:#E0A22C; --k-ai:#A57BD1; --k-arch:#8A9A55; --k-cut:#D45E44;
   --demo-a:#4C9DC4; --demo-b:#E0A22C; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#17161A; --panel:#211F25; --sunk:#0F0E12; --line:#36333C; --fg:#EDEAE3; --mute:#9A94A3; --on-accent:#fff;
-  --accent:#FF6A3D; --soft:rgba(255,106,61,.18); --flag:#F2C230; --done:#56B872; --queued:#4C9DC4;
+  --accent:#FF6A3D; --soft:rgba(255,106,61,.18); --dull:#E0604A; --flag:#F2C230; --done:#56B872; --queued:#4C9DC4;
   --k-face:#A8946E; --k-img:#4C9DC4; --k-gfx:#E0A22C; --k-ai:#A57BD1; --k-arch:#8A9A55; --k-cut:#D45E44;
   --demo-a:#4C9DC4; --demo-b:#E0A22C; color-scheme:dark}
 *{box-sizing:border-box}
@@ -166,6 +166,9 @@ textarea{min-height:60px;resize:vertical}
 .tick{position:absolute;top:0;height:100%;left:calc(var(--s) * var(--pps) * 1px);border-left:1px solid var(--line);font-family:var(--mono);font-size:10px;color:var(--mute);padding-left:3px;padding-top:5px;pointer-events:none}
 .chap{position:absolute;top:2px;left:calc(var(--s) * var(--pps) * 1px);font-size:10px;background:var(--fg);color:var(--bg);border-radius:4px;padding:1px 5px;direction:rtl;white-space:nowrap;pointer-events:none;transform:translateX(2px)}
 .marks{height:28px;touch-action:none;cursor:crosshair}
+.dull{height:14px}
+.zone{position:absolute;top:3px;height:8px;border-radius:4px;background:var(--dull);opacity:.75;cursor:pointer}
+.zone.warn{background:var(--flag)}
 .flag{position:absolute;top:4px;height:20px;left:calc(var(--s) * var(--pps) * 1px);min-width:20px;width:calc(max(var(--d) * var(--pps) * 1px, 20px));border-radius:5px;background:var(--flag);color:#1E1C18;font-size:11px;padding:1px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;direction:rtl;cursor:pointer;border:1px solid rgba(0,0,0,.15)}
 .flag.queued{background:var(--queued);color:#fff}.flag.done{background:var(--done);color:#fff}.flag.note{background:var(--panel);color:var(--fg);border-color:var(--line)}
 .video{height:92px}
@@ -317,6 +320,7 @@ textarea{min-height:60px;resize:vertical}
     <div class="tl" id="tl">
       <div class="lane ruler" id="ruler"></div>
       <div class="lane marks" id="marks"><span class="lbl">الطلبات</span></div>
+      <div class="lane dull" id="dull"><span class="lbl">خريطة الملل</span></div>
       <div class="lane orig" id="orig"><span class="lbl">قبل التعديل</span></div>
       <div class="lane video" id="track"><span class="lbl">المشاهد</span></div>
       <div class="lane texts" id="texts"><span class="lbl">الكتابة</span></div>
@@ -329,6 +333,7 @@ textarea{min-height:60px;resize:vertical}
   </div>
 
   <div class="legend" id="legend"></div>
+  <p class="help" id="dullCount" style="color:var(--dull)"></p>
   <p class="help" id="help"><b>صوتك ثابت</b>، والمشاهد فوگه: تطوّل مشهد، الي يمه يقصر. اسحب على خط <b>الطلبات</b> حتى تحدد قطعة. التعديلات تنحفظ وحدها.</p>
 </div>
 <div class="toast" id="toast" hidden role="status"></div>
@@ -454,8 +459,27 @@ function buildBeats(){
     fxEls.push(m);
   });
   track.appendChild(ft); texts.appendChild(fx); audio.appendChild(fa);
+  buildDull();
   const changes = beats.filter(changedFrom).length + base.filter(o => !beats.some(b => b.uid === o.uid)).length;
   $("bCmp").textContent = changes ? `قبل وبعد (${changes})` : "قبل وبعد";
+}
+/* where viewers may leave: his face alone for long (red), or nothing new on screen for over 6 s (yellow) */
+const PLAIN = new Set(["face", "face_zoom_in", "face_zoom_out", "face_framed", "face_punch"]);
+function buildDull(){
+  const l = $("dull"); l.querySelectorAll(".zone").forEach(n => n.remove());
+  let a = null, n = 0;
+  const flush = (end) => {
+    if (a != null && end - a > 8){ const z = el("div", "zone it"); pos(z, a, end - a); z.title = `وجهك بس ${Math.round(end - a)} ثانية: حط ورقة أو صورة هنا`; z.dataset.t = a; l.appendChild(z); }
+    a = null;
+  };
+  beats.forEach((b) => {
+    if (PLAIN.has(b.kind)){ if (a == null) a = b.start; }
+    else flush(b.start);
+    if (b.end - b.start > 6.2 && b.kind !== "face_paper"){ const z = el("div", "zone warn it"); pos(z, b.start + 6, b.end - b.start - 6); z.title = "ما اكو شي جديد أكثر من 6 ثواني"; z.dataset.t = b.start + 6; l.appendChild(z); }
+  });
+  flush(beats.length ? beats[beats.length - 1].end : 0);
+  n = l.querySelectorAll(".zone").length;
+  $("dullCount") && ($("dullCount").textContent = n ? `${n} أماكن ممكن الناس تطلع بيها` : "");
 }
 function moveBeat(i){
   const b = beats[i], d = b.end - b.start;
@@ -638,6 +662,7 @@ function scrubLoop(){ if (scrubT != null){ seekTo(scrubT, false); scrubT = null;
 $("ruler").addEventListener("pointerdown", (e) => { scrub = true; $("ruler").setPointerCapture(e.pointerId); video.currentTime = timeAt(e.clientX); scrubLoop(); });
 $("ruler").addEventListener("pointermove", (e) => { if (scrub) scrubT = timeAt(e.clientX); });
 $("ruler").addEventListener("pointerup", (e) => { scrub = false; seekTo(timeAt(e.clientX), true); });
+$("dull").addEventListener("click", (e) => { const z = e.target.closest(".zone"); if (z){ video.currentTime = +z.dataset.t; toast(z.title); } });
 $("words").addEventListener("click", (e) => { const w = e.target.closest(".w"); if (w) video.currentTime = +w.dataset.t; });
 $("texts").addEventListener("click", (e) => { const c = e.target.closest(".chip"); if (c){ select(+c.dataset.i); tab("scene"); } });
 $("audio").addEventListener("click", (e) => { const c = e.target.closest(".fxm"); if (c){ select(+c.dataset.i); tab("scene"); } });
@@ -894,7 +919,7 @@ $("reels").addEventListener("pointermove", (e) => {
 $("reels").addEventListener("pointerup", () => { if (!rdrag) return; undo.push(rdrag.before); redo = []; syncHist(); rdrag = null; buildReels(); changed(); });
 
 /* ---------- start ---------- */
-const legend = [["وجهك","--k-face"],["صورة","--k-img"],["موشن جرافك","--k-gfx"],["أرشيف","--k-arch"],["ذكاء اصطناعي","--k-ai"],["مقصوص","--k-cut"],["طلب جديد","--flag"],["بانتظار كلود","--queued"],["انسوّى","--done"]];
+const legend = [["وجهك","--k-face"],["صورة","--k-img"],["موشن جرافك","--k-gfx"],["أرشيف","--k-arch"],["ذكاء اصطناعي","--k-ai"],["مقصوص","--k-cut"],["ملل","--dull"],["طلب جديد","--flag"],["بانتظار كلود","--queued"],["انسوّى","--done"]];
 $("legend").innerHTML = legend.map(([n, v]) => `<span><i style="background:var(${v})"></i>${n}</span>`).join("");
 
 async function boot(){
