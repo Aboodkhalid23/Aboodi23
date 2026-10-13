@@ -1,0 +1,9 @@
+{
+  "size": "youtube",
+  "background": {"image": "scene-A.png", "contrast": 1.08, "saturation": 1.12, "sharpen": 1, "vignette": 0.3},
+  "layers": [
+    {"type": "text", "text": "300 مليار\nتبخرت!", "font": "Baloo", "x": 0.25, "y": 0.27, "size": 0.17,
+     "line_spacing": 0.66, "line_colors": ["#FFFFFF", ["#FFC400", "#FF6A00"]],
+     "stroke": {"color": "#0B0B0F", "width": 0.1}, "shadow": true, "rotate": 4}
+  ]
+}

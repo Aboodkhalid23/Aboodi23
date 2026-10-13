@@ -1,0 +1,123 @@
+{
+  "notes": [],
+  "picked": [
+    {
+      "id": "W01",
+      "angle": "before_disaster",
+      "idea": "إصبع روبوت ينزل على زر نووي أحمر، و3 أعلام صغيرة جنبه",
+      "text": null,
+      "subject": {
+        "outfit": "olive military shirt",
+        "expression": "tense, holding his breath, mouth closed",
+        "action": "leans over the operations table toward the camera, gripping its edge"
+      },
+      "hero": "a metal robotic finger descending onto a red nuclear launch button, three tiny flags of the USA, China and Russia beside it",
+      "setting": "dark military operations room with cold blue world-map screens",
+      "camera": "wide_close",
+      "layout": {
+        "face": "right",
+        "hero": "foreground",
+        "text_zone": null
+      },
+      "palette": [
+        "#0B1A2A",
+        "#E3262B",
+        "#2EC4FF"
+      ],
+      "scores": {
+        "clarity": 9,
+        "curiosity": 8,
+        "emotion": 9,
+        "novelty": 5,
+        "honesty": 8,
+        "producible": 8,
+        "face": 8
+      },
+      "why": "زر نووي = حرب، إصبع روبوت = الآلة هي الي تقرر. (نفس فكرة غلاف أمس)",
+      "hero_ar": "إصبع روبوت فوق زر نووي، و3 أعلام",
+      "expression_ar": "متوتر، حابس نفسه",
+      "label": "A",
+      "score": 79.1,
+      "prompt": "Cinematic photorealistic YouTube thumbnail photo. Main subject: the man in the reference image.\nPreserve his exact facial identity: face shape, eyes, eyebrows, nose, thin black mustache, short trimmed beard, short dark hair with faded sides, skin tone. Change only his expression, clothes, pose and lighting.\nHe is on the right third of the frame, chest-up and large (his head and shoulders fill about 40% of the frame width), looking straight into the camera. He wears olive military shirt. Expression: tense, holding his breath, mouth closed, natural and believable, not exaggerated. Pose: leans over the operations table toward the camera, gripping its edge.\nIn the foreground, large and close to the camera: a metal robotic finger descending onto a red nuclear launch button, three tiny flags of the USA, China and Russia beside it.\nSetting: dark military operations room with cold blue world-map screens.\nColors: dark navy dominant, red as the one strong accent color, cyan rim light on his face and shoulders, high contrast, vivid saturated colors, sharp detailed skin texture, background slightly darker and softer than his face.\nShot with a wide-angle lens very close to the subject, slight fisheye perspective.\nThe main object is big in the foreground, close to the lens.\nNo text, no letters, no captions, no logos, no watermark."
+    },
+    {
+      "id": "W04",
+      "angle": "two_objects",
+      "idea": "بإيد شريحة ذكاء اصطناعي، وبالثانية صاروخ صغير، ويوازنهم",
+      "text": "السلاح\nالجديد!",
+      "subject": {
+        "outfit": "dark navy bomber jacket",
+        "expression": "calm and confident, slight frown, mouth closed",
+        "action": "holds both objects toward the camera like a balance scale"
+      },
+      "hero": "a glowing golden AI microchip in his right hand and a small grey missile in his left hand, both big in the foreground",
+      "setting": "dark purple studio with soft smoke and a cyan rim light",
+      "camera": "wide_close",
+      "layout": {
+        "face": "right",
+        "hero": "foreground",
+        "text_zone": "top_left"
+      },
+      "palette": [
+        "#1E0F33",
+        "#FFC400",
+        "#33E1FF"
+      ],
+      "scores": {
+        "clarity": 9,
+        "curiosity": 7,
+        "emotion": 6,
+        "novelty": 8,
+        "honesty": 9,
+        "producible": 8,
+        "face": 8
+      },
+      "why": "الشريحة هي السلاح الجديد، أخطر من الصاروخ",
+      "hero_ar": "شريحة ذكاء اصطناعي ضد صاروخ",
+      "expression_ar": "هادي وواثق، عابس شوية",
+      "font": "Kufam",
+      "label": "B",
+      "score": 79.1,
+      "prompt": "Cinematic photorealistic YouTube thumbnail photo. Main subject: the man in the reference image.\nPreserve his exact facial identity: face shape, eyes, eyebrows, nose, thin black mustache, short trimmed beard, short dark hair with faded sides, skin tone. Change only his expression, clothes, pose and lighting.\nHe is on the right third of the frame, chest-up and large (his head and shoulders fill about 40% of the frame width), looking straight into the camera. He wears dark navy bomber jacket. Expression: calm and confident, slight frown, mouth closed, natural and believable, not exaggerated. Pose: holds both objects toward the camera like a balance scale.\nIn the foreground, large and close to the camera: a glowing golden AI microchip in his right hand and a small grey missile in his left hand, both big in the foreground.\nSetting: dark purple studio with soft smoke and a cyan rim light.\nColors: dark purple dominant, yellow as the one strong accent color, cyan rim light on his face and shoulders, high contrast, vivid saturated colors, sharp detailed skin texture, background slightly darker and softer than his face.\nShot with a wide-angle lens very close to the subject, slight fisheye perspective.\nThe main object is big in the foreground, close to the lens.\nKeep the upper-left part of the frame dark and empty for a headline.\nNo text, no letters, no captions, no logos, no watermark."
+    },
+    {
+      "id": "W02",
+      "angle": "metaphor",
+      "idea": "إيد روبوت ماسكة خيوط 3 دمى جنود: أمريكي وصيني وروسي",
+      "text": null,
+      "subject": {
+        "outfit": "dark charcoal turtleneck",
+        "expression": "calm and suspicious, one eyebrow slightly raised, mouth closed",
+        "action": "looks straight into the camera while the puppets hang beside him"
+      },
+      "hero": "a giant chrome robotic hand above the frame holding marionette strings attached to three small puppet soldiers in American, Chinese and Russian uniforms",
+      "setting": "dark minimal studio with a deep teal backdrop and thin cyan light lines",
+      "camera": "standard",
+      "layout": {
+        "face": "right",
+        "hero": "left",
+        "text_zone": null
+      },
+      "palette": [
+        "#062A24",
+        "#C9D1D9",
+        "#00E5FF"
+      ],
+      "scores": {
+        "clarity": 8,
+        "curiosity": 8,
+        "emotion": 7,
+        "novelty": 9,
+        "honesty": 8,
+        "producible": 6,
+        "face": 8
+      },
+      "why": "الدول الكبيرة صارت دمى، والذكاء الاصطناعي هو الي يحرك الخيوط",
+      "hero_ar": "إيد روبوت تحرك 3 دمى جنود",
+      "expression_ar": "هادي وشاك، حاجب مرفوع",
+      "label": "C",
+      "score": 78.2,
+      "prompt": "Cinematic photorealistic YouTube thumbnail photo. Main subject: the man in the reference image.\nPreserve his exact facial identity: face shape, eyes, eyebrows, nose, thin black mustache, short trimmed beard, short dark hair with faded sides, skin tone. Change only his expression, clothes, pose and lighting.\nHe is on the right third of the frame, chest-up and large (his head and shoulders fill about 40% of the frame width), looking straight into the camera. He wears dark charcoal turtleneck. Expression: calm and suspicious, one eyebrow slightly raised, mouth closed, natural and believable, not exaggerated. Pose: looks straight into the camera while the puppets hang beside him.\nOn the left side of the frame: a giant chrome robotic hand above the frame holding marionette strings attached to three small puppet soldiers in American, Chinese and Russian uniforms.\nSetting: dark minimal studio with a deep teal backdrop and thin cyan light lines.\nColors: dark green dominant, silver as the one strong accent color, cyan rim light on his face and shoulders, high contrast, vivid saturated colors, sharp detailed skin texture, background slightly darker and softer than his face.\nNo text, no letters, no captions, no logos, no watermark."
+    }
+  ]
+}

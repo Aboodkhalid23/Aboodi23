@@ -1,0 +1,5 @@
+{
+  "size": "youtube",
+  "background": {"image": "scene-D.png", "contrast": 1.08, "saturation": 1.1, "sharpen": 1, "vignette": 0.3},
+  "layers": []
+}

@@ -2,3 +2,22 @@
 .env
 **/.env
 *.key
+
+# المصمم: صور الوجه والمراجع ما تنرفع (الريبو عام)
+designer/faces/
+designer/references/
+designer/models/
+# المصمم: كل صور مجلدات التصميم (المشاهد والأغلفة) بيها وجهه، فما تنرفع (الريبو عام)
+episodes/*/design/*.png
+episodes/*/design/*.jpg
+designs/*/*.png
+designs/*/*.jpg
+# إلا المخططات ولوحة الأفكار: بيها كلام وأشكال بس (ماكو وجهه)
+!episodes/*/design/sketch-*.jpg
+!episodes/*/design/board.jpg
+!designs/*/sketch-*.jpg
+!designs/*/board.jpg
+__pycache__/
+
+# ملفات الصوت التجريبية (تنعاد بأمر وحد)
+episodes/**/*-voice.mp3

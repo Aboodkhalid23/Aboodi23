@@ -17,10 +17,30 @@ description: استوديو المحتوى — يشغّل فريق كامل (م�
 | المدير الإبداعي | `creative-director` | `01b-angle.md` |
 | الكاتب | `script-writer` | `02-plan.md` و`02-draft.md` |
 | المدقق | `fact-checker` | `03-factcheck.md` |
+| محامي الشيطان للتوتر | `tension-auditor` | `03b-tension.md` |
+| لجنة المشاهدين (محاكاة) | `viewer-panel` | `03c-panel.md` |
 | محرر اللهجة | `dialect-editor` | `04-script.md` |
+| مختبر الإلقاء | `delivery-tester` | `04b-delivery.md` (نسخة تلقين بعلامات الوقفات) |
 | التغليف والسيو | `packager` | `05-package.md` |
 | منسق المنصات | `platform-strategist` | `06-distribution.md` |
+| مصمم الأغلفة | `designer` | `design/thumb-A.jpg` و`thumb-B.jpg` و`thumb-C.jpg` و`compare.jpg`، وبعدها `final-reels.jpg` |
 | محلل النمو | `growth-analyst` | `studio/growth/<التاريخ>.md` |
+
+**❗ الفريق صار قسمين (التفاصيل بـ`studio/style/magic-formula.md`):**
+- **قسم الهوك (5):** `hook-miner` ← `hook-architect` ← `hook-psychologist` ← `hook-tester` ← `hook-director`. يطلّعون `hook/01-raw.md` لحد `hook/05-final.md`. الهدف: 80% بقاء محاكى.
+- **قسم السكربت (20):** الموجودين فوق + `source-hunter` (`01c-sources.md`)، `arabic-coverage-scout` (`01d-arabic-coverage.md`)، `timeline-builder` (`01e-timeline.md`)، `phenomenon-analyst` (`01f-phenomenon.md`، بحلقات الترند والإشاعات بس)، `tone-director` (`01g-tone.md`)، `analogy-maker` (`02b-analogies.md`)، `source-verifier` (`03d-verify.md`)، `balance-reviewer` (`03e-balance.md`)، `legal-risk-reviewer` (`03f-legal.md`)، `chief-editor` (`04-script.md` النهائي).
+
+**الترتيب الجديد:**
+1. البحث بالتوازي: `researcher` + `source-hunter` + `arabic-coverage-scout` + `theory-analyst` (+ `phenomenon-analyst` إذا الحلقة ترند/ظاهرة)، وبعدها `timeline-builder` و`claim-ledger-keeper` (ما يدخل السكربت إلا المؤكد أو المنسوب).
+2. `creative-director` ثم `tone-director`.
+3. **قسم الهوك كامل:** `hook-miner` ← `hook-architect` ← `suspense-director` (برود افتتاحية) ← `hook-psychologist` ← `hook-tester` ← `hook-director`. المرجع: `studio/style/nerve-engine.md`.
+4. `script-writer` (يستخدم الهوك النهائي والجسر وبطاقة الرتم) ثم `analogy-maker`.
+5. المراجعة بالتوازي: `fact-checker` + `source-verifier` + `balance-reviewer` + `legal-risk-reviewer` + `tension-auditor` + `viewer-panel`.
+6. `dialect-editor` ثم `human-voice-editor` (يخلي السكربت يبين إنسان مو ذكاء اصطناعي) ثم `chief-editor` ثم `delivery-tester`.
+7. `packager` و`platform-strategist` و`designer`.
+
+**❗ البصمة:** كل الفريق يقرا `studio/style/magic-formula.md` (الخلطة السحرية) قبل ما يشتغل. هي أعلى من أي مرجع أسلوبي ثاني، وبعدها `studio/script-rules.md`.
+**مراجع الأسلوب:** `studio/style/arabic-channels.md` و`foreign-channels.md` و`process-and-tools.md`.
 
 **المراجع المشتركة:** بمجلد `studio/references/`:
 - `channels.md`: القنوات المرجعية.
@@ -74,21 +94,38 @@ description: استوديو المحتوى — يشغّل فريق كامل (م�
 ```bash
 python3 -c "import sys;print(len(open(sys.argv[1],encoding='utf-8').read().split()))" <المسار>/02-draft.md
 ```
-إذا أقل من 2800، رجّعه للكاتب.
+إذا أقل من 4000، رجّعه للكاتب.
 
 ### 6. التدقيق ← `fact-checker`
 إذا اكو ❌ خطيرة تهز فكرة الحلقة نفسها، **وقف وخبّر صاحب القناة** قبل ما تكمل.
 
+### 6b. التوتر ← `tension-auditor`
+إذا طلعت 3 كتل حمراء أو أكثر، رجّع المسودة للكاتب **مرة وحدة** ويا قائمة التصليحات.
+
+### 6c. لجنة المشاهدين ← `viewer-panel`
+"الملاحظة الوحدة" تروح للكاتب أو للمحرر حسب نوعها.
+
 ### 7. التحرير ← `dialect-editor`
 **بوابة الجودة:**
-- 2800+ كلمة.
+- 4000+ كلمة.
 - ماكو عناوين داخل `04-script.md`.
 - اقرا أول 10 جمل وآخر 10 جمل بنفسك وتأكد إن اللهجة عراقية.
+
+### 7b. الإلقاء ← `delivery-tester`
+إذا الحكم "يحتاج تعديل"، المحرر يطبق جدول المشاكل على `04-script.md`. التسليم لصاحب القناة يبقى نظيف (هوك + سكربت بس، بكوكل درايف)، ونسخة التلقين تنحفظ بالمجلد.
 
 ### 8. التغليف والمنصات ← `packager` و`platform-strategist`
 يشتغلون **بالتوازي**، لأن الاثنين يعتمدون على `04-script.md` بس. إذا تحتاج، `platform-strategist` يقرا `05-package.md` بعد ما يخلص.
 
+### 8b. الأغلفة ← `designer`
+بعد ما يخلص `packager` (المصمم يحتاج `05-package.md`):
+1. اسأل صاحب القناة بـ AskUserQuestion **مرة وحدة**: "المصمم راح يولّد 3 مشاهد بوجهك بـ Higgsfield (6 نقاط مجانية). وإذا الرصيد ما كفى، يكمّل بـ Canva ويحفظ لوحة التنزيل حتى ينزّلها. موافق؟" واحفظ جوابه.
+2. شغّل `designer` على مجلد الحلقة، وانطيه بالتعليمات جوابه: "موافقة لوحة التنزيل: نعم" أو "موافقة لوحة التنزيل: لا". يرجعلك 3 أغلفة و`design/compare.jpg` ووصف الأفكار الثلاثة.
+3. كمّل انت الخطوة 7 من `.claude/skills/designer/SKILL.md`: دز الأغلفة الثلاثة لصاحب القناة لاختبار يوتيوب "اختبار ومقارنة".
+4. كمّل الخطوتين 8 و9 (الغلاف الطولي والحفظ).
+
 ### 9. التسليم
+0. شغّل `python3 scripts/script-check.py <المجلد>/04-script.md --strict` (لازم 0 🔴)، و`python3 scripts/teleprompter.py <المجلد>/04-script.md`.
 1. ضيف سطر بـ `episodes/log.md`: التاريخ | الموضوع | الفئة | نوع الهوك | العنوان الموصى به | عدد الكلمات | المجلد.
 2. سوّ commit وpush.
 3. رد على صاحب القناة بالعراقي، **باختصار**:
@@ -98,6 +135,7 @@ python3 -c "import sys;print(len(open(sys.argv[1],encoding='utf-8').read().split
    - أهم تصحيحات المدقق.
    - عدد المقاطع القصيرة وأول موعد نشر.
    - مسار السكربت النهائي.
+   - الغلاف المختار وغلاف الريلز (`design/final-youtube.jpg` و`design/final-reels.jpg`).
    - سطر "📚 تعلّم اليوم" عن تقنية كتابة أو قاعدة منصة استخدمها الفريق بهاي الحلقة.
 4. **اسأله:**
    - شنو عجبك، وشنو ما عجبك؟ ضيف ملاحظاته لقسم "تفضيلات" بـ `studio/channel.md`.
@@ -111,6 +149,7 @@ python3 -c "import sys;print(len(open(sys.argv[1],encoding='utf-8').read().split
 | "قوّي هاي الفكرة" / "زاوية أحسن" | `creative-director` بس |
 | "دقق هذا السكربت" | `fact-checker` ثم `dialect-editor` على نص يعطيك إياه |
 | "عناوين لهذا" | `packager` بس |
+| "صمملي غلاف" / "غلاف للحلقة" / "كفر ريلز" | سكيل `designer` بس |
 | "سوّيلي ريلز وتيك توك من هذا" | `platform-strategist` بس |
 | "ليش الفيديو ما نجح" / "حلل القناة" / "خطة الشهر" | `growth-analyst` |
 | "عدّل الهوك" / "قصّر" / "طوّل" | `dialect-editor` بتعليمات محددة |
