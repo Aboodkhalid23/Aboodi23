@@ -24,8 +24,8 @@ describe('public Skill contract', () => {
       'bottom 18%',
       'full-screen',
       '1.6–3.2 seconds',
-      'semantic palettes',
-      'programmatic line illustrations',
+      'two public styles',
+      'three basic layouts',
       'Do not continue until the user approves',
     ]) {
       expect(normalized).toContain(phrase.toLowerCase());
@@ -50,8 +50,10 @@ describe('public Skill contract', () => {
     expect(skill).toContain('references/visual-quality-gates.md');
   });
 
-  it('documents the ten V2 structures and cumulative four-gate flow', () => {
-    for (const name of SEMANTIC_STRUCTURES) expect(skill).toContain(name);
+  it('documents lite layouts and cumulative approvals while retaining V2 references', () => {
+    const historical = readFileSync('references/visual-structures.md', 'utf8');
+    for (const name of SEMANTIC_STRUCTURES) expect(historical).toContain(name);
+    for (const name of ['title', 'card', 'flow']) expect(skill).toContain(`\`${name}\``);
     for (const flag of ['--approve-gate-a', '--approve-gate-b', '--approve-gate-c', '--approve-gate-d']) {
       expect(skill).toContain(flag);
     }

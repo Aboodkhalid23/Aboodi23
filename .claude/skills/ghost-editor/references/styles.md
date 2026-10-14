@@ -31,10 +31,20 @@ recording (`examples/gallery/`) to check that they read as different.
 
 ## Saving a new style (from a reference study or a reel the user loved)
 
-1. Copy the closest preset in `styles/` to `styles/<new-name>.json`.
-2. Set `_about` (one line: the look and when to use it), `brand` (accent, accentDark, ink, fonts), `captions` (style, `upper`, `keywordStyle`), `sfxProfile`, `music` (an id or `auto` plus a mood tag in `library/music/manifest.json` `styles`), `look` and `scenes` defaults. Take all of these from the study or the reel.json that worked.
-3. Add a row to the table above, and save the reel.json that defined it as `examples/gallery/<new-name>.reel.json`.
-4. Render one existing example in the new style to confirm it reads as its own look.
+A recipe ships with a SYSTEM.md (thesis, invariants, slots with generators, planning procedure) and a catalog.json, like
+`recipes/clean-os/`. The element list alone produces copies.
+
+`python3 $S/scripts/save_style.py <project> <new-name> --best-for "..." [--about "one line"] [--music-auto] [--verify-on <another project>]`
+does it: it copies the reel's own preset, fills brand, caption look, sfxProfile, music, look and scene defaults from what
+rendered (never the per-recording fixes, tags or highlight words), writes `styles/<new-name>.json`, adds the row to the table
+above, saves `examples/gallery/<new-name>.reel.json`, and checks the round trip (example + new preset build the identical
+composition). `--verify-on` builds another project in the new style and snapshots it next to its own look: confirm it reads
+as its own look before calling the style done. It refuses a reel without a render or with a failed render report, and the
+seven built-in names.
+
+By hand (from a reference study): copy the closest preset, set `_about`, `brand`, `captions`, `sfxProfile`, `music` (an id or
+`auto` plus a mood tag in `library/music/manifest.json` `styles`), `look` and `scenes`, add the table row and the example,
+and render one existing example in the new style.
 
 ## Caption and overlay safety (all styles)
 
@@ -47,3 +57,13 @@ recording (`examples/gallery/`) to check that they read as different.
 - steps captions around cards on screen at the same time
 
 `build/caption_layout.json` records every block's zone. `qa.py` prints the counts and fails on anything outside the safe area.
+
+## Recipes (beyond the presets)
+
+| recipe | looks like | best for | where |
+|---|---|---|---|
+| **Clean OS** | Apple-clean lowercase Inter word cards resolving from blur, wide/tight cuts from one 4K camera, white iOS-style scenes (date picker, lock screen, search, Photos), a red Figma selection box with a cursor, perspective text + draining ring, Great Vibes script word | reflective or explanatory monologues where each line names something you could see on a phone | `recipes/clean-os/README.md` |
+| **Vector explainer** | no footage: one SVG world a camera travels through, a subject drawing itself (stroke-draw), Playfair headlines on panels, word-reveal captions, ElevenLabs narrator, piano bed | parables, life lessons, concepts you can draw | `recipes/explainer-vector/README.md` (example: "Two Directions") |
+| **RESULT** | one or two Inter Tight words with a small line + big word emphasis, Caveat handwriting, navy dust cards, polaroids, stop-motion paper stack, film-burn leaks, comic props (REC frame, incoming call, cursor dialog), dissolves between lines | storytelling, nostalgia, podcast-style monologues | `recipes/result-podcast/README.md` |
+| **POV montage** | first-person clips cut to a story: speed-ups, flash-forward hook, freeze-frame + zoom + record scratch + meme, editorial motion layer with a footage-matched accent | trips, vlogs, a day in the life from glasses or a GoPro | `recipes/pov-montage/README.md` (example: SF Lime ride) |
+

@@ -62,6 +62,16 @@ export const main = (argv = process.argv.slice(2)): void => {
   const renderTimeout = typeof args.timeout === 'string' ? args.timeout : '120000';
   if (!['burned-in', 'none', 'generated'].includes(captionsMode)) throw new Error('Invalid --captions mode');
   if (!['remotion', 'hyperframes'].includes(renderer)) throw new Error('Invalid --renderer');
+  if (!['remotion'].includes(renderer)) throw new Error('New public-lite jobs require Remotion; historical V2 HyperFrames projects remain readable');
+  const publicStyle = args.style ?? 'dark';
+  if (publicStyle !== 'dark' && publicStyle !== 'paper') throw new Error('Invalid --style; expected dark or paper');
+  const camera = args['presenter-motion'] ?? 'off';
+  if (camera !== 'off' && camera !== 'subtle') throw new Error('Invalid --presenter-motion; expected off or subtle');
+  if (camera === 'subtle' && outputMode !== 'composite') throw new Error('Source camera motion requires composite output');
+  const presenterLayout = args['presenter-layout'] ?? (outputMode === 'composite' ? 'single' : 'original');
+  if (presenterLayout !== 'single' && presenterLayout !== 'original') throw new Error('Invalid --presenter-layout; expected single or original');
+  if (presenterLayout === 'single' && outputMode !== 'composite') throw new Error('Presenter layout requires composite output');
+  const liteDirectionByCue = typeof args.direction === 'string' ? JSON.parse(readFileSync(resolve(args.direction), 'utf8')) : undefined;
   if (renderer === 'hyperframes' && outputMode === 'overlay') throw new Error('Overlay MOV output currently requires --renderer remotion');
   if (!/^[1-9]\d*$/.test(renderConcurrency) || Number(renderConcurrency) > 16) throw new Error('Invalid --concurrency; expected an integer from 1 to 16');
   if (!/^[1-9]\d*$/.test(renderTimeout) || Number(renderTimeout) < 7000) throw new Error('Invalid --timeout; expected an integer of at least 7000 milliseconds');
@@ -73,7 +83,7 @@ export const main = (argv = process.argv.slice(2)): void => {
   mkdirSync(out, {recursive: true});
   const probe = video ? probeMedia(video) : syntheticOverlayProbe({cues, width, height, fps});
   const id = typeof args.id === 'string' ? args.id : basename(out).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'video-package';
-  const storyboard = planStoryboard({id, title: typeof args.title === 'string' ? args.title : id, cues, probe, captionsMode: captionsMode as 'burned-in' | 'none' | 'generated', sourceVideo: 'input.mp4', sourceSrt: 'input.srt'});
+  const storyboard = planStoryboard({id, title: typeof args.title === 'string' ? args.title : id, cues, probe, captionsMode: captionsMode as 'burned-in' | 'none' | 'generated', sourceVideo: 'input.mp4', sourceSrt: 'input.srt', edition: 'public-lite', publicStyle, liteCamera: camera === 'subtle', litePresenter: presenterLayout === 'single', liteDirectionByCue});
   assertDirectorPlan(storyboard);
   writeFileSync(join(out, 'BRIEF.md'), gateABrief({storyboard, probe, cues}), 'utf8');
   writeFileSync(join(out, 'SOURCE_PROBE.json'), `${JSON.stringify(probe, null, 2)}\n`, 'utf8');

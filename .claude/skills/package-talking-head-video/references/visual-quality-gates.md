@@ -2,14 +2,15 @@
 
 These checks apply to every real invocation. Passing unit tests, typecheck, build, or render is not visual acceptance.
 
-## 1. Binary presentation mode
+## 1. Presentation mode
 
-Every beat declares exactly one visual mode:
+Original-layout beats declare exactly one of the first two modes. Single-presenter jobs use the third mode:
 
 - **Presenter-safe:** the live presenter remains visible. Foreground content is restricted to x=5%–32% or x=68%–95%; center x=35%–65% is completely clear; the lower 18% is reserved for burned-in captions.
 - **Opaque full-screen:** the graphic covers the full 1920×1080 canvas with an opaque background. It may use the center because the presenter is intentionally replaced for that beat.
+- **Single-presenter composition:** one persistent source video is reframed into a full-frame or single-window rectangle. Protect the actual forehead, face and chin inside that rectangle; typography occupies separate regions. Cropping removes the old subtitle reserve and matching SRT captions are redrawn once. Inspect moving boundaries at entry, hold and exit, without duplicate presenter layers.
 
-Reject any translucent hybrid. A card, SVG route, illustration, glow, title, or diagram that enters the presenter lane while the face remains visible is a failure. If the center is needed, use opaque full-screen.
+Reject graphic overlap with a visible face. In original mode, foreground graphics stay outside the center lane; if the center is needed, use opaque full-screen. In single-presenter composition, reserve the relocated person's actual region rather than assuming the face remains at the original center. Keep the bottom 18% for captions in either mode.
 
 ## 2. Side-card density
 
@@ -30,11 +31,11 @@ Presenter-safe side surfaces must be content-fit.
 
 ## 4. Stable review frames
 
-Representative stills are selected at 72% of each beat, after the main entry animation but before the exit. A midpoint screenshot is not sufficient because it can capture a half-built layout.
+Public-lite selects eight timeline samples. Check that each sample is readable; if it lands in entry/exit, inspect an additional stable frame of that beat. Also inspect first/last frames and basic camera entry/peak/return. Historical V2 stills are selected at 72% of each beat, after entry but before exit. A single screenshot cannot establish motion quality.
 
 Gate C must include:
 
-1. eight frames from eight distinct semantic structures when the video semantics support them;
+1. eight actual timeline frames for public-lite, covering every basic layout used; historical V2 retains eight distinct semantic structures;
 2. the exact timestamp, structure, presentation mode, and SHA-256 for every frame;
 3. a 4×2 contact sheet built from those exact frames;
 4. manual frame review, recorded as pass/fail for face safety, density, clipping, contrast, semantic fit, and subtitle clearance.

@@ -38,9 +38,10 @@ describe('packaging output modes', () => {
     ]);
     expect(buildRemotionOutputFlags('composite')).toEqual(['--codec', 'h264', '--crf', '18']);
     expect(buildOverlaySequenceFlags()).toEqual(['--sequence', '--image-format', 'png', '--image-sequence-pattern', 'frame-[frame].[ext]', '--muted']);
-    expect(buildOverlayFfmpegArgs({sequenceDir: 'C:/frames', output: 'C:/out/overlay.mov', fps: 30, totalFrames: 1478})).toEqual([
+    const overlayArgs = buildOverlayFfmpegArgs({sequenceDir: 'C:/frames', output: 'C:/out/overlay.mov', fps: 30, totalFrames: 1478});
+    expect(overlayArgs.map((arg) => arg.replaceAll('\\', '/'))).toEqual([
       '-y', '-v', 'error', '-framerate', '30', '-start_number', '0',
-      '-i', 'C:\\frames\\frame-%04d.png', '-an',
+      '-i', 'C:/frames/frame-%04d.png', '-an',
       '-c:v', 'prores_ks', '-profile:v', '4', '-pix_fmt', 'yuva444p10le',
       '-threads', '1', '-filter_threads', '1', '-filter_complex_threads', '1',
       'C:/out/overlay.mov',

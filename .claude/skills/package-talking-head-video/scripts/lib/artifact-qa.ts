@@ -79,6 +79,15 @@ export const detectBlackFrames = (file: string): Array<{start: number; end?: num
 };
 
 export const selectRepresentativeBeats = (storyboard: Storyboard): RepresentativeBeat[] => {
+  if (storyboard.edition === 'public-lite') {
+    // Eight timeline samples cover a small vocabulary without inventing layouts.
+    return Array.from({length: 8}, (_, i) => {
+      const timestamp = Math.min((storyboard.duration * (i + .5)) / 8, storyboard.duration - 1 / storyboard.fps);
+      const beat = storyboard.beats.find((b) => b.start <= timestamp && b.end > timestamp) ?? storyboard.beats.at(-1)!;
+      return {id: beat.id, timestamp: Number(Math.max(0, timestamp).toFixed(3)), structure: beat.structure,
+        presentationMode: resolvePresentationMode(beat.structure, beat.placement)};
+    });
+  }
   const selected: RepresentativeBeat[] = [];
   const seen = new Set<SemanticStructure>();
   for (const beat of storyboard.beats) {
@@ -125,13 +134,14 @@ export const writeRenderManifest = ({output, storyboard, frames, target, outputM
   const pixelFormat = probePixelFormat(output);
   const alphaChannel = outputMode === 'overlay' ? verifyAlphaChannel(output) : null;
   const manifest = {
-    rendererVersion: '2.0',
+    rendererVersion: storyboard.edition === 'public-lite' ? '0.3.0-public-lite' : '2.0',
     outputMode,
     output: {file: basename(output), sha256: sha256(output), pixelFormat, ...probe},
     storyboard: {id: storyboard.id, duration: storyboard.duration, structures: [...new Set(storyboard.beats.map((beat) => beat.structure))]},
     frames: frames.map((frame) => ({...frame, file: basename(frame.file)})),
     visualQuality: {
-      stableFrameProgress: 0.72,
+      stableFrameProgress: storyboard.edition === 'public-lite' ? null : 0.72,
+      samplingStrategy: storyboard.edition === 'public-lite' ? 'eight-timeline-samples' : 'eight-distinct-structures-at-72-percent',
       presentationContract: 'presenter-safe-or-opaque-full-screen',
       gateCApproval: 'confirmed-before-render',
     },

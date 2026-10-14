@@ -27,6 +27,28 @@ const structureAllowsFullScreen = new Set<SemanticStructure>([
 ]);
 
 export const validateDirectorPlan = (storyboard: Storyboard): DirectorIssue[] => {
+  if (storyboard.edition === 'public-lite') {
+    const expectedPalette = storyboard.publicStyle === 'paper' ? 'editorial-cream' : 'deep-ocean';
+    return storyboard.beats.flatMap((beat): DirectorIssue[] => {
+      const issues: DirectorIssue[] = [];
+      if (beat.liteDirection?.doodle && !storyboard.litePresenter) {
+        issues.push({code: 'content-contract', beatId: beat.id, message: 'Semantic doodles require single-presenter composition'});
+      }
+      if (beat.liteDirection && [...beat.liteDirection.lines, beat.liteDirection.eyebrow ?? '', beat.liteDirection.doodle?.label ?? ''].some((copy) => copy && !beat.text.includes(copy))) {
+        issues.push({code: 'content-contract', beatId: beat.id, message: 'Directed emphasis must use literal excerpts of the current source beat'});
+      }
+      if (!beat.liteLayout || beat.illustration || beat.evidence || beat.palette !== expectedPalette || beat.structure !== 'thesis-and-proof') {
+        issues.push({code: 'content-contract', beatId: beat.id, message: 'Public-lite requires a basic layout and a single selected palette; advanced assets are not supported'});
+      }
+      if (beat.liteLayout === 'flow' && ((beat.liteItems?.length ?? 0) < 2 || (beat.liteItems?.length ?? 0) > 3)) {
+        issues.push({code: 'content-contract', beatId: beat.id, message: 'Public-lite flow requires two or three source items'});
+      }
+      if ((beat.liteLayout === 'card') === (beat.placement === 'full')) {
+        issues.push({code: 'presentation-mode-mismatch', beatId: beat.id, message: 'Cards use side lanes; titles and flows require an opaque full-screen background'});
+      }
+      return issues;
+    });
+  }
   const issues: DirectorIssue[] = [];
   const uniqueStructures = new Set(storyboard.beats.map((beat) => beat.structure)).size;
   if (storyboard.duration > 30 && uniqueStructures < 8) {

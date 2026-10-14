@@ -28,6 +28,7 @@ const motionForBeat = (beat: Storyboard['beats'][number]): string => {
 };
 
 export const generateHyperFramesProject = (storyboard: Storyboard): {html: string; motion: HyperFramesMotionSidecar} => {
+  if (storyboard.edition === 'public-lite') throw new Error('Public-lite projects require Remotion');
   const beats = storyboard.beats.map(beatMarkup).join('\n');
   const timeline = storyboard.beats.map(motionForBeat).join('\n');
   const motion: HyperFramesMotionSidecar = {

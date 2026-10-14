@@ -632,5 +632,114 @@
     "licence": "Mixkit Free SFX licence (commercial OK, no redistribution as-is)",
     "licensed": true,
     "mixkit_id": "2901"
+  },
+  "wood-saw": {
+    "file": "wood-saw.wav",
+    "role": "foley",
+    "tags": [
+      "craft",
+      "wood",
+      "workshop"
+    ],
+    "duration": 1.2,
+    "peak_db": -1.0,
+    "source": "https://mixkit.co/free-sound-effects/wood/ #827 Hand saw tool on wood",
+    "licence": "Mixkit Free SFX licence (commercial OK, no redistribution as-is)",
+    "licensed": true,
+    "mixkit_id": "827"
+  },
+  "wood-hit": {
+    "file": "wood-hit.wav",
+    "role": "impact",
+    "tags": [
+      "craft",
+      "wood",
+      "turn",
+      "hit"
+    ],
+    "duration": 0.235,
+    "peak_db": -1.0,
+    "source": "https://mixkit.co/free-sound-effects/wood/ #2182 Wood hard hit",
+    "licence": "Mixkit Free SFX licence (commercial OK, no redistribution as-is)",
+    "licensed": true,
+    "mixkit_id": "2182"
+  },
+  "wood-ambience": {
+    "file": "wood-ambience.wav",
+    "role": "ambience",
+    "tags": [
+      "craft",
+      "workshop",
+      "room-tone"
+    ],
+    "duration": 14.0,
+    "peak_db": -1.0,
+    "source": "https://mixkit.co/free-sound-effects/wood/ #797 Wooden construction assembly ambience",
+    "licence": "Mixkit Free SFX licence (commercial OK, no redistribution as-is)",
+    "licensed": true,
+    "mixkit_id": "797"
+  },
+  "wood-sanding": {
+    "file": "wood-sanding.wav",
+    "role": "foley",
+    "tags": [
+      "craft",
+      "wood",
+      "workshop"
+    ],
+    "duration": 4.0,
+    "peak_db": -1.0,
+    "source": "https://mixkit.co/free-sound-effects/wood/ #850 Wood polishing electrical tool",
+    "licence": "Mixkit Free SFX licence (commercial OK, no redistribution as-is)",
+    "licensed": true,
+    "mixkit_id": "850"
+  },
+  "marker-scribble": {
+    "file": "marker-scribble.wav",
+    "role": "foley",
+    "tags": [
+      "whiteboard",
+      "write",
+      "draw",
+      "doodle"
+    ],
+    "duration": 0.543,
+    "peak_db": -1.0,
+    "source": "https://mixkit.co/free-sound-effects/paper/ #2369 Writing scribble on paper",
+    "licence": "Mixkit Free SFX licence (commercial OK, no redistribution as-is)",
+    "licensed": true,
+    "mixkit_id": "2369"
+  },
+  "pencil-write": {
+    "file": "pencil-write.wav",
+    "role": "foley",
+    "tags": [
+      "whiteboard",
+      "write",
+      "notebook"
+    ],
+    "duration": 1.866,
+    "peak_db": -1.0,
+    "source": "https://mixkit.co/free-sound-effects/paper/ #3194 Writing pencil",
+    "licence": "Mixkit Free SFX licence (commercial OK, no redistribution as-is)",
+    "licensed": true,
+    "mixkit_id": "3194"
+  },
+  "send-swoosh": {
+    "file": "send-swoosh.wav",
+    "role": "ui",
+    "tags": [
+      "send",
+      "message",
+      "imessage",
+      "swoosh"
+    ],
+    "duration": 0.639,
+    "peak_db": -1.0,
+    "source": "https://mixkit.co/free-sound-effects/transition/ #166 Fast small sweep transition",
+    "licence": "Mixkit Free SFX licence (commercial OK, no redistribution as-is)",
+    "licensed": true,
+    "mixkit_id": "166",
+    "review": "listen: picked by envelope (rising swoosh, peak at 0.25 s), not yet confirmed by ear as an iMessage-like send"
   }
 }

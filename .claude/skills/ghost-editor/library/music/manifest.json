@@ -228,5 +228,118 @@
     "url": "https://assets.mixkit.co/music/837/837.mp3",
     "lufs_i": -11.6,
     "duration": 99.1
+  },
+  "the-long-road": {
+    "file": "the-long-road.mp3",
+    "mood": [
+      "melancholic",
+      "acoustic",
+      "drama"
+    ],
+    "source": "https://assets.mixkit.co/music/52/52.mp3 (Mixkit #52)",
+    "licence": "Mixkit Free Music licence (free for commercial social use; not Content ID)",
+    "added": "2026-10-13"
+  },
+  "miss-you": {
+    "file": "miss-you.mp3",
+    "mood": [
+      "hopeful",
+      "cello",
+      "piano",
+      "arthouse"
+    ],
+    "source": "https://assets.mixkit.co/music/592/592.mp3 (Mixkit #592)",
+    "licence": "Mixkit Free Music licence (free for commercial social use; not Content ID)",
+    "added": "2026-10-13"
+  },
+  "a-new-life": {
+    "file": "a-new-life.mp3",
+    "mood": [
+      "hopeful",
+      "strings",
+      "documentary"
+    ],
+    "source": "https://assets.mixkit.co/music/543/543.mp3 (Mixkit #543)",
+    "licence": "Mixkit Free Music licence (free for commercial social use; not Content ID)",
+    "added": "2026-10-13"
+  },
+  "forest-mist-whispers": {
+    "file": "forest-mist-whispers.mp3",
+    "mood": [
+      "hopeful",
+      "atmospheric",
+      "piano",
+      "documentary"
+    ],
+    "source": "https://assets.mixkit.co/music/148/148.mp3 (Mixkit #148)",
+    "licence": "Mixkit Free Music licence (free for commercial social use; not Content ID)",
+    "added": "2026-10-13"
+  },
+  "staring-at-the-night-sky": {
+    "file": "staring-at-the-night-sky.mp3",
+    "mood": [
+      "mysterious",
+      "atmospheric",
+      "cello",
+      "piano"
+    ],
+    "source": "https://assets.mixkit.co/music/168/168.mp3 (Mixkit #168)",
+    "licence": "Mixkit Free Music licence (free for commercial social use; not Content ID)",
+    "added": "2026-10-13"
+  },
+  "drawing-the-sky": {
+    "file": "drawing-the-sky.mp3",
+    "mood": [
+      "dramatic",
+      "cinematic"
+    ],
+    "source": "https://assets.mixkit.co/music/606/606.mp3 (Mixkit #606)",
+    "licence": "Mixkit Free Music licence (free for commercial social use; not Content ID)",
+    "added": "2026-10-13"
+  },
+  "sleepy-cat": {
+    "file": "sleepy-cat.mp3",
+    "mood": [
+      "atmospheric",
+      "city",
+      "night"
+    ],
+    "source": "https://assets.mixkit.co/music/135/135.mp3 (Mixkit #135)",
+    "licence": "Mixkit Free Music licence (free for commercial social use; not Content ID)",
+    "added": "2026-10-13"
+  },
+  "classical-7": {
+    "file": "classical-7.mp3",
+    "mood": [
+      "melancholic",
+      "piano",
+      "soft"
+    ],
+    "source": "https://assets.mixkit.co/music/714/714.mp3 (Mixkit #714)",
+    "licence": "Mixkit Free Music licence (free for commercial social use; not Content ID)",
+    "added": "2026-10-13"
+  },
+  "a-baby-story": {
+    "file": "a-baby-story.mp3",
+    "mood": [
+      "hopeful",
+      "relaxed",
+      "acoustic",
+      "lifestyle"
+    ],
+    "source": "https://assets.mixkit.co/music/530/530.mp3 (Mixkit #530)",
+    "licence": "Mixkit Free Music licence (free for commercial social use; not Content ID)",
+    "added": "2026-10-13"
+  },
+  "chillax": {
+    "file": "chillax.mp3",
+    "mood": [
+      "meditative",
+      "acoustic",
+      "relaxed"
+    ],
+    "source": "https://assets.mixkit.co/music/655/655.mp3 (Mixkit #655)",
+    "licence": "Mixkit Free Music licence (free for commercial social use; not Content ID)",
+    "added": "2026-10-13"
   }
 }

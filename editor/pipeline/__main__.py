@@ -152,6 +152,29 @@ def st_validate(ep, a):
     print("✅ الخطة سليمة")
 
 
+def st_autofix(ep, a):
+    """Mechanical plan mistakes are repaired by the code itself (autofix.py); judgement calls are only reported."""
+    from .autofix import repair
+    from .plan import save_plan
+    plan = load_plan(ep.plan)
+    fixes = repair(plan, _clean_duration(ep), ep.clean_words)
+    if fixes:
+        save_plan(plan, ep.plan)
+        print(f"🔧 صلّحت {len(fixes)} شي بالخطة لحالي:")
+        for f in fixes[:20]:
+            print("   ", f)
+
+
+def st_review(ep, a):
+    """The senior editor's review (review.py): score, what to fix first, where the time went."""
+    from .review import review, trend
+    r = review(ep)
+    print((ep.work / "review.txt").read_text(encoding="utf-8").rstrip())
+    t = trend()
+    if t:
+        print(f"📈 التطور: {t}")
+
+
 def st_images(ep, a):
     print("🖼️  أجيب صور مجانية من ويكيميديا…", flush=True)
     collect_images(load_plan(ep.plan), ep)
@@ -227,12 +250,12 @@ def st_deliver(ep, a):
 
 STAGES = {"fetch": [st_fetch], "entities": [st_entities], "transcribe": [st_transcribe], "clean": [st_clean],
           "brief": [st_brief], "validate": [st_validate], "ai-jobs": [st_ai_jobs], "ai-fetch": [st_ai_fetch],
-          "ai-log": [st_ai_log], "check": [st_check], "music-free": [st_music_free], "face-ref": [st_face_ref], "character-jobs": [st_character_jobs], "avatar-register": [st_avatar_register], "music-jobs": [st_music_jobs], "music-fetch": [st_music_fetch], "qa": [st_qa], "scene-check": [st_scene_check], "shorts": [st_shorts], "images": [st_images], "compose": [st_compose], "deliver": [st_deliver]}
+          "ai-log": [st_ai_log], "check": [st_check], "music-free": [st_music_free], "face-ref": [st_face_ref], "character-jobs": [st_character_jobs], "avatar-register": [st_avatar_register], "music-jobs": [st_music_jobs], "music-fetch": [st_music_fetch], "qa": [st_qa], "scene-check": [st_scene_check], "shorts": [st_shorts], "images": [st_images], "compose": [st_compose], "deliver": [st_deliver], "autofix": [st_autofix], "review": [st_review]}
 STAGES["get"] = STAGES["fetch"] + STAGES["check"]   # download, then show the owner what came
 STAGES["prep"] = STAGES["fetch"] + STAGES["entities"] + STAGES["transcribe"] + STAGES["clean"] + STAGES["brief"]
 # Real pictures and free music first; what is still missing after that becomes an AI job (owner's rule).
-STAGES["render"] = (STAGES["validate"] + STAGES["music-free"] + STAGES["images"] + STAGES["ai-jobs"] + STAGES["music-jobs"]
-                    + STAGES["compose"] + STAGES["qa"] + STAGES["deliver"])
+STAGES["render"] = (STAGES["autofix"] + STAGES["validate"] + STAGES["music-free"] + STAGES["images"] + STAGES["ai-jobs"] + STAGES["music-jobs"]
+                    + STAGES["compose"] + STAGES["qa"] + STAGES["review"] + STAGES["deliver"])
 
 
 def main(argv=None):
@@ -258,9 +281,17 @@ def main(argv=None):
     p.add_argument("--props", help="props المشهد بصيغة JSON (scene-check)")
     a = p.parse_args(argv)
     ep = Episode(a.episode).ensure()
+    import time
+    timings = ep.work / "timings.json"
     try:
         for fn in STAGES[a.stage]:
+            t0 = time.monotonic()
             fn(ep, a)
+            spent_s = time.monotonic() - t0
+            if spent_s > 1:   # where the time goes, for review.py and for making the slow stages faster
+                done = json.loads(timings.read_text(encoding="utf-8")) if timings.exists() else {}
+                done[fn.__name__.removeprefix("st_")] = round(spent_s, 1)
+                timings.write_text(json.dumps(done, ensure_ascii=False, indent=1), encoding="utf-8")
     except MediaError as exc:
         print("❌", exc)
         sys.exit(1)

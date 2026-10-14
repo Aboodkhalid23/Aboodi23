@@ -11,23 +11,20 @@ describe('public README evidence', () => {
   it('links only existing local preview assets', () => {
     const markdown = read('README.md').toString('utf8');
     const links = [...markdown.matchAll(/!\[[^\]]*\]\(([^)]+)\)/g)].map((match) => match[1]);
-    expect(links.length).toBeGreaterThanOrEqual(7);
+    expect(links.length).toBeGreaterThanOrEqual(4);
+    expect(markdown).not.toContain('docs/assets/previews/');
     for (const link of links) expect(existsSync(resolve(root, link))).toBe(true);
   });
 
   it('maps every preview to the verified output and matching file hash', () => {
-    const manifest = JSON.parse(read('examples/auto-editing-0/preview-manifest.json').toString('utf8'));
-    expect(manifest.output.sha256).toBe('60BE56C417FE63EF17F18874A4EE74318D001CD40D7A40BA3312488900B85443');
-    expect(new Set(manifest.frames.map((frame: {presentationMode: string}) => frame.presentationMode))).toEqual(new Set(['presenter-safe', 'opaque-full-screen']));
-    for (const frame of manifest.frames) {
-      const path = resolve(root, 'examples/auto-editing-0', frame.file);
+    const manifest = JSON.parse(read('examples/current-demo/preview-manifest.json').toString('utf8'));
+    expect(manifest.kind).toBe('synthetic-renderer-example');
+    expect(manifest.version).toBe(JSON.parse(read('package.json').toString('utf8')).version);
+    for (const frame of manifest.images) {
+      const path = resolve(root, frame.file);
       expect(existsSync(path)).toBe(true);
-      expect(sha256(readFileSync(path))).toBe(frame.sha256);
-      expect(frame.timeSeconds).toBeGreaterThanOrEqual(0);
-      expect(frame.timeSeconds).toBeLessThanOrEqual(manifest.output.durationSeconds);
+      expect(sha256(readFileSync(path))).toBe(frame.sha256.toUpperCase());
     }
-    const contactSheet = resolve(root, 'examples/auto-editing-0', manifest.contactSheet.file);
-    expect(sha256(readFileSync(contactSheet))).toBe(manifest.contactSheet.sha256);
   });
 
   it('keeps the approved business WeChat and QR code together at the end', () => {

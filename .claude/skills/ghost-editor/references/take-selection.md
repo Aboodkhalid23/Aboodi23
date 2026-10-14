@@ -40,6 +40,39 @@ them back to back in script order.
    rhythm.
 7. Lines never said do not appear, not as captions, not as cards. If the
    script had a joke the speaker did not deliver, say so in the handover.
+8. Glances are part of talking. Prefer the take with fewer real look-aways
+   (eyes off the lens or closed for more than 0.5 s, the head turned or bowed
+   more than 12 deg), but do not reject or hide a take for blinks, quick
+   glances or small nods: they stay on screen. `cover_windows.py` /
+   `plan_cut.py` label every off-lens window keep or cover. A cover window
+   gets the cheapest fix: trim it, punch to the tight shot, hold the current
+   graphic, a framed insert, full-screen stock last (references/broll.md 1).
+   One audited reel hid all 31 of its flagged windows behind B-roll and UI; 29 of
+   them were 0.03-0.4 s blips, and the speaker ended up on screen 33 % of the reel.
+
+## When whisper smears a long raw take (a 5:38 raw with 8 hidden restarts)
+
+On a long recording with many retakes, whisper over the whole file drifts: a word lasts 4-7 s, and
+restarts vanish into one clean sentence. Neither Gemini's attempt log (its timestamps drifted ~15 s
+by minute 4) nor the raw word table can be cut on. What worked:
+
+1. Speech islands: `vad_pauses.py <raw or denoised audio> --min-pause 0.35 --out build/islands.json` (silero-vad v6, in the
+   optional venv from `scripts/setup_audioqa.sh`). It works on the RAW camera audio too: on a 5:38 outdoor night take it
+   found 51 islands on the raw and 49 on the denoised voice, missed no speech (whisper-checked), and returned none of the
+   20-24 breath/cough/noise islands that `silencedetect -38 dB` produced on the denoised voice (whisper hallucinated
+   a stock closing phrase, "To be continued...", on every one). On the raw audio silencedetect -38 dB returned ONE island: the night noise
+   peaks sit above the threshold. `pauses[].kind == "sound"` marks a breath or click inside a pause. Without the venv:
+   `silencedetect=noise=-38dB:d=0.35` on the denoised voice, and expect false islands.
+2. Cut each island to its own wav (pad 0.1 s) and run whisper on all of them in ONE call (model loads once).
+   Each island's text says which attempt it is (complete, abandoned, a fragment).
+3. Islands that still look too long for their words, or a word lasting > 1 s: print a 10 ms RMS envelope
+   (`#` > -30 dB, `+` > -40, `.` below) and split at the 0.1-0.3 s dips; transcribe the pieces. A restart
+   ("but from the constant, but from the constant") shows up as a short first piece.
+4. Refine each chosen take to the voice: onset/offset where RMS > -37 dB (-30 clips soft first words),
+   `a` = onset - 0.07, `b` = offset + 0.12. A click before a line sits below -30 dB with a gap before the word.
+5. Re-transcribe the assembled cut for captions; audit it with Gemini 2.5 Pro (it caught a leftover
+   fragment and a mouth click), and check take tails in close-up frames: the eyes close right after
+   the last word, so end within ~0.1 s of it.
 
 ## Worked example (a fictional recording)
 

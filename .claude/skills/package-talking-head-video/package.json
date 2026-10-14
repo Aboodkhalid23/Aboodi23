@@ -1,9 +1,9 @@
 {
   "name": "ai-self-media-video-packaging-skill",
-  "version": "0.2.0",
+  "version": "0.6.0",
   "private": true,
   "type": "module",
-  "description": "An Agent Skill for packaging talking-head videos with Remotion, HyperFrames, evidence cards, and programmatic line illustrations.",
+  "description": "An Agent Skill for packaging talking-head videos with three basic Remotion layouts, source captions, and verified delivery.",
   "license": "MIT",
   "engines": {
     "node": ">=20"
@@ -19,7 +19,8 @@
     "example:auto-editing-0": "tsx scripts/package-video.ts --video examples/auto-editing-0/private-input/input.mp4 --srt examples/auto-editing-0/private-input/input.srt --out examples/auto-editing-0/run-v2 --renderer remotion --captions burned-in",
     "checksums": "node scripts/generate-checksums.mjs",
     "verify:public": "node scripts/verify-public-repo.mjs",
-    "verify:all": "npm test && npm run typecheck && npm run build && npm run verify:public"
+    "verify:all": "npm test && npm run typecheck && npm run build && npm run verify:public",
+    "verify:lite": "tsx scripts/verify-public-lite.ts"
   },
   "dependencies": {
     "@remotion/bundler": "4.0.507",
@@ -37,6 +38,6 @@
     "@types/react-dom": "19.2.3",
     "tsx": "4.23.11",
     "typescript": "5.9.3",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   }
 }

@@ -4,10 +4,11 @@ import {StoryboardSchema, type Storyboard, type StoryboardBeat} from './schema';
 import {chooseDirectorRole, chooseIllustration, classifySemanticStructure, motionsForStructure} from './semantic-rules';
 import type {SemanticStructure} from './template-contracts';
 import type {MediaProbe, SrtCue} from './types';
+import {planPublicLite} from './public-lite';
 
 type PlannerEvidence = {src: string; label: string; sourceUrl?: string};
 
-type PlannerInput = {
+export type PlannerInput = {
   id: string;
   title: string;
   cues: SrtCue[];
@@ -16,6 +17,11 @@ type PlannerInput = {
   sourceVideo: string;
   sourceSrt?: string;
   evidenceByCue?: Record<number, PlannerEvidence>;
+  edition?: 'public-lite';
+  publicStyle?: 'dark' | 'paper';
+  liteCamera?: boolean;
+  litePresenter?: boolean;
+  liteDirectionByCue?: Record<number, NonNullable<StoryboardBeat['liteDirection']>>;
 };
 
 const overlayText = (text: string): string => {
@@ -131,6 +137,7 @@ const splitLongVisualCue = (cue: SrtCue): SrtCue[] => {
 
 export const planStoryboard = (input: PlannerInput): Storyboard => {
   if (input.cues.length === 0) throw new Error('At least one SRT cue is required');
+  if (input.edition === 'public-lite') return planPublicLite(input);
   const beats: StoryboardBeat[] = [];
   let lastSide: 'left' | 'right' = 'right';
   mergeVisualCues(input.cues).flatMap(splitLongVisualCue).forEach((cue, index) => {

@@ -11,7 +11,9 @@
 #
 # A portrait phone file is a landscape HEVC stream with a rotation tag;
 # ffmpeg rotates before the filter graph, so the target is 1080:1920. A
-# landscape source is centre-cropped to 9:16.
+# landscape source is centre-cropped to 9:16. An HDR source (iPhone HLG / PQ, BT.2020) is tone-mapped to SDR BT.709
+# first (grade_lib.py sdr-vf: a LUT, since this ffmpeg has no zscale): one HDR plate would make the whole HyperFrames
+# render HDR. Keyframes every 1 s (-g 30): HyperFrames seeks every plate on every frame.
 set -euo pipefail
 [ "$#" -eq 2 ] || { echo "usage: prep.sh <recording> <project-dir>" >&2; exit 2; }
 src="$1"; proj="$2"; out="$proj/assets/talk.mp4"
@@ -24,6 +26,16 @@ echo "source ${w}x${h} (rotation ${rot:-none}), $(ffprobe -v error -show_entries
 if [ "$w" -lt "$h" ]; then vf="scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30"
 else vf="crop=ih*9/16:ih,scale=1080:1920,fps=30"; echo "landscape source: centre-cropping to 9:16"; fi
 
+HERE="$(cd "$(dirname "$0")" && pwd)"
+tr=$(ffprobe -v error -select_streams v:0 -show_entries stream=color_transfer -of csv=p=0 "$src" | head -1 | tr -d ',')
+if [ "$tr" = "arib-std-b67" ] || [ "$tr" = "smpte2084" ]; then
+  PY=python3; $PY -c "import numpy" 2>/dev/null || PY="$HOME/.venvs/media/bin/python"
+  "$PY" -c "import numpy" 2>/dev/null || { echo "HDR source ($tr): tone-mapping needs python with numpy (set PATH or ~/.venvs/media)" >&2; exit 1; }
+  mkdir -p "$proj/build"
+  vf="$("$PY" "$HERE/grade_lib.py" sdr-vf "$src" "$proj/build/sdr.cube"),$vf"
+  echo "HDR source ($tr): tone-mapped to SDR BT.709 (build/sdr.cube)"
+fi
+
 echo "== measuring voice loudness"
 stats=$(ffmpeg -hide_banner -nostats -i "$src" -vn -af loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json -f null - 2>&1 | sed -n '/^{/,/^}/p')
 g() { echo "$stats" | python3 -c "import json,sys;print(json.load(sys.stdin)['$1'])"; }
@@ -32,7 +44,8 @@ af="loudnorm=I=-16:TP=-1.5:LRA=11:measured_I=$(g input_i):measured_TP=$(g input_
 
 enc=(-c:v h264_videotoolbox -b:v 14M)
 ffmpeg -hide_banner -encoders 2>/dev/null | grep -q h264_videotoolbox || enc=(-c:v libx264 -crf 17 -preset fast)
-ffmpeg -v error -y -i "$src" -vf "$vf" "${enc[@]}" -pix_fmt yuv420p -g 30 \
+ffmpeg -v error -y -i "$src" -vf "$vf" "${enc[@]}" -pix_fmt yuv420p -g 30 -keyint_min 30 \
+  -colorspace bt709 -color_primaries bt709 -color_trc bt709 -color_range tv \
   -af "$af" -c:a aac -b:a 192k -ac 2 -movflags +faststart "$out"
 echo "-> $out"
 ffprobe -v error -show_entries stream=codec_name,width,height,r_frame_rate -of csv=p=0 "$out"

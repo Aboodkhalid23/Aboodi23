@@ -1,71 +1,77 @@
 # AI Self-Media Video Packaging Skill
 
-一套可直接调用的 Agent Skill：把人物居中的横屏真人口播视频与 SRT 转成有节奏、有证据边界、可复现的视频包装工程。默认使用 Remotion 生成真实成片，也可以从同一份 storyboard 生成 HyperFrames 项目。
+**把口播视频和字幕交给 AI，让它帮你完成画面包装。**
 
-它不是“随便套几个字幕卡”的模板集合。完整流程会先检查源视频、逐条解析 SRT、生成 Gate A 审核稿，获得明确批准后才进入视觉实现和渲染；最后还会检查真实成片，而不是用成功构建或静态页面代替交付证据。
+这是我创建的一套 AI 口播视频包装 Skill，适合知识分享、AI 工具介绍和教程讲解。它会根据你说的内容，设计标题、重点信息、流程图和简笔画，让人物画面与辅助信息配合出现，而不只是给视频加一层字幕。
 
-## 真实调用效果
+你不需要自己写代码或逐个调整动画：在 Codex 或支持本地文件、终端操作的 AI Agent 里安装好项目，把 **MP4 视频和对应的 SRT 字幕**交给它，用大白话描述需求即可。AI 先给你看方案，确认后再制作、检查和导出。
 
-下面所有画面都直接抽取自同一次真实 Skill 调用生成的最终 MP4。案例使用 49.273 秒、1920×1080 的口播源片与 21 条 SRT；导演方案实际生成 22 个视觉节拍，使用 6 套配色与 8 种语义结构，最长状态 3.2 秒。Remotion 输出为 49.323 秒、H.264/AAC，输出 SHA-256 为 `60BE56C417FE63EF17F18874A4EE74318D001CD40D7A40BA3312488900B85443`。
+## 能帮你做什么
 
-![真实调用八帧总览](docs/assets/previews/auto-editing-0-contact-sheet.jpg)
+- **突出重点**：把口播里的关键词、要点和流程变成清楚的画面信息。
+- **丰富画面**：搭配人物窗口收放、适度推近，以及帮助理解内容的简笔画和动效。
+- **统一风格**：选择深色或浅色，让配色、文字和图形保持一致。
+- **交付成片**：按确认的方案输出带包装的 MP4，并检查字幕、遮挡和文件完整性。
 
-| 论点与证据 | 双侧编辑轨 | 文字指标 |
-|---|---|---|
-| ![论点与证据](docs/assets/previews/auto-editing-0-01-thesis-and-proof-1.920s.png) | ![双侧编辑轨](docs/assets/previews/auto-editing-0-02-editorial-dual-rail-4.269s.png) | ![保留口语数值的指标结构](docs/assets/previews/auto-editing-0-03-metric-odometer-6.403s.png) |
+保留你的视频、原声和完整字幕，把重点讲得更清楚。动效是为内容服务，不是每句话都塞一个特效。
 
-| 命令面板 | 语义简笔画 | 前后对比 |
-|---|---|---|
-| ![命令面板](docs/assets/previews/auto-editing-0-04-command-palette-10.546s.png) | ![人物推石上坡的语义简笔画](docs/assets/previews/auto-editing-0-05-semantic-doodle-15.606s.png) | ![前后对比](docs/assets/previews/auto-editing-0-06-before-after-scrub-19.564s.png) |
+## 怎么用：复制两段话就可以开始
 
-| 四阶段流程 | 信号路径 |
-|---|---|
-| ![四阶段流程](docs/assets/previews/auto-editing-0-07-four-stage-pipeline-21.501s.png) | ![全屏信号路径](docs/assets/previews/auto-editing-0-08-signal-route-26.980s.png) |
+### 1. 让 AI 帮你安装
 
-这组预览不是设计稿。完整证据链包括：[真实调用命令](examples/auto-editing-0/invocation.txt)、[输入哈希与参数](examples/auto-editing-0/input-manifest.json)、[完整分镜](examples/auto-editing-0/storyboard.json)、[逐帧哈希与时间码](examples/auto-editing-0/preview-manifest.json)及[成片验收记录](examples/auto-editing-0/QA_REPORT.md)。原始视频和 SRT 不随仓库分发。
+在 Codex 或其他具备本地执行能力的 AI Agent 中，新建一个对话，复制下面这段话：
 
-## 你会得到什么
+```text
+请帮我安装并配置这个 AI 口播视频包装 Skill：
+https://github.com/zhouyuechuan2025-ui/ai-self-media-video-packaging-skill
 
-- 依据 SRT 语义自动规划的视觉节拍，普通片段优先控制在 1.6–3.2 秒，硬上限 6 秒。
-- 10 种语义视觉结构、6 组语义配色、10 种 seek-safe 动效原语、6 类程序化 SVG 简笔画。
-- 三种清晰的字幕模式：原视频已经带有字幕（字幕已固定在画面中）；原视频没有字幕，希望 Skill 自动生成字幕；原视频没有字幕，并且只需要动效、不需要字幕。这样可以避免重复字幕。
-- 证据卡、个人经验、估算和客观事实的边界控制。
-- Remotion 默认渲染，以及可选的 HyperFrames 项目生成。
-- 输入哈希、媒体探测、storyboard、截图、输出 manifest、完整解码等验收证据。
+先读取仓库的 README.md 和 SKILL.md，再按当前 Agent 的方式安装。
+保留完整项目，不要只复制 SKILL.md；检查并准备项目所需依赖。
+不要覆盖我已有的同名项目或 Skill，遇到冲突先告诉我。
+完成后检查是否能调用，并告诉我接下来把视频和字幕放在哪里。
+```
 
-## 视觉与动画能力
+第一次需要准备运行环境，后面可以复用。同一段安装提示词不代表所有 Agent 都已测试兼容；仅能聊天、不能读取本地文件或运行命令的工具无法直接制作视频。
 
-### 10 种语义视觉结构
+### 2. 把 MP4 和 SRT 交给它
 
-`editorial-dual-rail`、`thesis-and-proof`、`bidirectional-flow`、`command-palette`、`four-stage-pipeline`、`before-after-scrub`、`evidence-panel`、`metric-odometer`、`signal-route`、`semantic-doodle`。
+把文件添加到对话，或告诉 AI 它们在电脑里的位置，再发：
 
-结构选择由口播逻辑、人物安全区和证据状态共同决定，不为了凑变化而随机套用。详见 [视觉结构说明](references/visual-structures.md)。
+```text
+请用刚安装的口播视频包装 Skill，处理我提供的 MP4 和对应 SRT。
+先理解文稿，按内容安排标题、重点信息和必要的简笔画。
+整体风格简洁、有设计感，不遮挡人物和字幕，保留原声，不改写原意。
+先给我看包装方案，等我确认后再制作预览；最终导出前再让我确认。
+最终需要一个带包装的 MP4，不要覆盖我的原视频。
+```
 
-### 真人居中安全排版
+你也可以补充一句：“用浅色风格”“这段重点展示流程”或“动效少一点，优先保证看得清楚”。不满意的地方直接在对话里提出，继续调整即可。
 
-- 人物默认位于画面中间，中央约 35%–65% 保持透明。
-- 普通信息进入左侧 6%–32% 或右侧 68%–94%，左右交替出现。
-- 底部 18% 预留给原视频中已经固定在画面里的字幕。
-- 每个镜头只能二选一：人物安全模式，或100%不透明全屏模式。任何卡片、路径、插画或光效需要进入人物中心区时，必须切换为完整全屏，禁止半透明压脸。
-- 左右信息卡按内容自适应高度，不用固定通栏高度填充空白；只有两组真实互补信息才使用双侧卡。
-- 开头钩子、章节转场、证据和结尾收束可短暂使用100%不透明全屏，普通全屏镜头约 1–2 秒。
-- 冲击问题、渐变关键词、信号路径、编辑印章、完成检查轨与纸张简笔画分别使用不同版式和语义配色，不是同一张卡片随机换色。
+**交素材 → 确认方案 → 看预览并修改 → 确认导出。** 不需要普通用户手动输入下面的命令。
 
-### 10 种 seek-safe 动效原语
+## 前期素材准备
 
-`hit`、`slide`、`lift`、`stamp`、`route`、`trace`、`count`、`reveal`、`relay`、`focus`。
+先剪好原片与对应字幕。本 Skill 负责画面包装，**不处理重读、漏读和气口**，不重排讲解，不追加原稿没有的数字、操作步骤或结论。目前支持 **16:9 横屏**，竖屏暂不支持。
 
-所有动画都由当前帧、fps、起始帧和持续时间计算；相同帧永远得到相同状态，支持任意 seek 和逐帧渲染。
+- **视频 + SRT**：默认推荐，直接合成 MP4，检查真人位置与字幕。
+- **只提供 SRT**：按明确的画布尺寸生成透明 MOV，不能据此判断真实人物是否被挡。
 
-### 6 类程序化简笔画
+字幕模式：
 
-`information-overload`、`climb-boulder`、`workstation-balance`、`paper-plane-route`、`route-activation`、`before-after-illustration`。
+- 原视频已经带有字幕（字幕已固定在画面中）：`--captions burned-in`。
+- 原视频没有字幕，希望 Skill 自动生成字幕：`--captions generated`。
+- 原视频没有字幕，并且只需要动效、不需要字幕：`--captions none`。
 
-简笔画用于解释信息过载、困难推进、权衡、速度路径、流程激活和前后变化。SVG 线条显式使用 `fill="none"`，不会把解释性插画伪装成事实证据。详见 [动效与简笔画说明](references/motion-and-illustration.md)。
+启用真人轻推近时，原视频底部字幕会由当前SRT重绘，保证内容完整，不叠两层字幕。若SRT与原声不同步，先修复输入。
 
-## 安装
+## 给 AI Agent 和开发者的技术说明
 
-环境要求：Node.js 20+、FFmpeg 与 ffprobe 可用。
+普通用户读到这里就可以开始使用了。以下是手动安装、命令和检查细节，供 AI Agent 或开发者参考。
+
+<details>
+<summary>展开手动安装与运行命令</summary>
+
+需要Node.js 20+、FFmpeg和ffprobe。当前支持16:9横屏输入，透明输出也使用16:9画布。
 
 ```bash
 git clone https://github.com/zhouyuechuan2025-ui/ai-self-media-video-packaging-skill.git
@@ -73,166 +79,82 @@ cd ai-self-media-video-packaging-skill
 npm ci
 ```
 
-作为 Agent Skill 使用时，把整个仓库目录复制或链接到 Agent 的 Skills 目录。入口文件是 [SKILL.md](SKILL.md)，推荐触发语句：
-
-> 使用 package-talking-head-video 检查这段 MP4 和 SRT，先生成 Gate A，未经我批准不要渲染。
-
-## 前期素材准备
-
-### 1. 先准备剪辑完成的真人口播视频
-
-这个 Skill 负责的是**画面包装**，不处理重读、漏读和气口，也不负责修正口误、长停顿、错误镜头或其他基础剪辑问题。输入视频必须是顺序、声音和时长已经确定的完整成片。
-
-推荐使用人物位于画面中间的 16:9 横屏素材。原视频如果已经带有字幕，而且字幕已经固定在画面中，后续应使用 `--captions burned-in`，避免再生成一层重复字幕。
-
-如果源片没有字幕：希望最终包装包含字幕时改用 `--captions generated`；只要动效、不需要字幕时使用 `--captions none`。
-
-### 2. 导出与成片完全对应的 SRT
-
-在剪辑或字幕工具中完成字幕识别、校对和时间轴对齐，导出视频时同时勾选并导出 UTF-8 编码的 `.srt` 文件。视频如果又发生删改，必须重新导出 SRT；旧时间码不能继续使用。
-
-SRT 是动效导演的核心输入。Skill 会读取全部字幕，根据每段口播的语义、时间码和事实属性匹配侧卡、流程、对比、数字、证据或简笔画结构，而不是简单地把字幕换一种颜色显示。
-
-## 在 Codex 中怎么使用
-
-是的，标准流程就是把**视频 + SRT** 一起提供给 Codex，并明确要求调用 `package-talking-head-video`。可以直接这样说：
-
-> 请调用 package-talking-head-video。输入是 `input.mp4` 和 `input.srt`，人物在画面中间，源视频已经剪辑完成，字幕也已经固定在画面中。先分析全部 SRT 并输出 Gate A 包装方案，确认后再制作。最终使用 composite 模式直接输出包装完成的 MP4。
-
-Codex 不会收到文件后立刻盲目导出。Skill 先生成 Gate A 方案，列出动效时间码、视觉结构、配色、人物与字幕安全区、简笔画和事实风险；方案确认后才进入实现、可视验收和最终导出。
-
-## 两种输出与包装方式
-
-| 方式 | 用户提供 | 最终输出 | 适合谁 |
-|---|---|---|---|
-| **方案一：透明叠加层** | 至少提供 SRT，并指定画布宽高和帧率 | 无音轨、带 Alpha 通道的 ProRes 4444 `overlay.mov` | 已经固定拍摄机位和工程规格、希望在剪映/Premiere/Final Cut 中自行叠加的人 |
-| **方案二：直接合成（默认推荐）** | 同时提供剪辑完成的视频和对应 SRT | 已经叠加动效的 H.264/AAC `packaged.mp4` | 大多数第一次使用者、希望减少操作并进行真实人物/字幕遮挡检查的人 |
-
-### 我的推荐
-
-**保留两种方案让用户选择，但默认推荐方案二。** 原因是视频 + SRT 能让 Skill 根据真实分辨率、帧率、人物位置，以及原视频中已经固定的字幕位置完成可视质检，并直接交付成片，出错环节最少。
-
-方案一更适合进阶工作流。只提供 SRT 时，Skill 无法看到真实人物位置、字幕高度和原片构图，只能按默认的中央人物安全区制作；因此必须额外确认 `--width`、`--height` 和 `--fps`。默认值为 `1920×1080 / 30fps`。如果原片机位不固定，建议仍把视频作为参考输入，或直接选择方案二。
-
-### 方案一：只提供 SRT，输出透明 MOV
-
-先生成方案：
+四步逐级审核；下列命令的输入与风格必须保持一致：
 
 ```bash
-npm run package-video -- --srt ./input.srt --out ./run-overlay --renderer remotion --captions burned-in --output-mode overlay --width 1920 --height 1080 --fps 30
+# Gate A：只写方案
+npm run package-video -- --video INPUT.mp4 --srt INPUT.srt --out RUN --output-mode composite --captions burned-in --style dark
+# Gate B：制作工程输入
+npm run package-video -- --video INPUT.mp4 --srt INPUT.srt --out RUN --output-mode composite --captions burned-in --style dark --approve-gate-a --approve-gate-b
+# Gate C：8个时间轴抽帧，人工检查，不导出最终视频
+npm run package-video -- --video INPUT.mp4 --srt INPUT.srt --out RUN --output-mode composite --captions burned-in --style dark --approve-gate-a --approve-gate-b --approve-gate-c
+# Gate D：完整MP4与验收记录
+npm run package-video -- --video INPUT.mp4 --srt INPUT.srt --out RUN --output-mode composite --captions burned-in --style dark --approve-gate-a --approve-gate-b --approve-gate-c --approve-gate-d --render
+# 透明MOV，画布需与目标工程一致
+npm run package-video -- --srt INPUT.srt --out RUN --output-mode overlay --width 1920 --height 1080 --fps 30
 ```
 
-全部 Gate 获批后导出：
+所有阶段可用 `--style paper`。合成MP4默认使用 `--presenter-layout single`，人物以唯一连续视频参与构图；`--presenter-layout original`保留原有侧卡方式。需要全幅画面的轻推近时，添加 `--presenter-motion subtle`，默认 `off`。透明输出只支持 `original`，不包含真人原片。当前工作流使用Remotion；HyperFrames适配器用于维护已有V2工程。
 
-```bash
-npm run package-video -- --srt ./input.srt --out ./run-overlay --renderer remotion --captions burned-in --output-mode overlay --width 1920 --height 1080 --fps 30 --approve-gate-a --approve-gate-b --approve-gate-c --approve-gate-d --render
-```
+Agent应先逐句分析语义，并用 `--direction DIRECTION.json` 提炼原句关键词与构图意图。该文件按SRT序号指定 `mode`、`lines`、可选 `eyebrow` 和 `highlight`，每个上屏词必须原样出现在对应原句中。它只描述展示方式，不改字幕、原声或源视频。示例见 [direction.json](examples/current-demo/direction.json)。所有审核阶段保持相同输入和参数。
 
-输出文件为 `run-overlay/renders/overlay.mov`。将它放在原口播视频上方同一起点叠加，不要改变速度、入点、出点或画布尺寸。导出会检查 ProRes 编码、Alpha 像素格式、真实透明度变化、无音轨、完整解码、时长、尺寸、帧率和 SHA-256。
+需要简笔画时，在相应方向条目中加入 `"doodle": {"type": "phone-mirror", "label": "屏幕镜像"}`。标签必须取自该句原稿；图形是概念示意，不是真实设备操作或截图。当前简笔画用于单窗合成MP4，图形区与文字、人物和字幕分开。支持的类型见 [功能与限制](references/public-lite.md)。
 
-上面的示例假定原视频已经带有字幕，而且字幕已固定在画面中，所以命令使用 `burned-in`。如果原视频没有字幕，并希望透明 MOV 包含可见字幕，把两条命令里的字幕参数改成 `--captions generated`。
+v0.6细化了动效与排版：每页先建立构图，再揭示重点，描线后给出一次流动提示，随后保持阅读停留。辅助色按语义分工，不逐句随机换色。真人原色与唯一原声保持不变。
 
-### 方案二：视频 + SRT，直接合成 MP4
+</details>
 
-```bash
-npm run package-video -- --video ./input.mp4 --srt ./input.srt --out ./run-composite --renderer remotion --captions burned-in --output-mode composite --approve-gate-a --approve-gate-b --approve-gate-c --approve-gate-d --render
-```
+## 检查与限制
 
-输出文件为 `run-composite/renders/packaged.mp4`，里面已经包含原口播画面、原声音和动效包装。
-
-## 最短使用流程
-
-### 硬规则：先出方案，确认后再实施
-
-每个视频都必须先执行不渲染的 Gate A，把源文件参数、SRT 节拍、视觉结构、语义配色、左右排版、全屏时机、事实风险、字幕模式和安全区方案交给用户确认。只有当前这个视频收到明确批准，才能进入视觉实现；沉默、催进度、其他视频的批准或笼统授权都不能代替本次确认。
-
-### 1. 只做 Gate A，不渲染
-
-```bash
-npm run package-video -- --video ./input.mp4 --srt ./input.srt --out ./run --renderer remotion --captions burned-in --output-mode composite
-```
-
-会生成 `BRIEF.md`、`SOURCE_PROBE.json`、`STORYBOARD.md`、`storyboard.json` 和 `input-manifest.json`。
-
-### 2. Gate A 获批后完成 Gate B 视觉实现
-
-```bash
-npm run package-video -- --video ./input.mp4 --srt ./input.srt --out ./run --renderer remotion --captions burned-in --output-mode composite --approve-gate-a --approve-gate-b
-```
-
-此阶段生成可复核的视觉实现，不导出最终成片。程序会在 HEVC 等浏览器不兼容输入时创建不改时序的 H.264/AAC 制作代理。
-
-### 3. Gate C 可视验收
-
-```bash
-npm run package-video -- --video ./input.mp4 --srt ./input.srt --out ./run --renderer remotion --captions burned-in --output-mode composite --approve-gate-a --approve-gate-b --approve-gate-c
-```
-
-检查实际时间轴、人物安全区、字幕安全区、语义准确性、配色与结构差异，再决定是否导出。
-
-### 4. Gate D 获批后生成 Remotion 成片
-
-```bash
-npm run package-video -- --video ./input.mp4 --srt ./input.srt --out ./run --renderer remotion --captions burned-in --output-mode composite --approve-gate-a --approve-gate-b --approve-gate-c --approve-gate-d --render
-```
-
-程序生成最终 MP4、代表帧和 `RENDER_MANIFEST.json`，并执行 ffprobe、完整解码与黑帧扫描。
-
-### 5. 可选：生成 HyperFrames 项目
-
-```bash
-npm run package-video -- --video ./input.mp4 --srt ./input.srt --out ./run --renderer hyperframes --captions burned-in --approve-gate-a --approve-gate-b
-npx hyperframes@0.7.99 lint ./run/hyperframes
-npx hyperframes@0.7.99 check ./run/hyperframes --snapshots
-```
-
-Remotion 与 HyperFrames 共享同一份 schema 和 storyboard，避免两套规则互相漂移。更完整的参数与字幕模式见 [使用说明](docs/USAGE.md)，案例见 [案例说明](docs/EXAMPLES.md)，异常处理见 [排障说明](docs/TROUBLESHOOTING.md)。
-
-## 质量门禁
-
-1. **Gate A — 分析与方案：** 探测媒体、计算哈希、解析全部 SRT、检查事实边界、生成分镜；禁止渲染。
-2. **Gate B — 视觉实现：** 获批后实现视觉结构、动效和必要插画；不把画廊截图当成结果。
-3. **Gate C — 可交互验收：** 检查实际时间轴、任意 seek、人物与字幕安全区、证据可读性。
-4. **Gate D — 导出验收：** 获得明确导出授权后渲染，并用 ffprobe、完整解码和代表帧验证最终文件。
-
-Gate C 的代表帧固定抽取在对应节拍的 72% 稳定位置，并逐张人工检查人物遮挡、卡片空白、内容重叠、可读性、语义匹配和字幕安全区；任何一项失败都禁止进入 Gate D。完整规则见 [视觉质检门禁](references/visual-quality-gates.md)。
-
-## 事实与安全原则
-
-- 不发明百分比、用户评价、平台能力、Logo 或产品成绩。
-- 估算和个人实测必须保留归属，不能改写成普遍事实。
-- 证据卡必须有真实素材；插画和通用图标不能充当证据。
-- 默认保留原片剪辑、声音，以及原视频中已经固定在画面里的字幕。
-- 仓库发布前扫描密钥、本地绝对路径、源媒体、大文件和未完成标记。
-- README 截图必须来自同一个可验证的真实成片输出。
-
-## 开发与验证
+<details>
+<summary>展开交付检查与技术边界</summary>
 
 ```bash
 npm test
 npm run typecheck
 npm run build
 npm run verify:public
-npm audit --omit=dev
 ```
 
-仓库使用 MIT License。Remotion 另有自身许可与商业使用条款；HyperFrames 可选适配器受其上游许可约束。使用第三方人物、商标、视频、图片与字体前，请自行确认授权。
+检查源文件哈希、文字与脸部安全区、字幕、首尾和转场、完整解码、黑帧与输出哈希。抽帧、构建成功和解码通过都不能替代完整播放或用户验收。
 
-## 关于作者与下一步
+居中人物使用左右安全区，底部18%预留字幕；单窗模式裁掉源字幕区域并从SRT完整重绘一次，文字与人物分栏。原始构图模式的全屏标题与流程使用不透明底色。三种语义版式不需要凑八种结构，长片也应按语义编排。两套风格逐片统一，标题取原稿关键词，超长句保留完整字幕。
 
-当然，做出好视频并不等于能变现赚钱。
+详细规则：[功能与限制](references/public-lite.md)、[审核阶段](references/gates.md)、[画面检查](references/visual-quality-gates.md)。
 
-如果你已经跑出第一条小样，下一步不是继续囤 Skill，而是确定你要用它做什么事情。
+</details>
 
-普通人在AI时代能够干什么赚钱？其实无非就这几个方向：用AI做内容、用AI做产品、用AI做服务。
+## 当前示例：三版式与两种配色
 
-其中做内容，并且是做自媒体内容，是门槛最低、见效最快、正反馈最快的赛道。我本人以及我身边带的几个学员，都在这个赛道拿到了不错的反馈。
+以下截图由本项目当前渲染器生成，使用可复现的合成测试画面与示例文案，不是真人口播案例，也不作为外部事实的证据。
 
-从平台数据来看，这个体感更加明显。无数大大小小的AI品牌方需要找AI博主做推广，但是目前能够持续产出优质AI内容的创作者还相对少。所以，你不是在追赶一个已饱和的赛道，而是在一个快速上升的赛道占位置。
+![开场标题](docs/assets/current-demo/title.png)
 
-我们在做的，就是这样的事情。
-针对不同人群的不同需求，我们已设计开发两个课程产品，预计8月14日开售。
-不仅会教给你完整的AI自媒体快速起号方法、避坑指南，还能给到独家内部商单派单资源。
+![侧边信息卡](docs/assets/current-demo/card.png)
+
+![原稿条目展示](docs/assets/current-demo/flow.png)
+
+![paper浅色风格](docs/assets/current-demo/paper.png)
+
+示例字幕与生成方法见 [示例目录](examples/current-demo/README.md)。
+
+## 当前简笔画示例
+
+![手机与电脑镜像简笔画示意](docs/assets/current-demo/doodle.png)
+
+此图由当前代码与示例文案生成。首页不再使用旧V2案例截图；真人素材与试看片留在本地，上面的公开示例明确使用合成画面。
+
+## 视频做好了，生意才刚开始
+
+我是 nana，正在做 AI 自媒体和 AI 企业服务。我的抖音账号两个月涨粉 3.4 万，累计变现六位数。这套 Skill 来自我自己的内容创作实践，是帮助我提高视频制作效率的工具。
+
+但视频包装出来了，不代表账号就能做起来，更不代表能持续赚钱。AI 能帮你提效，最终还是要回到业务本身：你服务谁、帮他们解决什么问题，怎样通过内容建立信任，以及后面用什么产品和服务承接需求。我的账号增长和变现，也不能简单归因于一个工具或一套 Skill。
+
+如果你想继续学习，我这边有两个产品：
+
+- **199 元域新AI社群终生会员**：适合想从0-1学习 AI、了解实际应用的人。内容包括基础 AI 知识，以及不同 AI 项目的分析、经验和应用分享。
+- **AI 自媒体真人商业 IP 全年陪跑服务（1v1）**：适合想把 AI 自媒体做成一门业务的人。围绕你的背景和资源，从账号定位、起号与内容创作，到引流、个人 IP 建设，再到后端产品设计与商业体系搭建，提供一对一指导，帮你把这些环节串起来。
+
 感兴趣的朋友欢迎咨询业务微信：nanaya093
 
 <img src="docs/assets/contact/nana-wechat-qr.jpg" alt="Nana 业务微信二维码" width="320">

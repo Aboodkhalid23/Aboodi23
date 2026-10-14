@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
 """Tighten a single clean take: cut the pauses, keep every word.
 
-    autocut.py <project>/assets/talk.mp4 [--noise -35] [--min 0.28] [--keep 0.10] [--from 0] [--to END]
+    autocut.py <project>/assets/talk.mp4 [--noise -35] [--min 0.28] [--keep 0.10] [--from 0] [--to END] [--vad]
 
 For a recording that is already one good take (no retakes to choose), the
 edit is mostly pause removal. Whisper stretches words over the pauses, so the
 pauses come from the AUDIO: silencedetect at --noise dB, silences longer than
 --min seconds are removed except --keep seconds on each side (the breath that
 keeps it natural). Prints a "takes" array for reel.json and the new length.
+
+--vad finds the pauses with silero-vad (scripts/vad_pauses.py, optional venv from scripts/setup_audioqa.sh) instead of a
+dB threshold: noise above the threshold (crickets, wind, traffic) no longer glues the recording into one island, and a
+soft first word is not clipped. --min is then the shortest pause that gets cut (0.35 recommended), --keep the lead/tail.
 """
+import os
 import argparse
 import json
 import re
@@ -23,7 +28,24 @@ def main():
     ap.add_argument("--keep", type=float, default=0.10)
     ap.add_argument("--from", dest="t0", type=float, default=0.0)
     ap.add_argument("--to", dest="t1", type=float, default=None)
+    ap.add_argument("--vad", action="store_true", help="speech islands from silero-vad (noise-robust) instead of silencedetect --noise")
     a = ap.parse_args()
+    if a.vad:
+        here = os.path.dirname(os.path.abspath(__file__))
+        py = os.path.join(os.environ.get("AUDIOQA_VENV", os.path.expanduser("~/.venvs/ghost-audioqa")), "bin", "python")
+        if not os.path.exists(py):
+            raise SystemExit(f"--vad needs the audio QA venv: bash {os.path.join(here, 'setup_audioqa.sh')}")
+        cmd = [py, os.path.join(here, "vad_pauses.py"), a.src, "--min-pause", str(a.min), "--lead", str(a.keep), "--tail", str(a.keep)]
+        if a.t0:
+            cmd += ["--ss", str(a.t0)]
+        if a.t1:
+            cmd += ["--t", str(a.t1 - a.t0)]
+        res = json.loads(subprocess.run(cmd, capture_output=True, text=True, check=True).stdout)
+        takes = [{"a": round(t["a"], 2), "b": round(t["b"], 2)} for t in res["takes"]]
+        kept = sum(t["b"] - t["a"] for t in takes)
+        print(json.dumps(takes))
+        print(f"\n{len(takes)} takes (silero-vad), {kept:.2f}s kept of {res.get('duration', kept):.2f}s")
+        return
     dur = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", a.src],
                                capture_output=True, text=True).stdout)
     t1 = a.t1 or dur

@@ -1,0 +1,5 @@
+{
+  "1": {"mode": "hero", "lines": ["手机与电脑", "屏幕镜像"], "highlight": 1, "doodle": {"type": "phone-mirror", "label": "屏幕镜像"}},
+  "2": {"mode": "split", "lines": ["重点", "侧边信息卡"], "highlight": 1, "doodle": {"type": "notes", "label": "信息卡"}},
+  "3": {"mode": "process", "lines": ["先给结论", "再给依据", "最后给建议"], "highlight": 2, "doodle": {"type": "route-activation", "label": "结论"}}
+}

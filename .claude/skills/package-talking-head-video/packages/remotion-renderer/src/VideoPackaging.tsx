@@ -6,6 +6,7 @@ import {PALETTES} from '../../core/src/palettes';
 import type {SrtCue} from '../../core/src/types';
 import {illustrationRegistry} from './illustrations';
 import {structureRegistry} from './structures';
+import {PublicLiteVideo} from './PublicLiteVideo';
 
 export type VideoPackagingProps = {
   storyboard: Storyboard;
@@ -13,6 +14,7 @@ export type VideoPackagingProps = {
   cues?: SrtCue[];
 };
 export const buildCompositionPlan = ({storyboard, overlayOnly = false, cues = []}: VideoPackagingProps) => {
+  if (overlayOnly && (storyboard.liteCamera || storyboard.litePresenter)) throw new Error('Source camera motion requires composite output');
   const durationInFrames = Math.ceil(storyboard.duration * storyboard.fps);
   return {
     durationInFrames,
@@ -68,6 +70,7 @@ const GeneratedCaptions = ({cues}: {cues: SrtCue[]}): ReactElement => {
 export const VideoPackaging = (props: VideoPackagingProps): ReactElement => {
   const {storyboard, overlayOnly = false, cues = []} = props;
   const plan = buildCompositionPlan(props);
+  if (storyboard.edition === 'public-lite') return <PublicLiteVideo storyboard={storyboard} cues={cues} overlayOnly={overlayOnly}/>;
   return (
     <AbsoluteFill style={{backgroundColor: plan.background}}>
       {!overlayOnly ? <Video src={staticFile(storyboard.source.video)} style={{width: '100%', height: '100%'}} objectFit="cover" disallowFallbackToOffthreadVideo/> : null}

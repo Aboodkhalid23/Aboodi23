@@ -27,6 +27,8 @@
 | **سكربت، حلقة، أفكار مواضيع، ترند** | **`studio`** (يشغّل الفريق الكامل بـ `.claude/agents/`) |
 | **منتجة حلقة من فيديو خام** (رابط درايف) | **`editor`** (المونتير الآلي). **الستايل الثابت لكل الحلقات: `retro-collage`**. قواعده بـ `editor/CRAFT.md`، وكل سكيلزات المونتاج (أكثر من 40) مرتبة بـ `editor/SKILLS_LIBRARY.md` |
 | **منين أجيب صور، فيديو، أرشيف، جرايد قديمة، أنميشن، موسيقى، مؤثرات** | **`media-sources`** (38+ مصدر ورخصها بـ `editor/sources/CATALOG.md`) |
+| **بداية أي مونتاج، ومراجعة قبل التسليم، وأي بطء أو خطأ** | **`editor-mind`** (عقل المونتير الخبير: يفكر قبل، يراجع بعين المشاهد بـ `review`، يصلح لحاله بـ `autofix`، ويتعلم من كل حلقة بـ `editor/LESSONS.md`) |
+| مشكلة صعبة انحلت، أو "شنو تعلمت" | `claudeception` (يحولها لسكيل)، و`writing-skills` (يكتبه صح) |
 | تحليل ليش فيديو ما نجح | `retention-audit`، `channel-formula` |
 | أي كود أو تعديل | `karpathy-guidelines` |
 | فكرة أو ميزة جديدة | `superpowers-brainstorming` ← `writing-plans` ← `executing-plans` |

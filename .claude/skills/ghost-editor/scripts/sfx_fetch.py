@@ -46,6 +46,12 @@ UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 Chrome/126
 # id, role, source, max seconds, tags, licence ("mixkit" | "rip")
 # role decides mix level in build.mjs: ui < whoosh < impact < meme
 KIT = [
+    ("wood-saw", "foley", r"mixkit:wood:^Hand saw tool on wood$", 1.2, ["craft", "wood", "workshop"], "mixkit"),
+    ("wood-hit", "impact", r"mixkit:wood:^Wood hard hit$", 1.0, ["craft", "wood", "turn", "hit"], "mixkit"),
+    ("wood-ambience", "ambience", r"mixkit:wood:^Wooden construction assembly ambience$", 14.0, ["craft", "workshop", "room-tone"], "mixkit"),
+    ("wood-sanding", "foley", r"mixkit:wood:^Wood polishing electrical tool$", 4.0, ["craft", "wood", "workshop"], "mixkit"),
+    ("marker-scribble", "foley", r"mixkit:paper:^Writing scribble on paper$", 2.5, ["whiteboard", "write", "draw", "doodle"], "mixkit"),
+    ("pencil-write", "foley", r"mixkit:paper:^Writing pencil$", 2.5, ["whiteboard", "write", "notebook"], "mixkit"),
     # editing layer
     ("whoosh-1", "whoosh", r"mixkit:whoosh:^Fast whoosh transition$", 0.9, ["zoom", "transition", "card-in"], "mixkit"),
     ("whoosh-2", "whoosh", r"mixkit:whoosh:^Air woosh$", 0.9, ["zoom", "transition", "card-in"], "mixkit"),
@@ -96,6 +102,8 @@ KIT = [
     ("tech-keyboard-burst", "ui", r"mixkit:typing:^Fast keyboard typing$", 2.0, ["typing", "prompt", "code"], "mixkit"),
     ("tech-notification-2", "ui", r"mixkit:technology:^High tech notification bleep$", 1.0, ["notification", "chip", "alert"], "mixkit"),
     ("tech-camera-flash", "ui", r"mixkit:camera:^Camera digital shutter$", 0.8, ["screenshot", "flash", "freeze"], "mixkit"),
+    # Seoul list: the iMessage-style "send" on the outro bubble (a short rising swoosh; chosen by envelope, confirm by ear)
+    ("send-swoosh", "ui", r"mixkit:transition:^Fast small sweep transition$", 0.8, ["send", "message", "imessage", "swoosh"], "mixkit"),
 ]
 
 LICENSED = {e[0] for e in KIT if e[5] == "mixkit"}  # public build: safe to ship

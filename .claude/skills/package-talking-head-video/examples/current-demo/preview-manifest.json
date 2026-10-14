@@ -1,0 +1,51 @@
+{
+  "doodles": [
+    "phone-mirror",
+    "notes",
+    "route-activation"
+  ],
+  "kind": "synthetic-renderer-example",
+  "version": "0.6.0",
+  "fullDecode": "PASS",
+  "layouts": [
+    "title",
+    "card",
+    "flow"
+  ],
+  "colorRoles": [
+    "emphasis",
+    "process",
+    "result"
+  ],
+  "presenter": "single-geometric-stand-in",
+  "images": [
+    {
+      "file": "docs/assets/current-demo/title.png",
+      "sha256": "5e45455b632014f8a495c12f39f98306aa16d90cd6251ac133cc2d9209f20212"
+    },
+    {
+      "file": "docs/assets/current-demo/card.png",
+      "sha256": "27c41ef0a84faa6280d4fccacbb4f1283fd2f0214b0944acdb481706cea8635c"
+    },
+    {
+      "file": "docs/assets/current-demo/flow.png",
+      "sha256": "d28d631042b2e492fcabf81057ed86d8e8ac18a4939cd88e04a43112e45c2d78"
+    },
+    {
+      "file": "docs/assets/current-demo/paper.png",
+      "sha256": "a1485996c0130d100bba1ce90b9621e95f757425ff50d399f0b2a784e6224c63"
+    },
+    {
+      "file": "docs/assets/current-demo/doodle.png",
+      "sha256": "5e45455b632014f8a495c12f39f98306aa16d90cd6251ac133cc2d9209f20212"
+    }
+  ],
+  "blackFrames": [],
+  "duration": 8,
+  "continuousPlaybackReviewed": false,
+  "styles": [
+    "dark",
+    "paper"
+  ],
+  "fps": 30
+}

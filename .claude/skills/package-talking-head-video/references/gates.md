@@ -12,7 +12,7 @@ Requires `--approve-gate-a --approve-gate-b`. Prepare the browser-compatible con
 
 ## Gate C — review evidence
 
-Requires `--approve-gate-a --approve-gate-b --approve-gate-c`. Generate eight semantically distinct stills and a contact sheet from the real composition. A video with fewer than eight distinct structures fails Gate C. Review hierarchy, face clearance, subtitle clearance, evidence legibility, doodle meaning, and structural difference. No final MP4.
+Requires `--approve-gate-a --approve-gate-b --approve-gate-c`. Public-lite generates eight timeline samples and a contact sheet; inspect every basic layout actually used, without requiring eight structures. Historical V2 inputs retain their eight-structure checks. Review face clearance, subtitle clearance, clipping, contrast and source meaning, plus camera entry/peak/return and first/last frames. No final MP4.
 
 ## Gate D — final export
 

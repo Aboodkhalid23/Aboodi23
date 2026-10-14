@@ -73,9 +73,10 @@ It writes a contact sheet, full-resolution frames and a second-by-second edit lo
 ## Licences
 
 - Code: MIT.
-- Sound effects and music: [Mixkit](https://mixkit.co/license/) (free, commercial use, no attribution). `library_restore.py` downloads them on your machine; none are stored in this repo.
-- Fonts: SIL OFL.
-- Face model (YuNet): MIT.
+- Sound effects and music: [Mixkit](https://mixkit.co/license/) (free, commercial use, no attribution; the music may not go to TV, radio or games or be registered with Content ID). `library_restore.py` downloads them on your machine; none are stored in this repo ([docs/THIRD_PARTY/audio.md](THIRD_PARTY/audio.md)).
+- Fonts: SIL OFL ([fonts.md](THIRD_PARTY/fonts.md)).
+- Face models: MediaPipe Face Landmarker (Apache-2.0, bundled), YuNet (MIT) and SFace (Apache-2.0), downloaded ([models.md](THIRD_PARTY/models.md)).
+- Bundled third-party code: Paper Shaders (Apache-2.0), xfade-easing (MIT, with two BSD transition ports). Everything else: [docs/THIRD_PARTY](THIRD_PARTY/README.md).
 - No memes ship. Add clips you have the rights to with `scripts/meme_add.py`.
 
 Take selection is adapted from [mariagorskikh/talking-head-reel](https://github.com/mariagorskikh/talking-head-reel) (MIT).
