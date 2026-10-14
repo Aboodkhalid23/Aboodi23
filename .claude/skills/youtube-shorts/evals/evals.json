@@ -80,7 +80,7 @@
       "input": "Publish this Short for tomorrow and then tell me its swipe rate.",
       "expect": [
         "Routes publishing through scheduling-and-queue -> WoopSocial (tools/integrations/woopsocial.md, MCP and REST); YouTube is a supported platform; validate before publish",
-        "Notes WoopSocial has no edit-after-publish (delete + recreate) and no analytics surface",
+        "Notes WoopSocial has no edit-after-publish (delete + recreate). Swipe rate, retention, and engaged views are read in YouTube Studio; views, likes, and comments are in WoopSocial post analytics",
         "Says swipe rate / Viewed vs Swiped Away, average % viewed, and engaged views must be read natively in YouTube Studio",
         "Refuses to fabricate a swipe rate or any metric"
       ]

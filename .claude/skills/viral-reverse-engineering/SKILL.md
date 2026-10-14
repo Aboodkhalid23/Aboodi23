@@ -47,8 +47,8 @@ play-by-play/transcript, caption + on-screen text, format, stats, creator size, 
 
 The rule: **the human (or a transcript/screenshot/tool) is the eyes; the skill is the analyst.**
 Never fabricate frames or lines you weren't given — analyze what's provided and **name the gaps**.
-Also: **patterns need multiple examples** — one viral post is an anecdote. (WoopSocial has no
-analytics; work from visible/native signals or pasted data.)
+Also: **patterns need multiple examples** — one viral post is an anecdote. (Other people's posts
+are visible/native signals or pasted data. Your own posts on the covered platforms can use WoopSocial post analytics.)
 
 ## Step 2 — Deconstruct (the teardown)
 

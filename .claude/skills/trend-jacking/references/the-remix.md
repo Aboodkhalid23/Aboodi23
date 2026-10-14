@@ -62,6 +62,6 @@ you actually are. Ride trends to get discovered; post your own content to be rem
 
 ## Measure honestly
 
-WoopSocial has no analytics surface — so judge a trend-jack by whether it **fit, was safe, and
+Don't claim a trend-jack worked without numbers. Judge it by whether it **fit, was safe, and
 landed** (native platform insights the user pulls, or qualitative read), not by metrics this skill
 can't provide. One trend-jack flopping isn't failure; forcing the next one would be.

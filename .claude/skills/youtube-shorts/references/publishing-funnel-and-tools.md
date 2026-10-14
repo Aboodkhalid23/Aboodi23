@@ -10,9 +10,10 @@ Route the finished Short through **scheduling-and-queue**, which connects to Woo
 - **YouTube is a supported platform** (one of 10, as of July 2026). Native scheduling; auto per-platform handling.
 - **Lifecycle:** create / list / read / **validate** / delete. **No update** — editing a Short
   means **delete + recreate**. Validate before publishing.
-- **No analytics surface.** WoopSocial cannot report swipe rate, retention, or engaged views.
-  **Read them natively in YouTube Studio** (Analytics → Content → the Short → Viewed vs Swiped
-  Away, average % viewed, engaged views). **Never fabricate a metric.**
+- **Studio-only metrics.** WoopSocial cannot report swipe rate, retention, or engaged views.
+  **Read them in YouTube Studio** (Analytics → Content → the Short → Viewed vs Swiped Away,
+  average % viewed, engaged views). Views, likes, and comments for the Short are in WoopSocial
+  post analytics. **Never fabricate a metric.**
 
 ## The decoupled funnel (bridge it manually)
 Shorts and long-form are **separate engines** — so the Short→channel→long-form funnel is a

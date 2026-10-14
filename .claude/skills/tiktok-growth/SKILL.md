@@ -38,8 +38,9 @@ model: `references/the-growth-engine.md`.)
 ## Step 0 — Read the foundation + the current state
 
 Load `brand-profile.md`, `social-strategy.md`, `audience.md`. Get the **goal** and the **current
-state** from native TikTok analytics (completion %, rewatch, shares, traffic source FYP vs Search vs
-Profile, follows-per-video) — needs a business/creator account; WoopSocial has no analytics.
+state** from WoopSocial post analytics (views, likes, comments, shares, saves) plus native TikTok
+analytics for completion %, rewatches, traffic source, and follows-per-video — those are not stored
+in WoopSocial. Never fabricate.
 
 ## Step 1 — Diagnose the broken stage/phase
 

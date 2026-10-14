@@ -73,7 +73,7 @@ unproven hooks, formats, and topics — it's the cheapest experiment on the plat
 ## Cadence, measurement & disclosure
 
 - **Consistency over bursts** — regular Reels give the system more tests; treat posting-time advice
-  as general guidance, not analytics (WoopSocial has no analytics surface — judge via native
-  Instagram Insights: watch time, sends-per-reach, saves, profile visits).
+  as general guidance, not the user's best time. Saves and shares are in WoopSocial post analytics;
+  watch time, sends-per-reach, and profile visits stay in native Instagram Insights.
 - **AI-generated media** — follow Meta's AI-labeling rules and the brand's policy; disclosure on
   Instagram is native/manual (see `veo-prompt-pack.md`). Never fabricate testimonials or stats.

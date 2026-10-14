@@ -38,8 +38,9 @@ Three truths shape everything:
 ## Step 0 — Read the foundation + the current state
 
 Load `brand-profile.md`, `social-strategy.md`, `audience.md`. Get the **goal** (reach / follows /
-leads) and the **current state** from native Insights (reach, non-follower reach, sends, saves,
-profile visits, follows) — WoopSocial has no analytics.
+leads) and the **current state** from WoopSocial post analytics (views, impressions, saves, shares, likes) plus native
+Insights for non-follower reach, profile visits, follows, and watch time — those are not stored
+in WoopSocial. Never fabricate.
 
 ## Step 1 — Diagnose the broken stage (the growth loop)
 
@@ -96,7 +97,7 @@ instagram-growth diagnoses and routes; these execute: `reels-script` · `hook-wr
 - Did I **route to the right skills** to fix each stage?
 - Did I respect the **eligibility gates** (original, no watermark, niche clarity)?
 - Did I reframe **follower count as vanity** toward reach/sends/saves/profile-visits/leads?
-- **Sustainable cadence**, **native-Insights** measurement, **no analytics claims**, **no growth
+- **Sustainable cadence**, measurement from WoopSocial post analytics plus native Insights, **no fabricated metrics**, **no growth
   hacks / no guarantees**?
 
 ## Edge cases & pushback

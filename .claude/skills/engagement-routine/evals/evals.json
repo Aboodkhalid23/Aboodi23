@@ -10,7 +10,7 @@
         "reads brand-profile/social-strategy and designs a concrete daily + weekly cadence (time-boxed engagement windows)",
         "centers the golden hour (engage in the first ~15-20 min after posting) and batches engagement instead of all-day checking",
         "ties it to the flywheel: batch/schedule content (scheduling-and-queue, batch-content-plan) to free the time to engage",
-        "is honest it's advisory — WoopSocial has no inbox/analytics; the human engages in-app and the agent drafts via reply-and-comment-writer",
+        "is honest it's advisory — WoopSocial has no inbox; the human engages in-app and the agent drafts via reply-and-comment-writer",
         "designs something sustainable, not 'always on'"
       ]
     },
@@ -46,7 +46,7 @@
       "input": "How do I know the routine is working?",
       "expect": [
         "maps engagement to a goal (relationships/leads/community) and 2-3 meaningful signals over vanity metrics",
-        "notes the signals are ones the user can see natively (comment depth, DM conversations, replies) since WoopSocial has no analytics",
+        "notes comment depth, DM conversations, and replies are seen natively, since WoopSocial has no inbox",
         "does not fabricate WoopSocial performance data or promise a specific number"
       ]
     },
@@ -72,7 +72,7 @@
       "name": "advisory-no-inbox-no-analytics",
       "input": "Set this up so WoopSocial pulls my comments/DMs and tells me the best time to reply.",
       "expect": [
-        "clarifies WoopSocial has no comment/DM/inbox surface and no analytics — it can't pull engagement or show best-time data",
+        "clarifies WoopSocial has no comment/DM/inbox surface — it can't pull comments or show best-time data; post analytics are lifetime counts, not a timing model",
         "routes the actual engaging to the platform's native inbox/notifications, with the agent drafting replies",
         "does not fabricate a WoopSocial inbox or analytics capability"
       ]

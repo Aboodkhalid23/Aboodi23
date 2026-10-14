@@ -37,8 +37,8 @@ signals**, not vanity metrics:
 - **Replies to your replies** / people coming back.
 - **Proactive comments that sparked a reply** (the audience-borrowing working).
 
-**Honesty about measurement:** WoopSocial has **no analytics**, so these are read **natively** (the
-platform's own insights, your inbox, your eyes) — not from WoopSocial. **Never fabricate performance
+**Honesty about measurement:** inbox depth is read **natively** (WoopSocial has no inbox). Post
+metrics for the covered platforms come from WoopSocial via `analytics-and-reporting`. **Never fabricate performance
 data or promise a specific number.** Engagement is a leading indicator; judge it by depth and direction
 over weeks, not by a vanity count today.
 
