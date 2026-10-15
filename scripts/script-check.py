@@ -5,37 +5,29 @@
     python3 scripts/script-check.py episodes/<الحلقة>/02-draft.md
     python3 scripts/script-check.py <الملف> --strict   # يرجع رمز خطأ إذا اكو مشاكل حمراء
 
-يفحص: عدد الكلمات، طول الجمل، صيغة التواريخ، الأسماء المعرّبة (لازم إنگليزي)،
-الفصحى، كليشيهات الذكاء الاصطناعي، "بس" مقابل "وبعدين"، الأسئلة بكل دقيقة،
-والمقاطع الميتة (كتلة 200 كلمة بدون سؤال).
+يفحص (المنهج الثالث، studio/style/method.md): العنوان بأول الملف، الطول (15-32 دقيقة)،
+طول الجمل، صيغة التواريخ وعددها، السنين الي ترجع لورا، الحروف الأجنبية (الأسماء لازم بالعربي)،
+الفصحى، الكليشيهات، "بس" مقابل "وبعدين"، تكرار وعود "بآخر الحلقة"، والمناطق الميتة.
 """
 import re
 import sys
 
-MIN_WORDS = 4000
+MIN_WORDS = 2100   # 15 دقيقة
+MAX_WORDS = 4500   # تقريباً 32 دقيقة
 MAX_LINE_WORDS = 12
 WARN_LINE_WORDS = 10
 WORDS_PER_MIN = 140
 DEAD_ZONE = 200
-MAX_DATES = 5
-MAX_TIME_REFS = 10
+MAX_DATES = 3        # تواريخ كاملة: بس للأحداث الكبيرة
+MAX_TIME_REFS = 8    # كل ذكر لسنة
+MAX_TEASERS = 3      # وعود "بآخر الحلقة / راح تعرف"
+TEASERS = ["بآخر الحلقة", "بنهاية الحلقة", "راح تعرف", "راح نعرف", "راح تكتشف", "راح أگولك", "بعدين راح", "خلّيها لبعدين", "بعد شوية راح"]
 REWIND = ["خلي أرجعك شوية لورا", "نرجع للمطار", "نرجع لأول القصة", "خلي نرجع للبداية", "نرجع للمشهد"]
 
 AR = r"؀-ۿ"
 
-# أسماء معرّبة لازم تنكتب بالإنگليزي
-ARABIZED = {
-    "أوبن إيه آي": "OpenAI", "اوبن اي اي": "OpenAI", "تشات جي بي تي": "ChatGPT",
-    "أنثروبيك": "Anthropic", "انثروبيك": "Anthropic", "كلود": "Claude",
-    "غوغل": "Google", "غوگل": "Google", "جوجل": "Google", "ميتا": "Meta",
-    "مايكروسوفت": "Microsoft", "أمازون": "Amazon", "أبل": "Apple", "آبل": "Apple",
-    "إنفيديا": "Nvidia", "انفيديا": "Nvidia", "تسلا": "Tesla", "سبيس إكس": "SpaceX",
-    "فيسبوك": "Facebook", "يوتيوب": "YouTube", "تيك توك": "TikTok", "إنستغرام": "Instagram",
-    "رويترز": "Reuters", "بلومبرغ": "Bloomberg", "فوربس": "Forbes", "فيفا": "FIFA",
-    "إيلون ماسك": "Elon Musk", "ماسك": "Musk", "سام ألتمان": "Sam Altman", "ألتمان": "Altman",
-    "ميسي": "Messi", "رونالدو": "Ronaldo", "ترامب": "Trump", "هگنگ فيس": "Hugging Face",
-    "هَگنگ فيس": "Hugging Face", "نتفليكس": "Netflix", "سامسونج": "Samsung", "سامسونگ": "Samsung",
-}
+# الأسماء تنكتب بالحروف العربية (صاحب القناة يقرا من الآيباد وما يقرا إنگليزي)
+LATIN = re.compile(r"[A-Za-z]{2,}")
 
 FUSHA = ["يتوجب", "ينبغي", "آنذاك", "جراء", "وفقاً", "حيال", "غالباً ما", "المفارقة",
          "يخيّم", "يُذكر أن", "لكن ", "الآن", "كثيراً", "ماذا", "لماذا", "كيف ", "حيث ",
@@ -65,10 +57,17 @@ def main():
     words = text.split()
     red, yellow = [], []
 
+    # 0. العنوان أول سطر
+    first = next((ln.strip() for ln in lines if ln.strip()), "")
+    if not first.startswith("العنوان"):
+        red.append("أول سطر لازم يكون \"العنوان: ...\" وبعده الهوك وبعده السكربت.")
+
     # 1. الطول
     n = len(words)
     if n < MIN_WORDS:
-        red.append(f"الطول {n} كلمة، والحد الأدنى {MIN_WORDS} (ناقص {MIN_WORDS - n}).")
+        red.append(f"الطول {n} كلمة (~{round(n / WORDS_PER_MIN)} دقيقة)، الحد الأدنى {MIN_WORDS} (15 دقيقة).")
+    elif n > MAX_WORDS:
+        yellow.append(f"الطول {n} كلمة (~{round(n / WORDS_PER_MIN)} دقيقة)، فوق 30 دقيقة: تأكد إن كل فصل يستاهل.")
 
     # 2. طول الجمل
     for i, ln in enumerate(lines, 1):
@@ -95,16 +94,27 @@ def main():
     if len(all_time) > MAX_TIME_REFS:
         yellow.append(f"ذكر سنوات وتواريخ {len(all_time)} مرة (الأفضل {MAX_TIME_REFS} أو أقل). المشاهد يضيع: استبدل قسم منها بـ\"بعدها بـ...\".")
 
+    # 3b2. سنين ترجع لورا (97 ثم 96 ثم 99 يلخبط المشاهد)
+    years = [int(y) for y in re.findall(r"(?<!\d)((?:19|20)\d{2})(?!\d)", text)]
+    back = [(a, b) for a, b in zip(years, years[1:]) if b < a]
+    if back:
+        yellow.append("سنين ترجع لورا: " + "، ".join(f"{a}←{b}" for a, b in back[:6]) + ". خلي الزمن يمشي لگدام، واستخدم \"قبلها بسنة\" بدل رقم.")
+
+    # 3d. وعود "بآخر الحلقة" المكررة (تملّ المشاهد)
+    t = sum(len(word_re(x).findall(text)) for x in TEASERS)
+    if t > MAX_TEASERS:
+        yellow.append(f"وعود \"راح تعرف/بآخر الحلقة\" {t} مرة (الحد {MAX_TEASERS}). بدالها انطي طُعم: جزء من الجواب.")
+
     # 3c. الرجوع لمشهد البداية بالنص (ممنوع)
     for i, ln in enumerate(lines, 1):
         if any(r in ln for r in REWIND):
             red.append(f"سطر {i}: رجوع لورا بنص الحلقة (ممنوع، التسلسل لگدام بس): {ln.strip()[:60]}")
 
-    # 4. الأسماء المعرّبة
-    for ar, en in ARABIZED.items():
-        for i, ln in enumerate(lines, 1):
-            if word_re(ar).search(ln):
-                red.append(f"سطر {i}: \"{ar}\" لازم تنكتب {en}")
+    # 4. الحروف الأجنبية (ممنوعة)
+    for i, ln in enumerate(lines, 1):
+        m = LATIN.findall(ln)
+        if m:
+            red.append(f"سطر {i}: حروف إنگليزية ({', '.join(m[:3])})، اكتبها بالعربي بلفظ سهل")
 
     # 5. الفصحى والكليشيهات
     for w in FUSHA:
@@ -118,7 +128,7 @@ def main():
     # 6. بس / وبعدين
     bas = len(word_re("بس").findall(text))
     then = len(word_re("وبعدين").findall(text)) + len(word_re("وبعدها").findall(text))
-    need = max(15, n // 270)
+    need = max(10, n // 270)
     if bas < need:
         yellow.append(f"\"بس\" {bas} مرة، المطلوب {need} أو أكثر (تقلب القصة).")
     if then > bas / 3:
