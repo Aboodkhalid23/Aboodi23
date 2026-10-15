@@ -9,7 +9,7 @@ description: >-
   to a goal, and anti-burnout boundaries. The flywheel: batch and schedule content
   (scheduling-and-queue, batch-content-plan) to
   free the time, then spend it engaging. Advisory and honest — WoopSocial has no comment/DM/inbox
-  surface and no analytics, so the human engages in-app and the agent drafts via
+  surface. Post performance is analytics-and-reporting, not here, so the human engages in-app and the agent drafts via
   reply-and-comment-writer; never automates or fakes engagement. Pairs with reply-and-comment-writer
   (the craft), the growth skills, community-management, and crisis-and-moderation.
 metadata:
@@ -62,8 +62,9 @@ off-hours, and prefer a **small repeatable routine you keep** over a heroic one 
 
 ## How it runs (advisory + honest)
 
-- **WoopSocial has no inbox/analytics.** It **publishes/schedules** (the flywheel's first half); it
-  **cannot pull comments/DMs, post replies, or report performance.** The **human engages in-app** via
+- **WoopSocial has no inbox.** It **publishes/schedules** (the flywheel's first half); it
+  **cannot pull comments/DMs or post replies.** Post performance for the covered platforms is
+  `analytics-and-reporting`, not this skill, and it cannot name a best time. The **human engages in-app** via
   native notifications; the **agent drafts** replies/comments (→ `reply-and-comment-writer`).
 - **Genuine only.** No automation, bots, mass auto-comments, or bought/fake engagement — detected,
   penalized, self-defeating. The agent assists by drafting; the human does the real interacting.
@@ -80,7 +81,7 @@ off-hours, and prefer a **small repeatable routine you keep** over a heroic one 
 ## Edge cases & pushback
 
 - **"Auto-reply / mass-comment for me"** → refuse automation/fake; genuine routine + draft-for-review.
-- **"WoopSocial: pull my comments + tell me the best time"** → no inbox, no analytics; native inbox +
+- **"WoopSocial: pull my comments + tell me the best time"** → no inbox, and post analytics are not a timing model; native inbox +
   agent drafts.
 - **"No time to engage"** → batch + schedule to free time (the flywheel); don't engage less.
 - **"Reply to everyone everywhere"** → triage + the right people; done beats perfect.

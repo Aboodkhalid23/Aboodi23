@@ -27,8 +27,7 @@ JuliusBrussee/caveman  skills/caveman-compress
 Claudefarid/claude-ceo-skill  .  ceo-assistant
 
 # بحث
-Anjos2/recursive-research  plugins/recursive-research/skills/recursive-research
-sanjay3290/ai-skills       skills/deep-research
+# موقوف (يحتاج مفتاح Gemini مدفوع): sanjay3290/ai-skills  skills/deep-research
 
 # رسمية من Anthropic (غير موجودة افتراضياً بالجلسة)
 anthropics/skills  skills/webapp-testing
@@ -44,7 +43,6 @@ artemnovitckii/content-skills  dumbify
 artemnovitckii/content-skills  viral-hooks
 
 # تدقيق الحقائق والمصادر (من أدوات الصحفيين)
-jamditis/claude-skills-journalism  journalism-core/skills/fact-check-workflow
 jamditis/claude-skills-journalism  journalism-core/skills/source-verification
 
 # نمو السوشيال ميديا — social-media-skills (مفحوصة: ملفات تعليمات بس، بدون كود)
@@ -78,13 +76,10 @@ Jakeschincariol/youtube-agent-skill  skills/yt-edit
 ravsau/youtuber-skills               skills/youtube-virality-gate
 artemnovitckii/content-skills        storytelling
 artemnovitckii/content-skills        anti-ai-writing
-SkillMedev/creator-studio            skills/youtube-script-writer
 
 # المستوى الثاني — بحث وتحقيق وأرشيف وترندات ويوتيوب (مفحوصة 2026/10/6)
 JalalD/verified-research             skills/verified-research
-reichaves/osint-investigation        .                                                osint-investigation
 jamditis/claude-skills-journalism    research-toolkit/skills/web-archiving
-jamditis/claude-skills-journalism    journalism-core/skills/social-media-intelligence
 jamditis/claude-skills-journalism    research-toolkit/skills/content-access
 terryds/google-trends-skill          .                                                google-trends
 Jakeschincariol/youtube-agent-skill  skills/yt-viral
@@ -94,8 +89,14 @@ AugustusW/audio-tldr-skill           skills/audio-tldr
 
 # المستوى الثالث — التشويق والسرد الوثائقي (مفحوصة 2026/10/8: تعليمات بس، MIT)
 EveryInc/compound-writing        skills/cw-hitchcock
-EveryInc/compound-writing        skills/cw-sorkin
 ur-grue/autopunk-media-skills    skills/writing/broadcast/cold-open-writer
 ur-grue/autopunk-media-skills    skills/radio-audio/scripting/documentary-narration-writer
 ur-grue/autopunk-media-skills    skills/writing/broadcast/transition-narration-writer
-ur-grue/autopunk-media-skills    skills/screenwriting/development/beat-sheet-builder
+
+# المستوى الرابع — المنهج الثالث (مفحوصة 2026/10/15: تعليمات بس، MIT، ماكو مفاتيح)
+# كاشف الذكاء الاصطناعي بالعربي (لمحرر اللهجة)
+OthmanAdi/humanizer-semitic        skills/humanizer-ar-msa
+# تحليل هوكات المنافسين ونصوصهم بـ yt-dlp (لكاشف المنافسين)
+deeployCO/youtube-seo-skills       youtube-seo-competitor
+# أفكار حلقات من تعليقات الجمهور (لمكتشف المواضيع)
+ravsau/youtuber-skills             skills/youtube-comments-to-ideas
