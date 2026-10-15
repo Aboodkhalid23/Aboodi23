@@ -64,3 +64,16 @@ def test_behind_his_shoulder_is_a_transparent_layer(tmp_path):
     assert paper_errors(b) == []
     job = face_paper_job(b, style, face, tmp_path / "p.mov", 30, bundle=tmp_path, face_x=0.4, layer_only=True)
     assert job.alpha and job.props["layerOnly"] and job.props["layout"] == "overlay"
+
+
+def test_director_cues_land_on_the_moment_the_sentence_is_said(tmp_path):
+    from editor.pipeline.brief import visual_cues
+    from editor.pipeline.paths import Episode
+    from editor.pipeline.transcribe import Word
+    ep = Episode(tmp_path / "ep").ensure()
+    (ep.root / "07-visuals.md").write_text("- «فورد شغل أول خط تجميع» → face_paper newspaper: فورد | خط تجميع\n"
+                                           "- «جملة ما انگالت أبد هنا» → image: x\n", encoding="utf-8")
+    text = "هلا بيكم سنة 1913 فورد شغّل أول خط تجميع بالعالم"
+    words = [Word(w, i * 0.5, i * 0.5 + 0.4) for i, w in enumerate(text.split())]
+    cues = visual_cues(ep, words)
+    assert len(cues) == 1 and cues[0].startswith("[00:02.0] face_paper newspaper")

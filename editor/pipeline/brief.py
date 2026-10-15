@@ -81,6 +81,36 @@ def find_moments(phrases) -> list[str]:
     return out
 
 
+def visual_cues(ep: Episode, words) -> list[str]:
+    """The studio's visual director planned the episode before filming (episodes/<ep>/07-visuals.md, lines like
+    `- «first words of a sentence» → face_paper newspaper: …`). Each cue is placed at the moment he actually said
+    that sentence (fuzzy match on the transcript), so the plan starts from the director's ideas with real times."""
+    import re
+    from .clean import normalize_ar
+    f = ep.root / "07-visuals.md"
+    if not f.exists() or not words:
+        return []
+    said = [normalize_ar(w.text) for w in words]
+    out = []
+    for line in f.read_text(encoding="utf-8").splitlines():
+        m = re.match(r"\s*-\s*«([^»]+)»\s*(?:→|->)\s*(.+)", line)
+        if not m:
+            continue
+        anchor = [normalize_ar(w) for w in m[1].split() if w.strip()]
+        if not anchor:
+            continue
+        best, at = 0.0, None
+        n = len(anchor)
+        for i in range(0, max(1, len(said) - n + 1)):
+            window = set(said[i:i + n + 2])   # a little slack: he may add or drop a word
+            score = sum(a in window for a in anchor) / n + (0.01 if said[i] == anchor[0] else 0)
+            if score > best:
+                best, at = score, i
+        if at is not None and best >= 0.6:
+            out.append(f"[{_ts(words[at].start)}] {m[2].strip()}  ← «{m[1].strip()}»")
+    return out
+
+
 def write_brief(ep: Episode, styles_summary: str) -> Path:
     cuts = json.loads(ep.cuts.read_text(encoding="utf-8"))
     duration = round(sum(e - s for s, e in cuts), 2)
@@ -90,7 +120,11 @@ def write_brief(ep: Episode, styles_summary: str) -> Path:
     if ents:
         lines += ["", "الأسماء (entities.json):"] + [f"{k}: {e['name']} ({e.get('role', e.get('kind', ''))})"
                                                      for k, e in ents.items()]
-    chunks = list(_chunks(split_phrases(load_words(ep.clean_words))))
+    all_words = load_words(ep.clean_words)
+    chunks = list(_chunks(split_phrases(all_words)))
+    director = visual_cues(ep, all_words)
+    if director:
+        lines += ["", "خطة المخرج البصري (من الاستوديو، بوقتها الحقيقي — ابدي منها):"] + director
     moments = find_moments(chunks)
     if moments:
         lines += ["", "لحظات مقترحة:"] + moments
