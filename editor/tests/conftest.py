@@ -21,3 +21,10 @@ def make_talking_video(path: Path) -> Path:
 @pytest.fixture
 def talking_video(tmp_path) -> Path:
     return make_talking_video(tmp_path / "talking.mp4")
+
+
+@pytest.fixture(autouse=True)
+def _keep_real_history_clean(tmp_path, monkeypatch):
+    """Test episodes must not land in the editor's real score history (editor/learning/history.jsonl)."""
+    import editor.pipeline.review as review
+    monkeypatch.setattr(review, "HISTORY", tmp_path / "history.jsonl")
