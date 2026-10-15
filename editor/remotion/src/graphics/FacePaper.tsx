@@ -22,6 +22,8 @@ export type Paper = {
   stamp?: string;              // red rubber stamp on a document
   img?: string;                // published image (newspaper photo / photo / page scan)
   box?: [number, number, number, number];   // page: area to mark (0–1 of the page)
+  enter?: 'fly' | 'turn' | 'drop';   // fly in from the side, turn onto the pile like a book page, or drop like a stamp
+  link?: boolean;              // investigation board: pinned apart, a red string ties it to the paper before
 };
 type Props = {style: StyleProps; durationSec: number; fps?: number; src: string; side?: 'left' | 'right'; papers: Paper[];
   layout?: 'overlay' | 'desk';   // overlay: he stays full frame, papers on the empty side; desk: he shrinks into a taped photo on the paper desk
@@ -215,6 +217,21 @@ export const FacePaper: React.FC<Props> = ({style, durationSec, src, side = 'rig
     paperScale = Math.min(1.2, Math.abs(side === 'right' ? W - edge : edge) / 700);
   }
   const push = layout === 'desk' ? 1 : interpolate(f, [0, durationSec * fps], [1, 1.035]);
+  // investigation board: the papers are pinned apart on the free side and tied with a red string
+  const board = papers.some((p) => p.link);
+  const boardScale = n <= 2 ? 0.72 : 0.56;
+  const slot = (i: number): [number, number] => {
+    const cols = n <= 2 ? 1 : 2, rows = Math.ceil(n / cols);
+    const c = i % cols, r = Math.floor(i / cols);
+    const w = 330 * paperScale, h = Math.min(820, H * 0.78) / rows;
+    const xx = cx + (cols === 1 ? 0 : (c ? 1 : -1) * w * 0.55 * -dir) + (random(`bx${i}`) - 0.5) * 40;
+    const yy = H * 0.5 + (r - (rows - 1) / 2) * h + (random(`by${i}`) - 0.5) * 30;
+    return [xx, yy];
+  };
+  const pin = (i: number): [number, number] => {
+    const [x0, y0] = slot(i);
+    return [x0, y0 - 200 * paperScale * boardScale];
+  };
   return (
     <AbsoluteFill style={{background: layerOnly ? 'transparent' : layout === 'desk' ? style.palette.paper : '#000', overflow: 'hidden'}}>
       {layout === 'desk' && <Grain f={f} opacity={0.35} />}
@@ -232,23 +249,43 @@ export const FacePaper: React.FC<Props> = ({style, durationSec, src, side = 'rig
       {/* overlay: a soft shade on the papers' side so they read against any room */}
       {layout === 'overlay' && <AbsoluteFill style={{background: `linear-gradient(${side === 'right' ? 270 : 90}deg, rgba(0,0,0,.28), transparent 45%)`,
         opacity: interpolate(f, [times[0] * fps - 6, times[0] * fps + 6], [0, 1], clamp) * (1 - exit)}} />}
+      {board && <svg width={W} height={H} style={{position: 'absolute', inset: 0, zIndex: 50, overflow: 'visible', pointerEvents: 'none'}}>
+        {papers.map((paper, i) => {
+          if (!i || !paper.link) return null;
+          const t = Math.round(times[i] * fps) + Math.round(0.35 * fps);
+          const k = interpolate(f, [t, t + 0.45 * fps], [0, 1], {...clamp, easing: ease}) * (1 - exit);
+          if (k <= 0) return null;
+          const [x1, y1] = pin(i - 1), [x2, y2] = pin(i);
+          const sag = 50 + Math.abs(x2 - x1) * 0.15;
+          return <path key={i} d={`M${x1},${y1} Q${(x1 + x2) / 2},${Math.max(y1, y2) + sag} ${x2},${y2}`} fill="none" stroke="#C4382E"
+            strokeWidth={5} strokeLinecap="round" pathLength={1} strokeDasharray={1} strokeDashoffset={1 - k}
+            style={{filter: 'drop-shadow(0 3px 2px rgba(0,0,0,.35))'}} />;
+        })}
+        {papers.map((_, i) => f >= Math.round(times[i] * fps) + 0.3 * fps && exit < 0.5 &&
+          <circle key={`p${i}`} cx={pin(i)[0]} cy={pin(i)[1]} r={11} fill="#C4382E" stroke="#7A1E16" strokeWidth={3} />)}
+      </svg>}
       {papers.map((paper, i) => {
         const start = Math.round(times[i] * fps);
         if (f < start - 1) return null;
         const p = spring({frame: f - start, fps, config: {damping: 14, stiffness: 120, mass: 0.9}});
-        const behind = i < n - 1   // pushed back by the next one
+        const behind = i < n - 1 && !board   // pushed back by the next one (on a board each keeps its place)
           ? spring({frame: f - Math.round(times[i + 1] * fps), fps, config: {damping: 16, stiffness: 110}}) : 0;
         const depth = n - 1 - i;
         const rest = (random(`rot${i}`) - 0.5) * 8;
         const wobble = (random(`w${i}-${Math.floor(f / 4)}`) - 0.5) * 0.6;                      // hand-made boil
+        const enter = paper.enter ?? (board ? 'drop' : i % 2 === 1 ? 'turn' : 'fly');
+        const [bx, by] = board ? slot(i) : [cx, H * 0.5];
         // behind him: the paper slides out from behind his shoulder; otherwise it flies in from the frame edge
-        const from = layerOnly ? faceX * W : cx + dir * 760;
-        const x = from + (cx - from) * p - dir * behind * 70 + dir * exit * 900;
-        const y = H * 0.5 + (1 - p) * (layerOnly ? 60 : 120) - behind * 30;
-        const rot = rest + dir * (1 - p) * 16 - dir * behind * 7 + wobble;
-        const scale = (1 - behind * 0.1) * paperScale;
+        const from = layerOnly ? faceX * W : enter === 'fly' ? bx + dir * 760 : bx;
+        const x = from + (bx - from) * p - dir * behind * 70 + dir * exit * 900;
+        const y = by + (enter === 'drop' ? -(1 - p) * 90 : (1 - p) * (layerOnly ? 60 : 120)) - behind * 30;
+        const rot = rest + (enter === 'fly' ? dir * (1 - p) * 16 : 0) - dir * behind * 7 + wobble;
+        const scale = (1 - behind * 0.1) * paperScale * (board ? boardScale : 1) * (enter === 'drop' ? 1 + (1 - p) * 0.25 : 1);
+        const turn = enter === 'turn' ? `perspective(1800px) rotateY(${dir * (1 - p) * 105}deg)` : '';
         return (
-          <div key={i} style={{position: 'absolute', left: x, top: y, transform: `translate(-50%, -50%) rotate(${rot}deg) scale(${scale})`,
+          <div key={i} style={{position: 'absolute', left: x, top: y, transform: `translate(-50%, -50%) ${turn} rotate(${rot}deg) scale(${scale})`,
+            transformOrigin: enter === 'turn' ? (side === 'right' ? '100% 50%' : '0% 50%') : '50% 50%',
+            opacity: enter === 'turn' ? Math.min(1, p * 3) : 1,
             filter: `drop-shadow(0 ${18 + depth * 2}px 26px rgba(0,0,0,.45)) brightness(${1 - behind * 0.12})`, zIndex: i}}>
             <Card paper={{...paper, at: times[i]}} p={p} f={f} idx={i} />
           </div>

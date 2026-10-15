@@ -31,6 +31,47 @@ def _other_face(*avoid: str) -> str:
     return next(k for k in FACE_CYCLE if k not in avoid)
 
 
+def moments(plan: EditPlan, words_file: Path | None) -> list[str]:
+    """His own moments get their look by themselves: asking to subscribe → the channel and the subscribe button
+    (face_fx subscribe); an aside (joke, side fact) → kept, with a "على الهامش" tape (face_fx none)."""
+    from .brief import _chunks, find_asides, find_moments
+    from .clean import split_phrases
+    from .transcribe import load_words
+    if not words_file or not Path(words_file).exists():
+        return []
+    words = load_words(words_file)
+    off = plan.teaser_total
+    fixes = []
+
+    def beat_at(t):
+        return next((i for i, b in enumerate(plan.beats) if b.start <= t + off < b.end), None)
+
+    def lonely(i):   # two face_fx in a row break the variety rule
+        return all(plan.beats[j].kind != "face_fx" for j in (i - 1, i + 1) if 0 <= j < len(plan.beats))
+    for line in find_moments(list(_chunks(split_phrases(words)))):
+        if " face_fx subscribe:" not in line:
+            continue
+        m, sec = line[1:line.index("]")].split(":")
+        i = beat_at(int(m) * 60 + float(sec))
+        if i is None:
+            continue
+        b = plan.beats[i]
+        near = any(x.kind == "face_fx" and x.fx == "subscribe" and abs(x.start - b.start) < 8 for x in plan.beats)
+        if not near and b.kind in FACE_KINDS and b.kind != "face_cutout" and b.end - b.start >= 3.5 and lonely(i):
+            b.kind, b.fx, b.stickers = "face_fx", "subscribe", None
+            fixes.append(f"beat {i}: يطلب الاشتراك هنا، حطيت القناة وزر الاشتراك")
+    for a, _z, _t in find_asides(split_phrases(words)):
+        i = beat_at(a)
+        if i is None:
+            continue
+        b = plan.beats[i]
+        if b.kind in FACE_KINDS and b.kind not in ("face_fx", "face_cutout") and not b.stickers and lonely(i):
+            b.kind, b.fx = "face_fx", "none"
+            b.stickers = [{"type": "tape", "text": "على الهامش", "at": round(min(b.end - b.start - 0.5, max(0.2, a + off - b.start)), 2)}]
+            fixes.append(f"beat {i}: سالفة جانبية، بقت ويه شريط «على الهامش»")
+    return fixes
+
+
 def repair(plan: EditPlan, clean_duration: float, words_file: Path | None = None) -> list[str]:
     total = round(plan.teaser_total + clean_duration, 3)
     pauses = _pauses(words_file, plan.teaser_total)
@@ -99,4 +140,5 @@ def repair(plan: EditPlan, clean_duration: float, words_file: Path | None = None
         if not changed:
             break
     plan.beats = beats
+    fixes += moments(plan, words_file)
     return fixes

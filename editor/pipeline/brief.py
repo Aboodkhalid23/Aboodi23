@@ -16,7 +16,7 @@ def rules() -> str:
 - ما يتكرر نفس kind مرتين ورا بعض. الوجه (face*) بين 40% و 65% من وقت الجسم (face_paper ينحسب نصه وجه).
 - الأنواع: {', '.join(KINDS)}.
 - face_paper (الأساس لما يذكر خبر أو وثيقة أو رقم أو تصريح): هو يبقى بالكادر والأوراق تطلع يمّه. papers 1–4، type من {', '.join(PAPER_TYPES)}،
-  و at (ثانية من بداية المشهد، ورقة كل 2–3 ث). newspaper (title, highlight, query?)، document (title, lines, highlight?, stamp?)، photo (query)، quote (text, who)، number (value, label)، page (query).
+  و at (ثانية من بداية المشهد، ورقة كل 2–3 ث). newspaper (title, highlight, query?)، document (title, lines, highlight?, stamp?)، photo (query)، quote (text, who)، number (value, label)، page (query). enter = fly|turn|drop، و link: true بكل ورقة = لوحة تحقيق بخيط أحمر.
 - image / footage: query إنگليزي قصير + caption عربي (+ prompt إنگليزي إذا ممكن ما تنلگى صورة حقيقية: يتحول ai_image لحاله).
 - ai_image / ai_video / avatar: prompt إنگليزي + caption عربي؛ الحقيقي أول، وai_budget بالرصيد.
 - entity: id من entities.json، أول مرة ينذكر الاسم.
@@ -26,7 +26,7 @@ def rules() -> str:
 
 
 MOMENTS = {
-    "subscribe": ("اشترك", "اشتركو", "الاشتراك", "لايك", "الجرس", "فعلو", "تفعيل"),
+    "subscribe": ("شترك", "شتراك", "سبسكرايب", "لايك", "الجرس", "فعلو", "تفعيل"),   # اشترك، تشتركون، الاشتراك، مشترك
     "tv": ("السلام عليكم", "هلا بيكم", "هلا والله", "مرحبا", "اهلا وسهلا", "هلو"),
 }
 
@@ -47,6 +47,25 @@ def _chunks(phrases, max_seconds: float = 5.0):
             line.append(w)
         if line:
             yield line
+
+
+# He steps out of the episode for a moment: a joke, a side fact, a word to the viewers. These are KEPT (owner:
+# "مو لازم تنكص") and get their own look (face_fx none + a "على الهامش" tape), so the viewer feels the aside.
+ASIDES = ("مزحه", "امزح", "دا امزح", "اضحك", "ههه", "بالمناسبه", "على الطاري", "عالطاري", "خارج الموضوع",
+          "مو موضوعنا", "خلي اگولكم شغله", "خلي اكولكم شغله", "سالفه صغيره", "المهم نرجع", "نرجع لموضوعنا",
+          "بيني وبينك", "بيني وبينكم", "شغله جانبيه", "معلومه جانبيه", "على الهامش")
+
+
+def find_asides(phrases) -> list[tuple[float, float, str]]:
+    """(start, end, words) of every aside: a phrase with an aside marker, up to the next pause."""
+    from .clean import normalize_ar
+    marks = [normalize_ar(m) for m in ASIDES]
+    out = []
+    for p in phrases:
+        text = " ".join(normalize_ar(w.text) for w in p)
+        if any(m in text for m in marks):
+            out.append((p[0].start, p[-1].end, " ".join(w.text for w in p)))
+    return out
 
 
 # Where a paper beside him fits (face_paper): news, documents, what someone said, numbers and years.
@@ -128,6 +147,13 @@ def write_brief(ep: Episode, styles_summary: str) -> Path:
     moments = find_moments(chunks)
     if moments:
         lines += ["", "لحظات مقترحة:"] + moments
+    asides = find_asides(split_phrases(all_words))
+    if asides:
+        lines += ["", "سوالف جانبية (تبقى، و autofix يحطلها شكل «على الهامش»):"] + [f"[{_ts(a)}–{_ts(z)}] {t}" for a, z, t in asides]
+    names_check = ep.work / "names_check.txt"
+    if names_check.exists() and names_check.read_text(encoding="utf-8").strip():
+        lines += ["", "أسماء مو متأكد منها (اعرفها من القصة، اكتبها بـ edit/names.json، وعيد names):",
+                  names_check.read_text(encoding="utf-8").rstrip()]
     lines += ["", "الكلام:"]
     for p in chunks:
         lines.append(f"[{_ts(p[0].start)}–{_ts(p[-1].end)}] " + " ".join(w.text for w in p))

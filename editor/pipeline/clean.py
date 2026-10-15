@@ -38,6 +38,8 @@ PAD = 0.12             # s: breath kept on each side of a cut (when the sound al
 RETAKE_WINDOW = 30.0   # s: how far ahead a restart can come
 SPAN_LIMIT = 12.0      # s: at most this much between a failed attempt and its restart is dropped with it
 FILLERS = {"اه", "ااه", "اااه", "ام", "امم", "اممم", "مم", "ممم", "اا", "ااا", "اهه", "همم", "هممم", "اوم", "ايي"}
+# Short words Iraqis double on purpose ("لا لا"، "اي اي"، "يا يا"): emphasis, not a stutter — said without a gap
+EMPHATIC = {"لا", "اي", "يا", "بس", "هي", "هو", "اه"}
 CUE_STRONG = {"اعيد", "اعيدها", "نعيد", "نعيدها", "غلط", "ستوب", "استوب", "كت", "جديد", "لحظه", "سوري"}
 CUE_WORDS = CUE_STRONG | {"لا", "خلي", "خليني", "من", "مره", "ثانيه", "اوكي", "اوك", "عفوا", "ماكو", "شي", "يعني"}
 
@@ -160,7 +162,8 @@ def trim_phrase(p: list[Word], removed: list | None = None) -> list[Word]:
             elif t[i] and t[i + 1].startswith(t[i]) and t[i] != t[i + 1] and len(t[i]) >= 3 \
                     and words[i].end - words[i].start < 0.6:     # ("لا، لازم" is not a cut-off word: 3 letters at least)
                 cut = (i, i + 1, "كلمة مقطوعة")
-            elif t[i] == t[i + 1] and len(t[i]) <= 2:
+            elif t[i] == t[i + 1] and len(t[i]) <= 2 and not (
+                    t[i] in EMPHATIC and words[i + 1].start - words[i].end < 0.15):
                 cut = (i, i + 1, "تأتأة")
             else:
                 for j in range(i + 2, min(len(words) - 1, i + 7)):
@@ -235,7 +238,7 @@ def remap_words(words: list[Word], segments: list[tuple[float, float]]) -> list[
         for w in words:
             if s <= (w.start + w.end) / 2 < e:
                 out.append(Word(w.text, round(offset + max(w.start, s) - s, 3),
-                                round(offset + min(w.end, e) - s, 3)))
+                                round(offset + min(w.end, e) - s, 3), w.p))
         offset += e - s
     return out
 

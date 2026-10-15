@@ -13,15 +13,17 @@ class Word:
     text: str
     start: float
     end: float
+    p: float = 1.0   # Whisper's confidence in the word (low on names he says unclearly: names.py looks there)
 
 
 def save_words(words: list[Word], path: Path) -> None:
-    data = [{"t": w.text, "s": round(w.start, 3), "e": round(w.end, 3)} for w in words]
+    data = [{"t": w.text, "s": round(w.start, 3), "e": round(w.end, 3), **({"p": round(w.p, 2)} if w.p < 0.995 else {})}
+            for w in words]
     Path(path).write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
 
 
 def load_words(path: Path) -> list[Word]:
-    return [Word(d["t"], d["s"], d["e"]) for d in json.loads(Path(path).read_text(encoding="utf-8"))]
+    return [Word(d["t"], d["s"], d["e"], d.get("p", 1.0)) for d in json.loads(Path(path).read_text(encoding="utf-8"))]
 
 
 IRAQI_PROMPT = "هلا بيكم، اليوم راح نحچي عن قصة غريبة. شلون صار هيچ؟ خلي نشوف شنو الي صار بالضبط."
@@ -53,7 +55,7 @@ def transcribe(ep: Episode, model_name: str = WHISPER_MODEL, model=None) -> list
         condition_on_previous_text=False,  # long talks: stops Whisper repeating / inventing lines
     )
     words = [
-        Word(w.word.strip(), float(w.start), float(w.end))
+        Word(w.word.strip(), float(w.start), float(w.end), float(getattr(w, "probability", 1.0) or 1.0))
         for seg in segments for w in (seg.words or []) if w.word.strip()
     ]
     if not words:

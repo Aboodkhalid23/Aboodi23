@@ -16,7 +16,7 @@ from .wikimedia import HEADERS, _get, _strip_html, license_ok
 
 WIKIDATA = "https://www.wikidata.org/w/api.php"
 COMMONS = "https://commons.wikimedia.org/w/api.php"
-FILEPATH = "https://commons.wikimedia.org/wiki/Special:FilePath/{}?width=1600"
+FILEPATH = "https://commons.wikimedia.org/wiki/Special:FilePath/{}?width=960"   # a standard thumbnail size: originals hit Wikimedia's rate limit (429)
 KINDS = ("person", "company")
 # person: photo (P18). company: logo (P154), then any image (P18).
 PROPS = {"person": ("P18",), "company": ("P154", "P18")}

@@ -152,6 +152,16 @@ def st_validate(ep, a):
     print("✅ الخطة سليمة")
 
 
+def st_names(ep, a):
+    """Right names for the people and companies, even when he says them wrong (names.py)."""
+    from .names import resolve
+    r = resolve(ep)
+    for f in r["fixed"]:
+        print(f"   ✏️  «{f['heard']}» ← {f['name']}")
+    if r["unsure"]:
+        print(f"🔎 {len(r['unsure'])} اسم ما متأكد منه: بـ work/names_check.txt (Claude يعرفهم من القصة ويكتب edit/names.json، وبعدها names مرة ثانية)")
+
+
 def st_autofix(ep, a):
     """Mechanical plan mistakes are repaired by the code itself (autofix.py); judgement calls are only reported."""
     from .autofix import repair
@@ -250,9 +260,10 @@ def st_deliver(ep, a):
 
 STAGES = {"fetch": [st_fetch], "entities": [st_entities], "transcribe": [st_transcribe], "clean": [st_clean],
           "brief": [st_brief], "validate": [st_validate], "ai-jobs": [st_ai_jobs], "ai-fetch": [st_ai_fetch],
-          "ai-log": [st_ai_log], "check": [st_check], "music-free": [st_music_free], "face-ref": [st_face_ref], "character-jobs": [st_character_jobs], "avatar-register": [st_avatar_register], "music-jobs": [st_music_jobs], "music-fetch": [st_music_fetch], "qa": [st_qa], "scene-check": [st_scene_check], "shorts": [st_shorts], "images": [st_images], "compose": [st_compose], "deliver": [st_deliver], "autofix": [st_autofix], "review": [st_review]}
+          "ai-log": [st_ai_log], "check": [st_check], "music-free": [st_music_free], "face-ref": [st_face_ref], "character-jobs": [st_character_jobs], "avatar-register": [st_avatar_register], "music-jobs": [st_music_jobs], "music-fetch": [st_music_fetch], "qa": [st_qa], "scene-check": [st_scene_check], "shorts": [st_shorts], "images": [st_images], "compose": [st_compose], "deliver": [st_deliver], "autofix": [st_autofix], "review": [st_review], "names": [st_names]}
 STAGES["get"] = STAGES["fetch"] + STAGES["check"]   # download, then show the owner what came
-STAGES["prep"] = STAGES["fetch"] + STAGES["entities"] + STAGES["transcribe"] + STAGES["clean"] + STAGES["brief"]
+# names after clean: the right spelling goes into the words, new people become entities, then their photos come
+STAGES["prep"] = STAGES["fetch"] + STAGES["transcribe"] + STAGES["clean"] + STAGES["names"] + STAGES["entities"] + STAGES["brief"]
 # Real pictures and free music first; what is still missing after that becomes an AI job (owner's rule).
 STAGES["render"] = (STAGES["autofix"] + STAGES["validate"] + STAGES["music-free"] + STAGES["images"] + STAGES["ai-jobs"] + STAGES["music-jobs"]
                     + STAGES["compose"] + STAGES["qa"] + STAGES["review"] + STAGES["deliver"])
