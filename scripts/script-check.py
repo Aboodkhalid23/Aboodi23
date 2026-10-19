@@ -14,10 +14,10 @@ import sys
 
 MIN_WORDS = 2100   # 15 دقيقة
 MAX_WORDS = 4500   # تقريباً 32 دقيقة
-MAX_LINE_WORDS = 12
-WARN_LINE_WORDS = 10
+MAX_LINE_WORDS = 20   # السطر = جملة كاملة تنقال بنفَس واحد
+WARN_LINE_WORDS = 16
 WORDS_PER_MIN = 140
-DEAD_ZONE = 200
+DEAD_ZONE = 350
 MAX_DATES = 3        # تواريخ كاملة: بس للأحداث الكبيرة
 MAX_TIME_REFS = 8    # كل ذكر لسنة
 MAX_TEASERS = 2      # وعود "بآخر الحلقة / راح تعرف"
@@ -77,6 +77,15 @@ def main():
         elif c > WARN_LINE_WORDS:
             yellow.append(f"سطر {i}: {c} كلمة، حاول تقصّه: {ln.strip()[:60]}")
 
+    # 2b. التقطيع الزايد (جمل كلمة أو كلمتين ورا بعض تشتت المقدّم والمشاهد)
+    body = [ln for ln in lines if ln.strip() and not ln.strip().startswith(("العنوان", "الهوك", "السكربت"))]
+    frag = [ln for ln in body if len(ln.split()) <= 2]
+    if body and len(frag) / len(body) > 0.15:
+        red.append(f"تقطيع زايد: {len(frag)} سطر من {len(body)} بيه كلمة أو كلمتين ({round(100*len(frag)/len(body))}%). اكتب جمل كاملة متصلة (الحد 15%).")
+    avg = sum(len(ln.split()) for ln in body) / max(1, len(body))
+    if avg < 6:
+        yellow.append(f"معدل طول السطر {avg:.1f} كلمة: قصير هواي، السرد يصير مقطّع. الأحسن 7-12.")
+
     # 3. التواريخ
     for i, ln in enumerate(lines, 1):
         if WORD_DATE.search(ln):
@@ -128,7 +137,7 @@ def main():
     # 6. بس / وبعدين
     bas = len(word_re("بس").findall(text))
     then = len(word_re("وبعدين").findall(text)) + len(word_re("وبعدها").findall(text))
-    need = max(10, n // 270)
+    need = max(6, n // 450)
     if bas < need:
         yellow.append(f"\"بس\" {bas} مرة، المطلوب {need} أو أكثر (تقلب القصة).")
     if then > bas / 3:
