@@ -47,6 +47,8 @@ def transcript(url, comments=False):
         if comments:
             args += ["--write-comments", "--extractor-args", "youtube:max_comments=30,all,0,0", "--write-info-json"]
         r = run(args + [url])
+        if not list(Path(d).glob("*.vtt")):  # يوتيوب يطلب تسجيل دخول أحياناً، نجرب واجهة الأندرويد
+            r = run(args + ["--extractor-args", "youtube:player_client=android", url])
         subs = sorted(Path(d).glob("*.vtt"), key=lambda p: (not ".ar" in p.name, p.name))
         if not subs:
             print("ما لگيت ترجمة لهالفيديو.\n" + r.stderr[-500:])
