@@ -19,6 +19,18 @@ final class Prefs {
         of(ctx).edit().putString("lang", ar ? "ar" : "en").apply();
     }
 
+    /** تطبيقات الشاشة الرئيسية. أول مرة: نتفلكس ويوتيوب وDAR. */
+    static java.util.List<String> favorites(Context ctx) {
+        String saved = of(ctx).getString("favs", "com.netflix.ninja,com.google.android.youtube.tv,com.mbm_soft.darplayer");
+        java.util.List<String> out = new java.util.ArrayList<>();
+        for (String p : saved.split(",")) if (!p.isEmpty()) out.add(p);
+        return out;
+    }
+
+    static void setFavorites(Context ctx, java.util.List<String> pkgs) {
+        of(ctx).edit().putString("favs", android.text.TextUtils.join(",", pkgs)).apply();
+    }
+
     static void countLaunch(Context ctx, String pkg) {
         SharedPreferences p = of(ctx);
         p.edit().putInt("use:" + pkg, p.getInt("use:" + pkg, 0) + 1).apply();

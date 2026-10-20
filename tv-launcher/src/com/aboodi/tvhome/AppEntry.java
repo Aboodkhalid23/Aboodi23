@@ -11,4 +11,5 @@ final class AppEntry {
     Drawable banner;   // صورة عريضة 16:9 (تطبيقات التلفزيون عدها وحدة)
     Drawable icon;     // الأيقونة العادية، إذا ماكو بانر
     int color;         // لون التطبيق، للخلفية فوگ
+    android.graphics.Bitmap wall; // نسخة صغيرة جداً من صورته، نكبّرها فتصير خلفية ضبابية
 }

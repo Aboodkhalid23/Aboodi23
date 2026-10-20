@@ -45,6 +45,7 @@ final class AppLoader {
                 if (e.banner == null) e.banner = ai.applicationInfo.loadBanner(pm);
                 e.icon = ri.loadIcon(pm);
                 e.color = toneColor(e.banner != null ? e.banner : e.icon);
+                e.wall = tiny(e.banner != null ? e.banner : e.icon, e.color);
                 byPkg.put(e.pkg, e);
             }
         }
@@ -61,6 +62,19 @@ final class AppLoader {
             if (ua != ub) return ub - ua;
             return collator.compare(a.label, b.label);
         });
+    }
+
+    /** يرسم الصورة بحجم 32×18 بكسل؛ لما تتكبر على الشاشة كلها تطلع ضبابية ناعمة مثل آبل تي في. */
+    private static Bitmap tiny(Drawable d, int color) {
+        Bitmap bmp = Bitmap.createBitmap(32, 18, Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(bmp);
+        c.drawColor(color);
+        if (d != null) {
+            boolean wide = d.getIntrinsicWidth() > d.getIntrinsicHeight() * 1.3f;
+            if (wide) d.setBounds(0, 0, 32, 18); else d.setBounds(7, 0, 25, 18);
+            d.draw(c);
+        }
+        return bmp;
     }
 
     /** ياخذ معدل لون الصورة ويخليه غامج شوية حتى الكتابة البيضة تنقرا فوگه. */

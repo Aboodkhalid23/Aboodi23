@@ -1,7 +1,5 @@
 package com.aboodi.tvhome;
 
-import android.animation.ArgbEvaluator;
-import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
@@ -11,9 +9,10 @@ import android.content.IntentFilter;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.StateListDrawable;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -22,8 +21,8 @@ import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.ViewOutlineProvider;
 import android.view.Window;
 import android.view.WindowManager;
@@ -31,8 +30,10 @@ import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextClock;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,33 +42,32 @@ import java.util.concurrent.Executors;
 
 /**
  * الشاشة الرئيسية بستايل آبل تي في:
- * فوگ "رف" كبير يعرض التطبيق المختار، وجوه شبكة تطبيقات تكبر لما تأشر عليها.
- * كلها عناصر أندرويد أصلية (بدون متصفح ولا مكتبات) حتى تكون خفيفة وسريعة.
+ * خلفية ضبابية بلون التطبيق المختار، واسمه كبير، وجوه صف واحد من تطبيقاتك المفضلة بس.
+ * "كل التطبيقات" تفتح شبكة بباقي التطبيقات. كلها عناصر أندرويد أصلية، خفيفة وسريعة.
  */
 public class MainActivity extends Activity {
-    private static final int COLS = 6;
-    private static final int GROUND = 0xFF08090B;
+    private static final int GRID_COLS = 6;
     private static final int INK = 0xFFF5F5F7;
-    private static final int INK_DIM = 0x9EF5F5F7;
+    private static final int INK_DIM = 0xA6F5F5F7;
+    private static final String ALL = "@all";
 
     /** نخلي القائمة بالذاكرة، فلما ترجع للرئيسية تطلع فوراً بدون تحميل. */
     private static List<AppEntry> sApps;
 
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
     private final Handler main = new Handler(Looper.getMainLooper());
+    private final DecelerateInterpolator ease = new DecelerateInterpolator(2f);
 
     private float u; // وحدة القياس: 1 = بكسل وحد على شاشة 1920 عرض
     private FrameLayout root;
-    private View shelfBg;
-    private GradientDrawable shelfGradient;
-    private ImageView shelfArt;
-    private TextView shelfKicker, shelfTitle, langPill, settingsPill;
-    private CalmScrollView scroll;
-    private LinearLayout gridBox;
-    private final List<View> tiles = new ArrayList<>();
-    private int shelfColor = 0xFF1C1C1E;
-    private ValueAnimator shelfAnim;
-    private boolean resortOnResume;
+    private ImageView wallA, wallB; // خلفيتين نبدل بيناتهن بنعومة
+    private boolean wallAOnTop = true;
+    private TextView heroTitle, heroHint, langPill, settingsPill;
+    private LinearLayout dock;
+    private FrameLayout allPanel;
+    private LinearLayout allGrid;
+    private TextView allTitle;
+    private String lastWallPkg;
     private boolean userMoved; // المستخدم ضغط شي بالريموت؟
 
     private final BroadcastReceiver packagesChanged = new BroadcastReceiver() {
@@ -107,80 +107,64 @@ public class MainActivity extends Activity {
         super.onDestroy();
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (resortOnResume && sApps != null) {
-            resortOnResume = false;
-            List<AppEntry> copy = new ArrayList<>(sApps);
-            AppLoader.sort(this, copy);
-            sApps = copy;
-            showApps(copy);
-        }
-    }
-
-    /** زر الرئيسية بالريموت وإحنا أصلاً بالرئيسية: نرجع لأول تطبيق. */
+    /** زر الرئيسية بالريموت وإحنا أصلاً بالرئيسية: نسد "كل التطبيقات" ونرجع لأول تطبيق. */
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        goTop();
+        closeAll();
+        focusFirst();
     }
 
-    /** زر الرجوع بالرئيسية ما يطلع لمكان، بس يرجعك لفوگ. */
+    /** زر الرجوع: يسد "كل التطبيقات" إذا مفتوحة، وغير هيچ ما يسوي شي. */
     @Override
     public void onBackPressed() {
-        goTop();
+        if (allPanel.getVisibility() == View.VISIBLE) closeAll();
+        else focusFirst();
     }
 
-    private void goTop() {
-        scroll.smoothScrollTo(0, 0);
-        if (!tiles.isEmpty()) tiles.get(0).requestFocus();
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent e) {
+        userMoved = true;
+        return super.dispatchKeyEvent(e);
+    }
+
+    private void focusFirst() {
+        if (dock.getChildCount() > 0) dock.getChildAt(0).requestFocus();
     }
 
     // ---------- بناء الشاشة ----------
 
     private void buildScreen() {
         root = new FrameLayout(this);
-        root.setBackgroundColor(GROUND);
-        root.setClipChildren(false);
+        root.setBackgroundColor(Color.BLACK);
 
-        // الرف الفوگاني: خلفية بلون التطبيق المختار + البانر مالته + اسمه
-        shelfGradient = new GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                new int[]{shelfColor, darken(shelfColor, 0.45f), GROUND});
-        shelfBg = new View(this);
-        shelfBg.setBackground(shelfGradient);
-        root.addView(shelfBg, new FrameLayout.LayoutParams(-1, px(640)));
+        // الخلفية: صورة صغيرة متكبرة على الشاشة كلها = ضباب ناعم
+        wallA = wallView();
+        wallB = wallView();
+        wallB.setAlpha(0f);
+        root.addView(wallB, new FrameLayout.LayoutParams(-1, -1));
+        root.addView(wallA, new FrameLayout.LayoutParams(-1, -1));
+        View dim = new View(this);
+        dim.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+                new int[]{0x33000000, 0x66000000, 0xE6000000}));
+        root.addView(dim, new FrameLayout.LayoutParams(-1, -1));
 
-        shelfArt = new ImageView(this);
-        shelfArt.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        shelfArt.setAlpha(0.95f);
-        FrameLayout.LayoutParams artLp = new FrameLayout.LayoutParams(px(620), px(349), Gravity.TOP | Gravity.END);
-        artLp.topMargin = px(120);
-        artLp.setMarginEnd(px(110));
-        roundCorners(shelfArt, px(26));
-        root.addView(shelfArt, artLp);
+        // اسم التطبيق المختار، كبير مثل آبل تي في
+        LinearLayout hero = new LinearLayout(this);
+        hero.setOrientation(LinearLayout.VERTICAL);
+        heroTitle = text(96, INK, true);
+        heroTitle.setMaxLines(1);
+        heroTitle.setEllipsize(TextUtils.TruncateAt.END);
+        heroTitle.setShadowLayer(px(24), 0, px(4), 0x80000000);
+        heroHint = text(28, INK_DIM, false);
+        hero.addView(heroTitle);
+        hero.addView(heroHint);
+        FrameLayout.LayoutParams hLp = new FrameLayout.LayoutParams(px(1300), -2, Gravity.TOP | Gravity.START);
+        hLp.topMargin = px(300);
+        hLp.setMarginStart(px(120));
+        root.addView(hero, hLp);
 
-        View fade = new View(this);
-        fade.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
-                new int[]{0x0008090B, 0xC008090B, GROUND}));
-        FrameLayout.LayoutParams fadeLp = new FrameLayout.LayoutParams(-1, px(300));
-        fadeLp.topMargin = px(340);
-        root.addView(fade, fadeLp);
-
-        LinearLayout shelfText = new LinearLayout(this);
-        shelfText.setOrientation(LinearLayout.VERTICAL);
-        shelfKicker = text(26, INK_DIM, false);
-        shelfTitle = text(80, INK, true);
-        shelfTitle.setMaxLines(1);
-        shelfTitle.setEllipsize(TextUtils.TruncateAt.END);
-        shelfText.addView(shelfKicker);
-        shelfText.addView(shelfTitle);
-        FrameLayout.LayoutParams stLp = new FrameLayout.LayoutParams(px(900), -2, Gravity.TOP | Gravity.START);
-        stLp.topMargin = px(300);
-        stLp.setMarginStart(px(110));
-        root.addView(shelfText, stLp);
-
-        // الشريط الفوگاني: الساعة + زر اللغة + زر الإعدادات
+        // فوگ: الساعة + اللغة + الإعدادات
         LinearLayout top = new LinearLayout(this);
         top.setGravity(Gravity.CENTER_VERTICAL);
         TextClock clock = new TextClock(this);
@@ -188,6 +172,7 @@ public class MainActivity extends Activity {
         clock.setFormat24Hour("H:mm");
         clock.setTextColor(INK);
         clock.setTextSize(TypedValue.COMPLEX_UNIT_PX, px(40));
+        clock.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
         top.addView(clock, new LinearLayout.LayoutParams(0, -2, 1));
         langPill = pill();
         langPill.setOnClickListener(v -> {
@@ -196,29 +181,58 @@ public class MainActivity extends Activity {
         });
         settingsPill = pill();
         settingsPill.setOnClickListener(v -> open(new Intent(Settings.ACTION_SETTINGS)));
-        LinearLayout.LayoutParams pl = new LinearLayout.LayoutParams(-2, px(58));
+        LinearLayout.LayoutParams pl = new LinearLayout.LayoutParams(-2, px(56));
         pl.setMarginStart(px(14));
         top.addView(langPill, pl);
         top.addView(settingsPill, new LinearLayout.LayoutParams(pl));
         FrameLayout.LayoutParams topLp = new FrameLayout.LayoutParams(-1, -2, Gravity.TOP);
-        topLp.topMargin = px(44);
-        topLp.leftMargin = topLp.rightMargin = px(110);
+        topLp.topMargin = px(48);
+        topLp.leftMargin = topLp.rightMargin = px(120);
         root.addView(top, topLp);
 
-        // شبكة التطبيقات: تتمرر فوگ الرف مثل آبل تي في
-        scroll = new CalmScrollView(this);
-        scroll.setVerticalScrollBarEnabled(false);
-        scroll.setOverScrollMode(View.OVER_SCROLL_NEVER);
-        scroll.setClipChildren(false);
-        scroll.setClipToPadding(false);
-        gridBox = new LinearLayout(this);
-        gridBox.setOrientation(LinearLayout.VERTICAL);
-        gridBox.setClipChildren(false);
-        scroll.addView(gridBox, new FrameLayout.LayoutParams(-1, -2));
-        FrameLayout.LayoutParams sLp = new FrameLayout.LayoutParams(-1, -1);
-        sLp.topMargin = px(130); // تحت الشريط الفوگاني
-        root.addView(scroll, sLp);
-        gridBox.setPadding(px(110), px(430), px(110), px(120));
+        // الصف: تطبيقاتك المفضلة بس، كبار
+        dock = new LinearLayout(this);
+        dock.setClipChildren(false);
+        dock.setPadding(px(120), px(40), px(120), px(40));
+        android.widget.HorizontalScrollView dockScroll = new android.widget.HorizontalScrollView(this);
+        dockScroll.setHorizontalScrollBarEnabled(false);
+        dockScroll.setClipChildren(false);
+        dockScroll.setClipToPadding(false);
+        dockScroll.setOverScrollMode(View.OVER_SCROLL_NEVER);
+        dockScroll.addView(dock, new FrameLayout.LayoutParams(-2, -2));
+        FrameLayout.LayoutParams dLp = new FrameLayout.LayoutParams(-1, -2, Gravity.TOP);
+        dLp.topMargin = px(640);
+        root.addView(dockScroll, dLp);
+        root.setClipChildren(false);
+
+        // لوحة "كل التطبيقات"
+        allPanel = new FrameLayout(this);
+        allPanel.setBackgroundColor(0xF20B0B0D);
+        allPanel.setVisibility(View.GONE);
+        allTitle = text(48, INK, true);
+        FrameLayout.LayoutParams atLp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.START);
+        atLp.topMargin = px(56);
+        atLp.setMarginStart(px(120));
+        allPanel.addView(allTitle, atLp);
+        ScrollView sv = new ScrollView(this);
+        sv.setVerticalScrollBarEnabled(false);
+        sv.setClipToPadding(false);
+        sv.setClipChildren(false);
+        allGrid = new LinearLayout(this);
+        allGrid.setOrientation(LinearLayout.VERTICAL);
+        allGrid.setClipChildren(false);
+        allGrid.setPadding(px(120), px(40), px(120), px(120));
+        sv.addView(allGrid, new FrameLayout.LayoutParams(-1, -2));
+        FrameLayout.LayoutParams svLp = new FrameLayout.LayoutParams(-1, -1);
+        svLp.topMargin = px(150);
+        allPanel.addView(sv, svLp);
+        root.addView(allPanel, new FrameLayout.LayoutParams(-1, -1));
+    }
+
+    private ImageView wallView() {
+        ImageView v = new ImageView(this);
+        v.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        return v;
     }
 
     private void reload() {
@@ -228,130 +242,223 @@ public class MainActivity extends Activity {
                 if (isDestroyed()) return;
                 boolean same = sameOrder(sApps, apps);
                 sApps = apps;
-                if (!same || tiles.isEmpty()) showApps(apps);
+                if (!same || dock.getChildCount() == 0) showApps(apps);
             });
         });
     }
 
+    private List<AppEntry> favorites(List<AppEntry> apps) {
+        List<AppEntry> favs = new ArrayList<>();
+        for (String pkg : Prefs.favorites(this)) {
+            for (AppEntry a : apps) if (a.pkg.equals(pkg)) { favs.add(a); break; }
+        }
+        if (favs.isEmpty()) favs.addAll(apps.subList(0, Math.min(3, apps.size())));
+        return favs;
+    }
+
     private void showApps(List<AppEntry> apps) {
         View focused = getCurrentFocus();
-        String keepPkg = focused != null && focused.getTag() instanceof AppEntry ? ((AppEntry) focused.getTag()).pkg : null;
-        gridBox.removeAllViews();
-        tiles.clear();
+        Object keep = focused != null ? focused.getTag() : null;
+        dock.removeAllViews();
 
-        int gap = px(44);
-        int contentW = Math.round(1920 * u) - px(220);
-        int cardW = (contentW - gap * (COLS - 1)) / COLS;
-        int cardH = cardW * 9 / 16;
-
-        LinearLayout row = null;
+        int tileW = px(360), tileH = px(216), gap = px(56);
         View restore = null;
+        List<AppEntry> favs = favorites(apps);
+        for (int i = 0; i <= favs.size(); i++) {
+            AppEntry app = i < favs.size() ? favs.get(i) : null; // الأخير = كل التطبيقات
+            View t = app != null ? tile(app, tileW, tileH, 30, true) : allAppsTile(tileW, tileH);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(tileW, -2);
+            if (i > 0) lp.setMarginStart(gap);
+            dock.addView(t, lp);
+            if (keep != null && keep.equals(t.getTag())) restore = t;
+        }
+        if (allPanel.getVisibility() == View.VISIBLE) fillAll();
+        else if (restore != null) restore.requestFocus();
+        else if (!userMoved || focused == null) focusFirst();
+    }
+
+    private void fillAll() {
+        allGrid.removeAllViews();
+        int gap = px(40);
+        int contentW = Math.round(1920 * u) - px(240);
+        int w = (contentW - gap * (GRID_COLS - 1)) / GRID_COLS;
+        int h = w * 3 / 5;
+        LinearLayout row = null;
+        List<AppEntry> apps = sApps != null ? sApps : new ArrayList<>();
         for (int i = 0; i < apps.size(); i++) {
-            if (i % COLS == 0) {
+            if (i % GRID_COLS == 0) {
                 row = new LinearLayout(this);
                 row.setClipChildren(false);
                 LinearLayout.LayoutParams rl = new LinearLayout.LayoutParams(-1, -2);
-                rl.bottomMargin = px(36);
-                gridBox.addView(row, rl);
+                rl.bottomMargin = px(30);
+                allGrid.addView(row, rl);
             }
-            View t = tile(apps.get(i), i / COLS, cardW, cardH);
-            LinearLayout.LayoutParams tl = new LinearLayout.LayoutParams(cardW, -2);
-            if (i % COLS != 0) tl.setMarginStart(gap);
+            View t = tile(apps.get(i), w, h, 24, false);
+            LinearLayout.LayoutParams tl = new LinearLayout.LayoutParams(w, -2);
+            if (i % GRID_COLS != 0) tl.setMarginStart(gap);
             row.addView(t, tl);
-            tiles.add(t);
-            if (apps.get(i).pkg.equals(keepPkg)) restore = t;
         }
-        if (restore == null && !tiles.isEmpty() && (!userMoved || focused == null || focused.getTag() instanceof AppEntry)) {
-            restore = tiles.get(0);
-        }
-        if (restore != null) restore.requestFocus();
+        if (allGrid.getChildCount() > 0) ((LinearLayout) allGrid.getChildAt(0)).getChildAt(0).requestFocus();
     }
 
-    private View tile(AppEntry app, int rowIndex, int cardW, int cardH) {
+    private void openAll() {
+        allTitle.setText(Prefs.arabic(this) ? "كل التطبيقات" : "All apps");
+        allPanel.setAlpha(0f);
+        allPanel.setVisibility(View.VISIBLE);
+        allPanel.animate().alpha(1f).setDuration(160).start();
+        fillAll();
+    }
+
+    private void closeAll() {
+        if (allPanel.getVisibility() != View.VISIBLE) return;
+        allPanel.setVisibility(View.GONE);
+        allGrid.removeAllViews();
+        focusFirst();
+    }
+
+    /** مربع تطبيق: صورته العريضة إذا عنده، وإلا أيقونته على لونه. */
+    private View tile(AppEntry app, int w, int h, float labelSize, boolean onHome) {
+        FrameLayout card = new FrameLayout(this);
+        GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                new int[]{lighten(app.color, 0.15f), darken(app.color, 0.65f)});
+        bg.setCornerRadius(px(onHome ? 26 : 20));
+        card.setBackground(bg);
+        ImageView img = new ImageView(this);
+        if (app.banner != null) {
+            img.setImageDrawable(copy(app.banner));
+            img.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            card.addView(img, new FrameLayout.LayoutParams(-1, -1));
+        } else {
+            img.setImageDrawable(copy(app.icon));
+            img.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            card.addView(img, new FrameLayout.LayoutParams(h * 3 / 5, h * 3 / 5, Gravity.CENTER));
+        }
+        View box = wrap(card, w, h, app.label, labelSize);
+        box.setTag(app.pkg);
+        box.setOnFocusChangeListener((v, has) -> {
+            lift(v, has);
+            if (has && onHome) showHero(app);
+        });
+        box.setOnClickListener(v -> {
+            Prefs.countLaunch(this, app.pkg);
+            open(app.launch);
+        });
+        // ضغطة طويلة: بالرئيسية تشيله منها، وبكل التطبيقات تضيفه للرئيسية
+        box.setOnLongClickListener(v -> {
+            toggleFavorite(app);
+            return true;
+        });
+        return box;
+    }
+
+    private View allAppsTile(int w, int h) {
+        FrameLayout card = new FrameLayout(this);
+        card.setBackground(roundRect(0x33FFFFFF, px(26)));
+        GridGlyph glyph = new GridGlyph(this, px(14));
+        card.addView(glyph, new FrameLayout.LayoutParams(h * 2 / 5, h * 2 / 5, Gravity.CENTER));
+        View box = wrap(card, w, h, Prefs.arabic(this) ? "كل التطبيقات" : "All apps", 30);
+        box.setTag(ALL);
+        box.setOnFocusChangeListener((v, has) -> {
+            lift(v, has);
+            if (has) {
+                heroTitle.setText(Prefs.arabic(this) ? "كل التطبيقات" : "All apps");
+                heroHint.setText(Prefs.arabic(this) ? "باقي تطبيقاتك هنا" : "The rest of your apps");
+                setWall(null, 0xFF2C2C2E);
+            }
+        });
+        box.setOnClickListener(v -> openAll());
+        return box;
+    }
+
+    /** يلف المربع ويا اسمه تحته، ويخليه يتأشر عليه بالريموت. */
+    private View wrap(FrameLayout card, int w, int h, String label, float labelSize) {
+        card.setOutlineProvider(ViewOutlineProvider.BACKGROUND);
+        card.setClipToOutline(true);
+        card.setElevation(px(8));
+        View shine = new View(this);
+        shine.setBackground(new GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                new int[]{0x40FFFFFF, 0x00FFFFFF, 0x00FFFFFF}));
+        shine.setAlpha(0f);
+        card.addView(shine, new FrameLayout.LayoutParams(-1, -1));
+
         LinearLayout box = new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL);
         box.setGravity(Gravity.CENTER_HORIZONTAL);
         box.setClipChildren(false);
         box.setFocusable(true);
         box.setClickable(true);
-        box.setTag(app);
-
-        FrameLayout card = new FrameLayout(this);
-        GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                new int[]{lighten(app.color, 0.18f), darken(app.color, 0.7f)});
-        bg.setCornerRadius(px(22));
-        card.setBackground(bg);
-        card.setOutlineProvider(ViewOutlineProvider.BACKGROUND);
-        card.setClipToOutline(true);
-        card.setElevation(px(6));
-        ImageView img = new ImageView(this);
-        if (app.banner != null) {
-            img.setImageDrawable(app.banner);
-            img.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            card.addView(img, new FrameLayout.LayoutParams(-1, -1));
-        } else {
-            img.setImageDrawable(app.icon);
-            img.setScaleType(ImageView.ScaleType.FIT_CENTER);
-            card.addView(img, new FrameLayout.LayoutParams(cardH * 11 / 20, cardH * 11 / 20, Gravity.CENTER));
-        }
-        View shine = new View(this);
-        shine.setBackground(new GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                new int[]{0x47FFFFFF, 0x00FFFFFF, 0x00FFFFFF}));
-        shine.setAlpha(0f);
-        card.addView(shine, new FrameLayout.LayoutParams(-1, -1));
-        box.addView(card, new LinearLayout.LayoutParams(cardW, cardH));
-
-        TextView label = text(24, INK, false);
-        label.setText(app.label);
-        label.setSingleLine(true);
-        label.setEllipsize(TextUtils.TruncateAt.END);
-        label.setGravity(Gravity.CENTER);
-        label.setAlpha(0f);
-        LinearLayout.LayoutParams ll = new LinearLayout.LayoutParams(-1, -2);
-        ll.topMargin = px(14);
-        box.addView(label, ll);
-
-        DecelerateInterpolator ease = new DecelerateInterpolator(2f);
-        box.setOnFocusChangeListener((v, has) -> {
-            card.animate().scaleX(has ? 1.15f : 1f).scaleY(has ? 1.15f : 1f)
-                    .translationY(has ? -px(6) : 0).translationZ(has ? px(28) : 0)
-                    .setDuration(150).setInterpolator(ease).start();
-            shine.animate().alpha(has ? 1f : 0f).setDuration(150).start();
-            label.animate().alpha(has ? 1f : 0f).translationY(has ? px(10) : 0).setDuration(150).start();
-            if (has) {
-                showOnShelf(app);
-                View rowView = (View) v.getParent();
-                scroll.smoothScrollTo(0, rowIndex <= 1 ? 0 : rowView.getTop() - gridBox.getChildAt(1).getTop());
-            }
-        });
-        box.setOnClickListener(v -> {
-            Prefs.countLaunch(this, app.pkg);
-            resortOnResume = true;
-            open(app.launch);
-        });
-        // ضغطة طويلة: صفحة معلومات التطبيق (منها تحذفه أو توقفه)
-        box.setOnLongClickListener(v -> {
-            open(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + app.pkg))
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
-            return true;
-        });
+        box.addView(card, new LinearLayout.LayoutParams(w, h));
+        TextView name = text(labelSize, INK, false);
+        name.setText(label);
+        name.setSingleLine(true);
+        name.setEllipsize(TextUtils.TruncateAt.END);
+        name.setGravity(Gravity.CENTER);
+        name.setAlpha(0f);
+        LinearLayout.LayoutParams nl = new LinearLayout.LayoutParams(-1, -2);
+        nl.topMargin = px(18);
+        box.addView(name, nl);
         return box;
     }
 
-    private void showOnShelf(AppEntry app) {
-        shelfTitle.setText(app.label);
-        shelfArt.setImageDrawable(app.banner != null ? app.banner : app.icon);
-        shelfArt.setScaleType(app.banner != null ? ImageView.ScaleType.CENTER_CROP : ImageView.ScaleType.FIT_CENTER);
-        shelfArt.setBackground(app.banner != null ? null : roundRect(darken(app.color, 0.8f), px(26)));
-        if (shelfAnim != null) shelfAnim.cancel();
-        int from = shelfColor, to = app.color;
-        shelfAnim = ValueAnimator.ofObject(new ArgbEvaluator(), from, to);
-        shelfAnim.setDuration(260);
-        shelfAnim.addUpdateListener(a -> {
-            shelfColor = (int) a.getAnimatedValue();
-            shelfGradient.setColors(new int[]{shelfColor, darken(shelfColor, 0.45f), GROUND});
-        });
-        shelfAnim.start();
+    /** لما يتأشر عليه: يكبر ويرتفع ويطلع اسمه، مثل آبل تي في. */
+    private void lift(View box, boolean has) {
+        View card = ((LinearLayout) box).getChildAt(0);
+        View shine = ((FrameLayout) card).getChildAt(((FrameLayout) card).getChildCount() - 1);
+        View name = ((LinearLayout) box).getChildAt(1);
+        card.animate().scaleX(has ? 1.12f : 1f).scaleY(has ? 1.12f : 1f)
+                .translationZ(has ? px(30) : 0).setDuration(160).setInterpolator(ease).start();
+        shine.animate().alpha(has ? 1f : 0f).setDuration(160).start();
+        name.animate().alpha(has ? 1f : 0f).translationY(has ? px(12) : 0).setDuration(160).start();
+    }
+
+    private void showHero(AppEntry app) {
+        heroTitle.setText(app.label);
+        heroHint.setText(Prefs.arabic(this) ? "اضغط OK حتى تفتح" : "Press OK to open");
+        setWall(app.pkg, app.color);
+        if (app.wall != null && !app.pkg.equals(lastWallPkg)) {
+            lastWallPkg = app.pkg;
+            crossfade(new BitmapDrawable(getResources(), app.wall));
+        }
+    }
+
+    private void setWall(String pkg, int color) {
+        if (pkg == null && lastWallPkg != null) {
+            lastWallPkg = null;
+            crossfade(new GradientDrawable(GradientDrawable.Orientation.TL_BR, new int[]{0xFF3A3A3C, 0xFF111113}));
+        }
+    }
+
+    /** نبدل الخلفية بنعومة: الجديدة تبيّن والقديمة تختفي سوة. */
+    private void crossfade(Drawable next) {
+        if (next instanceof BitmapDrawable) ((BitmapDrawable) next).setFilterBitmap(true);
+        ImageView shown = wallAOnTop ? wallA : wallB;
+        ImageView hidden = wallAOnTop ? wallB : wallA;
+        hidden.setImageDrawable(next);
+        hidden.animate().cancel();
+        shown.animate().cancel();
+        hidden.animate().alpha(1f).setDuration(280).start();
+        shown.animate().alpha(0f).setDuration(280).start();
+        wallAOnTop = !wallAOnTop;
+    }
+
+    private void toggleFavorite(AppEntry app) {
+        List<String> favs = new ArrayList<>(Prefs.favorites(this));
+        boolean ar = Prefs.arabic(this);
+        String msg;
+        if (favs.remove(app.pkg)) {
+            msg = ar ? "انشال من الرئيسية" : "Removed from Home";
+        } else {
+            favs.add(app.pkg);
+            msg = ar ? "انضاف للرئيسية" : "Added to Home";
+        }
+        Prefs.setFavorites(this, favs);
+        Toast.makeText(this, app.label + ": " + msg, Toast.LENGTH_SHORT).show();
+        if (sApps != null) {
+            boolean panel = allPanel.getVisibility() == View.VISIBLE;
+            View f = getCurrentFocus();
+            showApps(sApps);
+            if (panel && f != null) f.requestFocus();
+        }
     }
 
     private void applyLanguage() {
@@ -359,23 +466,18 @@ public class MainActivity extends Activity {
         root.setLayoutDirection(ar ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
         langPill.setText(ar ? "English" : "عربي");
         settingsPill.setText(ar ? "الإعدادات" : "Settings");
-        shelfKicker.setText(ar ? "اضغط OK حتى تفتح" : "Press OK to open");
+        if (sApps != null) showApps(sApps);
     }
 
     private void open(Intent intent) {
         try {
             startActivity(intent);
         } catch (ActivityNotFoundException | SecurityException e) {
-            // التطبيق انحذف أو ما يقبل ينفتح: نحدّث القائمة
-            reload();
+            reload(); // التطبيق انحذف أو ما يقبل ينفتح: نحدّث القائمة
         }
     }
 
-    @Override
-    public boolean dispatchKeyEvent(android.view.KeyEvent e) {
-        userMoved = true;
-        return super.dispatchKeyEvent(e);
-    }
+    // ---------- أدوات صغيرة ----------
 
     private static boolean sameOrder(List<AppEntry> a, List<AppEntry> b) {
         if (a == null || a.size() != b.size()) return false;
@@ -385,7 +487,11 @@ public class MainActivity extends Activity {
         return true;
     }
 
-    // ---------- أدوات صغيرة ----------
+    /** كل صورة تنرسم بأكثر من مكان لازم نسخة خاصة بيها. */
+    private Drawable copy(Drawable d) {
+        if (d == null || d.getConstantState() == null) return d;
+        return d.getConstantState().newDrawable(getResources()).mutate();
+    }
 
     private int px(float design) { return Math.round(design * u); }
 
@@ -404,8 +510,8 @@ public class MainActivity extends Activity {
         p.setFocusable(true);
         p.setClickable(true);
         StateListDrawable s = new StateListDrawable();
-        s.addState(new int[]{android.R.attr.state_focused}, roundRect(INK, px(29)));
-        s.addState(new int[]{}, roundRect(0x24FFFFFF, px(29)));
+        s.addState(new int[]{android.R.attr.state_focused}, roundRect(INK, px(28)));
+        s.addState(new int[]{}, roundRect(0x2EFFFFFF, px(28)));
         p.setBackground(s);
         p.setTextColor(new ColorStateList(
                 new int[][]{{android.R.attr.state_focused}, {}},
@@ -422,15 +528,6 @@ public class MainActivity extends Activity {
         return d;
     }
 
-    private static void roundCorners(View v, int radius) {
-        v.setOutlineProvider(new ViewOutlineProvider() {
-            @Override public void getOutline(View view, android.graphics.Outline o) {
-                o.setRoundRect(0, 0, view.getWidth(), view.getHeight(), radius);
-            }
-        });
-        v.setClipToOutline(true);
-    }
-
     private static int darken(int c, float k) {
         return Color.rgb(Math.round(Color.red(c) * k), Math.round(Color.green(c) * k), Math.round(Color.blue(c) * k));
     }
@@ -441,11 +538,25 @@ public class MainActivity extends Activity {
                 Color.blue(c) + Math.round((255 - Color.blue(c)) * k));
     }
 
-    /** سكرول ما يتحرك وحده لما يتغير التركيز؛ إحنا نحركه بهدوء من الكود. */
-    static final class CalmScrollView extends android.widget.ScrollView {
-        CalmScrollView(Context c) { super(c); }
+    /** أيقونة "كل التطبيقات": 9 مربعات صغيرة. */
+    static final class GridGlyph extends View {
+        private final android.graphics.Paint paint = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+        private final float r;
+
+        GridGlyph(Context c, float radius) {
+            super(c);
+            r = radius;
+            paint.setColor(INK);
+        }
 
         @Override
-        protected int computeScrollDeltaToGetChildRectOnScreen(android.graphics.Rect rect) { return 0; }
+        protected void onDraw(android.graphics.Canvas c) {
+            float cell = getWidth() / 3f, pad = cell * 0.14f;
+            for (int y = 0; y < 3; y++) {
+                for (int x = 0; x < 3; x++) {
+                    c.drawRoundRect(x * cell + pad, y * cell + pad, (x + 1) * cell - pad, (y + 1) * cell - pad, r / 2, r / 2, paint);
+                }
+            }
+        }
     }
 }
