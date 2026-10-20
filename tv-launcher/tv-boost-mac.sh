@@ -4,7 +4,9 @@ TV="${TV:-192.168.1.154}"
 ADB="$HOME/AboodTV/platform-tools/adb"
 [ -x "$ADB" ] || { echo "شغّل سطر التنصيب أول مرة وحدة."; exit 1; }
 "$ADB" connect "$TV:5555" >/dev/null
-S() { "$ADB" -s "$TV:5555" shell "$@"; }
+# </dev/null: حتى adb ما ياكل باقي السكربت من curl
+S() { "$ADB" -s "$TV:5555" shell "$@" </dev/null; }
+main() {
 
 echo "١) دا أخلي الحركات أسرع..."
 S settings put global window_animation_scale 0.5
@@ -43,4 +45,8 @@ echo "======================================================"
 
 echo "٥) دا أفتحلك سبوتيفاي بالمتجر، اضغط تثبيت..."
 S am start -a android.intent.action.VIEW -d "market://details?id=com.spotify.tv.android" >/dev/null
+echo "٦) دا أفتحلك صفحة تحديث النظام، اضغط فحص التحديثات..."
+S am start -a android.settings.SYSTEM_UPDATE_SETTINGS >/dev/null 2>&1
 echo "خلص."
+}
+main
