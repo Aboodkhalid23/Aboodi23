@@ -63,6 +63,7 @@ public class MainActivity extends Activity {
     private ImageView wallA, wallB; // خلفيتين نبدل بيناتهن بنعومة
     private boolean wallAOnTop = true;
     private TextView heroTitle, heroHint, langPill, settingsPill;
+    private TextClock dateClock;
     private LinearLayout dock;
     private FrameLayout allPanel;
     private LinearLayout allGrid;
@@ -93,7 +94,7 @@ public class MainActivity extends Activity {
         @Override public void run() {
             if (!visible) return;
             nextWallpaper();
-            main.postDelayed(this, 25000); // صورة جديدة كل 25 ثانية
+            main.postDelayed(this, 20000); // صورة جديدة كل 20 ثانية
         }
     };
     private boolean userMoved; // المستخدم ضغط شي بالريموت؟
@@ -194,21 +195,21 @@ public class MainActivity extends Activity {
         root.addView(wallA, new FrameLayout.LayoutParams(-1, -1));
         View dim = new View(this);
         dim.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
-                new int[]{0x8C000000, 0x14000000, 0x00000000, 0x33000000, 0xD9000000}));
+                new int[]{0x99000000, 0x59000000, 0x59000000, 0x8C000000, 0xE6000000})); // تغميق حتى الساعة والمربعات تبين
         root.addView(dim, new FrameLayout.LayoutParams(-1, -1));
 
         // كلمة يابانية كبيرة ويا نطقها ومعناها
         LinearLayout hero = new LinearLayout(this);
         hero.setOrientation(LinearLayout.VERTICAL);
-        heroTitle = text(110, INK, false);
+        heroTitle = text(54, INK, false);
         heroTitle.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
         heroTitle.setShadowLayer(px(30), 0, px(4), 0x99000000);
-        heroHint = text(30, INK_DIM, false);
+        heroHint = text(24, INK_DIM, false);
         heroHint.setShadowLayer(px(16), 0, px(2), 0x99000000);
         hero.addView(heroTitle);
         hero.addView(heroHint);
-        FrameLayout.LayoutParams hLp = new FrameLayout.LayoutParams(px(1300), -2, Gravity.TOP | Gravity.START);
-        hLp.topMargin = px(150);
+        FrameLayout.LayoutParams hLp = new FrameLayout.LayoutParams(px(1200), -2, Gravity.BOTTOM | Gravity.START);
+        hLp.bottomMargin = px(56);
         hLp.setMarginStart(px(120));
         root.addView(hero, hLp);
 
@@ -222,13 +223,7 @@ public class MainActivity extends Activity {
         // فوگ: الساعة + اللغة + الإعدادات
         LinearLayout top = new LinearLayout(this);
         top.setGravity(Gravity.CENTER_VERTICAL);
-        TextClock clock = new TextClock(this);
-        clock.setFormat12Hour("h:mm");
-        clock.setFormat24Hour("H:mm");
-        clock.setTextColor(INK);
-        clock.setTextSize(TypedValue.COMPLEX_UNIT_PX, px(40));
-        clock.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
-        top.addView(clock, new LinearLayout.LayoutParams(0, -2, 1));
+        top.addView(new View(this), new LinearLayout.LayoutParams(0, 1, 1));
         langPill = pill();
         langPill.setOnClickListener(v -> {
             Prefs.setArabic(this, !Prefs.arabic(this));
@@ -245,19 +240,34 @@ public class MainActivity extends Activity {
         topLp.leftMargin = topLp.rightMargin = px(120);
         root.addView(top, topLp);
 
-        // الصف: تطبيقاتك المفضلة بس، كبار
+        // ساعة كبيرة بالنص والتاريخ تحتها
+        TextClock clock = new TextClock(this);
+        clock.setFormat12Hour("h:mm");
+        clock.setFormat24Hour("H:mm");
+        clock.setTextColor(INK);
+        clock.setTextSize(TypedValue.COMPLEX_UNIT_PX, px(220));
+        clock.setTypeface(Typeface.create("sans-serif-thin", Typeface.NORMAL));
+        clock.setShadowLayer(px(40), 0, 0, 0x66000000);
+        clock.setIncludeFontPadding(false);
+        FrameLayout.LayoutParams clLp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+        clLp.topMargin = px(200);
+        root.addView(clock, clLp);
+        dateClock = new TextClock(this);
+        dateClock.setTextColor(INK_DIM);
+        dateClock.setTextSize(TypedValue.COMPLEX_UNIT_PX, px(36));
+        dateClock.setShadowLayer(px(16), 0, 0, 0x99000000);
+        FrameLayout.LayoutParams dcLp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+        dcLp.topMargin = px(500);
+        root.addView(dateClock, dcLp);
+
+        // صف التطبيقات بالنص، صغار ومرتبين
         dock = new LinearLayout(this);
         dock.setClipChildren(false);
-        dock.setPadding(px(120), px(40), px(120), px(40));
-        android.widget.HorizontalScrollView dockScroll = new android.widget.HorizontalScrollView(this);
-        dockScroll.setHorizontalScrollBarEnabled(false);
-        dockScroll.setClipChildren(false);
-        dockScroll.setClipToPadding(false);
-        dockScroll.setOverScrollMode(View.OVER_SCROLL_NEVER);
-        dockScroll.addView(dock, new FrameLayout.LayoutParams(-2, -2));
-        FrameLayout.LayoutParams dLp = new FrameLayout.LayoutParams(-1, -2, Gravity.TOP);
-        dLp.topMargin = px(780);
-        root.addView(dockScroll, dLp);
+        dock.setClipToPadding(false);
+        dock.setPadding(px(40), px(30), px(40), px(30));
+        FrameLayout.LayoutParams dLp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+        dLp.topMargin = px(640);
+        root.addView(dock, dLp);
         root.setClipChildren(false);
 
         // لوحة "كل التطبيقات"
@@ -316,7 +326,7 @@ public class MainActivity extends Activity {
         Object keep = focused != null ? focused.getTag() : null;
         dock.removeAllViews();
 
-        int tileW = px(250), tileH = px(150), gap = px(40);
+        int tileW = px(224), tileH = px(126), gap = px(36);
         View restore = null;
         List<AppEntry> favs = favorites(apps);
         for (int i = 0; i <= favs.size(); i++) {
@@ -376,7 +386,7 @@ public class MainActivity extends Activity {
         FrameLayout card = new FrameLayout(this);
         GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.TL_BR,
                 new int[]{lighten(app.color, 0.15f), darken(app.color, 0.65f)});
-        bg.setCornerRadius(px(onHome ? 26 : 20));
+        bg.setCornerRadius(px(onHome ? 22 : 20));
         card.setBackground(bg);
         ImageView img = new ImageView(this);
         if (app.banner != null) {
@@ -407,7 +417,7 @@ public class MainActivity extends Activity {
 
     private View allAppsTile(int w, int h) {
         FrameLayout card = new FrameLayout(this);
-        card.setBackground(roundRect(0x33FFFFFF, px(26)));
+        card.setBackground(roundRect(0x40FFFFFF, px(22)));
         GridGlyph glyph = new GridGlyph(this, px(14));
         card.addView(glyph, new FrameLayout.LayoutParams(h * 2 / 5, h * 2 / 5, Gravity.CENTER));
         View box = wrap(card, w, h, Prefs.arabic(this) ? "كل التطبيقات" : "All apps", 24);
@@ -469,7 +479,8 @@ public class MainActivity extends Activity {
         heroTitle.setAlpha(0f);
         heroTitle.animate().alpha(1f).setDuration(900).start();
         int maxW = getResources().getDisplayMetrics().widthPixels;
-        boolean fetch = System.currentTimeMillis() - lastFetch > 120000;
+        // بالبداية ننزل صورة ويا كل تبديل لحد ما يصير عدنا 15، وبعدين وحدة كل دقيقة
+        boolean fetch = feed.count() < 15 || System.currentTimeMillis() - lastFetch > 60000;
         if (fetch) lastFetch = System.currentTimeMillis();
         net.execute(() -> {
             android.graphics.Bitmap bmp = feed.next(maxW);
@@ -529,6 +540,8 @@ public class MainActivity extends Activity {
         boolean ar = Prefs.arabic(this);
         root.setLayoutDirection(ar ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
         langPill.setText(ar ? "English" : "عربي");
+        dateClock.setFormat12Hour(ar ? "EEEE، d MMMM" : "EEEE, d MMMM");
+        dateClock.setFormat24Hour(ar ? "EEEE، d MMMM" : "EEEE, d MMMM");
         settingsPill.setText(ar ? "الإعدادات" : "Settings");
         if (sApps != null) showApps(sApps);
     }

@@ -28,11 +28,13 @@ import java.util.Random;
 final class WallpaperFeed {
     private static final String UA = "AboodTV/2 (https://github.com/Aboodkhalid23/Aboodi23)";
     private static final int KEEP = 60; // كم صورة نخلي بالذاكرة
+    /** شوارع ومباني حديثة بالليل: طوكيو أكثر شي، وويّاها مدن ثانية بنفس الجو. */
     private static final String[] TOPICS = {
-            "Tokyo night", "Shinjuku", "Shibuya", "Akihabara", "Tokyo Tower", "Tokyo skyline",
-            "Kyoto temple", "Fushimi Inari", "Mount Fuji", "Osaka Dotonbori", "Japanese lantern",
-            "torii", "cherry blossom Japan", "Japan street night", "Nara", "Japanese garden",
-            "Kabukicho", "Asakusa", "Japan neon", "Japanese castle"
+            "Shinjuku night", "Shibuya night", "Shibuya Crossing night", "Tokyo night skyline", "Ginza night",
+            "Akihabara night", "Roppongi night", "Kabukicho night", "Tokyo Skytree night", "Tokyo Tower night",
+            "Tokyo neon", "Odaiba night", "Shinjuku skyscrapers night", "Tokyo street night", "Osaka Dotonbori night",
+            "Hong Kong night skyline", "Seoul night", "Shanghai skyline night", "Dubai night skyline",
+            "Singapore Marina Bay night", "New York night skyline", "Taipei night"
     };
 
     private final File dir;
@@ -77,6 +79,8 @@ final class WallpaperFeed {
                 File out = new File(dir, Integer.toHexString(url.hashCode()) + ".jpg");
                 if (out.exists()) continue;
                 download(url, out);
+                if (tooBright(out)) { //noinspection ResultOfMethodCallIgnored
+                    out.delete(); continue; } // نريد بس صور داكنة بالليل
                 trim();
                 return;
             }
@@ -85,9 +89,31 @@ final class WallpaperFeed {
         }
     }
 
+    int count() {
+        String[] n = dir.list((d, name) -> name.endsWith(".jpg"));
+        return n == null ? 0 : n.length;
+    }
+
+    /** نصغّر الصورة لـ 32×18 ونحسب معدل الضوء؛ إذا فاتحة (نهار) نرميها. */
+    private static boolean tooBright(File f) {
+        BitmapFactory.Options o = new BitmapFactory.Options();
+        o.inSampleSize = 32;
+        Bitmap b = BitmapFactory.decodeFile(f.getPath(), o);
+        if (b == null) return true;
+        Bitmap s = Bitmap.createScaledBitmap(b, 32, 18, true);
+        double sum = 0;
+        for (int y = 0; y < 18; y++) for (int x = 0; x < 32; x++) {
+            int p = s.getPixel(x, y);
+            sum += 0.2126 * ((p >> 16) & 255) + 0.7152 * ((p >> 8) & 255) + 0.0722 * (p & 255);
+        }
+        if (s != b) s.recycle();
+        b.recycle();
+        return sum / (32 * 18) > 105; // من 255
+    }
+
     private void refill(boolean strict) throws Exception {
         String topic = TOPICS[random.nextInt(TOPICS.length)];
-        String search = strict ? topic + " incategory:Quality_images filetype:bitmap filew:>1900" : topic + " filetype:bitmap";
+        String search = strict ? topic + " incategory:Quality_images filetype:bitmap filew:>1900" : topic + " filetype:bitmap filew:>1600";
         String api = "https://commons.wikimedia.org/w/api.php?action=query&format=json&generator=search"
                 + "&gsrnamespace=6&gsrlimit=20&gsroffset=" + (strict ? random.nextInt(120) : random.nextInt(40))
                 + "&gsrsearch=" + URLEncoder.encode(search, "UTF-8")
