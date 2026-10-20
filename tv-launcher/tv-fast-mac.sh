@@ -46,6 +46,19 @@ main() {
   echo "١) دا أحدّث شاشة عبود لآخر نسخة..."
   curl -sSLo "$DIR/AboodTV.apk" "$RAW/release/AboodTV.apk?t=$(date +%s)" && "$ADB" -s "$TV:5555" install -r "$DIR/AboodTV.apk" </dev/null >/dev/null && echo "   تمام"
 
+  # نسمح لشاشة عبود تنصب تحديثاتها بنفسها (بعد ما توافق بالتلفزيون)
+  S appops set com.aboodi.tvhome REQUEST_INSTALL_PACKAGES allow >/dev/null 2>&1
+
+  # صورك الخاصة: إذا نزّلت ملف AboodTV-my-walls.zip بالتنزيلات، ننقلها للتلفزيون
+  if [ -f "$HOME/Downloads/AboodTV-my-walls.zip" ]; then
+    echo "   دا أنقل صورك للتلفزيون..."
+    rm -rf "$DIR/mywalls" && mkdir -p "$DIR/mywalls" && unzip -qo "$HOME/Downloads/AboodTV-my-walls.zip" -d "$DIR/mywalls"
+    W=/sdcard/Android/data/com.aboodi.tvhome/files/mywalls
+    S mkdir -p "$W"
+    for f in "$DIR"/mywalls/*; do "$ADB" -s "$TV:5555" push "$f" "$W/" </dev/null >/dev/null; done
+    echo "   تمام"
+  fi
+
   echo "٢) دا أوقف تطبيقات النظام الزايدة (ما تنحذف)..."
   for p in $EXTRA; do
     S pm path "$p" 2>/dev/null | grep -q package && S pm disable-user --user 0 "$p" >/dev/null 2>&1 && echo "   وگّفت $p"

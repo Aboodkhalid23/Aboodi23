@@ -1,18 +1,22 @@
 package com.aboodi.tvhome;
 
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.res.ColorStateList;
+import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.Outline;
 import android.graphics.Typeface;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
-import android.graphics.drawable.StateListDrawable;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -27,6 +31,7 @@ import android.view.ViewOutlineProvider;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.DecelerateInterpolator;
+import android.view.animation.OvershootInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -35,72 +40,94 @@ import android.widget.TextClock;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * الشاشة الرئيسية بستايل آبل تي في:
- * خلفية ضبابية بلون التطبيق المختار، واسمه كبير، وجوه صف واحد من تطبيقاتك المفضلة بس.
- * "كل التطبيقات" تفتح شبكة بباقي التطبيقات. كلها عناصر أندرويد أصلية، خفيفة وسريعة.
+ * شاشة عبود 5: خلفيات أنمي وطوكيو بدقة عالية تتبدل كل 20 ثانية، وفوگها زجاج مثل آبل:
+ * الساعة والوايفاي واللغة والوضع الداكن والإعدادات بالزاوية، والتطبيقات بشريط زجاجي عائم تحت.
+ * وتنظف التلفزيون بنفسها كل ما ترجع للرئيسية، وتحدّث نفسها.
  */
 public class MainActivity extends Activity {
     private static final int GRID_COLS = 6;
-    private static final int INK = 0xFFF5F5F7;
-    private static final int INK_DIM = 0xA6F5F5F7;
+    private static final int INK = 0xFFFFFFFF;
     private static final String ALL = "@all";
+    private static final long AMBIENT_AFTER = 3 * 60 * 1000; // بعد 3 دقايق بدون ريموت: تبين الصورة بس
+    /** هذني ما نسكرهن أبداً بالتنظيف: دار (المباريات) وسبوتيفاي (الأغاني) وخدمات النظام. */
+    private static final Set<String> KEEP = new HashSet<>(java.util.Arrays.asList(
+            "com.mbm_soft.darplayer", "com.spotify.tv.android", "com.google.android.gms",
+            "com.google.android.katniss", "com.google.android.tvlauncher", "com.android.vending"));
 
-    /** نخلي القائمة بالذاكرة، فلما ترجع للرئيسية تطلع فوراً بدون تحميل. */
     private static List<AppEntry> sApps;
 
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
+    private final ExecutorService net = Executors.newSingleThreadExecutor();
     private final Handler main = new Handler(Looper.getMainLooper());
+    private final OvershootInterpolator pop = new OvershootInterpolator(1.3f);
     private final DecelerateInterpolator ease = new DecelerateInterpolator(2f);
 
-    private float u; // وحدة القياس: 1 = بكسل وحد على شاشة 1920 عرض
+    private float u;
+    private int screenW, screenH;
     private FrameLayout root;
-    private ImageView wallA, wallB; // خلفيتين نبدل بيناتهن بنعومة
+    private ImageView wallA, wallB;
     private boolean wallAOnTop = true;
-    private TextView heroTitle, heroHint, langPill, settingsPill;
-    private TextClock dateClock;
-    private LinearLayout dock;
-    private FrameLayout allPanel;
-    private LinearLayout allGrid;
-    private TextView allTitle;
+    private View dim;
+    private TextView phrase, phraseHint, dateText, focusLabel, allTitle;
+    private TextClock clock;
+    private LinearLayout topBar, dock, allGrid;
+    private Glass.GlassFrame dockGlass, allPanel, updateChip;
+    private Glyph wifiGlyph, darkGlyph;
     private WallpaperFeed feed;
-    private final ExecutorService net = Executors.newSingleThreadExecutor(); // تنزيل الصور بخيط وحده
-    private boolean visible;
+    private boolean visible, ambient;
     private int phraseIndex;
-    private long lastFetch;
+    private long lastFetch, lastClean, lastKey = System.currentTimeMillis(), lastWeather;
+    private String weather = "";
 
-    /** كلمات يابانية تتبدل ويا الصور: الكتابة، النطق، والمعنى. */
     private static final String[][] PHRASES = {
-            {"東京", "Tōkyō", "طوكيو", "Tokyo"},
-            {"夜の街", "Yoru no machi", "مدينة الليل", "City at night"},
-            {"桜", "Sakura", "زهرة الكرز", "Cherry blossom"},
-            {"夢", "Yume", "حلم", "Dream"},
-            {"侍", "Samurai", "ساموراي", "Samurai"},
-            {"一期一会", "Ichigo ichie", "كل لقاء يصير مرة وحدة بالعمر", "Once in a lifetime"},
-            {"頑張って", "Ganbatte", "شد حيلك", "Keep going"},
-            {"七転び八起き", "Nana korobi ya oki", "توگع سبع مرات وتگوم ثمانية", "Fall seven, rise eight"},
-            {"静けさ", "Shizukesa", "الهدوء", "Stillness"},
-            {"光", "Hikari", "ضوء", "Light"},
-            {"富士山", "Fujisan", "جبل فوجي", "Mount Fuji"},
-            {"ありがとう", "Arigatō", "شكراً", "Thank you"},
+            {"夜の東京", "طوكيو بالليل", "Tokyo at night"},
+            {"おかえり", "هلا بيك برجعتك", "Welcome home"},
+            {"桜", "زهرة الكرز", "Cherry blossom"},
+            {"夢", "حلم", "Dream"},
+            {"侍", "ساموراي", "Samurai"},
+            {"一期一会", "كل لقاء يصير مرة وحدة بالعمر", "Once in a lifetime"},
+            {"頑張って", "شد حيلك", "Keep going"},
+            {"七転び八起き", "توگع سبع مرات وتگوم ثمانية", "Fall seven, rise eight"},
+            {"静けさ", "الهدوء", "Stillness"},
+            {"光", "ضوء", "Light"},
+            {"富士山", "جبل فوجي", "Mount Fuji"},
+            {"ありがとう", "شكراً", "Thank you"},
     };
 
     private final Runnable rotate = new Runnable() {
         @Override public void run() {
             if (!visible) return;
             nextWallpaper();
-            main.postDelayed(this, 20000); // صورة جديدة كل 20 ثانية
+            main.postDelayed(this, 20000);
         }
     };
-    private boolean userMoved; // المستخدم ضغط شي بالريموت؟
+
+    private final Runnable dateTick = this::updateDate;
+
+    private final Runnable ambientCheck = new Runnable() {
+        @Override public void run() {
+            if (!visible) return;
+            if (!ambient && System.currentTimeMillis() - lastKey > AMBIENT_AFTER && allPanel.getVisibility() != View.VISIBLE) setAmbient(true);
+            main.postDelayed(this, 15000);
+        }
+    };
 
     private final BroadcastReceiver packagesChanged = new BroadcastReceiver() {
         @Override public void onReceive(Context c, Intent i) { reload(); }
+    };
+
+    private final BroadcastReceiver netChanged = new BroadcastReceiver() {
+        @Override public void onReceive(Context c, Intent i) { updateWifi(); }
     };
 
     @Override
@@ -112,10 +139,15 @@ public class MainActivity extends Activity {
                 | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
 
         DisplayMetrics dm = getResources().getDisplayMetrics();
-        u = Math.max(dm.widthPixels, dm.heightPixels) / 1920f;
+        screenW = Math.max(dm.widthPixels, dm.heightPixels);
+        screenH = Math.min(dm.widthPixels, dm.heightPixels);
+        u = screenW / 1920f;
+        feed = new WallpaperFeed(this);
+        Glass.Backdrop.dark = Prefs.dark(this);
 
         buildScreen();
         applyLanguage();
+        applyDark(false);
         setContentView(root);
 
         if (sApps != null) showApps(sApps);
@@ -127,33 +159,48 @@ public class MainActivity extends Activity {
         f.addAction(Intent.ACTION_PACKAGE_CHANGED);
         f.addDataScheme("package");
         registerReceiver(packagesChanged, f);
+        IntentFilter nf = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+        nf.addAction(WifiManager.RSSI_CHANGED_ACTION);
+        registerReceiver(netChanged, nf);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         visible = true;
+        lastKey = System.currentTimeMillis();
+        setAmbient(false);
+        updateWifi();
         main.removeCallbacks(rotate);
         main.post(rotate);
+        main.removeCallbacks(ambientCheck);
+        main.postDelayed(ambientCheck, 15000);
+        main.postDelayed(this::cleanUp, 1500);
+        net.execute(() -> {
+            int v = Updater.check(this);
+            main.post(() -> updateChip.setVisibility(v > 0 ? View.VISIBLE : View.GONE));
+            loadWeather();
+        });
     }
 
-    /** أول ما يفتح تطبيق ثاني (مباراة، نتفلكس): نوقف كلشي، ولا بايت نت. */
+    /** أول ما يفتح تطبيق ثاني: نوقف كلشي، ولا بايت نت. */
     @Override
     protected void onPause() {
         visible = false;
         main.removeCallbacks(rotate);
+        main.removeCallbacks(ambientCheck);
         super.onPause();
     }
 
     @Override
     protected void onDestroy() {
         unregisterReceiver(packagesChanged);
+        unregisterReceiver(netChanged);
         worker.shutdownNow();
         net.shutdownNow();
         super.onDestroy();
     }
 
-    /** زر الرئيسية بالريموت وإحنا أصلاً بالرئيسية: نسد "كل التطبيقات" ونرجع لأول تطبيق. */
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
@@ -161,7 +208,6 @@ public class MainActivity extends Activity {
         focusFirst();
     }
 
-    /** زر الرجوع: يسد "كل التطبيقات" إذا مفتوحة، وغير هيچ ما يسوي شي. */
     @Override
     public void onBackPressed() {
         if (allPanel.getVisibility() == View.VISIBLE) closeAll();
@@ -170,7 +216,11 @@ public class MainActivity extends Activity {
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent e) {
-        userMoved = true;
+        lastKey = System.currentTimeMillis();
+        if (ambient) { // أول ضغطة بعد وضع العرض بس ترجّع الواجهة
+            if (e.getAction() == KeyEvent.ACTION_UP) setAmbient(false);
+            return true;
+        }
         return super.dispatchKeyEvent(e);
     }
 
@@ -182,101 +232,126 @@ public class MainActivity extends Activity {
 
     private void buildScreen() {
         root = new FrameLayout(this);
-        root.setBackgroundColor(Color.BLACK);
-
-        // الخلفية: صور اليابان تتبدل وتتحرك ببطء
-        feed = new WallpaperFeed(this);
-        root.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
-                new int[]{0xFF0B1530, 0xFF1B2C55, 0xFF3D4F7C})); // لحد ما توصل أول صورة
+        root.setClipChildren(false);
+        root.setBackground(new GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                new int[]{0xFF0B1028, 0xFF1C1F4A, 0xFF3A2856})); // لحد ما توصل أول صورة
         wallA = wallView();
         wallB = wallView();
         wallB.setAlpha(0f);
         root.addView(wallB, new FrameLayout.LayoutParams(-1, -1));
         root.addView(wallA, new FrameLayout.LayoutParams(-1, -1));
-        View dim = new View(this);
-        dim.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
-                new int[]{0x99000000, 0x59000000, 0x59000000, 0x8C000000, 0xE6000000})); // تغميق حتى الساعة والمربعات تبين
+        dim = new View(this);
         root.addView(dim, new FrameLayout.LayoutParams(-1, -1));
 
-        // كلمة يابانية كبيرة ويا نطقها ومعناها
-        LinearLayout hero = new LinearLayout(this);
-        hero.setOrientation(LinearLayout.VERTICAL);
-        heroTitle = text(54, INK, false);
-        heroTitle.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
-        heroTitle.setShadowLayer(px(30), 0, px(4), 0x99000000);
-        heroHint = text(24, INK_DIM, false);
-        heroHint.setShadowLayer(px(16), 0, px(2), 0x99000000);
-        hero.addView(heroTitle);
-        hero.addView(heroHint);
-        FrameLayout.LayoutParams hLp = new FrameLayout.LayoutParams(px(1200), -2, Gravity.BOTTOM | Gravity.START);
-        hLp.bottomMargin = px(56);
-        hLp.setMarginStart(px(120));
-        root.addView(hero, hLp);
+        // يسار فوگ: كلمة يابانية صغيرة ومعناها
+        LinearLayout left = new LinearLayout(this);
+        left.setOrientation(LinearLayout.VERTICAL);
+        left.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
+        phrase = text(30, INK, false);
+        phrase.setShadowLayer(px(14), 0, px(2), 0x99000000);
+        phraseHint = text(20, 0xCCFFFFFF, false);
+        phraseHint.setShadowLayer(px(10), 0, px(2), 0x99000000);
+        left.addView(phrase);
+        left.addView(phraseHint);
+        FrameLayout.LayoutParams lLp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.LEFT);
+        lLp.topMargin = px(52);
+        lLp.leftMargin = px(70);
+        root.addView(left, lLp);
 
-        TextView credit = text(18, 0x80FFFFFF, false);
-        credit.setText("Wikimedia Commons");
-        FrameLayout.LayoutParams cLp = new FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM | Gravity.END);
-        cLp.bottomMargin = px(36);
-        cLp.setMarginEnd(px(120));
-        root.addView(credit, cLp);
-
-        // فوگ: الساعة + اللغة + الإعدادات
-        LinearLayout top = new LinearLayout(this);
-        top.setGravity(Gravity.CENTER_VERTICAL);
-        top.addView(new View(this), new LinearLayout.LayoutParams(0, 1, 1));
-        langPill = pill();
-        langPill.setOnClickListener(v -> {
-            Prefs.setArabic(this, !Prefs.arabic(this));
-            applyLanguage();
+        // يمين فوگ: أزرار زجاجية + الساعة
+        topBar = new LinearLayout(this);
+        topBar.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
+        topBar.setGravity(Gravity.CENTER_VERTICAL);
+        topBar.setClipChildren(false);
+        updateChip = new Glass.GlassFrame(this, px(36));
+        LinearLayout uc = new LinearLayout(this);
+        uc.setGravity(Gravity.CENTER_VERTICAL);
+        uc.setPadding(px(22), 0, px(26), 0);
+        Glyph ug = new Glyph(this, Glyph.UPDATE);
+        uc.addView(ug, new LinearLayout.LayoutParams(px(30), px(30)));
+        TextView ut = text(22, INK, true);
+        ut.setTag("upd");
+        LinearLayout.LayoutParams utl = new LinearLayout.LayoutParams(-2, -2);
+        utl.leftMargin = px(10);
+        uc.addView(ut, utl);
+        updateChip.addView(uc, new FrameLayout.LayoutParams(-2, -1));
+        updateChip.setVisibility(View.GONE);
+        button(updateChip, null, v -> {
+            Toast.makeText(this, Prefs.arabic(this) ? "دا أنزّل التحديث..." : "Downloading update...", Toast.LENGTH_SHORT).show();
+            net.execute(() -> {
+                try { Updater.install(this); }
+                catch (Exception e) {
+                    main.post(() -> Toast.makeText(this, Prefs.arabic(this) ? "ما گدرت أنزّل التحديث، جرب بعدين" : "Update failed, try later", Toast.LENGTH_LONG).show());
+                }
+            });
         });
-        settingsPill = pill();
-        settingsPill.setOnClickListener(v -> open(new Intent(Settings.ACTION_SETTINGS)));
-        LinearLayout.LayoutParams pl = new LinearLayout.LayoutParams(-2, px(56));
-        pl.setMarginStart(px(14));
-        top.addView(langPill, pl);
-        top.addView(settingsPill, new LinearLayout.LayoutParams(pl));
-        FrameLayout.LayoutParams topLp = new FrameLayout.LayoutParams(-1, -2, Gravity.TOP);
-        topLp.topMargin = px(48);
-        topLp.leftMargin = topLp.rightMargin = px(120);
-        root.addView(top, topLp);
+        addTop(updateChip, -2);
 
-        // ساعة كبيرة بالنص والتاريخ تحتها
-        TextClock clock = new TextClock(this);
+        addTop(iconButton(Glyph.GEAR, v -> open(new Intent(Settings.ACTION_SETTINGS))), px(72));
+        darkGlyph = new Glyph(this, Glyph.MOON);
+        addTop(iconButton(darkGlyph, v -> { Prefs.setDark(this, !Prefs.dark(this)); applyDark(true); }), px(72));
+        addTop(iconButton(Glyph.LANG, v -> { Prefs.setArabic(this, !Prefs.arabic(this)); applyLanguage(); }), px(72));
+        wifiGlyph = new Glyph(this, Glyph.WIFI);
+        addTop(iconButton(wifiGlyph, v -> {
+            Intent wi = new Intent(Settings.ACTION_WIFI_SETTINGS);
+            if (wi.resolveActivity(getPackageManager()) == null) wi = new Intent(Settings.ACTION_SETTINGS);
+            open(wi);
+        }), px(72));
+
+        LinearLayout clockBox = new LinearLayout(this);
+        clockBox.setOrientation(LinearLayout.VERTICAL);
+        clockBox.setGravity(Gravity.RIGHT);
+        clock = new TextClock(this);
         clock.setFormat12Hour("h:mm");
         clock.setFormat24Hour("H:mm");
         clock.setTextColor(INK);
-        clock.setTextSize(TypedValue.COMPLEX_UNIT_PX, px(220));
-        clock.setTypeface(Typeface.create("sans-serif-thin", Typeface.NORMAL));
-        clock.setShadowLayer(px(40), 0, 0, 0x66000000);
+        clock.setTextSize(TypedValue.COMPLEX_UNIT_PX, px(64));
+        clock.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
         clock.setIncludeFontPadding(false);
-        FrameLayout.LayoutParams clLp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.CENTER_HORIZONTAL);
-        clLp.topMargin = px(200);
-        root.addView(clock, clLp);
-        dateClock = new TextClock(this);
-        dateClock.setTextColor(INK_DIM);
-        dateClock.setTextSize(TypedValue.COMPLEX_UNIT_PX, px(36));
-        dateClock.setShadowLayer(px(16), 0, 0, 0x99000000);
-        FrameLayout.LayoutParams dcLp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.CENTER_HORIZONTAL);
-        dcLp.topMargin = px(500);
-        root.addView(dateClock, dcLp);
+        clock.setShadowLayer(px(16), 0, px(2), 0x73000000);
+        dateText = text(22, 0xE6FFFFFF, false);
+        dateText.setShadowLayer(px(12), 0, px(2), 0x99000000);
+        clockBox.addView(clock);
+        clockBox.addView(dateText);
+        LinearLayout.LayoutParams cbl = new LinearLayout.LayoutParams(-2, -2);
+        cbl.leftMargin = px(24);
+        topBar.addView(clockBox, cbl);
+        FrameLayout.LayoutParams tLp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.RIGHT);
+        tLp.topMargin = px(44);
+        tLp.rightMargin = px(60);
+        root.addView(topBar, tLp);
 
-        // صف التطبيقات بالنص، صغار ومرتبين
+        // تحت: شريط زجاجي عائم بيه التطبيقات
+        dockGlass = new Glass.GlassFrame(this, px(44));
+        dockGlass.setClipChildren(false);
+        dockGlass.setClipToPadding(false);
         dock = new LinearLayout(this);
+        dock.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         dock.setClipChildren(false);
         dock.setClipToPadding(false);
-        dock.setPadding(px(40), px(30), px(40), px(30));
-        FrameLayout.LayoutParams dLp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.CENTER_HORIZONTAL);
-        dLp.topMargin = px(640);
-        root.addView(dock, dLp);
-        root.setClipChildren(false);
+        dock.setPadding(px(32), px(28), px(32), px(28));
+        dockGlass.addView(dock, new FrameLayout.LayoutParams(-2, -2));
+        shadow(dockGlass, px(44), px(14));
+        FrameLayout.LayoutParams dLp = new FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
+        dLp.bottomMargin = px(96);
+        root.addView(dockGlass, dLp);
 
-        // لوحة "كل التطبيقات"
-        allPanel = new FrameLayout(this);
-        allPanel.setBackgroundColor(0xF20B0B0D);
+        focusLabel = text(24, INK, false);
+        focusLabel.setShadowLayer(px(10), 0, px(2), 0xCC000000);
+        focusLabel.setAlpha(0f);
+        FrameLayout.LayoutParams flLp = new FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM | Gravity.LEFT);
+        flLp.bottomMargin = px(44);
+        root.addView(focusLabel, flLp);
+
+        // لوحة "كل التطبيقات": زجاج على الشاشة كلها
+        allPanel = new Glass.GlassFrame(this, 0);
         allPanel.setVisibility(View.GONE);
-        allTitle = text(48, INK, true);
+        View shade = new View(this);
+        shade.setBackgroundColor(0x66000000);
+        allPanel.addView(shade, new FrameLayout.LayoutParams(-1, -1));
+        allTitle = text(46, INK, true);
         FrameLayout.LayoutParams atLp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.START);
-        atLp.topMargin = px(56);
+        atLp.topMargin = px(60);
         atLp.setMarginStart(px(120));
         allPanel.addView(allTitle, atLp);
         ScrollView sv = new ScrollView(this);
@@ -292,6 +367,49 @@ public class MainActivity extends Activity {
         svLp.topMargin = px(150);
         allPanel.addView(sv, svLp);
         root.addView(allPanel, new FrameLayout.LayoutParams(-1, -1));
+    }
+
+    private void addTop(View v, int size) {
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(size == -2 ? -2 : size, px(72));
+        lp.leftMargin = px(16);
+        topBar.addView(v, lp);
+    }
+
+    private View iconButton(int kind, View.OnClickListener click) { return iconButton(new Glyph(this, kind), click); }
+
+    /** زر دائري زجاجي: لما يتأشر عليه يصير أبيض والأيقونة غامجة، ويكبر بنطّة ناعمة. */
+    private View iconButton(Glyph g, View.OnClickListener click) {
+        Glass.GlassFrame b = new Glass.GlassFrame(this, px(36));
+        b.addView(g, new FrameLayout.LayoutParams(px(34), px(34), Gravity.CENTER));
+        button(b, g, click);
+        return b;
+    }
+
+    private void button(Glass.GlassFrame b, Glyph g, View.OnClickListener click) {
+        b.setFocusable(true);
+        b.setClickable(true);
+        b.setOnClickListener(click);
+        b.setOnFocusChangeListener((v, has) -> {
+            glow(b, has);
+            if (g != null) g.tint(has && !Prefs.dark(this) ? 0xFF15151A : INK);
+            v.animate().scaleX(has ? 1.15f : 1f).scaleY(has ? 1.15f : 1f).setDuration(240).setInterpolator(pop).start();
+        });
+    }
+
+    private void glow(Glass.GlassFrame f, boolean on) {
+        ValueAnimator a = ValueAnimator.ofFloat(f.glow, on ? 1f : 0f).setDuration(220);
+        a.addUpdateListener(x -> f.setGlow((float) x.getAnimatedValue()));
+        a.start();
+    }
+
+    private void shadow(View v, int radius, int elevation) {
+        v.setOutlineProvider(new ViewOutlineProvider() {
+            @Override public void getOutline(View view, Outline o) {
+                o.setRoundRect(0, 0, view.getWidth(), view.getHeight(), radius);
+                o.setAlpha(0.35f);
+            }
+        });
+        v.setElevation(elevation);
     }
 
     private ImageView wallView() {
@@ -324,30 +442,86 @@ public class MainActivity extends Activity {
     private void showApps(List<AppEntry> apps) {
         View focused = getCurrentFocus();
         Object keep = focused != null ? focused.getTag() : null;
+        boolean focusInDock = focused != null && focused.getParent() == dock;
         dock.removeAllViews();
-
-        int tileW = px(224), tileH = px(126), gap = px(36);
+        int w = px(200), h = px(124), gap = px(28);
         View restore = null;
         List<AppEntry> favs = favorites(apps);
         for (int i = 0; i <= favs.size(); i++) {
             AppEntry app = i < favs.size() ? favs.get(i) : null; // الأخير = كل التطبيقات
-            View t = app != null ? tile(app, tileW, tileH, 24, true) : allAppsTile(tileW, tileH);
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(tileW, -2);
-            if (i > 0) lp.setMarginStart(gap);
+            View t = app != null ? dockTile(app, w, h) : allAppsTile(w, h);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(w, h);
+            if (i > 0) lp.leftMargin = gap;
             dock.addView(t, lp);
             if (keep != null && keep.equals(t.getTag())) restore = t;
         }
         if (allPanel.getVisibility() == View.VISIBLE) fillAll();
         else if (restore != null) restore.requestFocus();
-        else if (!userMoved || focused == null) focusFirst();
+        else if (focused == null || focusInDock) focusFirst();
+    }
+
+    /** مربع زجاجي بالشريط: شعار خاص للتطبيقات المعروفة، وأيقونة التطبيق لغيرها. */
+    private View dockTile(AppEntry app, int w, int h) {
+        Glass.GlassFrame card = new Glass.GlassFrame(this, px(30));
+        int k = Glyph.forPackage(app.pkg);
+        if (k != 0) {
+            card.addView(new Glyph(this, k), new FrameLayout.LayoutParams(px(k == Glyph.DAR ? 92 : 64), px(k == Glyph.DAR ? 92 : 64), Gravity.CENTER));
+        } else {
+            ImageView img = new ImageView(this);
+            img.setImageDrawable(copy(app.icon));
+            img.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            card.addView(img, new FrameLayout.LayoutParams(px(72), px(72), Gravity.CENTER));
+        }
+        card.setTag(app.pkg);
+        tileBehaviour(card, app.label, px(30));
+        card.setOnClickListener(v -> launch(app));
+        card.setOnLongClickListener(v -> { toggleFavorite(app); return true; });
+        return card;
+    }
+
+    private View allAppsTile(int w, int h) {
+        Glass.GlassFrame card = new Glass.GlassFrame(this, px(30));
+        card.addView(new Glyph(this, Glyph.GRID), new FrameLayout.LayoutParams(px(52), px(52), Gravity.CENTER));
+        card.setTag(ALL);
+        tileBehaviour(card, null, px(30));
+        card.setOnClickListener(v -> openAll());
+        return card;
+    }
+
+    /** لما يتأشر عليه: يكبر ويرتفع بنطّة ناعمة، والزجاج يفتح ويلمع، واسمه يطلع تحت الشريط. */
+    private void tileBehaviour(Glass.GlassFrame card, String label, int radius) {
+        card.setFocusable(true);
+        card.setClickable(true);
+        shadow(card, radius, px(4));
+        card.setOnFocusChangeListener((v, has) -> {
+            glow(card, has);
+            v.animate().scaleX(has ? 1.14f : 1f).scaleY(has ? 1.14f : 1f)
+                    .translationY(has ? -px(8) : 0).translationZ(has ? px(22) : 0)
+                    .setDuration(260).setInterpolator(pop).start();
+            if (has && v.getParent() == dock) showLabel(v, label);
+        });
+    }
+
+    private void showLabel(View tile, String label) {
+        String text = label != null ? label : (Prefs.arabic(this) ? "كل التطبيقات" : "All apps");
+        focusLabel.setText(text);
+        focusLabel.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+        tile.post(() -> {
+            // مكان المربع بدون التكبير، حتى الاسم يبقى بالنص تحته
+            float x = dockGlass.getLeft() + dock.getLeft() + tile.getLeft() + tile.getWidth() / 2f - focusLabel.getMeasuredWidth() / 2f;
+            focusLabel.animate().cancel();
+            focusLabel.setTranslationX(x);
+            focusLabel.setAlpha(0f);
+            focusLabel.animate().alpha(1f).setDuration(200).start();
+        });
     }
 
     private void fillAll() {
         allGrid.removeAllViews();
-        int gap = px(40);
-        int contentW = Math.round(1920 * u) - px(240);
+        int gap = px(36);
+        int contentW = screenW - px(240);
         int w = (contentW - gap * (GRID_COLS - 1)) / GRID_COLS;
-        int h = w * 3 / 5;
+        int h = w * 3 / 4;
         LinearLayout row = null;
         List<AppEntry> apps = sApps != null ? sApps : new ArrayList<>();
         for (int i = 0; i < apps.size(); i++) {
@@ -355,13 +529,41 @@ public class MainActivity extends Activity {
                 row = new LinearLayout(this);
                 row.setClipChildren(false);
                 LinearLayout.LayoutParams rl = new LinearLayout.LayoutParams(-1, -2);
-                rl.bottomMargin = px(30);
+                rl.bottomMargin = px(32);
                 allGrid.addView(row, rl);
             }
-            View t = tile(apps.get(i), w, h, 24, false);
-            LinearLayout.LayoutParams tl = new LinearLayout.LayoutParams(w, -2);
+            AppEntry app = apps.get(i);
+            Glass.GlassFrame card = new Glass.GlassFrame(this, px(28));
+            LinearLayout in = new LinearLayout(this);
+            in.setOrientation(LinearLayout.VERTICAL);
+            in.setGravity(Gravity.CENTER);
+            int k = Glyph.forPackage(app.pkg);
+            View icon;
+            if (k != 0) icon = new Glyph(this, k);
+            else {
+                ImageView img = new ImageView(this);
+                img.setImageDrawable(copy(app.icon));
+                img.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                icon = img;
+            }
+            in.addView(icon, new LinearLayout.LayoutParams(px(76), px(76)));
+            TextView name = text(22, INK, false);
+            name.setText(app.label);
+            name.setSingleLine(true);
+            name.setEllipsize(TextUtils.TruncateAt.END);
+            name.setGravity(Gravity.CENTER);
+            LinearLayout.LayoutParams nl = new LinearLayout.LayoutParams(-1, -2);
+            nl.topMargin = px(14);
+            nl.leftMargin = nl.rightMargin = px(12);
+            in.addView(name, nl);
+            card.addView(in, new FrameLayout.LayoutParams(-1, -1));
+            card.setTag(app.pkg);
+            tileBehaviour(card, app.label, px(28));
+            card.setOnClickListener(v -> launch(app));
+            card.setOnLongClickListener(v -> { toggleFavorite(app); return true; });
+            LinearLayout.LayoutParams tl = new LinearLayout.LayoutParams(w, h);
             if (i % GRID_COLS != 0) tl.setMarginStart(gap);
-            row.addView(t, tl);
+            row.addView(card, tl);
         }
         if (allGrid.getChildCount() > 0) ((LinearLayout) allGrid.getChildAt(0)).getChildAt(0).requestFocus();
     }
@@ -370,7 +572,8 @@ public class MainActivity extends Activity {
         allTitle.setText(Prefs.arabic(this) ? "كل التطبيقات" : "All apps");
         allPanel.setAlpha(0f);
         allPanel.setVisibility(View.VISIBLE);
-        allPanel.animate().alpha(1f).setDuration(160).start();
+        allPanel.animate().alpha(1f).setDuration(200).setInterpolator(ease).start();
+        focusLabel.setAlpha(0f);
         fillAll();
     }
 
@@ -381,134 +584,41 @@ public class MainActivity extends Activity {
         focusFirst();
     }
 
-    /** مربع تطبيق: صورته العريضة إذا عنده، وإلا أيقونته على لونه. */
-    private View tile(AppEntry app, int w, int h, float labelSize, boolean onHome) {
-        FrameLayout card = new FrameLayout(this);
-        GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                new int[]{lighten(app.color, 0.15f), darken(app.color, 0.65f)});
-        bg.setCornerRadius(px(onHome ? 22 : 20));
-        card.setBackground(bg);
-        ImageView img = new ImageView(this);
-        if (app.banner != null) {
-            img.setImageDrawable(copy(app.banner));
-            img.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            card.addView(img, new FrameLayout.LayoutParams(-1, -1));
-        } else {
-            img.setImageDrawable(copy(app.icon));
-            img.setScaleType(ImageView.ScaleType.FIT_CENTER);
-            card.addView(img, new FrameLayout.LayoutParams(h * 3 / 5, h * 3 / 5, Gravity.CENTER));
-        }
-        View box = wrap(card, w, h, app.label, labelSize);
-        box.setTag(app.pkg);
-        box.setOnFocusChangeListener((v, has) -> {
-            lift(v, has);
-        });
-        box.setOnClickListener(v -> {
-            Prefs.countLaunch(this, app.pkg);
-            open(app.launch);
-        });
-        // ضغطة طويلة: بالرئيسية تشيله منها، وبكل التطبيقات تضيفه للرئيسية
-        box.setOnLongClickListener(v -> {
-            toggleFavorite(app);
-            return true;
-        });
-        return box;
+    private void launch(AppEntry app) {
+        Prefs.countLaunch(this, app.pkg);
+        open(app.launch);
     }
 
-    private View allAppsTile(int w, int h) {
-        FrameLayout card = new FrameLayout(this);
-        card.setBackground(roundRect(0x40FFFFFF, px(22)));
-        GridGlyph glyph = new GridGlyph(this, px(14));
-        card.addView(glyph, new FrameLayout.LayoutParams(h * 2 / 5, h * 2 / 5, Gravity.CENTER));
-        View box = wrap(card, w, h, Prefs.arabic(this) ? "كل التطبيقات" : "All apps", 24);
-        box.setTag(ALL);
-        box.setOnFocusChangeListener((v, has) -> {
-            lift(v, has);
-        });
-        box.setOnClickListener(v -> openAll());
-        return box;
-    }
+    // ---------- الخلفيات ----------
 
-    /** يلف المربع ويا اسمه تحته، ويخليه يتأشر عليه بالريموت. */
-    private View wrap(FrameLayout card, int w, int h, String label, float labelSize) {
-        card.setOutlineProvider(ViewOutlineProvider.BACKGROUND);
-        card.setClipToOutline(true);
-        card.setElevation(px(8));
-        View shine = new View(this);
-        shine.setBackground(new GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                new int[]{0x40FFFFFF, 0x00FFFFFF, 0x00FFFFFF}));
-        shine.setAlpha(0f);
-        card.addView(shine, new FrameLayout.LayoutParams(-1, -1));
-
-        LinearLayout box = new LinearLayout(this);
-        box.setOrientation(LinearLayout.VERTICAL);
-        box.setGravity(Gravity.CENTER_HORIZONTAL);
-        box.setClipChildren(false);
-        box.setFocusable(true);
-        box.setClickable(true);
-        box.addView(card, new LinearLayout.LayoutParams(w, h));
-        TextView name = text(labelSize, INK, false);
-        name.setText(label);
-        name.setSingleLine(true);
-        name.setEllipsize(TextUtils.TruncateAt.END);
-        name.setGravity(Gravity.CENTER);
-        name.setAlpha(0f);
-        LinearLayout.LayoutParams nl = new LinearLayout.LayoutParams(-1, -2);
-        nl.topMargin = px(18);
-        box.addView(name, nl);
-        return box;
-    }
-
-    /** لما يتأشر عليه: يكبر ويرتفع ويطلع اسمه، مثل آبل تي في. */
-    private void lift(View box, boolean has) {
-        View card = ((LinearLayout) box).getChildAt(0);
-        View shine = ((FrameLayout) card).getChildAt(((FrameLayout) card).getChildCount() - 1);
-        View name = ((LinearLayout) box).getChildAt(1);
-        card.animate().scaleX(has ? 1.12f : 1f).scaleY(has ? 1.12f : 1f)
-                .translationZ(has ? px(30) : 0).setDuration(160).setInterpolator(ease).start();
-        shine.animate().alpha(has ? 1f : 0f).setDuration(160).start();
-        name.animate().alpha(has ? 1f : 0f).translationY(has ? px(12) : 0).setDuration(160).start();
-    }
-
-    /** الصورة الجاية: نقراها بخيط جانبي، وننزل وحدة جديدة كل دقيقتين إذا الشاشة مفتوحة. */
     private void nextWallpaper() {
         String[] ph = PHRASES[phraseIndex++ % PHRASES.length];
-        boolean ar = Prefs.arabic(this);
-        heroTitle.setText(ph[0]);
-        heroHint.setText(ph[1] + "  ·  " + (ar ? ph[2] : ph[3]));
-        heroTitle.setAlpha(0f);
-        heroTitle.animate().alpha(1f).setDuration(900).start();
-        int maxW = getResources().getDisplayMetrics().widthPixels;
-        // بالبداية ننزل صورة ويا كل تبديل لحد ما يصير عدنا 15، وبعدين وحدة كل دقيقة
-        boolean fetch = feed.count() < 15 || System.currentTimeMillis() - lastFetch > 60000;
+        phrase.setText(ph[0]);
+        phraseHint.setText(Prefs.arabic(this) ? ph[1] : ph[2]);
+        phrase.setAlpha(0f);
+        phrase.animate().alpha(1f).setDuration(900).start();
+        // بالبداية ننزل ويا كل تبديل لحد ما يصير عدنا 30 صورة، وبعدين وحدة كل دقيقتين
+        boolean fetch = feed.count() < 30 || System.currentTimeMillis() - lastFetch > 120000;
         if (fetch) lastFetch = System.currentTimeMillis();
         net.execute(() -> {
-            android.graphics.Bitmap bmp = feed.next(maxW);
-            if (bmp == null) { feed.fetchOne(); bmp = feed.next(maxW); } // أول مرة
+            Bitmap bmp = feed.next(screenW, screenH);
+            if (bmp == null) { feed.fetchOne(); bmp = feed.next(screenW, screenH); }
             else if (fetch) feed.fetchOne();
-            final android.graphics.Bitmap show = bmp;
+            final Bitmap show = bmp;
             if (show != null) main.post(() -> { if (visible) crossfade(show); });
         });
     }
 
-    /** نبدل الخلفية بنعومة، والجديدة تتقرب ببطء (حركة مثل الأفلام الوثائقية). */
-    private void crossfade(android.graphics.Bitmap next) {
+    /** نبدل الخلفية بنعومة (تلاشي ثانية ونص)، والزجاج يتبدل وياها. */
+    private void crossfade(Bitmap next) {
         ImageView shown = wallAOnTop ? wallA : wallB;
         ImageView hidden = wallAOnTop ? wallB : wallA;
-        hidden.animate().cancel();
         hidden.setImageBitmap(next);
-        hidden.setScaleX(1f);
-        hidden.setScaleY(1f);
-        hidden.setTranslationX(0);
-        boolean left = phraseIndex % 2 == 0;
-        android.animation.ObjectAnimator.ofFloat(hidden, View.ALPHA, hidden.getAlpha(), 1f).setDuration(1200).start();
-        hidden.animate().scaleX(1.12f).scaleY(1.12f).translationX(px(left ? -60 : 60))
-                .setDuration(26000).setInterpolator(new android.view.animation.LinearInterpolator()).withLayer().start();
-        android.animation.ObjectAnimator out = android.animation.ObjectAnimator.ofFloat(shown, View.ALPHA, shown.getAlpha(), 0f);
-        out.setDuration(1200);
+        Glass.Backdrop.set(next);
+        ObjectAnimator.ofFloat(hidden, View.ALPHA, hidden.getAlpha(), 1f).setDuration(1500).start();
+        ObjectAnimator out = ObjectAnimator.ofFloat(shown, View.ALPHA, shown.getAlpha(), 0f).setDuration(1500);
         out.addListener(new android.animation.AnimatorListenerAdapter() {
             @Override public void onAnimationEnd(android.animation.Animator a) {
-                shown.animate().cancel();
                 shown.setImageDrawable(null); // نفرّغ الذاكرة
             }
         });
@@ -516,16 +626,130 @@ public class MainActivity extends Activity {
         wallAOnTop = !wallAOnTop;
     }
 
+    // ---------- الوضع الداكن، اللغة، الوايفاي، الطقس ----------
+
+    private void applyDark(boolean animate) {
+        boolean dark = Prefs.dark(this);
+        Glass.Backdrop.dark = dark;
+        darkGlyph.set(dark ? Glyph.SUN : Glyph.MOON);
+        GradientDrawable g = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, dark
+                ? new int[]{0xB3000000, 0x8C000000, 0x8C000000, 0xB3000000}
+                : new int[]{0x55000000, 0x00000000, 0x00000000, 0x40000000});
+        dim.setBackground(g);
+        if (animate) { dim.setAlpha(0f); dim.animate().alpha(1f).setDuration(400).start(); }
+        Glass.Backdrop.invalidateAll();
+        View f = getCurrentFocus();
+        if (f != null && f.getParent() == topBar) f.getOnFocusChangeListener().onFocusChange(f, true);
+    }
+
+    private void applyLanguage() {
+        boolean ar = Prefs.arabic(this);
+        root.setLayoutDirection(ar ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
+        TextView ut = updateChip.findViewWithTag("upd");
+        if (ut != null) ut.setText(ar ? "تحديث جديد" : "Update");
+        updateDate();
+        if (phraseIndex > 0) {
+            String[] ph = PHRASES[(phraseIndex - 1) % PHRASES.length];
+            phraseHint.setText(ar ? ph[1] : ph[2]);
+        }
+        if (sApps != null) showApps(sApps);
+    }
+
+    private void updateDate() {
+        boolean ar = Prefs.arabic(this);
+        java.util.Locale loc = ar ? new java.util.Locale("ar", "IQ") : java.util.Locale.ENGLISH;
+        String d = new java.text.SimpleDateFormat(ar ? "EEEE، d MMMM" : "EEEE, d MMMM", loc).format(new java.util.Date());
+        if (ar) d = toLatinDigits(d);
+        dateText.setText(weather.isEmpty() ? d : d + "   " + weather);
+        main.removeCallbacks(dateTick);
+        main.postDelayed(dateTick, 60000);
+    }
+
+    private static String toLatinDigits(String s) {
+        StringBuilder b = new StringBuilder();
+        for (char ch : s.toCharArray()) b.append(ch >= '٠' && ch <= '٩' ? (char) ('0' + ch - '٠') : ch);
+        return b.toString();
+    }
+
+    @SuppressWarnings("deprecation")
+    private void updateWifi() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+        NetworkInfo n = cm != null ? cm.getActiveNetworkInfo() : null;
+        int level;
+        if (n == null || !n.isConnected()) level = -1;
+        else if (n.getType() == ConnectivityManager.TYPE_WIFI) {
+            WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+            int rssi = wm != null ? wm.getConnectionInfo().getRssi() : -50;
+            level = Math.max(1, WifiManager.calculateSignalLevel(rssi, 5));
+        } else level = 4; // كيبل
+        wifiGlyph.level = level;
+        wifiGlyph.invalidate();
+    }
+
+    /** الطقس من open-meteo (مجاني وبدون حساب)، كل ساعة، بغداد افتراضياً. */
+    private void loadWeather() {
+        if (System.currentTimeMillis() - lastWeather < 3600000) return;
+        try {
+            JSONObject j = new JSONObject(WallpaperFeed.get(
+                    "https://api.open-meteo.com/v1/forecast?latitude=33.31&longitude=44.37&current=temperature_2m,weather_code"));
+            JSONObject c = j.getJSONObject("current");
+            int t = (int) Math.round(c.getDouble("temperature_2m"));
+            int code = c.getInt("weather_code");
+            lastWeather = System.currentTimeMillis();
+            main.post(() -> {
+                boolean ar = Prefs.arabic(this);
+                weather = t + "° " + sky(code, ar);
+                updateDate();
+            });
+        } catch (Exception ignored) { }
+    }
+
+    private static String sky(int code, boolean ar) {
+        if (code == 0) return ar ? "صافي" : "Clear";
+        if (code <= 3) return ar ? "غيوم خفيفة" : "Partly cloudy";
+        if (code <= 48) return ar ? "ضباب" : "Fog";
+        if (code <= 67 || (code >= 80 && code <= 82)) return ar ? "مطر" : "Rain";
+        if (code <= 77) return ar ? "ثلج" : "Snow";
+        return ar ? "عاصفة" : "Storm";
+    }
+
+    // ---------- السرعة ----------
+
+    /**
+     * التنظيف التلقائي: كل ما ترجع للرئيسية، نسكر التطبيقات الي ظلت شغالة بالخلفية
+     * (يوتيوب، نتفلكس...) حتى ترجع الرام فاضية. دار وسبوتيفاي ما نمسهن.
+     */
+    private void cleanUp() {
+        if (!visible || System.currentTimeMillis() - lastClean < 30000 || sApps == null) return;
+        lastClean = System.currentTimeMillis();
+        final List<String> pkgs = new ArrayList<>();
+        for (AppEntry a : sApps) if (!KEEP.contains(a.pkg)) pkgs.add(a.pkg);
+        worker.execute(() -> {
+            ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+            if (am == null) return;
+            for (String p : pkgs) {
+                try { am.killBackgroundProcesses(p); } catch (Exception ignored) { }
+            }
+        });
+    }
+
+    /** وضع العرض: بعد 3 دقايق بدون ريموت تختفي الأزرار وتبقى الصورة والساعة. */
+    private void setAmbient(boolean on) {
+        if (ambient == on) return;
+        ambient = on;
+        float a = on ? 0f : 1f;
+        dockGlass.animate().alpha(a).translationY(on ? px(40) : 0).setDuration(700).start();
+        focusLabel.animate().alpha(on ? 0f : focusLabel.getAlpha()).setDuration(400).start();
+        for (int i = 0; i < topBar.getChildCount() - 1; i++) topBar.getChildAt(i).animate().alpha(a).setDuration(700).start();
+        ((View) phrase.getParent()).animate().alpha(on ? 0.6f : 1f).setDuration(700).start();
+    }
+
     private void toggleFavorite(AppEntry app) {
         List<String> favs = new ArrayList<>(Prefs.favorites(this));
         boolean ar = Prefs.arabic(this);
         String msg;
-        if (favs.remove(app.pkg)) {
-            msg = ar ? "انشال من الرئيسية" : "Removed from Home";
-        } else {
-            favs.add(app.pkg);
-            msg = ar ? "انضاف للرئيسية" : "Added to Home";
-        }
+        if (favs.remove(app.pkg)) msg = ar ? "انشال من الرئيسية" : "Removed from Home";
+        else { favs.add(app.pkg); msg = ar ? "انضاف للرئيسية" : "Added to Home"; }
         Prefs.setFavorites(this, favs);
         Toast.makeText(this, app.label + ": " + msg, Toast.LENGTH_SHORT).show();
         if (sApps != null) {
@@ -536,21 +760,11 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void applyLanguage() {
-        boolean ar = Prefs.arabic(this);
-        root.setLayoutDirection(ar ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
-        langPill.setText(ar ? "English" : "عربي");
-        dateClock.setFormat12Hour(ar ? "EEEE، d MMMM" : "EEEE, d MMMM");
-        dateClock.setFormat24Hour(ar ? "EEEE، d MMMM" : "EEEE, d MMMM");
-        settingsPill.setText(ar ? "الإعدادات" : "Settings");
-        if (sApps != null) showApps(sApps);
-    }
-
     private void open(Intent intent) {
         try {
             startActivity(intent);
         } catch (ActivityNotFoundException | SecurityException e) {
-            reload(); // التطبيق انحذف أو ما يقبل ينفتح: نحدّث القائمة
+            reload();
         }
     }
 
@@ -564,8 +778,7 @@ public class MainActivity extends Activity {
         return true;
     }
 
-    /** كل صورة تنرسم بأكثر من مكان لازم نسخة خاصة بيها. */
-    private Drawable copy(Drawable d) {
+    private android.graphics.drawable.Drawable copy(android.graphics.drawable.Drawable d) {
         if (d == null || d.getConstantState() == null) return d;
         return d.getConstantState().newDrawable(getResources()).mutate();
     }
@@ -580,60 +793,6 @@ public class MainActivity extends Activity {
         return t;
     }
 
-    private TextView pill() {
-        TextView p = text(24, INK, true);
-        p.setGravity(Gravity.CENTER);
-        p.setPadding(px(26), 0, px(26), 0);
-        p.setFocusable(true);
-        p.setClickable(true);
-        StateListDrawable s = new StateListDrawable();
-        s.addState(new int[]{android.R.attr.state_focused}, roundRect(INK, px(28)));
-        s.addState(new int[]{}, roundRect(0x2EFFFFFF, px(28)));
-        p.setBackground(s);
-        p.setTextColor(new ColorStateList(
-                new int[][]{{android.R.attr.state_focused}, {}},
-                new int[]{Color.BLACK, INK}));
-        p.setOnFocusChangeListener((v, has) ->
-                v.animate().scaleX(has ? 1.1f : 1f).scaleY(has ? 1.1f : 1f).setDuration(120).start());
-        return p;
-    }
-
-    private static GradientDrawable roundRect(int color, float radius) {
-        GradientDrawable d = new GradientDrawable();
-        d.setColor(color);
-        d.setCornerRadius(radius);
-        return d;
-    }
-
-    private static int darken(int c, float k) {
-        return Color.rgb(Math.round(Color.red(c) * k), Math.round(Color.green(c) * k), Math.round(Color.blue(c) * k));
-    }
-
-    private static int lighten(int c, float k) {
-        return Color.rgb(Color.red(c) + Math.round((255 - Color.red(c)) * k),
-                Color.green(c) + Math.round((255 - Color.green(c)) * k),
-                Color.blue(c) + Math.round((255 - Color.blue(c)) * k));
-    }
-
-    /** أيقونة "كل التطبيقات": 9 مربعات صغيرة. */
-    static final class GridGlyph extends View {
-        private final android.graphics.Paint paint = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
-        private final float r;
-
-        GridGlyph(Context c, float radius) {
-            super(c);
-            r = radius;
-            paint.setColor(INK);
-        }
-
-        @Override
-        protected void onDraw(android.graphics.Canvas c) {
-            float cell = getWidth() / 3f, pad = cell * 0.14f;
-            for (int y = 0; y < 3; y++) {
-                for (int x = 0; x < 3; x++) {
-                    c.drawRoundRect(x * cell + pad, y * cell + pad, (x + 1) * cell - pad, (y + 1) * cell - pad, r / 2, r / 2, paint);
-                }
-            }
-        }
-    }
+    @SuppressWarnings("unused")
+    private static int alpha(int c, float a) { return Color.argb(Math.round(255 * a), Color.red(c), Color.green(c), Color.blue(c)); }
 }
