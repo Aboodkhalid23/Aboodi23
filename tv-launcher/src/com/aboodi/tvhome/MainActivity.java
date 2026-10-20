@@ -67,7 +67,35 @@ public class MainActivity extends Activity {
     private FrameLayout allPanel;
     private LinearLayout allGrid;
     private TextView allTitle;
-    private String lastWallPkg;
+    private WallpaperFeed feed;
+    private final ExecutorService net = Executors.newSingleThreadExecutor(); // تنزيل الصور بخيط وحده
+    private boolean visible;
+    private int phraseIndex;
+    private long lastFetch;
+
+    /** كلمات يابانية تتبدل ويا الصور: الكتابة، النطق، والمعنى. */
+    private static final String[][] PHRASES = {
+            {"東京", "Tōkyō", "طوكيو", "Tokyo"},
+            {"夜の街", "Yoru no machi", "مدينة الليل", "City at night"},
+            {"桜", "Sakura", "زهرة الكرز", "Cherry blossom"},
+            {"夢", "Yume", "حلم", "Dream"},
+            {"侍", "Samurai", "ساموراي", "Samurai"},
+            {"一期一会", "Ichigo ichie", "كل لقاء يصير مرة وحدة بالعمر", "Once in a lifetime"},
+            {"頑張って", "Ganbatte", "شد حيلك", "Keep going"},
+            {"七転び八起き", "Nana korobi ya oki", "توگع سبع مرات وتگوم ثمانية", "Fall seven, rise eight"},
+            {"静けさ", "Shizukesa", "الهدوء", "Stillness"},
+            {"光", "Hikari", "ضوء", "Light"},
+            {"富士山", "Fujisan", "جبل فوجي", "Mount Fuji"},
+            {"ありがとう", "Arigatō", "شكراً", "Thank you"},
+    };
+
+    private final Runnable rotate = new Runnable() {
+        @Override public void run() {
+            if (!visible) return;
+            nextWallpaper();
+            main.postDelayed(this, 25000); // صورة جديدة كل 25 ثانية
+        }
+    };
     private boolean userMoved; // المستخدم ضغط شي بالريموت؟
 
     private final BroadcastReceiver packagesChanged = new BroadcastReceiver() {
@@ -101,9 +129,26 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        visible = true;
+        main.removeCallbacks(rotate);
+        main.post(rotate);
+    }
+
+    /** أول ما يفتح تطبيق ثاني (مباراة، نتفلكس): نوقف كلشي، ولا بايت نت. */
+    @Override
+    protected void onPause() {
+        visible = false;
+        main.removeCallbacks(rotate);
+        super.onPause();
+    }
+
+    @Override
     protected void onDestroy() {
         unregisterReceiver(packagesChanged);
         worker.shutdownNow();
+        net.shutdownNow();
         super.onDestroy();
     }
 
@@ -138,7 +183,10 @@ public class MainActivity extends Activity {
         root = new FrameLayout(this);
         root.setBackgroundColor(Color.BLACK);
 
-        // الخلفية: صورة صغيرة متكبرة على الشاشة كلها = ضباب ناعم
+        // الخلفية: صور اليابان تتبدل وتتحرك ببطء
+        feed = new WallpaperFeed(this);
+        root.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+                new int[]{0xFF0B1530, 0xFF1B2C55, 0xFF3D4F7C})); // لحد ما توصل أول صورة
         wallA = wallView();
         wallB = wallView();
         wallB.setAlpha(0f);
@@ -146,23 +194,30 @@ public class MainActivity extends Activity {
         root.addView(wallA, new FrameLayout.LayoutParams(-1, -1));
         View dim = new View(this);
         dim.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
-                new int[]{0x33000000, 0x66000000, 0xE6000000}));
+                new int[]{0x8C000000, 0x14000000, 0x00000000, 0x33000000, 0xD9000000}));
         root.addView(dim, new FrameLayout.LayoutParams(-1, -1));
 
-        // اسم التطبيق المختار، كبير مثل آبل تي في
+        // كلمة يابانية كبيرة ويا نطقها ومعناها
         LinearLayout hero = new LinearLayout(this);
         hero.setOrientation(LinearLayout.VERTICAL);
-        heroTitle = text(96, INK, true);
-        heroTitle.setMaxLines(1);
-        heroTitle.setEllipsize(TextUtils.TruncateAt.END);
-        heroTitle.setShadowLayer(px(24), 0, px(4), 0x80000000);
-        heroHint = text(28, INK_DIM, false);
+        heroTitle = text(110, INK, false);
+        heroTitle.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
+        heroTitle.setShadowLayer(px(30), 0, px(4), 0x99000000);
+        heroHint = text(30, INK_DIM, false);
+        heroHint.setShadowLayer(px(16), 0, px(2), 0x99000000);
         hero.addView(heroTitle);
         hero.addView(heroHint);
         FrameLayout.LayoutParams hLp = new FrameLayout.LayoutParams(px(1300), -2, Gravity.TOP | Gravity.START);
-        hLp.topMargin = px(300);
+        hLp.topMargin = px(150);
         hLp.setMarginStart(px(120));
         root.addView(hero, hLp);
+
+        TextView credit = text(18, 0x80FFFFFF, false);
+        credit.setText("Wikimedia Commons");
+        FrameLayout.LayoutParams cLp = new FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM | Gravity.END);
+        cLp.bottomMargin = px(36);
+        cLp.setMarginEnd(px(120));
+        root.addView(credit, cLp);
 
         // فوگ: الساعة + اللغة + الإعدادات
         LinearLayout top = new LinearLayout(this);
@@ -201,7 +256,7 @@ public class MainActivity extends Activity {
         dockScroll.setOverScrollMode(View.OVER_SCROLL_NEVER);
         dockScroll.addView(dock, new FrameLayout.LayoutParams(-2, -2));
         FrameLayout.LayoutParams dLp = new FrameLayout.LayoutParams(-1, -2, Gravity.TOP);
-        dLp.topMargin = px(640);
+        dLp.topMargin = px(780);
         root.addView(dockScroll, dLp);
         root.setClipChildren(false);
 
@@ -261,12 +316,12 @@ public class MainActivity extends Activity {
         Object keep = focused != null ? focused.getTag() : null;
         dock.removeAllViews();
 
-        int tileW = px(360), tileH = px(216), gap = px(56);
+        int tileW = px(250), tileH = px(150), gap = px(40);
         View restore = null;
         List<AppEntry> favs = favorites(apps);
         for (int i = 0; i <= favs.size(); i++) {
             AppEntry app = i < favs.size() ? favs.get(i) : null; // الأخير = كل التطبيقات
-            View t = app != null ? tile(app, tileW, tileH, 30, true) : allAppsTile(tileW, tileH);
+            View t = app != null ? tile(app, tileW, tileH, 24, true) : allAppsTile(tileW, tileH);
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(tileW, -2);
             if (i > 0) lp.setMarginStart(gap);
             dock.addView(t, lp);
@@ -337,7 +392,6 @@ public class MainActivity extends Activity {
         box.setTag(app.pkg);
         box.setOnFocusChangeListener((v, has) -> {
             lift(v, has);
-            if (has && onHome) showHero(app);
         });
         box.setOnClickListener(v -> {
             Prefs.countLaunch(this, app.pkg);
@@ -356,15 +410,10 @@ public class MainActivity extends Activity {
         card.setBackground(roundRect(0x33FFFFFF, px(26)));
         GridGlyph glyph = new GridGlyph(this, px(14));
         card.addView(glyph, new FrameLayout.LayoutParams(h * 2 / 5, h * 2 / 5, Gravity.CENTER));
-        View box = wrap(card, w, h, Prefs.arabic(this) ? "كل التطبيقات" : "All apps", 30);
+        View box = wrap(card, w, h, Prefs.arabic(this) ? "كل التطبيقات" : "All apps", 24);
         box.setTag(ALL);
         box.setOnFocusChangeListener((v, has) -> {
             lift(v, has);
-            if (has) {
-                heroTitle.setText(Prefs.arabic(this) ? "كل التطبيقات" : "All apps");
-                heroHint.setText(Prefs.arabic(this) ? "باقي تطبيقاتك هنا" : "The rest of your apps");
-                setWall(null, 0xFF2C2C2E);
-            }
         });
         box.setOnClickListener(v -> openAll());
         return box;
@@ -411,33 +460,48 @@ public class MainActivity extends Activity {
         name.animate().alpha(has ? 1f : 0f).translationY(has ? px(12) : 0).setDuration(160).start();
     }
 
-    private void showHero(AppEntry app) {
-        heroTitle.setText(app.label);
-        heroHint.setText(Prefs.arabic(this) ? "اضغط OK حتى تفتح" : "Press OK to open");
-        setWall(app.pkg, app.color);
-        if (app.wall != null && !app.pkg.equals(lastWallPkg)) {
-            lastWallPkg = app.pkg;
-            crossfade(new BitmapDrawable(getResources(), app.wall));
-        }
+    /** الصورة الجاية: نقراها بخيط جانبي، وننزل وحدة جديدة كل دقيقتين إذا الشاشة مفتوحة. */
+    private void nextWallpaper() {
+        String[] ph = PHRASES[phraseIndex++ % PHRASES.length];
+        boolean ar = Prefs.arabic(this);
+        heroTitle.setText(ph[0]);
+        heroHint.setText(ph[1] + "  ·  " + (ar ? ph[2] : ph[3]));
+        heroTitle.setAlpha(0f);
+        heroTitle.animate().alpha(1f).setDuration(900).start();
+        int maxW = getResources().getDisplayMetrics().widthPixels;
+        boolean fetch = System.currentTimeMillis() - lastFetch > 120000;
+        if (fetch) lastFetch = System.currentTimeMillis();
+        net.execute(() -> {
+            android.graphics.Bitmap bmp = feed.next(maxW);
+            if (bmp == null) { feed.fetchOne(); bmp = feed.next(maxW); } // أول مرة
+            else if (fetch) feed.fetchOne();
+            final android.graphics.Bitmap show = bmp;
+            if (show != null) main.post(() -> { if (visible) crossfade(show); });
+        });
     }
 
-    private void setWall(String pkg, int color) {
-        if (pkg == null && lastWallPkg != null) {
-            lastWallPkg = null;
-            crossfade(new GradientDrawable(GradientDrawable.Orientation.TL_BR, new int[]{0xFF3A3A3C, 0xFF111113}));
-        }
-    }
-
-    /** نبدل الخلفية بنعومة: الجديدة تبيّن والقديمة تختفي سوة. */
-    private void crossfade(Drawable next) {
-        if (next instanceof BitmapDrawable) ((BitmapDrawable) next).setFilterBitmap(true);
+    /** نبدل الخلفية بنعومة، والجديدة تتقرب ببطء (حركة مثل الأفلام الوثائقية). */
+    private void crossfade(android.graphics.Bitmap next) {
         ImageView shown = wallAOnTop ? wallA : wallB;
         ImageView hidden = wallAOnTop ? wallB : wallA;
-        hidden.setImageDrawable(next);
         hidden.animate().cancel();
-        shown.animate().cancel();
-        hidden.animate().alpha(1f).setDuration(280).start();
-        shown.animate().alpha(0f).setDuration(280).start();
+        hidden.setImageBitmap(next);
+        hidden.setScaleX(1f);
+        hidden.setScaleY(1f);
+        hidden.setTranslationX(0);
+        boolean left = phraseIndex % 2 == 0;
+        android.animation.ObjectAnimator.ofFloat(hidden, View.ALPHA, hidden.getAlpha(), 1f).setDuration(1200).start();
+        hidden.animate().scaleX(1.12f).scaleY(1.12f).translationX(px(left ? -60 : 60))
+                .setDuration(26000).setInterpolator(new android.view.animation.LinearInterpolator()).withLayer().start();
+        android.animation.ObjectAnimator out = android.animation.ObjectAnimator.ofFloat(shown, View.ALPHA, shown.getAlpha(), 0f);
+        out.setDuration(1200);
+        out.addListener(new android.animation.AnimatorListenerAdapter() {
+            @Override public void onAnimationEnd(android.animation.Animator a) {
+                shown.animate().cancel();
+                shown.setImageDrawable(null); // نفرّغ الذاكرة
+            }
+        });
+        out.start();
         wallAOnTop = !wallAOnTop;
     }
 
