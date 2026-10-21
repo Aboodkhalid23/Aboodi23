@@ -87,7 +87,7 @@ public class MainActivity extends Activity {
     private ImageView wallA, wallB;
     private boolean wallAOnTop = true;
     private View dim;
-    private TextView phrase, phraseHint, dateText, focusLabel, allTitle, tempText, skyText;
+    private TextView dateText, focusLabel, allTitle, tempText, skyText;
     private Glass.GlassFrame clockGlass;
     private Glyph skyGlyph;
     private int wTemp = Integer.MIN_VALUE, wCode, wDay = 1;
@@ -99,23 +99,7 @@ public class MainActivity extends Activity {
     private boolean testing;
     private WallpaperFeed feed;
     private boolean visible, ambient;
-    private int phraseIndex;
     private long lastFetch, lastClean, lastKey = System.currentTimeMillis(), lastWeather;
-
-    private static final String[][] PHRASES = {
-            {"夜の東京", "طوكيو بالليل", "Tokyo at night"},
-            {"おかえり", "هلا بيك برجعتك", "Welcome home"},
-            {"桜", "زهرة الكرز", "Cherry blossom"},
-            {"夢", "حلم", "Dream"},
-            {"侍", "ساموراي", "Samurai"},
-            {"一期一会", "كل لقاء يصير مرة وحدة بالعمر", "Once in a lifetime"},
-            {"頑張って", "شد حيلك", "Keep going"},
-            {"七転び八起き", "توگع سبع مرات وتگوم ثمانية", "Fall seven, rise eight"},
-            {"静けさ", "الهدوء", "Stillness"},
-            {"光", "ضوء", "Light"},
-            {"富士山", "جبل فوجي", "Mount Fuji"},
-            {"ありがとう", "شكراً", "Thank you"},
-    };
 
     private final Runnable rotate = new Runnable() {
         @Override public void run() {
@@ -274,21 +258,6 @@ public class MainActivity extends Activity {
         root.addView(wallA, new FrameLayout.LayoutParams(-1, -1));
         dim = new View(this);
         root.addView(dim, new FrameLayout.LayoutParams(-1, -1));
-
-        // يسار فوگ: كلمة يابانية صغيرة ومعناها
-        LinearLayout left = new LinearLayout(this);
-        left.setOrientation(LinearLayout.VERTICAL);
-        left.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
-        phrase = text(30, INK, false);
-        phrase.setShadowLayer(px(14), 0, px(2), 0x99000000);
-        phraseHint = text(20, 0xCCFFFFFF, false);
-        phraseHint.setShadowLayer(px(10), 0, px(2), 0x99000000);
-        left.addView(phrase);
-        left.addView(phraseHint);
-        FrameLayout.LayoutParams lLp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.LEFT);
-        lLp.topMargin = px(52);
-        lLp.leftMargin = px(70);
-        root.addView(left, lLp);
 
         // يمين فوگ: أزرار زجاجية + الساعة
         topBar = new LinearLayout(this);
@@ -668,11 +637,6 @@ public class MainActivity extends Activity {
     // ---------- الخلفيات ----------
 
     private void nextWallpaper() {
-        String[] ph = PHRASES[phraseIndex++ % PHRASES.length];
-        phrase.setText(ph[0]);
-        phraseHint.setText(Prefs.arabic(this) ? ph[1] : ph[2]);
-        phrase.setAlpha(0f);
-        phrase.animate().alpha(1f).setDuration(900).start();
         // ننزل ويا كل تبديل لحد ما يصير عدنا 60 صورة، وبعدين صورة جديدة كل دقيقة
         boolean fetch = !matchMode() && (feed.count() < 60 || System.currentTimeMillis() - lastFetch > 60000);
         if (fetch) lastFetch = System.currentTimeMillis();
@@ -729,16 +693,12 @@ public class MainActivity extends Activity {
         TextView ut = updateChip.findViewWithTag("upd");
         if (ut != null) ut.setText(ar ? "تحديث جديد" : "Update");
         updateDate();
-        if (phraseIndex > 0) {
-            String[] ph = PHRASES[(phraseIndex - 1) % PHRASES.length];
-            phraseHint.setText(ar ? ph[1] : ph[2]);
-        }
         if (sApps != null) showApps(sApps);
     }
 
     private static final String[][] CLOCKS = {
             {"ناعمة", "Soft"}, {"عريضة", "Bold"}, {"نيون", "Neon"},
-            {"زجاجية", "Glass"}, {"يابانية", "Japanese"}, {"بالثواني", "Seconds"}};
+            {"زجاجية", "Glass"}, {"كلاسيكية", "Classic"}, {"بالثواني", "Seconds"}};
 
     /** نطبق شكل الساعة المختار: الخط والحجم واللون والتوهج، وهل بيها زجاج. */
     private void applyClock() {
@@ -782,8 +742,7 @@ public class MainActivity extends Activity {
         int st = Prefs.clockStyle(this) % CLOCKS.length;
         java.util.Date now = new java.util.Date();
         String d;
-        if (st == 4) d = new java.text.SimpleDateFormat("M月d日 EEEE", java.util.Locale.JAPANESE).format(now);
-        else {
+        {
             java.util.Locale loc = ar ? new java.util.Locale("ar", "IQ") : java.util.Locale.ENGLISH;
             d = new java.text.SimpleDateFormat(ar ? "EEEE، d MMMM" : "EEEE, d MMMM", loc).format(now);
             if (ar) d = toLatinDigits(d);
@@ -1032,7 +991,6 @@ public class MainActivity extends Activity {
         dockGlass.animate().alpha(a).translationY(on ? px(40) : 0).setDuration(d).start();
         focusLabel.animate().alpha(on ? 0f : focusLabel.getAlpha()).setDuration(400).start();
         topBar.animate().alpha(a).setDuration(d).start();
-        ((View) phrase.getParent()).animate().alpha(a).setDuration(d).start();
         dim.animate().alpha(a).setDuration(d).start(); // الصورة بألوانها الكاملة
     }
 
