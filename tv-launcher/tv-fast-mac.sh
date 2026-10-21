@@ -110,7 +110,12 @@ main() {
   done
 
   echo "٤) دا أسرّع الحركات..."
-  for k in window_animation_scale transition_animation_scale animator_duration_scale; do S settings put global $k 0.5; done
+  # فتح وسكر التطبيقات بدون حركة (فوري)، وحركات داخل التطبيقات بنص الوكت
+  S settings put global window_animation_scale 0
+  S settings put global transition_animation_scale 0
+  S settings put global animator_duration_scale 0.5
+  # نجمّد التطبيقات الي بالخلفية حتى ما تاكل معالج، وتفتح أسرع لما ترجعلها
+  S settings put global cached_apps_freezer enabled >/dev/null 2>&1
 
   echo "٥) دا أثبّت الوايفاي حتى ما يقطع..."
   S settings put global wifi_scan_always_enabled 0

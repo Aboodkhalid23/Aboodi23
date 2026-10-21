@@ -26,7 +26,7 @@ import java.util.Random;
 final class WallpaperFeed {
     static final String RAW = "https://raw.githubusercontent.com/Aboodkhalid23/Aboodi23/claude/project-thread-4ztr10/tv-launcher/";
     private static final String UA = "AboodTV/8 (https://github.com/Aboodkhalid23/Aboodi23)";
-    private static final int KEEP = 120; // كم صورة منزّلة نخلي
+    private static final int KEEP = 150; // كم صورة منزّلة نخلي
     private static final long LIST_EVERY = 6L * 3600 * 1000; // نشوف إذا اكو صور جديدة كل 6 ساعات
 
     private final Context ctx;

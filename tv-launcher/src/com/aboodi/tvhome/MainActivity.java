@@ -94,18 +94,31 @@ public class MainActivity extends Activity {
     private TextClock clock;
     private LinearLayout topBar, dock, allGrid;
     private Glass.GlassFrame dockGlass, allPanel, updateChip;
+    private Matches matches;
+    private long lastShown; // متى تبدلت الخلفية آخر مرة
     private Glyph wifiGlyph, darkGlyph, ballGlyph;
     private TextView speedText, ramText;
     private boolean testing;
     private WallpaperFeed feed;
     private boolean visible, ambient;
-    private long lastFetch, lastClean, lastKey = System.currentTimeMillis(), lastWeather;
+    private long lastClean, lastKey = System.currentTimeMillis(), lastWeather;
 
     private final Runnable rotate = new Runnable() {
         @Override public void run() {
             if (!visible) return;
             nextWallpaper();
-            main.postDelayed(this, 20000);
+            main.postDelayed(this, SHOW_FOR);
+        }
+    };
+
+    private static final long SHOW_FOR = 5 * 60 * 1000; // كل صورة تبقى 5 دقايق، مثل لوحة
+
+    /** كل دقيقة ننزل صورة جديدة (والرئيسية مفتوحة بس)، حتى دائماً اكو صور جديدة. */
+    private final Runnable fetchTick = new Runnable() {
+        @Override public void run() {
+            if (!visible) return;
+            if (!matchMode()) net.execute(feed::fetchOne);
+            main.postDelayed(this, 60000);
         }
     };
 
@@ -123,7 +136,7 @@ public class MainActivity extends Activity {
     private final Runnable ambientCheck = new Runnable() {
         @Override public void run() {
             if (!visible) return;
-            if (!ambient && System.currentTimeMillis() - lastKey > AMBIENT_AFTER && allPanel.getVisibility() != View.VISIBLE) setAmbient(true);
+            if (!ambient && System.currentTimeMillis() - lastKey > AMBIENT_AFTER && allPanel.getVisibility() != View.VISIBLE && !matches.visible()) setAmbient(true);
             main.postDelayed(this, 5000);
         }
     };
@@ -179,7 +192,9 @@ public class MainActivity extends Activity {
         setAmbient(false);
         updateWifi();
         main.removeCallbacks(rotate);
-        main.post(rotate);
+        main.postDelayed(rotate, lastShown == 0 ? 0 : Math.max(0, SHOW_FOR - (System.currentTimeMillis() - lastShown)));
+        main.removeCallbacks(fetchTick);
+        main.postDelayed(fetchTick, 10000);
         main.removeCallbacks(ambientCheck);
         main.postDelayed(ambientCheck, 5000);
         main.postDelayed(this::cleanUp, 1500);
@@ -201,6 +216,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onPause() {
         visible = false;
+        main.removeCallbacks(fetchTick);
         main.removeCallbacks(rotate);
         main.removeCallbacks(ambientCheck);
         main.removeCallbacks(statsTick);
@@ -220,13 +236,15 @@ public class MainActivity extends Activity {
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+        if (matches.visible()) matches.close();
         closeAll();
         focusFirst();
     }
 
     @Override
     public void onBackPressed() {
-        if (allPanel.getVisibility() == View.VISIBLE) closeAll();
+        if (matches.visible()) { if (!matches.back()) focusFirst(); }
+        else if (allPanel.getVisibility() == View.VISIBLE) closeAll();
         else focusFirst();
     }
 
@@ -409,6 +427,10 @@ public class MainActivity extends Activity {
         svLp.topMargin = px(150);
         allPanel.addView(sv, svLp);
         root.addView(allPanel, new FrameLayout.LayoutParams(-1, -1));
+
+        // صفحة المباريات
+        matches = new Matches(this, u);
+        root.addView(matches.panel, new FrameLayout.LayoutParams(-1, -1));
     }
 
     private void addTop(View v, int size) {
@@ -435,12 +457,12 @@ public class MainActivity extends Activity {
             if (has) Sound.move();
             glow(b, has);
             if (g != null) g.tint(has && !Prefs.dark(this) ? 0xFF15151A : INK);
-            v.animate().scaleX(has ? 1.15f : 1f).scaleY(has ? 1.15f : 1f).setDuration(180).setInterpolator(pop).start();
+            v.animate().scaleX(has ? 1.15f : 1f).scaleY(has ? 1.15f : 1f).setDuration(140).setInterpolator(pop).start();
         });
     }
 
     private void glow(Glass.GlassFrame f, boolean on) {
-        ValueAnimator a = ValueAnimator.ofFloat(f.glow, on ? 1f : 0f).setDuration(220);
+        ValueAnimator a = ValueAnimator.ofFloat(f.glow, on ? 1f : 0f).setDuration(150);
         a.addUpdateListener(x -> f.setGlow((float) x.getAnimatedValue()));
         a.start();
     }
@@ -490,9 +512,9 @@ public class MainActivity extends Activity {
         int w = px(200), h = px(124), gap = px(28);
         View restore = null;
         List<AppEntry> favs = favorites(apps);
-        for (int i = 0; i <= favs.size(); i++) {
-            AppEntry app = i < favs.size() ? favs.get(i) : null; // الأخير = كل التطبيقات
-            View t = app != null ? dockTile(app, w, h) : allAppsTile(w, h);
+        for (int i = 0; i <= favs.size() + 1; i++) {
+            AppEntry app = i < favs.size() ? favs.get(i) : null; // بعدها المباريات، والأخير = كل التطبيقات
+            View t = app != null ? dockTile(app, w, h) : i == favs.size() ? matchesTile() : allAppsTile(w, h);
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(w, h);
             if (i > 0) lp.leftMargin = gap;
             dock.addView(t, lp);
@@ -522,6 +544,15 @@ public class MainActivity extends Activity {
         return card;
     }
 
+    private View matchesTile() {
+        Glass.GlassFrame card = new Glass.GlassFrame(this, px(30));
+        card.addView(new Glyph(this, Glyph.TROPHY), new FrameLayout.LayoutParams(px(58), px(58), Gravity.CENTER));
+        card.setTag("@matches");
+        tileBehaviour(card, Prefs.arabic(this) ? "المباريات" : "Matches", px(30));
+        card.setOnClickListener(v -> { Sound.press(); focusLabel.setAlpha(0f); matches.open(); });
+        return card;
+    }
+
     private View allAppsTile(int w, int h) {
         Glass.GlassFrame card = new Glass.GlassFrame(this, px(30));
         card.addView(new Glyph(this, Glyph.GRID), new FrameLayout.LayoutParams(px(52), px(52), Gravity.CENTER));
@@ -541,7 +572,7 @@ public class MainActivity extends Activity {
             glow(card, has);
             v.animate().scaleX(has ? 1.14f : 1f).scaleY(has ? 1.14f : 1f)
                     .translationY(has ? -px(8) : 0).translationZ(has ? px(22) : 0)
-                    .setDuration(200).setInterpolator(pop).start();
+                    .setDuration(150).setInterpolator(pop).start();
             if (has && v.getParent() == dock) showLabel(v, label);
         });
     }
@@ -637,10 +668,6 @@ public class MainActivity extends Activity {
     // ---------- الخلفيات ----------
 
     private void nextWallpaper() {
-        // ننزل ويا كل تبديل لحد ما يصير عدنا 60 صورة، وبعدين صورة جديدة كل دقيقة
-        boolean fetch = !matchMode() && (feed.count() < 60 || System.currentTimeMillis() - lastFetch > 60000);
-        if (fetch) lastFetch = System.currentTimeMillis();
-        if (fetch) net.execute(feed::fetchOne); // التنزيل بخيط وحده، ما يأخر الصور
         pics.execute(() -> {
             Bitmap bmp = ready, blur = readyBlur;
             ready = readyBlur = null;
@@ -659,6 +686,7 @@ public class MainActivity extends Activity {
         ImageView shown = wallAOnTop ? wallA : wallB;
         ImageView hidden = wallAOnTop ? wallB : wallA;
         hidden.setImageBitmap(next);
+        lastShown = System.currentTimeMillis();
         Glass.Backdrop.set(next, blurred);
         ObjectAnimator.ofFloat(hidden, View.ALPHA, hidden.getAlpha(), 1f).setDuration(1500).start();
         ObjectAnimator out = ObjectAnimator.ofFloat(shown, View.ALPHA, shown.getAlpha(), 0f).setDuration(1500);

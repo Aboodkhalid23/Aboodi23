@@ -11,7 +11,7 @@ import android.view.View;
 /** أيقونات خاصة مرسومة بالكود (خطوط حديثة رفيعة)، ونفس الشي لشعارات التطبيقات المفضلة. */
 final class Glyph extends View {
     static final int WIFI = 1, LANG = 2, MOON = 3, SUN = 4, GEAR = 5, GRID = 6, NETFLIX = 7, YOUTUBE = 8,
-            DAR = 9, SPOTIFY = 10, UPDATE = 11, BALL = 12, CLEAN = 13, POWER = 14, CLOUD = 15, RAIN = 16, SNOW = 17;
+            DAR = 9, SPOTIFY = 10, UPDATE = 11, BALL = 12, CLEAN = 13, POWER = 14, CLOUD = 15, RAIN = 16, SNOW = 17, TROPHY = 18;
 
     private final Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Path path = new Path();
@@ -86,6 +86,18 @@ final class Glyph extends View {
                 break;
             case BALL: ball(c); break;
             case CLOUD: cloud(c, 0); break;
+            case TROPHY:
+                // كأس: الجام والمقابض والقاعدة
+                path.reset();
+                path.moveTo(7, 4); path.lineTo(17, 4); path.lineTo(17, 9);
+                path.quadTo(17, 14.5f, 12, 14.5f); path.quadTo(7, 14.5f, 7, 9); path.close();
+                c.drawPath(path, p);
+                path.reset(); path.moveTo(7, 6); path.quadTo(3, 6, 3.6f, 9); path.quadTo(4.4f, 11.5f, 7.6f, 11.6f); c.drawPath(path, p);
+                path.reset(); path.moveTo(17, 6); path.quadTo(21, 6, 20.4f, 9); path.quadTo(19.6f, 11.5f, 16.4f, 11.6f); c.drawPath(path, p);
+                c.drawLine(12, 14.5f, 12, 18, p);
+                r.set(8, 18, 16, 20.5f);
+                c.drawRoundRect(r, 1, 1, p);
+                break;
             case RAIN:
                 cloud(c, -3);
                 for (int i = 0; i < 3; i++) c.drawLine(8.5f + i * 3.5f, 16.5f, 7.3f + i * 3.5f, 20.5f, p);
