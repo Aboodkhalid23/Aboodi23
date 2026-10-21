@@ -70,6 +70,10 @@ public class MainActivity extends Activity {
     private static final Set<String> MATCH_KEEP = new HashSet<>(java.util.Arrays.asList(
             DAR, "com.google.android.gms", "com.google.android.katniss", "com.android.vending"));
 
+    /** خدمات گوگل الأساسية (المتجر والبحث بالصوت): ما نسكرها حتى بالتنظيف القوي. */
+    private static final Set<String> SYSTEM_KEEP = new HashSet<>(java.util.Arrays.asList(
+            "com.google.android.gms", "com.google.android.katniss", "com.android.vending"));
+
     private static List<AppEntry> sApps;
     private static long matchUntil; // static: يظل حتى لو النظام سوّى للشاشة إعادة بناء
 
@@ -89,7 +93,6 @@ public class MainActivity extends Activity {
     private View dim;
     private TextView dateText, focusLabel, allTitle, tempText, skyText;
     private Glass.GlassFrame clockGlass;
-    private TextView greetText;
     private Glyph skyGlyph;
     private int wTemp = Integer.MIN_VALUE, wCode, wDay = 1;
     private TextClock clock;
@@ -97,7 +100,7 @@ public class MainActivity extends Activity {
     private Glass.GlassFrame dockGlass, allPanel, updateChip;
     private long lastShown; // متى تبدلت الخلفية آخر مرة
     private Glyph wifiGlyph, darkGlyph, ballGlyph;
-    private TextView speedText, ramText;
+    private TextView speedText, speedUnit;
     private boolean testing;
     private WallpaperFeed feed;
     private boolean visible, ambient;
@@ -308,18 +311,27 @@ public class MainActivity extends Activity {
 
         // يمين فوگ، من اليسار لليمين: (تحديث) السرعة، الداكن، المباراة، التنظيف، الريستارت، الوايفاي، اللغة، الإعدادات
         // يعني من اليمين: الإعدادات أول شي، بعدها اللغة، الوايفاي، الريستارت، التنظيف، المباراة
+        // دائرة سرعة النت (نفس حجم باقي الأزرار). تضغطها: تسكر كل التطبيقات الي بالخلفية وتعيد الفحص
         Glass.GlassFrame stats = new Glass.GlassFrame(this, px(36));
         LinearLayout sc = new LinearLayout(this);
         sc.setOrientation(LinearLayout.VERTICAL);
         sc.setGravity(Gravity.CENTER);
-        sc.setPadding(px(22), 0, px(22), 0);
-        speedText = text(19, INK, true);
-        ramText = text(17, 0xD9FFFFFF, false);
+        speedText = text(21, INK, true);
+        speedText.setIncludeFontPadding(false);
+        speedUnit = text(10, 0xCCFFFFFF, false);
+        speedUnit.setIncludeFontPadding(false);
         sc.addView(speedText);
-        sc.addView(ramText);
-        stats.addView(sc, new FrameLayout.LayoutParams(-2, -1));
-        button(stats, null, v -> speedTest());
-        addTop(stats, -2);
+        sc.addView(speedUnit);
+        stats.addView(sc, new FrameLayout.LayoutParams(-1, -1));
+        button(stats, null, v -> { cleanNow(); main.postDelayed(this::speedTest, 2500); });
+        View.OnFocusChangeListener sf = stats.getOnFocusChangeListener();
+        stats.setOnFocusChangeListener((v, has) -> {
+            sf.onFocusChange(v, has);
+            int ink = has && !Prefs.dark(this) ? 0xFF15151A : INK;
+            speedText.setTextColor(ink);
+            speedUnit.setTextColor(ink);
+        });
+        addTop(stats, px(72));
         darkGlyph = new Glyph(this, Glyph.MOON);
         addTop(iconButton(darkGlyph, v -> { Prefs.setDark(this, !Prefs.dark(this)); applyDark(true); }), px(72));
         ballGlyph = new Glyph(this, Glyph.BALL);
@@ -339,7 +351,7 @@ public class MainActivity extends Activity {
         tLp.rightMargin = px(60);
         root.addView(topBar, tLp);
 
-        // الساعة والتاريخ والطقس. تضغط على الساعة = شكل ثاني (6 أشكال)
+        // الساعة والتاريخ والطقس. تضغط على الساعة = شكل ثاني (12 شكل)
         LinearLayout clockBox = new LinearLayout(this);
         clockBox.setOrientation(LinearLayout.VERTICAL);
         clockBox.setGravity(Gravity.LEFT);
@@ -363,8 +375,6 @@ public class MainActivity extends Activity {
         wRow.addView(skyText, sl);
         wRow.setVisibility(View.GONE);
         wRow.setTag("wrow");
-        greetText = text(22, 0xE6FFFFFF, false);
-        clockBox.addView(greetText);
         clockBox.addView(clock);
         clockBox.addView(dateText);
         LinearLayout.LayoutParams wl = new LinearLayout.LayoutParams(-2, -2);
@@ -378,11 +388,22 @@ public class MainActivity extends Activity {
             applyClock();
             Toast.makeText(this, (Prefs.arabic(this) ? "الساعة: " : "Clock: ") + CLOCKS[st][Prefs.arabic(this) ? 0 : 1], Toast.LENGTH_SHORT).show();
         });
+        // لما تأشر على الساعة ما يطلع مربع: بس تكبر شوية بنعومة
+        clockGlass.setOnFocusChangeListener((v, has) -> {
+            if (has) Sound.move();
+            v.animate().scaleX(has ? 1.06f : 1f).scaleY(has ? 1.06f : 1f).setDuration(160).setInterpolator(pop).start();
+        });
+        clockGlass.setPivotX(0);
+        clockGlass.setPivotY(0);
         // يسار فوگ: الساعة وحدها
         FrameLayout.LayoutParams cLp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.LEFT);
         cLp.topMargin = px(34);
         cLp.leftMargin = px(48);
         root.addView(clockGlass, cLp);
+        if (!Prefs.of(this).getBoolean("clock17", false)) { // أول مرة بالتحديث: نبدّل لشكل جديد
+            Prefs.of(this).edit().putBoolean("clock17", true).apply();
+            Prefs.setClockStyle(this, 6);
+        }
         applyClock();
 
         // تحت: شريط زجاجي عائم بيه التطبيقات
@@ -664,9 +685,15 @@ public class MainActivity extends Activity {
         focusFirst();
     }
 
+    /**
+     * وضع التركيز: كل ما تفتح تطبيق، نسكر كل التطبيقات الثانية الي بالخلفية،
+     * حتى كل النت والرام تروح للتطبيق الي قدامك بس.
+     */
     private void launch(AppEntry app) {
         Sound.press();
         Prefs.countLaunch(this, app.pkg);
+        killEverything(app.pkg);
+        lastClean = System.currentTimeMillis();
         open(app.launch);
     }
 
@@ -731,9 +758,11 @@ public class MainActivity extends Activity {
 
     private static final String[][] CLOCKS = {
             {"ناعمة", "Soft"}, {"عريضة", "Bold"}, {"نيون", "Neon"},
-            {"زجاجية", "Glass"}, {"كلاسيكية", "Classic"}, {"بالثواني", "Seconds"}};
+            {"قوية", "Strong"}, {"كلاسيكية", "Classic"}, {"بالثواني", "Seconds"},
+            {"غروب", "Sunset"}, {"ذهبية", "Gold"}, {"عملاقة", "Giant"},
+            {"بنفسجية", "Violet"}, {"طويلة", "Tall"}, {"ثلجية", "Ice"}};
 
-    /** نطبق شكل الساعة المختار: الخط والحجم واللون والتوهج، وهل بيها زجاج. */
+    /** نطبق شكل الساعة المختار (12 شكل): الخط والحجم واللون والتوهج، وهل بيها زجاج. */
     private void applyClock() {
         int st = Prefs.clockStyle(this) % CLOCKS.length;
         int color = INK, glowColor = 0x73000000;
@@ -747,9 +776,18 @@ public class MainActivity extends Activity {
             case 3: font = "sans-serif"; size = 70; weight = Typeface.BOLD; break;
             case 4: font = "serif"; size = 76; glow = 18; break;
             case 5: font = "monospace"; size = 58; f12 = "h:mm:ss"; f24 = "H:mm:ss"; break;
+            case 6: font = "sans-serif-black"; size = 96; spacing = -0.02f; glowColor = 0x80FF4D6D; glow = 24; break;
+            case 7: font = "serif"; size = 84; color = 0xFFFFD27A; glowColor = 0xB3C8860A; glow = 22; spacing = 0.02f; break;
+            case 8: font = "sans-serif-thin"; size = 132; spacing = -0.04f; glow = 20; break;
+            case 9: font = "sans-serif-light"; size = 84; color = 0xFFD6A6FF; glowColor = 0xE69D4DFF; glow = 28; break;
+            case 10: font = "sans-serif-condensed"; size = 110; weight = Typeface.BOLD; spacing = -0.01f; break;
+            case 11: font = "sans-serif-medium"; size = 80; color = 0xFFE6F7FF; glowColor = 0xCC7FD8FF; glow = 22; spacing = 0.06f; break;
             default: break;
         }
-        clockGlass.plain = st != 3; // الزجاج بس بالشكل "الزجاجي" (والباقي يبين لما تأشر عليها)
+        // شكل "غروب": الأرقام متدرجة من الوردي للبرتقالي
+        clock.getPaint().setShader(st == 6 ? new android.graphics.LinearGradient(0, 0, 0, px(size),
+                0xFFFF6FA5, 0xFFFFB347, android.graphics.Shader.TileMode.CLAMP) : null);
+        clockGlass.plain = true; // بدون مربع زجاج أبداً: الساعة تبين جزء من الصورة
         clockGlass.invalidate();
         clock.setFormat12Hour(f12);
         clock.setFormat24Hour(f24);
@@ -758,37 +796,23 @@ public class MainActivity extends Activity {
         clock.setTypeface(Typeface.create(font, weight));
         clock.setLetterSpacing(spacing);
         clock.setShadowLayer(px(glow), 0, st == 2 ? 0 : px(2), glowColor);
-        int sub = st == 2 ? 0xE68BF3FF : 0xE6FFFFFF;
+        int sub = st == 2 ? 0xE68BF3FF : st == 7 ? 0xE6FFE2A8 : st == 9 ? 0xE6E6CCFF : 0xE6FFFFFF;
         dateText.setTextColor(sub);
         dateText.setTypeface(Typeface.create(st == 4 ? "serif" : "sans-serif", st == 1 ? Typeface.BOLD : Typeface.NORMAL));
         dateText.setShadowLayer(px(st == 2 ? 14 : 12), 0, st == 2 ? 0 : px(2), st == 2 ? 0x9900D9FF : 0x99000000);
-        tempText.setTextColor(color);
+        tempText.setTextColor(st == 6 ? 0xFFFFB347 : color);
         tempText.setShadowLayer(px(10), 0, px(2), st == 2 ? 0x9900D9FF : 0x99000000);
         skyText.setTextColor(sub);
-        greetText.setTextColor(sub);
-        greetText.setShadowLayer(px(10), 0, px(2), st == 2 ? 0x9900D9FF : 0x99000000);
         skyText.setShadowLayer(px(10), 0, px(2), 0x99000000);
-        skyGlyph.tint(color);
+        skyGlyph.tint(st == 6 ? 0xFFFFB347 : color);
         updateDate();
     }
 
     private void updateDate() {
         boolean ar = Prefs.arabic(this);
-        int st = Prefs.clockStyle(this) % CLOCKS.length;
         java.util.Date now = new java.util.Date();
-        String d;
-        {
-            java.util.Locale loc = ar ? new java.util.Locale("ar", "IQ") : java.util.Locale.ENGLISH;
-            d = new java.text.SimpleDateFormat(ar ? "EEEE، d MMMM" : "EEEE, d MMMM", loc).format(now);
-            if (ar) d = toLatinDigits(d);
-            if (st == 1 && !ar) d = d.toUpperCase(java.util.Locale.ROOT);
-        }
-        dateText.setText(d);
-        int h = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY);
-        greetText.setText(h >= 5 && h < 12 ? (ar ? "صباح الخير عبود ☀️" : "Good morning, Abood ☀️")
-                : h >= 12 && h < 17 ? (ar ? "يومك حلو عبود ✨" : "Good afternoon, Abood ✨")
-                : h >= 17 && h < 23 ? (ar ? "مساء الخير عبود 🌙" : "Good evening, Abood 🌙")
-                : (ar ? "تصبح على خير عبود 🌙" : "Good night, Abood 🌙"));
+        // التاريخ بالأرقام مثل ما طلب عبود: السنة/اليوم/الشهر
+        dateText.setText(new java.text.SimpleDateFormat("yyyy/dd/MM", java.util.Locale.ROOT).format(now));
         View wRow = clockGlass.findViewWithTag("wrow");
         if (wTemp != Integer.MIN_VALUE) {
             wRow.setVisibility(View.VISIBLE);
@@ -806,12 +830,6 @@ public class MainActivity extends Activity {
         if (code <= 67 || (code >= 80 && code <= 82) || code >= 95) return Glyph.RAIN;
         if (code <= 86) return Glyph.SNOW;
         return Glyph.CLOUD;
-    }
-
-    private static String toLatinDigits(String s) {
-        StringBuilder b = new StringBuilder();
-        for (char ch : s.toCharArray()) b.append(ch >= '٠' && ch <= '٩' ? (char) ('0' + ch - '٠') : ch);
-        return b.toString();
     }
 
     @SuppressWarnings("deprecation")
@@ -902,7 +920,7 @@ public class MainActivity extends Activity {
         }
         matchUntil = System.currentTimeMillis() + MATCH_FOR;
         applyMatch();
-        killEverything();
+        killEverything(DAR);
         lastClean = System.currentTimeMillis();
         Toast.makeText(this, ar ? "⚽ وضع المباراة: كل النت لدار" : "⚽ Match mode: all bandwidth to DAR", Toast.LENGTH_SHORT).show();
         launch(dar);
@@ -912,7 +930,7 @@ public class MainActivity extends Activity {
      * أقوى تنظيف: مو بس تطبيقات الشاشة، كل تطبيق منصب بالتلفزيون (حتى خدمات بالخلفية
      * مثل الألعاب والمتجر والتحديثات) نسكره، إلا دار وأساسيات النظام.
      */
-    private void killEverything() {
+    private void killEverything(String spare) {
         final String me = getPackageName();
         worker.execute(() -> {
             ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
@@ -921,7 +939,7 @@ public class MainActivity extends Activity {
             try { all = getPackageManager().getInstalledApplications(0); } catch (Exception e) { return; }
             for (android.content.pm.ApplicationInfo ai : all) {
                 String p = ai.packageName;
-                if (p.equals(me) || MATCH_KEEP.contains(p) || CORE.contains(p) || p.startsWith("com.android.systemui")
+                if (p.equals(me) || p.equals(spare) || SYSTEM_KEEP.contains(p) || CORE.contains(p) || p.startsWith("com.android.systemui")
                         || p.startsWith("com.android.providers") || p.contains("inputmethod") || p.contains(".ime")) continue;
                 try { am.killBackgroundProcesses(p); } catch (Exception ignored) { }
             }
@@ -942,7 +960,7 @@ public class MainActivity extends Activity {
     /** زر التنظيف: نسكر كل التطبيقات الي بالخلفية (حتى سبوتيفاي) ونگول شگد فضّينا. */
     private void cleanNow() {
         final long before = freeRam();
-        killEverything();
+        killEverything(matchMode() ? DAR : null);
         lastClean = System.currentTimeMillis();
         main.postDelayed(() -> {
             long mb = Math.max(0, freeRam() - before) / 1048576;
@@ -977,9 +995,6 @@ public class MainActivity extends Activity {
         ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
         am.getMemoryInfo(mi);
         boolean low = mi.lowMemory || mi.availMem < mi.totalMem * 0.15;
-        String gb = String.format(java.util.Locale.ROOT, "%.1f", mi.availMem / 1073741824.0);
-        ramText.setText(ar ? "رام فاضية " + gb + " گيگا" : "Free RAM " + gb + " GB");
-        ramText.setTextColor(low ? 0xFFFFB74D : 0xD9FFFFFF);
         if (low) cleanUp(); // الرام قلت: ننظف بنفسنا (مرة كل 30 ثانية بالأكثر)
     }
 
@@ -989,8 +1004,8 @@ public class MainActivity extends Activity {
 
     private void showSpeed(boolean ar) {
         float last = Prefs.of(this).getFloat("speed", -1);
-        String v = last < 0 ? "…" : last == 0 ? (ar ? "ماكو" : "none") : speed(last);
-        speedText.setText((ar ? "النت " : "Net ") + v + (last > 0 ? (ar ? " ميگابت" : " Mb/s") : ""));
+        speedText.setText(last < 0 ? "…" : last == 0 ? "×" : speed(last));
+        speedUnit.setText(last == 0 ? (ar ? "ماكو نت" : "offline") : (ar ? "ميگابت" : "Mb/s"));
     }
 
     /** فحص سرعة: ننزل لحد 25 ميگابايت أو 3 ثواني من كلاودفلير ونحسب السرعة الحقيقية. */
@@ -998,7 +1013,8 @@ public class MainActivity extends Activity {
         if (testing || matchMode() || !visible) return;
         testing = true;
         boolean ar = Prefs.arabic(this);
-        speedText.setText(ar ? "دا أفحص..." : "Testing...");
+        speedText.setText("…");
+        speedUnit.setText(ar ? "دا أفحص" : "testing");
         net.execute(() -> {
             double mbps = -1;
             try {

@@ -6,9 +6,9 @@ DIR="$HOME/AboodTV"
 RAW="https://github.com/Aboodkhalid23/Aboodi23/raw/claude/project-thread-4ztr10/tv-launcher"
 ADB="$DIR/platform-tools/adb"
 # تطبيقات نظام زايدة تشتغل بالخلفية وتسحب نت ورام. نوقفها بس (ما تنحذف).
-EXTRA="com.google.android.tvrecommendations com.google.android.leanbacklauncher.recommendations com.google.android.play.games com.google.android.videos com.google.android.music com.google.android.feedback com.google.android.backdrop com.android.printspooler com.google.android.tvlauncher com.google.android.apps.tv.launcherx com.google.android.youtube.tvmusic com.google.android.apps.tv.dreamx com.android.dreams.basic com.android.dreams.phototable com.google.android.marvin.talkback com.google.android.tvtutorials com.google.android.apps.tv.ambient"
+EXTRA="com.google.android.tvrecommendations com.google.android.leanbacklauncher.recommendations com.google.android.play.games com.google.android.videos com.google.android.music com.google.android.feedback com.google.android.backdrop com.android.printspooler com.google.android.tvlauncher com.google.android.apps.tv.launcherx com.google.android.youtube.tvmusic com.google.android.apps.tv.dreamx com.android.dreams.basic com.android.dreams.phototable com.google.android.marvin.talkback com.google.android.tvtutorials com.google.android.apps.tv.ambient com.google.android.apps.youtube.music"
 # هذني ما نخليها تشتغل بالخلفية بعد ما تطلع منها.
-NOBG="com.google.android.youtube.tv com.netflix.ninja com.mxtech.videoplayer.ad com.esaba.downloader"
+NOBG="com.google.android.youtube.tv com.netflix.ninja com.mxtech.videoplayer.ad com.mxtech.videoplayer.pro com.teamsmart.videomanager.tv com.liskovsoft.smarttubetv com.liskovsoft.smarttubetv.beta"
 # هذني ممنوع يستخدمن النت بالخلفية (يشتغلن عادي لما تفتحهن).
 NONET="com.google.android.play.games com.google.android.videos com.google.android.music com.google.android.youtube.tvmusic com.google.android.apps.youtube.music com.amazon.amazonvideo.livingroom com.disney.disneyplus"
 FASTAPPS="com.google.android.youtube.tv com.netflix.ninja com.mbm_soft.darplayer com.spotify.tv.android com.aboodi.tvhome"
@@ -54,6 +54,13 @@ report() {
 }
 
 # حذف التطبيقات الي ما تحتاجها: يسألك عن كل تطبيق انت منصبه، وما يحذف شي إلا إذا گلت نعم
+# التطبيقات الي تبقى بس: يوتيوب، يوتيوب بدون إعلانات، دار، سبوتيفاي، نتفلكس، MX (المشغل)، والشاشة نفسها.
+# أي تطبيق ثاني انت منصبه ينحذف (وينرجع بأمر undo). المتجر وأدوات النظام ما نمسها.
+keep_app() {
+  case "$1" in *aboodi*|*youtube*|*smarttube*|*teamsmart*|*darplayer*|*spotify*|*netflix*|*mxtech*|*inputmethod*|*keyboard*|*remote*) return 0 ;; esac
+  return 1
+}
+
 KEEPAPPS="com.aboodi.tvhome com.mbm_soft.darplayer com.google.android.youtube.tv com.netflix.ninja com.spotify.tv.android com.mxtech.videoplayer.ad com.teamsmart.videomanager.tv com.liskovsoft.smarttubetv com.liskovsoft.smarttubetv.beta"
 apps() {
   echo "١) دا أوقف تطبيقات النظام الزايدة (تنرجع بأمر undo)..."
@@ -108,6 +115,8 @@ adblock_off() {
 undo() {
   for p in $EXTRA; do S pm enable "$p" >/dev/null 2>&1; done
   for p in $NOBG; do S cmd appops set "$p" RUN_ANY_IN_BACKGROUND allow >/dev/null 2>&1; done
+  # نرجّع التطبيقات الي انحذفت
+  [ -f "$DIR/removed.txt" ] && for p in $(cat "$DIR/removed.txt"); do S cmd package install-existing "$p" >/dev/null 2>&1 && echo "رجّعت $p"; done
   for k in window_animation_scale transition_animation_scale animator_duration_scale; do S settings put global $k 1; done
   S settings put global wifi_scan_always_enabled 1
   S settings put global encoded_surround_output 0
@@ -158,6 +167,12 @@ main() {
     S pm path "$p" 2>/dev/null | grep -q package && S pm disable-user --user 0 "$p" >/dev/null 2>&1 && echo "   وگّفت $p"
   done
 
+  echo "   ودا أحذف كل التطبيقات الي ما تحتاجها (يبقى بس يوتيوب ودار وسبوتيفاي ونتفلكس والمشغل)..."
+  for p in $(S pm list packages -3 | tr -d '\r' | sed 's/package://' | sort); do
+    keep_app "$p" && continue
+    S pm uninstall -k --user 0 "$p" >/dev/null 2>&1 && { echo "$p" >> "$DIR/removed.txt"; echo "   حذفت $p"; }
+  done
+
   echo "٣) دا أمنع التطبيقات تشتغل بالخلفية بعد ما تطلع منها..."
   for p in $NOBG; do S cmd appops set "$p" RUN_ANY_IN_BACKGROUND ignore >/dev/null 2>&1; done
   S am kill-all
@@ -183,6 +198,7 @@ main() {
     S cmd appops set $DAR RUN_IN_BACKGROUND allow >/dev/null 2>&1
     S dumpsys deviceidle whitelist +$DAR >/dev/null 2>&1
     S am set-standby-bucket $DAR active >/dev/null 2>&1
+    S am set-inactive $DAR false >/dev/null 2>&1
     U=$(S pm list packages -U $DAR 2>/dev/null | tr -d '\r' | grep "package:$DAR " | sed 's/.*uid://')
     [ -n "$U" ] && { S cmd netpolicy remove restrict-background-blacklist "$U"; S cmd netpolicy add restrict-background-whitelist "$U"; } >/dev/null 2>&1
     echo "   دار صار له أولوية بالنت والتشغيل"
@@ -193,6 +209,8 @@ main() {
   S settings put global ble_scan_always_enabled 0
   S settings put global wifi_sleep_policy 2
   S settings put global network_recommendations_enabled 0
+  S settings put global wifi_suspend_optimizations_enabled 0
+  S settings put global network_avoid_bad_wifi 0
 
   echo "   ودا أثبّت الصوت: الصوت يطلع للسماعة بشكل عادي (PCM) بدل الصيغ المضغوطة الي تسبب انقطاع ووشة"
   S settings put global encoded_surround_output 1
@@ -205,14 +223,13 @@ main() {
     S pm path "$p" 2>/dev/null | grep -q package && { echo "   $p"; S cmd package compile -m speed "$p" >/dev/null 2>&1; }
   done
 
-  echo "٨) دا أمنع الإعلانات..."
-  if S pm list packages | tr -d '\r' | grep -qE "smarttube|teamsmart"; then
-    S settings put global private_dns_mode hostname
-    S settings put global private_dns_specifier dns.adguard-dns.com
-    echo "   تمام (SmartTube منصب، ومنع الإعلانات شغال)"
-  else
-    adblock
-  fi
+  echo "٨) يوتيوب بدون إعلانات، وDNS سريع..."
+  S pm list packages | tr -d '\r' | grep -qE "smarttube|teamsmart" || adblock
+  # منع الإعلانات بالـDNS چان ممكن يسد عناوين يحتاجها دار ويقطع البث، فبدلناه بـDNS كلاودفلير السريع.
+  # إعلانات يوتيوب ينمنعن بتطبيق "يوتيوب بدون إعلانات" نفسه.
+  S settings put global private_dns_mode hostname
+  S settings put global private_dns_specifier one.one.one.one
+  echo "   تمام"
 
   S am force-stop com.aboodi.tvhome
   S am start -n com.aboodi.tvhome/.MainActivity >/dev/null
