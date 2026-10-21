@@ -16,6 +16,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.TrafficStats;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -64,7 +65,14 @@ public class MainActivity extends Activity {
             "com.mbm_soft.darplayer", "com.spotify.tv.android", "com.google.android.gms",
             "com.google.android.katniss", "com.google.android.tvlauncher", "com.android.vending"));
 
+    private static final String DAR = "com.mbm_soft.darplayer";
+    private static final long MATCH_FOR = 3 * 3600 * 1000; // وضع المباراة يظل 3 ساعات
+    /** بوضع المباراة نسكر حتى سبوتيفاي، ونخلي بس دار وخدمات النظام. */
+    private static final Set<String> MATCH_KEEP = new HashSet<>(java.util.Arrays.asList(
+            DAR, "com.google.android.gms", "com.google.android.katniss", "com.android.vending"));
+
     private static List<AppEntry> sApps;
+    private static long matchUntil; // static: يظل حتى لو النظام سوّى للشاشة إعادة بناء
 
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
     private final ExecutorService net = Executors.newSingleThreadExecutor(); // تنزيلات (بطيئة)
@@ -84,7 +92,10 @@ public class MainActivity extends Activity {
     private TextClock clock;
     private LinearLayout topBar, dock, allGrid;
     private Glass.GlassFrame dockGlass, allPanel, updateChip;
-    private Glyph wifiGlyph, darkGlyph;
+    private Glyph wifiGlyph, darkGlyph, ballGlyph;
+    private TextView speedText, ramText;
+    private long lastRx = -1, lastRxAt;
+    private boolean testing;
     private WallpaperFeed feed;
     private boolean visible, ambient;
     private int phraseIndex;
@@ -115,6 +126,15 @@ public class MainActivity extends Activity {
     };
 
     private final Runnable dateTick = this::updateDate;
+
+    /** كل ثانيتين: سرعة النت هسة والرام الفاضية (بس والرئيسية مفتوحة). */
+    private final Runnable statsTick = new Runnable() {
+        @Override public void run() {
+            if (!visible) return;
+            updateStats();
+            main.postDelayed(this, 2000);
+        }
+    };
 
     private final Runnable ambientCheck = new Runnable() {
         @Override public void run() {
@@ -178,6 +198,11 @@ public class MainActivity extends Activity {
         main.removeCallbacks(ambientCheck);
         main.postDelayed(ambientCheck, 15000);
         main.postDelayed(this::cleanUp, 1500);
+        lastRx = -1;
+        main.removeCallbacks(statsTick);
+        main.post(statsTick);
+        applyMatch();
+        if (matchMode()) return; // وضع المباراة: ولا طلب نت من الشاشة
         net.execute(() -> {
             int v = Updater.check(this);
             main.post(() -> updateChip.setVisibility(v > 0 ? View.VISIBLE : View.GONE));
@@ -191,6 +216,7 @@ public class MainActivity extends Activity {
         visible = false;
         main.removeCallbacks(rotate);
         main.removeCallbacks(ambientCheck);
+        main.removeCallbacks(statsTick);
         super.onPause();
     }
 
@@ -290,6 +316,8 @@ public class MainActivity extends Activity {
         });
         addTop(updateChip, -2);
 
+        ballGlyph = new Glyph(this, Glyph.BALL);
+        addTop(iconButton(ballGlyph, v -> toggleMatch()), px(72));
         addTop(iconButton(Glyph.GEAR, v -> open(new Intent(Settings.ACTION_SETTINGS))), px(72));
         darkGlyph = new Glyph(this, Glyph.MOON);
         addTop(iconButton(darkGlyph, v -> { Prefs.setDark(this, !Prefs.dark(this)); applyDark(true); }), px(72));
@@ -300,6 +328,20 @@ public class MainActivity extends Activity {
             if (wi.resolveActivity(getPackageManager()) == null) wi = new Intent(Settings.ACTION_SETTINGS);
             open(wi);
         }), px(72));
+
+        // جنب الوايفاي: سرعة النت هسة والرام الفاضية. تضغطه = فحص سرعة
+        Glass.GlassFrame stats = new Glass.GlassFrame(this, px(36));
+        LinearLayout sc = new LinearLayout(this);
+        sc.setOrientation(LinearLayout.VERTICAL);
+        sc.setGravity(Gravity.CENTER);
+        sc.setPadding(px(22), 0, px(22), 0);
+        speedText = text(19, INK, true);
+        ramText = text(17, 0xD9FFFFFF, false);
+        sc.addView(speedText);
+        sc.addView(ramText);
+        stats.addView(sc, new FrameLayout.LayoutParams(-2, -1));
+        button(stats, null, v -> speedTest());
+        addTop(stats, -2);
 
         LinearLayout clockBox = new LinearLayout(this);
         clockBox.setOrientation(LinearLayout.VERTICAL);
@@ -601,14 +643,14 @@ public class MainActivity extends Activity {
         phrase.setAlpha(0f);
         phrase.animate().alpha(1f).setDuration(900).start();
         // بالبداية ننزل ويا كل تبديل لحد ما يصير عدنا 30 صورة، وبعدين وحدة كل دقيقتين
-        boolean fetch = feed.count() < 30 || System.currentTimeMillis() - lastFetch > 120000;
+        boolean fetch = !matchMode() && (feed.count() < 30 || System.currentTimeMillis() - lastFetch > 120000);
         if (fetch) lastFetch = System.currentTimeMillis();
         if (fetch) net.execute(feed::fetchOne); // التنزيل بخيط وحده، ما يأخر الصور
         pics.execute(() -> {
             Bitmap bmp = ready, blur = readyBlur;
             ready = readyBlur = null;
             if (bmp == null) { bmp = feed.next(screenW, screenH); blur = bmp != null ? Glass.Backdrop.blur(bmp) : null; }
-            if (bmp == null) { feed.fetchOne(); bmp = feed.next(screenW, screenH); blur = bmp != null ? Glass.Backdrop.blur(bmp) : null; }
+            if (bmp == null && !matchMode()) { feed.fetchOne(); bmp = feed.next(screenW, screenH); blur = bmp != null ? Glass.Backdrop.blur(bmp) : null; }
             final Bitmap show = bmp, showBlur = blur;
             if (show != null) main.post(() -> { if (visible) crossfade(show, showBlur); });
             // نجهز الي بعدها من هسة
@@ -728,16 +770,116 @@ public class MainActivity extends Activity {
      * (يوتيوب، نتفلكس...) حتى ترجع الرام فاضية. دار وسبوتيفاي ما نمسهن.
      */
     private void cleanUp() {
-        if (!visible || System.currentTimeMillis() - lastClean < 30000 || sApps == null) return;
+        if (!visible || System.currentTimeMillis() - lastClean < 30000) return;
         lastClean = System.currentTimeMillis();
+        kill(matchMode() ? MATCH_KEEP : KEEP);
+    }
+
+    private void kill(Set<String> keep) {
+        if (sApps == null) return;
         final List<String> pkgs = new ArrayList<>();
-        for (AppEntry a : sApps) if (!KEEP.contains(a.pkg)) pkgs.add(a.pkg);
+        for (AppEntry a : sApps) if (!keep.contains(a.pkg)) pkgs.add(a.pkg);
         worker.execute(() -> {
             ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
             if (am == null) return;
             for (String p : pkgs) {
                 try { am.killBackgroundProcesses(p); } catch (Exception ignored) { }
             }
+        });
+    }
+
+    // ---------- وضع المباراة ----------
+
+    private static boolean matchMode() { return System.currentTimeMillis() < matchUntil; }
+
+    /**
+     * وضع المباراة: نسكر كل شي بالخلفية (حتى سبوتيفاي)، ونوقف تنزيل الصور والطقس والتحديث،
+     * ونفتح دار مباشرة. هيچ كل النت يروح للمباراة. نضغطه مرة ثانية يطفي.
+     */
+    private void toggleMatch() {
+        boolean ar = Prefs.arabic(this);
+        if (matchMode()) {
+            matchUntil = 0;
+            applyMatch();
+            Toast.makeText(this, ar ? "طفى وضع المباراة" : "Match mode off", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        AppEntry dar = null;
+        if (sApps != null) for (AppEntry a : sApps) if (a.pkg.equals(DAR)) { dar = a; break; }
+        if (dar == null) {
+            Toast.makeText(this, ar ? "تطبيق دار مو منصب" : "DAR is not installed", Toast.LENGTH_LONG).show();
+            return;
+        }
+        matchUntil = System.currentTimeMillis() + MATCH_FOR;
+        applyMatch();
+        kill(MATCH_KEEP);
+        lastClean = System.currentTimeMillis();
+        Toast.makeText(this, ar ? "⚽ وضع المباراة: كل النت لدار" : "⚽ Match mode: all bandwidth to DAR", Toast.LENGTH_SHORT).show();
+        launch(dar);
+    }
+
+    /** زر الكرة يصير أخضر لما وضع المباراة شغال. */
+    private void applyMatch() {
+        ballGlyph.tint(matchMode() ? 0xFF3DDC84 : INK);
+    }
+
+    // ---------- سرعة النت والرام ----------
+
+    private void updateStats() {
+        boolean ar = Prefs.arabic(this);
+        long rx = TrafficStats.getTotalRxBytes(), now = System.currentTimeMillis();
+        if (!testing && rx != TrafficStats.UNSUPPORTED) {
+            if (lastRx >= 0 && now > lastRxAt) {
+                double mbps = (rx - lastRx) * 8.0 / 1e6 / ((now - lastRxAt) / 1000.0);
+                speedText.setText("↓ " + speed(mbps) + (ar ? " ميگابت" : " Mb/s"));
+            } else if (speedText.length() == 0) speedText.setText("↓ …");
+            lastRx = rx;
+            lastRxAt = now;
+        }
+        ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+        if (am == null) return;
+        ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+        am.getMemoryInfo(mi);
+        boolean low = mi.lowMemory || mi.availMem < mi.totalMem * 0.15;
+        String gb = String.format(java.util.Locale.ROOT, "%.1f", mi.availMem / 1073741824.0);
+        ramText.setText(ar ? "رام فاضية " + gb + " گيگا" : "Free RAM " + gb + " GB");
+        ramText.setTextColor(low ? 0xFFFFB74D : 0xD9FFFFFF);
+        if (low) cleanUp(); // الرام قلت: ننظف بنفسنا (مرة كل 30 ثانية بالأكثر)
+    }
+
+    private static String speed(double mbps) {
+        return String.format(java.util.Locale.ROOT, mbps < 10 ? "%.1f" : "%.0f", Math.max(0, mbps));
+    }
+
+    /** فحص سرعة: ننزل لحد 25 ميگابايت أو 4 ثواني من كلاودفلير ونحسب السرعة الحقيقية. */
+    private void speedTest() {
+        if (testing || matchMode()) return;
+        testing = true;
+        boolean ar = Prefs.arabic(this);
+        speedText.setText(ar ? "دا أفحص..." : "Testing...");
+        net.execute(() -> {
+            double mbps = -1;
+            try {
+                java.net.HttpURLConnection c = WallpaperFeed.open("https://speed.cloudflare.com/__down?bytes=25000000");
+                long start = System.nanoTime(), got = 0;
+                try (java.io.InputStream in = c.getInputStream()) {
+                    byte[] b = new byte[65536];
+                    for (int n; (n = in.read(b)) > 0; ) {
+                        got += n;
+                        if (System.nanoTime() - start > 4_000_000_000L) break;
+                    }
+                } finally { c.disconnect(); }
+                mbps = got * 8.0 / 1e6 / ((System.nanoTime() - start) / 1e9);
+            } catch (Exception ignored) { }
+            final double r = mbps;
+            main.post(() -> {
+                testing = false;
+                lastRx = -1;
+                speedText.setText(r < 0 ? (ar ? "ماكو نت" : "No internet")
+                        : (ar ? "السرعة " + speed(r) + " ميگابت" : "Speed " + speed(r) + " Mb/s"));
+                main.removeCallbacks(statsTick);
+                main.postDelayed(statsTick, 6000); // نخلي النتيجة تبين 6 ثواني
+            });
         });
     }
 

@@ -11,7 +11,7 @@ import android.view.View;
 /** أيقونات خاصة مرسومة بالكود (خطوط حديثة رفيعة)، ونفس الشي لشعارات التطبيقات المفضلة. */
 final class Glyph extends View {
     static final int WIFI = 1, LANG = 2, MOON = 3, SUN = 4, GEAR = 5, GRID = 6, NETFLIX = 7, YOUTUBE = 8,
-            DAR = 9, SPOTIFY = 10, UPDATE = 11;
+            DAR = 9, SPOTIFY = 10, UPDATE = 11, BALL = 12;
 
     private final Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Path path = new Path();
@@ -84,6 +84,7 @@ final class Glyph extends View {
                 c.drawPath(path, p);
                 c.drawLine(5, 19.5f, 19, 19.5f, p);
                 break;
+            case BALL: ball(c); break;
             case NETFLIX:
                 p.setStyle(Paint.Style.FILL);
                 p.setColor(0xFFE50914);
@@ -160,6 +161,24 @@ final class Glyph extends View {
             p.setAlpha(255);
             c.drawLine(4, 4, 20, 20, p);
         }
+    }
+
+    /** كرة قدم: دائرة وبنصها خماسي مليان، وخطوط منه للحافة. */
+    private void ball(Canvas c) {
+        c.drawCircle(12, 12, 9.6f, p);
+        path.reset();
+        float[] xs = new float[5], ys = new float[5];
+        for (int i = 0; i < 5; i++) {
+            double a = -Math.PI / 2 + i * 2 * Math.PI / 5;
+            xs[i] = 12 + (float) Math.cos(a) * 3.6f;
+            ys[i] = 12 + (float) Math.sin(a) * 3.6f;
+            if (i == 0) path.moveTo(xs[i], ys[i]); else path.lineTo(xs[i], ys[i]);
+            c.drawLine(xs[i], ys[i], 12 + (float) Math.cos(a) * 9.6f, 12 + (float) Math.sin(a) * 9.6f, p);
+        }
+        path.close();
+        p.setStyle(Paint.Style.FILL);
+        c.drawPath(path, p);
+        p.setStyle(Paint.Style.STROKE);
     }
 
     private void lang(Canvas c) {

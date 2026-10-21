@@ -25,7 +25,7 @@ import java.util.Random;
  */
 final class WallpaperFeed {
     static final String RAW = "https://raw.githubusercontent.com/Aboodkhalid23/Aboodi23/claude/project-thread-4ztr10/tv-launcher/";
-    private static final String UA = "AboodTV/5 (https://github.com/Aboodkhalid23/Aboodi23)";
+    private static final String UA = "AboodTV/7 (https://github.com/Aboodkhalid23/Aboodi23)";
     private static final int KEEP = 60; // كم صورة منزّلة نخلي
     private static final long DAY = 24L * 3600 * 1000;
 
