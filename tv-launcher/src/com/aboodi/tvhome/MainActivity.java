@@ -16,7 +16,6 @@ import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.net.TrafficStats;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -59,7 +58,7 @@ public class MainActivity extends Activity {
     private static final int GRID_COLS = 6;
     private static final int INK = 0xFFFFFFFF;
     private static final String ALL = "@all";
-    private static final long AMBIENT_AFTER = 3 * 60 * 1000; // بعد 3 دقايق بدون ريموت: تبين الصورة بس
+    private static final long AMBIENT_AFTER = 60 * 1000; // بعد دقيقة بدون ريموت: التلفزيون يصير لوحة
     /** هذني ما نسكرهن أبداً بالتنظيف: دار (المباريات) وسبوتيفاي (الأغاني) وخدمات النظام. */
     private static final Set<String> KEEP = new HashSet<>(java.util.Arrays.asList(
             "com.mbm_soft.darplayer", "com.spotify.tv.android", "com.google.android.gms",
@@ -94,7 +93,6 @@ public class MainActivity extends Activity {
     private Glass.GlassFrame dockGlass, allPanel, updateChip;
     private Glyph wifiGlyph, darkGlyph, ballGlyph;
     private TextView speedText, ramText;
-    private long lastRx = -1, lastRxAt;
     private boolean testing;
     private WallpaperFeed feed;
     private boolean visible, ambient;
@@ -127,7 +125,7 @@ public class MainActivity extends Activity {
 
     private final Runnable dateTick = this::updateDate;
 
-    /** كل ثانيتين: سرعة النت هسة والرام الفاضية (بس والرئيسية مفتوحة). */
+    /** كل ثانيتين: الرام الفاضية (بس والرئيسية مفتوحة). */
     private final Runnable statsTick = new Runnable() {
         @Override public void run() {
             if (!visible) return;
@@ -140,7 +138,7 @@ public class MainActivity extends Activity {
         @Override public void run() {
             if (!visible) return;
             if (!ambient && System.currentTimeMillis() - lastKey > AMBIENT_AFTER && allPanel.getVisibility() != View.VISIBLE) setAmbient(true);
-            main.postDelayed(this, 15000);
+            main.postDelayed(this, 5000);
         }
     };
 
@@ -166,6 +164,7 @@ public class MainActivity extends Activity {
         u = screenW / 1920f;
         feed = new WallpaperFeed(this);
         Glass.Backdrop.dark = Prefs.dark(this);
+        worker.execute(Sound::init);
 
         buildScreen();
         applyLanguage();
@@ -196,13 +195,15 @@ public class MainActivity extends Activity {
         main.removeCallbacks(rotate);
         main.post(rotate);
         main.removeCallbacks(ambientCheck);
-        main.postDelayed(ambientCheck, 15000);
+        main.postDelayed(ambientCheck, 5000);
         main.postDelayed(this::cleanUp, 1500);
-        lastRx = -1;
         main.removeCallbacks(statsTick);
         main.post(statsTick);
         applyMatch();
         if (matchMode()) return; // وضع المباراة: ولا طلب نت من الشاشة
+        // فحص سرعة تلقائي كل ربع ساعة (3 ثواني بس)، بعد ما الشاشة تستقر
+        if (System.currentTimeMillis() - Prefs.of(this).getLong("speed_at", 0) > 15 * 60 * 1000)
+            main.postDelayed(this::speedTest, 4000);
         net.execute(() -> {
             int v = Updater.check(this);
             main.post(() -> updateChip.setVisibility(v > 0 ? View.VISIBLE : View.GONE));
@@ -318,6 +319,8 @@ public class MainActivity extends Activity {
 
         ballGlyph = new Glyph(this, Glyph.BALL);
         addTop(iconButton(ballGlyph, v -> toggleMatch()), px(72));
+        addTop(iconButton(Glyph.CLEAN, v -> cleanNow()), px(72));
+        addTop(iconButton(Glyph.POWER, v -> restart()), px(72));
         addTop(iconButton(Glyph.GEAR, v -> open(new Intent(Settings.ACTION_SETTINGS))), px(72));
         darkGlyph = new Glyph(this, Glyph.MOON);
         addTop(iconButton(darkGlyph, v -> { Prefs.setDark(this, !Prefs.dark(this)); applyDark(true); }), px(72));
@@ -433,8 +436,9 @@ public class MainActivity extends Activity {
     private void button(Glass.GlassFrame b, Glyph g, View.OnClickListener click) {
         b.setFocusable(true);
         b.setClickable(true);
-        b.setOnClickListener(click);
+        b.setOnClickListener(v -> { Sound.press(); click.onClick(v); });
         b.setOnFocusChangeListener((v, has) -> {
+            if (has) Sound.move();
             glow(b, has);
             if (g != null) g.tint(has && !Prefs.dark(this) ? 0xFF15151A : INK);
             v.animate().scaleX(has ? 1.15f : 1f).scaleY(has ? 1.15f : 1f).setDuration(180).setInterpolator(pop).start();
@@ -529,7 +533,7 @@ public class MainActivity extends Activity {
         card.addView(new Glyph(this, Glyph.GRID), new FrameLayout.LayoutParams(px(52), px(52), Gravity.CENTER));
         card.setTag(ALL);
         tileBehaviour(card, null, px(30));
-        card.setOnClickListener(v -> openAll());
+        card.setOnClickListener(v -> { Sound.press(); openAll(); });
         return card;
     }
 
@@ -539,6 +543,7 @@ public class MainActivity extends Activity {
         card.setClickable(true);
         shadow(card, radius, px(4));
         card.setOnFocusChangeListener((v, has) -> {
+            if (has) Sound.move();
             glow(card, has);
             v.animate().scaleX(has ? 1.14f : 1f).scaleY(has ? 1.14f : 1f)
                     .translationY(has ? -px(8) : 0).translationZ(has ? px(22) : 0)
@@ -630,6 +635,7 @@ public class MainActivity extends Activity {
     }
 
     private void launch(AppEntry app) {
+        Sound.press();
         Prefs.countLaunch(this, app.pkg);
         open(app.launch);
     }
@@ -642,8 +648,8 @@ public class MainActivity extends Activity {
         phraseHint.setText(Prefs.arabic(this) ? ph[1] : ph[2]);
         phrase.setAlpha(0f);
         phrase.animate().alpha(1f).setDuration(900).start();
-        // بالبداية ننزل ويا كل تبديل لحد ما يصير عدنا 30 صورة، وبعدين وحدة كل دقيقتين
-        boolean fetch = !matchMode() && (feed.count() < 30 || System.currentTimeMillis() - lastFetch > 120000);
+        // ننزل ويا كل تبديل لحد ما يصير عدنا 60 صورة، وبعدين صورة جديدة كل دقيقة
+        boolean fetch = !matchMode() && (feed.count() < 60 || System.currentTimeMillis() - lastFetch > 60000);
         if (fetch) lastFetch = System.currentTimeMillis();
         if (fetch) net.execute(feed::fetchOne); // التنزيل بخيط وحده، ما يأخر الصور
         pics.execute(() -> {
@@ -823,19 +829,39 @@ public class MainActivity extends Activity {
         ballGlyph.tint(matchMode() ? 0xFF3DDC84 : INK);
     }
 
+    /** زر التنظيف: نسكر كل التطبيقات الي بالخلفية (حتى سبوتيفاي) ونگول شگد فضّينا. */
+    private void cleanNow() {
+        final long before = freeRam();
+        kill(MATCH_KEEP);
+        lastClean = System.currentTimeMillis();
+        main.postDelayed(() -> {
+            long mb = Math.max(0, freeRam() - before) / 1048576;
+            boolean ar = Prefs.arabic(this);
+            Toast.makeText(this, ar ? "✨ سكّرت كل التطبيقات وفضّيت " + mb + " ميگا" : "✨ Closed all apps, freed " + mb + " MB", Toast.LENGTH_SHORT).show();
+            updateStats();
+        }, 1800);
+    }
+
+    private long freeRam() {
+        ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+        if (am == null) return 0;
+        ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+        am.getMemoryInfo(mi);
+        return mi.availMem;
+    }
+
+    /** زر الريستارت: يفتح قائمة الطاقة مال التلفزيون (بيها إعادة التشغيل). */
+    private void restart() {
+        if (PowerService.powerMenu()) return;
+        boolean ar = Prefs.arabic(this);
+        Toast.makeText(this, ar ? "شغّل ملف التسريع مرة وحدة من الماك حتى يشتغل زر الريستارت" : "Run the speed-up file once to enable restart", Toast.LENGTH_LONG).show();
+    }
+
     // ---------- سرعة النت والرام ----------
 
     private void updateStats() {
         boolean ar = Prefs.arabic(this);
-        long rx = TrafficStats.getTotalRxBytes(), now = System.currentTimeMillis();
-        if (!testing && rx != TrafficStats.UNSUPPORTED) {
-            if (lastRx >= 0 && now > lastRxAt) {
-                double mbps = (rx - lastRx) * 8.0 / 1e6 / ((now - lastRxAt) / 1000.0);
-                speedText.setText("↓ " + speed(mbps) + (ar ? " ميگابت" : " Mb/s"));
-            } else if (speedText.length() == 0) speedText.setText("↓ …");
-            lastRx = rx;
-            lastRxAt = now;
-        }
+        if (!testing) showSpeed(ar);
         ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
         if (am == null) return;
         ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
@@ -851,9 +877,15 @@ public class MainActivity extends Activity {
         return String.format(java.util.Locale.ROOT, mbps < 10 ? "%.1f" : "%.0f", Math.max(0, mbps));
     }
 
-    /** فحص سرعة: ننزل لحد 25 ميگابايت أو 4 ثواني من كلاودفلير ونحسب السرعة الحقيقية. */
+    private void showSpeed(boolean ar) {
+        float last = Prefs.of(this).getFloat("speed", -1);
+        String v = last < 0 ? "…" : last == 0 ? (ar ? "ماكو" : "none") : speed(last);
+        speedText.setText((ar ? "النت " : "Net ") + v + (last > 0 ? (ar ? " ميگابت" : " Mb/s") : ""));
+    }
+
+    /** فحص سرعة: ننزل لحد 25 ميگابايت أو 3 ثواني من كلاودفلير ونحسب السرعة الحقيقية. */
     private void speedTest() {
-        if (testing || matchMode()) return;
+        if (testing || matchMode() || !visible) return;
         testing = true;
         boolean ar = Prefs.arabic(this);
         speedText.setText(ar ? "دا أفحص..." : "Testing...");
@@ -866,7 +898,7 @@ public class MainActivity extends Activity {
                     byte[] b = new byte[65536];
                     for (int n; (n = in.read(b)) > 0; ) {
                         got += n;
-                        if (System.nanoTime() - start > 4_000_000_000L) break;
+                        if (System.nanoTime() - start > 3_000_000_000L) break;
                     }
                 } finally { c.disconnect(); }
                 mbps = got * 8.0 / 1e6 / ((System.nanoTime() - start) / 1e9);
@@ -874,24 +906,23 @@ public class MainActivity extends Activity {
             final double r = mbps;
             main.post(() -> {
                 testing = false;
-                lastRx = -1;
-                speedText.setText(r < 0 ? (ar ? "ماكو نت" : "No internet")
-                        : (ar ? "السرعة " + speed(r) + " ميگابت" : "Speed " + speed(r) + " Mb/s"));
-                main.removeCallbacks(statsTick);
-                main.postDelayed(statsTick, 6000); // نخلي النتيجة تبين 6 ثواني
+                Prefs.of(this).edit().putFloat("speed", (float) Math.max(0, r)).putLong("speed_at", System.currentTimeMillis()).apply();
+                showSpeed(ar);
             });
         });
     }
 
-    /** وضع العرض: بعد 3 دقايق بدون ريموت تختفي الأزرار وتبقى الصورة والساعة. */
+    /** وضع اللوحة: بعد دقيقة بدون ريموت يختفي كلشي (حتى الساعة) وتبقى الصورة بس، مثل لوحة جدارية. */
     private void setAmbient(boolean on) {
         if (ambient == on) return;
         ambient = on;
         float a = on ? 0f : 1f;
-        dockGlass.animate().alpha(a).translationY(on ? px(40) : 0).setDuration(700).start();
+        long d = on ? 1500 : 400;
+        dockGlass.animate().alpha(a).translationY(on ? px(40) : 0).setDuration(d).start();
         focusLabel.animate().alpha(on ? 0f : focusLabel.getAlpha()).setDuration(400).start();
-        for (int i = 0; i < topBar.getChildCount() - 1; i++) topBar.getChildAt(i).animate().alpha(a).setDuration(700).start();
-        ((View) phrase.getParent()).animate().alpha(on ? 0.6f : 1f).setDuration(700).start();
+        topBar.animate().alpha(a).setDuration(d).start();
+        ((View) phrase.getParent()).animate().alpha(a).setDuration(d).start();
+        dim.animate().alpha(a).setDuration(d).start(); // الصورة بألوانها الكاملة
     }
 
     private void toggleFavorite(AppEntry app) {

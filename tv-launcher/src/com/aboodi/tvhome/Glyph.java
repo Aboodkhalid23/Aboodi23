@@ -11,7 +11,7 @@ import android.view.View;
 /** أيقونات خاصة مرسومة بالكود (خطوط حديثة رفيعة)، ونفس الشي لشعارات التطبيقات المفضلة. */
 final class Glyph extends View {
     static final int WIFI = 1, LANG = 2, MOON = 3, SUN = 4, GEAR = 5, GRID = 6, NETFLIX = 7, YOUTUBE = 8,
-            DAR = 9, SPOTIFY = 10, UPDATE = 11, BALL = 12;
+            DAR = 9, SPOTIFY = 10, UPDATE = 11, BALL = 12, CLEAN = 13, POWER = 14;
 
     private final Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Path path = new Path();
@@ -85,6 +85,16 @@ final class Glyph extends View {
                 c.drawLine(5, 19.5f, 19, 19.5f, p);
                 break;
             case BALL: ball(c); break;
+            case CLEAN:
+                // نجمة لمعة كبيرة وصغيرة: "نظيف"
+                sparkle(c, 10f, 13f, 7.5f);
+                sparkle(c, 18.5f, 5.5f, 3.2f);
+                break;
+            case POWER:
+                r.set(5, 5.5f, 19, 19.5f);
+                c.drawArc(r, -60, 300, false, p);
+                c.drawLine(12, 3.5f, 12, 11.5f, p);
+                break;
             case NETFLIX:
                 p.setStyle(Paint.Style.FILL);
                 p.setColor(0xFFE50914);
@@ -161,6 +171,18 @@ final class Glyph extends View {
             p.setAlpha(255);
             c.drawLine(4, 4, 20, 20, p);
         }
+    }
+
+    private void sparkle(Canvas c, float x, float y, float s) {
+        float k = s * 0.22f;
+        path.reset();
+        path.moveTo(x, y - s);
+        path.quadTo(x + k, y - k, x + s, y);
+        path.quadTo(x + k, y + k, x, y + s);
+        path.quadTo(x - k, y + k, x - s, y);
+        path.quadTo(x - k, y - k, x, y - s);
+        path.close();
+        c.drawPath(path, p);
     }
 
     /** كرة قدم: دائرة وبنصها خماسي مليان، وخطوط منه للحافة. */

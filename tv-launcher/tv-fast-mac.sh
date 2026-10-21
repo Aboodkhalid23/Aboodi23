@@ -49,6 +49,12 @@ main() {
   # نسمح لشاشة عبود تنصب تحديثاتها بنفسها (بعد ما توافق بالتلفزيون)
   S appops set com.aboodi.tvhome REQUEST_INSTALL_PACKAGES allow >/dev/null 2>&1
 
+  # زر الريستارت بالشاشة يحتاج خدمة صغيرة تفتح قائمة الطاقة. نشغلها (ونخلي أي خدمة ثانية مثل ما هي)
+  SVC=com.aboodi.tvhome/com.aboodi.tvhome.PowerService
+  CUR=$(S settings get secure enabled_accessibility_services | tr -d '\r')
+  case "$CUR" in *"$SVC"*) ;; ""|null) S settings put secure enabled_accessibility_services "$SVC" ;; *) S settings put secure enabled_accessibility_services "$CUR:$SVC" ;; esac
+  S settings put secure accessibility_enabled 1
+
   # صورك الخاصة: إذا نزّلت ملف AboodTV-my-walls.zip بالتنزيلات، ننقلها للتلفزيون
   if [ -f "$HOME/Downloads/AboodTV-my-walls.zip" ]; then
     echo "   دا أنقل صورك للتلفزيون..."

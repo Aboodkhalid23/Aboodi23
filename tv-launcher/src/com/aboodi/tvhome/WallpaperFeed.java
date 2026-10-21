@@ -25,14 +25,16 @@ import java.util.Random;
  */
 final class WallpaperFeed {
     static final String RAW = "https://raw.githubusercontent.com/Aboodkhalid23/Aboodi23/claude/project-thread-4ztr10/tv-launcher/";
-    private static final String UA = "AboodTV/7 (https://github.com/Aboodkhalid23/Aboodi23)";
-    private static final int KEEP = 60; // كم صورة منزّلة نخلي
-    private static final long DAY = 24L * 3600 * 1000;
+    private static final String UA = "AboodTV/8 (https://github.com/Aboodkhalid23/Aboodi23)";
+    private static final int KEEP = 120; // كم صورة منزّلة نخلي
+    private static final long LIST_EVERY = 6L * 3600 * 1000; // نشوف إذا اكو صور جديدة كل 6 ساعات
 
     private final Context ctx;
     private final File cache, mine, listFile;
     private final Random random = new Random();
     private final List<File> bag = new ArrayList<>(); // نخلط الصور ونمشي عليهن وحدة وحدة بدون تكرار
+    private final List<File> fresh = new ArrayList<>(); // صور توها نزلت: تطلع أول شي
+    private static final Bitmap BAD = Bitmap.createBitmap(1, 1, Bitmap.Config.ALPHA_8); // علامة: ملف خربان
 
     WallpaperFeed(Context c) {
         ctx = c.getApplicationContext();
@@ -47,6 +49,14 @@ final class WallpaperFeed {
 
     /** الصورة الجاية بدقة الشاشة الكاملة. null إذا بعد ماكو ولا صورة. */
     Bitmap next(int screenW, int screenH) {
+        synchronized (fresh) {
+            while (!fresh.isEmpty()) {
+                File f = fresh.remove(0);
+                bag.remove(f);
+                Bitmap b = f.exists() ? decode(f, screenW, screenH) : null;
+                if (b != null && b != BAD) return b;
+            }
+        }
         if (bag.isEmpty()) {
             List<File> all = new ArrayList<>();
             addJpgs(mine, all);
@@ -63,7 +73,8 @@ final class WallpaperFeed {
         while (!bag.isEmpty()) {
             File f = bag.remove(0);
             Bitmap b = decode(f, screenW, screenH);
-            if (b != null) return b;
+            if (b == null) { System.gc(); continue; } // ما گدرنا هسة، نكمل بالي بعدها
+            if (b != BAD) return b;
             //noinspection ResultOfMethodCallIgnored
             f.delete(); // صورة خربانة
         }
@@ -80,11 +91,13 @@ final class WallpaperFeed {
         if (!online()) return;
         try {
             List<String> urls = urls();
+            prune(urls);
             Collections.shuffle(urls, random);
             for (String url : urls) {
                 File out = new File(cache, Integer.toHexString(url.hashCode()) + ".jpg");
                 if (out.exists()) continue;
                 download(url, out);
+                synchronized (fresh) { fresh.add(out); }
                 trim();
                 return;
             }
@@ -93,9 +106,19 @@ final class WallpaperFeed {
         }
     }
 
-    /** القائمة من الريبو، نجددها مرة باليوم. */
+    /** أي صورة منزّلة انشالت من القائمة (ما حلوة) نمسحها من التلفزيون هم. */
+    private void prune(List<String> urls) {
+        if (urls.isEmpty()) return;
+        java.util.Set<String> keep = new java.util.HashSet<>();
+        for (String u : urls) keep.add(Integer.toHexString(u.hashCode()) + ".jpg");
+        File[] fs = cache.listFiles();
+        if (fs != null) for (File f : fs) if (!keep.contains(f.getName())) //noinspection ResultOfMethodCallIgnored
+            f.delete();
+    }
+
+    /** القائمة من الريبو، نجددها كل 6 ساعات. */
     private List<String> urls() throws Exception {
-        if (!listFile.exists() || System.currentTimeMillis() - listFile.lastModified() > DAY) {
+        if (!listFile.exists() || System.currentTimeMillis() - listFile.lastModified() > LIST_EVERY) {
             try { download(RAW + "walls.txt", listFile); } catch (Exception ignored) { }
         }
         List<String> out = new ArrayList<>();
@@ -107,29 +130,30 @@ final class WallpaperFeed {
         return out;
     }
 
-    /** نقرا الصورة بأقرب دقة للشاشة وبألوان كاملة (ARGB_8888) حتى تطلع واضحة جداً. */
+    /**
+     * نقرا الصورة بدقة الشاشة بالضبط وبألوان كاملة (ARGB_8888). التصغير يصير وقت القراءة نفسها،
+     * فما نحجز صورة 4K كاملة بالرام (هذا الي چان يخلص الذاكرة ويخلي الصور ما تتبدل).
+     */
     private static Bitmap decode(File f, int w, int h) {
         BitmapFactory.Options o = new BitmapFactory.Options();
         o.inJustDecodeBounds = true;
         BitmapFactory.decodeFile(f.getPath(), o);
-        if (o.outWidth <= 0) return null;
+        if (o.outWidth <= 0) return BAD;
         o.inSampleSize = 1;
         while (o.outWidth / (o.inSampleSize * 2) >= w && o.outHeight / (o.inSampleSize * 2) >= h) o.inSampleSize *= 2;
+        float s = Math.max((float) w / (o.outWidth / o.inSampleSize), (float) h / (o.outHeight / o.inSampleSize));
+        if (s < 1f) { // نصغر للشاشة وقت القراءة
+            o.inScaled = true;
+            o.inDensity = 10000;
+            o.inTargetDensity = Math.max(1, Math.round(10000 * s));
+        }
         o.inJustDecodeBounds = false;
         o.inPreferredConfig = Bitmap.Config.ARGB_8888;
         try {
             Bitmap b = BitmapFactory.decodeFile(f.getPath(), o);
-            if (b == null) return null;
-            // إذا بعدها أكبر من الشاشة بهواية نصغرها بنعومة، حتى ما تاكل رام
-            float s = Math.max((float) w / b.getWidth(), (float) h / b.getHeight());
-            if (s < 0.8f) {
-                Bitmap r = Bitmap.createScaledBitmap(b, Math.round(b.getWidth() * s), Math.round(b.getHeight() * s), true);
-                if (r != b) b.recycle();
-                b = r;
-            }
-            return b;
+            return b != null ? b : BAD;
         } catch (OutOfMemoryError e) {
-            return null;
+            return null; // الرام مليانة هسة: الصورة سليمة، نجربها بعدين
         }
     }
 
