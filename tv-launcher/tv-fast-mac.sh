@@ -114,8 +114,20 @@ main() {
   S settings put global window_animation_scale 0
   S settings put global transition_animation_scale 0
   S settings put global animator_duration_scale 0.5
-  # نجمّد التطبيقات الي بالخلفية حتى ما تاكل معالج، وتفتح أسرع لما ترجعلها
-  S settings put global cached_apps_freezer enabled >/dev/null 2>&1
+  # تجميد التطبيقات رجعناه للأصل: ممكن يوقف جزء من مشغل دار ويقطع البث
+  S settings delete global cached_apps_freezer >/dev/null 2>&1
+
+  # دار: نخليه دائماً مسموح يشتغل وياخذ نت بدون أي تقييد من النظام، حتى البث ما يقطع
+  DAR=com.mbm_soft.darplayer
+  if S pm path $DAR 2>/dev/null | grep -q package; then
+    S cmd appops set $DAR RUN_ANY_IN_BACKGROUND allow >/dev/null 2>&1
+    S cmd appops set $DAR RUN_IN_BACKGROUND allow >/dev/null 2>&1
+    S dumpsys deviceidle whitelist +$DAR >/dev/null 2>&1
+    S am set-standby-bucket $DAR active >/dev/null 2>&1
+    U=$(S pm list packages -U $DAR 2>/dev/null | tr -d '\r' | grep "package:$DAR " | sed 's/.*uid://')
+    [ -n "$U" ] && { S cmd netpolicy remove restrict-background-blacklist "$U"; S cmd netpolicy add restrict-background-whitelist "$U"; } >/dev/null 2>&1
+    echo "   دار صار له أولوية بالنت والتشغيل"
+  fi
 
   echo "٥) دا أثبّت الوايفاي حتى ما يقطع..."
   S settings put global wifi_scan_always_enabled 0

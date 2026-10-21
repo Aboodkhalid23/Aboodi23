@@ -188,6 +188,7 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         visible = true;
+        WallpaperFeed.stop = false;
         lastKey = System.currentTimeMillis();
         setAmbient(false);
         updateWifi();
@@ -216,6 +217,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onPause() {
         visible = false;
+        WallpaperFeed.stop = true;
         main.removeCallbacks(fetchTick);
         main.removeCallbacks(rotate);
         main.removeCallbacks(ambientCheck);
@@ -996,7 +998,7 @@ public class MainActivity extends Activity {
                     byte[] b = new byte[65536];
                     for (int n; (n = in.read(b)) > 0; ) {
                         got += n;
-                        if (System.nanoTime() - start > 3_000_000_000L) break;
+                        if (System.nanoTime() - start > 3_000_000_000L || WallpaperFeed.stop) break;
                     }
                 } finally { c.disconnect(); }
                 mbps = got * 8.0 / 1e6 / ((System.nanoTime() - start) / 1e9);

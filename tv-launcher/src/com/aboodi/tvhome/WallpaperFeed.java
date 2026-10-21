@@ -34,6 +34,8 @@ final class WallpaperFeed {
     private final Random random = new Random();
     private final List<File> bag = new ArrayList<>(); // نخلط الصور ونمشي عليهن وحدة وحدة بدون تكرار
     private final List<File> fresh = new ArrayList<>(); // صور توها نزلت: تطلع أول شي
+    /** يصير true أول ما تطلع من الرئيسية: أي تنزيل صورة يوقف بنفس اللحظة، حتى النت كله للتطبيق. */
+    static volatile boolean stop;
     private static final Bitmap BAD = Bitmap.createBitmap(1, 1, Bitmap.Config.ALPHA_8); // علامة: ملف خربان
 
     WallpaperFeed(Context c) {
@@ -88,7 +90,7 @@ final class WallpaperFeed {
 
     /** ينزّل صورة جديدة وحدة من القائمة إذا اكو نت. يشتغل بخيط جانبي. */
     void fetchOne() {
-        if (!online()) return;
+        if (stop || !online()) return;
         try {
             List<String> urls = urls();
             prune(urls);
@@ -186,7 +188,10 @@ final class WallpaperFeed {
         try (InputStream in = c.getInputStream(); OutputStream os = new FileOutputStream(tmp)) {
             if (c.getResponseCode() != 200) throw new java.io.IOException("HTTP " + c.getResponseCode());
             byte[] b = new byte[32768];
-            for (int n; (n = in.read(b)) > 0; ) os.write(b, 0, n);
+            for (int n; (n = in.read(b)) > 0; ) {
+                if (stop) throw new java.io.IOException("stopped"); // انفتح تطبيق: نوقف التنزيل فوراً
+                os.write(b, 0, n);
+            }
         } finally {
             c.disconnect();
         }
