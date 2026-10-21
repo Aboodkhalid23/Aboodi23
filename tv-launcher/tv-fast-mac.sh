@@ -9,6 +9,8 @@ ADB="$DIR/platform-tools/adb"
 EXTRA="com.google.android.tvrecommendations com.google.android.leanbacklauncher.recommendations com.google.android.play.games com.google.android.videos com.google.android.music com.google.android.feedback com.google.android.backdrop com.android.printspooler com.google.android.tvlauncher"
 # هذني ما نخليها تشتغل بالخلفية بعد ما تطلع منها.
 NOBG="com.google.android.youtube.tv com.netflix.ninja com.mxtech.videoplayer.ad com.esaba.downloader"
+# هذني ممنوع يستخدمن النت بالخلفية (يشتغلن عادي لما تفتحهن).
+NONET="com.google.android.play.games com.google.android.videos com.google.android.music com.google.android.youtube.tvmusic com.google.android.apps.youtube.music com.amazon.amazonvideo.livingroom com.disney.disneyplus"
 FASTAPPS="com.google.android.youtube.tv com.netflix.ninja com.mbm_soft.darplayer com.spotify.tv.android com.aboodi.tvhome"
 
 S() { "$ADB" -s "$TV:5555" shell "$@" </dev/null; }
@@ -35,6 +37,10 @@ undo() {
   for p in $NOBG; do S cmd appops set "$p" RUN_ANY_IN_BACKGROUND allow >/dev/null 2>&1; done
   for k in window_animation_scale transition_animation_scale animator_duration_scale; do S settings put global $k 1; done
   S settings put global wifi_scan_always_enabled 1
+  for p in $NOBG $NONET; do
+    U=$(S pm list packages -U "$p" 2>/dev/null | tr -d '\r' | grep "package:$p " | sed 's/.*uid://')
+    [ -n "$U" ] && S cmd netpolicy remove restrict-background-blacklist "$U" >/dev/null 2>&1
+  done
   echo "رجّعت كلشي مثل ما چان."
 }
 
@@ -73,6 +79,12 @@ main() {
   echo "٣) دا أمنع التطبيقات تشتغل بالخلفية بعد ما تطلع منها..."
   for p in $NOBG; do S cmd appops set "$p" RUN_ANY_IN_BACKGROUND ignore >/dev/null 2>&1; done
   S am kill-all
+
+  echo "   وأمنعها تسحب نت بالخلفية، حتى وقت المباراة كل النت يروح للي مفتوح قدامك..."
+  for p in $NOBG $NONET; do
+    U=$(S pm list packages -U "$p" 2>/dev/null | tr -d '\r' | grep "package:$p " | sed 's/.*uid://')
+    [ -n "$U" ] && S cmd netpolicy add restrict-background-blacklist "$U" >/dev/null 2>&1
+  done
 
   echo "٤) دا أسرّع الحركات..."
   for k in window_animation_scale transition_animation_scale animator_duration_scale; do S settings put global $k 0.5; done

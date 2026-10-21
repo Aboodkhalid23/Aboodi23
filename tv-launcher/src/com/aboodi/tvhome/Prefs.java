@@ -19,6 +19,11 @@ final class Prefs {
         of(ctx).edit().putString("lang", ar ? "ar" : "en").apply();
     }
 
+    /** شكل الساعة المختار (0..5). */
+    static int clockStyle(Context ctx) { return of(ctx).getInt("clock", 0); }
+
+    static void setClockStyle(Context ctx, int s) { of(ctx).edit().putInt("clock", s).apply(); }
+
     static boolean dark(Context ctx) { return of(ctx).getBoolean("dark", false); }
 
     static void setDark(Context ctx, boolean d) { of(ctx).edit().putBoolean("dark", d).apply(); }

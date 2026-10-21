@@ -11,7 +11,7 @@ import android.view.View;
 /** أيقونات خاصة مرسومة بالكود (خطوط حديثة رفيعة)، ونفس الشي لشعارات التطبيقات المفضلة. */
 final class Glyph extends View {
     static final int WIFI = 1, LANG = 2, MOON = 3, SUN = 4, GEAR = 5, GRID = 6, NETFLIX = 7, YOUTUBE = 8,
-            DAR = 9, SPOTIFY = 10, UPDATE = 11, BALL = 12, CLEAN = 13, POWER = 14;
+            DAR = 9, SPOTIFY = 10, UPDATE = 11, BALL = 12, CLEAN = 13, POWER = 14, CLOUD = 15, RAIN = 16, SNOW = 17;
 
     private final Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Path path = new Path();
@@ -85,6 +85,17 @@ final class Glyph extends View {
                 c.drawLine(5, 19.5f, 19, 19.5f, p);
                 break;
             case BALL: ball(c); break;
+            case CLOUD: cloud(c, 0); break;
+            case RAIN:
+                cloud(c, -3);
+                for (int i = 0; i < 3; i++) c.drawLine(8.5f + i * 3.5f, 16.5f, 7.3f + i * 3.5f, 20.5f, p);
+                break;
+            case SNOW:
+                cloud(c, -3);
+                p.setStyle(Paint.Style.FILL);
+                for (int i = 0; i < 3; i++) c.drawCircle(8.5f + i * 3.5f, 18.5f + (i % 2) * 1.6f, 1.1f, p);
+                p.setStyle(Paint.Style.STROKE);
+                break;
             case CLEAN:
                 // نجمة لمعة كبيرة وصغيرة: "نظيف"
                 sparkle(c, 10f, 13f, 7.5f);
@@ -171,6 +182,23 @@ final class Glyph extends View {
             p.setAlpha(255);
             c.drawLine(4, 4, 20, 20, p);
         }
+    }
+
+    /** غيمة ناعمة: ثلاث دواير ومستطيل مدموجين، نرسم حافتها بس. */
+    private void cloud(Canvas c, float dy) {
+        path.reset();
+        path.addCircle(8.5f, 14f + dy, 4f, Path.Direction.CW);
+        Path q = new Path();
+        q.addCircle(13f, 11f + dy, 5.5f, Path.Direction.CW);
+        path.op(q, Path.Op.UNION);
+        q.reset();
+        q.addCircle(17.5f, 14.5f + dy, 3.5f, Path.Direction.CW);
+        path.op(q, Path.Op.UNION);
+        q.reset();
+        r.set(8.5f, 13f + dy, 17.5f, 18f + dy);
+        q.addRect(r, Path.Direction.CW);
+        path.op(q, Path.Op.UNION);
+        c.drawPath(path, p);
     }
 
     private void sparkle(Canvas c, float x, float y, float s) {

@@ -105,6 +105,7 @@ final class Glass {
         private int shaderKey = -1;
         private Shader fillShader, edgeShader;
         float glow; // 0 = عادي، 1 = متأشر عليه (أفتح وألمع)
+        boolean plain; // بدون زجاج: بس يبين الزجاج لما يتأشر عليه
 
         GlassFrame(Context c, float radius) {
             super(c);
@@ -121,6 +122,7 @@ final class Glass {
 
         @Override
         protected void onDraw(Canvas c) {
+            if (plain && glow <= 0.01f) return;
             int w = getWidth(), h = getHeight();
             box.set(0, 0, w, h);
             clip.reset();

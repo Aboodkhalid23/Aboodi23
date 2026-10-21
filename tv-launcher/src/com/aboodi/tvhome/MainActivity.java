@@ -87,7 +87,10 @@ public class MainActivity extends Activity {
     private ImageView wallA, wallB;
     private boolean wallAOnTop = true;
     private View dim;
-    private TextView phrase, phraseHint, dateText, focusLabel, allTitle;
+    private TextView phrase, phraseHint, dateText, focusLabel, allTitle, tempText, skyText;
+    private Glass.GlassFrame clockGlass;
+    private Glyph skyGlyph;
+    private int wTemp = Integer.MIN_VALUE, wCode, wDay = 1;
     private TextClock clock;
     private LinearLayout topBar, dock, allGrid;
     private Glass.GlassFrame dockGlass, allPanel, updateChip;
@@ -98,7 +101,6 @@ public class MainActivity extends Activity {
     private boolean visible, ambient;
     private int phraseIndex;
     private long lastFetch, lastClean, lastKey = System.currentTimeMillis(), lastWeather;
-    private String weather = "";
 
     private static final String[][] PHRASES = {
             {"夜の東京", "طوكيو بالليل", "Tokyo at night"},
@@ -346,24 +348,47 @@ public class MainActivity extends Activity {
         button(stats, null, v -> speedTest());
         addTop(stats, -2);
 
+        // الساعة والتاريخ والطقس. تضغط على الساعة = شكل ثاني (6 أشكال)
         LinearLayout clockBox = new LinearLayout(this);
         clockBox.setOrientation(LinearLayout.VERTICAL);
         clockBox.setGravity(Gravity.RIGHT);
+        clockBox.setPadding(px(22), px(10), px(22), px(12));
         clock = new TextClock(this);
-        clock.setFormat12Hour("h:mm");
-        clock.setFormat24Hour("H:mm");
-        clock.setTextColor(INK);
-        clock.setTextSize(TypedValue.COMPLEX_UNIT_PX, px(64));
-        clock.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
         clock.setIncludeFontPadding(false);
-        clock.setShadowLayer(px(16), 0, px(2), 0x73000000);
+        clock.setTextColor(INK);
         dateText = text(22, 0xE6FFFFFF, false);
-        dateText.setShadowLayer(px(12), 0, px(2), 0x99000000);
+        LinearLayout wRow = new LinearLayout(this);
+        wRow.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
+        wRow.setGravity(Gravity.CENTER_VERTICAL);
+        skyGlyph = new Glyph(this, Glyph.SUN);
+        tempText = text(26, INK, true);
+        skyText = text(19, 0xCCFFFFFF, false);
+        wRow.addView(skyGlyph, new LinearLayout.LayoutParams(px(30), px(30)));
+        LinearLayout.LayoutParams tl = new LinearLayout.LayoutParams(-2, -2);
+        tl.leftMargin = px(8);
+        wRow.addView(tempText, tl);
+        LinearLayout.LayoutParams sl = new LinearLayout.LayoutParams(-2, -2);
+        sl.leftMargin = px(10);
+        wRow.addView(skyText, sl);
+        wRow.setVisibility(View.GONE);
+        wRow.setTag("wrow");
         clockBox.addView(clock);
         clockBox.addView(dateText);
+        LinearLayout.LayoutParams wl = new LinearLayout.LayoutParams(-2, -2);
+        wl.topMargin = px(6);
+        clockBox.addView(wRow, wl);
+        clockGlass = new Glass.GlassFrame(this, px(34));
+        clockGlass.addView(clockBox, new FrameLayout.LayoutParams(-2, -2));
+        button(clockGlass, null, v -> {
+            int st = (Prefs.clockStyle(this) + 1) % CLOCKS.length;
+            Prefs.setClockStyle(this, st);
+            applyClock();
+            Toast.makeText(this, (Prefs.arabic(this) ? "الساعة: " : "Clock: ") + CLOCKS[st][Prefs.arabic(this) ? 0 : 1], Toast.LENGTH_SHORT).show();
+        });
         LinearLayout.LayoutParams cbl = new LinearLayout.LayoutParams(-2, -2);
-        cbl.leftMargin = px(24);
-        topBar.addView(clockBox, cbl);
+        cbl.leftMargin = px(12);
+        topBar.addView(clockGlass, cbl);
+        applyClock();
         FrameLayout.LayoutParams tLp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.RIGHT);
         tLp.topMargin = px(44);
         tLp.rightMargin = px(60);
@@ -711,14 +736,77 @@ public class MainActivity extends Activity {
         if (sApps != null) showApps(sApps);
     }
 
+    private static final String[][] CLOCKS = {
+            {"ناعمة", "Soft"}, {"عريضة", "Bold"}, {"نيون", "Neon"},
+            {"زجاجية", "Glass"}, {"يابانية", "Japanese"}, {"بالثواني", "Seconds"}};
+
+    /** نطبق شكل الساعة المختار: الخط والحجم واللون والتوهج، وهل بيها زجاج. */
+    private void applyClock() {
+        int st = Prefs.clockStyle(this) % CLOCKS.length;
+        int color = INK, glowColor = 0x73000000;
+        float size = 64, glow = 16, spacing = 0;
+        String font = "sans-serif-light";
+        int weight = Typeface.NORMAL;
+        String f12 = "h:mm", f24 = "H:mm";
+        switch (st) {
+            case 1: font = "sans-serif-black"; size = 92; spacing = -0.03f; glow = 22; break;
+            case 2: font = "sans-serif-thin"; size = 78; color = 0xFF8BF3FF; glowColor = 0xE600D9FF; glow = 26; spacing = 0.04f; break;
+            case 3: font = "sans-serif"; size = 70; weight = Typeface.BOLD; break;
+            case 4: font = "serif"; size = 76; glow = 18; break;
+            case 5: font = "monospace"; size = 58; f12 = "h:mm:ss"; f24 = "H:mm:ss"; break;
+            default: break;
+        }
+        clockGlass.plain = st != 3; // الزجاج بس بالشكل "الزجاجي" (والباقي يبين لما تأشر عليها)
+        clockGlass.invalidate();
+        clock.setFormat12Hour(f12);
+        clock.setFormat24Hour(f24);
+        clock.setTextColor(color);
+        clock.setTextSize(TypedValue.COMPLEX_UNIT_PX, px(size));
+        clock.setTypeface(Typeface.create(font, weight));
+        clock.setLetterSpacing(spacing);
+        clock.setShadowLayer(px(glow), 0, st == 2 ? 0 : px(2), glowColor);
+        int sub = st == 2 ? 0xE68BF3FF : 0xE6FFFFFF;
+        dateText.setTextColor(sub);
+        dateText.setTypeface(Typeface.create(st == 4 ? "serif" : "sans-serif", st == 1 ? Typeface.BOLD : Typeface.NORMAL));
+        dateText.setShadowLayer(px(st == 2 ? 14 : 12), 0, st == 2 ? 0 : px(2), st == 2 ? 0x9900D9FF : 0x99000000);
+        tempText.setTextColor(color);
+        tempText.setShadowLayer(px(10), 0, px(2), st == 2 ? 0x9900D9FF : 0x99000000);
+        skyText.setTextColor(sub);
+        skyText.setShadowLayer(px(10), 0, px(2), 0x99000000);
+        skyGlyph.tint(color);
+        updateDate();
+    }
+
     private void updateDate() {
         boolean ar = Prefs.arabic(this);
-        java.util.Locale loc = ar ? new java.util.Locale("ar", "IQ") : java.util.Locale.ENGLISH;
-        String d = new java.text.SimpleDateFormat(ar ? "EEEE، d MMMM" : "EEEE, d MMMM", loc).format(new java.util.Date());
-        if (ar) d = toLatinDigits(d);
-        dateText.setText(weather.isEmpty() ? d : d + "   " + weather);
+        int st = Prefs.clockStyle(this) % CLOCKS.length;
+        java.util.Date now = new java.util.Date();
+        String d;
+        if (st == 4) d = new java.text.SimpleDateFormat("M月d日 EEEE", java.util.Locale.JAPANESE).format(now);
+        else {
+            java.util.Locale loc = ar ? new java.util.Locale("ar", "IQ") : java.util.Locale.ENGLISH;
+            d = new java.text.SimpleDateFormat(ar ? "EEEE، d MMMM" : "EEEE, d MMMM", loc).format(now);
+            if (ar) d = toLatinDigits(d);
+            if (st == 1 && !ar) d = d.toUpperCase(java.util.Locale.ROOT);
+        }
+        dateText.setText(d);
+        View wRow = clockGlass.findViewWithTag("wrow");
+        if (wTemp != Integer.MIN_VALUE) {
+            wRow.setVisibility(View.VISIBLE);
+            tempText.setText(wTemp + "°");
+            skyText.setText((ar ? "توركو · " : "Turku · ") + sky(wCode, ar));
+            skyGlyph.set(skyIcon(wCode, wDay));
+        }
         main.removeCallbacks(dateTick);
         main.postDelayed(dateTick, 60000);
+    }
+
+    private static int skyIcon(int code, int day) {
+        if (code == 0) return day == 1 ? Glyph.SUN : Glyph.MOON;
+        if (code <= 48) return Glyph.CLOUD;
+        if (code <= 67 || (code >= 80 && code <= 82) || code >= 95) return Glyph.RAIN;
+        if (code <= 86) return Glyph.SNOW;
+        return Glyph.CLOUD;
     }
 
     private static String toLatinDigits(String s) {
@@ -747,16 +835,13 @@ public class MainActivity extends Activity {
         if (System.currentTimeMillis() - lastWeather < 3600000) return;
         try {
             JSONObject j = new JSONObject(WallpaperFeed.get(
-                    "https://api.open-meteo.com/v1/forecast?latitude=60.45&longitude=22.27&current=temperature_2m,weather_code"));
+                    "https://api.open-meteo.com/v1/forecast?latitude=60.45&longitude=22.27&current=temperature_2m,weather_code,is_day"));
             JSONObject c = j.getJSONObject("current");
             int t = (int) Math.round(c.getDouble("temperature_2m"));
             int code = c.getInt("weather_code");
+            int day = c.optInt("is_day", 1);
             lastWeather = System.currentTimeMillis();
-            main.post(() -> {
-                boolean ar = Prefs.arabic(this);
-                weather = (ar ? "توركو " : "Turku ") + t + "° " + sky(code, ar);
-                updateDate();
-            });
+            main.post(() -> { wTemp = t; wCode = code; wDay = day; updateDate(); });
         } catch (Exception ignored) { }
     }
 
@@ -765,7 +850,7 @@ public class MainActivity extends Activity {
         if (code <= 3) return ar ? "غيوم خفيفة" : "Partly cloudy";
         if (code <= 48) return ar ? "ضباب" : "Fog";
         if (code <= 67 || (code >= 80 && code <= 82)) return ar ? "مطر" : "Rain";
-        if (code <= 77) return ar ? "ثلج" : "Snow";
+        if (code <= 77 || code == 85 || code == 86) return ar ? "ثلج" : "Snow";
         return ar ? "عاصفة" : "Storm";
     }
 
@@ -818,11 +903,37 @@ public class MainActivity extends Activity {
         }
         matchUntil = System.currentTimeMillis() + MATCH_FOR;
         applyMatch();
-        kill(MATCH_KEEP);
+        killEverything();
         lastClean = System.currentTimeMillis();
         Toast.makeText(this, ar ? "⚽ وضع المباراة: كل النت لدار" : "⚽ Match mode: all bandwidth to DAR", Toast.LENGTH_SHORT).show();
         launch(dar);
     }
+
+    /**
+     * أقوى تنظيف: مو بس تطبيقات الشاشة، كل تطبيق منصب بالتلفزيون (حتى خدمات بالخلفية
+     * مثل الألعاب والمتجر والتحديثات) نسكره، إلا دار وأساسيات النظام.
+     */
+    private void killEverything() {
+        final String me = getPackageName();
+        worker.execute(() -> {
+            ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+            if (am == null) return;
+            List<android.content.pm.ApplicationInfo> all;
+            try { all = getPackageManager().getInstalledApplications(0); } catch (Exception e) { return; }
+            for (android.content.pm.ApplicationInfo ai : all) {
+                String p = ai.packageName;
+                if (p.equals(me) || MATCH_KEEP.contains(p) || CORE.contains(p) || p.startsWith("com.android.systemui")
+                        || p.startsWith("com.android.providers") || p.contains("inputmethod") || p.contains(".ime")) continue;
+                try { am.killBackgroundProcesses(p); } catch (Exception ignored) { }
+            }
+        });
+    }
+
+    /** أساسيات ما نمسها: النظام والريموت والصوت والشاشة. */
+    private static final Set<String> CORE = new HashSet<>(java.util.Arrays.asList(
+            "android", "com.android.phone", "com.android.bluetooth", "com.android.nfc", "com.android.shell",
+            "com.google.android.tv.remote.service", "com.android.tv.settings", "com.google.android.apps.tv.launcherx",
+            "com.android.se", "com.android.networkstack", "com.google.android.networkstack"));
 
     /** زر الكرة يصير أخضر لما وضع المباراة شغال. */
     private void applyMatch() {
@@ -832,7 +943,7 @@ public class MainActivity extends Activity {
     /** زر التنظيف: نسكر كل التطبيقات الي بالخلفية (حتى سبوتيفاي) ونگول شگد فضّينا. */
     private void cleanNow() {
         final long before = freeRam();
-        kill(MATCH_KEEP);
+        killEverything();
         lastClean = System.currentTimeMillis();
         main.postDelayed(() -> {
             long mb = Math.max(0, freeRam() - before) / 1048576;
