@@ -95,7 +95,6 @@ public class MainActivity extends Activity {
     private TextClock clock;
     private LinearLayout topBar, dock, allGrid;
     private Glass.GlassFrame dockGlass, allPanel, updateChip;
-    private Matches matches;
     private long lastShown; // متى تبدلت الخلفية آخر مرة
     private Glyph wifiGlyph, darkGlyph, ballGlyph;
     private TextView speedText, ramText;
@@ -137,7 +136,7 @@ public class MainActivity extends Activity {
     private final Runnable ambientCheck = new Runnable() {
         @Override public void run() {
             if (!visible) return;
-            if (!ambient && System.currentTimeMillis() - lastKey > AMBIENT_AFTER && allPanel.getVisibility() != View.VISIBLE && !matches.visible()) setAmbient(true);
+            if (!ambient && System.currentTimeMillis() - lastKey > AMBIENT_AFTER && allPanel.getVisibility() != View.VISIBLE) setAmbient(true);
             main.postDelayed(this, 5000);
         }
     };
@@ -239,15 +238,13 @@ public class MainActivity extends Activity {
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        if (matches.visible()) matches.close();
         closeAll();
         focusFirst();
     }
 
     @Override
     public void onBackPressed() {
-        if (matches.visible()) { if (!matches.back()) focusFirst(); }
-        else if (allPanel.getVisibility() == View.VISIBLE) closeAll();
+        if (allPanel.getVisibility() == View.VISIBLE) closeAll();
         else focusFirst();
     }
 
@@ -435,9 +432,6 @@ public class MainActivity extends Activity {
         allPanel.addView(sv, svLp);
         root.addView(allPanel, new FrameLayout.LayoutParams(-1, -1));
 
-        // صفحة المباريات
-        matches = new Matches(this, u);
-        root.addView(matches.panel, new FrameLayout.LayoutParams(-1, -1));
     }
 
     private void addTop(View v, int size) {
@@ -519,9 +513,9 @@ public class MainActivity extends Activity {
         int w = px(200), h = px(124), gap = px(28);
         View restore = null;
         List<AppEntry> favs = favorites(apps);
-        for (int i = 0; i <= favs.size() + 1; i++) {
-            AppEntry app = i < favs.size() ? favs.get(i) : null; // بعدها المباريات، والأخير = كل التطبيقات
-            View t = app != null ? dockTile(app, w, h) : i == favs.size() ? matchesTile() : allAppsTile(w, h);
+        for (int i = 0; i <= favs.size(); i++) {
+            AppEntry app = i < favs.size() ? favs.get(i) : null; // الأخير = كل التطبيقات
+            View t = app != null ? dockTile(app, w, h) : allAppsTile(w, h);
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(w, h);
             if (i > 0) lp.leftMargin = gap;
             dock.addView(t, lp);
@@ -548,15 +542,6 @@ public class MainActivity extends Activity {
         tileBehaviour(card, app.label, px(30));
         card.setOnClickListener(v -> launch(app));
         card.setOnLongClickListener(v -> { toggleFavorite(app); return true; });
-        return card;
-    }
-
-    private View matchesTile() {
-        Glass.GlassFrame card = new Glass.GlassFrame(this, px(30));
-        card.addView(new Glyph(this, Glyph.TROPHY), new FrameLayout.LayoutParams(px(58), px(58), Gravity.CENTER));
-        card.setTag("@matches");
-        tileBehaviour(card, Prefs.arabic(this) ? "المباريات" : "Matches", px(30));
-        card.setOnClickListener(v -> { Sound.press(); focusLabel.setAlpha(0f); matches.open(); });
         return card;
     }
 
