@@ -11,7 +11,7 @@ import android.view.View;
 /** أيقونات خاصة مرسومة بالكود (خطوط حديثة رفيعة)، ونفس الشي لشعارات التطبيقات المفضلة. */
 final class Glyph extends View {
     static final int WIFI = 1, LANG = 2, MOON = 3, SUN = 4, GEAR = 5, GRID = 6, NETFLIX = 7, YOUTUBE = 8,
-            DAR = 9, SPOTIFY = 10, UPDATE = 11, BALL = 12, CLEAN = 13, POWER = 14, CLOUD = 15, RAIN = 16, SNOW = 17, TROPHY = 18;
+            DAR = 9, SPOTIFY = 10, UPDATE = 11, BALL = 12, CLEAN = 13, POWER = 14, CLOUD = 15, RAIN = 16, SNOW = 17, TROPHY = 18, NOADS = 19;
 
     private final Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Path path = new Path();
@@ -27,7 +27,8 @@ final class Glyph extends View {
 
     static int forPackage(String pkg) {
         if (pkg.startsWith("com.netflix")) return NETFLIX;
-        if (pkg.startsWith("com.google.android.youtube") || isSmartTube(pkg)) return YOUTUBE;
+        if (isSmartTube(pkg)) return NOADS;
+        if (pkg.startsWith("com.google.android.youtube")) return YOUTUBE;
         if (pkg.startsWith("com.mbm_soft")) return DAR;
         if (pkg.startsWith("com.spotify")) return SPOTIFY;
         return 0;
@@ -134,6 +135,21 @@ final class Glyph extends View {
                 p.setColor(0xFFB1060F);
                 path.reset();
                 path.moveTo(6.5f, 3); path.lineTo(10, 3); path.lineTo(17.5f, 21.6f); path.lineTo(14, 21); path.close();
+                c.drawPath(path, p);
+                break;
+            case NOADS:
+                // يوتيوب بدون إعلانات: درع أخضر فيروزي بنصه زر تشغيل أبيض، حتى يختلف عن يوتيوب الأحمر
+                p.setStyle(Paint.Style.FILL);
+                p.setColor(0xFF12C2A0);
+                p.setShadowLayer(1.2f, 0, 0.6f, 0x66000000);
+                path.reset();
+                path.moveTo(12, 2); path.lineTo(20.5f, 5.2f); path.lineTo(20.5f, 11);
+                path.quadTo(20.5f, 18.5f, 12, 22.2f); path.quadTo(3.5f, 18.5f, 3.5f, 11);
+                path.lineTo(3.5f, 5.2f); path.close();
+                c.drawPath(path, p);
+                p.clearShadowLayer();
+                p.setColor(0xFFFFFFFF);
+                path.reset(); path.moveTo(9.8f, 8.2f); path.lineTo(16, 12); path.lineTo(9.8f, 15.8f); path.close();
                 c.drawPath(path, p);
                 break;
             case YOUTUBE:

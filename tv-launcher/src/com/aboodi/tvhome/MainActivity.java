@@ -498,11 +498,21 @@ public class MainActivity extends Activity {
 
     private List<AppEntry> favorites(List<AppEntry> apps) {
         List<AppEntry> favs = new ArrayList<>();
-        AppEntry smart = null; // يوتيوب بدون إعلانات: إذا منصب ياخذ مكان يوتيوب
-        for (AppEntry a : apps) if (Glyph.isSmartTube(a.pkg)) { smart = a; break; }
+        // يوتيوب بدون إعلانات (SmartTube): أول ما يتنصب نحطه بالشريط جنب يوتيوب الأصلي، مرة وحدة بس
+        if (!Prefs.of(this).getBoolean("smart_added", false)) {
+            for (AppEntry a : apps) if (Glyph.isSmartTube(a.pkg)) {
+                List<String> f = new ArrayList<>(Prefs.favorites(this));
+                if (!f.contains(a.pkg)) {
+                    int yt = f.indexOf("com.google.android.youtube.tv");
+                    f.add(yt >= 0 ? yt + 1 : f.size(), a.pkg);
+                    Prefs.setFavorites(this, f);
+                }
+                Prefs.of(this).edit().putBoolean("smart_added", true).apply();
+                break;
+            }
+        }
         for (String pkg : Prefs.favorites(this)) {
-            if (smart != null && pkg.equals("com.google.android.youtube.tv")) { if (!favs.contains(smart)) favs.add(smart); continue; }
-            for (AppEntry a : apps) if (a.pkg.equals(pkg)) { if (!favs.contains(a)) favs.add(a); break; }
+            for (AppEntry a : apps) if (a.pkg.equals(pkg)) { favs.add(a); break; }
         }
         if (favs.isEmpty()) favs.addAll(apps.subList(0, Math.min(3, apps.size())));
         return favs;
@@ -542,7 +552,7 @@ public class MainActivity extends Activity {
             card.addView(img, new FrameLayout.LayoutParams(px(72), px(72), Gravity.CENTER));
         }
         card.setTag(app.pkg);
-        tileBehaviour(card, app.label, px(30));
+        tileBehaviour(card, Glyph.isSmartTube(app.pkg) ? (Prefs.arabic(this) ? "يوتيوب بدون إعلانات" : "YouTube, no ads") : app.label, px(30));
         card.setOnClickListener(v -> launch(app));
         card.setOnLongClickListener(v -> { toggleFavorite(app); return true; });
         return card;
