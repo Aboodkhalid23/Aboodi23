@@ -100,7 +100,7 @@ public class MainActivity extends Activity {
     private Glass.GlassFrame dockGlass, allPanel, updateChip;
     private long lastShown; // متى تبدلت الخلفية آخر مرة
     private Glyph wifiGlyph, darkGlyph, ballGlyph;
-    private TextView speedText, speedUnit;
+    private TextView speedText;
     private boolean testing;
     private WallpaperFeed feed;
     private boolean visible, ambient;
@@ -313,23 +313,19 @@ public class MainActivity extends Activity {
         // يعني من اليمين: الإعدادات أول شي، بعدها اللغة، الوايفاي، الريستارت، التنظيف، المباراة
         // دائرة سرعة النت (نفس حجم باقي الأزرار). تضغطها: تسكر كل التطبيقات الي بالخلفية وتعيد الفحص
         Glass.GlassFrame stats = new Glass.GlassFrame(this, px(36));
-        LinearLayout sc = new LinearLayout(this);
-        sc.setOrientation(LinearLayout.VERTICAL);
-        sc.setGravity(Gravity.CENTER);
-        speedText = text(21, INK, true);
+        speedText = text(26, INK, true);
         speedText.setIncludeFontPadding(false);
-        speedUnit = text(10, 0xCCFFFFFF, false);
-        speedUnit.setIncludeFontPadding(false);
-        sc.addView(speedText);
-        sc.addView(speedUnit);
-        stats.addView(sc, new FrameLayout.LayoutParams(-1, -1));
+        speedText.setGravity(Gravity.CENTER);
+        speedText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        speedText.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
+        speedText.setMaxLines(1);
+        stats.addView(speedText, new FrameLayout.LayoutParams(-1, -1, Gravity.CENTER));
         button(stats, null, v -> { cleanNow(); main.postDelayed(this::speedTest, 2500); });
         View.OnFocusChangeListener sf = stats.getOnFocusChangeListener();
         stats.setOnFocusChangeListener((v, has) -> {
             sf.onFocusChange(v, has);
             int ink = has && !Prefs.dark(this) ? 0xFF15151A : INK;
             speedText.setTextColor(ink);
-            speedUnit.setTextColor(ink);
         });
         addTop(stats, px(72));
         darkGlyph = new Glyph(this, Glyph.MOON);
@@ -1004,8 +1000,7 @@ public class MainActivity extends Activity {
 
     private void showSpeed(boolean ar) {
         float last = Prefs.of(this).getFloat("speed", -1);
-        speedText.setText(last < 0 ? "…" : last == 0 ? "×" : speed(last));
-        speedUnit.setText(last == 0 ? (ar ? "ماكو نت" : "offline") : (ar ? "ميگابت" : "Mb/s"));
+        speedText.setText(last < 0 ? "…" : last == 0 ? "×" : speed(last)); // بس الرقم، بالنص
     }
 
     /** فحص سرعة: ننزل لحد 25 ميگابايت أو 3 ثواني من كلاودفلير ونحسب السرعة الحقيقية. */
@@ -1014,7 +1009,6 @@ public class MainActivity extends Activity {
         testing = true;
         boolean ar = Prefs.arabic(this);
         speedText.setText("…");
-        speedUnit.setText(ar ? "دا أفحص" : "testing");
         net.execute(() -> {
             double mbps = -1;
             try {
