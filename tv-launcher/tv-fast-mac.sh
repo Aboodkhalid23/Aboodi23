@@ -6,7 +6,7 @@ DIR="$HOME/AboodTV"
 RAW="https://github.com/Aboodkhalid23/Aboodi23/raw/claude/project-thread-4ztr10/tv-launcher"
 ADB="$DIR/platform-tools/adb"
 # تطبيقات نظام زايدة تشتغل بالخلفية وتسحب نت ورام. نوقفها بس (ما تنحذف).
-EXTRA="com.google.android.tvrecommendations com.google.android.leanbacklauncher.recommendations com.google.android.play.games com.google.android.videos com.google.android.music com.google.android.feedback com.google.android.backdrop com.android.printspooler com.google.android.tvlauncher"
+EXTRA="com.google.android.tvrecommendations com.google.android.leanbacklauncher.recommendations com.google.android.play.games com.google.android.videos com.google.android.music com.google.android.feedback com.google.android.backdrop com.android.printspooler com.google.android.tvlauncher com.google.android.apps.tv.launcherx com.google.android.youtube.tvmusic com.google.android.apps.tv.dreamx com.android.dreams.basic com.android.dreams.phototable com.google.android.marvin.talkback com.google.android.tvtutorials com.google.android.apps.tv.ambient"
 # هذني ما نخليها تشتغل بالخلفية بعد ما تطلع منها.
 NOBG="com.google.android.youtube.tv com.netflix.ninja com.mxtech.videoplayer.ad com.esaba.downloader"
 # هذني ممنوع يستخدمن النت بالخلفية (يشتغلن عادي لما تفتحهن).
@@ -53,6 +53,31 @@ report() {
   echo "خلص ✅ الملف: تقرير-التلفزيون.txt على سطح المكتب. دزه بالمحادثة."
 }
 
+# حذف التطبيقات الي ما تحتاجها: يسألك عن كل تطبيق انت منصبه، وما يحذف شي إلا إذا گلت نعم
+KEEPAPPS="com.aboodi.tvhome com.mbm_soft.darplayer com.google.android.youtube.tv com.netflix.ninja com.spotify.tv.android com.mxtech.videoplayer.ad"
+apps() {
+  echo "١) دا أوقف تطبيقات النظام الزايدة (تنرجع بأمر undo)..."
+  for p in $EXTRA; do
+    S pm path "$p" 2>/dev/null | grep -q package && S pm disable-user --user 0 "$p" >/dev/null 2>&1 && echo "   وگّفت $p"
+  done
+  echo
+  echo "٢) هذني التطبيقات الي انت منصبها. لكل واحد اكتب: ن (يعني احذفه) واضغط Enter، أو بس Enter حتى يبقى."
+  for p in $(S pm list packages -3 | tr -d '\r' | sed 's/package://' | sort); do
+    case " $KEEPAPPS " in *" $p "*) continue ;; esac
+    printf "   تحذف %s ؟ " "$p"
+    read -r ans </dev/tty
+    case "$ans" in ن|نعم|y|Y|yes)
+      S pm uninstall --user 0 "$p" >/dev/null 2>&1 && echo "      انحذف ✅" || echo "      ما انحذف" ;;
+    *) echo "      بقى" ;;
+    esac
+  done
+  S pm trim-caches 999G
+  echo
+  echo "الذاكرة الفاضية: $(S cat /proc/meminfo | awk '/MemAvailable/{printf "%d ميگا", $2/1024}')"
+  echo "المساحة: $(S df -h /data | tail -1 | awk '{print $4" فاضية من "$2}')"
+  echo "خلص ✅"
+}
+
 undo() {
   for p in $EXTRA; do S pm enable "$p" >/dev/null 2>&1; done
   for p in $NOBG; do S cmd appops set "$p" RUN_ANY_IN_BACKGROUND allow >/dev/null 2>&1; done
@@ -71,6 +96,7 @@ main() {
   connect
   [ "$1" = "undo" ] && { undo; return; }
   [ "$1" = "report" ] && { report; return; }
+  [ "$1" = "apps" ] && { apps; return; }
 
   echo "١) دا أحدّث شاشة عبود لآخر نسخة..."
   curl -sSLo "$DIR/AboodTV.apk" "$RAW/release/AboodTV.apk?t=$(date +%s)" && "$ADB" -s "$TV:5555" install -r "$DIR/AboodTV.apk" </dev/null >/dev/null && echo "   تمام"
