@@ -27,10 +27,14 @@ final class Glyph extends View {
 
     static int forPackage(String pkg) {
         if (pkg.startsWith("com.netflix")) return NETFLIX;
-        if (pkg.startsWith("com.google.android.youtube")) return YOUTUBE;
+        if (pkg.startsWith("com.google.android.youtube") || isSmartTube(pkg)) return YOUTUBE;
         if (pkg.startsWith("com.mbm_soft")) return DAR;
         if (pkg.startsWith("com.spotify")) return SPOTIFY;
         return 0;
+    }
+
+    static boolean isSmartTube(String pkg) {
+        return pkg.startsWith("com.teamsmart.videomanager") || pkg.startsWith("com.liskovsoft.smarttube") || pkg.startsWith("org.smarttube");
     }
 
     void set(int k) { kind = k; invalidate(); }

@@ -128,7 +128,11 @@ main() {
   [ "$1" = "adblock-off" ] && { adblock_off; return; }
 
   echo "١) دا أحدّث شاشة عبود لآخر نسخة..."
-  curl -sSLo "$DIR/AboodTV.apk" "$RAW/release/AboodTV.apk?t=$(date +%s)" && "$ADB" -s "$TV:5555" install -r "$DIR/AboodTV.apk" </dev/null >/dev/null && echo "   تمام"
+  # نجيب آخر نسخة بالضبط (برقم آخر تعديل)، مو نسخة قديمة محفوظة بالطريق
+  SHA=$(curl -s https://api.github.com/repos/Aboodkhalid23/Aboodi23/commits/claude/project-thread-4ztr10 | grep -m1 '"sha"' | sed 's/.*"\([0-9a-f]\{40\}\)".*/\1/')
+  APKURL="$RAW/release/AboodTV.apk?t=$(date +%s)"
+  [ -n "$SHA" ] && APKURL="https://raw.githubusercontent.com/Aboodkhalid23/Aboodi23/$SHA/tv-launcher/release/AboodTV.apk"
+  curl -sSLo "$DIR/AboodTV.apk" "$APKURL" && "$ADB" -s "$TV:5555" install -r "$DIR/AboodTV.apk" </dev/null >/dev/null && echo "   تمام"
 
   # نسمح لشاشة عبود تنصب تحديثاتها بنفسها (بعد ما توافق بالتلفزيون)
   S appops set com.aboodi.tvhome REQUEST_INSTALL_PACKAGES allow >/dev/null 2>&1
@@ -201,6 +205,16 @@ main() {
     S pm path "$p" 2>/dev/null | grep -q package && { echo "   $p"; S cmd package compile -m speed "$p" >/dev/null 2>&1; }
   done
 
+  echo "٨) دا أمنع الإعلانات..."
+  if S pm list packages | tr -d '\r' | grep -qE "smarttube|teamsmart"; then
+    S settings put global private_dns_mode hostname
+    S settings put global private_dns_specifier dns.adguard-dns.com
+    echo "   تمام (SmartTube منصب، ومنع الإعلانات شغال)"
+  else
+    adblock
+  fi
+
+  S am force-stop com.aboodi.tvhome
   S am start -n com.aboodi.tvhome/.MainActivity >/dev/null
   echo
   echo "الذاكرة الفاضية: $(S cat /proc/meminfo | awk '/MemAvailable/{printf "%d ميگا", $2/1024}')"

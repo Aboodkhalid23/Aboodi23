@@ -15,11 +15,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * التحديث التلقائي: مرة باليوم نشوف version.txt بالريبو. إذا اكو نسخة أجدد
+ * التحديث التلقائي: كل ساعة نشوف version.txt بالريبو. إذا اكو نسخة أجدد
  * نطلّع زر "تحديث جديد"، ولما تضغطه ننزّلها ونطلب من النظام ينصبها (يطلع سؤال تأكيد بالتلفزيون).
  */
 final class Updater {
-    private static final long DAY = 24L * 3600 * 1000;
+    private static final long EVERY = 3600 * 1000; // نشوف إذا اكو تحديث كل ساعة
     private static final String ACTION = "com.aboodi.tvhome.INSTALLED";
 
     private Updater() {}
@@ -29,7 +29,7 @@ final class Updater {
         android.content.SharedPreferences p = Prefs.of(c);
         long last = p.getLong("upd_check", 0);
         int known = p.getInt("upd_latest", 0);
-        if (System.currentTimeMillis() - last > DAY) {
+        if (System.currentTimeMillis() - last > EVERY) {
             try {
                 known = Integer.parseInt(WallpaperFeed.get(WallpaperFeed.RAW + "version.txt").trim());
                 p.edit().putLong("upd_check", System.currentTimeMillis()).putInt("upd_latest", known).apply();

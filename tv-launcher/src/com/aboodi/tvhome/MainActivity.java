@@ -118,7 +118,7 @@ public class MainActivity extends Activity {
         @Override public void run() {
             if (!visible) return;
             if (!matchMode()) net.execute(feed::fetchOne);
-            main.postDelayed(this, 60000);
+            main.postDelayed(this, feed.count() < 60 ? 60000 : 180000); // بعد ما يصير عدنا هواية: كل 3 دقايق
         }
     };
 
@@ -498,8 +498,11 @@ public class MainActivity extends Activity {
 
     private List<AppEntry> favorites(List<AppEntry> apps) {
         List<AppEntry> favs = new ArrayList<>();
+        AppEntry smart = null; // يوتيوب بدون إعلانات: إذا منصب ياخذ مكان يوتيوب
+        for (AppEntry a : apps) if (Glyph.isSmartTube(a.pkg)) { smart = a; break; }
         for (String pkg : Prefs.favorites(this)) {
-            for (AppEntry a : apps) if (a.pkg.equals(pkg)) { favs.add(a); break; }
+            if (smart != null && pkg.equals("com.google.android.youtube.tv")) { if (!favs.contains(smart)) favs.add(smart); continue; }
+            for (AppEntry a : apps) if (a.pkg.equals(pkg)) { if (!favs.contains(a)) favs.add(a); break; }
         }
         if (favs.isEmpty()) favs.addAll(apps.subList(0, Math.min(3, apps.size())));
         return favs;
@@ -678,14 +681,6 @@ public class MainActivity extends Activity {
         ImageView shown = wallAOnTop ? wallA : wallB;
         ImageView hidden = wallAOnTop ? wallB : wallA;
         hidden.setImageBitmap(next);
-        // الصورة تتحرك ببطء شديد (تكبير خفيف 5 دقايق) حتى تحس اللوحة حية
-        hidden.animate().cancel();
-        hidden.setScaleX(1f);
-        hidden.setScaleY(1f);
-        hidden.setTranslationX(0);
-        boolean leftward = (System.currentTimeMillis() / 1000) % 2 == 0;
-        hidden.animate().scaleX(1.08f).scaleY(1.08f).translationX(leftward ? -px(40) : px(40))
-                .setDuration(SHOW_FOR + 2000).setInterpolator(new android.view.animation.LinearInterpolator()).start();
         lastShown = System.currentTimeMillis();
         Glass.Backdrop.set(next, blurred);
         ObjectAnimator.ofFloat(hidden, View.ALPHA, hidden.getAlpha(), 1f).setDuration(1500).start();
