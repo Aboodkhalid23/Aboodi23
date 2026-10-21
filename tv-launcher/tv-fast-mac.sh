@@ -32,11 +32,33 @@ connect() {
     exit 1; }
 }
 
+# فحص مشكلة الصوت والشاشة الخضرة: يجمع سجل التلفزيون بملف على سطح المكتب
+report() {
+  OUT="$HOME/Desktop/تقرير-التلفزيون.txt"
+  echo "دا أجمع معلومات التلفزيون..."
+  {
+    echo "== الجهاز =="
+    for k in ro.product.manufacturer ro.product.model ro.build.version.release ro.build.fingerprint; do echo "$k=$(S getprop $k)"; done
+    echo "== إعدادات الصوت =="
+    for k in encoded_surround_output hdmi_control_enabled hdmi_system_audio_control_enabled; do echo "$k=$(S settings get global $k)"; done
+    echo "== أجهزة الصوت =="
+    S dumpsys audio | grep -iE "devices|output|hdmi|arc|a2dp|bluetooth|spdif|usb" | head -60
+    echo "== HDMI =="
+    S dumpsys hdmi_control 2>/dev/null | head -80
+    echo "== بلوتوث =="
+    S dumpsys bluetooth_manager 2>/dev/null | grep -iE "name|state|connected|a2dp|codec" | head -40
+    echo "== أخطاء الصوت والصورة =="
+    S logcat -d -b main,system,crash 2>/dev/null | grep -iE "hdmi|cec|arc|audio|underrun|codec|hwc|hdcp|a2dp|bluetooth|display|vsync|panel|crash|fatal" | tail -600
+  } > "$OUT" 2>&1
+  echo "خلص ✅ الملف: تقرير-التلفزيون.txt على سطح المكتب. دزه بالمحادثة."
+}
+
 undo() {
   for p in $EXTRA; do S pm enable "$p" >/dev/null 2>&1; done
   for p in $NOBG; do S cmd appops set "$p" RUN_ANY_IN_BACKGROUND allow >/dev/null 2>&1; done
   for k in window_animation_scale transition_animation_scale animator_duration_scale; do S settings put global $k 1; done
   S settings put global wifi_scan_always_enabled 1
+  S settings put global encoded_surround_output 0
   for p in $NOBG $NONET; do
     U=$(S pm list packages -U "$p" 2>/dev/null | tr -d '\r' | grep "package:$p " | sed 's/.*uid://')
     [ -n "$U" ] && S cmd netpolicy remove restrict-background-blacklist "$U" >/dev/null 2>&1
@@ -48,6 +70,7 @@ main() {
   setup_mac
   connect
   [ "$1" = "undo" ] && { undo; return; }
+  [ "$1" = "report" ] && { report; return; }
 
   echo "١) دا أحدّث شاشة عبود لآخر نسخة..."
   curl -sSLo "$DIR/AboodTV.apk" "$RAW/release/AboodTV.apk?t=$(date +%s)" && "$ADB" -s "$TV:5555" install -r "$DIR/AboodTV.apk" </dev/null >/dev/null && echo "   تمام"
@@ -94,6 +117,9 @@ main() {
   S settings put global ble_scan_always_enabled 0
   S settings put global wifi_sleep_policy 2
   S settings put global network_recommendations_enabled 0
+
+  echo "   ودا أثبّت الصوت: الصوت يطلع للسماعة بشكل عادي (PCM) بدل الصيغ المضغوطة الي تسبب انقطاع ووشة"
+  S settings put global encoded_surround_output 1
 
   echo "٦) دا أفضّي الذاكرة من الملفات المؤقتة..."
   S pm trim-caches 999G
