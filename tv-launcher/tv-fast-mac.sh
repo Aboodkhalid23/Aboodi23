@@ -54,7 +54,7 @@ report() {
 }
 
 # حذف التطبيقات الي ما تحتاجها: يسألك عن كل تطبيق انت منصبه، وما يحذف شي إلا إذا گلت نعم
-KEEPAPPS="com.aboodi.tvhome com.mbm_soft.darplayer com.google.android.youtube.tv com.netflix.ninja com.spotify.tv.android com.mxtech.videoplayer.ad"
+KEEPAPPS="com.aboodi.tvhome com.mbm_soft.darplayer com.google.android.youtube.tv com.netflix.ninja com.spotify.tv.android com.mxtech.videoplayer.ad com.teamsmart.videomanager.tv com.liskovsoft.smarttubetv com.liskovsoft.smarttubetv.beta"
 apps() {
   echo "١) دا أوقف تطبيقات النظام الزايدة (تنرجع بأمر undo)..."
   for p in $EXTRA; do
@@ -78,6 +78,33 @@ apps() {
   echo "خلص ✅"
 }
 
+# منع الإعلانات: SmartTube (يوتيوب بدون إعلانات، مفتوح المصدر) + DNS يمنع إعلانات باقي التطبيقات
+adblock() {
+  echo "١) دا أنزّل SmartTube (يوتيوب بدون إعلانات)..."
+  ABI=$(S getprop ro.product.cpu.abi | tr -d '\r')
+  case "$ABI" in arm64*) A=arm64-v8a ;; x86*) A=x86 ;; *) A=armeabi-v7a ;; esac
+  URL=$(curl -s https://api.github.com/repos/yuliskov/SmartTube/releases/latest | grep -o '"browser_download_url": *"[^"]*\.apk"' | sed 's/.*"\(http[^"]*\)"/\1/' | grep -i stable | grep -- "$A" | head -1)
+  [ -z "$URL" ] && URL=$(curl -s https://api.github.com/repos/yuliskov/SmartTube/releases/latest | grep -o '"browser_download_url": *"[^"]*\.apk"' | sed 's/.*"\(http[^"]*\)"/\1/' | grep -- "$A" | head -1)
+  if [ -n "$URL" ] && curl -sSLo "$DIR/SmartTube.apk" "$URL" && "$ADB" -s "$TV:5555" install -r "$DIR/SmartTube.apk" </dev/null >/dev/null; then
+    echo "   تمام ✅ تلگاه باسم SmartTube بكل التطبيقات"
+  else
+    echo "   ما گدرت أنزّله هسة، جرب بعدين"
+  fi
+
+  echo "٢) دا أشغّل منع الإعلانات لكل الجهاز (AdGuard DNS)..."
+  S settings put global private_dns_mode hostname
+  S settings put global private_dns_specifier dns.adguard-dns.com
+  echo "   تمام ✅"
+  echo
+  echo "إذا أي تطبيق (مثل دار) صار ما يشتغل بعدها، رجّع بهذا الأمر:  curl -sSL https://github.com/Aboodkhalid23/Aboodi23/raw/claude/project-thread-4ztr10/tv-launcher/tv-fast-mac.sh | bash -s adblock-off"
+}
+
+adblock_off() {
+  S settings put global private_dns_mode opportunistic
+  S settings delete global private_dns_specifier
+  echo "رجّعت النت مثل ما چان (بدون منع إعلانات)."
+}
+
 undo() {
   for p in $EXTRA; do S pm enable "$p" >/dev/null 2>&1; done
   for p in $NOBG; do S cmd appops set "$p" RUN_ANY_IN_BACKGROUND allow >/dev/null 2>&1; done
@@ -97,6 +124,8 @@ main() {
   [ "$1" = "undo" ] && { undo; return; }
   [ "$1" = "report" ] && { report; return; }
   [ "$1" = "apps" ] && { apps; return; }
+  [ "$1" = "adblock" ] && { adblock; return; }
+  [ "$1" = "adblock-off" ] && { adblock_off; return; }
 
   echo "١) دا أحدّث شاشة عبود لآخر نسخة..."
   curl -sSLo "$DIR/AboodTV.apk" "$RAW/release/AboodTV.apk?t=$(date +%s)" && "$ADB" -s "$TV:5555" install -r "$DIR/AboodTV.apk" </dev/null >/dev/null && echo "   تمام"
