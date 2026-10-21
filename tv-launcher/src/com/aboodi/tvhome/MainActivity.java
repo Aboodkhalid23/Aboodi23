@@ -89,6 +89,7 @@ public class MainActivity extends Activity {
     private View dim;
     private TextView dateText, focusLabel, allTitle, tempText, skyText;
     private Glass.GlassFrame clockGlass;
+    private TextView greetText;
     private Glyph skyGlyph;
     private int wTemp = Integer.MIN_VALUE, wCode, wDay = 1;
     private TextClock clock;
@@ -308,22 +309,8 @@ public class MainActivity extends Activity {
         });
         addTop(updateChip, -2);
 
-        ballGlyph = new Glyph(this, Glyph.BALL);
-        addTop(iconButton(ballGlyph, v -> toggleMatch()), px(72));
-        addTop(iconButton(Glyph.CLEAN, v -> cleanNow()), px(72));
-        addTop(iconButton(Glyph.POWER, v -> restart()), px(72));
-        addTop(iconButton(Glyph.GEAR, v -> open(new Intent(Settings.ACTION_SETTINGS))), px(72));
-        darkGlyph = new Glyph(this, Glyph.MOON);
-        addTop(iconButton(darkGlyph, v -> { Prefs.setDark(this, !Prefs.dark(this)); applyDark(true); }), px(72));
-        addTop(iconButton(Glyph.LANG, v -> { Prefs.setArabic(this, !Prefs.arabic(this)); applyLanguage(); }), px(72));
-        wifiGlyph = new Glyph(this, Glyph.WIFI);
-        addTop(iconButton(wifiGlyph, v -> {
-            Intent wi = new Intent(Settings.ACTION_WIFI_SETTINGS);
-            if (wi.resolveActivity(getPackageManager()) == null) wi = new Intent(Settings.ACTION_SETTINGS);
-            open(wi);
-        }), px(72));
-
-        // جنب الوايفاي: سرعة النت هسة والرام الفاضية. تضغطه = فحص سرعة
+        // يمين فوگ، من اليسار لليمين: (تحديث) السرعة، الداكن، المباراة، التنظيف، الريستارت، الوايفاي، اللغة، الإعدادات
+        // يعني من اليمين: الإعدادات أول شي، بعدها اللغة، الوايفاي، الريستارت، التنظيف، المباراة
         Glass.GlassFrame stats = new Glass.GlassFrame(this, px(36));
         LinearLayout sc = new LinearLayout(this);
         sc.setOrientation(LinearLayout.VERTICAL);
@@ -336,11 +323,29 @@ public class MainActivity extends Activity {
         stats.addView(sc, new FrameLayout.LayoutParams(-2, -1));
         button(stats, null, v -> speedTest());
         addTop(stats, -2);
+        darkGlyph = new Glyph(this, Glyph.MOON);
+        addTop(iconButton(darkGlyph, v -> { Prefs.setDark(this, !Prefs.dark(this)); applyDark(true); }), px(72));
+        ballGlyph = new Glyph(this, Glyph.BALL);
+        addTop(iconButton(ballGlyph, v -> toggleMatch()), px(72));
+        addTop(iconButton(Glyph.CLEAN, v -> cleanNow()), px(72));
+        addTop(iconButton(Glyph.POWER, v -> restart()), px(72));
+        wifiGlyph = new Glyph(this, Glyph.WIFI);
+        addTop(iconButton(wifiGlyph, v -> {
+            Intent wi = new Intent(Settings.ACTION_WIFI_SETTINGS);
+            if (wi.resolveActivity(getPackageManager()) == null) wi = new Intent(Settings.ACTION_SETTINGS);
+            open(wi);
+        }), px(72));
+        addTop(iconButton(Glyph.LANG, v -> { Prefs.setArabic(this, !Prefs.arabic(this)); applyLanguage(); }), px(72));
+        addTop(iconButton(Glyph.GEAR, v -> open(new Intent(Settings.ACTION_SETTINGS))), px(72));
+        FrameLayout.LayoutParams tLp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.RIGHT);
+        tLp.topMargin = px(44);
+        tLp.rightMargin = px(60);
+        root.addView(topBar, tLp);
 
         // الساعة والتاريخ والطقس. تضغط على الساعة = شكل ثاني (6 أشكال)
         LinearLayout clockBox = new LinearLayout(this);
         clockBox.setOrientation(LinearLayout.VERTICAL);
-        clockBox.setGravity(Gravity.RIGHT);
+        clockBox.setGravity(Gravity.LEFT);
         clockBox.setPadding(px(22), px(10), px(22), px(12));
         clock = new TextClock(this);
         clock.setIncludeFontPadding(false);
@@ -361,6 +366,8 @@ public class MainActivity extends Activity {
         wRow.addView(skyText, sl);
         wRow.setVisibility(View.GONE);
         wRow.setTag("wrow");
+        greetText = text(22, 0xE6FFFFFF, false);
+        clockBox.addView(greetText);
         clockBox.addView(clock);
         clockBox.addView(dateText);
         LinearLayout.LayoutParams wl = new LinearLayout.LayoutParams(-2, -2);
@@ -374,14 +381,12 @@ public class MainActivity extends Activity {
             applyClock();
             Toast.makeText(this, (Prefs.arabic(this) ? "الساعة: " : "Clock: ") + CLOCKS[st][Prefs.arabic(this) ? 0 : 1], Toast.LENGTH_SHORT).show();
         });
-        LinearLayout.LayoutParams cbl = new LinearLayout.LayoutParams(-2, -2);
-        cbl.leftMargin = px(12);
-        topBar.addView(clockGlass, cbl);
+        // يسار فوگ: الساعة وحدها
+        FrameLayout.LayoutParams cLp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.LEFT);
+        cLp.topMargin = px(34);
+        cLp.leftMargin = px(48);
+        root.addView(clockGlass, cLp);
         applyClock();
-        FrameLayout.LayoutParams tLp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.RIGHT);
-        tLp.topMargin = px(44);
-        tLp.rightMargin = px(60);
-        root.addView(topBar, tLp);
 
         // تحت: شريط زجاجي عائم بيه التطبيقات
         dockGlass = new Glass.GlassFrame(this, px(44));
@@ -688,6 +693,14 @@ public class MainActivity extends Activity {
         ImageView shown = wallAOnTop ? wallA : wallB;
         ImageView hidden = wallAOnTop ? wallB : wallA;
         hidden.setImageBitmap(next);
+        // الصورة تتحرك ببطء شديد (تكبير خفيف 5 دقايق) حتى تحس اللوحة حية
+        hidden.animate().cancel();
+        hidden.setScaleX(1f);
+        hidden.setScaleY(1f);
+        hidden.setTranslationX(0);
+        boolean leftward = (System.currentTimeMillis() / 1000) % 2 == 0;
+        hidden.animate().scaleX(1.08f).scaleY(1.08f).translationX(leftward ? -px(40) : px(40))
+                .setDuration(SHOW_FOR + 2000).setInterpolator(new android.view.animation.LinearInterpolator()).start();
         lastShown = System.currentTimeMillis();
         Glass.Backdrop.set(next, blurred);
         ObjectAnimator.ofFloat(hidden, View.ALPHA, hidden.getAlpha(), 1f).setDuration(1500).start();
@@ -762,6 +775,8 @@ public class MainActivity extends Activity {
         tempText.setTextColor(color);
         tempText.setShadowLayer(px(10), 0, px(2), st == 2 ? 0x9900D9FF : 0x99000000);
         skyText.setTextColor(sub);
+        greetText.setTextColor(sub);
+        greetText.setShadowLayer(px(10), 0, px(2), st == 2 ? 0x9900D9FF : 0x99000000);
         skyText.setShadowLayer(px(10), 0, px(2), 0x99000000);
         skyGlyph.tint(color);
         updateDate();
@@ -779,6 +794,11 @@ public class MainActivity extends Activity {
             if (st == 1 && !ar) d = d.toUpperCase(java.util.Locale.ROOT);
         }
         dateText.setText(d);
+        int h = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY);
+        greetText.setText(h >= 5 && h < 12 ? (ar ? "صباح الخير عبود ☀️" : "Good morning, Abood ☀️")
+                : h >= 12 && h < 17 ? (ar ? "يومك حلو عبود ✨" : "Good afternoon, Abood ✨")
+                : h >= 17 && h < 23 ? (ar ? "مساء الخير عبود 🌙" : "Good evening, Abood 🌙")
+                : (ar ? "تصبح على خير عبود 🌙" : "Good night, Abood 🌙"));
         View wRow = clockGlass.findViewWithTag("wrow");
         if (wTemp != Integer.MIN_VALUE) {
             wRow.setVisibility(View.VISIBLE);
@@ -1021,6 +1041,7 @@ public class MainActivity extends Activity {
         dockGlass.animate().alpha(a).translationY(on ? px(40) : 0).setDuration(d).start();
         focusLabel.animate().alpha(on ? 0f : focusLabel.getAlpha()).setDuration(400).start();
         topBar.animate().alpha(a).setDuration(d).start();
+        clockGlass.animate().alpha(a).setDuration(d).start();
         dim.animate().alpha(a).setDuration(d).start(); // الصورة بألوانها الكاملة
     }
 
