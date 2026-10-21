@@ -34,11 +34,12 @@ final class Glass {
         private static final List<GlassFrame> views = new ArrayList<>();
         private static ValueAnimator anim;
 
-        static void set(Bitmap full) {
+        /** blurred: نسخة مضببة جاهزة (نسويها بخيط جانبي حتى الشاشة ما تتأخر ولا جزء من الثانية). */
+        static void set(Bitmap full, Bitmap blurred) {
             prev = cur;
             fullW = full.getWidth();
             fullH = full.getHeight();
-            cur = blur(full);
+            cur = blurred;
             if (anim != null) anim.cancel();
             anim = ValueAnimator.ofFloat(0f, 1f).setDuration(1400);
             anim.addUpdateListener(a -> { mix = (float) a.getAnimatedValue(); invalidateAll(); });
@@ -50,7 +51,7 @@ final class Glass {
         }
 
         /** نصغر الصورة لـ 160 عرض ونضببها بثلاث مرات تمويه سريع. */
-        private static Bitmap blur(Bitmap src) {
+        static Bitmap blur(Bitmap src) {
             int w = 160, h = Math.max(1, Math.round(160f * src.getHeight() / src.getWidth()));
             Bitmap s = Bitmap.createScaledBitmap(src, w, h, true).copy(Bitmap.Config.ARGB_8888, true);
             int[] px = new int[w * h];
@@ -101,6 +102,8 @@ final class Glass {
         private final int[] loc = new int[2], rootLoc = new int[2];
         private final float radius;
         private static final ColorMatrixColorFilter LIGHT = filter(false), DARK = filter(true);
+        private int shaderKey = -1;
+        private Shader fillShader, edgeShader;
         float glow; // 0 = عادي، 1 = متأشر عليه (أفتح وألمع)
 
         GlassFrame(Context c, float radius) {
@@ -140,16 +143,22 @@ final class Glass {
             float g = glow;
             if (!dark) { a1 += Math.round(g * 0x50); a2 += Math.round(g * 0x30); }
             else { base = blend(0x141420, 0x5A5A68, g); }
-            fill.setShader(new LinearGradient(0, 0, w * 0.35f, h, (a1 << 24) | base, (a2 << 24) | base, Shader.TileMode.CLAMP));
+            int key = (w * 31 + h) * 31 + Math.round(g * 20) * 2 + (dark ? 1 : 0);
+            if (key != shaderKey) { // نسوي التدرجات بس لما يتغير الحجم أو اللمعة، مو بكل رسمة
+                shaderKey = key;
+                fillShader = new LinearGradient(0, 0, w * 0.35f, h, (a1 << 24) | base, (a2 << 24) | base, Shader.TileMode.CLAMP);
+                int top = dark ? 0x40 : 0x9C, bot = dark ? 0x18 : 0x30;
+                top += Math.round(g * (255 - top));
+                edgeShader = new LinearGradient(0, 0, 0, h, Color.argb(top, 255, 255, 255), Color.argb(bot + Math.round(g * 90), 255, 255, 255), Shader.TileMode.CLAMP);
+            }
+            fill.setShader(fillShader);
             c.drawRect(box, fill);
             c.restore();
 
             // 3) حافة مضيئة: أقوى فوگ، أخف جوه
             float sw2 = Math.max(1.5f, h / 80f) + g * 2.5f;
             edge.setStrokeWidth(sw2);
-            int top = dark ? 0x40 : 0x9C, bot = dark ? 0x18 : 0x30;
-            top += Math.round(g * (255 - top));
-            edge.setShader(new LinearGradient(0, 0, 0, h, Color.argb(top, 255, 255, 255), Color.argb(bot + Math.round(g * 90), 255, 255, 255), Shader.TileMode.CLAMP));
+            edge.setShader(edgeShader);
             float i = sw2 / 2;
             box.set(i, i, w - i, h - i);
             c.drawRoundRect(box, radius - i, radius - i, edge);

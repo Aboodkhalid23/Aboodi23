@@ -67,7 +67,9 @@ public class MainActivity extends Activity {
     private static List<AppEntry> sApps;
 
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
-    private final ExecutorService net = Executors.newSingleThreadExecutor();
+    private final ExecutorService net = Executors.newSingleThreadExecutor(); // تنزيلات (بطيئة)
+    private final ExecutorService pics = Executors.newSingleThreadExecutor(); // تجهيز الصور (سريع)
+    private Bitmap ready, readyBlur; // الصورة الجاية جاهزة مقدماً، فالتبديل فوري
     private final Handler main = new Handler(Looper.getMainLooper());
     private final OvershootInterpolator pop = new OvershootInterpolator(1.3f);
     private final DecelerateInterpolator ease = new DecelerateInterpolator(2f);
@@ -198,6 +200,7 @@ public class MainActivity extends Activity {
         unregisterReceiver(netChanged);
         worker.shutdownNow();
         net.shutdownNow();
+        pics.shutdownNow();
         super.onDestroy();
     }
 
@@ -392,7 +395,7 @@ public class MainActivity extends Activity {
         b.setOnFocusChangeListener((v, has) -> {
             glow(b, has);
             if (g != null) g.tint(has && !Prefs.dark(this) ? 0xFF15151A : INK);
-            v.animate().scaleX(has ? 1.15f : 1f).scaleY(has ? 1.15f : 1f).setDuration(240).setInterpolator(pop).start();
+            v.animate().scaleX(has ? 1.15f : 1f).scaleY(has ? 1.15f : 1f).setDuration(180).setInterpolator(pop).start();
         });
     }
 
@@ -497,7 +500,7 @@ public class MainActivity extends Activity {
             glow(card, has);
             v.animate().scaleX(has ? 1.14f : 1f).scaleY(has ? 1.14f : 1f)
                     .translationY(has ? -px(8) : 0).translationZ(has ? px(22) : 0)
-                    .setDuration(260).setInterpolator(pop).start();
+                    .setDuration(200).setInterpolator(pop).start();
             if (has && v.getParent() == dock) showLabel(v, label);
         });
     }
@@ -600,21 +603,26 @@ public class MainActivity extends Activity {
         // بالبداية ننزل ويا كل تبديل لحد ما يصير عدنا 30 صورة، وبعدين وحدة كل دقيقتين
         boolean fetch = feed.count() < 30 || System.currentTimeMillis() - lastFetch > 120000;
         if (fetch) lastFetch = System.currentTimeMillis();
-        net.execute(() -> {
-            Bitmap bmp = feed.next(screenW, screenH);
-            if (bmp == null) { feed.fetchOne(); bmp = feed.next(screenW, screenH); }
-            else if (fetch) feed.fetchOne();
-            final Bitmap show = bmp;
-            if (show != null) main.post(() -> { if (visible) crossfade(show); });
+        if (fetch) net.execute(feed::fetchOne); // التنزيل بخيط وحده، ما يأخر الصور
+        pics.execute(() -> {
+            Bitmap bmp = ready, blur = readyBlur;
+            ready = readyBlur = null;
+            if (bmp == null) { bmp = feed.next(screenW, screenH); blur = bmp != null ? Glass.Backdrop.blur(bmp) : null; }
+            if (bmp == null) { feed.fetchOne(); bmp = feed.next(screenW, screenH); blur = bmp != null ? Glass.Backdrop.blur(bmp) : null; }
+            final Bitmap show = bmp, showBlur = blur;
+            if (show != null) main.post(() -> { if (visible) crossfade(show, showBlur); });
+            // نجهز الي بعدها من هسة
+            Bitmap n = feed.next(screenW, screenH);
+            if (n != null) { readyBlur = Glass.Backdrop.blur(n); ready = n; }
         });
     }
 
     /** نبدل الخلفية بنعومة (تلاشي ثانية ونص)، والزجاج يتبدل وياها. */
-    private void crossfade(Bitmap next) {
+    private void crossfade(Bitmap next, Bitmap blurred) {
         ImageView shown = wallAOnTop ? wallA : wallB;
         ImageView hidden = wallAOnTop ? wallB : wallA;
         hidden.setImageBitmap(next);
-        Glass.Backdrop.set(next);
+        Glass.Backdrop.set(next, blurred);
         ObjectAnimator.ofFloat(hidden, View.ALPHA, hidden.getAlpha(), 1f).setDuration(1500).start();
         ObjectAnimator out = ObjectAnimator.ofFloat(shown, View.ALPHA, shown.getAlpha(), 0f).setDuration(1500);
         out.addListener(new android.animation.AnimatorListenerAdapter() {
@@ -686,19 +694,19 @@ public class MainActivity extends Activity {
         wifiGlyph.invalidate();
     }
 
-    /** الطقس من open-meteo (مجاني وبدون حساب)، كل ساعة، بغداد افتراضياً. */
+    /** الطقس من open-meteo (مجاني وبدون حساب)، كل ساعة، لمدينة توركو بفنلندا. */
     private void loadWeather() {
         if (System.currentTimeMillis() - lastWeather < 3600000) return;
         try {
             JSONObject j = new JSONObject(WallpaperFeed.get(
-                    "https://api.open-meteo.com/v1/forecast?latitude=33.31&longitude=44.37&current=temperature_2m,weather_code"));
+                    "https://api.open-meteo.com/v1/forecast?latitude=60.45&longitude=22.27&current=temperature_2m,weather_code"));
             JSONObject c = j.getJSONObject("current");
             int t = (int) Math.round(c.getDouble("temperature_2m"));
             int code = c.getInt("weather_code");
             lastWeather = System.currentTimeMillis();
             main.post(() -> {
                 boolean ar = Prefs.arabic(this);
-                weather = t + "° " + sky(code, ar);
+                weather = (ar ? "توركو " : "Turku ") + t + "° " + sky(code, ar);
                 updateDate();
             });
         } catch (Exception ignored) { }
