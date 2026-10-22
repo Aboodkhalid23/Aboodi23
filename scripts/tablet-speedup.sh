@@ -6,6 +6,8 @@
 #   bash <(curl -fsSL ...نفس الرابط...) --restore
 # للوضع الخفيف (بدون حركات + واجهة خفيفة بدل واجهة سامسونگ):
 #   bash <(curl -fsSL ...نفس الرابط...) --lite
+# لوضع قارئ النصوص (تلقين التصوير): الخفيف + حذف أكثر + شاشة ما تطفي + عدم الإزعاج:
+#   bash <(curl -fsSL ...نفس الرابط...) --prompter
 
 set -u
 
@@ -53,6 +55,34 @@ com.google.android.apps.tachyon
 com.google.android.videos
 com.google.android.apps.youtube.music
 com.google.android.feedback
+"
+
+# برامج زايدة إضافية لتابلت مخصص لقراءة النصوص بس. هم يرجعن بأمر --restore.
+PROMPTER_BLOAT="
+com.samsung.android.email.provider
+com.samsung.android.calendar
+com.samsung.android.app.reminder
+com.samsung.android.app.notes
+com.samsung.android.oneconnect
+com.samsung.android.voc
+com.samsung.android.themestore
+com.samsung.android.app.dressroom
+com.samsung.android.aircommandmanager
+com.samsung.android.app.taskedge
+com.samsung.android.app.cocktailbarservice
+com.samsung.android.service.peoplestripe
+com.samsung.android.kidsinstaller
+com.sec.android.app.kidshome
+com.sec.android.app.samsungapps
+com.sec.android.app.popupcalculator
+com.sec.android.app.clockpackage
+com.samsung.android.video
+com.google.android.youtube
+com.google.android.apps.maps
+com.google.android.apps.photos
+com.google.android.apps.messaging
+com.google.android.apps.googleassistant
+com.google.android.googlequicksearchbox
 "
 
 say() { printf '\n▶ %s\n' "$1"; }
@@ -197,6 +227,30 @@ speedup() {
   done
   echo "  عدد المحذوفة: $count"
 
+  if [ "$PROMPTER" = 1 ]; then
+    say "وضع قارئ النصوص: دا أحذف البرامج الي ما يحتاجها قارئ النصوص..."
+    for pkg in $PROMPTER_BLOAT; do
+      if "$ADB" shell pm uninstall -k --user 0 "$pkg" 2>/dev/null | grep -q Success; then
+        echo "$pkg" >> "$REMOVED_LIST"
+        echo "  انحذف: $pkg"
+      fi
+    done
+
+    say "دا أضبط الشاشة للتصوير..."
+    # الشاشة ما تطفي وهو على الشاحن، وبدونه تبقى 30 دقيقة
+    "$ADB" shell settings put global stay_on_while_plugged_in 7
+    "$ADB" shell settings put system screen_off_timeout 1800000
+    # إضاءة ثابتة (التلقائية تتغير ويا ضوء التصوير وتشتت)
+    "$ADB" shell settings put system screen_brightness_mode 0
+    # الشاشة ما تدور وحدها إذا تحرك التابلت
+    "$ADB" shell settings put system accelerometer_rotation 0
+    # عدم الإزعاج: ماكو إشعارات تطلع فوق النص
+    "$ADB" shell cmd notification set_dnd priority >/dev/null 2>&1
+    # ما يدوّر على شبكات وأجهزة بالخلفية
+    "$ADB" shell settings put global wifi_scan_always_enabled 0
+    "$ADB" shell settings put global ble_scan_always_enabled 0
+  fi
+
   say "دا أنظّف الملفات المؤقتة لكل البرامج..."
   "$ADB" shell pm trim-caches 999G >/dev/null 2>&1
   "$ADB" shell sm fstrim >/dev/null 2>&1
@@ -226,11 +280,17 @@ speedup() {
   echo "✔ خلص التسريع."
   echo "شغلة أخيرة بإيدك: الإعدادات ← العناية بالجهاز ← الذاكرة ← (RAM Plus) طفّيه."
   echo "إذا تريد ترجع البرامج المحذوفة: شغّل نفس الأمر وضيف بآخره --restore"
+  if [ "$PROMPTER" = 1 ]; then
+    echo "قارئ النصوص جاهز: الشاشة ما تطفي على الشاحن، وعدم الإزعاج شغّال، والدوران مقفول."
+    echo "الإضاءة: نزّل شريط الإشعارات وخلّيها بالمستوى الي يريحك للتصوير."
+  fi
   echo "وإذا تريد ترجع واجهة سامسونگ: الإعدادات ← التطبيقات ← اختيار التطبيقات الافتراضية ← تطبيق الشاشة الرئيسية ← One UI Home"
 }
 
 install_adb
 connect
 LITE=0
+PROMPTER=0
 [ "${1:-}" = "--lite" ] && LITE=1
+[ "${1:-}" = "--prompter" ] && LITE=1 && PROMPTER=1
 if [ "${1:-}" = "--restore" ]; then restore; else speedup; fi
