@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- خدمة صغيرة بس تفتح قائمة الطاقة (ريستارت). ما تقرا الشاشة ولا أي شي ثاني. -->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeAnnouncement"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:canRetrieveWindowContent="false"
+    android:notificationTimeout="1000"
+    android:description="@string/power_desc" />
