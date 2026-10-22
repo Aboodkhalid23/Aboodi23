@@ -10,6 +10,8 @@
 #   bash <(curl -fsSL ...نفس الرابط...) --prompter
 # للسرعة القصوى (قارئ النصوص + حذف خدمات الخلفية + منع البرامج الباقية من الشغل بالخلفية):
 #   bash <(curl -fsSL ...نفس الرابط...) --extreme
+# الأقوى (القصوى + تعطيل كل البرامج المنزّلة الي ما يحتاجها قارئ النصوص + ضبط الرام + قياس قبل وبعد):
+#   bash <(curl -fsSL ...نفس الرابط...) --max
 
 set -u
 
@@ -17,6 +19,7 @@ TOOLS_DIR="$HOME/android-tools"
 ADB="$TOOLS_DIR/platform-tools/adb"
 REMOVED_LIST="$TOOLS_DIR/removed.txt"
 BG_LIST="$TOOLS_DIR/background-blocked.txt"
+DISABLED_LIST="$TOOLS_DIR/disabled.txt"
 
 # برامج تثگّل الجهاز وحذفها آمن. الحذف "للمستخدم" بس، فيرجع بأمر --restore.
 BLOAT="
@@ -123,6 +126,13 @@ com.google.ar.core
 
 # برامج لازم تبقى تشتغل بالخلفية (ما ينمنعن)
 KEEP_BG="com.android.chrome com.google.android.apps.docs com.google.android.gm com.android.vending app.lawnchair"
+
+# الرام المستخدم بالگيگا (الكلي ناقص المتوفر)
+ram_used() {
+  "$ADB" shell cat /proc/meminfo </dev/null | tr -d '\r' | awk '
+    /^MemTotal/ {t=$2} /^MemAvailable/ {a=$2}
+    END {printf "%.1f من %.1f", (t-a)/1048576, t/1048576}'
+}
 
 say() { printf '\n▶ %s\n' "$1"; }
 die() { printf '\n✖ %s\n' "$1"; exit 1; }
@@ -237,13 +247,20 @@ install_light_home() {
 }
 
 restore() {
-  [ -f "$REMOVED_LIST" ] || [ -f "$BG_LIST" ] || die "ماكو شي محذوف حتى أرجعه."
+  [ -f "$REMOVED_LIST" ] || [ -f "$BG_LIST" ] || [ -f "$DISABLED_LIST" ] || die "ماكو شي محذوف حتى أرجعه."
   touch "$REMOVED_LIST"
   say "دا أرجّع البرامج المحذوفة..."
   while read -r pkg; do
     [ -n "$pkg" ] && "$ADB" shell cmd package install-existing "$pkg" </dev/null >/dev/null 2>&1 && echo "  رجع: $pkg"
   done < "$REMOVED_LIST"
   rm -f "$REMOVED_LIST"
+  if [ -f "$DISABLED_LIST" ]; then
+    while read -r pkg; do
+      [ -n "$pkg" ] && "$ADB" shell pm enable "$pkg" </dev/null >/dev/null 2>&1 && echo "  رجع: $pkg"
+    done < "$DISABLED_LIST"
+    rm -f "$DISABLED_LIST"
+  fi
+  "$ADB" shell device_config delete activity_manager max_cached_processes </dev/null >/dev/null 2>&1
   if [ -f "$BG_LIST" ]; then
     while read -r pkg; do
       [ -n "$pkg" ] && "$ADB" shell cmd appops set "$pkg" RUN_ANY_IN_BACKGROUND allow </dev/null >/dev/null 2>&1
@@ -256,6 +273,8 @@ restore() {
 speedup() {
   model=$("$ADB" shell getprop ro.product.model | tr -d '\r')
   say "لگيت التابلت: $model"
+  RAM_BEFORE=$(ram_used)
+  echo "  الرام المستخدم هسه: $RAM_BEFORE گيگا"
 
   say "دا أسرّع الحركات (نصّ الوقت)..."
   for k in window_animation_scale transition_animation_scale animator_duration_scale; do
@@ -314,6 +333,22 @@ speedup() {
     done
   fi
 
+  if [ "$MAX" = 1 ]; then
+    say "الأقوى: دا أعطّل البرامج المنزّلة الي ما يحتاجها قارئ النصوص..."
+    for pkg in $("$ADB" shell pm list packages -3 | tr -d '\r' | cut -d: -f2); do
+      case " $KEEP_BG " in *" $pkg "*) continue ;; esac
+      case "$pkg" in *prompt*|*Prompt*) continue ;; esac
+      "$ADB" shell pm disable-user --user 0 "$pkg" 2>/dev/null | grep -q "disabled" \
+        && echo "$pkg" >> "$DISABLED_LIST" && echo "  تعطّل: $pkg"
+    done
+
+    say "دا أضبط الرام: أقل برامج محفوظة بالذاكرة، وتجميد البرامج النايمة..."
+    "$ADB" shell device_config put activity_manager max_cached_processes 8 >/dev/null 2>&1
+    "$ADB" shell settings put global cached_apps_freezer enabled
+    # ما يحدّث البرامج وحده بنص التصوير
+    "$ADB" shell settings put global auto_update_apps 0 >/dev/null 2>&1
+  fi
+
   say "دا أنظّف الملفات المؤقتة لكل البرامج..."
   "$ADB" shell pm trim-caches 999G >/dev/null 2>&1
   "$ADB" shell sm fstrim >/dev/null 2>&1
@@ -339,6 +374,14 @@ speedup() {
   say "دا أعيد تشغيل التابلت..."
   "$ADB" reboot
 
+  if [ "$MAX" = 1 ]; then
+    say "دا أنتظر التابلت يشتغل حتى أقيس الرام (دقيقة تقريباً)..."
+    "$ADB" wait-for-device
+    sleep 60
+    echo "  الرام قبل: $RAM_BEFORE گيگا"
+    echo "  الرام بعد: $(ram_used) گيگا"
+  fi
+
   echo
   echo "✔ خلص التسريع."
   echo "شغلة أخيرة بإيدك: الإعدادات ← العناية بالجهاز ← الذاكرة ← (RAM Plus) طفّيه."
@@ -355,7 +398,9 @@ connect
 LITE=0
 PROMPTER=0
 EXTREME=0
+MAX=0
 [ "${1:-}" = "--lite" ] && LITE=1
 [ "${1:-}" = "--prompter" ] && LITE=1 && PROMPTER=1
 [ "${1:-}" = "--extreme" ] && LITE=1 && PROMPTER=1 && EXTREME=1
+[ "${1:-}" = "--max" ] && LITE=1 && PROMPTER=1 && EXTREME=1 && MAX=1
 if [ "${1:-}" = "--restore" ]; then restore; else speedup; fi
