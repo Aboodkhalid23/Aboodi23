@@ -1,13 +1,17 @@
-"""شعار "سالوفة": 8 تصاميم مبدئية (عربي + روح الكتابة المسمارية)، كلها مرسومة بالكود.
+"""شعار "سالوفة" (الجولة الثانية): حروف مرسومة من الصفر هندسياً، مو خطوط جاهزة.
 
     python3 brand/salufa/logos.py -o brand/salufa/out
 
-يطلع logo-1.png … logo-8.png (1000×1000، خلفية شفافة إذا التصميم يسمح) و sheet.jpg (كلهن بورقة وحدة).
-المسماري: 𒊓𒇻𒉺 (سا-لو-پا). الأكدية ما بيها حرف "ف"، فأقرب نطق بالمقاطع المسمارية هو "پا".
+الكلمة تنبني من 3 مقاطع (من اليمين): "سا" و"لو" و"فة"، كل مقطع خطوط وأقواس بسمك واحد.
+الاتجاهات الأربعة (اختارهن صاحب القناة):
+  1. الكشيدة الطويلة: خط وصل الفاء والتاء يمتد مثل "سالوفة طويلة".
+  2. الفاء فم يحچي: رأس الفاء فم مفتوح يحچي باقي الكلمة.
+  3. أطراف مسمارية: كل خط عمودي راسه إسفين مسماري.
+  4. ريترو عراقي جريء: حروف ثقيلة مدوّرة وظل ملوّن مثل بوسترات بغداد القديمة.
+النقاط تصير أسافين مسمارية بأغلب النسخ. المسماري الصغير 𒊓𒇻𒉺 = سا-لو-پا (كتابة صوتية للاسم).
 """
 import argparse
 import math
-import random
 import sys
 from pathlib import Path
 
@@ -18,14 +22,13 @@ sys.path.insert(0, str(ROOT / "designer"))
 from arabic import load_font, shape_word  # noqa: E402
 
 FONTS = ROOT / "designer" / "fonts"
-CUNEI = FONTS / "NotoSansCuneiform-Regular.ttf"
-WORD = "سالوفة"
-CUNEI_WORD = "\U00012293\U000121FB\U0001227A"  # SA LU PA
-S = 1000
+CUNEI_WORD = "\U00012293\U000121FB\U0001227A"
+K = 4            # رسم بدقة ×4 وبعدين تصغير، حتى الحواف تطلع ناعمة
+W, H = 2400, 1000
 
-# ألوان بلاد الرافدين: لازورد بوابة عشتار، وذهب، وطين، وكريمي
-LAPIS, LAPIS_DEEP, GOLD, CLAY, CLAY_DARK, CREAM, INK = (
-    "#1E3F8F", "#0E1F4D", "#D9A521", "#B9773E", "#7A4521", "#F3E6CC", "#1A1410")
+# ألوان سالوفة: زيتوني وكريمي أساس، ووياهم زعفراني وطين وردي وفستقي وليلكي
+OLIVE, OLIVE_DEEP, CREAM = "#3E4A2C", "#262E1B", "#F1E7D0"
+SAFFRON, CLAY_ROSE, PISTACHIO, LILAC, INK = "#E8A33D", "#D9734E", "#B8C97A", "#B9A6D8", "#17150F"
 
 
 def rgb(h):
@@ -33,253 +36,215 @@ def rgb(h):
     return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
 
 
-def font(name, px):
-    return load_font(FONTS / name, px)
+class Pen:
+    """يرسم بقناع (أبيض = حبر) بدقة K، بسمك ثابت ونهايات مدوّرة أو مقطوعة."""
+
+    def __init__(self, w, round_caps=True):
+        self.mask = Image.new("L", (W * K, H * K))
+        self.d = ImageDraw.Draw(self.mask)
+        self.w = w
+        self.round = round_caps
+
+    def _p(self, pts):
+        return [(x * K, y * K) for x, y in pts]
+
+    def line(self, pts, w=None):
+        w = (w or self.w) * K
+        pts = self._p(pts)
+        if len(pts) > 2:  # منحني: نطبع دوائر متلاصقة (أنظف من وصلات PIL)
+            for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+                n = max(1, int(math.hypot(x1 - x0, y1 - y0) / (w / 6)))
+                for i in range(n + 1):
+                    x, y = x0 + (x1 - x0) * i / n, y0 + (y1 - y0) * i / n
+                    self.d.ellipse((x - w / 2, y - w / 2, x + w / 2, y + w / 2), fill=255)
+            return
+        self.d.line(pts, fill=255, width=int(w))
+        if self.round:
+            for x, y in (pts[0], pts[-1]):
+                self.d.ellipse((x - w / 2, y - w / 2, x + w / 2, y + w / 2), fill=255)
+
+    def arc(self, cx, cy, rx, ry, a0, a1, w=None, steps=90):
+        pts = [(cx + rx * math.cos(math.radians(a0 + (a1 - a0) * i / steps)),
+                cy + ry * math.sin(math.radians(a0 + (a1 - a0) * i / steps))) for i in range(steps + 1)]
+        self.line(pts, w)
+
+    def bezier(self, p0, p1, p2, w=None, steps=60):
+        pts = [((1 - t) ** 2 * p0[0] + 2 * (1 - t) * t * p1[0] + t * t * p2[0],
+                (1 - t) ** 2 * p0[1] + 2 * (1 - t) * t * p1[1] + t * t * p2[1])
+               for t in (i / steps for i in range(steps + 1))]
+        self.line(pts, w)
+
+    def ring(self, cx, cy, r, w=None):
+        w = (w or self.w)
+        R = r + w / 2  # PIL يرسم الحافة للداخل، فنكبّر حتى الخط يتوسط نصف القطر
+        self.d.ellipse(((cx - R) * K, (cy - R) * K, (cx + R) * K, (cy + R) * K), outline=255, width=int(w * K))
+
+    def disc(self, cx, cy, r):
+        self.d.ellipse(((cx - r) * K, (cy - r) * K, (cx + r) * K, (cy + r) * K), fill=255)
+
+    def poly(self, pts, fill=255):
+        self.d.polygon(self._p(pts), fill=fill)
+
+    def wedge(self, x, y, size):
+        """إسفين مسماري عمودي: رأس مثلث فوق وذيل نازل."""
+        s = size
+        self.poly([(x - s * 0.62, y - s * 0.55), (x + s * 0.62, y - s * 0.55), (x, y + s * 0.35)])
+        self.poly([(x - s * 0.14, y), (x + s * 0.14, y), (x, y + s * 1.05)])
+
+    def wedge_head(self, x, y_top, w):
+        """رأس إسفين فوق خط عمودي (الاتجاه 3)."""
+        self.poly([(x - w * 1.05, y_top - w * 0.15), (x + w * 1.05, y_top - w * 0.15), (x, y_top + w * 1.35)])
+
+    def done(self):
+        return self.mask.resize((W, H), Image.LANCZOS)
 
 
-def text_center(d, xy, text, f, fill, stroke=0, stroke_fill=None, anchor="mm"):
-    t, kw = shape_word(text)
-    d.text(xy, t, font=f, fill=fill, anchor=anchor, stroke_width=stroke, stroke_fill=stroke_fill, **kw)
+def build(style):
+    """يبني قناع كلمة سالوفة حسب الستايل.
+
+    style: w (السمك)، kashida (طول وصل الفاء والتاء)، verticals (plain|wedge)، fa (ring|mouth|disc)،
+    dots (round|wedge)، caps (round|butt)، teeth (طول أسنان السين).
+    """
+    w = style["w"]
+    pen = Pen(w, style.get("caps", "round") == "round")
+    B = 600                         # خط الكتابة
+    tall = style.get("tall", 300)   # طول الألف واللام
+    tooth = style.get("teeth", 80)
+    gap = style.get("gap", w * 1.3 + 12)  # المسافة بين المقاطع
+    r = max(style.get("head", 52), w * 1.2)  # نصف قطر رأس الفاء والواو (الفتحة تبقى واضحة بالثقيل)
+    kash = style.get("kashida", 120)
+    x = style.get("right", 2150)
+
+    def vertical(xv, top):
+        pen.line([(xv, top), (xv, B)])
+        if style.get("verticals") == "wedge":
+            pen.wedge_head(xv, top - w * 0.2, w)
+
+    def dots(xs, y):
+        for xd in xs:
+            if style.get("dots") == "wedge":
+                pen.wedge(xd, y, w * 1.25)
+            else:
+                pen.disc(xd, y, w * 0.62)
+
+    # المقطع 1: "سا" (سين أولية بثلاث أسنان، وألف)
+    step = tooth * 0.75 + w * 0.6
+    teeth_x = [x, x - step, x - 2 * step]
+    for tx in teeth_x:
+        vertical(tx, B - tooth)
+    alef_x = teeth_x[-1] - step * 1.6
+    pen.line([(x, B), (alef_x, B)])
+    vertical(alef_x, B - tall)
+    x = alef_x - gap - w
+
+    # المقطع 2: "لو" (لام أولية وواو نهائية)
+    vertical(x, B - tall)
+    waw_cx = x - w * 0.5 - r * 1.55
+    pen.line([(x, B), (waw_cx + r * 0.6, B)])
+    pen.ring(waw_cx, B - r + w / 2, r)
+    # ذيل الواو: من أسفل يسار الحلقة، نازل ويلتف لليسار تحت الخط
+    pen.bezier((waw_cx - r * 0.55, B), (waw_cx - r * 0.6, B + r * 1.9), (waw_cx - r * 2.3, B + r * 1.7))
+    x = waw_cx - r - gap
+
+    # المقطع 3: "فة" (فاء أولية ووصل كشيدة وتاء مربوطة)
+    fa_cx = x - r
+    fa_cy = B - r + w / 2
+    if style.get("fa") == "mouth":
+        # فم مفتوح باتجاه الكلمة (يسار): حلقة ناقصة وشفة
+        pen.arc(fa_cx, fa_cy, r, r, 222, 498)   # فتحة الفم لفوق-يسار
+    elif style.get("fa") == "disc":
+        pen.ring(fa_cx, fa_cy, r)
+    else:
+        pen.ring(fa_cx, fa_cy, r)
+    dots([fa_cx], B - 2 * r - w * 1.7)
+    end = fa_cx - r - kash
+    pen.line([(fa_cx + r * 0.2, B), (end, B)])
+    # التاء المربوطة: حلقة بيضوية لاصقة بآخر الكشيدة
+    ta_cx = end - r * 0.95
+    pen.d.ellipse(((ta_cx - r * 1.05 - w / 2) * K, (B - r * 2.1 - w / 2) * K, (ta_cx + r * 1.05 + w / 2) * K,
+                   (B + w / 2) * K), outline=255, width=int(w * K))
+    dots([ta_cx - w * 0.95, ta_cx + w * 0.95], B - 2.1 * r - w * 1.7)
+    mask = pen.done()
+    bbox = mask.getbbox()
+    return mask, bbox
 
 
-def wedge(d, x, y, length, angle, head, fill):
-    """إسفين مسماري: رأس مثلث وذيل يضعف."""
-    a = math.radians(angle)
-    dx, dy = math.cos(a), math.sin(a)
-    px, py = -dy, dx
-    tip = (x + dx * length, y + dy * length)
-    hw = head / 2
-    d.polygon([(x + px * hw, y + py * hw), (x - px * hw, y - py * hw),
-               (x + dx * head * 0.9, y + dy * head * 0.9)], fill=fill)
-    d.polygon([(x + dx * head * 0.5 + px * head * 0.14, y + dy * head * 0.5 + py * head * 0.14),
-               (x + dx * head * 0.5 - px * head * 0.14, y + dy * head * 0.5 - py * head * 0.14), tip], fill=fill)
+def fit(mask, bbox, size, scale_w=0.72):
+    """يقص الكلمة ويوسّطها بلوحة size بعرض نسبة scale_w."""
+    crop = mask.crop(bbox)
+    tw = int(size[0] * scale_w)
+    th = int(crop.height * tw / crop.width)
+    if th > size[1] * 0.55:
+        th = int(size[1] * 0.55)
+        tw = int(crop.width * th / crop.height)
+    return crop.resize((tw, th), Image.LANCZOS)
 
 
-def clay_texture(size, base, seed=7):
-    """سطح طين: لون أساسي وضوضاء ناعمة وبقع."""
-    rnd = random.Random(seed)
-    img = Image.new("RGB", size, rgb(base))
-    noise = Image.effect_noise(size, 40).convert("RGB")
-    img = Image.blend(img, ImageChops.multiply(img, noise.point(lambda v: 170 + v // 3)), 0.6)
-    spots = Image.new("L", size)
-    sd = ImageDraw.Draw(spots)
-    for _ in range(60):
-        r = rnd.randint(4, 30)
-        x, y = rnd.randint(0, size[0]), rnd.randint(0, size[1])
-        sd.ellipse((x - r, y - r, x + r, y + r), fill=rnd.randint(20, 60))
-    spots = spots.filter(ImageFilter.GaussianBlur(8))
-    return Image.composite(Image.new("RGB", size, (0, 0, 0)), img, spots.point(lambda v: v // 3))
-
-
-def carve(base, mask, depth=6):
-    """يحفر الشكل بالطين: ظل غامق فوق-يسار وضو تحت-يمين، مثل الكتابة على لوح."""
-    dark = Image.new("RGB", base.size, (40, 22, 10))
-    light = Image.new("RGB", base.size, (255, 230, 190))
-    sh = ImageChops.offset(mask, -depth // 2, -depth // 2)
-    hi = ImageChops.offset(mask, depth // 2, depth // 2)
-    out = Image.composite(light, base, ImageChops.subtract(hi, mask).point(lambda v: v * 0.5))
-    out = Image.composite(dark, out, mask.point(lambda v: int(v * 0.75)))
-    return Image.composite(dark, out, ImageChops.subtract(sh, mask).point(lambda v: v * 0.4))
-
-
-def word_mask(text, f, size, center):
-    m = Image.new("L", size)
-    text_center(ImageDraw.Draw(m), center, text, f, 255)
-    return m
-
-
-def rounded_mask(size, box, r):
-    m = Image.new("L", size)
-    ImageDraw.Draw(m).rounded_rectangle(box, radius=r, fill=255)
-    return m
-
-
-# ---------------- التصاميم ----------------
-def logo_1():
-    """اللوح الطيني: الكلمة محفورة بلوح طين، والمسماري تحتها."""
-    img = Image.new("RGBA", (S, S))
-    box = (110, 200, 890, 800)
-    tablet = clay_texture((S, S), CLAY)
-    tablet = carve(tablet, word_mask(WORD, font("Kufam-Variable.ttf", 165), (S, S), (500, 440)), 9)
-    tablet = carve(tablet, word_mask(CUNEI_WORD, load_font(CUNEI, 120), (S, S), (500, 660)), 6)
-    m = rounded_mask((S, S), box, 90).filter(ImageFilter.GaussianBlur(2))
-    shadow = rounded_mask((S, S), (box[0] + 14, box[1] + 22, box[2] + 14, box[3] + 22), 90).filter(
-        ImageFilter.GaussianBlur(18))
-    img.paste((0, 0, 0, 140), (0, 0), shadow)
-    img.paste(tablet, (0, 0), m)
-    return img
-
-
-def dots_of(text_dotted, text_plain, f, center):
-    """مراكز النقاط: الفرق بين الكلمة المنقوطة والكلمة بلا نقاط، مقسوم لكتل حسب الأعمدة."""
-    a = word_mask(text_dotted, f, (S, S), center)
-    b = word_mask(text_plain, f, (S, S), center)
-    diff = ImageChops.subtract(a, b.filter(ImageFilter.MaxFilter(5))).point(lambda v: 255 if v > 128 else 0)
-    cols = [diff.crop((x, 0, x + 1, S)).getbbox() for x in range(S)]
-    blobs, cur = [], []
-    for x, bb in enumerate(cols):
-        if bb:
-            cur.append((x, bb))
-        elif cur:
-            blobs.append(cur)
-            cur = []
-    out = []
-    for blob in blobs:
-        if len(blob) < 6:
-            continue
-        x0, x1 = blob[0][0], blob[-1][0]
-        y0 = min(bb[1] for _, bb in blob)
-        y1 = max(bb[3] for _, bb in blob)
-        out.append(((x0 + x1) / 2, (y0 + y1) / 2, x1 - x0))
-    return out, b
-
-
-def logo_2():
-    """الأسافين بدل النقاط: نقاط الفاء والتاء صارت أسافين مسمارية ذهبية."""
-    img = Image.new("RGBA", (S, S), rgb(LAPIS_DEEP) + (255,))
+def compose(word, bg, fg, size=(1200, 1200), shadow=None, tagline=None, cunei=None, accent=None, y=0.45):
+    """يحط الكلمة على خلفية، ويا ظل ملوّن (ريترو)، وسطر صغير، والمسماري."""
+    img = Image.new("RGB", size, rgb(bg))
+    x0 = (size[0] - word.width) // 2
+    y0 = int(size[1] * y - word.height / 2)
+    if shadow:
+        off = max(8, word.width // 60)
+        img.paste(rgb(shadow), (x0 + off, y0 + off), word)
+    img.paste(rgb(fg), (x0, y0), word)
     d = ImageDraw.Draw(img)
-    f = font("ReemKufi-Variable.ttf", 240)
-    dots, plain = dots_of("سالوفة", "سالوڡه", f, (500, 460))
-    img.paste(rgb(CREAM), (0, 0), plain)
-    for x, y, w in dots:
-        n = 2 if w > 60 else 1   # كتلة عريضة = نقطتين
-        for k in range(n):
-            cx = x + (k - (n - 1) / 2) * w / 2
-            wedge(d, cx, y - 32, 62, 90, 36, GOLD)
-    for i in range(9):  # شريط أسافين مثل سطر لوح
-        wedge(d, 230 + i * 62, 690, 50, 25 if i % 2 else -25, 30, GOLD)
-    text_center(d, (500, 800), CUNEI_WORD, load_font(CUNEI, 70), GOLD)
+    yy = y0 + word.height + size[1] * 0.07
+    if cunei:
+        f = load_font(FONTS / "NotoSansCuneiform-Regular.ttf", int(size[1] * 0.05))
+        d.text((size[0] / 2, yy), CUNEI_WORD, font=f, fill=rgb(accent or fg), anchor="mm")
+        yy += size[1] * 0.08
+    if tagline:
+        f = load_font(FONTS / "Alexandria-Variable.ttf", int(size[1] * 0.034))
+        t, kw = shape_word(tagline)
+        d.text((size[0] / 2, yy), t, font=f, fill=rgb(accent or fg), anchor="mm", **kw)
     return img
 
 
-def logo_3():
-    """الختم الأسطواني: دائرة ختم بيها مسماري بالحافة، والكلمة بالنص."""
-    img = Image.new("RGBA", (S, S))
-    d = ImageDraw.Draw(img)
-    d.ellipse((90, 90, 910, 910), fill=GOLD)
-    d.ellipse((120, 120, 880, 880), fill=LAPIS)
-    d.ellipse((215, 215, 785, 785), outline=GOLD, width=6)
-    cf = load_font(CUNEI, 58)
-    ring = (CUNEI_WORD + " ") * 5
-    n = len(ring)
-    for i, ch in enumerate(ring):
-        if ch == " ":
-            continue
-        ang = -90 + 360 * i / n
-        layer = Image.new("RGBA", (120, 120))
-        ImageDraw.Draw(layer).text((60, 60), ch, font=cf, fill=CREAM, anchor="mm")
-        layer = layer.rotate(-ang - 90, resample=Image.BICUBIC)
-        r = 335
-        x = 500 + r * math.cos(math.radians(ang)) - 60
-        y = 500 + r * math.sin(math.radians(ang)) - 60
-        img.alpha_composite(layer, (int(x), int(y)))
-    text_center(d, (500, 490), WORD, font("Blaka-Regular.ttf", 190), GOLD)
+DESIGNS = [
+    # (الاسم، الستايل، الخلفية، الحبر، الظل، سطر، مسماري، لون إضافي)
+    ("الكشيدة الطويلة: زيتوني", dict(w=34, kashida=330, dots="wedge"), OLIVE, CREAM, None, "تعالوا أحچيلكم", False, SAFFRON),
+    ("الكشيدة الطويلة: كريمي", dict(w=46, kashida=260, dots="round", caps="butt"), CREAM, OLIVE_DEEP, None, None, True, CLAY_ROSE),
+    ("الفاء فم يحچي: زعفراني", dict(w=44, fa="mouth", kashida=150, dots="wedge"), SAFFRON, OLIVE_DEEP, None, "تعالوا أحچيلكم", False, OLIVE_DEEP),
+    ("الفاء فم يحچي: زيتوني", dict(w=40, fa="mouth", kashida=200, dots="round"), OLIVE_DEEP, CREAM, None, None, True, PISTACHIO),
+    ("أطراف مسمارية: كريمي", dict(w=26, verticals="wedge", dots="wedge", kashida=170, tall=330), CREAM, OLIVE, None, None, True, CLAY_ROSE),
+    ("أطراف مسمارية: ليلكي", dict(w=30, verticals="wedge", dots="wedge", kashida=230, caps="butt"), LILAC, INK, None, "سوالف من الزمن الأول", False, INK),
+    ("ريترو جريء: طين وردي", dict(w=72, fa="disc", kashida=110, teeth=95, head=58, tall=290), CLAY_ROSE, CREAM, OLIVE_DEEP, None, False, CREAM),
+    ("ريترو جريء: فستقي", dict(w=78, kashida=90, teeth=95, head=60, dots="round"), PISTACHIO, OLIVE_DEEP, SAFFRON, "تعالوا أحچيلكم", False, OLIVE_DEEP),
+]
+
+
+def icon(style, bg, fg):
+    """أيقونة صغيرة (لزاوية الفيديو وصورة الحساب): الكلمة داخل مربع مدوّر."""
+    mask, bbox = build(style)
+    word = fit(mask, bbox, (600, 600), 0.78)
+    img = Image.new("RGBA", (600, 600))
+    box = Image.new("L", (600, 600))
+    ImageDraw.Draw(box).rounded_rectangle((0, 0, 599, 599), radius=140, fill=255)
+    img.paste(rgb(bg) + (255,), (0, 0), box)
+    img.paste(rgb(fg) + (255,), ((600 - word.width) // 2, (600 - word.height) // 2), word)
     return img
 
 
-def logo_4():
-    """الأيقونة: حرف السين، أسنانه 3 أسافين مسمارية وقوسه تحت الخط، علامة صغيرة لزاوية الفيديو."""
-    img = Image.new("RGBA", (S, S))
-    d = ImageDraw.Draw(img)
-    d.rounded_rectangle((100, 100, 900, 900), radius=200, fill=LAPIS_DEEP)
-    base = 540
-    for x in (720, 590, 460):  # أسنان السين: أسافين نازلة لخط الكتابة
-        wedge(d, x, base - 250, 250, 90, 104, GOLD)
-    d.line((330, base, 745, base), fill=GOLD, width=46)                     # خط الكتابة
-    d.arc((180, base - 150, 480, base + 150), start=0, end=180, fill=GOLD, width=46)  # قوس السين
-    text_center(d, (500, 800), WORD, font("Alexandria-Variable.ttf", 90), CREAM)
-    return img
-
-
-def logo_5():
-    """الاستكان والحكاية: استكان چاي عراقي، وبخاره خط مسماري، والكلمة تحته."""
-    img = Image.new("RGBA", (S, S), rgb(CREAM) + (255,))
-    d = ImageDraw.Draw(img)
-    # الاستكان: خصر ضيق
-    cx, top, bot = 500, 330, 620
-    d.polygon([(cx - 120, top), (cx + 120, top), (cx + 70, (top + bot) / 2), (cx + 105, bot),
-               (cx - 105, bot), (cx - 70, (top + bot) / 2)], fill=rgb(CLAY_DARK))
-    d.polygon([(cx - 108, top + 30), (cx + 108, top + 30), (cx + 64, (top + bot) / 2 + 4),
-               (cx + 94, bot - 12), (cx - 94, bot - 12), (cx - 64, (top + bot) / 2 + 4)], fill="#B3261E")
-    d.ellipse((cx - 170, bot - 10, cx + 170, bot + 40), fill=GOLD)              # الصحن
-    for i, ch in enumerate(CUNEI_WORD):                                       # البخار مسماري
-        text_center(d, (cx - 60 + i * 60, 250 - i * 55), ch, load_font(CUNEI, 70), LAPIS)
-    text_center(d, (500, 790), WORD, font("ArefRuqaa-Bold.ttf", 200), INK)
-    return img
-
-
-def logo_6():
-    """فقاعة الحچي: فقاعة كلام بشكل لوح طين، والكلمة جوه."""
-    img = Image.new("RGBA", (S, S))
-    size = (S, S)
-    bubble = Image.new("L", size)
-    bd = ImageDraw.Draw(bubble)
-    bd.rounded_rectangle((120, 220, 880, 700), radius=150, fill=255)
-    bd.polygon([(300, 660), (420, 690), (230, 830)], fill=255)
-    clay = clay_texture(size, CLAY, 11)
-    clay = carve(clay, word_mask(WORD, font("Lalezar-Regular.ttf", 240), size, (500, 440)), 10)
-    clay = carve(clay, word_mask(CUNEI_WORD, load_font(CUNEI, 80), size, (500, 600)), 5)
-    shadow = ImageChops.offset(bubble, 12, 20).filter(ImageFilter.GaussianBlur(16))
-    img.paste((0, 0, 0, 130), (0, 0), shadow)
-    img.paste(clay, (0, 0), bubble)
-    return img
-
-
-def logo_7():
-    """بوابة عشتار: قوس بوابة لازوردي بطابوق، والكلمة ذهبية بالباب."""
-    img = Image.new("RGBA", (S, S))
-    gate = Image.new("L", (S, S))
-    gd = ImageDraw.Draw(gate)
-    gd.rectangle((150, 300, 850, 880), fill=255)
-    gd.pieslice((150, 120, 850, 480), 180, 360, fill=255)
-    wall = Image.new("RGBA", (S, S), rgb(LAPIS) + (255,))
-    wd = ImageDraw.Draw(wall)
-    for y in range(120, 880, 40):  # طابوق
-        off = 0 if (y // 40) % 2 else 35
-        for x in range(150 - 70 + off, 850, 70):
-            wd.rectangle((x, y, x + 66, y + 36), outline=LAPIS_DEEP, width=3)
-    img.paste(wall, (0, 0), gate)
-    d = ImageDraw.Draw(img)
-    d.rectangle((300, 470, 700, 880), fill=LAPIS_DEEP)                       # الباب
-    d.pieslice((300, 330, 700, 610), 180, 360, fill=LAPIS_DEEP)
-    for x in range(200, 820, 62):                                             # شريط أسافين ذهبية
-        wedge(d, x, 268, 34, 90, 22, GOLD)
-    text_center(d, (500, 640), WORD, font("Kufam-Variable.ttf", 120), GOLD)
-    text_center(d, (500, 780), CUNEI_WORD, load_font(CUNEI, 60), CREAM)
-    return img
-
-
-def logo_8():
-    """البسيط الحديث: الكلمة نظيفة، وتحتها 3 علامات مسمارية صغيرة مثل توقيع."""
-    img = Image.new("RGBA", (S, S))
-    d = ImageDraw.Draw(img)
-    text_center(d, (500, 450), WORD, font("Alexandria-Variable.ttf", 220), INK)
-    d.line((250, 600, 750, 600), fill=GOLD, width=6)
-    text_center(d, (500, 690), CUNEI_WORD, load_font(CUNEI, 90), GOLD)
-    return img
-
-
-LOGOS = [logo_1, logo_2, logo_3, logo_4, logo_5, logo_6, logo_7, logo_8]
-NAMES = ["اللوح الطيني", "أسافين بدل النقاط", "الختم الأسطواني", "أيقونة السين",
-         "الاستكان والحكاية", "فقاعة الحچي", "بوابة عشتار", "البسيط الحديث"]
-
-
-def contact_sheet(images):
-    tile, gap, cols = 460, 30, 4
+def sheet(images, names):
+    tile, gap, cols = 540, 26, 4
     rows = math.ceil(len(images) / cols)
-    W = cols * tile + (cols + 1) * gap
-    H = rows * (tile + 70) + gap + 90
-    sheet = Image.new("RGB", (W, H), (236, 230, 220))
-    d = ImageDraw.Draw(sheet)
-    text_center(d, (W / 2, 50), "تصاميم شعار سالوفة", font("Cairo-Black.ttf", 44), INK)
-    for i, im in enumerate(images):
+    Wd = cols * tile + (cols + 1) * gap
+    Ht = rows * (tile + 64) + gap + 96
+    out = Image.new("RGB", (Wd, Ht), rgb("#EDE6D8"))
+    d = ImageDraw.Draw(out)
+    f = load_font(FONTS / "Alexandria-Variable.ttf", 40)
+    t, kw = shape_word("سالوفة: الجولة الثانية")
+    d.text((Wd / 2, 52), t, font=f, fill=rgb(INK), anchor="mm", **kw)
+    fs = load_font(FONTS / "Alexandria-Variable.ttf", 24)
+    for i, (im, name) in enumerate(zip(images, names)):
         x = gap + (i % cols) * (tile + gap)
-        y = 90 + (i // cols) * (tile + 70)
-        checker = Image.new("RGB", (tile, tile), (250, 247, 240))
-        checker.paste(im.resize((tile, tile), Image.LANCZOS), (0, 0), im.resize((tile, tile), Image.LANCZOS))
-        sheet.paste(checker, (x, y))
-        text_center(d, (x + tile / 2, y + tile + 32), f"{i + 1}. {NAMES[i]}", font("Cairo-Black.ttf", 28), INK)
-    return sheet
+        y = 96 + (i // cols) * (tile + 64)
+        out.paste(im.convert("RGB").resize((tile, tile), Image.LANCZOS), (x, y))
+        t, kw = shape_word(f"{i + 1}. {name}")
+        d.text((x + tile / 2, y + tile + 30), t, font=fs, fill=rgb(INK), anchor="mm", **kw)
+    return out
 
 
 def main(argv=None) -> int:
@@ -288,12 +253,21 @@ def main(argv=None) -> int:
     args = ap.parse_args(argv)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    images = []
-    for i, fn in enumerate(LOGOS, 1):
-        im = fn()
-        im.save(out / f"logo-{i}.png")
-        images.append(im)
-    contact_sheet(images).save(out / "sheet.jpg", quality=92)
+    for old in out.glob("*"):
+        old.unlink()
+    images, names = [], []
+    for i, (name, style, bg, fg, shadow, tag, cunei, accent) in enumerate(DESIGNS, 1):
+        mask, bbox = build(style)
+        word = fit(mask, bbox, (1200, 1200))
+        img = compose(word, bg, fg, shadow=shadow, tagline=tag, cunei=cunei, accent=accent)
+        img.save(out / f"logo-{i}.png")
+        # نسخة شفافة للفيديو (الحبر بس)
+        clear = Image.new("RGBA", word.size, rgb(fg) + (0,))
+        clear.putalpha(word)
+        clear.save(out / f"logo-{i}-clear.png")
+        images.append(img)
+        names.append(name)
+    sheet(images, names).save(out / "sheet.jpg", quality=92)
     print(f"✓ انرسمت {len(images)} تصاميم بـ {out}")
     return 0
 
