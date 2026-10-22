@@ -21,7 +21,7 @@ LEAD, LEAD_LIGHT, INDIGO, PETROL, BONE = "#6E7378", "#C9CCCF", "#2A3478", "#134A
 TAGLINE = "سوالف من الزمن الأول"
 
 
-def layers(fa_dot="round", ta_dots="round"):
+def layers(fa_dot="round", ta_dots="round", keep_stroke=False):
     """يرجع (قناع الحروف، قناع النقاط) منفصلين، حتى النقاط تاخذ لون ثاني إذا ردنا.
 
     fa_dot: round | wedge | istikan.  ta_dots: round | wedge.
@@ -35,13 +35,16 @@ def layers(fa_dot="round", ta_dots="round"):
     tops = [body.crop((int(tx + k), 0, int(tx + k) + 1, body.height)).getbbox() for k in range(-30, 31, 6)]
     bowl_top = min(t[1] for t in tops if t)
     # التاء بهذا الخط إلها خط طويل فوق (يخليها تشبه اللام): نشيله، ونخلي القوس بس
-    ImageDraw.Draw(body).rectangle((0, 0, int(fx - fw * 2), int(bowl_top) - 2), fill=0)
+    if not keep_stroke:
+        ImageDraw.Draw(body).rectangle((0, 0, int(fx - fw * 2), int(bowl_top) - 2), fill=0)
     body = wedge_heads(body, 1.2)
     dots = Image.new("L", body.size)
     d = ImageDraw.Draw(dots)
     # نقطتين التاء: جنب بعض، فوق قوس التاء بمسافة واضحة
     ty = bowl_top - r * 1.9
     gap = r * 1.25
+    if keep_stroke:  # الخط الطويل يمين النقاط: نزحزحهن لليسار حتى ما يلمسنه
+        tx -= gap * 0.9
     for x, y, style in ((fx, fy, fa_dot), (tx - gap, ty, ta_dots), (tx + gap, ty, ta_dots)):
         if style == "wedge":
             wedge(d, x, y - r * 0.9, r * 2.3)
