@@ -103,3 +103,7 @@ ravsau/youtuber-skills             skills/youtube-comments-to-ideas
 
 # اكتشاف وتثبيت سكيلزات جديدة (أولوية: يُستخدم قبل ما نگول "ما عدنا أداة") — مفحوص: ملف تعليمات بس
 vercel-labs/skills  skills/find-skills
+
+# من مخزن skills.sh (أُضيفت 22 تشرين الأول 2026 بعد الفحص)
+higgsfield-ai/skills           higgsfield-youtube-thumbnail
+coreyhaines31/marketingskills  skills/marketing-psychology

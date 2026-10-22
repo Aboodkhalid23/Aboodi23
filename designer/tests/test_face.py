@@ -28,6 +28,7 @@ class FaceTest(unittest.TestCase):
             with self.assertRaisesRegex(face.FaceUnavailable, "OpenCV"):
                 face.detect_faces(Image.new("RGB", (64, 36)))
 
+    @unittest.skipUnless(HAS_CV, "OpenCV ماكو")
     def test_model_error_becomes_face_unavailable(self):
         with mock.patch.object(face.models, "ensure_model", side_effect=face.models.ModelError("ما گدرت أنزّل")):
             with self.assertRaisesRegex(face.FaceUnavailable, "ما گدرت أنزّل"):
