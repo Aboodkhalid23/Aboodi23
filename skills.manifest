@@ -100,3 +100,6 @@ OthmanAdi/humanizer-semitic        skills/humanizer-ar-msa
 deeployCO/youtube-seo-skills       youtube-seo-competitor
 # أفكار حلقات من تعليقات الجمهور (لمكتشف المواضيع)
 ravsau/youtuber-skills             skills/youtube-comments-to-ideas
+
+# اكتشاف وتثبيت سكيلزات جديدة (أولوية: يُستخدم قبل ما نگول "ما عدنا أداة") — مفحوص: ملف تعليمات بس
+vercel-labs/skills  skills/find-skills
