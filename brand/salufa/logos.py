@@ -143,7 +143,7 @@ def kashida_word(fname, px, n=7):
     return text_mask("سالوف" + "ـ" * n + "ة", font(fname, px))
 
 
-def wedge_heads(m):
+def wedge_heads(m, scale=0.75):
     """روس الخطوط الطويلة (الألف واللام) تصير أسافين."""
     bbox = m.getbbox()
     top = bbox[1]
@@ -164,7 +164,7 @@ def wedge_heads(m):
     d = ImageDraw.Draw(m)
     for g in groups:
         cx, sw = (g[0] + g[-1]) / 2, g[-1] - g[0] + 1
-        s = sw * 0.75
+        s = sw * scale
         d.polygon([(cx - s, top - s * 0.25), (cx + s, top - s * 0.25), (cx, top + s * 1.2)], fill=255)
     return m
 
