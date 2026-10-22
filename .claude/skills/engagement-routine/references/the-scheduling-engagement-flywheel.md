@@ -46,7 +46,7 @@ WoopSocial is the **scheduling/publishing** half of the flywheel — that's its 
 - It has **no comment/DM/inbox surface** — it **cannot pull comments or DMs, or post replies.** The
   **human engages in-app** via the platform's native notifications/inbox; the **agent drafts** the
   replies/comments (→ `reply-and-comment-writer`).
-- It has **no analytics** — it can't tell you a "best time" or show engagement data. Use the platform's
+- It can't tell you a "best time." Post analytics are lifetime counts, not a timing model. Comment depth still comes from the platform's
   native insights and your own eyes (see goals in `triage-priorities-and-goals.md`).
 
 So: **WoopSocial buys you the time to engage; it doesn't do the engaging.** Never imply it manages the

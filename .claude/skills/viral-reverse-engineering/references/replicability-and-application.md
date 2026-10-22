@@ -58,7 +58,7 @@ numbers filed off, you've crossed the line — go back to mechanism + your own m
 
 ## Measure honestly
 
-Judging "what's viral/top" needs numbers. WoopSocial has **no analytics surface** — so work from
-**visible/native signals** (public view/like/share/comment counts, the user's own platform insights,
-or pasted data). Be clear about that scope, and apply small-sample caution to a single own-post
+Judging "what's viral/top" needs numbers. Other people's posts are **visible/native signals**
+(public counts or pasted data). Your own posts on the covered platforms can use **WoopSocial post
+analytics**. Be clear about that scope, and apply small-sample caution to a single own-post
 ("overperformed" ≠ a proven repeatable win).

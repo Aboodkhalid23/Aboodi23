@@ -57,6 +57,7 @@ Sends don't work alone:
 
 ## Measure it honestly
 
-Track **sends per reach** (and saves, watch time) in **native Instagram Insights** — WoopSocial has
-no analytics surface. Use it to learn *which* content people share, then make more of that. Don't
+Track **saves and shares** in **WoopSocial post analytics**, and **sends per reach** plus **watch
+time** in **native Instagram Insights** (WoopSocial doesn't store those). Use it to learn *which*
+content people share, then make more of that. Don't
 present any of this as data WoopSocial supplies.

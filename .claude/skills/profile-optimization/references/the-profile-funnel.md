@@ -59,6 +59,6 @@ and why someone should care — in the audience's words.
 
 This is **advisory**: it produces the spec (handle, name, bio, link, CTA, pinned/highlights, banner
 brief). **WoopSocial publishes posts and media — it does not edit profile fields**, so the user
-applies the spec in each app. And WoopSocial has no analytics surface, so judge results via **native
-profile insights** (profile visits, link taps, follows) the user pulls, or the qualitative 3-second
+applies the spec in each app. Profile visits, link taps, and follows are not in WoopSocial post
+analytics — judge those via **native profile insights** or the qualitative 3-second
 test — never claimed performance data.

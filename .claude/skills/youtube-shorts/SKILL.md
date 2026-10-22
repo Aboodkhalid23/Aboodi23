@@ -50,8 +50,8 @@ Drafts here; **does not publish directly**. Full wiring: `references/publishing-
   `…/mcp`, REST `…/v1`). YouTube supported; **validate before publish; no edit (delete + recreate)**.
 - **Assets:** B-roll via **veo-3** / **ai-video**; captions & long→Short clipping via
   **captions-and-clipping**.
-- **Analytics:** WoopSocial has **none** — read Viewed vs Swiped Away, avg % viewed, and engaged
-  views **natively in YouTube Studio**.
+- **Analytics:** views, likes, and comments are in WoopSocial post analytics. Viewed vs Swiped
+  Away, avg % viewed, and engaged views are read **in YouTube Studio**.
 
 ## Honest scope (never violate)
 - Drafts scripts; the human films/edits; WoopSocial schedules; Studio measures.
