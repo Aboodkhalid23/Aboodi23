@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # تسريع تابلت سامسونگ (Galaxy Tab A9) من الماك بوك، بدون روت وبدون ما يتغير النظام.
-# الاستخدام (بالطرفية Terminal مال الماك):
+# الربط بالواي فاي (تصحيح الأخطاء اللاسلكي). الاستخدام (بالطرفية Terminal مال الماك):
 #   bash <(curl -fsSL https://raw.githubusercontent.com/aboodkhalid23/aboodi23/claude/github-skills-development-3orc6c/scripts/tablet-speedup.sh)
 # للتراجع ورجوع كل البرامج المحذوفة:
 #   bash <(curl -fsSL ...نفس الرابط...) --restore
@@ -68,60 +68,80 @@ install_adb() {
   [ -x "$ADB" ] || die "الأداة ما اشتغلت."
 }
 
-connect() {
-  echo
-  echo "شلون تريد تربط التابلت؟"
-  echo "  1) بالكيبل (أسهل)"
-  echo "  2) بالواي فاي"
-  printf "اكتب 1 أو 2 واضغط إنتر: "
-  read -r way
+# يدوّر على التابلت بالشبكة ويطلع العنوان والمنفذ وحده (نوع الخدمة: إقران أو ربط)
+find_service() {
+  "$ADB" mdns services 2>/dev/null | awk -v t="$1" '$0 ~ t {print $NF; exit}'
+}
 
-  if [ "$way" = "2" ]; then
-    echo
-    echo "بالتابلت: الإعدادات ← خيارات المطوّر ← تصحيح الأخطاء اللاسلكي ← شغّله"
-    echo "بعدين اضغط: إقران الجهاز برمز الإقران"
-    echo "راح تطلعلك نافذة بيها: رمز من 6 أرقام، وتحته عنوان مثل 192.168.1.64:37123"
-    echo "الأرقام الي بعد النقطتين (:) هي المنفذ."
-    echo
-    printf "اكتب العنوان (مثل 192.168.1.64): "
-    read -r ip
-    printf "اكتب المنفذ الي بنافذة الإقران (الأرقام بعد النقطتين): "
-    read -r pair_port
-    printf "اكتب رمز الإقران (الـ6 أرقام): "
-    read -r code
-    "$ADB" pair "$ip:$pair_port" "$code" | grep -q -i success \
-      || die "الإقران فشل. النافذة تتغير كل شوية، فافتح نافذة إقران جديدة وعيد بالأرقام الجديدة."
-    echo "  ✔ انقرن."
-    echo
-    echo "سدّ نافذة الإقران. بشاشة تصحيح الأخطاء اللاسلكي تحت (عنوان IP والمنفذ) أكو منفذ ثاني."
-    printf "اكتب هذا المنفذ الثاني: "
-    read -r conn_port
-    conn_addr="$ip:$conn_port"
-    "$ADB" connect "$conn_addr" >/dev/null
-  else
-    echo
-    echo "بالتابلت: الإعدادات ← خيارات المطوّر ← شغّل (تصحيح أخطاء USB)"
-    echo "اربط الكيبل، وإذا طلعلك سؤال على التابلت اضغط (سماح)."
-    printf "اضغط إنتر لما تربط..."
-    read -r _
+is_connected() {
+  "$ADB" devices | awk 'NR>1 && $2=="device"' | grep -q .
+}
+
+connect() {
+  "$ADB" start-server >/dev/null 2>&1
+  if is_connected; then return; fi
+
+  # إذا انقرن قبل، يرتبط وحده بدون رمز
+  addr=$(find_service _adb-tls-connect)
+  if [ -n "$addr" ]; then
+    "$ADB" connect "$addr" >/dev/null 2>&1
+    sleep 2
+    if is_connected; then return; fi
   fi
 
-  say "دا أنتظر التابلت..."
-  for _ in $(seq 1 30); do
-    state=$("$ADB" get-state 2>&1)
-    case "$state" in
-      device) return ;;
-      *unauthorized*) echo "  وافق على رسالة السماح الي طلعت على التابلت..." ;;
-    esac
+  echo
+  echo "الماك والتابلت لازم يكونون على نفس الواي فاي."
+  echo
+  echo "بالتابلت:"
+  echo "  1. الإعدادات ← خيارات المطوّر ← (تصحيح الأخطاء اللاسلكي) ← فعّل الزر"
+  echo "  2. اضغط على الكلمة نفسها (تصحيح الأخطاء اللاسلكي) حتى تنفتح صفحتها"
+  echo "  3. اضغط (إقران الجهاز برمز الإقران) وخلّي النافذة مفتوحة"
+  echo
+  printf "اضغط إنتر لما تنفتح نافذة الرمز..."
+  read -r _
+
+  say "دا أدوّر على التابلت بالشبكة..."
+  pair_addr=""
+  for _ in $(seq 1 15); do
+    pair_addr=$(find_service _adb-tls-pairing)
+    [ -n "$pair_addr" ] && break
     sleep 2
   done
-  echo
-  echo "ما لگيت التابلت. جرّب هذني:"
-  echo "  - تأكد (الحظر التلقائي) مطفي، و(تصحيح أخطاء USB) مفعّل."
-  echo "  - بعض الكيبلات بس تشحن وما تنقل. جرّب كيبل ثاني (الأصلي أحسن)."
-  echo "  - لما تربط الكيبل، انزل شريط الإشعارات بالتابلت واختار (نقل الملفات)."
-  echo "  - إذا ما طلعت رسالة السماح: خيارات المطوّر ← (إلغاء تراخيص تصحيح أخطاء USB)، وافصل الكيبل وربطه."
-  exit 1
+
+  if [ -n "$pair_addr" ]; then
+    echo "  ✔ لگيته: $pair_addr"
+  else
+    echo "  ما لگيته وحدي. اكتبه إنت:"
+    printf "  اكتب السطر الي تحت الرمز بالنافذة كامل، مثل 192.168.1.64:41235 : "
+    read -r pair_addr
+    case "$pair_addr" in
+      *:*) ;;
+      *) die "لازم يكون وياه نقطتين ورقم بعدها. إذا ما تشوفه، صوّر النافذة ودزها." ;;
+    esac
+  fi
+
+  printf "اكتب رمز الإقران الي بالنافذة (6 أرقام): "
+  read -r code
+  "$ADB" pair "$pair_addr" "$code" 2>&1 | grep -qi success \
+    || die "الإقران فشل. سدّ النافذة وافتحها من جديد (الرمز يتغير)، وعيد."
+  echo "  ✔ انقرن."
+
+  say "دا أربط..."
+  for _ in $(seq 1 10); do
+    if is_connected; then return; fi
+    addr=$(find_service _adb-tls-connect)
+    [ -n "$addr" ] && "$ADB" connect "$addr" >/dev/null 2>&1
+    sleep 2
+  done
+
+  # آخر حل: يكتبه بإيده
+  ip=${pair_addr%:*}
+  echo "  سدّ نافذة الإقران. بصفحة تصحيح الأخطاء اللاسلكي، تحت (عنوان IP والمنفذ)، أكو رقم بعد النقطتين."
+  printf "  اكتب هذا الرقم بس: "
+  read -r port
+  "$ADB" connect "$ip:$port" >/dev/null 2>&1
+  sleep 2
+  is_connected || die "ما گدرت أربط. تأكد الماك والتابلت على نفس الواي فاي وعيد."
 }
 
 restore() {
@@ -153,6 +173,17 @@ speedup() {
     fi
   done
   echo "  عدد المحذوفة: $count"
+
+  say "دا أنظّف الملفات المؤقتة لكل البرامج..."
+  "$ADB" shell pm trim-caches 999G >/dev/null 2>&1
+  "$ADB" shell sm fstrim >/dev/null 2>&1
+
+  say "دا أطفي تأثيرات الضبابية حتى تخف الشاشة..."
+  "$ADB" shell settings put global disable_window_blurs 1
+  "$ADB" shell settings put global accessibility_reduce_transparency 1
+
+  say "دا أسد البرامج الشغالة بالخلفية..."
+  "$ADB" shell am kill-all >/dev/null 2>&1
 
   say "دا أرتّب البرامج حتى تفتح أسرع (ياخذ من 5 لـ 15 دقيقة، لا تفصل التابلت)..."
   "$ADB" shell cmd package bg-dexopt-job >/dev/null 2>&1
