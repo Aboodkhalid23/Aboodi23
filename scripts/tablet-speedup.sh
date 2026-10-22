@@ -4,6 +4,8 @@
 #   bash <(curl -fsSL https://raw.githubusercontent.com/aboodkhalid23/aboodi23/claude/github-skills-development-3orc6c/scripts/tablet-speedup.sh)
 # للتراجع ورجوع كل البرامج المحذوفة:
 #   bash <(curl -fsSL ...نفس الرابط...) --restore
+# للوضع الخفيف (بدون حركات + واجهة خفيفة بدل واجهة سامسونگ):
+#   bash <(curl -fsSL ...نفس الرابط...) --lite
 
 set -u
 
@@ -144,6 +146,27 @@ connect() {
   is_connected || die "ما گدرت أربط. تأكد الماك والتابلت على نفس الواي فاي وعيد."
 }
 
+# يحط واجهة Lawnchair الخفيفة (مفتوحة المصدر) بدل واجهة سامسونگ، ويخليها الافتراضية
+install_light_home() {
+  say "دا أنزّل واجهة خفيفة اسمها Lawnchair..."
+  url=$(curl -fsSL "https://api.github.com/repos/LawnchairLauncher/lawnchair/releases?per_page=5" \
+    | grep -o '"browser_download_url": *"[^"]*\.apk"' | head -1 | sed 's/.*"\(http[^"]*\)"/\1/')
+  if [ -z "$url" ] || ! curl -fsSL -o "$TOOLS_DIR/home.apk" "$url"; then
+    echo "  ما گدرت أنزّلها. نزّل من سوگ پلي برنامج (Niagara Launcher) وخلّيه الافتراضي."
+    return
+  fi
+  "$ADB" install -r "$TOOLS_DIR/home.apk" >/dev/null 2>&1 || { echo "  التثبيت فشل."; return; }
+  rm -f "$TOOLS_DIR/home.apk"
+  pkg=$("$ADB" shell pm list packages | tr -d '\r' | grep -i lawnchair | head -1 | cut -d: -f2)
+  comp=$("$ADB" shell cmd package resolve-activity --brief -a android.intent.action.MAIN \
+    -c android.intent.category.HOME "$pkg" | tr -d '\r' | tail -1)
+  if [ -n "$pkg" ] && "$ADB" shell cmd package set-home-activity "$comp" >/dev/null 2>&1; then
+    echo "  ✔ صارت الواجهة الافتراضية."
+  else
+    echo "  انثبتت. لما يشتغل التابلت اضغط زر البيت واختار Lawnchair ثم (دائماً)."
+  fi
+}
+
 restore() {
   [ -f "$REMOVED_LIST" ] || die "ماكو برامج محذوفة حتى أرجعها."
   say "دا أرجّع البرامج المحذوفة..."
@@ -188,6 +211,14 @@ speedup() {
   say "دا أرتّب البرامج حتى تفتح أسرع (ياخذ من 5 لـ 15 دقيقة، لا تفصل التابلت)..."
   "$ADB" shell cmd package bg-dexopt-job >/dev/null 2>&1
 
+  if [ "$LITE" = 1 ]; then
+    say "الوضع الخفيف: دا أطفي الحركات كلياً..."
+    for k in window_animation_scale transition_animation_scale animator_duration_scale; do
+      "$ADB" shell settings put global "$k" 0
+    done
+    install_light_home
+  fi
+
   say "دا أعيد تشغيل التابلت..."
   "$ADB" reboot
 
@@ -195,8 +226,11 @@ speedup() {
   echo "✔ خلص التسريع."
   echo "شغلة أخيرة بإيدك: الإعدادات ← العناية بالجهاز ← الذاكرة ← (RAM Plus) طفّيه."
   echo "إذا تريد ترجع البرامج المحذوفة: شغّل نفس الأمر وضيف بآخره --restore"
+  echo "وإذا تريد ترجع واجهة سامسونگ: الإعدادات ← التطبيقات ← اختيار التطبيقات الافتراضية ← تطبيق الشاشة الرئيسية ← One UI Home"
 }
 
 install_adb
 connect
+LITE=0
+[ "${1:-}" = "--lite" ] && LITE=1
 if [ "${1:-}" = "--restore" ]; then restore; else speedup; fi
