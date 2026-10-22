@@ -8,12 +8,15 @@
 #   bash <(curl -fsSL ...نفس الرابط...) --lite
 # لوضع قارئ النصوص (تلقين التصوير): الخفيف + حذف أكثر + شاشة ما تطفي + عدم الإزعاج:
 #   bash <(curl -fsSL ...نفس الرابط...) --prompter
+# للسرعة القصوى (قارئ النصوص + حذف خدمات الخلفية + منع البرامج الباقية من الشغل بالخلفية):
+#   bash <(curl -fsSL ...نفس الرابط...) --extreme
 
 set -u
 
 TOOLS_DIR="$HOME/android-tools"
 ADB="$TOOLS_DIR/platform-tools/adb"
 REMOVED_LIST="$TOOLS_DIR/removed.txt"
+BG_LIST="$TOOLS_DIR/background-blocked.txt"
 
 # برامج تثگّل الجهاز وحذفها آمن. الحذف "للمستخدم" بس، فيرجع بأمر --restore.
 BLOAT="
@@ -84,6 +87,42 @@ com.google.android.apps.messaging
 com.google.android.apps.googleassistant
 com.google.android.googlequicksearchbox
 "
+
+# خدمات خلفية تاكل رام وبطارية، حذفها آمن ويرجع بأمر --restore
+EXTREME_BLOAT="
+com.samsung.android.rubin.app
+com.samsung.android.smartsuggestions
+com.samsung.android.app.galaxyfinder
+com.samsung.android.bixby.service
+com.samsung.android.app.settings.bixby
+com.samsung.android.intellivoiceservice
+com.samsung.android.svoiceime
+com.samsung.android.mateagent
+com.samsung.android.app.omcagent
+com.samsung.android.beaconmanager
+com.samsung.android.scloud
+com.samsung.android.dqagent
+com.samsung.android.samsungpass
+com.samsung.android.samsungpassautofill
+com.samsung.android.ipsgeofence
+com.samsung.android.easysetup
+com.samsung.android.privateshare
+com.samsung.android.dynamiclock
+com.samsung.android.allshare.service.mediashare
+com.samsung.android.app.simplesharing
+com.samsung.android.smartface
+com.sec.android.easyMover
+com.sec.android.app.chromecustomizations
+com.sec.android.gallery3d
+com.google.android.apps.turbo
+com.google.android.apps.wellbeing
+com.google.android.projection.gearhead
+com.google.android.apps.subscriptions.red
+com.google.ar.core
+"
+
+# برامج لازم تبقى تشتغل بالخلفية (ما ينمنعن)
+KEEP_BG="com.android.chrome com.google.android.apps.docs com.google.android.gm com.android.vending app.lawnchair"
 
 say() { printf '\n▶ %s\n' "$1"; }
 die() { printf '\n✖ %s\n' "$1"; exit 1; }
@@ -198,12 +237,19 @@ install_light_home() {
 }
 
 restore() {
-  [ -f "$REMOVED_LIST" ] || die "ماكو برامج محذوفة حتى أرجعها."
+  [ -f "$REMOVED_LIST" ] || [ -f "$BG_LIST" ] || die "ماكو شي محذوف حتى أرجعه."
+  touch "$REMOVED_LIST"
   say "دا أرجّع البرامج المحذوفة..."
   while read -r pkg; do
-    [ -n "$pkg" ] && "$ADB" shell cmd package install-existing "$pkg" >/dev/null 2>&1 && echo "  رجع: $pkg"
+    [ -n "$pkg" ] && "$ADB" shell cmd package install-existing "$pkg" </dev/null >/dev/null 2>&1 && echo "  رجع: $pkg"
   done < "$REMOVED_LIST"
   rm -f "$REMOVED_LIST"
+  if [ -f "$BG_LIST" ]; then
+    while read -r pkg; do
+      [ -n "$pkg" ] && "$ADB" shell cmd appops set "$pkg" RUN_ANY_IN_BACKGROUND allow </dev/null >/dev/null 2>&1
+    done < "$BG_LIST"
+    rm -f "$BG_LIST"
+  fi
   say "خلص. كل البرامج رجعت."
 }
 
@@ -251,6 +297,23 @@ speedup() {
     "$ADB" shell settings put global ble_scan_always_enabled 0
   fi
 
+  if [ "$EXTREME" = 1 ]; then
+    say "السرعة القصوى: دا أحذف خدمات الخلفية الي تاكل الرام..."
+    for pkg in $EXTREME_BLOAT; do
+      if "$ADB" shell pm uninstall -k --user 0 "$pkg" 2>/dev/null | grep -q Success; then
+        echo "$pkg" >> "$REMOVED_LIST"
+        echo "  انحذف: $pkg"
+      fi
+    done
+
+    say "دا أمنع البرامج الباقية من الشغل بالخلفية..."
+    for pkg in $("$ADB" shell pm list packages -3 | tr -d '\r' | cut -d: -f2); do
+      case " $KEEP_BG " in *" $pkg "*) continue ;; esac
+      "$ADB" shell cmd appops set "$pkg" RUN_ANY_IN_BACKGROUND ignore >/dev/null 2>&1 \
+        && echo "$pkg" >> "$BG_LIST" && echo "  انمنع بالخلفية: $pkg"
+    done
+  fi
+
   say "دا أنظّف الملفات المؤقتة لكل البرامج..."
   "$ADB" shell pm trim-caches 999G >/dev/null 2>&1
   "$ADB" shell sm fstrim >/dev/null 2>&1
@@ -291,6 +354,8 @@ install_adb
 connect
 LITE=0
 PROMPTER=0
+EXTREME=0
 [ "${1:-}" = "--lite" ] && LITE=1
 [ "${1:-}" = "--prompter" ] && LITE=1 && PROMPTER=1
+[ "${1:-}" = "--extreme" ] && LITE=1 && PROMPTER=1 && EXTREME=1
 if [ "${1:-}" = "--restore" ]; then restore; else speedup; fi
