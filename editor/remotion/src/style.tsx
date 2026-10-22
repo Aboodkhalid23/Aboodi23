@@ -9,6 +9,8 @@ export type BaseProps = {style: StyleProps; durationSec: number};
 export type CustomProps = BaseProps;
 
 export const FPS = 30;
+/** Text printed on a physical paper card (newspaper, tag, tape): always dark, whatever the world's colours. */
+export const PAPER_INK = '#1C1B19';
 export const ease = Easing.bezier(0.22, 1, 0.36, 1);
 
 /** Hold rendering until the Arabic font is ready, so frame 0 is never in a fallback font. */

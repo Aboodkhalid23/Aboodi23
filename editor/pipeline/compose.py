@@ -30,6 +30,8 @@ VIDEO_EXT = (".mp4", ".mov", ".webm")
 # Sounds inside special beats (seconds from the beat start); must match FaceFx.tsx / EntityCard.tsx.
 FX_CUES = {"fx:subscribe": [(0.0, "whoosh"), (1.6, "click"), (1.75, "ding")],
            "fx:tv": [(0.0, "whoosh"), (0.5, "switch")],
+           "fx:search": [(0.0, "whoosh"), (0.65, "click"), (0.95, "click"), (1.25, "click"), (1.65, "pop"),
+                         (3.0, "click"), (3.15, "ding")],
            "entity": [(0.0, "paper"), (0.45, "pop")]}
 SFX_GAIN = 0.4       # effects sit ~8 dB under the voice
 MUSIC_LUFS = -24     # music bed between sentences; the voice ducks it further

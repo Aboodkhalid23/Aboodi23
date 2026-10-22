@@ -49,7 +49,7 @@ export const KineticType: React.FC<BaseProps & {text: string; times?: number[]; 
   const push = interpolate(f, [0, durationSec * fps], [1, 1.05], {easing: ease});
   const ink = style.palette.ink;
   return (
-    <AbsoluteFill style={{background: '#E9E6E0', overflow: 'hidden'}}>
+    <AbsoluteFill style={{background: style.palette.paper, overflow: 'hidden'}}>
       <AbsoluteFill style={{backgroundImage: `url(${staticFile('paper-noise.png')})`, backgroundSize: '512px 512px', mixBlendMode: 'multiply',
         opacity: 0.5, backgroundPosition: boil(f)}} />
       <AbsoluteFill style={{alignItems: 'center', justifyContent: 'center', transform: `scale(${push})`}}>
@@ -89,7 +89,7 @@ export const BandScene: React.FC<Inner> = ({style, src, caption, title, f, fps, 
   const [ink, seed] = useDraw(Math.round(0.9 * fps), `band${word}`);
   const ar = isAr(caption);
   return (
-    <AbsoluteFill style={{background: '#F4F1EA', overflow: 'hidden'}}>
+    <AbsoluteFill style={{background: style.palette.paper, overflow: 'hidden'}}>
       <div style={{position: 'absolute', left: 0, right: 0, top: 0, height: '56%', overflow: 'hidden',
         transform: `translateY(${(1 - drop) * -60}px)`, boxShadow: '0 12px 24px rgba(0,0,0,.18)'}}>
         <Img src={staticFile(src)} style={{width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 35%', transform: `scale(${kb})`}} />

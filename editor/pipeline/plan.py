@@ -15,7 +15,7 @@ CUSTOM_DIR = Path(__file__).resolve().parent.parent / "remotion" / "src" / "cust
 PAPER_TYPES = ("newspaper", "document", "photo", "quote", "number", "page")   # face_paper: papers landing beside him
 PAPER_LAYOUTS = ("overlay", "desk", "behind")   # overlay: he stays full frame; desk: his picture becomes a taped
 # photo on paper; behind: full frame and the papers slip out from behind his shoulder (precise matting, landscape footage)
-FX_TYPES = ("subscribe", "tv", "none")        # face_fx wrappers; "none" = stickers only
+FX_TYPES = ("subscribe", "tv", "none", "search")   # search: his channel searched on a YouTube page, real videos        # face_fx wrappers; "none" = stickers only
 TRANSITIONS = ("zoom", "flash", "whip", "glitch", "tear", "burn", "dive", "pan", "shutter", "slide")
 STICKERS = ("stamp", "arrow", "burst", "tape", "circle", "scribble_circle", "scribble_arrow", "scribble_underline",
             "censor", "name_tag", "emoji", "icon", "bubble", "label")   # emoji: Noto animated; icon: Iconify; bubble: comic speech; label: red box typing
@@ -157,6 +157,8 @@ def validate_plan(plan: EditPlan, clean_duration: float, entities: set[str] | No
                 errs.append(f"beat {i}: '{b.entity}' مو موجود بـ entities.json")
         if b.kind == "face_paper":
             errs += [f"beat {i}: {e}" for e in paper_errors(b)]
+        if b.kind == "face_fx" and b.fx == "search" and b.duration < 4.5 - TOL:
+            errs.append(f"beat {i}: face_fx search يحتاج 4.5 ثانية أقل شي (بحث، نتايج، اشتراك)")
         if b.kind == "face_fx" and b.fx not in FX_TYPES:
             errs.append(f"beat {i}: face_fx لازم fx من {', '.join(FX_TYPES)}")
         for s in b.stickers or []:

@@ -36,6 +36,8 @@ PHRASE_PAUSE = 0.7     # s: a longer pause starts a new phrase (unit for retakes
 MAX_GAP = 0.45         # s: a longer pause inside the talk is cut out
 PAD = 0.12             # s: breath kept on each side of a cut (when the sound allows)
 RETAKE_WINDOW = 30.0   # s: how far ahead a restart can come
+PUNCH = 1.08          # after a removed retake the picture steps in (or back out) by this much: the jump reads as a
+JUMP = 0.9            # deliberate second camera, not a hole. JUMP: seconds removed that make a cut "visible"
 SPAN_LIMIT = 12.0      # s: at most this much between a failed attempt and its restart is dropped with it
 FILLERS = {"اه", "ااه", "اااه", "ام", "امم", "اممم", "مم", "ممم", "اا", "ااا", "اهه", "همم", "هممم", "اوم", "ايي"}
 # Short words Iraqis double on purpose ("لا لا"، "اي اي"، "يا يا"): emphasis, not a stutter — said without a gap
@@ -359,6 +361,22 @@ def _report(ep: Episode, removed, duration: float, kept_secs: float, missed=()) 
     (ep.work / "cut_report.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def _punch_filter(ep: Episode) -> str:
+    """Crop PUNCH× around his face and scale back: the closer framing used after a removed retake."""
+    info = probe(ep.source)
+    w, h = info.width, info.height
+    try:   # on the raw footage (face.json is made later, from the cleaned video)
+        from .face import locate_face
+        f = locate_face(ep.source, info.duration) or {}
+    except Exception:   # no face found: centre, a little above the middle (where faces sit)
+        f = {}
+    cx, cy = f.get("cx", 0.5), f.get("cy", 0.42)
+    cw, ch = round(w / PUNCH / 2) * 2, round(h / PUNCH / 2) * 2
+    x = min(max(0, round(cx * w - cw / 2)), w - cw)
+    y = min(max(0, round(cy * h - ch / 2)), h - ch)
+    return f",crop={cw}:{ch}:{x}:{y},scale={w}:{h}:flags=lanczos,setsar=1"
+
+
 def clean(ep: Episode, script: Path | None = None) -> float:
     words = load_words(ep.transcript)
     duration = probe(ep.source).duration
@@ -383,11 +401,16 @@ def clean(ep: Episode, script: Path | None = None) -> float:
     _report(ep, removed, duration, kept_secs, unheard(env, words))
 
     parts, labels = [], []
+    zoomed, punch = False, _punch_filter(ep)
     for i, (s, e) in enumerate(segs):
         f0, f1 = round(s * fps), round(e * fps)
         d = (f1 - f0) / fps
-        fade = min(0.008, d / 4)
-        parts.append(f"[0:v]trim=start_frame={f0}:end_frame={f1},setpts=PTS-STARTPTS[v{i}];"
+        jump = i > 0 and s - segs[i - 1][1] >= JUMP
+        if jump:   # a retake was removed here: change the framing so the cut is felt as a camera change
+            zoomed = not zoomed
+        # the sound: a slightly longer fade on the big cuts, so no click and no sudden breath
+        fade = min(0.025 if jump or (i + 1 < len(segs) and segs[i + 1][0] - e >= JUMP) else 0.012, d / 4)
+        parts.append(f"[0:v]trim=start_frame={f0}:end_frame={f1},setpts=PTS-STARTPTS{punch if zoomed else ''}[v{i}];"
                      f"[0:a]atrim=start_sample={f0 * spf}:end_sample={f1 * spf},asetpts=PTS-STARTPTS,"
                      f"afade=t=in:d={fade:.4f},afade=t=out:st={d - fade:.4f}:d={fade:.4f}[a{i}];")
         labels.append(f"[v{i}][a{i}]")

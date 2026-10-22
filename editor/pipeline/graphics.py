@@ -183,6 +183,10 @@ def face_fx_job(beat: Beat, style: Style, face: Path, out: Path, fps: int, chann
              "src": _publish(bundle, face), "fx": beat.fx or "none",
              "stickers": prepare_stickers(beat.stickers or [], lambda f: _publish(bundle, f)),
              "channel": ch}
+    if beat.fx == "search":   # his real latest videos on the YouTube-style page
+        from .channel import channel_videos
+        props["videos"] = [{**v, "thumb": _publish(bundle, Path(v["thumb"])) if v.get("thumb") else None}
+                           for v in channel_videos(Path(out).parent)]
     return RenderJob("face-fx", props, Path(out), scale)
 
 

@@ -7,11 +7,19 @@ from pathlib import Path
 
 from .paths import Episode
 
-# The owner's rule (2026-10-04): natural colours only — correct the footage, never restyle it.
-# No film looks, no colour casts, no vignette, no grain.
+# The owner's rule (2026-10-04): natural colours — correct the footage. Updated 2026-10-22: a light cinematic
+# touch is wanted by default ("cinema"); still no heavy filters or old-film colours.
 # "natural" = measured correction + a light polish (a touch of clarity and of colour in dull areas).
 # "none"    = the footage untouched.
-LOOKS = {"natural": "", "none": ""}
+# "cinema"  = (owner, 2026-10-22: "لمسة خفيفة من الأفلام، كأنك داخل فيلم نتفليكس") the correction, then a gentle
+#             film look: soft S-curve with lifted blacks and rolled-off highlights, shadows a touch cooler and
+#             highlights a touch warmer (skin in the mids stays itself), a whisper of saturation, light
+#             denoise instead of sharpening (smooth, not plastic), fine moving grain and a faint vignette.
+LOOKS = {"natural": "", "none": "",
+         "cinema": ("curves=master='0/0.025 0.25/0.215 0.5/0.5 0.75/0.785 1/0.975',"
+                    "colorbalance=rs=-0.025:bs=0.035:rh=0.035:gh=0.008:bh=-0.03,"
+                    "eq=saturation=1.05,hqdn3d=1.2:1.2:2.5:2.5,noise=alls=3:allf=t,vignette=angle=0.42")}
+CINEMA_POLISH = "vibrance=intensity=0.08,unsharp=5:5:0.15:5:5:0"   # softer than POLISH: the film look is smooth
 POLISH = "vibrance=intensity=0.12,unsharp=5:5:0.35:5:5:0"   # vibrance lifts dull colours, leaves skin
 SAMPLES = 12
 
@@ -81,5 +89,8 @@ def grade_filter(correct: str, look: str | None) -> str:
         raise KeyError(f"'{look}' مو موجود. الموجود: {', '.join(LOOKS)}")
     if look == "none":
         return ""
-    parts = [p for p in (correct, POLISH) if p]
+    if look == "cinema":
+        parts = [p for p in (correct, CINEMA_POLISH, LOOKS["cinema"]) if p]
+    else:
+        parts = [p for p in (correct, POLISH) if p]
     return "," + ",".join(parts)

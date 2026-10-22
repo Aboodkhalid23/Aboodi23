@@ -7,6 +7,7 @@ the sound, where did the time go. Writes edit/work/review.txt (Arabic, with a sc
 first) and adds one line of numbers to editor/learning/history.jsonl, so later episodes can be compared and the
 editor can see whether it is getting better."""
 import json
+import os
 import re
 import subprocess
 from collections import Counter
@@ -16,7 +17,7 @@ from pathlib import Path
 from .paths import Episode
 from .plan import FACE_KINDS, HOOK_SECONDS, load_plan
 
-HISTORY = Path(__file__).resolve().parents[1] / "learning" / "history.jsonl"
+HISTORY = Path(os.environ.get("ABOODI_HISTORY") or Path(__file__).resolve().parents[1] / "learning" / "history.jsonl")
 PLAIN_FACE = {"face", "face_zoom_in", "face_zoom_out", "face_framed", "face_punch"}
 DULL_FACE = 8.0      # his face alone for longer than this: viewers start to drift
 DULL_STILL = 6.2     # one scene with nothing new for longer than this

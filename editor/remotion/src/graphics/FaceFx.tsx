@@ -1,11 +1,12 @@
 import React from 'react';
-import {AbsoluteFill, Img, interpolate, OffthreadVideo, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
+import {AbsoluteFill, Img, interpolate, OffthreadVideo, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {ease, StyleProps, useFonts} from '../style';
 import {SCENE_SPOTS, Sticker, Stickers} from './Stickers';
 
 type Channel = {name: string; handle?: string; avatar?: string | null};
-type Props = {style: StyleProps; durationSec: number; fps?: number; src: string; fx: 'subscribe' | 'tv' | 'none';
-  stickers?: Sticker[]; channel: Channel};
+type Video = {title: string; thumb?: string | null; views?: number};
+type Props = {style: StyleProps; durationSec: number; fps?: number; src: string; fx: 'subscribe' | 'tv' | 'none' | 'search';
+  stickers?: Sticker[]; channel: Channel; videos?: Video[]};
 
 const W = 1920, H = 1080;
 type Rect = [number, number, number, number];
@@ -124,13 +125,94 @@ const TV: React.FC<Props> = ({src}) => {
   );
 };
 
+
+// "search": his channel is searched on a YouTube-style page, his real latest videos show, the cursor subscribes.
+// Timings (s) must match compose.py FX_CUES["fx:search"]: whoosh 0, typing 0.6–1.5, results 1.65, click 3.0, bell 3.15.
+const TYPE_A = 0.6, TYPE_B = 1.5, RESULTS = 1.65, S_CLICK = 3.0, S_BELL = 3.15;
+const arNum = (n: number) => n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1).replace('.0', '')} ألف` : `${n}`;
+
+const Search: React.FC<Props> = ({src, channel, videos = []}) => {
+  const f = useCurrentFrame();
+  const {fps, durationInFrames} = useVideoConfig();
+  const pip: Rect = [60, H - 60 - 300, 533, 300];
+  const {rect, m} = useShrink(pip);
+  const page = Math.min(1, m * 1.6);
+  const q = channel.name.split('•')[0].trim() || channel.name;
+  const typed = q.slice(0, Math.round(interpolate(f, [TYPE_A * fps, TYPE_B * fps], [0, q.length], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})));
+  const caret = f < TYPE_B * fps + 10 && Math.floor(f / 8) % 2 === 0;
+  const res = (k: number) => spring({frame: f - Math.round((RESULTS + k * 0.08) * fps), fps, config: {damping: 16, stiffness: 150}});
+  const btn = {x: 265, y: 335};   // the subscribe button (left: the page is right-to-left)
+  const move = interpolate(f, [2.2 * fps, 2.9 * fps], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: ease});
+  const cx = interpolate(move, [0, 1], [900, btn.x]), cy = interpolate(move, [0, 1], [820, btn.y]);
+  const press = interpolate(f, [S_CLICK * fps - 3, S_CLICK * fps, S_CLICK * fps + 4], [0, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const subscribed = f >= S_CLICK * fps + 1;
+  const ring = f >= S_BELL * fps ? Math.sin((f - S_BELL * fps) / fps * 40) * 22 * Math.max(0, 1 - (f - S_BELL * fps) / (0.7 * fps)) : 0;
+  const cursorOut = interpolate(f, [S_CLICK * fps + 18, S_CLICK * fps + 30], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const shown = videos.slice(0, 4);
+  const end = interpolate(f, [durationInFrames - 0.45 * fps, durationInFrames - 1], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  return (
+    <AbsoluteFill style={{background: '#0F0F0F'}}>
+      <AbsoluteFill style={{opacity: page * end, direction: 'rtl', fontFamily: 'Tajawal', color: '#F1F1F1'}}>
+        {/* top bar */}
+        <div style={{position: 'absolute', top: 0, left: 0, right: 0, height: 120, display: 'flex', alignItems: 'center', padding: '0 60px', gap: 40}}>
+          <svg width={92} height={64} viewBox="0 0 46 32"><rect width="46" height="32" rx="9" fill="#FF0033" /><path d="M18 9.5v13l11-6.5Z" fill="#fff" /></svg>
+          <div style={{flex: 1, display: 'flex', justifyContent: 'center'}}>
+            <div style={{width: 980, height: 78, borderRadius: 40, border: '2px solid #303030', background: '#121212', display: 'flex',
+              alignItems: 'center', padding: '0 34px', gap: 20, direction: 'ltr'}}>
+              <svg width={40} height={40} viewBox="0 0 24 24"><path fill="#AAA" d="M15.5 14h-.8l-.3-.3A6.5 6.5 0 1 0 14 15.5l.3.3v.8l5 5 1.5-1.5Zm-6 0a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9Z" /></svg>
+              <span style={{fontFamily: 'Inter, Tajawal', fontSize: 40}}>{typed}{caret ? '|' : ''}</span>
+            </div>
+          </div>
+          <div style={{width: 92}} />
+        </div>
+        {/* channel result */}
+        <div style={{position: 'absolute', top: 200, right: 120, left: 120, height: 260, display: 'flex', alignItems: 'center', gap: 60,
+          opacity: res(0), transform: `translateY(${(1 - res(0)) * 40}px)`, borderBottom: '2px solid #272727'}}>
+          <div style={{width: 210, height: 210, borderRadius: '50%', overflow: 'hidden', background: '#C4382E', flexShrink: 0, display: 'flex',
+            alignItems: 'center', justifyContent: 'center', fontSize: 90, fontWeight: 900}}>
+            {channel.avatar ? <Img src={staticFile(channel.avatar)} style={{width: '100%', height: '100%', objectFit: 'cover'}} /> : channel.name.slice(0, 1)}
+          </div>
+          <div style={{display: 'flex', flexDirection: 'column', gap: 10, flex: 1}}>
+            <span style={{fontWeight: 700, fontSize: 56}}>{channel.name}</span>
+            {channel.handle && <span style={{fontFamily: 'Inter', fontSize: 34, color: '#AAAAAA', direction: 'ltr', textAlign: 'right'}}>{channel.handle}</span>}
+            <span style={{fontSize: 32, color: '#AAAAAA'}}>قصص الشركات والأسرار والأسئلة الغريبة</span>
+          </div>
+          <div style={{display: 'flex', alignItems: 'center', gap: 14, padding: '0 48px', height: 92, borderRadius: 46,
+            background: subscribed ? '#272727' : '#F1F1F1', color: subscribed ? '#F1F1F1' : '#0F0F0F', fontWeight: 700, fontSize: 44,
+            transform: `scale(${1 - press * 0.08})`}}>
+            {subscribed && <Bell size={44} color="#F1F1F1" angle={ring} />}
+            {subscribed ? 'مشترك' : 'اشتراك'}
+          </div>
+        </div>
+        {/* his latest videos */}
+        <div style={{position: 'absolute', top: 500, right: 120, left: 640, display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '34px 40px'}}>
+          {shown.map((v, k) => (
+            <div key={k} style={{display: 'flex', gap: 22, opacity: res(k + 1), transform: `translateY(${(1 - res(k + 1)) * 30}px)`}}>
+              <div style={{width: 300, height: 169, borderRadius: 14, overflow: 'hidden', background: '#272727', flexShrink: 0}}>
+                {v.thumb && <Img src={staticFile(v.thumb)} style={{width: '100%', height: '100%', objectFit: 'cover'}} />}
+              </div>
+              <div style={{display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0}}>
+                <span style={{fontWeight: 700, fontSize: 30, lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical' as const}}>{v.title}</span>
+                {v.views != null && <span style={{fontSize: 26, color: '#AAAAAA'}}>{arNum(v.views)} مشاهدة</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+      </AbsoluteFill>
+      <Footage src={src} rect={rect} radius={24 * m} shadow />
+      {move > 0 && <div style={{opacity: cursorOut * end}}><Cursor x={cx} y={cy} press={press} /></div>}
+    </AbsoluteFill>
+  );
+};
+
 /** The presenter keeps talking while his shot is wrapped in a YouTube scene; stickers sit on top. */
 export const FaceFx: React.FC<Props> = (props) => {
   useFonts();
   const {fx, src, stickers = [], style} = props;
   return (
     <AbsoluteFill style={{background: '#000'}}>
-      {fx === 'subscribe' ? <Subscribe {...props} /> : fx === 'tv' ? <TV {...props} /> : <Footage src={src} rect={FULL} radius={0} />}
+      {fx === 'subscribe' ? <Subscribe {...props} /> : fx === 'search' ? <Search {...props} /> : fx === 'tv' ? <TV {...props} /> : <Footage src={src} rect={FULL} radius={0} />}
       <Stickers stickers={stickers} style={style} W={W} H={H} spots={fx === 'none' ? undefined : SCENE_SPOTS} />
     </AbsoluteFill>
   );

@@ -80,9 +80,11 @@ def st_avatar_register(ep, a):
 
 
 def st_music_free(ep, a):
-    from .free_audio import free_music
-    missing = free_music(ep, _final_duration(ep))
-    print("🎵 موسيقى مجانية: " + ("كلها تمام" if not missing else f"ما لگيت لـ {', '.join(missing)} (تبقى بدون أو بآرتلست بموافقته)"))
+    """Music the channel owns: composed by code for each cue (composer.py) — no rights, no Content ID, no cost.
+    The free-licence catalogue (free_audio.free_music) stays as a fallback the plan can ask for with "search"."""
+    from .composer import compose_music
+    done = compose_music(ep, _final_duration(ep))
+    print("🎵 موسيقى خاصة بالقناة: " + ("، ".join(done) if done else "كلها موجودة"))
 
 
 def st_music_fetch(ep, a):

@@ -1,6 +1,6 @@
 import React from 'react';
 import {AbsoluteFill, Img, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
-import {appear, Background, BaseProps, ease} from '../style';
+import {appear, Background, BaseProps, ease, PAPER_INK} from '../style';
 
 type Props = BaseProps & {name: string; role?: string; entityKind?: 'person' | 'company'; src?: string};
 
@@ -55,7 +55,7 @@ export const EntityCard: React.FC<Props> = ({style, durationSec, name, role = ''
           {role && (
             <div style={{position: 'relative', opacity: roleIn, transform: `translateX(${(1 - roleIn) * -30}px) rotate(-1deg)`}}>
               <div style={{background: '#FBF8F1', clipPath: TORN, padding: '18px 44px', fontFamily: 'Tajawal', fontWeight: 700,
-                fontSize: 54, color: style.palette.ink, boxShadow: '0 8px 18px rgba(0,0,0,.2)'}}>{role}</div>
+                fontSize: 54, color: PAPER_INK, boxShadow: '0 8px 18px rgba(0,0,0,.2)'}}>{role}</div>
               <div style={{position: 'absolute', bottom: -14, right: 20, height: 8, background: red, borderRadius: 4,
                 width: `${interpolate(underline, [0, 1], [0, 88], {easing: ease})}%`}} />
             </div>

@@ -56,10 +56,11 @@ def moments(plan: EditPlan, words_file: Path | None) -> list[str]:
         if i is None:
             continue
         b = plan.beats[i]
-        near = any(x.kind == "face_fx" and x.fx == "subscribe" and abs(x.start - b.start) < 8 for x in plan.beats)
+        near = any(x.kind == "face_fx" and x.fx in ("subscribe", "search") and abs(x.start - b.start) < 8 for x in plan.beats)
         if not near and b.kind in FACE_KINDS and b.kind != "face_cutout" and b.end - b.start >= 3.5 and lonely(i):
-            b.kind, b.fx, b.stickers = "face_fx", "subscribe", None
-            fixes.append(f"beat {i}: يطلب الاشتراك هنا، حطيت القناة وزر الاشتراك")
+            # long enough: his channel is searched on a YouTube page with his real videos; else the short card
+            b.kind, b.fx, b.stickers = "face_fx", "search" if b.end - b.start >= 4.5 else "subscribe", None
+            fixes.append(f"beat {i}: يطلب الاشتراك هنا، حطيت " + ("صفحة البحث بقناته وفيديواته" if b.fx == "search" else "القناة وزر الاشتراك"))
     for a, _z, _t in find_asides(split_phrases(words)):
         i = beat_at(a)
         if i is None:

@@ -52,6 +52,6 @@ def test_subscribe_and_aside_moments_get_their_look(tmp_path):
                                                  Beat(13, 28, "body", "graphic"), Beat(28, 33, "body", "face_zoom_in"),
                                                  Beat(33, 40, "body", "image")])
     fixes = moments(plan, f)
-    assert plan.beats[1].kind == "face_fx" and plan.beats[1].fx == "subscribe"
+    assert plan.beats[1].kind == "face_fx" and plan.beats[1].fx == "search"   # 5 s: room for the search page
     assert plan.beats[3].fx == "none" and plan.beats[3].stickers[0]["text"] == "على الهامش"
     assert len(fixes) == 2

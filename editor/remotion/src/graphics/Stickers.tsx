@@ -1,6 +1,6 @@
 import React from 'react';
 import {interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
-import {ease, StyleProps} from '../style';
+import {ease, PAPER_INK, StyleProps} from '../style';
 import {Img, staticFile} from 'remotion';
 import {Lottie, LottieAnimationData} from '@remotion/lottie';
 import {ScribbleCircle, ScribbleLine, useDraw} from './HandDrawn';
@@ -101,7 +101,7 @@ const One: React.FC<{s: Sticker; style: StyleProps; W: number; H: number; spots:
     }
     case 'name_tag':
       return <div style={{position: 'absolute', left: x, top: y, transform: `translate(-50%, -50%) rotate(${s.rotate ?? -3}deg) scale(${k})`,
-        background: '#FBF8F1', padding: '10px 30px', fontFamily: 'Aref Ruqaa Ink', fontWeight: 700, fontSize: 54, color: style.palette.ink,
+        background: '#FBF8F1', padding: '10px 30px', fontFamily: 'Aref Ruqaa Ink', fontWeight: 700, fontSize: 54, color: PAPER_INK,
         direction: 'rtl', whiteSpace: 'nowrap', boxShadow: '0 8px 16px rgba(0,0,0,.3)', borderBottom: `6px solid ${red}`}}>{s.text}</div>;
     case 'stamp':
       return (
@@ -120,7 +120,7 @@ const One: React.FC<{s: Sticker; style: StyleProps; W: number; H: number; spots:
     case 'tape':
       return (
         <div style={{...base, background: 'rgba(242,235,221,.94)', padding: '16px 60px', fontFamily: 'Tajawal', fontWeight: 900,
-          fontSize: 64, color: style.palette.ink, boxShadow: '0 8px 16px rgba(0,0,0,.25)',
+          fontSize: 64, color: PAPER_INK, boxShadow: '0 8px 16px rgba(0,0,0,.25)',
           clipPath: 'polygon(2% 0, 98% 4%, 100% 50%, 97% 100%, 3% 96%, 0 50%)'}}>{s.text}</div>
       );
     case 'circle':
