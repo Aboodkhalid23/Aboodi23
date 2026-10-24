@@ -19,6 +19,21 @@ LOOKS = {"natural": "", "none": "",
          "cinema": ("curves=master='0/0.025 0.25/0.215 0.5/0.5 0.75/0.785 1/0.975',"
                     "colorbalance=rs=-0.025:bs=0.035:rh=0.035:gh=0.008:bh=-0.03,"
                     "eq=saturation=1.05,hqdn3d=1.2:1.2:2.5:2.5,noise=alls=3:allf=t,vignette=angle=0.42")}
+# Looks the owner picks in the Mac app before preparing a clip (owner, 2026-10-24: "نفس الاستوديو"). All made of
+# ffmpeg filters (ours, free). "log" and "log-vivid" turn flat/log footage (DJI D-Log, phone "Log") into normal
+# contrast and colour; the film looks are gentle and keep skin believable.
+LOOKS.update({
+    "log": "curves=master='0/0 0.18/0.12 0.5/0.52 0.82/0.9 1/1',eq=saturation=1.35:contrast=1.06",
+    "log-vivid": "curves=master='0/0 0.2/0.1 0.5/0.53 0.8/0.93 1/1',eq=saturation=1.6:contrast=1.08,vibrance=intensity=0.15",
+    "warm-film": ("curves=r='0/0.02 0.5/0.53 1/0.98':g='0/0.01 0.5/0.5 1/0.96':b='0/0.06 0.5/0.46 1/0.9',"
+                  "eq=saturation=0.95,noise=alls=4:allf=t"),
+    "soft-film": "curves=master='0/0.04 0.5/0.5 1/0.95',colorbalance=gs=0.03:bs=0.02:rh=0.02,eq=saturation=0.88",
+    "teal-orange": "colorbalance=rs=-0.08:bs=0.08:rh=0.08:bh=-0.06,eq=saturation=1.1:contrast=1.05",
+    "mono": "hue=s=0,curves=master='0/0.03 0.5/0.5 1/0.97'",
+})
+LOOK_NAMES = {"none": "بدون تحويل", "natural": "طبيعي", "cinema": "سينما", "log": "لوگ ← عادي",
+              "log-vivid": "لوگ ← حيوي", "warm-film": "فلم دافي", "soft-film": "فلم ناعم",
+              "teal-orange": "سينما أكشن", "mono": "أبيض وأسود"}
 CINEMA_POLISH = "vibrance=intensity=0.08,unsharp=5:5:0.15:5:5:0"   # softer than POLISH: the film look is smooth
 POLISH = "vibrance=intensity=0.12,unsharp=5:5:0.35:5:5:0"   # vibrance lifts dull colours, leaves skin
 SAMPLES = 12
@@ -82,15 +97,39 @@ def analyse(ep: Episode) -> dict:
     return d
 
 
-def grade_filter(correct: str, look: str | None) -> str:
-    """',<filters>' to append to a chain (empty when there is nothing to do)."""
+def adjust_filter(temp: float = 0, tint: float = 0, exposure: float = 0) -> str:
+    """The app's balance sliders: temperature and tint (−100…100) and exposure (stops, −2…2)."""
+    parts = []
+    if temp or tint:
+        rm, bm, gm = temp * 0.0015, -temp * 0.0015, -tint * 0.0015
+        parts.append(f"colorbalance=rm={rm:.4f}:gm={gm:.4f}:bm={bm:.4f}")
+    if exposure:
+        parts.append(f"exposure=exposure={exposure:.3f}")
+    return ",".join(parts)
+
+
+def look_settings(ep: Episode) -> dict:
+    """What the owner chose in the app (edit/look.json): {"look", "lut", "temp", "tint", "exposure"}; {} if none."""
+    f = ep.edit / "look.json"
+    try:
+        return json.loads(f.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def grade_filter(correct: str, look: str | None, extra: str = "", lut: str | None = None) -> str:
+    """',<filters>' to append to a chain (empty when there is nothing to do). `extra`: the app's balance sliders;
+    `lut`: a .cube file the owner added (replaces the look)."""
     look = look or "natural"
     if look not in LOOKS:
         raise KeyError(f"'{look}' مو موجود. الموجود: {', '.join(LOOKS)}")
-    if look == "none":
-        return ""
-    if look == "cinema":
+    if lut:
+        parts = [p for p in (correct, "lut3d=file='" + str(lut).replace("'", "") + "'") if p]
+    elif look == "none":
+        parts = []
+    elif look == "cinema":
         parts = [p for p in (correct, CINEMA_POLISH, LOOKS["cinema"]) if p]
     else:
-        parts = [p for p in (correct, POLISH) if p]
-    return "," + ",".join(parts)
+        parts = [p for p in (correct, POLISH, LOOKS[look]) if p]
+    parts += [extra] if extra else []
+    return "," + ",".join(parts) if parts else ""

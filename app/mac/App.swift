@@ -218,21 +218,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         switch cmd {
         case "setup": runSetup()
         case "restart": restartServer()
-        case "pick": pickVideo()
+        case "pick": pickFile(types: body["types"] as? [String])
         case "open":
             if let s = body["url"] as? String, let u = URL(string: s) { NSWorkspace.shared.open(u) }
         default: break
         }
     }
 
-    func pickVideo() {
+    func pickFile(types: [String]?) {
         let panel = NSOpenPanel()
         panel.canChooseFiles = true
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = false
-        panel.message = "اختار الفيديو الخام"
+        let lut = types?.contains("cube") ?? false
+        panel.message = lut ? "اختار ملف الألوان" : "اختار الفيديو الخام"
         panel.prompt = "اختار"
-        panel.allowedFileTypes = ["mp4", "mov", "m4v", "mkv", "MP4", "MOV"]
+        panel.allowedFileTypes = types ?? ["mp4", "mov", "m4v", "mkv", "MP4", "MOV"]
         panel.beginSheetModal(for: window) { result in
             if result == .OK, let url = panel.url { self.js("onPicked(\(self.quoted(url.path)))") }
         }

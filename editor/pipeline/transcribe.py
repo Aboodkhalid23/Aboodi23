@@ -54,10 +54,16 @@ def transcribe(ep: Episode, model_name: str = WHISPER_MODEL, model=None) -> list
         initial_prompt=IRAQI_PROMPT, hotwords=hotwords(ep), beam_size=5,
         condition_on_previous_text=False,  # long talks: stops Whisper repeating / inventing lines
     )
-    words = [
-        Word(w.word.strip(), float(w.start), float(w.end), float(getattr(w, "probability", 1.0) or 1.0))
-        for seg in segments for w in (seg.words or []) if w.word.strip()
-    ]
+    total = probe(ep.source).duration or 1.0
+    show = os.environ.get("ABOODI_PROGRESS")   # the Mac app shows how far the transcription is ("@@ 41")
+    words, last = [], -1
+    for seg in segments:
+        words += [Word(w.word.strip(), float(w.start), float(w.end), float(getattr(w, "probability", 1.0) or 1.0))
+                  for w in (seg.words or []) if w.word.strip()]
+        pct = min(99, int(100 * getattr(seg, "end", 0) / total))
+        if show and pct > last:
+            print(f"@@ {pct}", flush=True)
+            last = pct
     if not words:
         raise MediaError("الصوت فارغ أو مو واضح")
     save_words(words, ep.transcript)

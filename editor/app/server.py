@@ -40,10 +40,16 @@ UPDATE_EXIT = 75          # the app window restarts the server when it exits wit
 ANSI = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
 
 STEPS = {"all": ["prep", "plan", "render", "suite"], "from-plan": ["plan", "render", "suite"],
-         "from-render": ["render", "suite"], "prep": ["prep"], "plan": ["plan"], "render": ["render"],
-         "suite": ["suite"], "requests": ["requests", "render", "suite"], "preview": ["preview"]}
+         "from-render": ["render", "suite"], "prep": ["prep"], "plan": ["plan", "images"], "render": ["render"],
+         "suite": ["suite"], "requests": ["requests", "render"], "preview": ["preview"],
+         # the studio's steps (one screen each)
+         "prepare": ["fetch", "transcribe"], "cut": ["cut"], "sentences": ["sentences"], "captions": ["captions"],
+         "images": ["images"], "build": ["preview"], "final": ["render"], "assist": ["assist"],
+         "auto": ["fetch", "transcribe", "cut", "plan", "images", "render"]}
 STEP_NAMES = {"prep": "التجهيز", "plan": "خطة المونتير", "render": "النسخة الكاملة", "preview": "المعاينة",
-              "suite": "غرفة المونتاج", "requests": "طلباتك"}
+              "suite": "غرفة المونتاج", "requests": "ملاحظاتك", "fetch": "تجهيز الفيديو", "transcribe": "تفريغ الكلام",
+              "cut": "قص المقطع", "sentences": "المساعد يراجع الجمل", "captions": "المساعد يراجع الكابشن",
+              "images": "الصور", "assist": "المساعد"}
 CLAUDE_TOOLS = ["Read", "Write", "Edit", "Glob", "Grep", "WebSearch", "WebFetch", "TodoWrite",
                 "Bash(python -m editor.pipeline:*)", "Bash(python3 -m editor.pipeline:*)",
                 "Bash(ffprobe:*)", "Bash(ffmpeg:*)", "Bash(ls:*)"]
@@ -89,7 +95,9 @@ def episode_state(d: Path) -> dict:
     names = e / "work" / "names_check.txt"
     return {
         "id": d.name, **_meta(d),
-        "done": {"prep": (e / "work" / "plan_input.txt").exists(), "plan": (e / "edit_plan.json").exists(),
+        "done": {"fetch": (e / "work" / "source.mp4").exists(), "transcribe": (e / "transcript.json").exists(),
+                 "cut": (e / "work" / "clean.mp4").exists() and (e / "work" / "plan_input.txt").exists(),
+                 "prep": (e / "work" / "plan_input.txt").exists(), "plan": (e / "edit_plan.json").exists(),
                  "preview": (e / "preview.mp4").exists(), "render": (e / "final.mp4").exists(),
                  "suite": (e / "work" / "suite" / "data.json").exists()},
         "score": score,
@@ -107,7 +115,7 @@ def list_episodes() -> list[dict]:
     return sorted(eps, key=lambda e: e.get("created", ""), reverse=True)
 
 
-def create_episode(name: str, source: str, script: str = "") -> dict:
+def create_episode(name: str, source: str, script: str = "", look: dict | None = None, lut_key: str = "") -> dict:
     if not name.strip():
         raise ValueError("اكتب اسم الحلقة")
     if not source.strip():
@@ -123,6 +131,15 @@ def create_episode(name: str, source: str, script: str = "") -> dict:
     _save_meta(d, {"name": name.strip(), "source": source.strip(), "created": datetime.now().isoformat(timespec="minutes")})
     if script.strip():
         (d / "04-script.md").write_text(script.strip() + "\n", encoding="utf-8")
+    if look:
+        from editor.pipeline.paths import Episode
+        from .studio import save_look
+        lut = HOME / "cache" / re.sub(r"[^0-9a-f]", "", lut_key) / "look.cube" if lut_key else None
+        if lut and lut.exists():
+            (d / "edit").mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(lut, d / "edit" / "look.cube")
+            look = {**look, "lut": True}
+        save_look(Episode(d), look)
     return episode_state(d)
 
 
@@ -184,11 +201,16 @@ class Job:
         self.ep, self.step, self.steps, self.lines = None, None, [], []
         self.running, self.ok, self.proc, self.stop_asked, self.need_login = False, None, None, False, False
         self.claude_failed = False
+        self.progress, self.message, self.started = None, "", 0.0
         self.lock = threading.Lock()
 
     def say(self, line: str) -> None:
         line = ANSI.sub("", line).rstrip()
         if not line.strip():
+            return
+        m = re.fullmatch(r"@@ (\d+)", line.strip())
+        if m:   # a stage telling how far it is (transcription: "@@ 41")
+            self.progress = int(m.group(1))
             return
         with self.lock:
             self.lines.append(line)
@@ -294,15 +316,38 @@ def _claude(prompt: str) -> int:
 
 PLAN_PROMPT = """انت المونتير الآلي لقناة صاحب القناة، وشغّال من داخل تطبيق المونتير على حاسبته. ماكو أحد يجاوبك هسة، فلا تسأل، قرر بنفسك.
 الحلقة بالمجلد: {ep}
-التجهيز (prep) خلص: السحب والتفريغ والقص والأسماء والصور. صاحب القناة شاف الخام ووافق.
-اتبع سكيل editor من الخطوة 5 لحد 11 (الفحص الذاتي)، ويه سكيل editor-mind:
+القص والتفريغ والأسماء خلصت (صاحب القناة راجع الجمل والكابشن بنفسه).
+اتبع سكيل editor من الخطوة 5 لحد 8، ويه سكيل editor-mind:
 - اقرا editor/LESSONS.md و"{ep}/edit/work/plan_input.txt".
 - إذا "{ep}/edit/work/names_check.txt" بيه أسماء، اعرفها من القصة، اكتب "{ep}/edit/names.json"، وعيد names وبعدها entities وbrief بـ python -m editor.pipeline.
 - اكتب "{ep}/edit/edit_plan.json"، وافحصه بـ python -m editor.pipeline validate "{ep}" لحد ما يطلع ✅.
-- المعاينة: python -m editor.pipeline render "{ep}" --preview (تاخذ دقايق، انتظرها). اقرا لوحات qa_sheet بعينك وصلّح الخطة لحد ما الناقد يطلع 85 أو أكثر.
-- لا تطلع النسخة الكاملة (التطبيق يطلعها بعدك).
+{extra}
+- لا تطلع معاينة ولا النسخة الكاملة (التطبيق يجيب الصور ويطلعها بعدك).
 - ممنوع تصرف فلوس أو رصيد: لا ذكاء اصطناعي مدفوع (هيگزفيلد، آرتلست). الحقيقي والمجاني بس.
-- كل رسائلك عربي عراقي بس. وبالآخر سطرين: شنو سويت، وشگد الدرجة."""
+- كل رسائلك عربي عراقي بس. وبالآخر سطر: شنو الفكرة البصرية للحلقة."""
+
+SENT_PROMPT = """انت مساعد المونتاج بتطبيق المونتير على حاسبة صاحب القناة. ماكو أحد يجاوبك هسة، فلا تسأل.
+بالملف "{file}" جمل الحلقة كلها: i رقم الجملة، s ثانيتها بالخام، text الكلام، keep هل القص الآلي يخليها، why ليش انحذفت.
+راجع اختيار القص الآلي: الإعادات والبدايات المتعثرة والجمل الناقصة تنحذف، وإذا جملة انعادت أكثر من مرة تبقى أحسن نسخة (عادة الأخيرة).
+المزحة والسالفة الجانبية والمعلومة الإضافية تبقى (قاعدة صاحب القناة). لا تحذف كلام مفيد.
+{message}
+اكتب "{out}" بهالشكل بس: {{"summary": "سطر عربي عراقي: شگد جملة اقترحت تنحذف وليش", "drop": [أرقام الجمل], "keep": [أرقام الجمل], "why": {{"رقم": "سبب قصير"}}}}.
+لا تعدّل أي ملف ثاني."""
+
+CAP_PROMPT = """انت مساعد المونتاج بتطبيق المونتير. ماكو أحد يجاوبك هسة، فلا تسأل.
+بالملف "{file}" كلام الحلقة بعد القص كلمة كلمة: i رقم الكلمة، t الكلمة، doubt إذا التفريغ مو متأكد منها. الكلام عراقي، والحلقة عن: {topic}.
+{context}
+صحّح بس الغلط الواضح: أسماء أشخاص وشركات وبلدان انكتبت غلط، وكلمة عراقية انكتبت فصحى (اكتبها مثل ما انگالت)، وكلمة ما إلها معنى بمكانها. لا تغيّر أسلوب كلامه.
+والكلمات الي مو متأكد منها، اسأله عنها بخيارات (لا تخمّن).
+{message}
+اكتب "{out}" بهالشكل بس: {{"summary": "سطر عربي: صححت كذا كلمة، وعندي كذا سؤال", "fixes": [{{"i": رقم, "old": "الكلمة", "new": "الصح", "why": "سبب قصير"}}], "questions": [{{"i": رقم, "q": "السؤال", "options": ["خيار", "خيار"]}}]}}.
+للتصحيح الي يشمل أكثر من كلمة، حط i أول كلمة وnew كل الكلام. لا تعدّل أي ملف ثاني."""
+
+ASSIST_PROMPT = """انت مساعد المونتاج بتطبيق المونتير على حاسبة صاحب القناة. ماكو أحد يجاوبك هسة غير هالرسالة، فلا تسأل.
+الحلقة: {ep}
+صاحب القناة يگول: «{message}»
+نفّذ طلبه بأحسن طريقة حسب سكيل editor (الخطة "{ep}/edit/edit_plan.json"، والفحص بـ python -m editor.pipeline validate). لا تطلع معاينة ولا نسخة كاملة. ممنوع صرف فلوس.
+بالآخر اكتب سطر أو سطرين بالعربي العراقي: شنو سويت."""
 
 REQ_PROMPT = """انت المونتير الآلي، وشغّال من داخل تطبيق المونتير على حاسبة صاحب القناة. ماكو أحد يجاوبك هسة، فلا تسأل.
 الحلقة: {ep}
@@ -356,6 +401,84 @@ def _requests_step(d: Path) -> int:
     return code
 
 
+def _pipe(stage: str, d: Path, *extra: str) -> int:
+    return _run([sys.executable, "-m", "editor.pipeline", stage, str(d), *extra])
+
+
+def _plan_extra(d: Path) -> str:
+    """The owner's idea, his chosen look and sound, and his notes on the old plan's cards, for the plan prompt."""
+    lines = []
+    idea = d / "edit" / "idea.txt"
+    if idea.exists() and idea.read_text(encoding="utf-8").strip():
+        lines.append("- فكرة صاحب القناة للحلقة (التزم بيها): «" + idea.read_text(encoding="utf-8").strip() + "»")
+    sf = d / "edit" / "style.txt"
+    if sf.exists() and sf.read_text(encoding="utf-8").strip():
+        lines.append(f"- الستايل: صاحب القناة اختار «{sf.read_text(encoding='utf-8').strip()}» (style.primary).")
+    if (d / "edit" / "look.json").exists():
+        lines.append('- الألوان اختارها صاحب القناة (edit/look.json): لا تحط "grade" بالخطة.')
+    try:
+        snd = json.loads((d / "edit" / "sound.json").read_text(encoding="utf-8"))
+        if snd.get("music") not in (None, "auto"):
+            lines.append(f"- الموسيقى: صاحب القناة اختار «{snd['music']}» (off = بلا موسيقى).")
+    except (OSError, ValueError):
+        pass
+    try:
+        old = json.loads((d / "edit" / "edit_plan.json").read_text(encoding="utf-8"))
+        notes = [f"  مشهد {i} ({b['start']:.1f}–{b['end']:.1f} ث): {b['note']}" for i, b in enumerate(old.get("beats", []))
+                 if b.get("note")]
+        if notes:
+            lines.append("- اكو خطة قديمة، وصاحب القناة كتب ملاحظات على مشاهدها؛ طبقها بالخطة الجديدة وامسح note:\n" + "\n".join(notes))
+    except (OSError, ValueError):
+        pass
+    if JOB.message:
+        lines.append(f"- وطلب هسة: «{JOB.message}»")
+    return "\n".join(lines)
+
+
+def _review_step(d: Path, kind: str) -> int:
+    """The assistant reads the sentences or the captions and writes its suggestions (the screen shows them)."""
+    from editor.pipeline.paths import Episode
+    from . import studio
+    ep = Episode(d)
+    app = d / "edit" / "work" / "app"
+    app.mkdir(parents=True, exist_ok=True)
+    out = app / f"{kind}_review.json"
+    out.unlink(missing_ok=True)
+    msg = f"وصاحب القناة يگول: «{JOB.message}»" if JOB.message else ""
+    if kind == "sentences":
+        data = studio.sentences(ep)
+        f = app / "sentences_in.json"
+        f.write_text(json.dumps([{k: x[k] for k in ("i", "s", "text", "keep", "why")} for x in data["items"]],
+                                ensure_ascii=False), encoding="utf-8")
+        code = _claude(SENT_PROMPT.format(file=f, out=out, message=msg))
+    else:
+        caps = studio.captions(ep)
+        f = app / "captions_in.json"
+        f.write_text(json.dumps([{"i": w["i"], "t": w["t"], **({"doubt": True} if w["doubt"] else {})}
+                                 for line in caps["lines"] for w in line], ensure_ascii=False), encoding="utf-8")
+        ctx = []
+        for name in ("04-script.md", "02-draft.md"):
+            if (d / name).exists():
+                ctx.append(f'سكربت الحلقة الي قراه: "{d / name}".')
+                break
+        if (d / "edit" / "entities.json").exists():
+            ctx.append(f'الأسماء المعروفة بالحلقة: "{d / "edit" / "entities.json"}".')
+        code = _claude(CAP_PROMPT.format(file=f, out=out, message=msg, topic=_meta(d).get("name", ""),
+                                         context="\n".join(ctx)))
+    if code == 0 and not out.exists():
+        JOB.say("❌ المساعد خلص بس ما كتب اقتراحاته")
+        return 1
+    if code == 0 and kind == "sentences":   # its choices go straight onto the list; he can still change any
+        rev = json.loads(out.read_text(encoding="utf-8"))
+        cur = {x["i"]: x["keep"] for x in studio.sentences(ep)["items"]}
+        cur.update({int(i): False for i in rev.get("drop", [])})
+        cur.update({int(i): True for i in rev.get("keep", [])})
+        studio.set_sentences(ep, cur)
+    if code == 0:
+        JOB.say("💡 " + json.loads(out.read_text(encoding="utf-8")).get("summary", "خلص"))
+    return code
+
+
 def run_job(ep_id: str, what: str) -> None:
     d = episode_dir(ep_id)
     meta = _meta(d)
@@ -367,10 +490,29 @@ def run_job(ep_id: str, what: str) -> None:
         JOB.step = step
         JOB.say(f"━━ {STEP_NAMES[step]} ━━")
         t0 = time.monotonic()
+        JOB.progress = None
         if step == "prep":
             code = _run([sys.executable, "-m", "editor.pipeline", "prep", str(d), "--source", meta.get("source", "")])
+        elif step == "fetch":
+            code = _pipe("fetch", d, "--source", meta.get("source", ""))
+        elif step == "transcribe":
+            os.environ["ABOODI_PROGRESS"] = "1"
+            code = _pipe("transcribe", d)
+        elif step == "cut":
+            code = 0
+            for stage in ("clean", "names", "entities", "brief"):
+                code = code or _pipe(stage, d)
+        elif step in ("sentences", "captions"):
+            code = _review_step(d, step)
+        elif step == "images":
+            code = _pipe("images", d)
+            if code:   # pictures are a nicety for the storyboard: a failed download never stops the episode
+                JOB.say("⚠️ بعض الصور ما نزلت، تنجاب وقت النسخة الكاملة")
+                code = 0
+        elif step == "assist":
+            code = _claude(ASSIST_PROMPT.format(ep=d, message=JOB.message or "راجع الخطة وحسّنها"))
         elif step == "plan":
-            code = _claude(PLAN_PROMPT.format(ep=d))
+            code = _claude(PLAN_PROMPT.format(ep=d, extra=_plan_extra(d)))
             if code == 0 and not (d / "edit" / "edit_plan.json").exists():
                 JOB.say("❌ كلود خلص بس ما كتب الخطة")
                 code = 1
@@ -397,7 +539,7 @@ def run_job(ep_id: str, what: str) -> None:
     JOB.ok, JOB.running = ok and not JOB.stop_asked, False
 
 
-def start_job(ep_id: str, what: str) -> None:
+def start_job(ep_id: str, what: str, message: str = "") -> None:
     episode_dir(ep_id)
     if what not in STEPS:
         raise ValueError("خطوة مو معروفة")
@@ -405,6 +547,7 @@ def start_job(ep_id: str, what: str) -> None:
         if JOB.running:
             raise RuntimeError("اكو شغل ماشي هسة. انتظره يخلص أو وگّفه")
         JOB.ep, JOB.step, JOB.lines, JOB.running, JOB.ok, JOB.stop_asked, JOB.need_login = ep_id, None, [], True, None, False, False
+        JOB.what, JOB.message, JOB.progress, JOB.started = what, message.strip(), None, time.time()
     threading.Thread(target=_guard, args=(ep_id, what), daemon=True).start()
 
 
@@ -465,6 +608,60 @@ def version() -> dict:
         return json.loads((HOME / "version.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return {}
+
+
+STYLE_NAMES = {"investigation": "لوحة تحقيق", "noir": "سينما الليل", "retro-collage": "كولاج ريترو", "vox": "ورق وقص ولزق"}
+
+
+def styles_list() -> list[dict]:
+    """The style library with Arabic names (the part of the summary before the dash)."""
+    from editor.pipeline.styles import _style_files, load_style
+    out = []
+    for f in _style_files():
+        st = load_style(f.stem)
+        name = STYLE_NAMES.get(f.stem) or re.split(r"\s+—\s+|\.|،", st.summary, maxsplit=1)[0].strip()[:30]
+        out.append({"id": f.stem, "name": name, "summary": st.summary})
+    return out
+
+
+# ---------- samples for the studio's colour and sound steps ----------
+
+def frame_with_look(ep, t: float, raw: bool = False) -> Path:
+    """One frame of his video at `t` through the chosen look and sliders (what the render will do)."""
+    from editor.pipeline.grade import adjust_filter, grade_filter, look_settings
+    video = ep.clean_video if ep.clean_video.exists() else ep.source
+    s = look_settings(ep)
+    lut = ep.edit / "look.cube" if s.get("lut") and (ep.edit / "look.cube").exists() else None
+    chain = "scale=-2:540" + ("" if raw else grade_filter("", s.get("look"), adjust_filter(
+        s.get("temp", 0), s.get("tint", 0), s.get("exposure", 0)), lut))
+    out = ep.work / "app" / f"frame_{'raw' if raw else 'look'}.jpg"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-ss", f"{max(0.0, t):.2f}", "-i", str(video), "-frames:v", "1",
+                    "-vf", chain, "-q:v", "3", str(out)], capture_output=True)
+    return out
+
+
+def voice_sample(ep, t: float, clean: int) -> Path:
+    """Eight seconds of his voice from `t`, cleaned at the chosen level (before/after in the sound step)."""
+    from editor.pipeline.compose import voice_chain
+    video = ep.clean_video if ep.clean_video.exists() else ep.source
+    out = ep.work / "app" / f"voice_{clean}.wav"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    chain = voice_chain(clean) if clean >= 0 else "anull"
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-ss", f"{max(0.0, t):.2f}", "-t", "8", "-i", str(video), "-vn",
+                    "-af", chain, str(out)], capture_output=True)
+    return out
+
+
+def music_sample(mood: str) -> Path:
+    """Fifteen seconds of the code-made music in a mood (cached)."""
+    from editor.pipeline.composer import PROGRESSIONS, compose, write_wav
+    mood = mood if mood in PROGRESSIONS else "tension"
+    out = HOME / "cache" / "music" / f"{mood}.wav"
+    if not out.exists():
+        out.parent.mkdir(parents=True, exist_ok=True)
+        write_wav(compose(15.0, mood, 7), out)
+    return out
 
 
 # ---------- http ----------
@@ -570,7 +767,20 @@ class Handler(BaseHTTPRequestHandler):
                 with JOB.lock:
                     lines, total = JOB.lines[since:], len(JOB.lines)
                 return self._json({"ep": JOB.ep, "lines": lines, "next": total, "running": JOB.running, "ok": JOB.ok,
-                                   "step": JOB.step, "steps": JOB.steps, "need_login": JOB.need_login})
+                                   "step": JOB.step, "steps": JOB.steps, "need_login": JOB.need_login,
+                                   "progress": JOB.progress, "what": getattr(JOB, "what", None),
+                                   "elapsed": round(time.time() - JOB.started) if JOB.started else 0})
+            if path.startswith("/cache/"):
+                root = (HOME / "cache").resolve()
+                f = (root / path[7:]).resolve()
+                return self._file(f) if f.is_relative_to(root) else self._err("لا", 403)
+            if path == "/api/styles":
+                return self._json(styles_list())
+            if path == "/api/music-sample":
+                return self._file(music_sample(q.get("mood", "tension")))
+            m = re.match(r"^/api/episodes/([^/]+)/(sentences|captions|plan|timeline|look|sound|idea|review|frame|voice-sample)$", path)
+            if m:
+                return self._studio_get(episode_dir(m.group(1)), m.group(2), q)
             m = re.match(r"^/api/db/([^/]+)/(doc|list)$", path)
             if m:
                 d = episode_dir(m.group(1))
@@ -610,20 +820,99 @@ class Handler(BaseHTTPRequestHandler):
         except KeyError:
             return self._err("الحلقة مو موجودة", 404)
 
+    def _studio_get(self, d: Path, what: str, q: dict):
+        from editor.pipeline.paths import Episode
+        from . import studio
+        ep = Episode(d)
+        if what == "sentences":
+            return self._json(studio.sentences(ep))
+        if what == "captions":
+            return self._json(studio.captions(ep))
+        if what == "plan":
+            return self._json(studio.storyboard(ep))
+        if what == "timeline":
+            return self._json(studio.timeline(ep))
+        if what == "look":
+            from editor.pipeline.grade import LOOK_NAMES, look_settings
+            return self._json({"settings": look_settings(ep), "names": LOOK_NAMES})
+        if what == "sound":
+            from editor.pipeline.compose import sound_settings
+            return self._json(sound_settings(ep))
+        if what == "idea":
+            f, sf = d / "edit" / "idea.txt", d / "edit" / "style.txt"
+            style = sf.read_text(encoding="utf-8").strip() if sf.exists() else ""
+            name = next((x["name"] for x in styles_list() if x["id"] == style), "")
+            return self._json({"text": f.read_text(encoding="utf-8") if f.exists() else "", "style": style, "style_name": name})
+        if what == "review":
+            f = d / "edit" / "work" / "app" / f"{q.get('kind', 'captions')}_review.json"
+            return self._json(json.loads(f.read_text(encoding="utf-8")) if f.exists() else None)
+        if what == "frame":
+            return self._file(frame_with_look(ep, float(q.get("t") or 0), q.get("raw") == "1"))
+        if what == "voice-sample":
+            return self._file(voice_sample(ep, float(q.get("t") or 0), int(q.get("clean") or 1)))
+        return self._err("مو موجود", 404)
+
+    def _studio_post(self, d: Path, what: str, b: dict):
+        from editor.pipeline.paths import Episode
+        from . import studio
+        ep = Episode(d)
+        if what == "sentences":
+            return self._json(studio.set_sentences(ep, b.get("keep") or {}))
+        if what == "captions":
+            return self._json(studio.edit_words(ep, b.get("fixes") or {}, b.get("delete") or []))
+        if what == "look":
+            return self._json(studio.save_look(ep, b))
+        if what == "sound":
+            keep = {"clean": max(0, min(3, int(b.get("clean", 1)))), "music": str(b.get("music", "auto")),
+                    "level": max(-32.0, min(-16.0, float(b.get("level", -24)))), "sfx": bool(b.get("sfx", True))}
+            (d / "edit" / "sound.json").write_text(json.dumps(keep, ensure_ascii=False, indent=1), encoding="utf-8")
+            return self._json(keep)
+        if what == "idea":
+            (d / "edit").mkdir(parents=True, exist_ok=True)
+            if "text" in b:
+                (d / "edit" / "idea.txt").write_text(str(b.get("text", "")).strip() + "\n", encoding="utf-8")
+            if "style" in b:
+                ok = {x["id"] for x in styles_list()}
+                (d / "edit" / "style.txt").write_text(b["style"] if b["style"] in ok else "", encoding="utf-8")
+            return self._json({"ok": True})
+        if what == "beat":
+            return self._json(studio.edit_beat(ep, int(b.get("i", -1)), b.get("change") or {}))
+        return self._err("مو موجود", 404)
+
     def do_POST(self):
         path = urllib.parse.unquote(urllib.parse.urlsplit(self.path).path)
         q = dict(urllib.parse.parse_qsl(urllib.parse.urlsplit(self.path).query))
         try:
             if path == "/api/episodes":
                 b = self._body()
-                return self._json(create_episode(b.get("name", ""), b.get("source", ""), b.get("script", "")))
+                return self._json(create_episode(b.get("name", ""), b.get("source", ""), b.get("script", ""),
+                                                 b.get("look"), b.get("lut_key", "")))
+            if path == "/api/probe":
+                from .studio import probe_source
+                src = Path(str(self._body().get("path", ""))).expanduser()
+                if not src.is_file():
+                    raise ValueError("ما لگيت الفيديو بهذا المكان")
+                return self._json(probe_source(src, HOME / "cache"))
+            if path == "/api/lut":
+                from .studio import lut_preview
+                b = self._body()
+                key = re.sub(r"[^0-9a-f]", "", str(b.get("key", "")))
+                src = Path(str(b.get("path", ""))).expanduser()
+                if not key or src.suffix.lower() != ".cube" or not src.is_file():
+                    raise ValueError("اختار ملف ألوان بصيغة كيوب")
+                folder = HOME / "cache" / key
+                shutil.copyfile(src, folder / "look.cube")
+                return self._json({"img": f"{key}/" + lut_preview(folder, folder / "look.cube"), "name": src.stem})
+            m = re.match(r"^/api/episodes/([^/]+)/(sentences|captions|look|sound|idea|beat)$", path)
+            if m:
+                return self._studio_post(episode_dir(m.group(1)), m.group(2), self._body())
             m = re.match(r"^/api/episodes/([^/]+)/(run|stop|reveal|rename)$", path)
             if m:
                 ep, act = m.groups()
                 d = episode_dir(ep)
                 b = self._body()
                 if act == "run":
-                    start_job(ep, b.get("what", "all"))
+                    start_job(ep, b.get("what", "all"), str(b.get("message", "")))
                 elif act == "stop":
                     stop_job()
                 elif act == "reveal":

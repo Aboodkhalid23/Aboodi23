@@ -7,7 +7,7 @@ from pathlib import Path
 from .channel import channel_avatar, load_channel
 from .entities import entity_image, load_entities
 from .fmt import load_format
-from .grade import analyse, grade_filter
+from .grade import adjust_filter, analyse, grade_filter, look_settings
 from .graphics import (_source_hash, ensure_bundle, face_fx_job, face_paper_job, graphic_job, render_batch,
                        render_face_frame_bg)
 from .media import MediaError, run_ffmpeg
@@ -267,12 +267,35 @@ def _fallback_text(beat: Beat) -> Beat:
 VOICE_CHAIN = ("highpass=f=80,afftdn=nr=8:nf=-50,"
                "acompressor=threshold=-20dB:ratio=2.5:attack=8:release=120:makeup=1.5,"
                "loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000")
+CLEAN_NR = {0: 0, 1: 8, 2: 14, 3: 22}   # the app's "صوت نظيف" levels → afftdn noise reduction (dB)
+
+
+def sound_settings(ep: Episode) -> dict:
+    """The Mac app's sound step (edit/sound.json): {"clean": 0–3, "music": "auto"|mood|"off", "level": LUFS,
+    "sfx": bool}; defaults when absent."""
+    try:
+        d = json.loads((ep.edit / "sound.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        d = {}
+    return {"clean": int(d.get("clean", 1)), "music": d.get("music", "auto"), "level": float(d.get("level", MUSIC_LUFS)),
+            "sfx": bool(d.get("sfx", True))}
+
+
+def voice_chain(clean: int = 1) -> str:
+    nr = CLEAN_NR.get(clean, 8)
+    chain = VOICE_CHAIN.replace("afftdn=nr=8:nf=-50,", f"afftdn=nr={nr}:nf=-50," if nr else "")
+    return chain.replace("highpass=f=80,", "highpass=f=80,equalizer=f=3000:t=q:w=1.2:g=2," if clean >= 2 else "highpass=f=80,")
 
 
 def _build_audio(ep: Episode, teaser, duration: float, out: Path,
                  cues: list[tuple[float, str]] = (), music: list[tuple[int, Path, float, float]] = ()) -> None:
     """Voice (cleaned, -14 LUFS) + effects at their cue times + music segments ducked under the voice.
     `music`: (cue, file, start, end) on the final timeline."""
+    snd = sound_settings(ep)
+    if snd["music"] == "off":
+        music = ()
+    if not snd["sfx"]:
+        cues = ()
     args, labels = [], ""
     for i, (s, e) in enumerate(teaser):
         args += ["-ss", f"{s:.3f}", "-t", f"{e - s:.3f}", "-i", str(ep.clean_video)]
@@ -280,11 +303,11 @@ def _build_audio(ep: Episode, teaser, duration: float, out: Path,
     args += ["-i", str(ep.clean_video)]
     labels += f"[{len(teaser)}:a]"
     n = len(teaser) + 1
-    graph = (f"{labels}concat=n={n}:v=0:a=1,{VOICE_CHAIN},aformat=channel_layouts=stereo,"
+    graph = (f"{labels}concat=n={n}:v=0:a=1,{voice_chain(snd['clean'])},aformat=channel_layouts=stereo,"
              f"apad,atrim=0:{duration:.4f}")
     mix = []
     if music:
-        margs, mgraph = bed_filter(list(music), n, MUSIC_LUFS)
+        margs, mgraph = bed_filter(list(music), n, snd["level"])
         args += margs
         n += len(margs) // 2
         graph += (f",asplit=2[voice][key];{mgraph};[mus]apad,atrim=0:{duration:.4f}[mus2];"
@@ -396,13 +419,17 @@ def compose(ep: Episode, preview: bool = False) -> Path:
 
     src_stamp = str(ep.clean_video.stat().st_mtime)
     correct = analyse(ep)["correction"]
+    app_look = look_settings(ep)   # chosen in the Mac app: look, LUT and balance sliders for the whole episode
+    app_extra = adjust_filter(app_look.get("temp", 0), app_look.get("tint", 0), app_look.get("exposure", 0))
+    app_lut = ep.edit / "look.cube" if app_look.get("lut") and (ep.edit / "look.cube").exists() else None
     design = _source_hash()   # a changed graphic design re-renders the clips that use it
     clips, missing, pending = [], [], []   # pending: Remotion renders, done together with one browser
     for i, b in enumerate(plan.beats):
         # Frame-grid boundaries: the sum of clip lengths equals the timeline exactly (no drift).
         frames = round(b.end * cv.fps) - round(b.start * cv.fps)
-        look = b.grade or plan.grade or style.grade
-        footage_grade = grade_filter(correct, look)   # his camera: measured correction + light polish
+        look = b.grade or app_look.get("look") or plan.grade or style.grade
+        # his camera: measured correction + the look (+ the app's sliders and LUT)
+        footage_grade = grade_filter(correct, look, app_extra, None if b.grade else app_lut)
         ai_grade = ""                                  # generated clips are left as they came
         asset = None
         if b.kind == "ai_image":

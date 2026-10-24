@@ -52,6 +52,7 @@ class Beat:
     animate: str | None = None      # avatar: "code" (layered motion, default) or "ai" (a video model moves the drawing)
     pick: dict | None = None        # image: the picture the owner chose on the suite page (sources.Found fields)
     papers: list | None = None      # face_paper: [{"type": "newspaper", "at": 0.3, "title": ..., "query": ...}] (FacePaper.tsx)
+    note: str | None = None         # the owner's note on this scene (Mac app storyboard): Claude reads it on the next plan
 
     @property
     def duration(self) -> float:

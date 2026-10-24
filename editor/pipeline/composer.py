@@ -188,6 +188,13 @@ def write_wav(x: np.ndarray, path: Path) -> Path:
     return path
 
 
+def _app_mood(ep) -> str | None:
+    try:
+        return json.loads((ep.edit / "sound.json").read_text(encoding="utf-8")).get("music")
+    except (OSError, ValueError):
+        return None
+
+
 def compose_music(ep, total: float) -> list[str]:
     """assets/music_<k>.wav for every music cue still empty (or one bed, assets/music.wav, when the plan names none).
     Returns what it wrote, for the log."""
@@ -208,6 +215,8 @@ def compose_music(ep, total: float) -> list[str]:
         if have:
             continue
         mood = pick_mood(f"{m.get('mood', '')} {m.get('prompt', '')} {m.get('search', '')} {style_mood}")
+        chosen = _app_mood(ep)
+        mood = chosen if chosen in PROGRESSIONS else mood   # the owner picked one mood for the episode in the app
         seed = int(hashlib.sha1(f"{ep.root.name}:{key}".encode()).hexdigest()[:8], 16)
         write_wav(compose(max(4.0, length), mood, seed), out)
         credits[key] = {"url": "", "credit": f"موسيقى مؤلفة بالكود خاصة بالقناة ({mood})"}
