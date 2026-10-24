@@ -329,7 +329,9 @@ def storyboard(ep: Episode) -> dict:
         cards.append({"i": i, "start": b["start"], "end": b["end"], "kind": b["kind"],
                       "kind_ar": KIND_AR.get(b["kind"], "مشهد"), "title": ar(b.get("title")) or ar(b.get("caption"))
                       or KIND_AR.get(b["kind"], "مشهد"), "said": said, "shows": shows,
-                      "motion": motion, "source": src, "img": _beat_image(ep, i, b), "note": b.get("note", "")})
+                      "motion": motion, "source": src, "img": _beat_image(ep, i, b), "note": b.get("note", ""),
+                      "effect": b.get("effect"), "transition": b.get("transition"), "stickers": b.get("stickers") or [],
+                      "text": ar(b.get("title")) or ar(b.get("caption")), "own": bool((b.get("pick") or {}).get("local"))})
     return {"ready": True, "cards": cards, "style": plan.get("style", {}).get("primary"),
             "summary": plan.get("style_reason", ""), "chapters": plan.get("chapters", [])}
 
@@ -366,12 +368,183 @@ def edit_beat(ep: Episode, i: int, change: dict) -> dict:
                     beats[j]["end"] = b["end"]
                 else:
                     beats[j]["start"] = b["start"]
+    elif "insert" in change:   # text from the app's text panel: a short scene of its own at the playhead
+        ins = change["insert"]
+        t, dur = float(ins.get("t", beats[i]["start"])), max(1.5, min(8.0, float(ins.get("dur", 3))))
+        b = beats[i]
+        t = max(b["start"], min(t, b["end"] - 1.0))
+        end = min(b["end"], t + dur)
+        new = {"start": round(t, 3), "end": round(end, 3), "zone": b["zone"], **_text_scene(ins)}
+        pieces = []
+        if t - b["start"] >= 0.5:
+            pieces.append({**b, "end": round(t, 3)})
+        pieces.append(new)
+        if b["end"] - end >= 0.5:
+            rest = {k: v for k, v in b.items() if k in ("zone", "kind", "query", "caption", "source", "grade", "effect")}
+            pieces.append({**rest, "start": round(end, 3), "end": b["end"]})
+        else:
+            new["end"] = b["end"]
+        beats[i:i + 1] = pieces
+    elif "sticker" in change:   # the stickers panel: on his face it becomes a face scene that can carry them
+        st = change["sticker"]
+        if st.get("remove") is not None:
+            sts = beats[i].get("stickers") or []
+            del sts[int(st["remove"])]
+            beats[i]["stickers"] = sts or None
+        else:
+            if beats[i]["kind"] not in MARKABLE:
+                beats[i]["kind"], beats[i]["fx"] = "face_fx", "none"
+            at = max(0.2, min(float(st.get("at", 0.3)), beats[i]["end"] - beats[i]["start"] - 0.5))
+            item = {"type": st.get("type", "stamp"), "at": round(at, 2), **({"text": st["text"]} if st.get("text") else {})}
+            beats[i]["stickers"] = (beats[i].get("stickers") or []) + [item]
+    elif "media" in change:   # his own picture or clip on this scene
+        src = ep.edit / "media" / Path(str(change["media"])).name
+        if not src.exists():
+            raise ValueError("الملف مو موجود بمواد الحلقة")
+        for old in list(ep.assets.glob(f"img_{i}.*")) + list(ep.assets.glob(f"footage_{i}.*")):
+            old.unlink()
+        ep.assets.mkdir(parents=True, exist_ok=True)
+        if src.suffix.lower() in VIDEO_EXT:
+            import shutil
+            shutil.copyfile(src, ep.assets / f"footage_{i}.mp4")
+            beats[i].update(kind="footage", query="own footage", pick={"local": True})
+            (ep.assets / f"footage_{i}.json").write_text(json.dumps({"query": "own footage", "credit": "من تصويرك"}), encoding="utf-8")
+        else:
+            import shutil
+            shutil.copyfile(src, ep.assets / f"img_{i}{src.suffix.lower()}")
+            beats[i].update(kind="image", query=beats[i].get("query") or "own picture", pick={"local": True})
+            beats[i].setdefault("caption", src.stem)
     else:
-        for k in ("note", "caption", "query", "title"):
+        for k in ("note", "caption", "query", "title", "effect", "transition"):
             if k in change:
                 beats[i][k] = str(change[k]).strip() or None
     ep.plan.write_text(json.dumps(plan, ensure_ascii=False, indent=1), encoding="utf-8")
     return storyboard(ep)
+
+
+VIDEO_EXT = {".mp4", ".mov", ".m4v", ".mkv"}
+MEDIA_EXT = VIDEO_EXT | {".jpg", ".jpeg", ".png", ".webp", ".mp3", ".wav", ".m4a"}
+MARKABLE = ("face_fx", "image", "ai_image", "graphic", "entity", "footage", "avatar")
+
+
+def _text_scene(ins: dict) -> dict:
+    text = str(ins.get("text", "")).strip() or "عنوان"
+    style = ins.get("style", "title")
+    if style == "title":
+        return {"kind": "cinematic_title", "title": text, "caption": text}
+    if style == "words":
+        return {"kind": "kinetic", "caption": text}
+    return {"kind": "graphic", "caption": text, "graphic": {"type": "text", "text": text}}
+
+
+# ---------- the episode's own media (photos, clips, sounds he brings) ----------
+
+def media_list(ep: Episode) -> list[dict]:
+    folder = ep.edit / "media"
+    if not folder.exists():
+        return []
+    out = []
+    for f in sorted(folder.iterdir()):
+        if f.suffix.lower() not in MEDIA_EXT or f.name.startswith("."):
+            continue
+        kind = "video" if f.suffix.lower() in VIDEO_EXT else "audio" if f.suffix.lower() in {".mp3", ".wav", ".m4a"} else "image"
+        thumb = f if kind == "image" else ep.work / "app" / "media" / (f.stem + ".jpg")
+        if kind == "video" and not thumb.exists():
+            thumb.parent.mkdir(parents=True, exist_ok=True)
+            _ff(["-ss", "0.5", "-i", str(f), "-frames:v", "1", "-vf", "scale=-2:180", str(thumb)])
+        out.append({"name": f.name, "kind": kind, "size": f.stat().st_size,
+                    "thumb": str(thumb.relative_to(ep.root)) if kind != "audio" and thumb.exists() else None})
+    return out
+
+
+def media_add(ep: Episode, path: str) -> list[dict]:
+    import shutil
+    src = Path(path).expanduser()
+    if not src.is_file() or src.suffix.lower() not in MEDIA_EXT:
+        raise ValueError("هذا مو صورة ولا فيديو ولا صوت")
+    folder = ep.edit / "media"
+    folder.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(src, folder / src.name)
+    return media_list(ep)
+
+
+# ---------- the effects library ----------
+
+def effect_thumbs(ep: Episode) -> dict:
+    """One small picture per effect, of his own footage (the effects panel)."""
+    from types import SimpleNamespace
+    from editor.pipeline.compose import effect_filter
+    from editor.pipeline.plan import EFFECTS
+    video = ep.clean_video if ep.clean_video.exists() else ep.source
+    out = ep.work / "app" / "fx"
+    out.mkdir(parents=True, exist_ok=True)
+    frame = out / "frame.png"
+    if not frame.exists() and video.exists():
+        _ff(["-ss", f"{_duration(video) * 0.4:.2f}", "-i", str(video), "-frames:v", "1", "-vf", "scale=-2:200", str(frame)])
+    res = {}
+    for e in EFFECTS:
+        jpg = out / f"{e}.jpg"
+        if not jpg.exists() and frame.exists():
+            cv = SimpleNamespace(width=356, height=200)
+            chain = "scale=356:200,setsar=1,loop=loop=12:size=1" + effect_filter(e, cv)
+            _ff(["-i", str(frame), "-vf", chain, "-vframes", "1", "-ss", "0.2", "-q:v", "4", str(jpg)])
+            if not jpg.exists():   # filters that need time (flash, shake): a still from the first frame
+                _ff(["-i", str(frame), "-vf", "scale=356:200,setsar=1" + effect_filter(e, cv), "-frames:v", "1", "-q:v", "4", str(jpg)])
+        res[e] = {"name": EFFECT_NAMES.get(e, e), "img": str(jpg.relative_to(ep.root)) if jpg.exists() else None}
+    return res
+
+
+EFFECT_NAMES = {"shake": "اهتزاز", "vhs": "شريط قديم", "retro_shake": "قديم ويهتز", "bw": "أبيض وأسود", "night": "ليل مخيف",
+                "dream": "حلم", "rgb_split": "انقسام ألوان", "flash_in": "دخول بوميض", "sharpen": "حدّة", "film": "فلم سينما"}
+
+
+# ---------- undo / redo (the plan, colours, sound, cuts) ----------
+
+UNDO_FILES = ("edit_plan.json", "look.json", "sound.json", "cuts_override.json", "clean_words.json")
+
+
+def snapshot(ep: Episode) -> None:
+    """Keep the editable files as they are now, before a change (50 steps back)."""
+    import shutil
+    hist = ep.work / "app" / "undo"
+    stamp = f"{len(list(hist.glob('*'))) if hist.exists() else 0:05d}"
+    d = hist / stamp
+    d.mkdir(parents=True, exist_ok=True)
+    for name in UNDO_FILES:
+        f = ep.edit / name
+        if f.exists():
+            shutil.copyfile(f, d / name)
+    (ep.work / "app" / "redo").exists() and shutil.rmtree(ep.work / "app" / "redo")
+    for old in sorted(hist.iterdir())[:-50]:
+        shutil.rmtree(old)
+
+
+def _restore(ep: Episode, frm: str, to: str) -> bool:
+    import shutil
+    src = ep.work / "app" / frm
+    if not src.exists() or not any(src.iterdir()):
+        return False
+    last = sorted(src.iterdir())[-1]
+    keep = ep.work / "app" / to / f"{len(list((ep.work / 'app' / to).glob('*'))) if (ep.work / 'app' / to).exists() else 0:05d}"
+    keep.mkdir(parents=True, exist_ok=True)
+    for name in UNDO_FILES:
+        cur = ep.edit / name
+        if cur.exists():
+            shutil.copyfile(cur, keep / name)
+        if (last / name).exists():
+            shutil.copyfile(last / name, cur)
+        elif cur.exists() and name != "clean_words.json":
+            cur.unlink()
+    shutil.rmtree(last)
+    return True
+
+
+def undo(ep: Episode) -> bool:
+    return _restore(ep, "undo", "redo")
+
+
+def redo(ep: Episode) -> bool:
+    return _restore(ep, "redo", "undo")
 
 
 # ---------- timeline ----------
@@ -405,7 +578,7 @@ def timeline(ep: Episode) -> dict:
     if not video.exists():
         return {"ready": False}
     cache = ep.work / "app" / "timeline.json"
-    stamp = f"v2:{video}:{video.stat().st_mtime}:{ep.plan.stat().st_mtime if ep.plan.exists() else 0}"
+    stamp = f"v3:{video}:{video.stat().st_mtime}:{ep.plan.stat().st_mtime if ep.plan.exists() else 0}"
     if cache.exists():
         d = json.loads(cache.read_text(encoding="utf-8"))
         if d.get("stamp") == stamp:
@@ -418,7 +591,8 @@ def timeline(ep: Episode) -> dict:
     off = sum(e - s for s, e in plan.get("teaser", []))
     scenes = [{"i": i, "s": round(b["start"] - off, 2), "e": round(b["end"] - off, 2), "kind": b["kind"],
                "face": b["kind"].startswith("face") and b["kind"] != "face_paper", "kind_ar": KIND_AR.get(b["kind"], b["kind"]),
-               "label": ar(b.get("title")) or ar(b.get("caption")) or KIND_AR.get(b["kind"], "مشهد")}
+               "label": ar(b.get("title")) or ar(b.get("caption")) or KIND_AR.get(b["kind"], "مشهد"),
+               "effect": b.get("effect")}
               for i, b in enumerate(plan.get("beats", []))]
     sounds = [{"s": round(m.get("t", 0) - off, 2), "label": m.get("mood") or "موسيقى"} for m in plan.get("music", [])]
     d = {"ready": True, "stamp": stamp, "offset": off, "video": str(video.relative_to(ep.root)), "duration": round(dur, 2),

@@ -88,6 +88,9 @@ def collect_images(plan: EditPlan, ep: Episode, session=None) -> EditPlan:
     for i, b in enumerate(plan.beats):
         if b.kind != "image" and not (b.kind == "face_cutout" and b.query):
             continue
+        if (b.pick or {}).get("local") and any(ep.assets.glob(f"img_{i}.*")):   # his own picture (the app's media)
+            credits.append(f"صورة {i}: من ملفاتك")
+            continue
         img, errors = None, []
         candidates = find(b.query, "image", b.source, session, used, errors)
         if b.pick and b.pick.get("url"):   # chosen by the owner on the suite page: that one first

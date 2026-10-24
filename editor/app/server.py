@@ -45,11 +45,12 @@ STEPS = {"all": ["prep", "plan", "render", "suite"], "from-plan": ["plan", "rend
          # the studio's steps (one screen each)
          "prepare": ["fetch", "transcribe"], "cut": ["cut"], "sentences": ["sentences"], "captions": ["captions"],
          "images": ["images"], "build": ["preview"], "final": ["render"], "assist": ["assist"],
-         "auto": ["fetch", "transcribe", "cut", "plan", "images", "render"], "chat": ["chat"]}
+         "auto": ["fetch", "transcribe", "cut", "plan", "images", "render"], "chat": ["chat"],
+         "shorts": ["shorts"], "export": ["export"]}
 STEP_NAMES = {"prep": "التجهيز", "plan": "خطة المونتير", "render": "النسخة الكاملة", "preview": "المعاينة",
               "suite": "غرفة المونتاج", "requests": "ملاحظاتك", "fetch": "تجهيز الفيديو", "transcribe": "تفريغ الكلام",
               "cut": "قص المقطع", "sentences": "المساعد يراجع الجمل", "captions": "المساعد يراجع الكابشن",
-              "images": "الصور", "assist": "المساعد", "chat": "المساعد"}
+              "images": "الصور", "assist": "المساعد", "chat": "المساعد", "shorts": "الريلز", "export": "التصدير"}
 CLAUDE_TOOLS = ["Read", "Write", "Edit", "Glob", "Grep", "WebSearch", "WebFetch", "TodoWrite",
                 "Bash(python -m editor.pipeline:*)", "Bash(python3 -m editor.pipeline:*)",
                 "Bash(ffprobe:*)", "Bash(ffmpeg:*)", "Bash(ls:*)"]
@@ -545,6 +546,9 @@ def _chat_step(d: Path) -> int:
     last = msgs[-1] if msgs else {"text": JOB.message, "ctx": {}}
     plan_f = d / "edit" / "edit_plan.json"
     before = json.loads(plan_f.read_text(encoding="utf-8")) if plan_f.exists() else {}
+    from editor.pipeline.paths import Episode
+    from .studio import snapshot
+    snapshot(Episode(d))   # what the assistant changes can be undone too
     JOB.last_reply = ""
     code = _claude(CHAT_PROMPT.format(ep=d, history=history, message=last["text"], context=_chat_context(d, last.get("ctx") or {}),
                                       looks="، ".join(LOOK_NAMES)))
@@ -714,6 +718,11 @@ def run_job(ep_id: str, what: str) -> None:
             if code:   # pictures are a nicety for the storyboard: a failed download never stops the episode
                 JOB.say("⚠️ بعض الصور ما نزلت، تنجاب وقت النسخة الكاملة")
                 code = 0
+        elif step == "shorts":
+            code = _pipe("shorts", d)
+        elif step == "export":   # a smaller copy for sending (the full file stays as it is)
+            mb = re.sub(r"[^0-9.]", "", JOB.message or "") or "200"
+            code = _pipe("deliver", d, "--max-mb", mb)
         elif step == "chat":
             code = _chat_step(d)
         elif step == "assist":
@@ -1054,7 +1063,7 @@ class Handler(BaseHTTPRequestHandler):
             m = re.match(r"^/api/episodes/([^/]+)/chat$", path)
             if m:
                 return self._json(chat_load(episode_dir(m.group(1))))
-            m = re.match(r"^/api/episodes/([^/]+)/(sentences|captions|plan|timeline|look|sound|idea|review|frame|voice-sample)$", path)
+            m = re.match(r"^/api/episodes/([^/]+)/(sentences|captions|plan|timeline|look|sound|idea|review|frame|voice-sample|media|effects|export-info)$", path)
             if m:
                 return self._studio_get(episode_dir(m.group(1)), m.group(2), q)
             m = re.match(r"^/api/db/([^/]+)/(doc|list)$", path)
@@ -1124,6 +1133,20 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(json.loads(f.read_text(encoding="utf-8")) if f.exists() else None)
         if what == "frame":
             return self._file(frame_with_look(ep, float(q.get("t") or 0), q.get("raw") == "1"))
+        if what == "media":
+            return self._json(studio.media_list(ep))
+        if what == "effects":
+            return self._json(studio.effect_thumbs(ep))
+        if what == "export-info":
+            final = d / "edit" / "final.mp4"
+            plan = json.loads(ep.plan.read_text(encoding="utf-8")) if ep.plan.exists() else {}
+            ch = d / "edit" / "chapters.txt"
+            cr = d / "edit" / "credits.txt"
+            shorts = sorted((d / "edit").glob("short_*.mp4")) + sorted((d / "edit" / "shorts").glob("*.mp4") if (d / "edit" / "shorts").exists() else [])
+            return self._json({"final": final.exists(), "size": final.stat().st_size if final.exists() else 0,
+                               "chapters": ch.read_text(encoding="utf-8") if ch.exists() else "",
+                               "credits": cr.read_text(encoding="utf-8") if cr.exists() else "",
+                               "shorts_plan": plan.get("shorts", []), "shorts": [str(f.relative_to(d)) for f in shorts]})
         if what == "voice-sample":
             return self._file(voice_sample(ep, float(q.get("t") or 0), int(q.get("clean") or 1)))
         return self._err("مو موجود", 404)
@@ -1132,6 +1155,21 @@ class Handler(BaseHTTPRequestHandler):
         from editor.pipeline.paths import Episode
         from . import studio
         ep = Episode(d)
+        if what in ("beat", "look", "sound", "sentences", "captions"):
+            studio.snapshot(ep)   # every change can be undone
+        if what in ("undo", "redo"):
+            ok = (studio.undo if what == "undo" else studio.redo)(ep)
+            return self._json({"ok": ok, "plan": studio.storyboard(ep)})
+        if what == "media":
+            return self._json(studio.media_add(ep, str(b.get("path", ""))))
+        if what == "short":
+            plan = json.loads(ep.plan.read_text(encoding="utf-8"))
+            fr, to = float(b.get("from", 0)), float(b.get("to", 30))
+            if not 10 <= to - fr <= 90:
+                raise ValueError("الريل لازم بين ١٠ و٩٠ ثانية")
+            plan["shorts"] = (plan.get("shorts") or []) + [{"from": round(fr, 2), "to": round(to, 2), "title": str(b.get("title", ""))}]
+            ep.plan.write_text(json.dumps(plan, ensure_ascii=False, indent=1), encoding="utf-8")
+            return self._json({"shorts": plan["shorts"]})
         if what == "sentences":
             return self._json(studio.set_sentences(ep, b.get("keep") or {}))
         if what == "captions":
@@ -1192,7 +1230,7 @@ class Handler(BaseHTTPRequestHandler):
                 chat_add(d, {"role": "owner", "text": text, "ctx": b.get("ctx") or {}})
                 start_job(m.group(1), "chat", text)
                 return self._json({"ok": True, "messages": chat_load(d)})
-            m = re.match(r"^/api/episodes/([^/]+)/(sentences|captions|look|sound|idea|beat)$", path)
+            m = re.match(r"^/api/episodes/([^/]+)/(sentences|captions|look|sound|idea|beat|undo|redo|media|short)$", path)
             if m:
                 return self._studio_post(episode_dir(m.group(1)), m.group(2), self._body())
             m = re.match(r"^/api/episodes/([^/]+)/(run|stop|reveal|rename)$", path)

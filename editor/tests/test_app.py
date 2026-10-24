@@ -216,3 +216,32 @@ def test_sony_log_becomes_normal_colour():
     assert slog3_to_display(np.array([[0.0] * 3]))[0][0] == 0
     pix, spatial = split_chain("curves=master='0/0 0.5/0.6 1/1',eq=saturation=1.2,noise=alls=3:allf=t")
     assert pix == "curves=master='0/0 0.5/0.6 1/1',eq=saturation=1.2" and spatial == "noise=alls=3:allf=t"
+
+
+def test_scene_tools_and_undo(app, tmp_path):
+    from editor.app import studio
+    from editor.pipeline.paths import Episode
+    d = srv.EPISODES / srv.create_episode("حلقة", str(app))["id"]
+    ep = Episode(d).ensure()
+    plan = {"style": {"primary": "noir", "sections": []}, "teaser": [],
+            "beats": [{"start": 0, "end": 10, "zone": "hook", "kind": "face"}]}
+    ep.plan.write_text(json.dumps(plan), encoding="utf-8")
+    studio.snapshot(ep)
+    studio.edit_beat(ep, 0, {"insert": {"t": 3, "dur": 3, "style": "title", "text": "نوكيا"}})
+    beats = json.loads(ep.plan.read_text())["beats"]
+    assert [b["kind"] for b in beats] == ["face", "cinematic_title", "face"] and beats[1]["title"] == "نوكيا"
+    assert [(b["start"], b["end"]) for b in beats] == [(0, 3), (3, 6), (6, 10)]
+    studio.edit_beat(ep, 0, {"sticker": {"type": "stamp", "text": "سري", "at": 1}})
+    b0 = json.loads(ep.plan.read_text())["beats"][0]
+    assert b0["kind"] == "face_fx" and b0["stickers"][0] == {"type": "stamp", "at": 1.0, "text": "سري"}
+    studio.edit_beat(ep, 2, {"effect": "vhs"})
+    assert json.loads(ep.plan.read_text())["beats"][2]["effect"] == "vhs"
+    pic = tmp_path / "صورتي.png"
+    pic.write_bytes(b"\x89PNG fake")
+    studio.media_add(ep, str(pic))
+    studio.edit_beat(ep, 2, {"media": "صورتي.png"})
+    b2 = json.loads(ep.plan.read_text())["beats"][2]
+    assert b2["kind"] == "image" and b2["pick"] == {"local": True} and (ep.assets / "img_2.png").exists()
+    assert studio.undo(ep)            # back to the first snapshot: one face scene
+    assert len(json.loads(ep.plan.read_text())["beats"]) == 1
+    assert studio.redo(ep) and len(json.loads(ep.plan.read_text())["beats"]) == 3

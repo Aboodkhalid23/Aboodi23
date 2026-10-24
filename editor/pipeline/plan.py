@@ -19,6 +19,8 @@ FX_TYPES = ("subscribe", "tv", "none", "search")   # search: his channel searche
 TRANSITIONS = ("zoom", "flash", "whip", "glitch", "tear", "burn", "dive", "pan", "shutter", "slide")
 STICKERS = ("stamp", "arrow", "burst", "tape", "circle", "scribble_circle", "scribble_arrow", "scribble_underline",
             "censor", "name_tag", "emoji", "icon", "bubble", "label")   # emoji: Noto animated; icon: Iconify; bubble: comic speech; label: red box typing
+# video effects on his own footage (the app's effects library; compose.effect_filter)
+EFFECTS = ("shake", "vhs", "retro_shake", "bw", "night", "dream", "rgb_split", "flash_in", "sharpen", "film")
 MARKABLE = ("face_fx", "image", "ai_image", "graphic", "entity", "footage", "avatar")   # beats that can carry stickers
 
 HOOK_SECONDS = 30.0
@@ -53,6 +55,7 @@ class Beat:
     pick: dict | None = None        # image: the picture the owner chose on the suite page (sources.Found fields)
     papers: list | None = None      # face_paper: [{"type": "newspaper", "at": 0.3, "title": ..., "query": ...}] (FacePaper.tsx)
     note: str | None = None         # the owner's note on this scene (Mac app storyboard): Claude reads it on the next plan
+    effect: str | None = None       # a video effect on his footage (EFFECTS), from the app's effects library
 
     @property
     def duration(self) -> float:
@@ -172,6 +175,8 @@ def validate_plan(plan: EditPlan, clean_duration: float, entities: set[str] | No
                 break
         if b.grade and b.grade not in LOOKS:
             errs.append(f"beat {i}: grade لازم من {', '.join(LOOKS)}")
+        if b.effect and b.effect not in EFFECTS:
+            errs.append(f"beat {i}: effect لازم من {', '.join(EFFECTS)}")
         if b.transition and b.transition not in TRANSITIONS:
             errs.append(f"beat {i}: transition لازم من {', '.join(TRANSITIONS)}")
         if b.kind == "face_cutout" and b.treatment and b.treatment not in ("paper", "title"):

@@ -153,6 +153,20 @@ def _transition_filter(name: str | None, cv: Canvas) -> str:
     }[name]
 
 
+def effect_filter(name: str | None, cv: "Canvas") -> str:
+    """',<filters>' for a video effect from the app's library, on his footage (after the colours)."""
+    w, h = cv.width, cv.height
+    shake = (f"crop=iw*0.94:ih*0.94:iw*0.03+iw*0.022*sin(t*31):ih*0.03+ih*0.022*cos(t*23),"
+             f"scale={w}:{h}:flags=bicubic,setsar=1")
+    vhs = "noise=alls=14:allf=t,chromashift=cbh=4:crh=-4,curves=preset=vintage,eq=saturation=0.85"
+    chains = {"shake": shake, "vhs": vhs, "retro_shake": f"{shake},{vhs}", "bw": "hue=s=0,eq=contrast=1.12",
+              "night": "curves=preset=darker,colorbalance=bs=0.15:bm=0.1,eq=saturation=0.6",
+              "dream": "gblur=sigma=1.6,eq=brightness=0.03:saturation=1.12", "rgb_split": "chromashift=cbh=9:crh=-9:cbv=3:crv=-3",
+              "flash_in": "fade=t=in:st=0:d=0.3:color=white", "sharpen": "unsharp=7:7:1.1:7:7:0",
+              "film": "noise=alls=8:allf=t,vignette=angle=0.5,curves=preset=increase_contrast"}
+    return "," + chains[name] if name in chains else ""
+
+
 def _face_clip(ep: Episode, beat: Beat, frames: int, teaser, out: Path, frame_bg: Path | None,
                cv: Canvas | None = None, encode: list[str] | None = None, grade: str = "", plain: bool = False) -> None:
     """`plain`: fit with black bars instead of the blurred fill (for the cut-out, which must see only him)."""
@@ -429,6 +443,7 @@ def compose(ep: Episode, preview: bool = False) -> Path:
         look = b.grade or plan.grade or style.grade
         # his camera: measured correction + light polish, or the look he chose in the app
         footage_grade = app_grade if app_grade is not None and not b.grade else grade_filter(correct, look)
+        footage_grade += effect_filter(b.effect, cv)    # an effect he put on this scene in the app
         ai_grade = ""                                  # generated clips are left as they came
         asset = None
         if b.kind == "ai_image":
