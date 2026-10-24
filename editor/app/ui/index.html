@@ -200,7 +200,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;heigh
 .blk.sc.face{background:#16161a;color:var(--dim);border-color:#232328}
 .blk.sc.sel{outline:2px solid var(--y)}
 .blk .hd{position:absolute;top:0;bottom:0;width:6px;left:-3px;cursor:ew-resize}
-.vid{position:absolute;inset:0;border-radius:5px;background:var(--vid) repeat-x;background-size:auto 100%;opacity:.9}
+.vid{position:absolute;top:0;bottom:0;left:0;border-radius:5px;background:var(--vid) repeat-x;background-size:auto 100%;opacity:.9}
 canvas.wave{position:absolute;inset:0;width:100%;height:100%}
 .snd{position:absolute;top:2px;height:18px;border-radius:4px;background:#1f3b2a;color:#9fe3b2;font-size:10px;padding:0 6px;display:flex;align-items:center;direction:rtl}
 .ph{position:absolute;top:0;bottom:0;width:2px;background:#fff;pointer-events:none;z-index:5}
@@ -300,11 +300,11 @@ canvas.wave{position:absolute;inset:0;width:100%;height:100%}
 
   <section id="tl">
     <div class="tbar">
-      <button class="tt on" data-tool="select"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 8-6 2-2 6z"/></svg>تحديد<small>Select</small></button>
-      <button class="tt" data-tool="blade"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4l6 6L9 21H3v-6z"/></svg>تقسيم<small>Blade</small></button>
-      <button class="tt" data-tool="trim"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg>تحريك المحتوى<small>Trim</small></button>
-      <button class="tt on" id="tSnap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 4v8a6 6 0 0 0 12 0V4"/></svg>مغناطيس<small>Snap</small></button>
-      <button class="tt" id="tSkim"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/></svg>معاينة بالمرور<small>Skim</small></button>
+      <button class="tt on" data-tool="select"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 8-6 2-2 6z"/></svg>تحديد</button>
+      <button class="tt" data-tool="blade"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4l6 6L9 21H3v-6z"/></svg>تقسيم</button>
+      <button class="tt" data-tool="trim"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg>تحريك المحتوى</button>
+      <button class="tt on" id="tSnap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 4v8a6 6 0 0 0 12 0V4"/></svg>مغناطيس</button>
+      <button class="tt" id="tSkim"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/></svg>معاينة بالمرور</button>
       <div class="trans">
         <button class="icobtn" id="pPrev"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
         <button class="icobtn" id="pPlay" style="width:38px"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg></button>
@@ -312,16 +312,16 @@ canvas.wave{position:absolute;inset:0;width:100%;height:100%}
         <div class="time" id="time">00:00:00 <span>/ 00:00:00</span></div>
         <button class="icobtn" id="zOut" title="صغّر">−</button>
         <button class="icobtn" id="zIn" title="كبّر">＋</button>
-        <button class="pill sm" id="zFit">الكل<small class="dim" style="margin-inline-start:4px">Fit</small></button>
+        <button class="pill sm" id="zFit">الكل</button>
       </div>
     </div>
     <div class="tracks">
       <div class="labels">
-        <div>الكابشن <small>Captions</small></div>
-        <div>الصور <small>Images</small></div>
-        <div>الفيديو <small>Video</small></div>
-        <div>صوتك <small>Voice</small></div>
-        <div>الأصوات <small>Sounds</small></div>
+        <div>الكابشن </div>
+        <div>الصور </div>
+        <div>الفيديو </div>
+        <div>صوتك </div>
+        <div>الأصوات </div>
       </div>
       <div class="scroll" id="tscroll">
         <div class="lane" id="lane">
@@ -477,7 +477,9 @@ async function loadAll(){
     api(E() + "/sentences").catch(() => null), api(E() + "/captions").catch(() => null), api(E() + "/plan").catch(() => null),
     api(E() + "/timeline").catch(() => null), api(E() + "/look").catch(() => null), api(E() + "/sound").catch(() => null),
     api(`/api/db/${enc(cur)}/list?path=requests`).catch(() => [])]);
+  const firstTl = !data.timeline && t && t.ready;
   Object.assign(data, {sentences: s, captions: c, plan: p, timeline: t, look: l, sound: so});
+  if (firstTl || (t && t.ready && Math.abs((t.duration || 0) - tlDur) > 1)) pps = Math.max(0.3, ($("tscroll").clientWidth - 20) / Math.max(1, t.duration));
   notes = n.map(x => ({id: x.id, ...x.data})).filter(x => typeof x.t === "number").sort((a, b) => a.t - b.t);
   for (const k of ["captions", "sentences"]) data.review[k] = await api(E() + "/review?kind=" + k).catch(() => null);
   keepMap = {}; (s && s.items || []).forEach(x => keepMap[x.i] = x.keep);
@@ -567,6 +569,7 @@ function stepSentences(){
   else if (running("cut")) h += jobStatus("يقص المقطع: يشيل الجمل المحذوفة ويلصق الباقي بنعومة…", {elapsed: true});
   else if (!d.fetch) h += `<div class="status"><div class="grow">الفيديو بعده ما تجهّز.</div><button class="pill sm y" data-run="prepare">جهّزه</button></div>`;
   else if (!d.transcribe) h += `<div class="status"><div class="grow">الكلام بعده ما انفرّغ.</div><button class="pill sm y" data-run="prepare">فرّغه</button></div>`;
+  else if (!(s && s.ready)) h += `<div class="status"><div class="spinner"></div><div class="grow">يرتّب الجمل…</div></div>`;
   const rv = data.review.sentences;
   if (s && s.ready){
     const g = s.groups || {}, parts = Object.entries(g).map(([k, v]) => `${k} ${ar(v)}`).join("، ");
@@ -575,7 +578,7 @@ function stepSentences(){
       <div class="row" style="margin-top:8px;flex-wrap:wrap"><span class="chip r">يُحذف ${ar(cut, 1)} ث</span>${s.cut_done ? `<span class="chip">انقصّ ✓</span>` : ""}</div></div>`;
     h += `<div id="sentList">` + s.items.map(x => {
       const k = keepMap[x.i] ?? x.keep;
-      const why = !k ? `<span class="why">${esc(x.why || (rv && rv.why && rv.why[x.i]) || "حذفتها انت")}</span>` : x.partial ? `<span class="part">ينشال منها: ${esc(x.cut_words.join(" "))}</span>` : "";
+      const why = !k ? `<span class="why">${esc((rv && rv.why && rv.why[x.i]) || x.why || "حذفتها انت")}</span>` : x.partial ? `<span class="part">ينشال منها: ${esc(x.cut_words.join(" "))}</span>` : "";
       return `<div class="sent ${k ? "" : "off"}" data-i="${x.i}" data-s="${x.s}"><span class="t num">${mmss(x.s)}</span><span class="x">${esc(x.text)}${why}</span><button class="pill sm" data-flip="${x.i}">${k ? "احذفها" : "أرجعها"}</button></div>`;
     }).join("") + `</div>`;
   }
@@ -874,7 +877,7 @@ function renderTimeline(){
   $("rCap").innerHTML = t.captions.length ? t.captions.map(c => `<div class="blk cap" style="left:${c.s * pps}px;width:${Math.max(3, (c.e - c.s) * pps - 2)}px" data-s="${c.s}">${esc(c.t)}</div>`).join("") : `<span class="drop">الكابشن يطلع بعد القص</span>`;
   $("rImg").innerHTML = t.scenes.length ? t.scenes.map(s => `<div class="blk sc ${s.face ? "face" : ""} ${selScene === s.i ? "sel" : ""}" style="left:${s.s * pps}px;width:${Math.max(3, (s.e - s.s) * pps - 2)}px" data-sc="${s.i}" title="${esc(s.kind_ar)}">${esc(s.label)}<span class="hd" data-edge="${s.i}" style="left:auto;right:-3px"></span></div>`).join("") : `<span class="drop">اسحب صورة هنا · المشاهد تطلع بعد الخطة</span>`;
   $("strip").style.backgroundImage = t.strip ? `url('/files/${enc(cur)}/${t.strip}')` : "";
-  $("strip").style.backgroundSize = `${width}px 100%`;
+  $("strip").style.width = (dur * pps) + "px"; $("strip").style.backgroundSize = `${dur * pps}px 100%`;
   $("rSnd").innerHTML = t.sounds.length ? t.sounds.map(s => `<div class="snd" style="left:${Math.max(0, s.s) * pps}px">♪ ${esc(moodName(s.label))}</div>`).join("") : `<span class="drop">اسحب صوتاً هنا · الموسيقى تتألف وقت البناء</span>`;
   drawWave(t.wave, t.wave_hop);
   renderMarks(); tick();
