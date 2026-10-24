@@ -47,7 +47,7 @@ def word_re(w):
 
 
 def main():
-    if len(sys.argv) < 2:
+    if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help"):
         print(__doc__)
         sys.exit(1)
     path = sys.argv[1]
