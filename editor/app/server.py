@@ -97,6 +97,8 @@ def episode_state(d: Path) -> dict:
     return {
         "id": d.name, **_meta(d),
         "done": {"fetch": (e / "work" / "source.mp4").exists(), "transcribe": (e / "transcript.json").exists(),
+                 "proxy_source": (e / "work" / "app" / "proxy_source.mp4").exists(),
+                 "proxy_clean": (e / "work" / "app" / "proxy_clean.mp4").exists(),
                  "cut": (e / "work" / "clean.mp4").exists() and (e / "work" / "plan_input.txt").exists(),
                  "prep": (e / "work" / "plan_input.txt").exists(), "plan": (e / "edit_plan.json").exists(),
                  "preview": (e / "preview.mp4").exists(), "render": (e / "final.mp4").exists(),
@@ -107,6 +109,22 @@ def episode_state(d: Path) -> dict:
                      "queued": sum(r.get("status") == "queued" for r in reqs)},
         "running": JOB.ep == d.name and JOB.running,
     }
+
+
+def trash_episode(ep_id: str) -> None:
+    """Delete from the app = move to the Mac's Trash (it can still be brought back from there)."""
+    d = episode_dir(ep_id)
+    if JOB.running and JOB.ep == ep_id:
+        raise RuntimeError("هالحلقة دا تشتغل هسة. وگّفها أول")
+    if MAC:
+        target = Path.home() / ".Trash" / d.name
+        n = 2
+        while target.exists():
+            target, n = Path.home() / ".Trash" / f"{d.name} {n}", n + 1
+    else:
+        target = EPISODES / ".trash" / d.name
+        target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.move(str(d), str(target))
 
 
 def list_episodes() -> list[dict]:
@@ -620,6 +638,13 @@ def _plan_extra(d: Path) -> str:
     idea = d / "edit" / "idea.txt"
     if idea.exists() and idea.read_text(encoding="utf-8").strip():
         lines.append("- فكرة صاحب القناة للحلقة (التزم بيها): «" + idea.read_text(encoding="utf-8").strip() + "»")
+    try:
+        opts = json.loads((d / "edit" / "options.json").read_text(encoding="utf-8"))
+        pace = {"calm": "هادئ (مشاهد أطول، وقفات أكثر)", "normal": "عادي", "fast": "سريع (مشاهد قصيرة، تغيير كل ٢–٤ ثواني، هوك سريع جداً)"}.get(opts.get("pace"))
+        if pace:
+            lines.append(f"- الرتم: صاحب القناة خلّاه عليك، وريده {pace}. اضبط طول المشاهد والانتقالات على هذا.")
+    except (OSError, ValueError):
+        pass
     sf = d / "edit" / "style.txt"
     if sf.exists() and sf.read_text(encoding="utf-8").strip():
         lines.append(f"- الستايل: صاحب القناة اختار «{sf.read_text(encoding='utf-8').strip()}» (style.primary).")
@@ -703,6 +728,7 @@ def run_job(ep_id: str, what: str) -> None:
         if step == "prep":
             code = _run([sys.executable, "-m", "editor.pipeline", "prep", str(d), "--source", meta.get("source", "")])
         elif step == "fetch":
+            os.environ["ABOODI_PROGRESS"] = "1"
             code = _pipe("fetch", d, "--source", meta.get("source", ""))
         elif step == "transcribe":
             os.environ["ABOODI_PROGRESS"] = "1"
@@ -893,6 +919,9 @@ def version() -> dict:
         return {}
 
 
+SFX_AR = {"whoosh": "ووش", "swoosh": "سحبة", "boom": "بووم", "pop": "طگة", "click": "كليك", "ding": "دينگ", "hit": "ضربة",
+          "riser": "صعود", "paper": "ورق", "glitch": "تشويش", "tick": "تك تك", "switch": "مفتاح", "factory_machine": "مكينة مصنع",
+          "old_factory": "مصنع قديم", "robot_arm": "ذراع روبوت", "camera": "كاميرا", "typing": "طباعة", "heartbeat": "نبض قلب"}
 STYLE_NAMES = {"investigation": "لوحة تحقيق", "noir": "سينما الليل", "retro-collage": "كولاج ريترو", "vox": "ورق وقص ولزق"}
 
 
@@ -1063,7 +1092,13 @@ class Handler(BaseHTTPRequestHandler):
             m = re.match(r"^/api/episodes/([^/]+)/chat$", path)
             if m:
                 return self._json(chat_load(episode_dir(m.group(1))))
-            m = re.match(r"^/api/episodes/([^/]+)/(sentences|captions|plan|timeline|look|sound|idea|review|frame|voice-sample|media|effects|export-info)$", path)
+            if path == "/api/sfx":
+                from editor.pipeline.sfx import names
+                return self._json([{"id": n, "name": SFX_AR.get(n, n)} for n in names()])
+            if path == "/api/sfx-sample":
+                from editor.pipeline.sfx import sfx_path
+                return self._file(sfx_path(q.get("name", "whoosh")))
+            m = re.match(r"^/api/episodes/([^/]+)/(sentences|captions|plan|timeline|look|sound|idea|review|frame|voice-sample|media|effects|export-info|options|suggest)$", path)
             if m:
                 return self._studio_get(episode_dir(m.group(1)), m.group(2), q)
             m = re.match(r"^/api/db/([^/]+)/(doc|list)$", path)
@@ -1104,6 +1139,11 @@ class Handler(BaseHTTPRequestHandler):
             return self._err("مو موجود", 404)
         except KeyError:
             return self._err("الحلقة مو موجودة", 404)
+        except (ValueError, RuntimeError) as exc:
+            return self._err(str(exc), 400)
+
+    def _qs(self) -> dict:
+        return dict(urllib.parse.parse_qsl(urllib.parse.urlsplit(self.path).query))
 
     def _studio_get(self, d: Path, what: str, q: dict):
         from editor.pipeline.paths import Episode
@@ -1147,6 +1187,15 @@ class Handler(BaseHTTPRequestHandler):
                                "chapters": ch.read_text(encoding="utf-8") if ch.exists() else "",
                                "credits": cr.read_text(encoding="utf-8") if cr.exists() else "",
                                "shorts_plan": plan.get("shorts", []), "shorts": [str(f.relative_to(d)) for f in shorts]})
+        if what == "options":
+            from editor.pipeline.options import load_options
+            return self._json(load_options(ep))
+        if what == "suggest":
+            text = (q.get("q") or "").strip()
+            if not text:
+                raise ValueError("اكتب شنو تريد")
+            kind = q.get("kind") if q.get("kind") in ("image", "video") else "image"
+            return self._json(studio.suggest(text, kind))
         if what == "voice-sample":
             return self._file(voice_sample(ep, float(q.get("t") or 0), int(q.get("clean") or 1)))
         return self._err("مو موجود", 404)
@@ -1155,6 +1204,13 @@ class Handler(BaseHTTPRequestHandler):
         from editor.pipeline.paths import Episode
         from . import studio
         ep = Episode(d)
+        if what == "options":
+            from editor.pipeline.options import save_options
+            studio.snapshot(ep)
+            return self._json(save_options(ep, b))
+        if what == "choose":
+            studio.snapshot(ep)
+            return self._json(studio.suggest_choose(ep, int(b.get("i", -1)), b.get("cand") or {}))
         if what in ("beat", "look", "sound", "sentences", "captions"):
             studio.snapshot(ep)   # every change can be undone
         if what in ("undo", "redo"):
@@ -1230,9 +1286,22 @@ class Handler(BaseHTTPRequestHandler):
                 chat_add(d, {"role": "owner", "text": text, "ctx": b.get("ctx") or {}})
                 start_job(m.group(1), "chat", text)
                 return self._json({"ok": True, "messages": chat_load(d)})
-            m = re.match(r"^/api/episodes/([^/]+)/(sentences|captions|look|sound|idea|beat|undo|redo|media|short)$", path)
+            m = re.match(r"^/api/episodes/([^/]+)/(sentences|captions|look|sound|idea|beat|undo|redo|media|short|options|choose)$", path)
             if m:
                 return self._studio_post(episode_dir(m.group(1)), m.group(2), self._body())
+            m = re.match(r"^/api/episodes/([^/]+)/(delete|media-delete)$", path)
+            if m:
+                if m.group(2) == "delete":
+                    trash_episode(m.group(1))
+                    return self._json({"ok": True})
+                d = episode_dir(m.group(1))
+                name = Path(str(self._body().get("name", ""))).name
+                f = d / "edit" / "media" / name
+                if name and f.exists():
+                    f.unlink()
+                from editor.pipeline.paths import Episode
+                from .studio import media_list
+                return self._json(media_list(Episode(d)))
             m = re.match(r"^/api/episodes/([^/]+)/(run|stop|reveal|rename)$", path)
             if m:
                 ep, act = m.groups()

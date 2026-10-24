@@ -24,7 +24,7 @@ from pathlib import Path
 import numpy as np
 
 from .fmt import load_format
-from .media import filter_script, probe, run_ffmpeg
+from .media import PROXY, filter_script, probe, run_ffmpeg
 from .paths import Episode
 from .transcribe import Word, load_words, save_words
 
@@ -388,9 +388,11 @@ def clean(ep: Episode, script: Path | None = None) -> float:
          for ws, why in removed], ensure_ascii=False, indent=1), encoding="utf-8")
     fps = load_format(ep).fps  # fetch() normalized to this fps and 48 kHz audio
     spf = 48000 // fps
-    segs = keep_segments([kept_words], duration=duration)
+    from .options import pace_gaps
+    gaps = pace_gaps(ep)   # the assistant sets the rhythm (the app's option): how much of each pause stays
+    segs = keep_segments([kept_words], duration=duration, **({"max_gap": gaps[0], "pad": gaps[1]} if gaps else {}))
     env = loudness(ep.source)
-    segs = refine(segs, env, words)
+    segs = refine(segs, env, words, **({"pad": gaps[1]} if gaps else {}))
     segs = snap_to_frames([(s, min(e, duration)) for s, e in segs], fps)
     ep.cuts.write_text(json.dumps(segs), encoding="utf-8")
     if script:  # Iraqi dialect: correct the words we keep from the script the owner read
@@ -414,11 +416,19 @@ def clean(ep: Episode, script: Path | None = None) -> float:
                      f"[0:a]atrim=start_sample={f0 * spf}:end_sample={f1 * spf},asetpts=PTS-STARTPTS,"
                      f"afade=t=in:d={fade:.4f},afade=t=out:st={d - fade:.4f}:d={fade:.4f}[a{i}];")
         labels.append(f"[v{i}][a{i}]")
-    graph = "".join(parts) + "".join(labels) + f"concat=n={len(segs)}:v=1:a=1[v][a]"
+    graph = "".join(parts) + "".join(labels) + f"concat=n={len(segs)}:v=1:a=1[v0][a0];[v0]split=2[v][vp];[vp]scale=-2:720[pv];[a0]asplit=2[a][pa]"
     gfile = ep.work / "clean_filter.txt"
     gfile.write_text(graph, encoding="utf-8")
     run_ffmpeg(["-i", str(ep.source), *filter_script(gfile),
                 "-map", "[v]", "-map", "[a]", "-r", str(fps), "-c:v", "libx264", "-crf", "12",
                 "-preset", "veryfast", "-c:a", "pcm_s16le" if ep.clean_video.suffix == ".mov" else "aac",
-                "-b:a", "320k", str(ep.clean_video)])
+                "-b:a", "320k", str(ep.clean_video),
+                "-map", "[pv]", "-map", "[pa]", "-r", str(fps), *PROXY, str(_proxy(ep))])
     return kept_secs
+
+
+def _proxy(ep: Episode) -> Path:
+    """The app's light copy of the cut video (same pass)."""
+    p = ep.work / "app" / "proxy_clean.mp4"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    return p

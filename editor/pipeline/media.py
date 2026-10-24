@@ -76,6 +76,30 @@ def filter_script(path: Path) -> list[str]:
     return ["-/filter_complex", str(path)] if ffmpeg_version() >= (7, 1) else ["-filter_complex_script", str(path)]
 
 
+def run_ffmpeg_progress(args: list[str], duration: float) -> None:
+    """run_ffmpeg that also tells the Mac app how far it is ("@@ 42"), when ABOODI_PROGRESS is set."""
+    import os
+    if not os.environ.get("ABOODI_PROGRESS") or duration <= 0:
+        return run_ffmpeg(args)
+    proc = subprocess.Popen(["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-nostats", "-progress", "pipe:1", *args],
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    last = -1
+    for line in proc.stdout:
+        if line.startswith("out_time_us=") and line.strip()[12:].isdigit():
+            pct = min(99, int(int(line.strip()[12:]) / 1e6 / duration * 100))
+            if pct > last:
+                print(f"@@ {pct}", flush=True)
+                last = pct
+    err = proc.stderr.read()
+    if proc.wait() != 0:
+        raise MediaError(f"فشل ffmpeg: {err.strip()[-800:]}")
+
+
+# the app's light copy for playing and scrubbing (720p, a keyframe every 12 frames, index first)
+PROXY = ["-c:v", "libx264", "-preset", "veryfast", "-crf", "27", "-g", "12", "-keyint_min", "12", "-sc_threshold", "0",
+         "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-c:a", "aac", "-b:a", "96k"]
+
+
 def run_ffmpeg(args: list[str]) -> None:
     proc = subprocess.run(
         ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", *args],

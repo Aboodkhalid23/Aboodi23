@@ -245,3 +245,35 @@ def test_scene_tools_and_undo(app, tmp_path):
     assert studio.undo(ep)            # back to the first snapshot: one face scene
     assert len(json.loads(ep.plan.read_text())["beats"]) == 1
     assert studio.redo(ep) and len(json.loads(ep.plan.read_text())["beats"]) == 3
+
+
+def test_optional_extras_and_suggestions(app, monkeypatch):
+    from editor.app import studio
+    from editor.pipeline import options
+    from editor.pipeline.paths import Episode
+    d = srv.EPISODES / srv.create_episode("حلقة", str(app))["id"]
+    ep = Episode(d).ensure()
+    plan = {"style": {"primary": "noir", "sections": []}, "teaser": [], "end_screen": 20.0,
+            "beats": [{"start": 0, "end": 10, "zone": "hook", "kind": "face"}]}
+    ep.plan.write_text(json.dumps(plan), encoding="utf-8")
+    o = options.load_options(ep)
+    assert o["captions"]["on"] is False and o["pace"] == "off" and o["intro"] is False and o["outro"] is True
+    assert options.pace_gaps(ep) is None
+    o = options.save_options(ep, {"captions": {"on": True, "words": 9, "style": "weird"}, "pace": "fast", "outro": False})
+    assert o["captions"] == {"on": True, "style": "pop", "words": 6} and options.pace_gaps(ep) == options.PACE["fast"]
+    assert json.loads(ep.plan.read_text())["end_screen"] == 0
+    ass = options.captions_ass([("هلو", 0.0, 0.4), ("شلونكم", 0.4, 1.0), ("اليوم", 1.0, 1.5)], 2.0, 1920, 1080, "pop", 2)
+    assert "Vazirmatn" in ass and "شلونكم" in ass and "0:00:02.00" in ass
+    studio.edit_beat(ep, 0, {"cutout": "title", "title": "نوكيا"})
+    b = json.loads(ep.plan.read_text())["beats"][0]
+    assert b["kind"] == "face_cutout" and b["treatment"] == "title" and b["title"] == "نوكيا"
+    studio.edit_beat(ep, 0, {"cutout": "none"})
+    assert json.loads(ep.plan.read_text())["beats"][0]["kind"] == "face"
+    studio.edit_beat(ep, 0, {"sfx": "whoosh"})
+    assert studio.storyboard(ep)["cards"][0]["sfx"] == "whoosh"
+    import editor.pipeline.sources as sources
+    monkeypatch.setattr(sources, "download", lambda f, s: b"\x89PNG picked")
+    studio.suggest_choose(ep, 0, {"kind": "image", "url": "https://x/a.png", "provider": "wikimedia", "title": "t",
+                                  "query": "old factory", "credit": "t — a — cc"})
+    b = json.loads(ep.plan.read_text())["beats"][0]
+    assert b["kind"] == "image" and b["pick"]["local"] and (ep.assets / "img_0.png").read_bytes() == b"\x89PNG picked"

@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 
 from .fmt import decide_format, save_format
-from .media import MediaError, probe, run_ffmpeg
+from .media import PROXY, run_ffmpeg_progress, MediaError, probe, run_ffmpeg
 from .paths import Episode
 
 VIDEO_EXTS = {".mp4", ".mov", ".mkv", ".m4v", ".avi", ".webm"}
@@ -94,9 +94,13 @@ def fetch(source: str, ep: Episode, max_height: int | None = None) -> Path:
         vf.insert(0, TONEMAP)
     vf += [f"fps={fmt.fps}", "format=yuv420p"]
     partial = ep.work / "source.partial.mp4"
-    run_ffmpeg(["-i", str(raw), "-vf", ",".join(vf), *INTERMEDIATE,
-                "-color_primaries", "bt709", "-color_trc", "bt709", "-colorspace", "bt709",
-                "-c:a", "aac", "-ar", "48000", "-b:a", "192k", "-metadata:s:v", "rotate=0", str(partial)])
+    proxy = ep.work / "app" / "proxy_source.mp4"   # the app plays this light copy (same pass, no extra decode)
+    proxy.parent.mkdir(parents=True, exist_ok=True)
+    run_ffmpeg_progress(["-i", str(raw), "-filter_complex", f"[0:v]{','.join(vf)},split=2[v][p];[p]scale=-2:720[pv]",
+                         "-map", "[v]", "-map", "0:a?", *INTERMEDIATE,
+                         "-color_primaries", "bt709", "-color_trc", "bt709", "-colorspace", "bt709",
+                         "-c:a", "aac", "-ar", "48000", "-b:a", "192k", "-metadata:s:v", "rotate=0", str(partial),
+                         "-map", "[pv]", "-map", "0:a?", *PROXY, str(proxy)], info.duration)
     partial.replace(ep.source)
     save_format(ep, fmt)
     record.write_text(json.dumps({

@@ -570,4 +570,5 @@ def compose(ep: Episode, preview: bool = False) -> Path:
     final = ep.edit / "preview.mp4" if preview else ep.final
     run_ffmpeg(["-f", "concat", "-safe", "0", "-i", str(listing), "-i", str(audio), "-map", "0:v", "-map", "1:a",
                 "-c", "copy", "-movflags", "+faststart", str(final)])
-    return final
+    from .options import post_process
+    return post_process(ep, final, plan.teaser_total)   # captions on the video / the opening, if he turned them on

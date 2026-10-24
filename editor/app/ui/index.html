@@ -274,9 +274,49 @@ canvas.wave{position:absolute;inset:0;width:100%;height:100%}
 .ctxchip{display:flex;align-items:center;gap:6px;color:var(--mute);font-size:12px}
 .log{font-size:12px;line-height:1.8;color:#c5c5cc;max-height:240px;overflow:auto;white-space:pre-wrap;word-break:break-word;user-select:text}
 .log .bad{color:#ff8a8a}.log .good{color:var(--green)}.log .h{color:var(--y);font-weight:700}
+
+/* ---------- Liquid Glass (owner, 2026-10-24: "نفس نظام آبل"): translucent panels over a soft glow of his own video ---------- */
+:root{--glass:rgba(255,255,255,.055);--glass2:rgba(255,255,255,.09);--glassline:rgba(255,255,255,.13);--glasshi:rgba(255,255,255,.22);--blur:saturate(170%) blur(28px)}
+body{background:#07070a}
+#ambient{position:fixed;inset:-10%;z-index:-1;filter:blur(90px) saturate(150%);opacity:.55;pointer-events:none;transition:opacity 1s}
+#ambient canvas{width:100%;height:100%}
+#ambientBase{position:fixed;inset:0;z-index:-2;background:radial-gradient(900px 600px at 80% 0%,#2a2350 0,transparent 60%),radial-gradient(800px 500px at 0% 100%,#3a2a12 0,transparent 60%),#07070a}
+header,#rail,#panel,#viewer,#inspector,#tl,.dlg,.chat,.lib,.toast,.pop,.bigsb{background:var(--glass)!important;-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  border:1px solid var(--glassline)!important;box-shadow:inset 0 1px 0 var(--glasshi),0 18px 50px rgba(0,0,0,.35)}
+header{border-width:0 0 1px 0!important;border-radius:0}
+#rail,#panel,#viewer,#inspector,#tl{border-radius:22px}
+#viewer{background:rgba(0,0,0,.35)!important}
+.lib{background:rgba(10,10,14,.6)!important}
+.dlg{border-radius:24px;background:rgba(28,28,34,.72)!important}
+.veil{background:rgba(0,0,0,.45);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.pill{background:var(--glass2);border-color:var(--glassline);box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+.pill:hover{background:rgba(255,255,255,.14)}
+.pill.y{background:linear-gradient(180deg,#ffe07a,#f2c94c);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 6px 18px rgba(242,201,76,.25)}
+.card,.status,.scard,.st,.lc,.tile span,.sub3 button,.seg2,.seg3,.seg4,.tstyle,input,textarea,select{background:rgba(255,255,255,.05)!important;border-color:var(--glassline)!important}
+.st.on,.sub3 button.on{background:rgba(255,255,255,.14)!important}
+.rb.on{background:linear-gradient(180deg,#ffe07a,#f2c94c);box-shadow:0 6px 18px rgba(242,201,76,.3)}
+.ycard{background:linear-gradient(180deg,rgba(242,201,76,.16),rgba(242,201,76,.07));border-color:rgba(242,201,76,.35)}
+.blk.cap{background:rgba(124,104,255,.32)}.blk.sc{background:rgba(242,201,76,.16);border-color:rgba(242,201,76,.32)}.blk.sc.face{background:rgba(255,255,255,.05)}
+.vid{opacity:.8}
+/* the fixed box for talking to the assistant (always there, under the video) */
+.sw{width:44px;height:26px;border-radius:999px;background:rgba(255,255,255,.12);position:relative;flex:none;border:1px solid var(--glassline)}
+.sw::after{content:"";position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:#ddd;transition:right .2s}
+.sw.on{background:linear-gradient(180deg,#ffe07a,#f2c94c)}.sw.on::after{right:20px;background:#fff}
+.excard{padding:12px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid var(--glassline)}
+.excard .row b{font-size:14px}
+.sfxrow{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid var(--glassline)}
+.sug{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.sug .tile img,.sug .tile video{width:100%;aspect-ratio:16/10;object-fit:cover;display:block;background:#000}
+.askbar{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);width:min(560px,86%);display:flex;align-items:center;gap:8px;padding:6px 6px 6px 14px;
+  border-radius:999px;background:rgba(30,30,36,.55);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid var(--glassline);box-shadow:inset 0 1px 0 var(--glasshi),0 10px 30px rgba(0,0,0,.4);z-index:6}
+.askbar input{background:transparent!important;border:0!important;padding:8px 4px;outline:none!important}
+.askbar .spark{color:var(--y);flex:none;padding-inline-start:8px}
+.askreply{position:absolute;left:50%;bottom:66px;transform:translateX(-50%);width:min(560px,86%);padding:12px 14px;border-radius:18px;background:rgba(30,30,36,.7);
+  -webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid var(--glassline);line-height:1.7;z-index:6}
 </style>
 </head>
 <body>
+<div id="ambientBase"></div><div id="ambient"><canvas id="amb" width="32" height="18"></canvas></div>
 <div id="app">
   <header>
     <div class="brand row"><img src="/ui/logo.png" alt="" style="height:28px;width:auto">URU<small>استوديو المونتاج</small></div>
@@ -304,6 +344,8 @@ canvas.wave{position:absolute;inset:0;width:100%;height:100%}
       <button class="rb" data-panel="effects" title="المؤثرات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8l1.4 1.4M17.8 6.2l1.4-1.4M3 21l9-9M12.2 6.2l-1.4-1.4"/></svg><span>المؤثرات</span></button>
       <button class="rb" data-panel="text" title="النص"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5h16v2M9 19h6M12 5v14"/></svg><span>النص</span></button>
       <button class="rb" data-panel="stickers" title="الملصقات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9.5L21 14.5V5a2 2 0 0 0-2-2z"/><path d="M14 21v-5a2 2 0 0 1 2-2h5"/></svg><span>الملصقات</span></button>
+      <button class="rb" data-panel="sounds" title="الأصوات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg><span>الأصوات</span></button>
+      <button class="rb" data-panel="extras" title="الإضافات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="10" rx="5"/><circle cx="15" cy="12" r="3"/></svg><span>الإضافات</span></button>
       <button class="rb" data-panel="colors" title="الألوان"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2a10 10 0 1 0 0 20c1 0 1.5-.8 1.5-1.6 0-.5-.2-.8-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.7-1.6 1.6-1.6H16a6 6 0 0 0 6-6c0-4.4-4.5-8.4-10-8.4z"/></svg><span>الألوان</span></button>
       <button class="rb" data-panel="format" title="المقاس"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg><span>المقاس</span></button>
       <span class="grow"></span>
@@ -343,6 +385,18 @@ canvas.wave{position:absolute;inset:0;width:100%;height:100%}
         <div class="dim tiny" style="padding:0 14px 8px">تنحط على المشهد المحدد، بوقت المؤشر.</div>
         <div style="padding:0 14px 8px"><input id="stTxt" placeholder="الكلمة (للختم والملصق والفقاعة)"></div>
         <div class="grid3" id="stGrid"></div>
+      </div>
+      <div class="pn" data-pn="sounds" hidden>
+        <div class="pnh"><b>الأصوات</b></div>
+        <div class="dim tiny" style="padding:0 14px 8px">مؤثرات صوتية ملكك (بلا حقوق). اسمعها، ودوس «أضف» حتى تنحط ببداية المشهد المحدد.</div>
+        <div style="padding:0 14px 8px"><input id="sfxFind" placeholder="ابحث بالأصوات"></div>
+        <div id="sfxList" style="padding:0 14px 14px;display:grid;gap:6px"></div>
+        <audio id="sfxAud" hidden></audio>
+      </div>
+      <div class="pn" data-pn="extras" hidden>
+        <div class="pnh"><b>الإضافات</b></div>
+        <div class="dim tiny" style="padding:0 14px 8px">كلها اختيارية: شغّل الي تريده وطفّي الباقي. تنطبق وقت البناء.</div>
+        <div id="exBody" style="padding:0 14px 14px;display:grid;gap:10px"></div>
       </div>
       <div class="pn" data-pn="colors" hidden>
         <div id="inspEmpty" class="dim" style="padding:14px">افتح مشروع حتى تشوف ألوانه.</div>
@@ -392,6 +446,9 @@ canvas.wave{position:absolute;inset:0;width:100%;height:100%}
         <div class="empty" id="vEmpty"><div><h1>استوديو المونتاج</h1><div>لا يوجد مشروع مفتوح</div><div class="dim" style="margin-top:4px">اختر مشروعاً من المكتبة</div></div></div>
         <video id="video" playsinline preload="auto" hidden></video>
         <div class="cmp" id="cmp" hidden><img id="cmpImg" alt=""><span class="lbl" id="cmpLbl"></span></div>
+        <div class="askreply" id="askReply" hidden></div>
+        <div class="askbar" id="askBar" hidden><button class="icobtn" id="askOpen" title="افتح المحادثة">💬</button>
+          <input id="askIn" placeholder="احچي ويه المساعد عن هاللحظة… مثلاً: هالصورة ما عجبتني"><span class="spark">✦</span><button class="pill sm y" id="askGo">ارسل</button></div>
       </div>
     </section>
 
@@ -448,6 +505,11 @@ canvas.wave{position:absolute;inset:0;width:100%;height:100%}
     </div>
   </section>
 </div>
+
+<!-- delete a clip -->
+<div class="veil" id="dDel" hidden><div class="dlg" style="width:min(440px,100%)">
+  <h2>تحذف هالحلقة؟</h2><div class="muted" style="margin-top:6px">«<span id="delName"></span>» تروح لسلة المحذوفات بالماك، وتگدر ترجّعها من هناك.</div>
+  <div class="foot"><button class="pill big" id="delGo" style="background:var(--red);border-color:var(--red);color:#fff">احذفها</button><button class="pill big" data-close>لا</button></div></div></div>
 
 <!-- export -->
 <div class="veil" id="dExport" hidden><div class="dlg" style="width:min(620px,100%)">
@@ -620,11 +682,15 @@ function renderLibrary(){
     const d = e.done, n = ["fetch", "transcribe", "cut", "plan", "render"].filter(k => d[k]).length;
     const st = e.running ? "دا يشتغل…" : d.render ? "جاهزة" : d.plan ? "الخطة جاهزة" : d.cut ? "انقصّت" : d.transcribe ? "انفرّغت" : d.fetch ? "الفيديو جاهز" : "جديدة";
     const b = document.createElement("button"); b.className = "lc";
-    b.innerHTML = `<b></b><div class="s"></div><div class="p"><i style="width:${n * 20}%"></i></div>`;
+    b.innerHTML = `<div class="row"><b class="grow"></b><span class="icobtn lcdel" title="احذف">🗑</span></div><div class="s"></div><div class="p"><i style="width:${n * 20}%"></i></div>`;
     b.querySelector("b").textContent = e.name; b.querySelector(".s").textContent = st + " · " + (e.created || "").slice(0, 10);
-    b.onclick = () => open(e.id);
+    b.onclick = (ev) => { if (ev.target.closest(".lcdel")){ askDelete(e); return; } open(e.id); };
     g.appendChild(b);
   }
+}
+function askDelete(e){
+  $("delName").textContent = e.name; $("dDel").hidden = false;
+  $("delGo").onclick = async () => { try { await post(`/api/episodes/${enc(e.id)}/delete`); $("dDel").hidden = true; if (cur === e.id){ cur = null; location.hash = ""; } await refresh(); loadVideo(); toast("انحذفت (موجودة بسلة المحذوفات إذا تريد ترجعها)"); } catch (err){ toast(err.message); } };
 }
 async function open(id){
   if (id !== cur){ thumbs = null; $("chat").hidden = true; }
@@ -650,7 +716,8 @@ async function loadAll(){
   notes = n.map(x => ({id: x.id, ...x.data})).filter(x => typeof x.t === "number").sort((a, b) => a.t - b.t);
   for (const k of ["captions", "sentences"]) data.review[k] = await api(E() + "/review?kind=" + k).catch(() => null);
   keepMap = {}; (s && s.items || []).forEach(x => keepMap[x.i] = x.keep);
-  renderSteps(); renderInspector(); renderTimeline(); renderScene(); drawToggles(); fxData = null;
+  chatMsgs = await api(E() + "/chat").catch(() => []);
+  renderSteps(); renderInspector(); renderTimeline(); renderScene(); drawToggles(); fxData = null; drawAsk();
   if (panelNow !== "steps") showPanel(panelNow);
 }
 
@@ -662,19 +729,27 @@ function wantedVideo(){
   const d = ep.done;
   if (step >= 5 && d.render) return [`/files/${enc(cur)}/edit/final.mp4`, "النسخة الكاملة"];
   if (step >= 5 && d.preview) return [`/files/${enc(cur)}/edit/preview.mp4`, "معاينة"];
-  if (step >= 2 && d.cut) return [`/files/${enc(cur)}/edit/work/clean.mp4`, "بعد القص"];
-  if (d.fetch) return [`/files/${enc(cur)}/edit/work/source.mp4`, "الخام"];
+  if (step >= 2 && d.cut) return [`/files/${enc(cur)}/edit/work/${d.proxy_clean ? "app/proxy_clean.mp4" : "clean.mp4"}`, "بعد القص"];
+  if (d.fetch) return [`/files/${enc(cur)}/edit/work/${d.proxy_source ? "app/proxy_source.mp4" : "source.mp4"}`, "الخام"];
   return ["", ""];
 }
 function loadVideo(force){
   const [src, which] = wantedVideo();
   $("vWhich").textContent = which;
   $("vEmpty").hidden = !!src || !!ep; video.hidden = !src;
-  if (!src && ep){ $("vEmpty").hidden = false; $("vEmpty").innerHTML = `<div><h1>${esc(ep.name)}</h1><div>الفيديو يطلع هنا أول ما يتجهز</div></div>`; }
+  if (!src && ep){ $("vEmpty").hidden = false; drawPreparing(); }
   if (!ep){ $("vEmpty").innerHTML = `<div><h1>استوديو المونتاج</h1><div>لا يوجد مشروع مفتوح</div><div class="dim" style="margin-top:4px">اختر مشروعاً من المكتبة</div></div>`; }
   if (src && (src !== vSrc || force)){ const t = src === vSrc ? video.currentTime : 0; vSrc = src; video.src = src; video.addEventListener("loadedmetadata", () => { video.currentTime = Math.min(t, video.duration || t); }, {once: true}); }
   $("vReveal").hidden = !(ep && ep.done.render && step >= 5);
   applyCssLook();
+}
+function drawPreparing(){
+  if (!ep || $("vEmpty").hidden) return;
+  const busy = job.running && job.ep === cur && job.step === "fetch", pct = busy && job.progress != null ? job.progress : null;
+  $("vEmpty").innerHTML = `<div style="width:min(360px,80%)"><div class="spinner" style="margin:0 auto 14px;width:26px;height:26px;${busy ? "" : "animation:none;border-top-color:var(--line2)"}"></div>
+    <div style="font-weight:700">${busy ? "دا أجهّز الفيديو" : "الفيديو بعده ما تجهّز"}</div>
+    <div class="dim tiny" style="margin-top:6px">${busy ? "الملفات الكبيرة (فور كي) تاخذ وقت. تگدر تشتغل على غيرها." : "دوس «جهّزه» بخطوة الجمل."}</div>
+    ${pct != null ? `<div class="prog" style="margin-top:12px"><i style="width:${pct}%"></i></div><div class="num" style="margin-top:6px">${ar(pct)}٪</div>` : ""}</div>`;
 }
 $("vFit").onchange = () => $("vwrap").classList.toggle("full", $("vFit").value === "full");
 $("vReveal").onclick = () => post(E() + "/reveal", {what: "final"}).catch(e => toast(e.message));
@@ -774,12 +849,12 @@ function miniMap(s){
 }
 function seekRaw(t){
   if (ep.done.cut && step >= 2){ toast("هاي على الخام: ارجع لخطوة الجمل"); return; }
-  if (!vSrc.endsWith("source.mp4")){ step = 1; loadVideo(); }
+  if (!/source\.mp4$/.test(vSrc)){ step = 1; loadVideo(); }
   video.currentTime = t;
 }
 function listenResult(){
   const s = data.sentences; if (!s) return;
-  if (!vSrc.endsWith("source.mp4")){ const [src] = [`/files/${enc(cur)}/edit/work/source.mp4`]; vSrc = src; video.src = src; }
+  if (!/source\.mp4$/.test(vSrc)){ const [src] = [`/files/${enc(cur)}/edit/work/source.mp4`]; vSrc = src; video.src = src; }
   skipRanges = s.items.filter(x => !(keepMap[x.i] ?? x.keep)).map(x => [x.s, x.e]);
   const first = s.items.find(x => keepMap[x.i] ?? x.keep);
   video.currentTime = first ? first.s : 0; video.play().then(() => { skipRanges = s.items.filter(x => !(keepMap[x.i] ?? x.keep)).map(x => [x.s, x.e]); });
@@ -1096,8 +1171,8 @@ function tick(){
   $("time").innerHTML = `${clock(t)} <span>/ ${clock(d)}</span>`;
   $("ph").style.left = t * pps + "px";
   const sc = $("tscroll"); if (!video.paused && (t * pps > sc.scrollLeft + sc.clientWidth - 40 || t * pps < sc.scrollLeft)) sc.scrollLeft = t * pps - 80;
-  if ($("miniHead") && data.sentences && vSrc.endsWith("source.mp4")) $("miniHead").style.left = (100 * t / (data.sentences.raw || 1)) + "%";
-  if (step === 1 && vSrc.endsWith("source.mp4")){ const rows = $("stepbody").querySelectorAll(".sent"); rows.forEach(r => r.classList.toggle("cur", t >= +r.dataset.s && t < +(r.nextElementSibling ? r.nextElementSibling.dataset.s : 1e9))); }
+  if ($("miniHead") && data.sentences && /source\.mp4$/.test(vSrc)) $("miniHead").style.left = (100 * t / (data.sentences.raw || 1)) + "%";
+  if (step === 1 && /source\.mp4$/.test(vSrc)){ const rows = $("stepbody").querySelectorAll(".sent"); rows.forEach(r => r.classList.toggle("cur", t >= +r.dataset.s && t < +(r.nextElementSibling ? r.nextElementSibling.dataset.s : 1e9))); }
 }
 function timeAt(e){ const r = $("lane").getBoundingClientRect(); return Math.max(0, Math.min(tlDur, (e.clientX - r.left) / pps)); }
 function snapT(t){
@@ -1148,11 +1223,12 @@ async function pollLog(){
     if (d.ep !== lastLog.ep && logNext) { logNext = 0; logLines = []; }
     lastLog = d; logLines.push(...d.lines); if (logLines.length > 400) logLines = logLines.slice(-300); logNext = d.next;
     job = {...job, running: d.running, ep: d.ep, what: d.what, step: d.step, progress: d.progress};
-    if (d.running && d.ep === cur){ if (!ep || ep.running !== true) await refresh(); renderSteps(); if (!$("chat").hidden) renderChat(); }
+    if (d.running && d.ep === cur){ if (!ep || ep.running !== true) await refresh(); renderSteps(); if (!$("chat").hidden) renderChat(); drawPreparing(); }
+    drawAsk();
     if (was && !d.running){
       await refresh(); if (d.ep === cur){ await loadAll(); loadVideo(true); }
       if (d.need_login) openLink();
-      if (d.what === "chat" && d.ep === cur){ chatMsgs = await api(E() + "/chat").catch(() => chatMsgs); if ($("chat").hidden) toast("المساعد جاوبك 💬"); renderChat(); }
+      if (d.what === "chat" && d.ep === cur){ chatMsgs = await api(E() + "/chat").catch(() => chatMsgs); askFresh = $("chat").hidden; renderChat(); }
       else toast(d.ok ? "خلص ✅" : "ما كمل، شوف التفاصيل");
       if (d.ok && d.what === "prepare" && d.ep === cur){ step = 1; renderSteps(); }
       if (d.ok && d.what === "cut" && d.ep === cur){ step = 3; renderSteps(); loadVideo(true); }
@@ -1330,6 +1406,8 @@ function showPanel(k){
   if (k === "stickers") drawStickers();
   if (k === "colors") renderInspector();
   if (k === "format") loadFormat();
+  if (k === "sounds") loadSfx();
+  if (k === "extras") loadExtras();
 }
 document.querySelectorAll("#rail .rb[data-panel]").forEach(b => b.onclick = () => showPanel(b.dataset.panel));
 $("rChat").onclick = () => ep ? openChat() : toast("افتح مشروع أول");
@@ -1347,9 +1425,10 @@ async function loadMedia(){ mediaData = await api(E() + "/media").catch(() => []
 function drawMedia(){
   $("mTabs").querySelectorAll("[data-mk]").forEach(b => b.classList.toggle("on", b.dataset.mk === mediaKind));
   const list = mediaData.filter(m => mediaKind === "all" || m.kind === mediaKind);
-  $("mGrid").innerHTML = list.length ? list.map(m => `<button class="tile" data-m="${esc(m.name)}">${m.thumb ? `<img src="/files/${enc(cur)}/${m.thumb.split("/").map(enc).join("/")}">` : `<div class="ic">${m.kind === "audio" ? "🎵" : "🎞️"}</div>`}<span>${esc(m.name)}</span></button>`).join("")
+  $("mGrid").innerHTML = list.length ? list.map(m => `<button class="tile" data-m="${esc(m.name)}">${m.thumb ? `<img src="/files/${enc(cur)}/${m.thumb.split("/").map(enc).join("/")}">` : `<div class="ic">${m.kind === "audio" ? "🎵" : "🎞️"}</div>`}<span>${esc(m.name)}<i class="mdel" data-del="${esc(m.name)}" title="احذف" style="float:left;font-style:normal;opacity:.7">✕</i></span></button>`).join("")
     : `<div class="dim" style="grid-column:1/-1;line-height:1.8">ماكو مواد بعد. دوس «أضف ملف» وجيب صورة أو مقطع من حاسبتك.</div>`;
-  $("mGrid").querySelectorAll("[data-m]").forEach(b => b.onclick = () => {
+  $("mGrid").querySelectorAll("[data-m]").forEach(b => b.onclick = async (ev) => {
+    if (ev.target.closest(".mdel")){ mediaData = await post(E() + "/media-delete", {name: ev.target.dataset.del}).catch(() => mediaData); drawMedia(); return; }
     const m = mediaData.find(x => x.name === b.dataset.m);
     if (m.kind === "audio"){ toast("الأصوات: گول للمساعد وين تريدها"); openChat(`حط الصوت «${m.name}» من موادي بهالمكان`); return; }
     changeScene(targetScene(), {media: m.name}, m.kind === "video" ? "انحط المقطع على المشهد" : "انحطت الصورة على المشهد");
@@ -1403,6 +1482,7 @@ $("rAdd").onclick = async () => { try { await post(E() + "/short", {from: +$("rF
 $("rMake").onclick = () => { if (!ep.done.render && !ep.done.preview){ toast("طلّع الحلقة أول (البناء)"); return; } run("shorts"); };
 
 /* scene settings (the left panel) */
+function prompt2(label){ const t = ($("iTxt") && $("iTxt").value.trim()) || ""; if (!t) toast("اكتب " + label + " بخانة «النص على الشاشة» أول"); return t; }
 function renderScene(){
   const c = data.plan && data.plan.cards && data.plan.cards[selScene ?? -1];
   if (!ep || !c){ $("insWhat").textContent = ""; $("insBody").innerHTML = `<div class="dim" style="line-height:1.9">دوس على مشهد بالتايم لاين حتى تشوف إعداداته هنا: النص، والتأثير، والانتقال، والملصقات، والصورة.</div>`; return; }
@@ -1414,6 +1494,10 @@ function renderScene(){
     <div class="field2"><label>التأثير</label><select id="iFx"><option value="">بلا تأثير</option>${Object.entries(EFFECT_AR).map(([k, n]) => `<option value="${k}" ${c.effect === k ? "selected" : ""}>${n}</option>`).join("")}</select></div>
     <div class="field2"><label>الانتقال لهالمشهد</label><select id="iTr"><option value="">قطع مباشر</option>${Object.entries(TRANS_AR).map(([k, n]) => `<option value="${k}" ${c.transition === k ? "selected" : ""}>${n}</option>`).join("")}</select></div>
     <div class="field2"><label>الملصقات</label>${(c.stickers || []).length ? c.stickers.map((st, k) => `<div class="row" style="padding:4px 0"><span class="grow">${(STICK.find(x => x[0] === st.type) || [0, st.type])[1]}${st.text ? ` «${esc(st.text)}»` : ""}</span><button class="icobtn" data-rmst="${k}">✕</button></div>`).join("") : `<div class="dim tiny">ماكو. ضيفها من «الملصقات».</div>`}</div>
+    ${c.kind.startsWith("face") ? `<div class="field2"><label>الخلفية</label><select id="iBg"><option value="none">الأصلية</option><option value="paper" ${c.kind === "face_cutout" && c.treatment === "paper" ? "selected" : ""}>شيلها، وحط ورق القناة وراك</option><option value="title" ${c.kind === "face_cutout" && c.treatment === "title" ? "selected" : ""}>شيلها، وحط كلمة كبيرة وراك</option></select></div>` : ""}
+    <div class="field2"><label>اقترح بدائل</label><div class="row"><input id="sugQ" placeholder="شنو تريد؟ مثلاً: old factory" value="${esc(c.query_raw || "")}"></div>
+      <div class="row" style="margin-top:6px"><button class="pill sm" id="sugImg">صور</button><button class="pill sm" id="sugVid">مقاطع</button><button class="pill sm" id="sugAsk">خلّي المساعد يقترح</button></div>
+      <div class="sug" id="sugBox"></div></div>
     <div class="field2"><label>ملاحظتك للمساعد</label><input id="iNote" value="${esc(c.note || "")}" placeholder="شنو تريد يتغيّر؟"></div>
     <div class="row" style="flex-wrap:wrap;margin-top:14px"><button class="pill sm y" id="iAsk">اسأل المساعد عنه</button><button class="pill sm" id="iSplit">قسّمه عند المؤشر</button><button class="pill sm" id="iDel">شيله</button></div>`;
   const i = c.i;
@@ -1421,6 +1505,12 @@ function renderScene(){
   $("iFx").onchange = () => changeScene(i, {effect: $("iFx").value}, "تغيّر التأثير");
   $("iTr").onchange = () => changeScene(i, {transition: $("iTr").value}, "تغيّر الانتقال");
   $("iNote").onchange = () => changeScene(i, {note: $("iNote").value}, "انحفظت الملاحظة");
+  if ($("iBg")) $("iBg").onchange = () => { const v = $("iBg").value; const ch = {cutout: v};
+    if (v === "title"){ ch.title = (c.text || "").trim() || prompt2("الكلمة الي تطلع ورا ظهرك"); if (!ch.title){ $("iBg").value = "none"; return; } }
+    changeScene(i, ch, v === "none" ? "رجعت الخلفية" : "تنشال الخلفية وقت البناء"); };
+  $("sugImg").onclick = () => suggestFor(i, "image");
+  $("sugVid").onclick = () => suggestFor(i, "video");
+  $("sugAsk").onclick = () => openChat("اقترح لي ٣ صور أو مقاطع أحسن لهالمشهد، وحط أحسن وحدة", i);
   $("insBody").querySelectorAll("[data-rmst]").forEach(b => b.onclick = () => changeScene(i, {sticker: {remove: +b.dataset.rmst}}, "انشال الملصق"));
   $("iAsk").onclick = () => openChat("", i);
   $("iSplit").onclick = () => changeScene(i, {split: planTime()}, "انقسم المشهد");
@@ -1457,6 +1547,92 @@ async function openExport(){
 $("tExport").onclick = openExport;
 $("vFull").onclick = () => { const v = $("vwrap"); (v.requestFullscreen || v.webkitRequestFullscreen || (() => {})).call(v); };
 $("vZoom").onchange = () => { video.style.transform = `scale(${$("vZoom").value})`; };
+
+
+/* ---------- ambient glow from his video, and the fixed box for the assistant ---------- */
+(function ambient(){
+  const c = $("amb"), g = c.getContext("2d");
+  setInterval(() => { if (video.hidden || video.readyState < 2) return; try { g.drawImage(video, 0, 0, c.width, c.height); } catch (_) {} }, 700);
+})();
+function drawAsk(){
+  $("askBar").hidden = !ep;
+  const busy = job.running && job.ep === cur && job.what === "chat";
+  $("askGo").disabled = !!job.running; $("askGo").textContent = busy ? "…" : "ارسل";
+  const last = chatMsgs.length ? chatMsgs[chatMsgs.length - 1] : null;
+  if (busy) { $("askReply").hidden = false; $("askReply").innerHTML = `<div class="row"><div class="spinner"></div><span class="muted">المساعد يشتغل على طلبك…</span></div>`; }
+  else if (last && last.role !== "owner" && askFresh){ $("askReply").hidden = false;
+    $("askReply").innerHTML = `${esc(last.text)}<div class="row" style="margin-top:8px">${last.changed ? `<button class="pill sm y" id="arBuild">طلّع معاينة</button>` : ""}<button class="pill sm" id="arMore">كمّل المحادثة</button><button class="pill sm" id="arX">✕</button></div>`;
+    if ($("arBuild")) $("arBuild").onclick = () => { askFresh = false; drawAsk(); step = 5; showPanel("steps"); run("build"); };
+    $("arMore").onclick = () => { askFresh = false; drawAsk(); openChat(); };
+    $("arX").onclick = () => { askFresh = false; drawAsk(); };
+  } else $("askReply").hidden = true;
+}
+let askFresh = false;
+$("askGo").onclick = async () => {
+  const text = $("askIn").value.trim(); if (!text) return;
+  try { const r = await post(E() + "/chat", {text, ctx: chatCtx()}); chatMsgs = r.messages; $("askIn").value = ""; askFresh = true;
+    job = {...job, running: true, ep: cur, what: "chat"}; lastLog = {running: true, what: "chat"}; drawAsk(); if (!$("chat").hidden) renderChat(); }
+  catch (e){ toast(e.message); }
+};
+$("askIn").onkeydown = (e) => { if (e.key === "Enter"){ e.preventDefault(); $("askGo").click(); } };
+$("askOpen").onclick = () => openChat();
+
+
+/* ---------- sounds library ---------- */
+let sfxData = null;
+async function loadSfx(){ if (!sfxData) sfxData = await api("/api/sfx").catch(() => []); drawSfx(); }
+function drawSfx(){
+  const q = ($("sfxFind").value || "").trim(), c = data.plan && data.plan.cards && data.plan.cards[targetScene() ?? -1];
+  $("sfxList").innerHTML = (sfxData || []).filter(x => !q || x.name.includes(q)).map(x => `<div class="sfxrow"><button class="icobtn" data-play="${x.id}">▶</button><span class="grow">${esc(x.name)}</span>${c && c.sfx === x.id ? `<span class="chip">بالمشهد</span>` : ""}<button class="pill sm" data-add="${x.id}">أضف</button></div>`).join("")
+    + `<div class="sfxrow"><span class="grow dim">شيل الصوت من المشهد المحدد</span><button class="pill sm" data-add="">شيل</button></div>`;
+  $("sfxList").querySelectorAll("[data-play]").forEach(b => b.onclick = () => { const a = $("sfxAud"); a.src = "/api/sfx-sample?name=" + b.dataset.play; a.play(); });
+  $("sfxList").querySelectorAll("[data-add]").forEach(b => b.onclick = () => changeScene(targetScene(), {sfx: b.dataset.add}, b.dataset.add ? "انضاف الصوت" : "انشال الصوت"));
+}
+$("sfxFind").oninput = drawSfx;
+
+/* ---------- optional extras ---------- */
+let opts = null;
+async function loadExtras(){ opts = await api(E() + "/options").catch(() => null); drawExtras(); }
+function sw(id, on){ return `<button class="sw ${on ? "on" : ""}" id="${id}" aria-pressed="${on}"></button>`; }
+function drawExtras(){
+  if (!opts) return;
+  const c = opts.captions;
+  $("exBody").innerHTML = `
+    <div class="excard"><div class="row"><b class="grow">كابشن على الفيديو</b>${sw("exCap", c.on)}</div>
+      <div class="dim tiny" style="margin-top:6px">كلمات تطلع وحدة وحدة والكلمة الي تنگال تضوي (ستايل الريلز وتيك توك).</div>
+      ${c.on ? `<div class="seg3" style="margin:10px 0 0;grid-template-columns:repeat(3,1fr)">${[["pop", "قوي"], ["clean", "هادئ"], ["box", "بمربع"]].map(([k, n]) => `<button data-cs="${k}" class="${c.style === k ? "on" : ""}">${n}</button>`).join("")}</div>
+      <div class="sl"><label>كلمات بالمرة</label><input type="range" class="exp" id="exWords" min="1" max="6" value="${c.words}"><output>${ar(c.words)}</output></div>` : ""}</div>
+    <div class="excard"><div class="row"><b class="grow">المساعد يتحكم بالرتم</b>${sw("exPace", opts.pace !== "off")}</div>
+      <div class="dim tiny" style="margin-top:6px">يقرر شگد يشيل من الوقفات، وطول المشاهد، وسرعة الانتقالات.</div>
+      ${opts.pace !== "off" ? `<div class="seg3" style="margin:10px 0 0;grid-template-columns:repeat(3,1fr)">${[["calm", "هادئ"], ["normal", "عادي"], ["fast", "سريع"]].map(([k, n]) => `<button data-pc="${k}" class="${opts.pace === k ? "on" : ""}">${n}</button>`).join("")}</div>` : ""}</div>
+    <div class="excard"><div class="row"><b class="grow">بداية جاهزة</b>${sw("exIntro", opts.intro)}</div><div class="dim tiny" style="margin-top:6px">صورة قناتك واسمك قبل الحلقة، ثانيتين ونص، ويه صوت.</div></div>
+    <div class="excard"><div class="row"><b class="grow">نهاية جاهزة</b>${sw("exOutro", opts.outro)}</div><div class="dim tiny" style="margin-top:6px">شاشة النهاية مال يوتيوب (فيديو مقترح وزر الاشتراك)، ٢٠ ثانية.</div></div>
+    <div class="excard"><div class="row"><b class="grow">قص الخلفية ورا وجهك</b></div><div class="dim tiny" style="margin-top:6px">حدد مشهد بالتايم لاين، ومن «الإعدادات» يسار اختار «الخلفية».</div></div>`;
+  const save = async (ch) => { opts = await post(E() + "/options", ch).catch(e => (toast(e.message), opts)); drawExtras(); };
+  $("exCap").onclick = () => save({captions: {on: !c.on}});
+  $("exPace").onclick = () => save({pace: opts.pace === "off" ? "normal" : "off"});
+  $("exIntro").onclick = () => save({intro: !opts.intro});
+  $("exOutro").onclick = () => save({outro: !opts.outro});
+  $("exBody").querySelectorAll("[data-cs]").forEach(b => b.onclick = () => save({captions: {style: b.dataset.cs}}));
+  $("exBody").querySelectorAll("[data-pc]").forEach(b => b.onclick = () => save({pace: b.dataset.pc}));
+  if ($("exWords")) $("exWords").onchange = () => save({captions: {words: +$("exWords").value}});
+}
+
+/* ---------- suggestions: pictures and clips to choose from ---------- */
+async function suggestFor(i, kind){
+  const c = data.plan.cards[i], box = $("sugBox");
+  const q = ($("sugQ").value || "").trim();
+  if (!q){ toast("اكتب شنو تريد بالإنگليزي أو العربي"); return; }
+  box.innerHTML = `<div class="row" style="grid-column:1/-1"><div class="spinner"></div><span class="muted">أدوّر…</span></div>`;
+  try {
+    const list = await api(`${E()}/suggest?i=${i}&kind=${kind}&q=${enc(q)}`);
+    box.innerHTML = list.length ? list.map((x, k) => `<button class="tile" data-k="${k}">${kind === "video" ? `<video src="${esc(x.url)}" muted preload="metadata" onmouseover="this.play()" onmouseout="this.pause()"></video>` : `<img src="${esc(x.thumb)}" loading="lazy">`}<span>${esc(x.provider)}</span></button>`).join("") : `<div class="dim" style="grid-column:1/-1">ما لگيت شي. جرّب كلمات ثانية.</div>`;
+    box.querySelectorAll("[data-k]").forEach(b => b.onclick = async () => {
+      b.style.opacity = .5; toast("دا أنزّله…");
+      try { data.plan = await post(E() + "/choose", {i, cand: list[+b.dataset.k]}); toast("انحط بالمشهد ✓"); refreshPlanViews(); renderScene(); } catch (e){ toast(e.message); }
+    });
+  } catch (e){ box.innerHTML = `<div class="err" style="grid-column:1/-1">${esc(e.message)}</div>`; }
+}
 
 /* ---------- start ---------- */
 (async () => {

@@ -331,7 +331,9 @@ def storyboard(ep: Episode) -> dict:
                       or KIND_AR.get(b["kind"], "مشهد"), "said": said, "shows": shows,
                       "motion": motion, "source": src, "img": _beat_image(ep, i, b), "note": b.get("note", ""),
                       "effect": b.get("effect"), "transition": b.get("transition"), "stickers": b.get("stickers") or [],
-                      "text": ar(b.get("title")) or ar(b.get("caption")), "own": bool((b.get("pick") or {}).get("local"))})
+                      "text": ar(b.get("title")) or ar(b.get("caption")), "own": bool((b.get("pick") or {}).get("local")),
+                      "sfx": b.get("sfx"), "treatment": b.get("treatment"),
+                      "query_raw": b.get("query") if b.get("query") not in ("own footage", "own picture", "chosen picture", "chosen footage") else ""})
     return {"ready": True, "cards": cards, "style": plan.get("style", {}).get("primary"),
             "summary": plan.get("style_reason", ""), "chapters": plan.get("chapters", [])}
 
@@ -414,8 +416,29 @@ def edit_beat(ep: Episode, i: int, change: dict) -> dict:
             shutil.copyfile(src, ep.assets / f"img_{i}{src.suffix.lower()}")
             beats[i].update(kind="image", query=beats[i].get("query") or "own picture", pick={"local": True})
             beats[i].setdefault("caption", src.stem)
+    elif "cutout" in change:   # his background removed for this scene: paper world behind him, or a word
+        mode = change["cutout"]
+        b = beats[i]
+        if mode in ("paper", "title"):
+            b.update(kind="face_cutout", treatment=mode)
+            if mode == "title":
+                b["title"] = str(change.get("title") or b.get("title") or b.get("caption") or "").strip() or None
+                if not b["title"]:
+                    raise ValueError("اكتب الكلمة الي تطلع ورا ظهرك")
+        elif b["kind"] == "face_cutout":
+            b["kind"] = "face"
+            b.pop("treatment", None)
+    elif "choose" in change:   # one of the suggested pictures or clips (downloaded by suggest_choose)
+        c = change["choose"]
+        for old in list(ep.assets.glob(f"img_{i}.*")) + list(ep.assets.glob(f"footage_{i}.*")):
+            old.unlink()
+        if c["kind"] == "video":
+            beats[i].update(kind="footage", query=c.get("query") or "chosen footage")
+        else:
+            beats[i].update(kind="image", query=c.get("query") or beats[i].get("query") or "chosen picture",
+                            pick={"local": True, "credit": c.get("credit", "")})
     else:
-        for k in ("note", "caption", "query", "title", "effect", "transition"):
+        for k in ("note", "caption", "query", "title", "effect", "transition", "sfx"):
             if k in change:
                 beats[i][k] = str(change[k]).strip() or None
     ep.plan.write_text(json.dumps(plan, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -466,6 +489,50 @@ def media_add(ep: Episode, path: str) -> list[dict]:
     folder.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(src, folder / src.name)
     return media_list(ep)
+
+
+# ---------- suggestions: pictures and clips he chooses from ----------
+
+def suggest(query: str, kind: str = "image", n: int = 8) -> list[dict]:
+    import requests
+    from editor.pipeline.sources import find
+    from editor.pipeline.suite import _small
+    errors = []
+    found = find(query, "video" if kind == "video" else "image", None, requests.Session(), set(), errors)[:n]
+    return [{"kind": kind, "query": query, "provider": f.provider, "title": f.title, "url": f.url,
+             "thumb": _small(f.url) if kind != "video" else f.url, "license": f.license, "artist": f.artist,
+             "page": f.page, "width": f.width, "height": f.height, "duration": f.duration,
+             "credit": f"{f.title} — {f.artist} — {f.license} — {f.page}"} for f in found]
+
+
+def suggest_choose(ep: Episode, i: int, cand: dict) -> dict:
+    """Download the one he picked onto scene `i`, then the plan points to it."""
+    import requests
+    from editor.pipeline.sources import Found, download
+    fields = Found.__dataclass_fields__
+    if not str(cand.get("url", "")).startswith("http"):
+        raise ValueError("هذا الاختيار ما بيه رابط")
+    base = {"provider": "", "title": "", "width": 0, "height": 0, "license": "", "artist": "", "page": ""}
+    data = download(Found(**{k: v for k, v in {**base, **cand}.items() if k in fields}), requests.Session())
+    for old in list(ep.assets.glob(f"img_{i}.*")) + list(ep.assets.glob(f"footage_{i}.*")):
+        old.unlink()
+    ep.assets.mkdir(parents=True, exist_ok=True)
+    if cand.get("kind") == "video":
+        (ep.assets / f"footage_{i}.mp4").write_bytes(data)
+        (ep.assets / f"footage_{i}.json").write_text(json.dumps({"query": cand.get("query") or "chosen footage",
+                                                                "credit": cand.get("credit", "")}), encoding="utf-8")
+    else:
+        ext = Path(cand["url"].split("?")[0]).suffix.lower()
+        (ep.assets / f"img_{i}{ext if ext in ('.jpg', '.jpeg', '.png', '.webp') else '.jpg'}").write_bytes(data)
+    plan = json.loads(ep.plan.read_text(encoding="utf-8"))
+    b = plan["beats"][i]
+    if cand.get("kind") == "video":
+        b.update(kind="footage", query=cand.get("query") or "chosen footage")
+    else:
+        b.update(kind="image", query=cand.get("query") or b.get("query") or "chosen picture",
+                 pick={"local": True, "credit": cand.get("credit", "")})
+    ep.plan.write_text(json.dumps(plan, ensure_ascii=False, indent=1), encoding="utf-8")
+    return storyboard(ep)
 
 
 # ---------- the effects library ----------

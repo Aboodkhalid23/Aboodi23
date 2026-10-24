@@ -89,7 +89,7 @@ def collect_images(plan: EditPlan, ep: Episode, session=None) -> EditPlan:
         if b.kind != "image" and not (b.kind == "face_cutout" and b.query):
             continue
         if (b.pick or {}).get("local") and any(ep.assets.glob(f"img_{i}.*")):   # his own picture (the app's media)
-            credits.append(f"صورة {i}: من ملفاتك")
+            credits.append(b.pick.get("credit") or f"صورة {i}: من ملفاتك")
             continue
         img, errors = None, []
         candidates = find(b.query, "image", b.source, session, used, errors)
