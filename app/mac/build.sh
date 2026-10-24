@@ -16,7 +16,7 @@ rm -f "$OUT"/URU-*
 
 cp Info.plist "$APP/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" -c "Set :CFBundleVersion $VERSION" "$APP/Contents/Info.plist"
-cp setup.html ../../editor/app/ui/logo.svg "$APP/Contents/Resources/"
+cp setup.html ../../editor/app/ui/logo.png "$APP/Contents/Resources/"
 cp ../setup.sh "$APP/Contents/Resources/"
 
 ICONSET="$OUT/AppIcon.iconset"; mkdir -p "$ICONSET"

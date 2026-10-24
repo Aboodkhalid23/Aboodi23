@@ -636,8 +636,8 @@ def upgrade_app() -> None:
 def check_app() -> None:
     """At start: an app still under its old name is replaced at once; a newer app after a code update ("حدّث")
     is installed too; otherwise a newer app is only offered in the settings."""
-    if not MAC:
-        return
+    if not MAC or not os.environ.get("MONTIER_APP") or ".app" not in _parent_app():
+        return    # only when the app window started this server (never from a terminal or a test)
     marker = HOME / "after_update"
     after = marker.exists()
     marker.unlink(missing_ok=True)
