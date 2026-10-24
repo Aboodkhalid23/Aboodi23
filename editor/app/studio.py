@@ -21,7 +21,10 @@ from editor.pipeline.grade import LOOK_NAMES, LOOKS, POLISH, adjust_filter
 from editor.pipeline.paths import Episode
 from editor.pipeline.transcribe import Word, load_words, save_words
 
-THUMB_LOOKS = ["none", "natural", "cinema", "log", "log-vivid", "warm-film", "soft-film", "teal-orange", "mono"]
+THUMB_LOOKS = ["none", "natural", "cinema", "documentary", "vivid", "action", "golden", "warm-film", "soft-film", "teal-orange",
+               "night", "bleach", "mono", "log", "log-vivid"]
+CAMERA_LOOKS = ["natural", "cinema", "documentary", "vivid", "action", "golden", "warm-film", "soft-film", "teal-orange",
+                "night", "bleach", "mono"]   # on top of a camera conversion (the generic "log" curves make no sense there)
 LOW = 0.55            # Whisper's confidence under this: the word is underlined for a check
 REASON_GROUP = {"إعادة": "إعادة", "إعادة (تكملة غلط)": "إعادة", "إشارة غلط": "إعادة", "قبل إشارة الغلط": "إعادة",
                 "بدأ الجملة من جديد": "بداية متعثرة", "كلمة مقطوعة": "بداية متعثرة", "تأتأة": "بداية متعثرة",
@@ -54,14 +57,43 @@ def _signal(frame: Path) -> dict:
     return {k: float(v) for k, v in re.findall(r"lavfi\.signalstats\.(YLOW|YHIGH|SATAVG|YAVG)=([\d.]+)", out)}
 
 
-def probe_source(src: Path, cache: Path) -> dict:
-    """Length, size, a flat-footage guess and one thumbnail per look, from a frame a third of the way in."""
+def _sony(src: Path) -> bool:
+    """Sony cameras write their name in the file's tags (XAVC)."""
+    out = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format_tags:stream_tags", "-of", "json", str(src)],
+                         capture_output=True, text=True).stdout.lower()
+    return "sony" in out or "xavc" in out
+
+
+def look_thumbs(frame: Path, out: Path, source: str, strength: float = 1.0) -> dict:
+    """One small picture per look of his own frame, through the same cube the render uses."""
+    from editor.pipeline.grade import look_chain
+    from editor.pipeline.luts import bake, split_chain
+    looks = {}
+    for k in (CAMERA_LOOKS + ["none"] if source != "rec709" else THUMB_LOOKS):
+        pix, spatial = split_chain(look_chain(k))
+        cube = bake(out / "cubes", source, pix, strength)
+        chain = ",".join(x for x in ("scale=-2:240", f"lut3d=file='{cube}'", spatial) if x)
+        jpg = out / f"look_{source}_{k}.jpg"
+        if jpg.exists() or _ff(["-i", str(frame), "-vf", chain, "-q:v", "4", str(jpg)]).returncode == 0:
+            looks[k] = {"name": LOOK_NAMES.get(k, k), "img": f"{out.name}/{jpg.name}"}
+    return looks
+
+
+def probe_source(src: Path, cache: Path, source: str | None = None) -> dict:
+    """Length, size, the camera (flat log? Sony?) and one thumbnail per look, from a frame a third of the way in.
+    `source`: the camera conversion the owner picked (rec709 | slog3); a guess when not given."""
+    from editor.pipeline.luts import SOURCES
     src = Path(src).expanduser()
     key = hashlib.sha1(f"{src}:{src.stat().st_size}:{src.stat().st_mtime}".encode()).hexdigest()[:16]
     out = cache / key
     meta = out / "probe.json"
     if meta.exists():
-        return json.loads(meta.read_text(encoding="utf-8"))
+        d = json.loads(meta.read_text(encoding="utf-8"))
+        if source and source in SOURCES and source != d.get("source"):
+            d.update(source=source, looks=look_thumbs(out / "frame.png", out, source),
+                     suggest="cinema" if source != "rec709" else ("log" if d["flat"] else "cinema"))
+            meta.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
+        return d
     out.mkdir(parents=True, exist_ok=True)
     dur = _duration(src)
     frame = out / "frame.png"
@@ -71,15 +103,12 @@ def probe_source(src: Path, cache: Path) -> dict:
     st = _signal(frame)
     # flat (log) footage: little contrast and little colour (a normal phone picture has SATAVG ≈ 25–45)
     flat = bool(st) and st.get("SATAVG", 99) < 16 and st.get("YHIGH", 255) - st.get("YLOW", 0) < 175
-    looks = {}
-    for k in THUMB_LOOKS:
-        f = LOOKS.get(k, "")
-        chain = ",".join(x for x in ("scale=-2:240", POLISH if k not in ("none", "cinema") else "", f) if x)
-        jpg = out / f"look_{k}.jpg"
-        if _ff(["-i", str(frame), "-vf", chain, "-q:v", "4", str(jpg)]).returncode == 0:
-            looks[k] = {"name": LOOK_NAMES.get(k, k), "img": f"{key}/look_{k}.jpg"}
+    sony = _sony(src)
+    if not source or source not in SOURCES:
+        source = "slog3" if flat and sony else "rec709"
     d = {"key": key, "path": str(src), "name": src.stem, "duration": round(dur, 2), "size": src.stat().st_size,
-         "flat": flat, "suggest": "log" if flat else "cinema", "looks": looks}
+         "flat": flat, "sony": sony, "source": source, "looks": look_thumbs(frame, out, source),
+         "suggest": "cinema" if source != "rec709" else ("log" if flat else "cinema")}
     meta.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
     return d
 
@@ -92,7 +121,10 @@ def lut_preview(cache_dir: Path, lut: Path) -> str:
 
 
 def save_look(ep: Episode, look: dict) -> dict:
-    keep = {k: look[k] for k in ("look", "temp", "tint", "exposure", "lut", "log") if k in look}
+    from editor.pipeline.luts import SOURCES
+    keep = {k: look[k] for k in ("look", "temp", "tint", "exposure", "lut", "source", "strength") if k in look}
+    keep["source"] = keep.get("source") if keep.get("source") in SOURCES else "rec709"
+    keep["strength"] = max(0.0, min(1.0, float(keep.get("strength", 1.0) if keep.get("strength") is not None else 1.0)))
     if keep.get("look") not in LOOKS:
         keep["look"] = "cinema"
     for k in ("temp", "tint"):

@@ -7,7 +7,7 @@ from pathlib import Path
 from .channel import channel_avatar, load_channel
 from .entities import entity_image, load_entities
 from .fmt import load_format
-from .grade import adjust_filter, analyse, grade_filter, look_settings
+from .grade import analyse, app_chain, grade_filter, look_settings
 from .graphics import (_source_hash, ensure_bundle, face_fx_job, face_paper_job, graphic_job, render_batch,
                        render_face_frame_bg)
 from .media import MediaError, run_ffmpeg
@@ -419,17 +419,16 @@ def compose(ep: Episode, preview: bool = False) -> Path:
 
     src_stamp = str(ep.clean_video.stat().st_mtime)
     correct = analyse(ep)["correction"]
-    app_look = look_settings(ep)   # chosen in the Mac app: look, LUT and balance sliders for the whole episode
-    app_extra = adjust_filter(app_look.get("temp", 0), app_look.get("tint", 0), app_look.get("exposure", 0))
-    app_lut = ep.edit / "look.cube" if app_look.get("lut") and (ep.edit / "look.cube").exists() else None
+    # chosen in the Mac app (camera, look, strength, LUT, balance sliders): one chain for the whole episode
+    app_grade = app_chain(ep, correct) if look_settings(ep) else None
     design = _source_hash()   # a changed graphic design re-renders the clips that use it
     clips, missing, pending = [], [], []   # pending: Remotion renders, done together with one browser
     for i, b in enumerate(plan.beats):
         # Frame-grid boundaries: the sum of clip lengths equals the timeline exactly (no drift).
         frames = round(b.end * cv.fps) - round(b.start * cv.fps)
-        look = b.grade or app_look.get("look") or plan.grade or style.grade
-        # his camera: measured correction + the look (+ the app's sliders and LUT)
-        footage_grade = grade_filter(correct, look, app_extra, None if b.grade else app_lut)
+        look = b.grade or plan.grade or style.grade
+        # his camera: measured correction + light polish, or the look he chose in the app
+        footage_grade = app_grade if app_grade is not None and not b.grade else grade_filter(correct, look)
         ai_grade = ""                                  # generated clips are left as they came
         asset = None
         if b.kind == "ai_image":

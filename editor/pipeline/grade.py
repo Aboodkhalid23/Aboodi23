@@ -30,10 +30,21 @@ LOOKS.update({
     "soft-film": "curves=master='0/0.04 0.5/0.5 1/0.95',colorbalance=gs=0.03:bs=0.02:rh=0.02,eq=saturation=0.88",
     "teal-orange": "colorbalance=rs=-0.08:bs=0.08:rh=0.08:bh=-0.06,eq=saturation=1.1:contrast=1.05",
     "mono": "hue=s=0,curves=master='0/0.03 0.5/0.5 1/0.97'",
+    # strong looks (owner, 2026-10-24: "نطلع بألوان قوية")
+    "vivid": "curves=master='0/0 0.25/0.22 0.5/0.5 0.75/0.8 1/1',eq=saturation=1.35:contrast=1.05,vibrance=intensity=0.25",
+    "action": ("curves=master='0/0 0.25/0.2 0.5/0.5 0.75/0.82 1/1',colorbalance=rs=-0.12:gs=-0.02:bs=0.12:rh=0.1:gh=0.02:bh=-0.1,"
+               "eq=saturation=1.2,vibrance=intensity=0.2"),
+    "golden": ("curves=r='0/0.03 0.5/0.56 1/1':g='0/0.02 0.5/0.51 1/0.97':b='0/0.03 0.5/0.42 1/0.85',"
+               "eq=saturation=1.12,vibrance=intensity=0.15"),
+    "night": "curves=master='0/0.02 0.5/0.45 1/0.95',colorbalance=rs=-0.06:bs=0.1:rm=-0.04:bm=0.06:rh=0.02,eq=saturation=0.9",
+    "bleach": "curves=master='0/0 0.3/0.24 0.7/0.8 1/1',eq=saturation=0.6:contrast=1.15",
+    "documentary": ("curves=master='0/0.03 0.25/0.23 0.5/0.5 0.75/0.77 1/0.97',colorbalance=rs=-0.03:bs=0.04:rh=0.03:bh=-0.02,"
+                    "eq=saturation=1.08,noise=alls=2:allf=t"),
 })
 LOOK_NAMES = {"none": "بدون تحويل", "natural": "طبيعي", "cinema": "سينما", "log": "لوگ ← عادي",
               "log-vivid": "لوگ ← حيوي", "warm-film": "فلم دافي", "soft-film": "فلم ناعم",
-              "teal-orange": "سينما أكشن", "mono": "أبيض وأسود"}
+              "teal-orange": "سينما أكشن", "mono": "أبيض وأسود", "vivid": "ألوان قوية", "action": "أكشن قوي",
+              "golden": "ذهبي دافي", "night": "ليل بارد", "bleach": "باهت سينمائي", "documentary": "وثائقي"}
 CINEMA_POLISH = "vibrance=intensity=0.08,unsharp=5:5:0.15:5:5:0"   # softer than POLISH: the film look is smooth
 POLISH = "vibrance=intensity=0.12,unsharp=5:5:0.35:5:5:0"   # vibrance lifts dull colours, leaves skin
 SAMPLES = 12
@@ -106,6 +117,32 @@ def adjust_filter(temp: float = 0, tint: float = 0, exposure: float = 0) -> str:
     if exposure:
         parts.append(f"exposure=exposure={exposure:.3f}")
     return ",".join(parts)
+
+
+def look_chain(look: str) -> str:
+    """Everything a look does (polish included), as one chain."""
+    look = look if look in LOOKS else "natural"
+    if look == "none":
+        return ""
+    if look == "cinema":
+        return f"{CINEMA_POLISH},{LOOKS['cinema']}"
+    return ",".join(x for x in (POLISH, LOOKS[look]) if x)
+
+
+def app_chain(ep: Episode, correct: str) -> str:
+    """',<filters>' for his footage from what he chose in the Mac app: the camera conversion and the look baked
+    into one cube at his strength, then the grain/sharpening the cube cannot hold, then his balance sliders.
+    The automatic correction is skipped on log footage (it would stretch the flat picture before converting)."""
+    from .luts import bake, split_chain
+    s = look_settings(ep)
+    source = s.get("source", "rec709")
+    pix, spatial = split_chain(look_chain(s.get("look", "cinema")))
+    user = ep.edit / "look.cube" if s.get("lut") and (ep.edit / "look.cube").exists() else None
+    cube = bake(ep.work / "app", source, pix, s.get("strength", 1.0), user)
+    parts = ([] if source != "rec709" else [correct]) + [f"lut3d=file='{cube}'", spatial,
+             adjust_filter(s.get("temp", 0), s.get("tint", 0), s.get("exposure", 0))]
+    parts = [p for p in parts if p]
+    return "," + ",".join(parts) if parts else ""
 
 
 def look_settings(ep: Episode) -> dict:

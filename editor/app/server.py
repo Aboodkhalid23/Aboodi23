@@ -45,11 +45,11 @@ STEPS = {"all": ["prep", "plan", "render", "suite"], "from-plan": ["plan", "rend
          # the studio's steps (one screen each)
          "prepare": ["fetch", "transcribe"], "cut": ["cut"], "sentences": ["sentences"], "captions": ["captions"],
          "images": ["images"], "build": ["preview"], "final": ["render"], "assist": ["assist"],
-         "auto": ["fetch", "transcribe", "cut", "plan", "images", "render"]}
+         "auto": ["fetch", "transcribe", "cut", "plan", "images", "render"], "chat": ["chat"]}
 STEP_NAMES = {"prep": "التجهيز", "plan": "خطة المونتير", "render": "النسخة الكاملة", "preview": "المعاينة",
               "suite": "غرفة المونتاج", "requests": "ملاحظاتك", "fetch": "تجهيز الفيديو", "transcribe": "تفريغ الكلام",
               "cut": "قص المقطع", "sentences": "المساعد يراجع الجمل", "captions": "المساعد يراجع الكابشن",
-              "images": "الصور", "assist": "المساعد"}
+              "images": "الصور", "assist": "المساعد", "chat": "المساعد"}
 CLAUDE_TOOLS = ["Read", "Write", "Edit", "Glob", "Grep", "WebSearch", "WebFetch", "TodoWrite",
                 "Bash(python -m editor.pipeline:*)", "Bash(python3 -m editor.pipeline:*)",
                 "Bash(ffprobe:*)", "Bash(ffmpeg:*)", "Bash(ls:*)"]
@@ -201,7 +201,7 @@ class Job:
         self.ep, self.step, self.steps, self.lines = None, None, [], []
         self.running, self.ok, self.proc, self.stop_asked, self.need_login = False, None, None, False, False
         self.claude_failed = False
-        self.progress, self.message, self.started = None, "", 0.0
+        self.progress, self.message, self.started, self.last_reply = None, "", 0.0, ""
         self.lock = threading.Lock()
 
     def say(self, line: str) -> None:
@@ -409,6 +409,7 @@ def _claude_line(raw: str) -> None:
                          "Glob": "🗂️ يدوّر على ملفات", "Grep": "🗂️ يدوّر داخل الملفات"}.get(name, "🔧 " + str(name)))
     elif ev.get("type") == "result":
         text = str(ev.get("result") or "")
+        JOB.last_reply = text.strip()
         if ev.get("is_error") or ev.get("subtype") != "success":
             if re.search(r"login|log in|api key|auth", text, re.I):
                 JOB.need_login = True
@@ -470,6 +471,95 @@ REQ_PROMPT = """انت المونتير الآلي، وشغّال من داخل 
 {reqs}
 تعديلاته بالصفحة (المشاهد والصور والريلز) رجعت للخطة. نفّذ كل طلب بتعديل "{ep}/edit/edit_plan.json" (سكيل editor، قسم غرفة المونتاج)، وافحص بـ python -m editor.pipeline validate "{ep}" لحد ما يطلع ✅. لا تطلع النسخة الكاملة (التطبيق يطلعها بعدك). ممنوع صرف فلوس أو رصيد.
 بالآخر اكتب "{ep}/edit/work/requests_done.json" بهالشكل: {{"<id الطلب>": "رد قصير بالعربي العراقي: شنو سويت"}}. كل رسائلك عربي بس."""
+
+
+CHAT_PROMPT = """انت مساعد المونتاج بتطبيق URU على حاسبة صاحب القناة، وتحچي وياه مثل مونتير صاحبه. هو يشوف الحلقة ويحچي وياك.
+الحلقة: {ep}
+المحادثة لحد هسة:
+{history}
+صاحب القناة يگول هسة: «{message}»
+{context}
+الملفات الي تگدر تغيّرها:
+- الخطة "{ep}/edit/edit_plan.json": المشاهد (beats) بأوقات الفيديو النهائي، حسب سكيل editor. صورة ما عجبته: غيّر query (كلمات بحث إنگليزية أدق) أو النوع، وامسح pick. موشن جرافك: graphic أو kinetic أو face_paper. صوت بمكان معيّن: sfx بالمشهد.
+- الألوان "{ep}/edit/look.json": look من ({looks})، source (rec709 أو slog3 لسوني لوگ ٣)، strength من 0 لـ 1، temp وtint من -100 لـ 100، exposure من -2 لـ 2.
+- الصوت "{ep}/edit/sound.json": clean من 0 لـ 3 (تنظيف الصوت)، music (auto أو tension أو wonder أو sad أو drive أو dark أو calm أو off)، level من -32 لـ -16 (علو الموسيقى)، sfx (true/false).
+- الجمل: "{ep}/edit/cuts_override.json" (drop/keep بثواني الخام) إذا يريد يشيل أو يرجّع كلام.
+نفّذ طلبه، وإذا غيّرت الخطة افحصها بـ python -m editor.pipeline validate "{ep}" لحد ما يطلع ✅. إذا طلبه مو واضح، اسأله سؤال واحد قصير بدال ما تخمّن.
+لا تطلع معاينة ولا نسخة كاملة (التطبيق يطلعها لما يريد). ممنوع صرف فلوس أو رصيد.
+آخر شي تكتبه: سطر أو سطرين بالعربي العراقي تخاطبه بيهم: شنو سويت (أو سؤالك). بلا ولا كلمة إنگليزي."""
+
+
+def _chat_file(d: Path) -> Path:
+    return d / "edit" / "work" / "app" / "chat.json"
+
+
+def chat_load(d: Path) -> list[dict]:
+    try:
+        return json.loads(_chat_file(d).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+
+
+def chat_add(d: Path, msg: dict) -> list[dict]:
+    msgs = chat_load(d) + [{**msg, "at": datetime.now().isoformat(timespec="seconds")}]
+    _chat_file(d).parent.mkdir(parents=True, exist_ok=True)
+    _chat_file(d).write_text(json.dumps(msgs[-200:], ensure_ascii=False, indent=1), encoding="utf-8")
+    return msgs
+
+
+def _chat_context(d: Path, ctx: dict) -> str:
+    """Where he is when he talks: the moment and the scene under the playhead."""
+    if not ctx or ctx.get("t") is None:
+        return ""
+    t = float(ctx["t"])
+    out = [f"هو واگف عند الثانية {t:.1f} من {'الفيديو النهائي' if ctx.get('timeline') == 'final' else 'الفيديو بعد القص'}."]
+    try:
+        plan = json.loads((d / "edit" / "edit_plan.json").read_text(encoding="utf-8"))
+        off = 0.0 if ctx.get("timeline") == "final" else sum(e - s for s, e in plan.get("teaser", []))
+        i = next((k for k, b in enumerate(plan["beats"]) if b["start"] <= t + off < b["end"]), None)
+        if ctx.get("scene") is not None:
+            i = int(ctx["scene"])
+        if i is not None:
+            b = plan["beats"][i]
+            out.append(f"المشهد {i} ({b['start']:.1f}–{b['end']:.1f} ث) نوعه {b['kind']}: " +
+                       json.dumps({k: v for k, v in b.items() if k not in ("start", "end", "zone")}, ensure_ascii=False))
+    except (OSError, ValueError, KeyError, StopIteration):
+        pass
+    return "\n".join(out)
+
+
+def _changed_beats(before: dict, after: dict) -> list[int]:
+    """Scenes whose picture must be fetched again (search words, chosen picture or kind changed)."""
+    out = []
+    for i, b in enumerate(after.get("beats", [])):
+        old = before.get("beats", [])[i] if i < len(before.get("beats", [])) else {}
+        if any(b.get(k) != old.get(k) for k in ("query", "pick", "kind", "entity", "source")):
+            out.append(i)
+    return out
+
+
+def _chat_step(d: Path) -> int:
+    from editor.pipeline.grade import LOOK_NAMES
+    msgs = chat_load(d)
+    history = "\n".join(f"{'هو' if m['role'] == 'owner' else 'انت'}: {m['text']}" for m in msgs[-12:-1]) or "(أول رسالة)"
+    last = msgs[-1] if msgs else {"text": JOB.message, "ctx": {}}
+    plan_f = d / "edit" / "edit_plan.json"
+    before = json.loads(plan_f.read_text(encoding="utf-8")) if plan_f.exists() else {}
+    JOB.last_reply = ""
+    code = _claude(CHAT_PROMPT.format(ep=d, history=history, message=last["text"], context=_chat_context(d, last.get("ctx") or {}),
+                                      looks="، ".join(LOOK_NAMES)))
+    after = json.loads(plan_f.read_text(encoding="utf-8")) if plan_f.exists() else {}
+    changed = before != after
+    redo = _changed_beats(before, after) if changed else []
+    for i in redo:   # its old picture goes, so the new search brings a new one
+        for f in (d / "edit" / "assets").glob(f"img_{i}.*"):
+            f.unlink(missing_ok=True)
+    reply = JOB.last_reply or ("سويتها." if code == 0 else "ما گدرت أكمل، جرّب مرة ثانية.")
+    chat_add(d, {"role": "assistant", "text": reply, "changed": changed, "ok": code == 0})
+    if code == 0 and redo:
+        JOB.say("🖼️ أجيب الصور الجديدة…")
+        _pipe("images", d)
+    return code
 
 
 def _voice_text(d: Path, asset_id: str) -> str:
@@ -624,6 +714,8 @@ def run_job(ep_id: str, what: str) -> None:
             if code:   # pictures are a nicety for the storyboard: a failed download never stops the episode
                 JOB.say("⚠️ بعض الصور ما نزلت، تنجاب وقت النسخة الكاملة")
                 code = 0
+        elif step == "chat":
+            code = _chat_step(d)
         elif step == "assist":
             code = _claude(ASSIST_PROMPT.format(ep=d, message=JOB.message or "راجع الخطة وحسّنها"))
         elif step == "plan":
@@ -757,8 +849,22 @@ def check_app() -> None:
     after = marker.exists()
     marker.unlink(missing_ok=True)
     if not os.environ.get("URU_APP_PATH"):    # the first app (المونتير) does not say its version: always old
+        installed = next((p for p in (Path("/Applications/URU.app"), Path.home() / "Applications" / "URU.app")
+                          if (p / "Contents" / "MacOS" / "URU").exists()), None)
+        tries = HOME / "app_swap_tries"
+        n = int(tries.read_text() or 0) if tries.exists() else 0
+        tries.write_text(str(n + 1))
+        if installed and n >= 3:
+            APP_STATE["update"] = "stuck"     # it keeps coming back: say where the new app is, stop trying
+            return
+        if installed:   # already there (an earlier swap could not reopen it): just open it and close this one
+            APP_STATE["update"] = "running"
+            subprocess.Popen(["/bin/bash", "-c", f"sleep 1.5; kill {os.getppid()}; kill {os.getpid()}; sleep 1; open '{installed}'"],
+                             start_new_session=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            return
         upgrade_app()
         return
+    (HOME / "app_swap_tries").unlink(missing_ok=True)
     try:
         import urllib.request
         latest = urllib.request.urlopen(APP_RELEASE, timeout=8).read().decode().strip()
@@ -796,12 +902,9 @@ def styles_list() -> list[dict]:
 
 def frame_with_look(ep, t: float, raw: bool = False) -> Path:
     """One frame of his video at `t` through the chosen look and sliders (what the render will do)."""
-    from editor.pipeline.grade import adjust_filter, grade_filter, look_settings
+    from editor.pipeline.grade import app_chain
     video = ep.clean_video if ep.clean_video.exists() else ep.source
-    s = look_settings(ep)
-    lut = ep.edit / "look.cube" if s.get("lut") and (ep.edit / "look.cube").exists() else None
-    chain = "scale=-2:540" + ("" if raw else grade_filter("", s.get("look"), adjust_filter(
-        s.get("temp", 0), s.get("tint", 0), s.get("exposure", 0)), lut))
+    chain = "scale=-2:540" + ("" if raw else app_chain(ep, ""))
     out = ep.work / "app" / f"frame_{'raw' if raw else 'look'}.jpg"
     out.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-ss", f"{max(0.0, t):.2f}", "-i", str(video), "-frames:v", "1",
@@ -948,6 +1051,9 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json(styles_list())
             if path == "/api/music-sample":
                 return self._file(music_sample(q.get("mood", "tension")))
+            m = re.match(r"^/api/episodes/([^/]+)/chat$", path)
+            if m:
+                return self._json(chat_load(episode_dir(m.group(1))))
             m = re.match(r"^/api/episodes/([^/]+)/(sentences|captions|plan|timeline|look|sound|idea|review|frame|voice-sample)$", path)
             if m:
                 return self._studio_get(episode_dir(m.group(1)), m.group(2), q)
@@ -1059,10 +1165,11 @@ class Handler(BaseHTTPRequestHandler):
                                                  b.get("look"), b.get("lut_key", "")))
             if path == "/api/probe":
                 from .studio import probe_source
-                src = Path(str(self._body().get("path", ""))).expanduser()
+                b = self._body()
+                src = Path(str(b.get("path", ""))).expanduser()
                 if not src.is_file():
                     raise ValueError("ما لگيت الفيديو بهذا المكان")
-                return self._json(probe_source(src, HOME / "cache"))
+                return self._json(probe_source(src, HOME / "cache", b.get("source")))
             if path == "/api/lut":
                 from .studio import lut_preview
                 b = self._body()
@@ -1073,6 +1180,18 @@ class Handler(BaseHTTPRequestHandler):
                 folder = HOME / "cache" / key
                 shutil.copyfile(src, folder / "look.cube")
                 return self._json({"img": f"{key}/" + lut_preview(folder, folder / "look.cube"), "name": src.stem})
+            m = re.match(r"^/api/episodes/([^/]+)/chat$", path)
+            if m:
+                d = episode_dir(m.group(1))
+                b = self._body()
+                text = str(b.get("text", "")).strip()
+                if not text:
+                    raise ValueError("اكتب شنو تريد")
+                if JOB.running:
+                    raise RuntimeError("المساعد مشغول هسة. انتظره يخلص")
+                chat_add(d, {"role": "owner", "text": text, "ctx": b.get("ctx") or {}})
+                start_job(m.group(1), "chat", text)
+                return self._json({"ok": True, "messages": chat_load(d)})
             m = re.match(r"^/api/episodes/([^/]+)/(sentences|captions|look|sound|idea|beat)$", path)
             if m:
                 return self._studio_post(episode_dir(m.group(1)), m.group(2), self._body())
@@ -1116,6 +1235,11 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/update":
                 update_app()
                 return self._json({"ok": True})
+            if path == "/api/show-new-app":
+                target = next((p for p in (Path("/Applications/URU.app"), Path.home() / "Applications" / "URU.app") if p.exists()), None)
+                if target:
+                    reveal(target)
+                return self._json({"ok": bool(target)})
             if path == "/api/update-app":
                 upgrade_app()
                 return self._json({"ok": True})

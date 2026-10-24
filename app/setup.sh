@@ -47,13 +47,20 @@ if [ "${1:-}" = "--app" ]; then
   hdiutil detach "$MNT" >/dev/null || true
   rm -rf "$DEST/URU.app"; mv "$DEST/URU.app.new" "$DEST/URU.app"
   xattr -cr "$DEST/URU.app" 2>/dev/null || true
-  # the old one (its old name) goes, wherever it was
-  case "$OLD_APP" in */المونتير.app) rm -rf "$OLD_APP" ;; esac
-  for old in "/Applications/المونتير.app" "$HOME/Applications/المونتير.app"; do [ -d "$old" ] && rm -rf "$old"; done
+  # the old one (its old name) goes, wherever it was; never a reason to stop (it may run from the read-only
+  # install window, /Volumes/…: that window is closed after the old app quits)
+  EJECT=""
+  case "$OLD_APP" in
+    /Volumes/*) EJECT="$(dirname "$OLD_APP")" ;;
+    */المونتير.app) rm -rf "$OLD_APP" 2>/dev/null || true ;;
+  esac
+  for old in "/Applications/المونتير.app" "$HOME/Applications/المونتير.app"; do
+    [ -d "$old" ] && { rm -rf "$old" 2>/dev/null || true; }
+  done
   rm -f "$TMP/URU.dmg"
   echo "✅ انصّب URU. يفتح هسة…"
   # after this script and the old window are gone: close them, then open the new app
-  nohup /bin/bash -c "sleep 2; ${OLD_PID:+kill $OLD_PID;} ${SERVER_PID:+kill $SERVER_PID;} sleep 1.5; open \"$DEST/URU.app\"" >/dev/null 2>&1 &
+  nohup /bin/bash -c "sleep 2; ${OLD_PID:+kill $OLD_PID;} ${SERVER_PID:+kill $SERVER_PID;} sleep 1.5; open \"$DEST/URU.app\"; ${EJECT:+sleep 3; hdiutil detach \"$EJECT\" -force;}" >/dev/null 2>&1 &
   exit 0
 fi
 
@@ -162,6 +169,8 @@ fi
 step "أنزّل موديل التفريغ (تقريباً گيگا ونص، مرة وحدة)"
 if [ -n "${MONTIER_SKIP_MODEL:-}" ]; then
   say "تخطيت (اختبار)"
+elif [ "$UPDATE" = 1 ] && [ -f "$HOME_DIR/ready" ]; then
+  say "موجود من قبل"   # an update never re-checks the 1.5 GB model (a missing one downloads on first use)
 else
   (cd "$CODE" && "$TOOLS/venv/bin/python" -c "from faster_whisper import WhisperModel; from editor.pipeline.transcribe import WHISPER_MODEL; WhisperModel(WHISPER_MODEL, device='cpu', compute_type='int8')") \
     || fail "ما گدرت أنزّل موديل التفريغ"

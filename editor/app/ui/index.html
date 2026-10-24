@@ -232,6 +232,18 @@ canvas.wave{position:absolute;inset:0;width:100%;height:100%}
 .pop input{width:180px}
 .bigsb{position:fixed;inset:0;z-index:55;background:var(--bg);overflow:auto;padding:24px}
 .bigsb .sb{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.chat{position:fixed;top:46px;left:0;bottom:262px;width:min(440px,100%);background:var(--panel);border-inline-start:1px solid var(--line2);z-index:40;display:flex;flex-direction:column;box-shadow:20px 0 40px #0008}
+.chat .hd{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.msgs{flex:1;overflow:auto;padding:12px 14px;display:flex;flex-direction:column;gap:10px;user-select:text}
+.msg{max-width:88%;padding:10px 12px;border-radius:14px;line-height:1.7;font-size:13.5px;white-space:pre-wrap;word-break:break-word}
+.msg.me{align-self:flex-start;background:#2b2412;border:1px solid #4c3f17;border-start-start-radius:4px}
+.msg.ai{align-self:flex-end;background:var(--panel3);border:1px solid var(--line2);border-start-end-radius:4px}
+.msg .ctx{display:block;color:var(--dim);font-size:11px;margin-top:4px}
+.msg .acts{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.quick{display:flex;gap:6px;overflow-x:auto;padding:8px 14px 0;scrollbar-width:none}
+.quick .pill{flex:none}
+.cbox{padding:10px 14px 12px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.ctxchip{display:flex;align-items:center;gap:6px;color:var(--mute);font-size:12px}
 .log{font-size:12px;line-height:1.8;color:#c5c5cc;max-height:240px;overflow:auto;white-space:pre-wrap;word-break:break-word;user-select:text}
 .log .bad{color:#ff8a8a}.log .good{color:var(--green)}.log .h{color:var(--y);font-weight:700}
 </style>
@@ -262,7 +274,10 @@ canvas.wave{position:absolute;inset:0;width:100%;height:100%}
         <div class="ih">المشروع <small id="iName"></small></div>
         <div class="ih" style="font-size:13px;margin-top:6px">تحويل الألوان</div>
         <div class="seg2"><button id="lkLog">مسطّح لوگ</button><button id="lkNorm" class="on">عادي</button></div>
+        <div class="row" id="camRow" hidden style="margin-bottom:10px;flex-wrap:wrap"><span class="dim tiny">الكاميرا:</span>
+          <button class="pill sm" data-src="slog3">سوني لوگ ٣</button><button class="pill sm" data-src="genlog">لوگ ثاني (دي جي آي، موبايل)</button></div>
         <div class="looks" id="iLooks"></div>
+        <div class="sl" style="margin-top:12px"><label>قوة اللون</label><input type="range" class="exp" id="sStr" min="0" max="100" value="100"><output id="oStr">١٠٠٪</output></div>
         <div class="sep"></div>
         <div class="row" style="justify-content:space-between"><b>التوازن</b>
           <div class="row"><button class="icobtn" id="bCmp" title="قبل وبعد"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
@@ -341,6 +356,18 @@ canvas.wave{position:absolute;inset:0;width:100%;height:100%}
   </section>
 </div>
 
+<!-- chat with the assistant -->
+<aside class="chat" id="chat" hidden>
+  <div class="hd"><img src="/ui/logo.png" alt="" style="height:22px;width:auto"><b class="grow">المساعد</b><span class="dim tiny">احچي وياه عن أي لحظة</span><button class="icobtn" id="chClose">✕</button></div>
+  <div class="msgs" id="msgs"></div>
+  <div class="quick" id="quick"></div>
+  <div class="cbox">
+    <label class="ctxchip"><input type="checkbox" id="chCtx" checked><span id="chCtxTxt">عن هاللحظة</span></label>
+    <div class="row"><textarea id="chMsg" rows="2" placeholder="مثلاً: هالصورة ما عجبتني، حط بدالها صورة المصنع القديم"></textarea>
+    <button class="pill y" id="chSend" style="height:auto;align-self:stretch">ارسل</button></div>
+  </div>
+</aside>
+
 <!-- linking his Claude account -->
 <div class="veil" id="dLink" hidden><div class="dlg" style="width:min(560px,100%)">
   <h2>اربط حساب كلود</h2>
@@ -363,6 +390,17 @@ canvas.wave{position:absolute;inset:0;width:100%;height:100%}
   <h2>دا أحدّث التطبيق نفسه</h2><div class="muted" style="line-height:1.8;margin-top:6px">الاسم الجديد والشعار. التطبيق يتسكّر ويرجع ينفتح لحاله خلال ثواني، لا تسوي شي.</div>
   <div class="spinner" style="margin:16px auto 4px;width:22px;height:22px"></div></div></div>
 
+<!-- the old app keeps opening: show where the new one is -->
+<div class="veil" id="dStuck" hidden style="z-index:94"><div class="dlg" style="width:min(520px,100%)">
+  <img src="/ui/logo.png" alt="" style="height:90px;width:auto;margin:4px auto 12px;display:block">
+  <h2 style="text-align:center">التطبيق الجديد جاهز بمجلد التطبيقات</h2>
+  <ol class="muted" style="line-height:2;padding-inline-start:18px">
+    <li>دوس «وينه؟» تحت: ينفتح مجلد التطبيقات والتطبيق الجديد محدد (أيقونة اللوح البرونزي).</li>
+    <li>افتحه من هناك، وسكّر هذا القديم.</li>
+    <li>بالشريط الي جوه الشاشة: دوس بالزر اليمين على أيقونة القديم ← خيارات ← «إزالة من الشريط»، وعلى الجديد ← خيارات ← «إبقاء في الشريط».</li>
+    <li>إذا جنت تفتحه من نافذة التنصيب، سكّرها: التطبيق الجديد صار بمجلد التطبيقات.</li></ol>
+  <div class="foot"><button class="pill y big" id="stuckShow">وينه؟</button><button class="pill big" data-close>سكّر</button></div></div></div>
+
 <!-- library -->
 <div class="lib" id="lib" hidden>
   <div class="row"><div><div class="h2" style="font-size:22px">المكتبة</div><div class="muted">كل حلقاتك على هالحاسبة</div></div>
@@ -378,6 +416,8 @@ canvas.wave{position:absolute;inset:0;width:100%;height:100%}
     <div class="f"><label class="l">اسم المقطع</label><input id="nName"></div>
     <div class="f" id="nPickRow"><label class="l">الفيديو الخام</label>
       <div class="row"><button class="pill" id="nPick">اختار الفيديو</button><span class="dim">أو</span><input id="nLink" class="ltr" placeholder="رابط درايف" style="max-width:340px"></div></div>
+    <div class="f" id="nCamRow" hidden><label class="l">الكاميرا</label><div class="row" style="flex-wrap:wrap">
+      <button class="pill sm" data-cam="rec709">عادي (بالألوان)</button><button class="pill sm" data-cam="slog3">سوني لوگ ٣ (مسطّح)</button></div></div>
     <div class="f" id="nLooksRow" hidden><label class="l">الألوان</label><div class="looks" id="nLooks"></div></div>
     <div class="note2" id="nFlat" hidden></div>
     <div class="note2">يفتح المقطع كاملاً حين يجهز الفيديو، فتتصفّحه وتسمعه بينما يُفرّغ الكلام، ثم يقترح المساعد الجمل التي تُحذف. القص اختياري، والملف الأصلي لا يتغيّر.</div>
@@ -451,7 +491,7 @@ let state = {episodes: []}, cur = null, ep = null, step = 1, job = {}, logNext =
 let data = {sentences: null, captions: null, plan: null, timeline: null, look: null, sound: null, review: {}};
 let planSub = 1, pendingFix = {}, pendingDel = new Set(), keepMap = {}, notes = [];
 const STEPS = [["الجمل", "sentences"], ["الصوت", "sound"], ["الكابشن", "captions"], ["الخطة", "plan"], ["البناء", "build"], ["الملاحظات", "notes"]];
-const RUNS = {prepare: 1, cut: 1, sentences: 1, captions: 3, plan: 4, images: 4, build: 5, final: 5, requests: 6, assist: 4, auto: 1};
+const RUNS = {prepare: 1, cut: 1, sentences: 1, captions: 3, plan: 4, images: 4, build: 5, final: 5, requests: 6, assist: 4, auto: 1, chat: 4};
 
 async function refresh(){
   try { state = await api("/api/state"); } catch (_) { return; }
@@ -464,6 +504,8 @@ async function refresh(){
 function renderHeader(){
   $("dApp").hidden = !(job.running && job.step === "app");
   if ($("sAppRow")) $("sAppRow").hidden = state.app_update !== "available";
+  if (state.app_update === "stuck" && !window._stuckShown){ window._stuckShown = true; $("dStuck").hidden = false; }
+  if (state.app_update === "running") $("dApp").hidden = false;
   $("pName").textContent = ep ? ep.name : "لا يوجد مشروع مفتوح";
   $("saved").hidden = !ep;
   const busy = job.running && job.ep === cur;
@@ -485,6 +527,7 @@ function renderLibrary(){
   }
 }
 async function open(id){
+  if (id !== cur){ thumbs = null; $("chat").hidden = true; }
   cur = id; location.hash = enc(id); $("lib").hidden = true;
   data = {sentences: null, captions: null, plan: null, timeline: null, look: null, sound: null, review: {}};
   pendingFix = {}; pendingDel = new Set(); keepMap = {}; planSub = 1;
@@ -771,7 +814,7 @@ function cardHtml(c){
   return `<div class="scard" data-card="${c.i}"><div class="top"><span class="k">${ar(c.i + 1)}</span><b class="grow">${esc(c.title)}</b><span class="dim tiny num">${mmss(c.start)}</span></div>
     <div class="img" ${img}>${c.img ? "" : "لم تُصنع بعد"}<span class="tag">${esc(c.kind_ar)}</span></div>
     <dl><dt>الكلام</dt><dd>${esc(c.said || "—")}</dd>${c.shows ? `<dt>ما يظهر</dt><dd>${esc(c.shows)}</dd>` : ""}${c.motion ? `<dt>الحركة</dt><dd>${esc(c.motion)}</dd>` : ""}${c.source ? `<dt>المصدر</dt><dd class="dim">${esc(c.source)}</dd>` : ""}${c.note ? `<dt>ملاحظتك</dt><dd class="note">${esc(c.note)}</dd>` : ""}</dl>
-    <div class="act"><button class="pill sm" data-note="${c.i}">✎ ملاحظة</button><button class="pill sm" data-del="${c.i}">✕ شيله</button><button class="pill sm" data-seek="${c.start}">▶</button></div></div>`;
+    <div class="act"><button class="pill sm" data-note="${c.i}">✎ ملاحظة</button><button class="pill sm" data-swap="${c.i}">🔁 بدّل</button><button class="pill sm" data-del="${c.i}">✕ شيله</button><button class="pill sm" data-seek="${c.start}">▶</button></div></div>`;
 }
 function bindCards(root){
   root.querySelectorAll("[data-del]").forEach(b => b.onclick = async () => { data.plan = await post(E() + "/beat", {i: +b.dataset.del, change: {remove: true}}).catch(e => (toast(e.message), data.plan)); refreshPlanViews(); });
@@ -781,6 +824,7 @@ function bindCards(root){
     const inp = card.querySelector("input"); inp.focus();
     card.querySelector(".act .y").onclick = async () => { data.plan = await post(E() + "/beat", {i, change: {note: inp.value}}).catch(e => (toast(e.message), data.plan)); toast("انحفظت. «أعد الخطة» يطبقها"); refreshPlanViews(); };
   });
+  root.querySelectorAll("[data-swap]").forEach(b => b.onclick = () => { $("bigsb").hidden = true; openChat("ما عجبني هالمشهد. بدّله بشي أحسن: ", +b.dataset.swap); });
   root.querySelectorAll("[data-seek]").forEach(b => b.onclick = () => { video.currentTime = +b.dataset.seek - ((data.timeline && data.timeline.offset) || 0); });
 }
 function refreshPlanViews(){ stepPlan(); if (!$("bigsb").hidden){ $("bigCards").innerHTML = data.plan.cards.map(cardHtml).join(""); bindCards($("bigCards")); } reloadTimeline(); }
@@ -830,31 +874,46 @@ function bindRun(){ $("stepbody").querySelectorAll("[data-run]").forEach(b => b.
 
 /* ---------- inspector: colours ---------- */
 let lookTab = "norm", thumbs = null, cmpOn = false;
-const LOG_LOOKS = ["log", "log-vivid", "none"], NORM_LOOKS = ["natural", "cinema", "warm-film", "soft-film", "teal-orange", "mono", "none"];
+const GEN_LOG_LOOKS = ["log", "log-vivid", "none"];
+const NORM_LOOKS = ["cinema", "natural", "documentary", "vivid", "action", "golden", "warm-film", "soft-film", "teal-orange", "night", "bleach", "mono", "none"];
+const CAM_LOOKS = ["cinema", "natural", "documentary", "vivid", "action", "golden", "warm-film", "soft-film", "teal-orange", "night", "bleach", "mono", "none"];
 async function renderInspector(){
   if (!ep) return;
   const s = (data.look && data.look.settings) || {};
+  const src = s.source || "rec709";
   $("iName").textContent = ep.name;
-  if (s.look && LOG_LOOKS.includes(s.look) && s.look !== "none") lookTab = "log";
+  if (src === "slog3" || GEN_LOG_LOOKS.includes(s.look) && s.look !== "none") lookTab = "log";
   $("lkLog").classList.toggle("on", lookTab === "log"); $("lkNorm").classList.toggle("on", lookTab === "norm");
-  if (!thumbs && ep.done.fetch){ thumbs = await post("/api/probe", {path: ep.source && !/^https?:/.test(ep.source) ? ep.source : ""}).catch(() => null); }
+  $("camRow").hidden = lookTab !== "log";
+  const camKey = src === "slog3" ? "slog3" : "genlog";
+  $("camRow").querySelectorAll("[data-src]").forEach(b => b.classList.toggle("on", b.dataset.src === camKey));
+  const wantSrc = src === "slog3" ? "slog3" : "rec709";
+  if (ep.done.fetch && (!thumbs || thumbs.source !== wantSrc) && ep.source && !/^https?:/.test(ep.source))
+    thumbs = await post("/api/probe", {path: ep.source, source: wantSrc}).catch(() => thumbs);
   const names = (data.look && data.look.names) || {};
-  const keys = lookTab === "log" ? LOG_LOOKS : NORM_LOOKS;
+  const keys = lookTab === "log" ? (src === "slog3" ? CAM_LOOKS : GEN_LOG_LOOKS) : NORM_LOOKS;
   $("iLooks").innerHTML = keys.map(k => { const t = thumbs && thumbs.looks && thumbs.looks[k];
-    return `<button class="lk ${(s.look || "cinema") === k && !s.lut ? "on" : ""}" data-look="${k}">${t ? `<img src="/cache/${t.img}">` : ""}<span>${esc(names[k] || k)}</span></button>`; }).join("")
+    return `<button class="lk ${(s.look || "cinema") === k && !s.lut ? "on" : ""}" data-look="${k}">${t ? `<img src="/cache/${t.img}">` : ""}<span>${esc(names[k] || (t && t.name) || k)}</span></button>`; }).join("")
     + (s.lut ? `<button class="lk on" data-look="lut"><span>ملف ألوانك</span></button>` : "");
   $("iLooks").querySelectorAll("[data-look]").forEach(b => b.onclick = () => saveLook({look: b.dataset.look === "lut" ? s.look : b.dataset.look, lut: b.dataset.look === "lut"}));
+  const st = Math.round((s.strength ?? 1) * 100); $("sStr").value = st; $("oStr").textContent = ar(st) + "٪";
   $("sTemp").value = s.temp || 0; $("oTemp").textContent = ar(s.temp || 0);
   $("sTint").value = s.tint || 0; $("oTint").textContent = ar(s.tint || 0);
   $("sExp").value = Math.round((s.exposure || 0) * 100); $("oExp").textContent = (s.exposure || 0).toFixed(2);
   const t = data.timeline || {};
   $("iInfo").innerHTML = `<span>الحالة</span><b>${ep.done.render ? "جاهزة" : ep.done.plan ? "الخطة جاهزة" : ep.done.cut ? "انقصّت" : "تتجهّز"}</b>
+    <span>الكاميرا</span><b>${src === "slog3" ? "سوني لوگ ٣" : "عادي"}</b>
     ${data.sentences && data.sentences.ready ? `<span>الخام</span><b class="num">${mmss(data.sentences.raw)}</b><span>بعد القص</span><b class="num">${mmss(data.sentences.after)}</b>` : ""}
     ${t.duration ? `<span>الفيديو</span><b class="num">${mmss(t.duration)}</b>` : ""}${ep.score != null ? `<span>درجة الناقد</span><b>${ar(ep.score)}</b>` : ""}`;
   applyCssLook();
 }
+$("camRow").querySelectorAll("[data-src]").forEach(b => b.onclick = () => {
+  const slog = b.dataset.src === "slog3";
+  saveLook({source: slog ? "slog3" : "rec709", look: slog ? "cinema" : "log"});
+});
+$("sStr").oninput = () => { $("oStr").textContent = ar(+$("sStr").value) + "٪"; clearTimeout(lookTimer); lookTimer = setTimeout(() => saveLook({strength: +$("sStr").value / 100}, true), 500); };
 $("lkLog").onclick = () => { lookTab = "log"; renderInspector(); };
-$("lkNorm").onclick = () => { lookTab = "norm"; renderInspector(); };
+$("lkNorm").onclick = () => { lookTab = "norm"; const s = (data.look && data.look.settings) || {}; if (s.source === "slog3" || GEN_LOG_LOOKS.includes(s.look)) saveLook({source: "rec709", look: "cinema"}); else renderInspector(); };
 let lookTimer = null;
 function curLook(){ return {...((data.look && data.look.settings) || {}), temp: +$("sTemp").value, tint: +$("sTint").value, exposure: +$("sExp").value / 100}; }
 for (const [id, out, fmt] of [["sTemp", "oTemp", v => ar(v)], ["sTint", "oTint", v => ar(v)], ["sExp", "oExp", v => (v / 100).toFixed(2)]]){
@@ -874,8 +933,11 @@ function applyCssLook(s){
     "log-vivid": "contrast(1.45) saturate(1.75)", "warm-film": "sepia(0.18) saturate(0.95) contrast(1.02)", "soft-film": "contrast(0.94) saturate(0.86) brightness(1.03)",
     "teal-orange": "contrast(1.06) saturate(1.12) hue-rotate(-4deg)", mono: "grayscale(1) contrast(1.05)"}[s.look || "cinema"] || "";
   const temp = (s.temp || 0) / 100, tint = (s.tint || 0) / 100, exp = s.exposure || 0;
-  const extra = `${temp > 0 ? `sepia(${(temp * 0.35).toFixed(2)})` : temp < 0 ? `hue-rotate(${(temp * 12).toFixed(1)}deg) saturate(${(1 + temp * 0.15).toFixed(2)})` : ""} ${tint ? `hue-rotate(${(tint * 10).toFixed(1)}deg)` : ""} ${exp ? `brightness(${Math.pow(2, exp * 0.6).toFixed(2)})` : ""}`;
-  video.style.filter = (base + " " + extra).trim();
+  const strength = s.strength ?? 1;
+  const camera = s.source === "slog3" ? "contrast(1.55) saturate(1.75) brightness(0.92)" : "";
+  const extra0 = `${strength < 1 ? `saturate(${(0.85 + 0.15 * strength).toFixed(2)})` : ""}`;
+  const extra = extra0 + ` ${temp > 0 ? `sepia(${(temp * 0.35).toFixed(2)})` : temp < 0 ? `hue-rotate(${(temp * 12).toFixed(1)}deg) saturate(${(1 + temp * 0.15).toFixed(2)})` : ""} ${tint ? `hue-rotate(${(tint * 10).toFixed(1)}deg)` : ""} ${exp ? `brightness(${Math.pow(2, exp * 0.6).toFixed(2)})` : ""}`;
+  video.style.filter = (camera + " " + base + " " + extra).trim();
 }
 $("bCmp").onclick = () => { cmpOn = !cmpOn; $("bCmp").style.color = cmpOn ? "var(--y)" : ""; applyCssLook(); toast(cmpOn ? "قبل: بدون ألوان" : "بعد: بالألوان"); };
 $("bExact").onclick = async () => {
@@ -956,6 +1018,7 @@ $("lane").addEventListener("mousedown", async (e) => {
   video.currentTime = t; tick();
   renderTimelineSel();
 });
+$("lane").addEventListener("dblclick", (e) => { const sc = e.target.closest("[data-sc]"); if (sc) openChat("", +sc.dataset.sc); });
 function renderTimelineSel(){ $("rImg").querySelectorAll("[data-sc]").forEach(b => b.classList.toggle("sel", +b.dataset.sc === selScene)); }
 document.addEventListener("mousemove", (e) => {
   if (drag){ const s = data.timeline.scenes.find(x => x.i === drag.i); const t = snapT(timeAt(e)); drag.t = t; drag.el.style.width = Math.max(3, (t - s.s) * pps - 2) + "px"; return; }
@@ -983,10 +1046,11 @@ async function pollLog(){
     if (d.ep !== lastLog.ep && logNext) { logNext = 0; logLines = []; }
     lastLog = d; logLines.push(...d.lines); if (logLines.length > 400) logLines = logLines.slice(-300); logNext = d.next;
     job = {...job, running: d.running, ep: d.ep, what: d.what, step: d.step, progress: d.progress};
-    if (d.running && d.ep === cur){ if (!ep || ep.running !== true) await refresh(); renderSteps(); }
+    if (d.running && d.ep === cur){ if (!ep || ep.running !== true) await refresh(); renderSteps(); if (!$("chat").hidden) renderChat(); }
     if (was && !d.running){
       await refresh(); if (d.ep === cur){ await loadAll(); loadVideo(true); }
       if (d.need_login) openLink();
+      if (d.what === "chat" && d.ep === cur){ chatMsgs = await api(E() + "/chat").catch(() => chatMsgs); if ($("chat").hidden) toast("المساعد جاوبك 💬"); renderChat(); }
       else toast(d.ok ? "خلص ✅" : "ما كمل، شوف التفاصيل");
       if (d.ok && d.what === "prepare" && d.ep === cur){ step = 1; renderSteps(); }
       if (d.ok && d.what === "cut" && d.ep === cur){ step = 3; renderSteps(); loadVideo(true); }
@@ -1018,12 +1082,14 @@ window.onPicked = async (path) => {
     $("nFile").textContent = `${(probe.size / 1e9).toFixed(2)} گيگابايت · ${mmss(probe.duration)} · ${path.split("/").pop()}`;
     if (!$("nName").value) $("nName").value = probe.name;
     chosenLook = probe.suggest; drawNewLooks();
-    $("nFlat").hidden = !probe.flat; $("nFlat").textContent = "صُوّر هذا المقطع مسطّح (لوگ). اختر تحويل الألوان، ويمكنك تعديله لاحقاً من قسم الألوان.";
+    $("nFlat").hidden = !probe.flat; $("nFlat").textContent = probe.sony && probe.flat ? "صُوّر هذا المقطع بسوني مسطّح (لوگ ٣). اخترت لك تحويل سوني، وفوگه الألوان الي تحبها، وتگدر تغيّرها بعدين من قسم الألوان." : "صُوّر هذا المقطع مسطّح (لوگ). اختر تحويل الألوان، ويمكنك تعديله لاحقاً من قسم الألوان.";
   } catch (e){ $("nFile").textContent = ""; $("nErr").textContent = e.message; }
 };
 function drawNewLooks(){
-  $("nLooksRow").hidden = false;
-  const order = probe.flat ? ["log", "log-vivid", "cinema", "warm-film", "soft-film", "teal-orange", "mono", "natural", "none"] : ["cinema", "natural", "warm-film", "soft-film", "teal-orange", "mono", "log", "log-vivid", "none"];
+  $("nLooksRow").hidden = false; $("nCamRow").hidden = false;
+  $("nCamRow").querySelectorAll("[data-cam]").forEach(b => { b.classList.toggle("on", b.dataset.cam === (probe.source || "rec709"));
+    b.onclick = async () => { $("nFile").textContent = "دا أجهّز الألوان…"; try { probe = await post("/api/probe", {path: probe.path, source: b.dataset.cam}); chosenLook = probe.suggest; drawNewLooks(); } catch (e){ $("nErr").textContent = e.message; } $("nFile").textContent = `${(probe.size / 1e9).toFixed(2)} گيگابايت · ${mmss(probe.duration)}`; }; });
+  const order = probe.source === "slog3" ? CAM_LOOKS : probe.flat ? ["log", "log-vivid"].concat(NORM_LOOKS) : NORM_LOOKS.concat(["log", "log-vivid"]);
   const keys = order.filter(k => probe.looks[k]).concat(probe.looks.lut ? ["lut"] : []);
   $("nLooks").innerHTML = keys.map(k => `<button class="lk ${chosenLook === k ? "on" : ""}" data-k="${k}"><img src="/cache/${probe.looks[k].img}"><span>${esc(probe.looks[k].name)}</span></button>`).join("") + `<button class="lk add" id="nLut">＋<br>أضف ملف ألوان…</button>`;
   $("nLooks").querySelectorAll("[data-k]").forEach(b => b.onclick = () => { chosenLook = b.dataset.k; drawNewLooks(); });
@@ -1034,7 +1100,7 @@ $("nGo").onclick = async () => {
   $("nErr").textContent = "";
   const source = probe ? probe.path : $("nLink").value.trim();
   try {
-    const look = {look: chosenLook === "lut" ? (probe.flat ? "log" : "natural") : chosenLook};
+    const look = {look: chosenLook === "lut" ? (probe.flat ? "log" : "natural") : chosenLook, source: probe.source || "rec709", strength: 1};
     const e = await post("/api/episodes", {name: $("nName").value, source, script: $("nScript").value, look, lut_key: chosenLook === "lut" ? lutKey : ""});
     $("dNew").hidden = true; thumbs = probe; await open(e.id); step = 1; await run("prepare"); renderSteps();
   } catch (err){ $("nErr").textContent = err.message; }
@@ -1047,7 +1113,50 @@ $("tText").onclick = () => { if (!ep) return; step = 3; renderSteps(); loadVideo
 $("tPlan").onclick = () => { if (!ep) return; step = 4; renderSteps(); loadVideo(); };
 $("tFiles").onclick = () => ep ? post(E() + "/reveal", {}).catch(e => toast(e.message)) : post("/api/open-folder").catch(e => toast(e.message));
 $("libFolder").onclick = () => post("/api/open-folder").catch(e => toast(e.message));
-$("tAssist").onclick = () => { if (!ep){ toast("افتح مشروع أول"); return; } $("aErr").textContent = ""; $("dAssist").hidden = false; setTimeout(() => $("aMsg").focus(), 30); };
+$("tAssist").onclick = () => { if (!ep){ toast("افتح مشروع أول"); return; } $("chat").hidden ? openChat() : ($("chat").hidden = true); };
+
+/* ---------- chat with the assistant ---------- */
+let chatMsgs = [], chatScene = null;
+const QUICK = ["ما عجبتني هالصورة، بدّلها بأحسن", "حط موشن جرافك هنا يشرح الكلام", "حط صوت مؤثر هنا", "خلّي الموسيقى أهدأ",
+  "خلّي الألوان أقوى", "شيل هالجملة", "خلّي الهوك أسرع وأقوى", "كبّر الكتابة الي على الشاشة"];
+function chatCtx(){
+  if (!$("chCtx").checked) return {};
+  const final = /final|preview/.test(vSrc);
+  return {t: +(video.currentTime || 0).toFixed(2), timeline: final ? "final" : "clean", scene: chatScene};
+}
+function ctxText(){
+  const c = chatCtx(); if (c.t == null) return "عن الحلقة كلها";
+  const sc = chatScene != null && data.plan && data.plan.cards ? data.plan.cards[chatScene] : null;
+  return `عن هاللحظة: ${mmss(c.t)}${sc ? ` · المشهد ${ar(sc.i + 1)} (${sc.kind_ar})` : ""}`;
+}
+async function openChat(prefill, scene){
+  if (!ep) return;
+  chatScene = scene ?? null; $("chat").hidden = false;
+  $("quick").innerHTML = QUICK.map(q => `<button class="pill sm">${q}</button>`).join("");
+  $("quick").querySelectorAll(".pill").forEach(b => b.onclick = () => { $("chMsg").value = b.textContent; $("chMsg").focus(); });
+  if (prefill) $("chMsg").value = prefill;
+  $("chCtxTxt").textContent = ctxText();
+  chatMsgs = await api(E() + "/chat").catch(() => []);
+  renderChat(); setTimeout(() => $("chMsg").focus(), 30);
+}
+function renderChat(){
+  const thinking = job.running && job.ep === cur && job.what === "chat";
+  $("msgs").innerHTML = (chatMsgs.length ? "" : `<div class="dim" style="line-height:1.9">احچي وياه مثل ما تحچي ويه مونتير: «هالصورة ما عجبتني»، «حط هنا موشن جرافك»، «الموسيقى عالية»، «الألوان أدفى». وگّف الفيديو على اللحظة الي تقصدها، وهو يعرف وين انت.</div>`)
+    + chatMsgs.map((m, k) => `<div class="msg ${m.role === "owner" ? "me" : "ai"}">${esc(m.text)}${m.ctx && m.ctx.t != null ? `<span class="ctx">عند ${mmss(m.ctx.t)}${m.ctx.scene != null ? ` · المشهد ${ar(m.ctx.scene + 1)}` : ""}</span>` : ""}${m.role !== "owner" && m.changed ? `<div class="acts"><button class="pill sm y" data-act="build">طلّع معاينة</button><button class="pill sm" data-act="plan">شوف الخطة</button></div>` : ""}</div>`).join("")
+    + (thinking ? `<div class="msg ai"><div class="row"><div class="spinner"></div><span class="muted">يفكّر ويعدّل… ${esc((lastLines(1).match(/>([^<]+)<\/div><\/div>$/) || [])[1] || "")}</span></div></div>` : "");
+  $("msgs").scrollTop = $("msgs").scrollHeight;
+  $("chSend").disabled = !!job.running;
+  $("msgs").querySelectorAll("[data-act]").forEach(b => b.onclick = () => { if (b.dataset.act === "build"){ step = 5; run("build"); } else { step = 4; planSub = 2; renderSteps(); } });
+}
+$("chSend").onclick = async () => {
+  const text = $("chMsg").value.trim(); if (!text) return;
+  try { const r = await post(E() + "/chat", {text, ctx: chatCtx()}); chatMsgs = r.messages; $("chMsg").value = ""; chatScene = null; lastLog = {running: true, what: "chat"}; job = {...job, running: true, ep: cur, what: "chat"}; renderChat(); }
+  catch (e){ toast(e.message); }
+};
+$("chMsg").onkeydown = (e) => { if (e.key === "Enter" && !e.shiftKey){ e.preventDefault(); $("chSend").click(); } };
+$("chClose").onclick = () => $("chat").hidden = true;
+$("chCtx").onchange = () => $("chCtxTxt").textContent = ctxText();
+video.addEventListener("pause", () => { if (!$("chat").hidden) $("chCtxTxt").textContent = ctxText(); });
 $("aGo").onclick = async () => { const m = $("aMsg").value.trim(); if (!m) return; $("dAssist").hidden = true; $("aMsg").value = ""; step = 4; planSub = 2; await run("assist", m); };
 $("tUndo").onclick = () => toast("التراجع: كل تعديل ينحفظ بملف الحلقة، وتگدر ترجّعه من خطوته");
 $("tInsp").onclick = async () => {
@@ -1088,6 +1197,7 @@ $("lkCancel").onclick = () => post("/api/claude-link/cancel").then(linkView);
 $("lkOpen").onclick = () => { const u = $("lkOpen").dataset.url; if (!u) return; if (bridge) bridge.postMessage({cmd: "open", url: u}); else window.open(u, "_blank"); };
 $("sLink").onclick = openLink;
 $("sApp").onclick = () => post("/api/update-app").then(() => { $("dSet").hidden = true; refresh(); }, e => toast(e.message));
+$("stuckShow").onclick = () => post("/api/show-new-app").catch(e => toast(e.message));
 $("sOpen").onclick = () => post("/api/open-folder").catch(e => toast(e.message));
 $("sUpdate").onclick = () => post("/api/update").then(() => { $("dSet").hidden = true; toast("دا أحدّث… يرجع يشتغل لحاله"); }, e => toast(e.message));
 document.querySelectorAll("[data-close]").forEach(b => b.onclick = () => b.closest(".veil").hidden = true);

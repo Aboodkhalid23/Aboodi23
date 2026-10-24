@@ -189,3 +189,30 @@ def test_linking_claude_inside_the_app(tmp_path, monkeypatch):
     assert oct(tok.stat().st_mode)[-3:] == "600"
     assert srv._env()["CLAUDE_CODE_OAUTH_TOKEN"].startswith("sk-ant-oat01-")
     assert srv.claude_logged_in() is True
+
+
+def test_chat_with_the_assistant_keeps_the_conversation(app):
+    d = srv.EPISODES / srv.create_episode("حلقة", str(app))["id"]
+    plan = {"style": {"primary": "noir", "sections": []}, "teaser": [],
+            "beats": [{"start": 0, "end": 4, "zone": "hook", "kind": "face"},
+                      {"start": 4, "end": 9, "zone": "hook", "kind": "image", "query": "old factory", "caption": "مصنع"}]}
+    (d / "edit" / "edit_plan.json").write_text(json.dumps(plan), encoding="utf-8")
+    srv.chat_add(d, {"role": "owner", "text": "ما عجبتني الصورة", "ctx": {"t": 5.0, "timeline": "final"}})
+    ctx = srv._chat_context(d, {"t": 5.0, "timeline": "final"})
+    assert "المشهد 1" in ctx and "old factory" in ctx
+    srv.JOB.ep = d.name
+    assert srv._chat_step(d) == 0
+    msgs = srv.chat_load(d)
+    assert [m["role"] for m in msgs] == ["owner", "assistant"] and msgs[-1]["text"] == "تم"
+    assert srv._changed_beats(plan, {**plan, "beats": [plan["beats"][0], {**plan["beats"][1], "query": "steel mill"}]}) == [1]
+
+
+def test_sony_log_becomes_normal_colour():
+    import numpy as np
+    from editor.pipeline.luts import slog3_to_display, split_chain
+    grey = (420 - 64) / 876      # Sony's 18% grey in S-Log3, as ffmpeg reads legal-range video
+    out = slog3_to_display(np.array([[grey] * 3]))
+    assert 0.45 < out[0][0] < 0.6
+    assert slog3_to_display(np.array([[0.0] * 3]))[0][0] == 0
+    pix, spatial = split_chain("curves=master='0/0 0.5/0.6 1/1',eq=saturation=1.2,noise=alls=3:allf=t")
+    assert pix == "curves=master='0/0 0.5/0.6 1/1',eq=saturation=1.2" and spatial == "noise=alls=3:allf=t"
