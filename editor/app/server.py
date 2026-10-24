@@ -233,6 +233,9 @@ def _env() -> dict:
                ABOODI_HISTORY=str(HOME / "learning" / "history.jsonl"),
                BASH_DEFAULT_TIMEOUT_MS="3600000", BASH_MAX_TIMEOUT_MS="7200000")
     (HOME / "learning").mkdir(parents=True, exist_ok=True)
+    tok = HOME / "claude_token"
+    if tok.exists() and tok.read_text(encoding="utf-8").strip():   # linked from the app (ClaudeLink)
+        env["CLAUDE_CODE_OAUTH_TOKEN"] = tok.read_text(encoding="utf-8").strip()
     py = Path(sys.executable).parent
     env["PATH"] = os.pathsep.join([str(py), str(Path.home() / ".local" / "bin"), env.get("PATH", "")])
     return env
@@ -243,12 +246,124 @@ def claude_bin() -> str | None:
                                                              Path("/opt/homebrew/bin/claude")) if p.exists()), None)
 
 
+def _token_file() -> Path:
+    return HOME / "claude_token"
+
+
 def claude_logged_in() -> bool | None:
-    """A hint only (no request is spent): Claude Code keeps the signed-in account in ~/.claude.json."""
+    """A hint only (no request is spent): the app's own link (a long-lived token from `claude setup-token`), or
+    Claude Code's signed-in account in ~/.claude.json."""
+    if _token_file().exists() and _token_file().read_text(encoding="utf-8").strip():
+        return True
     try:
         return bool(json.loads((Path.home() / ".claude.json").read_text(encoding="utf-8")).get("oauthAccount"))
     except (OSError, ValueError):
         return None
+
+
+class ClaudeLink:
+    """Linking his Claude account from inside the app, in Arabic, without the terminal (owner, 2026-10-24: "ما
+    گدرت أربطه"). Runs `claude setup-token` in a pseudo-terminal: it opens the browser on the sign-in page; after
+    he approves, the page shows a code that he pastes in the app; the long-lived token it prints is kept in
+    HOME/claude_token (only his user can read it) and given to every Claude run as CLAUDE_CODE_OAUTH_TOKEN."""
+
+    def __init__(self):
+        self.status, self.url, self.error, self.pid, self.fd, self.out = "idle", "", "", None, None, ""
+        self.lock = threading.Lock()
+
+    def start(self) -> dict:
+        import fcntl
+        import pty
+        import struct
+        import termios
+        exe = claude_bin()
+        if not exe:
+            raise RuntimeError("كلود مو منصّب بعد. دوس «حدّث» بالإعدادات")
+        self.cancel()
+        env = {k: v for k, v in _env().items() if k not in ("CLAUDE_CODE_OAUTH_TOKEN", "ANTHROPIC_API_KEY")}
+        env["TERM"] = "xterm-256color"
+        pid, fd = pty.fork()
+        if pid == 0:   # the child: claude itself
+            try:
+                os.execvpe(exe, [exe, "setup-token"], env)
+            finally:
+                os._exit(127)
+        fcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack("HHHH", 50, 1000, 0, 0))   # the link stays on one line
+        with self.lock:
+            self.status, self.url, self.error, self.pid, self.fd, self.out = "starting", "", "", pid, fd, ""
+        threading.Thread(target=self._read, daemon=True).start()
+        return self.state()
+
+    def _read(self) -> None:
+        import select
+        fd = self.fd
+        while True:
+            try:
+                r, _, _ = select.select([fd], [], [], 1.0)
+                if not r:
+                    if self.status in ("done", "error", "idle"):
+                        break
+                    continue
+                chunk = os.read(fd, 4096)
+            except OSError:
+                break
+            if not chunk:
+                break
+            text = ANSI.sub(" ", chunk.decode("utf-8", "replace")).replace("\x1b", "")   # cursor moves stand for spaces
+            with self.lock:
+                self.out = (self.out + text)[-20000:]
+                flat = re.sub(r"\s+", "", self.out)
+                m = re.search(r"https://\S*oauth/authorize\?\S*state=[\w\-]+", self.out)   # one line (1000 columns)
+                if m and not self.url:
+                    self.url, self.status = m.group(0), "waiting"
+                    if MAC:   # claude opens the browser itself too; this is the fallback
+                        subprocess.Popen(["open", self.url])
+                tok = re.search(r"(sk-ant-oat[\w\-]{20,})", self.out)
+                if tok:
+                    _token_file().parent.mkdir(parents=True, exist_ok=True)
+                    _token_file().write_text(tok.group(1), encoding="utf-8")
+                    os.chmod(_token_file(), 0o600)
+                    self.status = "done"
+                elif re.search(r"(?i)invalid|error|failed|expired", flat[-400:]) and self.status == "checking":
+                    self.status, self.error = "error", "الرمز ما زبط. جرّب مرة ثانية من الأول"
+        with self.lock:
+            if self.status not in ("done", "error"):
+                self.status, self.error = "error", "انسكر قبل ما يخلص. جرّب مرة ثانية"
+        self._reap()
+
+    def submit(self, code: str) -> dict:
+        code = re.sub(r"\s+", "", code or "")
+        if not code:
+            raise ValueError("الصق الرمز أول")
+        with self.lock:
+            if self.fd is None or self.status != "waiting":
+                raise RuntimeError("ابدأ الربط من جديد")
+            os.write(self.fd, code.encode() + b"\r")
+            self.status = "checking"
+        return self.state()
+
+    def cancel(self) -> None:
+        with self.lock:
+            if self.pid:
+                try:
+                    os.kill(self.pid, signal.SIGTERM)
+                except OSError:
+                    pass
+            self.status = "idle" if self.status != "done" else "done"
+        self._reap()
+
+    def _reap(self) -> None:
+        if self.pid:
+            try:
+                os.waitpid(self.pid, os.WNOHANG)
+            except OSError:
+                pass
+
+    def state(self) -> dict:
+        return {"status": self.status, "url": self.url, "error": self.error, "linked": bool(claude_logged_in())}
+
+
+LINK = ClaudeLink()
 
 
 def _run(cmd: list[str], on_line=None) -> int:
@@ -827,6 +942,8 @@ class Handler(BaseHTTPRequestHandler):
                 root = (HOME / "cache").resolve()
                 f = (root / path[7:]).resolve()
                 return self._file(f) if f.is_relative_to(root) else self._err("لا", 403)
+            if path == "/api/claude-link":
+                return self._json(LINK.state())
             if path == "/api/styles":
                 return self._json(styles_list())
             if path == "/api/music-sample":
@@ -976,6 +1093,16 @@ class Handler(BaseHTTPRequestHandler):
                     meta["name"] = (b.get("name") or meta["name"]).strip()
                     _save_meta(d, meta)
                 return self._json({"ok": True})
+            if path == "/api/claude-link/start":
+                return self._json(LINK.start())
+            if path == "/api/claude-link/code":
+                return self._json(LINK.submit(str(self._body().get("code", ""))))
+            if path == "/api/claude-link/cancel":
+                LINK.cancel()
+                return self._json(LINK.state())
+            if path == "/api/claude-link/unlink":
+                _token_file().unlink(missing_ok=True)
+                return self._json(LINK.state())
             if path == "/api/claude-login":
                 exe = claude_bin()
                 if not exe:

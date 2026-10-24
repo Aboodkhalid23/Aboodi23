@@ -146,3 +146,46 @@ def test_http_serves_the_room_with_its_stand_in_and_video_ranges(app):
         assert err.value.code in (403, 404)
     finally:
         server.shutdown()
+
+
+FAKE_SETUP = r'''#!/usr/bin/env python3
+import sys
+print("Welcome to Claude Code\nBrowser didn't open? Use the url below to sign in\n")
+print("https://claude.com/cai/oauth/authorize?code=true&client_id=abc&redirect_uri=x&state=st-ate_1\n")
+sys.stdout.write("Paste code here if prompted > "); sys.stdout.flush()
+code = sys.stdin.readline().strip()
+if code == "good-code":
+    print("\nYour OAuth token (valid for 1 year):\n\nsk-ant-oat01-ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\n")
+else:
+    print("\nError: invalid code")
+'''
+
+
+def test_linking_claude_inside_the_app(tmp_path, monkeypatch):
+    monkeypatch.setattr(srv, "HOME", tmp_path / "home")
+    monkeypatch.setattr(srv, "MAC", False)
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    fake = bin_dir / "claude"
+    fake.write_text(FAKE_SETUP, encoding="utf-8")
+    fake.chmod(fake.stat().st_mode | stat.S_IEXEC)
+    monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ['PATH']}")
+    monkeypatch.setenv("HOME", str(tmp_path))      # no real ~/.claude.json
+    link = srv.ClaudeLink()
+    link.start()
+    for _ in range(100):
+        if link.status == "waiting":
+            break
+        time.sleep(0.05)
+    assert link.status == "waiting" and link.url.endswith("state=st-ate_1")
+    link.submit(" good-code \n")
+    for _ in range(100):
+        if link.status == "done":
+            break
+        time.sleep(0.05)
+    assert link.status == "done", link.out[-300:]
+    tok = srv._token_file()
+    assert tok.read_text() == "sk-ant-oat01-ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    assert oct(tok.stat().st_mode)[-3:] == "600"
+    assert srv._env()["CLAUDE_CODE_OAUTH_TOKEN"].startswith("sk-ant-oat01-")
+    assert srv.claude_logged_in() is True
