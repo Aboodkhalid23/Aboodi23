@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>المونتير</title>
+<style>
+:root{
+  --bg:#0F131C; --panel:#151B27; --panel2:#1B2331; --line:#263044; --ink:#F3EFE6; --mute:#9AA3B5; --dim:#6B7489;
+  --red:#FF3B55; --red2:#C81E3A; --teal:#2FD9C9; --gold:#F2C14E; --ok:#3DDC84;
+  --r:14px; color-scheme:dark;
+  font-family:-apple-system,"SF Arabic","Geeza Pro","Segoe UI",Tahoma,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-size:14px;display:flex;overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+input,textarea{font:inherit;color:var(--ink);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+input:focus,textarea:focus{outline:2px solid var(--teal);outline-offset:-1px}
+[hidden]{display:none!important}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-weight:600;white-space:nowrap}
+.btn:hover{border-color:var(--mute)}
+.btn.main{background:var(--red);border-color:var(--red);color:#fff;box-shadow:0 6px 22px #ff3b5540}
+.btn.main:hover{background:#ff5068}
+.btn.teal{background:transparent;border-color:var(--teal);color:var(--teal)}
+.btn.small{padding:6px 12px;font-size:12.5px}
+.btn:disabled{opacity:.45;cursor:default}
+
+/* sidebar */
+aside{width:280px;flex:none;background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.brand{padding:22px 20px 14px;display:flex;align-items:center;gap:10px}
+.logo{width:34px;height:34px;border-radius:9px;background:var(--red);display:grid;place-items:center;box-shadow:0 0 0 3px #ff3b5530}
+.logo svg{width:18px;height:18px}
+.brand b{font-size:19px;letter-spacing:.2px}
+.brand small{display:block;color:var(--dim);font-size:11.5px;font-weight:400}
+.new{margin:4px 16px 12px;justify-content:center}
+.eps{flex:1;overflow:auto;padding:4px 10px 10px;display:flex;flex-direction:column;gap:4px}
+.ep{display:block;text-align:right;padding:11px 12px;border-radius:11px;border:1px solid transparent;width:100%}
+.ep:hover{background:var(--panel2)}
+.ep.on{background:var(--panel2);border-color:var(--line)}
+.ep .n{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ep .s{color:var(--dim);font-size:12px;margin-top:3px;display:flex;gap:6px;align-items:center}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--dim);flex:none}
+.dot.run{background:var(--gold);animation:pulse 1s infinite}
+.dot.done{background:var(--ok)}
+@keyframes pulse{50%{opacity:.3}}
+.side-foot{border-top:1px solid var(--line);padding:12px 16px;display:flex;gap:8px}
+.side-foot .btn{flex:1;justify-content:center}
+
+/* main */
+main{flex:1;min-width:0;overflow:auto;position:relative}
+.wrap{max-width:1040px;margin:0 auto;padding:28px 32px 60px}
+h1{font-size:26px;margin:0;text-wrap:balance}
+.sub{color:var(--mute);margin-top:6px}
+.head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.score{font-variant-numeric:tabular-nums;border:1px solid var(--line);border-radius:12px;padding:8px 14px;text-align:center}
+.score b{display:block;font-size:22px;color:var(--teal)}
+.score span{font-size:11.5px;color:var(--dim)}
+
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:24px 0}
+.step{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px;position:relative;min-width:0}
+.step .k{color:var(--dim);font-size:12px}
+.step .t{font-weight:700;margin-top:4px}
+.step .d{color:var(--mute);font-size:12px;margin-top:6px;line-height:1.5}
+.step .st{position:absolute;top:12px;left:12px;font-size:12px;color:var(--dim)}
+.step.done{border-color:#2d5a45}.step.done .st{color:var(--ok)}
+.step.run{border-color:var(--gold);box-shadow:0 0 0 3px #f2c14e1f}.step.run .st{color:var(--gold)}
+.step.fail{border-color:var(--red)}.step.fail .st{color:var(--red)}
+.step .again{margin-top:10px}
+
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.banner{display:flex;gap:12px;align-items:center;background:#2a1520;border:1px solid var(--red2);border-radius:var(--r);padding:12px 16px;margin-top:16px}
+.banner.teal{background:#0f2626;border-color:#1f6b66}
+
+.grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px;margin-top:22px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;min-width:0}
+.card h3{margin:0;font-size:13px;color:var(--mute);font-weight:600;padding:12px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+video{display:block;width:100%;background:#000;aspect-ratio:16/9}
+.noplay{aspect-ratio:16/9;display:grid;place-items:center;color:var(--dim);text-align:center;padding:20px;background:repeating-linear-gradient(45deg,#121826 0 12px,#141b29 12px 24px)}
+.log{height:340px;overflow:auto;padding:10px 14px;font-size:12.5px;line-height:1.75;color:#cfd5e2;white-space:pre-wrap;word-break:break-word}
+.log .h{color:var(--teal);font-weight:700;margin-top:6px}
+.log .bad{color:#ff8094}.log .good{color:var(--ok)}
+.bar{height:3px;background:var(--line);position:relative;overflow:hidden}
+.bar i{position:absolute;inset:0 auto 0 0;width:30%;background:var(--gold);animation:slide 1.4s infinite ease-in-out}
+@keyframes slide{0%{left:-30%}100%{left:100%}}
+
+/* welcome / drop */
+.drop{margin-top:26px;border:2px dashed var(--line);border-radius:20px;padding:56px 24px;text-align:center;background:linear-gradient(180deg,#141a26,#10151f)}
+.drop.over{border-color:var(--teal);background:#0f2222}
+.drop .big{font-size:20px;font-weight:700;margin:14px 0 6px}
+.drop svg{width:56px;height:56px;color:var(--red)}
+.how{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:22px}
+.how div{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;color:var(--mute);font-size:12.5px;line-height:1.6}
+.how b{display:block;color:var(--ink);font-size:13.5px;margin-bottom:4px}
+
+/* modal */
+.veil{position:fixed;inset:0;background:#05070bcc;display:grid;place-items:center;z-index:20;padding:20px}
+.modal{width:min(560px,100%);background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;max-height:90vh;overflow:auto}
+.modal h2{margin:0 0 4px;font-size:19px}
+.field{margin-top:16px}
+.field label{display:block;font-weight:600;margin-bottom:7px}
+.field .hint{color:var(--dim);font-size:12px;margin-top:6px}
+.pick{display:flex;gap:8px;align-items:center}
+.chosen{flex:1;min-width:0;padding:10px 12px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr;text-align:right}
+.chosen.ok{color:var(--ink)}
+.or{color:var(--dim);font-size:12px;text-align:center;margin:10px 0}
+.foot{display:flex;gap:10px;justify-content:flex-start;margin-top:22px;flex-wrap:wrap}
+.err{color:#ff8094;margin-top:12px;min-height:1em}
+.set{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.set:last-child{border:0}
+.set .x{color:var(--dim);font-size:12.5px;margin-top:4px;line-height:1.6}
+ol.tips{margin:8px 0 0;padding-inline-start:20px;color:var(--mute);line-height:1.9;font-size:12.5px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:600;z-index:40}
+.up{height:6px;background:var(--line);border-radius:3px;margin-top:10px;overflow:hidden}
+.up i{display:block;height:100%;width:0;background:var(--teal)}
+
+@media (max-width:900px){.grid{grid-template-columns:1fr}.steps,.how{grid-template-columns:repeat(2,1fr)}aside{width:230px}}
+</style>
+</head>
+<body>
+<aside>
+  <div class="brand">
+    <div class="logo"><svg viewBox="0 0 24 24" fill="#fff"><path d="M8 5.5v13l10.5-6.5z"/></svg></div>
+    <div><b>المونتير</b><small>المونتاج الآلي على حاسبتك</small></div>
+  </div>
+  <button class="btn main new" id="bNew">＋ حلقة جديدة</button>
+  <div class="eps" id="eps"></div>
+  <div class="side-foot">
+    <button class="btn small" id="bFolder" title="مجلد الحلقات">📁 الحلقات</button>
+    <button class="btn small" id="bSettings">⚙️ الإعدادات</button>
+  </div>
+</aside>
+
+<main id="main">
+  <!-- welcome -->
+  <section class="wrap" id="welcome" hidden>
+    <h1>هلا بيك 👋</h1>
+    <div class="sub">اسحب الفيديو الخام هنا، والمونتير يسوي الباقي.</div>
+    <div class="drop" id="drop">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="13" height="14" rx="2"/><path d="M16 10l5-3v10l-5-3"/></svg>
+      <div class="big">اسحب الفيديو الخام لهنا</div>
+      <div class="sub">أو</div>
+      <div style="margin-top:14px"><button class="btn main" id="bNew2">اختار الفيديو من الحاسبة</button></div>
+    </div>
+    <div class="how">
+      <div><b>١. التجهيز</b>يسحب الفيديو، يفرّغ كلامك، يشيل السكتات والإعادات، ويصلح الأسماء.</div>
+      <div><b>٢. خطة المونتير</b>كلود يقرر مشهد مشهد: أوراق يمّك، صور، أرقام، موشن، وموسيقى.</div>
+      <div><b>٣. النسخة الكاملة</b>تطلع الحلقة بنفس دقة الخام، بلمسة سينما.</div>
+      <div><b>٤. غرفة المونتاج</b>تشوفها وتترك طلبات على أي ثانية، وهو ينفذها.</div>
+    </div>
+  </section>
+
+  <!-- episode -->
+  <section class="wrap" id="episode" hidden>
+    <div class="head">
+      <div style="min-width:0">
+        <h1 id="eName"></h1>
+        <div class="sub" id="eSub"></div>
+      </div>
+      <div class="score" id="eScore" hidden><b></b><span>درجة الناقد</span></div>
+    </div>
+
+    <div class="steps" id="steps"></div>
+
+    <div class="actions">
+      <button class="btn main" id="bGo"></button>
+      <button class="btn" id="bStop" hidden>⏹️ وگّف</button>
+      <button class="btn teal" id="bRoom" hidden>🎬 افتح غرفة المونتاج</button>
+      <button class="btn" id="bReq" hidden></button>
+      <button class="btn" id="bReveal" hidden>📂 وين الملف؟</button>
+    </div>
+    <div class="banner" id="loginBanner" hidden>
+      <span>🔑</span><div style="flex:1">كلود يحتاج تسجيل دخول بحسابك حتى يسوي خطة المونتير.</div>
+      <button class="btn small main" data-login>سجّل دخول</button>
+    </div>
+    <div class="banner teal" id="namesBanner" hidden>
+      <span>🧑‍🏫</span><div style="flex:1">اكو أسماء ما انعرفت من الصوت. كلود يعرفها من القصة بخطوة الخطة.</div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3><span id="vTitle">الحلقة</span><span id="vWhich"></span></h3>
+        <div id="player"></div>
+      </div>
+      <div class="card">
+        <h3><span>شنو دا يصير</span><button class="btn small" id="bCopy">نسخ</button></h3>
+        <div class="bar" id="bar" hidden><i></i></div>
+        <div class="log" id="log"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- new episode -->
+<div class="veil" id="mNew" hidden>
+  <div class="modal">
+    <h2>حلقة جديدة</h2>
+    <div class="sub">بس الاسم والفيديو. الباقي علينا.</div>
+    <div class="field">
+      <label for="fName">اسم الحلقة</label>
+      <input id="fName" placeholder="مثلاً: قصة نوكيا">
+    </div>
+    <div class="field">
+      <label>الفيديو الخام</label>
+      <div class="pick"><div class="chosen" id="fChosen">ما اخترت بعد</div><button class="btn" id="fPick">اختار</button></div>
+      <input type="file" id="fFile" accept="video/*" hidden>
+      <div class="up" id="fUp" hidden><i></i></div>
+      <div class="or">أو</div>
+      <input id="fLink" placeholder="رابط درايف (أي شخص عنده الرابط يشوفه)" dir="ltr">
+    </div>
+    <div class="field">
+      <label for="fScript">سكربت الحلقة <span style="color:var(--dim);font-weight:400">(إذا عندك، يصحح التفريغ)</span></label>
+      <textarea id="fScript" rows="4" placeholder="الصق السكربت هنا"></textarea>
+    </div>
+    <div class="err" id="fErr"></div>
+    <div class="foot">
+      <button class="btn main" id="fGo">ابدأ المونتاج ▶</button>
+      <button class="btn" id="fSave">احفظها بس</button>
+      <button class="btn" data-close>إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- settings -->
+<div class="veil" id="mSet" hidden>
+  <div class="modal">
+    <h2>الإعدادات</h2>
+    <div class="set">
+      <div><b>كلود</b><div class="x" id="sClaude"></div>
+        <ol class="tips">
+          <li>دوس «سجّل دخول»: تنفتح نافذة سودة (الطرفية).</li>
+          <li>إذا سألك عن الشكل، دوس إنتر.</li>
+          <li>اختار الخيار الأول (حساب كلود) ودوس إنتر.</li>
+          <li>ينفتح المتصفح: دوس «موافق»، وارجع سكّر النافذة السودة.</li>
+        </ol>
+      </div>
+      <button class="btn main small" data-login>سجّل دخول</button>
+    </div>
+    <div class="set">
+      <div><b>مجلد الحلقات</b><div class="x" id="sFolder"></div></div>
+      <button class="btn small" id="sOpen">افتحه</button>
+    </div>
+    <div class="set">
+      <div><b>تحديث المونتير</b><div class="x" id="sVer"></div></div>
+      <button class="btn small teal" id="sUpdate">حدّث</button>
+    </div>
+    <div class="foot"><button class="btn" data-close>تمام</button></div>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const bridge = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.app;
+let state = {episodes: []}, cur = null, logNext = 0, logEp = null, picked = "", pollT = null;
+
+const STEP_INFO = [
+  ["prep", "التجهيز", "سحب، تفريغ، قص السكتات والإعادات، الأسماء والصور"],
+  ["plan", "خطة المونتير", "كلود يقرر المشاهد ويجرب معاينة ويصلحها"],
+  ["render", "النسخة الكاملة", "الحلقة بالدقة الكاملة ولمسة السينما"],
+  ["suite", "غرفة المونتاج", "تشوفها وتطلب تعديلات على أي ثانية"],
+];
+
+function toast(t){ const d = document.createElement("div"); d.className = "toast"; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 2600); }
+async function api(path, opts = {}){
+  const r = await fetch(path, {headers: {"Content-Type": "application/json"}, ...opts});
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || "صار خطأ");
+  return d;
+}
+const post = (path, body = {}) => api(path, {method: "POST", body: JSON.stringify(body)});
+const enc = encodeURIComponent;
+function ago(iso){
+  if (!iso) return "";
+  const d = new Date(iso), days = Math.floor((Date.now() - d) / 864e5);
+  return days <= 0 ? "اليوم" : days === 1 ? "البارحة" : `قبل ${days.toLocaleString("ar-IQ")} يوم`;
+}
+
+/* ---------- state ---------- */
+async function refresh(){
+  try { state = await api("/api/state"); } catch (_) { return; }
+  renderList();
+  if (cur && !state.episodes.find(e => e.id === cur)) cur = null;
+  if (!cur && state.episodes.length && !location.hash) cur = state.episodes[0].id;
+  show();
+}
+function epStatus(e){
+  if (e.running) return ["run", "دا يشتغل…"];
+  if (e.done.render) return ["done", e.requests.open ? `جاهزة · ${e.requests.open.toLocaleString("ar-IQ")} طلب` : "جاهزة"];
+  if (e.done.plan) return ["", "الخطة جاهزة"];
+  if (e.done.prep) return ["", "متجهزة"];
+  return ["", "جديدة"];
+}
+function renderList(){
+  $("eps").innerHTML = "";
+  for (const e of state.episodes){
+    const [cls, txt] = epStatus(e), b = document.createElement("button");
+    b.className = "ep" + (e.id === cur ? " on" : "");
+    b.innerHTML = `<div class="n"></div><div class="s"><i class="dot ${cls}"></i><span></span><span style="margin-inline-start:auto"></span></div>`;
+    b.querySelector(".n").textContent = e.name;
+    b.querySelectorAll(".s span")[0].textContent = txt;
+    b.querySelectorAll(".s span")[1].textContent = ago(e.created);
+    b.onclick = () => { cur = e.id; location.hash = enc(e.id); renderList(); show(); };
+    $("eps").appendChild(b);
+  }
+}
+
+/* ---------- episode view ---------- */
+let shownVideo = "";
+function show(){
+  const e = state.episodes.find(x => x.id === cur);
+  $("welcome").hidden = !!e; $("episode").hidden = !e;
+  if (!e) return;
+  const job = state.job || {}, mine = job.running && job.ep === e.id, busy = job.running && job.ep !== e.id;
+  $("eName").textContent = e.name;
+  $("eSub").textContent = ago(e.created) + (e.done.render ? " · الحلقة جاهزة" : "");
+  if (e.score != null){ $("eScore").hidden = false; $("eScore").querySelector("b").textContent = Number(e.score).toLocaleString("ar-IQ"); }
+  else $("eScore").hidden = true;
+
+  // steps
+  const failed = !mine && lastLog.ep === e.id && lastLog.ok === false ? lastLog.step : null;
+  $("steps").innerHTML = "";
+  STEP_INFO.forEach(([k, t, d], i) => {
+    const isRun = mine && job.step === k, done = e.done[k];
+    const div = document.createElement("div");
+    div.className = "step" + (isRun ? " run" : failed === k ? " fail" : done ? " done" : "");
+    div.innerHTML = `<div class="st">${isRun ? "دا يشتغل…" : failed === k ? "ما كمل" : done ? "✓ خلص" : ""}</div>
+      <div class="k">الخطوة ${(i + 1).toLocaleString("ar-IQ")}</div><div class="t">${t}</div><div class="d">${d}</div>`;
+    if (done && !job.running){
+      const again = document.createElement("button");
+      again.className = "btn small again"; again.textContent = "↻ عيدها";
+      again.onclick = () => run(k === "prep" ? "prep" : k);
+      div.appendChild(again);
+    }
+    $("steps").appendChild(div);
+  });
+
+  // main button
+  const next = !e.done.prep ? "all" : !e.done.plan ? "from-plan" : !e.done.render ? "from-render" : !e.done.suite ? "suite" : null;
+  const go = $("bGo");
+  go.hidden = mine || !next; go.disabled = busy;
+  go.textContent = failed ? "↻ جرّب مرة ثانية" : next === "all" ? "▶ منتج الحلقة" : "▶ كمّل";
+  go.onclick = () => run(next);
+  if (busy) go.title = "اكو حلقة ثانية دا تشتغل";
+  $("bStop").hidden = !mine;
+  $("bRoom").hidden = !e.done.suite;
+  const q = e.requests.open;
+  $("bReq").hidden = !e.done.suite || !q || job.running;
+  $("bReq").textContent = `🛠️ نفّذ طلباتي (${q.toLocaleString("ar-IQ")})`;
+  $("bReveal").hidden = !e.done.render;
+  $("loginBanner").hidden = !(state.claude && state.claude.installed && state.claude.logged_in === false && !e.done.plan) && !lastLog.need_login;
+  $("namesBanner").hidden = !(e.unsure_names && !e.done.plan);
+
+  // player
+  const which = e.done.render ? "final" : e.done.preview ? "preview" : "";
+  const src = which ? `/files/${enc(e.id)}/edit/${which}.mp4` : "";
+  if (src + e.id !== shownVideo){
+    shownVideo = src + e.id;
+    $("player").innerHTML = src ? `<video controls preload="metadata" src="${src}"></video>`
+      : `<div class="noplay">الحلقة تطلع هنا أول ما تخلص</div>`;
+  }
+  $("vWhich").textContent = which === "final" ? "النسخة الكاملة" : which === "preview" ? "معاينة" : "";
+
+  if (logEp !== e.id){ logEp = e.id; logNext = 0; $("log").innerHTML = ""; if (lastLog.ep !== e.id) $("log").innerHTML = `<div style="color:var(--dim)">ماكو شغل هسة.</div>`; }
+  $("bar").hidden = !mine;
+}
+
+let lastLog = {};
+async function pollLog(){
+  try {
+    const d = await api(`/api/log?since=${logNext}`);
+    const wasRunning = lastLog.running;
+    if (d.ep !== lastLog.ep){ logNext = 0; }
+    lastLog = d;
+    if (d.ep && d.ep === cur){
+      if (logNext === 0) $("log").innerHTML = "";
+      const box = $("log"), stick = box.scrollTop + box.clientHeight >= box.scrollHeight - 30;
+      for (const line of d.lines){
+        const div = document.createElement("div");
+        div.textContent = line;
+        if (line.startsWith("━━")) div.className = "h";
+        else if (line.startsWith("❌")) div.className = "bad";
+        else if (line.startsWith("✅")) div.className = "good";
+        box.appendChild(div);
+      }
+      logNext = d.next;
+      if (stick) box.scrollTop = box.scrollHeight;
+    } else logNext = d.next;
+    if (wasRunning && !d.running){ refresh(); if (d.ok) toast("خلص ✅"); }
+    if (d.running) $("bar").hidden = d.ep !== cur;
+  } catch (_) {}
+}
+
+async function run(what){
+  try {
+    await post(`/api/episodes/${enc(cur)}/run`, {what});
+    logNext = 0; $("log").innerHTML = ""; lastLog = {ep: cur, running: true};
+    await refresh();
+  } catch (err){ toast(err.message); }
+}
+$("bStop").onclick = () => post(`/api/episodes/${enc(cur)}/stop`).then(refresh);
+$("bRoom").onclick = () => { location.href = `/room/${enc(cur)}/`; };
+$("bReq").onclick = () => run("requests");
+$("bReveal").onclick = () => post(`/api/episodes/${enc(cur)}/reveal`, {what: "final"}).catch(err => toast(err.message));
+$("bCopy").onclick = () => {
+  const t = $("log").innerText;
+  navigator.clipboard.writeText(t).then(() => toast("انسخ"), () => toast("ما گدرت أنسخ"));
+};
+
+/* ---------- new episode ---------- */
+function openNew(file){
+  $("mNew").hidden = false; $("fErr").textContent = ""; picked = ""; $("fChosen").textContent = "ما اخترت بعد"; $("fChosen").className = "chosen";
+  $("fLink").value = ""; $("fScript").value = ""; $("fUp").hidden = true;
+  setTimeout(() => $("fName").focus(), 30);
+  if (file) uploadFile(file);
+}
+function setPicked(path){
+  picked = path || ""; $("fChosen").textContent = picked ? picked.split("/").pop() : "ما اخترت بعد";
+  $("fChosen").className = "chosen" + (picked ? " ok" : ""); $("fChosen").title = picked;
+  if (picked && !$("fName").value.trim()) $("fName").value = picked.split("/").pop().replace(/\.[^.]+$/, "");
+}
+window.onPicked = setPicked;      // the app window answers here (native file chooser)
+$("fPick").onclick = () => { if (bridge) bridge.postMessage({cmd: "pick"}); else $("fFile").click(); };
+$("fFile").onchange = () => { const f = $("fFile").files[0]; if (f) uploadFile(f); };
+function uploadFile(f){
+  if (!$("fName").value.trim()) $("fName").value = f.name.replace(/\.[^.]+$/, "");
+  $("fChosen").textContent = "دا أنقله… " + f.name; $("fUp").hidden = false; $("fGo").disabled = $("fSave").disabled = true;
+  const x = new XMLHttpRequest();
+  x.open("PUT", `/api/upload?name=${enc(f.name)}`);
+  x.upload.onprogress = (ev) => { if (ev.lengthComputable) $("fUp").firstElementChild.style.width = (100 * ev.loaded / ev.total) + "%"; };
+  x.onload = () => { $("fGo").disabled = $("fSave").disabled = false; $("fUp").hidden = true;
+    try { setPicked(JSON.parse(x.responseText).path); } catch (_) { $("fErr").textContent = "ما گدرت أنقل الفيديو"; } };
+  x.onerror = () => { $("fGo").disabled = $("fSave").disabled = false; $("fErr").textContent = "ما گدرت أنقل الفيديو"; };
+  x.send(f);
+}
+async function create(start){
+  $("fErr").textContent = "";
+  try {
+    const e = await post("/api/episodes", {name: $("fName").value, source: picked || $("fLink").value.trim(), script: $("fScript").value});
+    $("mNew").hidden = true; cur = e.id; location.hash = enc(e.id);
+    await refresh();
+    if (start) run("all");
+  } catch (err){ $("fErr").textContent = err.message; }
+}
+$("fGo").onclick = () => create(true);
+$("fSave").onclick = () => create(false);
+$("bNew").onclick = () => openNew(); $("bNew2").onclick = () => openNew();
+document.querySelectorAll("[data-close]").forEach(b => b.onclick = () => b.closest(".veil").hidden = true);
+document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") document.querySelectorAll(".veil").forEach(v => v.hidden = true); });
+
+// drag a video anywhere on the window
+["dragenter", "dragover"].forEach(t => document.addEventListener(t, (ev) => { ev.preventDefault(); $("drop").classList.add("over"); }));
+["dragleave", "drop"].forEach(t => document.addEventListener(t, (ev) => { ev.preventDefault(); if (t === "dragleave" && ev.relatedTarget) return; $("drop").classList.remove("over"); }));
+document.addEventListener("drop", (ev) => {
+  const f = [...(ev.dataTransfer.files || [])].find(x => x.type.startsWith("video/") || /\.(mp4|mov|m4v|mkv)$/i.test(x.name));
+  if (f) openNew(f); else toast("هذا مو فيديو");
+});
+
+/* ---------- settings ---------- */
+$("bSettings").onclick = () => {
+  const c = state.claude || {};
+  $("sClaude").textContent = !c.installed ? "مو منصّب. دوس «حدّث» تحت حتى ينصبه."
+    : c.logged_in ? "منصّب ومسجّل دخول ✅" : "منصّب، بس يحتاج تسجيل دخول بحسابك (مرة وحدة بس).";
+  $("sFolder").textContent = state.folder || "";
+  const v = state.version || {};
+  $("sVer").textContent = v.commit ? `النسخة: ${v.commit.slice(0, 7)} · ${v.date || ""}` : "يجيب آخر نسخة من المونتير ويرجع يشتغل";
+  $("mSet").hidden = false;
+};
+document.querySelectorAll("[data-login]").forEach(b => b.onclick = () => post("/api/claude-login").then(() => toast("انفتحت نافذة الطرفية، اتبع الخطوات"), err => toast(err.message)));
+$("sOpen").onclick = $("bFolder").onclick = () => post("/api/open-folder").catch(err => toast(err.message));
+$("sUpdate").onclick = async () => {
+  try { await post("/api/update"); $("mSet").hidden = true; toast("دا أحدّث المونتير… التطبيق يرجع يشتغل لحاله"); }
+  catch (err){ toast(err.message); }
+};
+
+/* ---------- start ---------- */
+if (location.hash) cur = decodeURIComponent(location.hash.slice(1));
+window.addEventListener("hashchange", () => { cur = decodeURIComponent(location.hash.slice(1)) || cur; renderList(); show(); });
+refresh().then(pollLog);
+setInterval(refresh, 4000);
+setInterval(pollLog, 1000);
+</script>
+</body>
+</html>

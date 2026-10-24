@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>تنصيب المونتير</title>
+<style>
+:root{--bg:#0F131C;--panel:#151B27;--line:#263044;--ink:#F3EFE6;--mute:#9AA3B5;--dim:#6B7489;--red:#FF3B55;--teal:#2FD9C9;--ok:#3DDC84;color-scheme:dark;
+  font-family:-apple-system,"SF Arabic","Geeza Pro",Tahoma,sans-serif}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:radial-gradient(1200px 600px at 70% -10%,#1d2540 0,transparent 60%),var(--bg);color:var(--ink);display:grid;place-items:center;font-size:14px}
+.box{width:min(620px,92vw);text-align:center}
+.logo{width:72px;height:72px;margin:0 auto 18px;border-radius:20px;background:var(--red);display:grid;place-items:center;box-shadow:0 0 0 6px #ff3b5526,0 20px 60px #ff3b5540}
+h1{font-size:30px;margin:0}
+p{color:var(--mute);line-height:1.8;margin:10px 0 0}
+.list{margin:24px auto 0;text-align:right;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 20px;line-height:2;color:var(--mute);font-size:13px}
+.list b{color:var(--ink)}
+button{font:inherit;cursor:pointer;border:0;border-radius:999px;padding:13px 28px;font-weight:700;font-size:15px}
+.go{background:var(--red);color:#fff;margin-top:26px;box-shadow:0 8px 30px #ff3b5550}
+.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);margin:26px 6px 0}
+.prog{margin-top:30px}
+.track{height:10px;background:var(--line);border-radius:5px;overflow:hidden}
+.track i{display:block;height:100%;width:2%;background:linear-gradient(90deg,var(--teal),#7ff0e6);transition:width .6s}
+.now{margin-top:14px;font-weight:600;min-height:1.4em}
+.count{color:var(--dim);font-size:12px;margin-top:4px;font-variant-numeric:tabular-nums}
+details{margin-top:18px;text-align:right}
+summary{color:var(--dim);cursor:pointer;font-size:12px}
+pre{max-height:180px;overflow:auto;background:#0a0d14;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:11.5px;color:#aab3c5;white-space:pre-wrap;direction:rtl;text-align:right}
+.bad{color:#ff8094}.good{color:var(--ok)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="logo"><svg width="32" height="32" viewBox="0 0 24 24" fill="#fff"><path d="M8 5.5v13l10.5-6.5z"/></svg></div>
+
+  <section id="intro">
+    <h1>هلا بيك بالمونتير</h1>
+    <p>قبل أول استخدام، لازم أنصّب الأدوات الي يحتاجها المونتير على حاسبتك. هالشي يصير مرة وحدة بس.</p>
+    <div class="list">
+      ⏱️ <b>الوقت:</b> تقريباً نص ساعة (حسب النت).<br>
+      💾 <b>المساحة:</b> تقريباً ١٥ گيگا.<br>
+      🌐 <b>النت:</b> لازم يبقى شغّال لحد ما يخلص.<br>
+      💸 <b>الفلوس:</b> ولا فلس. كل شي ببلاش.<br>
+      🔒 <b>الخصوصية:</b> حلقاتك تبقى على حاسبتك بس.
+    </div>
+    <button class="go" id="go">ابدأ التنصيب</button>
+  </section>
+
+  <section id="error" hidden>
+    <h1>المونتير ما اشتغل</h1>
+    <p>صار خلل بالتشغيل. جرّب مرة ثانية، وإذا ما زبط، عيد التنصيب (حلقاتك ما تنمس).</p>
+    <button class="go" id="retry">جرّب مرة ثانية</button>
+    <button class="ghost" id="again">عيد التنصيب</button>
+  </section>
+
+  <section id="prog" class="prog" hidden>
+    <h1 id="title">دا أنصّب…</h1>
+    <p id="sub">تگدر تخلي الحاسبة وترجع. لا تسكّر التطبيق.</p>
+    <div class="track" style="margin-top:26px"><i id="bar"></i></div>
+    <div class="now" id="now">أبدي…</div>
+    <div class="count" id="count"></div>
+    <div id="after" hidden><button class="go" id="redo">عيد المحاولة</button></div>
+    <details><summary>التفاصيل</summary><pre id="log"></pre></details>
+  </section>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const app = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.app;
+const ar = (n) => Number(n).toLocaleString("ar-IQ");
+function start(){
+  $("intro").hidden = true; $("error").hidden = true; $("prog").hidden = false; $("after").hidden = true;
+  $("title").textContent = "دا أنصّب…"; $("bar").style.width = "2%";
+  if (app) app.postMessage({cmd: "setup"});
+}
+$("go").onclick = start; $("again").onclick = start; $("redo").onclick = start;
+$("retry").onclick = () => { if (app) app.postMessage({cmd: "restart"}); $("retry").textContent = "دا أحاول…"; };
+let last = "";
+window.onLine = (line) => {
+  const m = line.match(/^@@ (\d+) (\d+) (.*)$/);
+  if (m){
+    const [, n, total, text] = m;
+    $("now").textContent = text; $("count").textContent = `الخطوة ${ar(n)} من ${ar(total)}`;
+    $("bar").style.width = Math.max(4, 100 * (n - 1) / total) + "%";
+    return;
+  }
+  if (line.startsWith("❌")) last = line.slice(1).trim();
+  const log = $("log"); log.textContent += line + "\n"; log.scrollTop = log.scrollHeight;
+};
+window.onDone = (ok) => {
+  if (ok){ $("bar").style.width = "100%"; $("title").textContent = "خلص التنصيب ✅"; $("now").textContent = "دا أفتح المونتير…"; $("now").className = "now good"; $("count").textContent = ""; }
+  else { $("title").textContent = "التنصيب وگف"; $("now").textContent = last || "صار خلل. تأكد من النت وعيد"; $("now").className = "now bad"; $("after").hidden = false; }
+};
+if (location.hash === "#error"){ $("intro").hidden = true; $("error").hidden = false; }
+</script>
+</body>
+</html>

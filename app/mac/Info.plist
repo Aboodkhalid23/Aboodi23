@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleName</key><string>المونتير</string>
+	<key>CFBundleDisplayName</key><string>المونتير</string>
+	<key>CFBundleIdentifier</key><string>com.aboodi23.montier</string>
+	<key>CFBundleExecutable</key><string>Montier</string>
+	<key>CFBundleIconFile</key><string>AppIcon</string>
+	<key>CFBundlePackageType</key><string>APPL</string>
+	<key>CFBundleShortVersionString</key><string>1.0</string>
+	<key>CFBundleVersion</key><string>1</string>
+	<key>CFBundleDevelopmentRegion</key><string>ar</string>
+	<key>LSMinimumSystemVersion</key><string>12.0</string>
+	<key>LSApplicationCategoryType</key><string>public.app-category.video</string>
+	<key>NSHighResolutionCapable</key><true/>
+	<key>NSSupportsAutomaticGraphicsSwitching</key><true/>
+	<key>NSMicrophoneUsageDescription</key><string>حتى تسجل رسالة صوتية بغرفة المونتاج.</string>
+	<key>NSAppleEventsUsageDescription</key><string>حتى يفتح نافذة تسجيل الدخول لكلود.</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key><true/>
+	</dict>
+</dict>
+</plist>

@@ -7,6 +7,7 @@
 #
 # رقم الـ commit لكل سكيل مثبت ينحفظ في .skills.lock داخل مجلد السكيلزات حتى تعرف شنو تغيّر.
 set -euo pipefail
+[ -n "${MONTIER_APP:-}" ] && exit 0   # inside the Mac app: the app installs and updates everything itself
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MANIFEST="$ROOT/skills.manifest"

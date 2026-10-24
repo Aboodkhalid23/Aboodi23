@@ -1,0 +1,75 @@
+# يبني تطبيق المونتير للماك على جهاز ماك بالسحابة (ببلاش لأن الريبو عام)، ويحطه بصفحة الإصدارات:
+#   https://github.com/aboodkhalid23/aboodi23/releases/download/mac-app/Montier.dmg
+# The second job installs the editor on a real Mac and runs the first stage on a tiny video, so a broken
+# download link or a package without a Mac build shows up here, not on the owner's computer.
+name: تطبيق الماك
+
+on:
+  push:
+    branches: [claude/video-editing-skills-vd37x3]
+    paths: ["app/**", "editor/app/**", "editor/requirements.txt", ".github/workflows/mac-app.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mac-app
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the app
+        run: bash app/mac/build.sh "1.0.${{ github.run_number }}"
+      - name: Launch smoke test
+        run: |
+          APP="app/mac/build/المونتير.app/Contents/MacOS/Montier"
+          lipo -archs "$APP"
+          "$APP" & pid=$!
+          sleep 8
+          kill -0 $pid && echo "still running after 8 s" && kill $pid
+      - name: Publish to the release page
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          notes="نزّل الملف، افتحه، واسحب المونتير لمجلد التطبيقات. النسخة 1.0.${{ github.run_number }}"
+          if gh release view mac-app >/dev/null 2>&1; then
+            gh release upload mac-app app/mac/build/Montier.dmg --clobber
+            gh release edit mac-app --notes "$notes"
+          else
+            gh release create mac-app app/mac/build/Montier.dmg --title "المونتير للماك" --notes "$notes" --target "${{ github.sha }}"
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Montier
+          path: app/mac/build/Montier.dmg
+
+  install-test:
+    runs-on: macos-14
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install like the app does (from this commit)
+        env:
+          MONTIER_CODE_SRC: ${{ github.workspace }}
+          MONTIER_SKIP_CLAUDE: "1"
+          MONTIER_SKIP_MODEL: "1"
+        run: bash app/setup.sh
+      - name: First stage on a tiny video, then the app server
+        run: |
+          H="$HOME/Library/Application Support/Montier"
+          export PATH="$H/tools/venv/bin:$H/tools/node/bin:$H/tools/bin:$PATH"
+          cd "$H/code"
+          voice=$(say -v '?' | awk '/ar_/ {print $1; exit}')
+          say ${voice:+-v "$voice"} -o "$RUNNER_TEMP/voice.aiff" "مرحبا بكم في القناة. اليوم نحكي عن قصة شركة نوكيا، وشلون صعدت وشلون وقعت."
+          ffmpeg -hide_banner -loglevel error -f lavfi -i testsrc2=size=1280x720:rate=25:duration=12 -i "$RUNNER_TEMP/voice.aiff" \
+            -c:v libx264 -pix_fmt yuv420p -c:a aac -shortest "$RUNNER_TEMP/raw.mp4"
+          ABOODI_WHISPER=tiny python -m editor.pipeline prep "$RUNNER_TEMP/ep" --source "$RUNNER_TEMP/raw.mp4"
+          test -f "$RUNNER_TEMP/ep/edit/work/plan_input.txt"
+          MONTIER_HOME="$H" MONTIER_EPISODES="$RUNNER_TEMP/eps" python -m editor.app.server --port 47823 & sleep 4
+          curl -fsS http://127.0.0.1:47823/api/state
+          curl -fsS http://127.0.0.1:47823/ | grep -q "المونتير"
+          node -e "require('$H/code/editor/remotion/node_modules/@remotion/renderer').ensureBrowser().then(()=>console.log('browser ok'))"

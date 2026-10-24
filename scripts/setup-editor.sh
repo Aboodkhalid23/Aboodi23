@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # يجهز أدوات المونتير (ffmpeg، مكتبات بايثون، Remotion). آمن تعيد تشغيله.
 set -e
+[ -n "${MONTIER_APP:-}" ] && exit 0   # inside the Mac app: the app installs and updates everything itself
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 if ! command -v ffmpeg >/dev/null; then
   apt-get update -qq || true
