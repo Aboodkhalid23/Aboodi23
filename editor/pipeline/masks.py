@@ -4,6 +4,8 @@ from pathlib import Path
 
 import numpy as np
 
+from .face import face_detector
+
 MIN_AREA = 0.03     # under 3% of the picture: no usable person
 
 
@@ -71,7 +73,7 @@ PART_AREA = 0.012            # a silhouette smaller than 1.2% of the picture is 
 def _faces(img, min_frac: float = 1 / 30):
     import cv2
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    det = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+    det = face_detector()
     m = max(20, round(gray.shape[1] * min_frac))
     return det.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=7, minSize=(m, m))
 
@@ -148,7 +150,7 @@ def image_layout(src: Path, cut: Path | None = None, frame=FRAME) -> dict:
     s, ox, oy = _cover(w, h, frame)
     out: dict = {"face": None}
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    det = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+    det = face_detector()
     faces = det.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=6, minSize=(max(24, w // 20),) * 2)
     if len(faces):
         x, y, fw, fh = max(faces, key=lambda f: f[2] * f[3])

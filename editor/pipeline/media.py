@@ -1,5 +1,6 @@
 """ffprobe / ffmpeg helpers shared by every stage."""
 import json
+import re
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -54,6 +55,25 @@ def probe(path: Path) -> MediaInfo:
         rotation=rotation % 360,
         color_transfer=video.get("color_transfer", ""),
     )
+
+
+_FFMPEG_VERSION: tuple[int, int] | None = None
+
+
+def ffmpeg_version() -> tuple[int, int]:
+    """(major, minor) of the ffmpeg on the PATH; a git snapshot ("N-12345") counts as the newest."""
+    global _FFMPEG_VERSION
+    if _FFMPEG_VERSION is None:
+        out = subprocess.run(["ffmpeg", "-version"], capture_output=True, text=True).stdout
+        m = re.search(r"ffmpeg version n?(\d+)\.(\d+)", out)
+        _FFMPEG_VERSION = (int(m.group(1)), int(m.group(2))) if m else (99, 0)
+    return _FFMPEG_VERSION
+
+
+def filter_script(path: Path) -> list[str]:
+    """Arguments that read a filter graph from a file: ffmpeg 7.1 added "-/filter_complex <file>" and 8 dropped
+    "-filter_complex_script" (the Mac app ships ffmpeg 9; the cloud has 6)."""
+    return ["-/filter_complex", str(path)] if ffmpeg_version() >= (7, 1) else ["-filter_complex_script", str(path)]
 
 
 def run_ffmpeg(args: list[str]) -> None:

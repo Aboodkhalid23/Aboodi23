@@ -19,11 +19,29 @@ def _frame(video: Path, t: float):
     return cv2.imdecode(np.frombuffer(png, np.uint8), cv2.IMREAD_COLOR) if png else None
 
 
+def face_detector():
+    """OpenCV's front-face detector. Its model file is copied to the temp folder first: on the Mac the app lives
+    under "Application Support", and OpenCV failed to open the file there (seen on a cloud Mac, 2026-10-24)."""
+    import shutil
+    import tempfile
+
+    import cv2
+    src = Path(cv2.data.haarcascades) / "haarcascade_frontalface_default.xml"
+    det = cv2.CascadeClassifier(str(src))
+    if det.empty() and src.exists():
+        tmp = Path(tempfile.gettempdir()) / "aboodi_face.xml"
+        shutil.copyfile(src, tmp)
+        det = cv2.CascadeClassifier(str(tmp))
+    if det.empty():
+        raise RuntimeError("ما گدرت أحمّل كاشف الوجه (OpenCV)")
+    return det
+
+
 def locate_face(video: Path, duration: float) -> dict | None:
     """Median face box over the video as fractions of the frame: cx, cy (centre), h (height), and the
     face's average brightness `luma` (0–1). None if no face is found (e.g. a screen recording)."""
     import cv2
-    det = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+    det = face_detector()
     boxes, lumas = [], []
     for i in range(SAMPLES):
         img = _frame(video, duration * (i + 0.5) / SAMPLES)

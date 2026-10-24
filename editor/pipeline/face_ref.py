@@ -6,6 +6,7 @@ from pathlib import Path
 
 import numpy as np
 
+from .face import face_detector
 from .media import MediaError, probe, run_ffmpeg
 
 SAMPLES = 48
@@ -15,7 +16,7 @@ def best_frames(video: Path, n: int = 3) -> list[float]:
     """Times of the n best frames: a big, sharp, frontal face, spread over the episode."""
     import cv2
     dur = probe(video).duration
-    det = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+    det = face_detector()
     scored = []
     for k in range(SAMPLES):
         t = dur * (k + 0.5) / SAMPLES
@@ -42,7 +43,7 @@ def best_frames(video: Path, n: int = 3) -> list[float]:
 def face_crops(video: Path, out_dir: Path, n: int = 3, size: int = 1024) -> list[Path]:
     """`n` square head crops (face_ref_1.jpg …) from the best frames: what the character designer works from."""
     import cv2
-    det = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+    det = face_detector()
     outs = []
     for k, t in enumerate(best_frames(video, n), 1):
         frame = out_dir / f"face_ref_{k}_frame.png"
