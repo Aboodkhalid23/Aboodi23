@@ -1,5 +1,6 @@
-# يبني تطبيق المونتير للماك على جهاز ماك بالسحابة (ببلاش لأن الريبو عام)، ويحطه بصفحة الإصدارات:
-#   https://github.com/aboodkhalid23/aboodi23/releases/download/mac-app/Montier.dmg
+# يبني تطبيق URU للماك على جهاز ماك بالسحابة (ببلاش لأن الريبو عام)، ويحطه بصفحة الإصدارات:
+#   https://github.com/aboodkhalid23/aboodi23/releases/download/mac-app/URU.dmg
+# (also published as Montier.dmg, the first link the owner got; app-version.txt tells installed apps to update)
 # The second job installs the editor on a real Mac and runs the first stage on a tiny video, so a broken
 # download link or a package without a Mac build shows up here, not on the owner's computer.
 name: تطبيق الماك
@@ -26,7 +27,7 @@ jobs:
         run: bash app/mac/build.sh "1.0.${{ github.run_number }}"
       - name: Launch smoke test
         run: |
-          APP="app/mac/build/المونتير.app/Contents/MacOS/Montier"
+          APP="app/mac/build/URU.app/Contents/MacOS/URU"
           lipo -archs "$APP"
           "$APP" & pid=$!
           sleep 8
@@ -35,17 +36,18 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          notes="نزّل الملف، افتحه، واسحب المونتير لمجلد التطبيقات. النسخة 1.0.${{ github.run_number }}"
+          notes="نزّل الملف، افتحه، واسحب URU لمجلد التطبيقات. النسخة 1.0.${{ github.run_number }}"
+          cp app/mac/build/URU.dmg app/mac/build/Montier.dmg
           if gh release view mac-app >/dev/null 2>&1; then
-            gh release upload mac-app app/mac/build/Montier.dmg --clobber
+            gh release upload mac-app app/mac/build/URU.dmg app/mac/build/Montier.dmg app/mac/build/app-version.txt --clobber
             gh release edit mac-app --notes "$notes"
           else
-            gh release create mac-app app/mac/build/Montier.dmg --title "المونتير للماك" --notes "$notes" --target "${{ github.sha }}"
+            gh release create mac-app app/mac/build/URU.dmg app/mac/build/Montier.dmg app/mac/build/app-version.txt --title "URU للماك" --notes "$notes" --target "${{ github.sha }}"
           fi
       - uses: actions/upload-artifact@v4
         with:
-          name: Montier
-          path: app/mac/build/Montier.dmg
+          name: URU
+          path: app/mac/build/URU.dmg
 
   install-test:
     runs-on: macos-14
@@ -71,5 +73,5 @@ jobs:
           test -f "$RUNNER_TEMP/ep/edit/work/plan_input.txt"
           MONTIER_HOME="$H" MONTIER_EPISODES="$RUNNER_TEMP/eps" python -m editor.app.server --port 47823 & sleep 4
           curl -fsS http://127.0.0.1:47823/api/state
-          curl -fsS http://127.0.0.1:47823/ | grep -q "المونتير"
+          curl -fsS http://127.0.0.1:47823/ | grep -q "URU"
           node -e "require('$H/code/editor/remotion/node_modules/@remotion/renderer').ensureBrowser().then(()=>console.log('browser ok'))"

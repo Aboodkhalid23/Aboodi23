@@ -1,7 +1,8 @@
 #!/bin/bash
-# ينصّب المونتير على الماك (وعلى لينكس للاختبار) بدون صلاحيات مدير وبدون فلوس، وآمن تعيد تشغيله.
+# ينصّب URU (المونتير) على الماك (وعلى لينكس للاختبار) بدون صلاحيات مدير وبدون فلوس، وآمن تعيد تشغيله.
 #   app/setup.sh            أول تنصيب (التطبيق يشغله لحاله)
 #   app/setup.sh --update   يجيب آخر نسخة من الكود وينصب الجديد بس
+#   app/setup.sh --app <pid التطبيق القديم> <pid المحرك> <مسار التطبيق القديم>   يبدّل التطبيق نفسه (الاسم والشعار) بآخر نسخة
 # كل شي يروح لمجلد واحد ($MONTIER_HOME): الأدوات، والكود. الحلقات بمجلد ثاني وما تنمس.
 # للاختبار: MONTIER_CODE_SRC=<مسار ريبو محلي>  MONTIER_SKIP_CLAUDE=1  MONTIER_SKIP_MODEL=1
 # Written for the bash 3.2 that ships with macOS: no associative arrays, no ${x,,}.
@@ -32,17 +33,41 @@ say()  { echo "   $1"; }
 fail() { echo "❌ $1"; exit 1; }
 get()  { curl -fL --retry 4 --retry-delay 3 --connect-timeout 20 -sS -o "$2" "$1" || fail "ما گدرت أنزّل: $(basename "$1"). تأكد من النت وعيد"; }
 
+# ---------- the app itself (name, logo, window): the newest URU.app from the release page ----------
+if [ "${1:-}" = "--app" ]; then
+  OLD_PID="${2:-}"; SERVER_PID="${3:-}"; OLD_APP="${4:-}"
+  [ "$OS" = "Darwin" ] || fail "هاي للماك بس"
+  echo "📦 أنزّل التطبيق الجديد…"
+  get "https://github.com/$REPO/releases/download/mac-app/URU.dmg" "$TMP/URU.dmg"
+  MNT="$(mktemp -d)"
+  hdiutil attach -nobrowse -readonly -mountpoint "$MNT" "$TMP/URU.dmg" >/dev/null || fail "ما گدرت أفتح ملف التطبيق"
+  DEST=/Applications; [ -w "$DEST" ] || { DEST="$HOME/Applications"; mkdir -p "$DEST"; }
+  rm -rf "$DEST/URU.app.new"
+  cp -R "$MNT/URU.app" "$DEST/URU.app.new" || { hdiutil detach "$MNT" >/dev/null; fail "ما گدرت أنسخ التطبيق"; }
+  hdiutil detach "$MNT" >/dev/null || true
+  rm -rf "$DEST/URU.app"; mv "$DEST/URU.app.new" "$DEST/URU.app"
+  xattr -cr "$DEST/URU.app" 2>/dev/null || true
+  # the old one (its old name) goes, wherever it was
+  case "$OLD_APP" in */المونتير.app) rm -rf "$OLD_APP" ;; esac
+  for old in "/Applications/المونتير.app" "$HOME/Applications/المونتير.app"; do [ -d "$old" ] && rm -rf "$old"; done
+  rm -f "$TMP/URU.dmg"
+  echo "✅ انصّب URU. يفتح هسة…"
+  # after this script and the old window are gone: close them, then open the new app
+  nohup /bin/bash -c "sleep 2; ${OLD_PID:+kill $OLD_PID;} ${SERVER_PID:+kill $SERVER_PID;} sleep 1.5; open \"$DEST/URU.app\"" >/dev/null 2>&1 &
+  exit 0
+fi
+
 # ---------- 1. المكان ----------
 step "أتأكد من المساحة والنت"
 free_gb=$(df -Pk "$HOME_DIR" | awk 'NR==2 {print int($4 / 1048576)}')
 if [ "$UPDATE" = 0 ] && [ "$free_gb" -lt 12 ]; then
-  fail "المساحة الفاضية ${free_gb} گيگا بس. المونتير يحتاج تقريباً 15 گيگا. فضّي شوية وعيد"
+  fail "المساحة الفاضية ${free_gb} گيگا بس. التطبيق يحتاج تقريباً 15 گيگا. فضّي شوية وعيد"
 fi
 say "المساحة الفاضية: ${free_gb} گيگا"
 curl -sS --connect-timeout 15 -o /dev/null https://api.github.com || fail "ماكو نت، أو النت ضعيف. تأكد منه وعيد"
 
 # ---------- 2. الكود ----------
-step "أجيب آخر نسخة من المونتير"
+step "أجيب آخر نسخة"
 rm -rf "$CODE.new"; mkdir -p "$CODE.new"
 if [ -n "${MONTIER_CODE_SRC:-}" ]; then
   (cd "$MONTIER_CODE_SRC" && tar --exclude=.git --exclude=node_modules --exclude='episodes/*/edit' -cf - .) | (cd "$CODE.new" && tar -xf -)
@@ -123,7 +148,7 @@ fi
 say "أدوات الرسم جاهزة"
 
 # ---------- 6. كلود ----------
-step "أنصّب كلود (عقل المونتير)"
+step "أنصّب كلود (عقل المساعد)"
 if [ -n "${MONTIER_SKIP_CLAUDE:-}" ]; then
   say "تخطيت (اختبار)"
 elif command -v claude >/dev/null 2>&1; then
@@ -149,4 +174,4 @@ step "أفحص كل شي"
 printf '{"commit": "%s", "branch": "%s", "date": "%s"}\n' "$COMMIT" "$BRANCH" "$(date +%Y-%m-%d)" > "$HOME_DIR/version.json"
 touch "$HOME_DIR/ready"
 rm -rf "$TMP"
-echo "✅ المونتير جاهز"
+echo "✅ URU جاهز"

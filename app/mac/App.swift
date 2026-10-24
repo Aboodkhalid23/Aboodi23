@@ -1,4 +1,4 @@
-// المونتير: the Mac window around the local editor (editor/app/server.py).
+// URU (formerly المونتير): the Mac window around the local editor (editor/app/server.py).
 //
 // First run: shows setup.html (bundled) and runs setup.sh (bundled), which installs everything into
 // ~/Library/Application Support/Montier without admin rights. After that: starts the local server with the
@@ -34,7 +34,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         web.setValue(false, forKey: "drawsBackground")
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1320, height: 860),
                           styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
-        window.title = "المونتير"
+        window.title = "URU"
         window.minSize = NSSize(width: 900, height: 600)
         window.backgroundColor = NSColor(red: 0.059, green: 0.075, blue: 0.11, alpha: 1)
         window.contentView = web
@@ -148,6 +148,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
             env["MONTIER_HOME"] = support.path
             env["MONTIER_APP"] = "1"
             env["PYTHONUNBUFFERED"] = "1"
+            env["URU_APP_VERSION"] = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
+            env["URU_APP_PATH"] = Bundle.main.bundlePath
             p.environment = env
             try? fm.createDirectory(at: support.appendingPathComponent("logs"), withIntermediateDirectories: true)
             let logURL = support.appendingPathComponent("logs/server.log")
@@ -302,12 +304,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         let appItem = NSMenuItem()
         main.addItem(appItem)
         let appMenu = NSMenu()
-        appMenu.addItem(withTitle: "حول المونتير", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
+        appMenu.addItem(withTitle: "حول URU", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
         appMenu.addItem(.separator())
         appMenu.addItem(withTitle: "إعادة التحميل", action: #selector(reloadPage), keyEquivalent: "r")
-        appMenu.addItem(withTitle: "إخفاء المونتير", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
+        appMenu.addItem(withTitle: "إخفاء URU", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
         appMenu.addItem(.separator())
-        appMenu.addItem(withTitle: "إنهاء المونتير", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        appMenu.addItem(withTitle: "إنهاء URU", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         appItem.submenu = appMenu
 
         let editItem = NSMenuItem()

@@ -1,4 +1,4 @@
-"""The Mac app's engine: a small local web server that the app window shows (owner, 2026-10-24: "تطبيق على
+"""URU's engine (the Mac app, first named المونتير): a small local web server that the app window shows (owner, 2026-10-24: "تطبيق على
 الماك بوك، خاص بيه وبحاسبتي").
 
 It runs the same editor as the cloud sessions, on his own computer:
@@ -597,10 +597,63 @@ def update_app() -> None:
         code = _run(["/bin/bash", str(CODE / "app" / "setup.sh"), "--update"])
         JOB.ok, JOB.running = code == 0, False
         if code == 0:
+            (HOME / "after_update").write_text("1", encoding="utf-8")   # the next start also brings the newest app
             JOB.say("✅ تحدّث. التطبيق يرجع يشتغل هسة…")
             time.sleep(1.5)
             os._exit(UPDATE_EXIT)
     threading.Thread(target=go, daemon=True).start()
+
+
+APP_RELEASE = "https://github.com/aboodkhalid23/aboodi23/releases/download/mac-app/app-version.txt"
+APP_STATE = {"update": None}   # None | "available" | "running"
+
+
+def _parent_app() -> str:
+    """The app window that started this server (its bundle path), on the Mac."""
+    if os.environ.get("URU_APP_PATH"):
+        return os.environ["URU_APP_PATH"]
+    if not MAC:
+        return ""
+    out = subprocess.run(["ps", "-o", "comm=", "-p", str(os.getppid())], capture_output=True, text=True).stdout.strip()
+    return out.split("/Contents/MacOS/")[0] if "/Contents/MacOS/" in out else ""
+
+
+def upgrade_app() -> None:
+    """Swap the app itself (name, logo, window) for the newest one on the release page, then reopen it."""
+    with JOB.lock:
+        if JOB.running:
+            raise RuntimeError("اكو شغل ماشي هسة. انتظره يخلص")
+        JOB.ep, JOB.step, JOB.lines, JOB.running, JOB.ok, JOB.stop_asked = None, "app", [], True, None, False
+    APP_STATE["update"] = "running"
+
+    def go():
+        code = _run(["/bin/bash", str(CODE / "app" / "setup.sh"), "--app", str(os.getppid()), str(os.getpid()), _parent_app()])
+        JOB.ok, JOB.running = code == 0, False
+        APP_STATE["update"] = None if code == 0 else "available"
+    threading.Thread(target=go, daemon=True).start()
+
+
+def check_app() -> None:
+    """At start: an app still under its old name is replaced at once; a newer app after a code update ("حدّث")
+    is installed too; otherwise a newer app is only offered in the settings."""
+    if not MAC:
+        return
+    marker = HOME / "after_update"
+    after = marker.exists()
+    marker.unlink(missing_ok=True)
+    if not os.environ.get("URU_APP_PATH"):    # the first app (المونتير) does not say its version: always old
+        upgrade_app()
+        return
+    try:
+        import urllib.request
+        latest = urllib.request.urlopen(APP_RELEASE, timeout=8).read().decode().strip()
+    except Exception:
+        return
+    if latest and latest != os.environ.get("URU_APP_VERSION", ""):
+        if after:
+            upgrade_app()
+        else:
+            APP_STATE["update"] = "available"
 
 
 def version() -> dict:
@@ -760,7 +813,7 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/state":
                 return self._json({"episodes": list_episodes(), "folder": str(EPISODES), "mac": MAC,
                                    "claude": {"installed": bool(claude_bin()), "logged_in": claude_logged_in()},
-                                   "version": version(),
+                                   "version": version(), "app_update": APP_STATE["update"],
                                    "job": {"ep": JOB.ep, "running": JOB.running, "step": JOB.step}})
             if path == "/api/log":
                 since = int(q.get("since") or 0)
@@ -936,6 +989,9 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/update":
                 update_app()
                 return self._json({"ok": True})
+            if path == "/api/update-app":
+                upgrade_app()
+                return self._json({"ok": True})
             m = re.match(r"^/api/db/([^/]+)/add$", path)
             if m:
                 d = episode_dir(m.group(1))
@@ -1014,6 +1070,13 @@ class Handler(BaseHTTPRequestHandler):
         return self._err("لا")
 
 
+def _safe(fn):
+    try:
+        fn()
+    except Exception as exc:   # an update check must never stop the app
+        print("app check:", exc, flush=True)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="python -m editor.app.server")
     ap.add_argument("--port", type=int, default=47823)
@@ -1026,7 +1089,8 @@ def main(argv=None):
         stop_job()
         os._exit(0)
     signal.signal(signal.SIGTERM, bye)
-    print(f"المونتير شغّال: http://127.0.0.1:{a.port}  (الحلقات: {EPISODES})", flush=True)
+    print(f"URU شغّال: http://127.0.0.1:{a.port}  (الحلقات: {EPISODES})", flush=True)
+    threading.Timer(2.0, lambda: _safe(check_app)).start()
     srv.serve_forever()
 
 

@@ -2,21 +2,21 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
-<title>تنصيب المونتير</title>
+<title>تنصيب URU</title>
 <style>
-:root{--bg:#0F131C;--panel:#151B27;--line:#263044;--ink:#F3EFE6;--mute:#9AA3B5;--dim:#6B7489;--red:#FF3B55;--teal:#2FD9C9;--ok:#3DDC84;color-scheme:dark;
+:root{--bg:#0F131C;--panel:#151B27;--line:#263044;--ink:#F3EFE6;--mute:#9AA3B5;--dim:#6B7489;--red:#F2C94C;--teal:#2FD9C9;--ok:#3DDC84;color-scheme:dark;
   font-family:-apple-system,"SF Arabic","Geeza Pro",Tahoma,sans-serif}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
 body{background:radial-gradient(1200px 600px at 70% -10%,#1d2540 0,transparent 60%),var(--bg);color:var(--ink);display:grid;place-items:center;font-size:14px}
 .box{width:min(620px,92vw);text-align:center}
-.logo{width:72px;height:72px;margin:0 auto 18px;border-radius:20px;background:var(--red);display:grid;place-items:center;box-shadow:0 0 0 6px #ff3b5526,0 20px 60px #ff3b5540}
+.logo{width:96px;height:96px;margin:0 auto 18px;display:block;filter:drop-shadow(0 18px 40px #0009)}
 h1{font-size:30px;margin:0}
 p{color:var(--mute);line-height:1.8;margin:10px 0 0}
 .list{margin:24px auto 0;text-align:right;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 20px;line-height:2;color:var(--mute);font-size:13px}
 .list b{color:var(--ink)}
 button{font:inherit;cursor:pointer;border:0;border-radius:999px;padding:13px 28px;font-weight:700;font-size:15px}
-.go{background:var(--red);color:#fff;margin-top:26px;box-shadow:0 8px 30px #ff3b5550}
+.go{background:var(--red);color:#141006;margin-top:26px;box-shadow:0 8px 30px #f2c94c40}
 .ghost{background:transparent;color:var(--ink);border:1px solid var(--line);margin:26px 6px 0}
 .prog{margin-top:30px}
 .track{height:10px;background:var(--line);border-radius:5px;overflow:hidden}
@@ -32,11 +32,11 @@ pre{max-height:180px;overflow:auto;background:#0a0d14;border:1px solid var(--lin
 </head>
 <body>
 <div class="box">
-  <div class="logo"><svg width="32" height="32" viewBox="0 0 24 24" fill="#fff"><path d="M8 5.5v13l10.5-6.5z"/></svg></div>
+  <img class="logo" src="logo.svg" alt="">
 
   <section id="intro">
-    <h1>هلا بيك بالمونتير</h1>
-    <p>قبل أول استخدام، لازم أنصّب الأدوات الي يحتاجها المونتير على حاسبتك. هالشي يصير مرة وحدة بس.</p>
+    <h1>هلا بيك بـ URU</h1>
+    <p>قبل أول استخدام، لازم أنصّب الأدوات الي يحتاجها التطبيق على حاسبتك. هالشي يصير مرة وحدة بس.</p>
     <div class="list">
       ⏱️ <b>الوقت:</b> تقريباً نص ساعة (حسب النت).<br>
       💾 <b>المساحة:</b> تقريباً ١٥ گيگا.<br>
@@ -48,7 +48,7 @@ pre{max-height:180px;overflow:auto;background:#0a0d14;border:1px solid var(--lin
   </section>
 
   <section id="error" hidden>
-    <h1>المونتير ما اشتغل</h1>
+    <h1>URU ما اشتغل</h1>
     <p>صار خلل بالتشغيل. جرّب مرة ثانية، وإذا ما زبط، عيد التنصيب (حلقاتك ما تنمس).</p>
     <button class="go" id="retry">جرّب مرة ثانية</button>
     <button class="ghost" id="again">عيد التنصيب</button>
@@ -88,7 +88,7 @@ window.onLine = (line) => {
   const log = $("log"); log.textContent += line + "\n"; log.scrollTop = log.scrollHeight;
 };
 window.onDone = (ok) => {
-  if (ok){ $("bar").style.width = "100%"; $("title").textContent = "خلص التنصيب ✅"; $("now").textContent = "دا أفتح المونتير…"; $("now").className = "now good"; $("count").textContent = ""; }
+  if (ok){ $("bar").style.width = "100%"; $("title").textContent = "خلص التنصيب ✅"; $("now").textContent = "دا أفتح URU…"; $("now").className = "now good"; $("count").textContent = ""; }
   else { $("title").textContent = "التنصيب وگف"; $("now").textContent = last || "صار خلل. تأكد من النت وعيد"; $("now").className = "now bad"; $("after").hidden = false; }
 };
 if (location.hash === "#error"){ $("intro").hidden = true; $("error").hidden = false; }

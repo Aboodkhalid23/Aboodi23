@@ -242,6 +242,15 @@ def edit_words(ep: Episode, fixes: dict, delete: list) -> dict:
 
 # ---------- الخطة ----------
 
+_LATIN = re.compile(r"[A-Za-z]")
+
+
+def ar(text) -> str:
+    """Arabic text only: search words and AI prompts are English by design and never reach the owner's screen."""
+    t = str(text or "").strip()
+    return "" if not t or len(_LATIN.findall(t)) > len(t) / 4 else t
+
+
 def _beat_image(ep: Episode, i: int, b: dict) -> str | None:
     for stem in (f"img_{i}", f"ai_{i}", f"paper_{i}_0", f"cutout_{i}"):
         for f in sorted(ep.assets.glob(stem + ".*")):
@@ -259,6 +268,11 @@ def _beat_image(ep: Episode, i: int, b: dict) -> str | None:
     return f"edit/work/suite/thumbs/{i}.jpg" if thumb.exists() else None
 
 
+MOTION_AR = {"zoom": "تقريب", "flash": "وميض", "whip": "سحبة سريعة", "glitch": "تشويش", "shutter": "باب ينزل", "slide": "ورقة تنسحب",
+             "code": "حركة طبقات", "ai": "حركة ذكاء اصطناعي", "subscribe": "زر الاشتراك", "search": "صفحة يوتيوب بقناتك",
+             "tv": "تلفزيون", "none": ""}
+
+
 def _credits(ep: Episode) -> list[str]:
     f = ep.credits
     return [l.strip() for l in f.read_text(encoding="utf-8").splitlines() if l.strip()] if f.exists() else []
@@ -274,15 +288,15 @@ def storyboard(ep: Episode) -> dict:
     cards = []
     for i, b in enumerate(plan.get("beats", [])):
         said = " ".join(w.text for w in words if b["start"] - off <= (w.start + w.end) / 2 < b["end"] - off)
-        shows = b.get("caption") or b.get("title") or b.get("prompt") or b.get("query") or ""
+        shows = ar(b.get("caption")) or ar(b.get("title")) or ar(b.get("prompt"))
         if b.get("papers"):
-            shows = "، ".join(p.get("title") or p.get("query") or p.get("type", "") for p in b["papers"])
-        motion = "، ".join(x for x in (b.get("transition"), b.get("animate"), b.get("fx")) if x)
+            shows = "، ".join(x for x in (ar(p.get("title")) for p in b["papers"]) if x)
+        motion = "، ".join(MOTION_AR.get(x, "") for x in (b.get("transition"), b.get("animate"), b.get("fx")) if MOTION_AR.get(x))
         q = (b.get("query") or "").lower()
         src = next((c for c in credits if q and q.split()[0] in c.lower()), "") if q else ""
         cards.append({"i": i, "start": b["start"], "end": b["end"], "kind": b["kind"],
-                      "kind_ar": KIND_AR.get(b["kind"], b["kind"]), "title": (b.get("title") or b.get("caption") or
-                      b.get("query") or KIND_AR.get(b["kind"], "")).strip(), "said": said, "shows": shows,
+                      "kind_ar": KIND_AR.get(b["kind"], "مشهد"), "title": ar(b.get("title")) or ar(b.get("caption"))
+                      or KIND_AR.get(b["kind"], "مشهد"), "said": said, "shows": shows,
                       "motion": motion, "source": src, "img": _beat_image(ep, i, b), "note": b.get("note", "")})
     return {"ready": True, "cards": cards, "style": plan.get("style", {}).get("primary"),
             "summary": plan.get("style_reason", ""), "chapters": plan.get("chapters", [])}
@@ -359,7 +373,7 @@ def timeline(ep: Episode) -> dict:
     if not video.exists():
         return {"ready": False}
     cache = ep.work / "app" / "timeline.json"
-    stamp = f"{video}:{video.stat().st_mtime}:{ep.plan.stat().st_mtime if ep.plan.exists() else 0}"
+    stamp = f"v2:{video}:{video.stat().st_mtime}:{ep.plan.stat().st_mtime if ep.plan.exists() else 0}"
     if cache.exists():
         d = json.loads(cache.read_text(encoding="utf-8"))
         if d.get("stamp") == stamp:
@@ -372,7 +386,7 @@ def timeline(ep: Episode) -> dict:
     off = sum(e - s for s, e in plan.get("teaser", []))
     scenes = [{"i": i, "s": round(b["start"] - off, 2), "e": round(b["end"] - off, 2), "kind": b["kind"],
                "face": b["kind"].startswith("face") and b["kind"] != "face_paper", "kind_ar": KIND_AR.get(b["kind"], b["kind"]),
-               "label": b.get("title") or b.get("caption") or b.get("query") or KIND_AR.get(b["kind"], "")}
+               "label": ar(b.get("title")) or ar(b.get("caption")) or KIND_AR.get(b["kind"], "مشهد")}
               for i, b in enumerate(plan.get("beats", []))]
     sounds = [{"s": round(m.get("t", 0) - off, 2), "label": m.get("mood") or "موسيقى"} for m in plan.get("music", [])]
     d = {"ready": True, "stamp": stamp, "offset": off, "video": str(video.relative_to(ep.root)), "duration": round(dur, 2),
