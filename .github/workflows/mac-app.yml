@@ -7,7 +7,7 @@ name: تطبيق الماك
 on:
   push:
     branches: [claude/video-editing-skills-vd37x3]
-    paths: ["app/**", "editor/app/**", "editor/requirements.txt", ".github/workflows/mac-app.yml"]
+    paths: ["app/**", "editor/app/**", "editor/pipeline/**", "editor/requirements.txt", ".github/workflows/mac-app.yml"]
   workflow_dispatch:
 
 permissions:
