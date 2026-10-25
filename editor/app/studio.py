@@ -64,12 +64,13 @@ def _sony(src: Path) -> bool:
     return "sony" in out or "xavc" in out
 
 
-def look_thumbs(frame: Path, out: Path, source: str, strength: float = 1.0) -> dict:
-    """One small picture per look of his own frame, through the same cube the render uses."""
-    from editor.pipeline.grade import look_chain
+def look_thumbs(frame: Path, out: Path, source: str, strength: float = 1.0, keys: list[str] | None = None) -> dict:
+    """One small picture per look of his own frame, through the same cube the render uses.
+    `keys`: only these looks (a group of the big library, made when he opens that group)."""
+    from editor.pipeline.grade import LOOKS as ALL, look_chain
     from editor.pipeline.luts import bake, split_chain
     looks = {}
-    for k in (CAMERA_LOOKS + ["none"] if source != "rec709" else THUMB_LOOKS):
+    for k in ([x for x in keys if x in ALL] if keys else CAMERA_LOOKS + ["none"] if source != "rec709" else THUMB_LOOKS):
         pix, spatial = split_chain(look_chain(k))
         cube = bake(out / "cubes", source, pix, strength)
         chain = ",".join(x for x in ("scale=-2:240", f"lut3d=file='{cube}'", spatial) if x)
@@ -77,6 +78,13 @@ def look_thumbs(frame: Path, out: Path, source: str, strength: float = 1.0) -> d
         if jpg.exists() or _ff(["-i", str(frame), "-vf", chain, "-q:v", "4", str(jpg)]).returncode == 0:
             looks[k] = {"name": LOOK_NAMES.get(k, k), "img": f"{out.name}/{jpg.name}"}
     return looks
+
+
+def group_thumbs(src: Path, cache: Path, source: str, keys: list[str]) -> dict:
+    """Pictures for one group of the big colour library, from the frame the probe already took."""
+    d = probe_source(src, cache)
+    out = cache / d["key"]
+    return look_thumbs(out / "frame.png", out, source if source in ("rec709", "slog3") else d["source"], keys=keys)
 
 
 def probe_source(src: Path, cache: Path, source: str | None = None) -> dict:

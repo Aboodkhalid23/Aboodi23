@@ -318,6 +318,88 @@ def test_self_check_and_a_stuck_step_is_stopped(app, monkeypatch, tmp_path):
     assert time.monotonic() - t0 < 10 and code != 0 and any("علگت" in x for x in srv.JOB.lines)
 
 
+def test_big_colour_library_has_groups_and_every_look_renders(tmp_path):
+    import subprocess
+    from editor.app import studio
+    from editor.pipeline.grade import LOOK_GROUPS, LOOK_NAMES, LOOKS, PACK_CATS
+    assert len(PACK_CATS) >= 100 and set(PACK_CATS.values()) == set(LOOK_GROUPS)
+    assert all(k in LOOKS and k in LOOK_NAMES for k in PACK_CATS)
+    src = tmp_path / "clip.mp4"
+    subprocess.run(["ffmpeg", "-v", "error", "-f", "lavfi", "-i", "testsrc2=s=320x180:d=2", str(src)], check=True)
+    group = [k for k, g in PACK_CATS.items() if g == "night"]
+    pics = studio.group_thumbs(src, tmp_path / "cache", "rec709", group + ["no-such-look"])
+    assert set(pics) == set(group) and all((tmp_path / "cache" / p["img"]).exists() for p in pics.values())
+
+
+def test_chatgpt_and_gemini_give_a_second_opinion_read_only(app, tmp_path):
+    from editor.app import brains
+    tools = srv.HOME / "tools" / "brains" / "bin"
+    tools.mkdir(parents=True)
+    log = tmp_path / "calls.txt"
+    (tools / "codex").write_text(f"""#!/bin/sh
+echo "$@" >> {log}
+[ "$1" = exec ] || exit 1
+while [ "$1" != "-o" ]; do shift; done
+printf '1. 0:05 قوّي الهوك بخريطة' > "$2"
+""")
+    (tools / "agy").write_text(f"""#!/bin/sh
+echo "$@" >> {log}
+echo '1. 0:40 هنا ممل، حط صورة أرشيف'
+""")
+    for f in tools.iterdir():
+        f.chmod(0o755)
+    st = brains.status(srv.HOME, srv.HOME / "tools")
+    assert st["chatgpt"]["installed"] and not st["chatgpt"]["linked"]
+    assert brains.test("chatgpt", srv.HOME, srv.HOME / "tools")["ok"] and brains.test("gemini", srv.HOME, srv.HOME / "tools")["ok"]
+    assert brains.active(srv.HOME, srv.HOME / "tools") == ["chatgpt", "gemini"]
+    e = srv.create_episode("رأي", str(app))
+    d = srv.EPISODES / e["id"]
+    (d / "edit").mkdir(parents=True, exist_ok=True)
+    (d / "edit" / "edit_plan.json").write_text(json.dumps({"beats": [{"start": 0, "end": 5, "kind": "face", "title": "نوكيا"}]}))
+    srv.start_job(e["id"], "opinion")
+    _wait()
+    assert srv.JOB.ok, srv.JOB.lines
+    assert "الهوك" in (d / "edit" / "opinions" / "chatgpt.md").read_text() and "أرشيف" in (d / "edit" / "opinions" / "gemini.md").read_text()
+    calls = log.read_text()
+    assert "--sandbox read-only" in calls and "workspace-write" not in calls
+    brains.set_on("gemini", False, srv.HOME)
+    assert brains.active(srv.HOME, srv.HOME / "tools") == ["chatgpt"]
+
+
+def test_youtube_subtitles_and_titles_in_other_languages(tmp_path):
+    from editor.app import youtube
+
+    class R:
+        def __init__(self, code, js=None, text=""):
+            self.status_code, self._js, self.text = code, js or {}, text
+        def json(self):
+            return self._js
+
+    class S:
+        def __init__(self):
+            self.caps, self.put_body = [], None
+        def post(self, url, data=None, params=None, headers=None, timeout=None, json=None):
+            self.caps.append((params, headers["Content-Type"], data))
+            return R(200, {"id": "CAP"})
+        def get(self, url, params=None, headers=None, timeout=None):
+            return R(200, {"items": [{"snippet": {"title": "نوكيا", "description": "د", "categoryId": "27"},
+                                      "localizations": {"en": {"title": "Nokia", "description": ""}}}]})
+        def put(self, url, json=None, params=None, headers=None, timeout=None):
+            self.put_body = json
+            return R(200, {})
+
+    (tmp_path / "youtube.json").write_text('{"refresh_token": "RT", "access_token": "AT", "expires": 9999999999}')
+    srt = tmp_path / "subtitles-es.srt"
+    srt.write_text("1\n00:00:00,000 --> 00:00:02,000\nHola\n", encoding="utf-8")
+    s = S()
+    assert youtube.upload_caption(tmp_path, "VID", "es", srt, "Español", session=s) == "CAP"
+    params, ctype, body = s.caps[0]
+    assert params["uploadType"] == "multipart" and ctype.startswith("multipart/related") and b"Hola" in body and b'"language": "es"' in body
+    youtube.set_languages(tmp_path, "VID", {"es": {"title": "Nokia en español", "description": "x"}}, session=s)
+    assert s.put_body["localizations"]["es"]["title"] == "Nokia en español" and "en" in s.put_body["localizations"]
+    assert s.put_body["snippet"]["defaultLanguage"] == "ar" and s.put_body["snippet"]["title"] == "نوكيا"
+
+
 def test_optional_extras_and_suggestions(app, monkeypatch):
     from editor.app import studio
     from editor.pipeline import options
@@ -448,7 +530,7 @@ def test_youtube_link_and_private_resumable_upload(tmp_path):
     assert q["code_challenge_method"] == "S256" and "youtube.upload" in q["scope"]
     s = S()
     st = youtube.finish(tmp_path, "CODE", q["state"], "http://127.0.0.1:1/oauth/youtube", session=s)
-    assert st == {"client": True, "linked": True, "channel": "قناتي"}
+    assert st == {"client": True, "linked": True, "channel": "قناتي", "langs": True}
     assert oct((tmp_path / "youtube.json").stat().st_mode & 0o777) == "0o600"
     video = tmp_path / "v.mp4"
     video.write_bytes(b"x" * (youtube.CHUNK + 10))

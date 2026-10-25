@@ -392,6 +392,9 @@ body,header,#rail,#panel,#viewer,#inspector,#tl,.dlg,.pill,.rb,.lc,.card{transit
 .askbar input{height:28px;font-size:12px;padding:4px 6px!important}.askbar .pill.sm{height:24px}
 .askbar:focus-within{width:min(560px,86%)}
 .tracks{overflow-y:auto!important;min-height:0}
+.lkgroups{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
+.lkgroups .chip{cursor:pointer}.lkgroups .chip.on{background:var(--y);color:var(--yink);border-color:var(--y)}
+.lkgroups .chip small{opacity:.6;font-size:10px}
 </style>
 </head>
 <body>
@@ -514,6 +517,7 @@ body,header,#rail,#panel,#viewer,#inspector,#tl,.dlg,.pill,.rb,.lc,.card{transit
         <div class="seg2"><button id="lkLog">مسطّح لوگ</button><button id="lkNorm" class="on">عادي</button></div>
         <div class="row" id="camRow" hidden style="margin-bottom:10px;flex-wrap:wrap"><span class="dim tiny">الكاميرا:</span>
           <button class="pill sm" data-src="slog3">سوني لوگ ٣</button><button class="pill sm" data-src="genlog">لوگ ثاني (دي جي آي، موبايل)</button></div>
+        <div class="lkgroups" id="lkGroups"></div>
         <div class="looks" id="iLooks"></div>
         <div class="sl" style="margin-top:12px"><label>قوة اللون</label><input type="range" class="exp" id="sStr" min="0" max="100" value="100"><output id="oStr">١٠٠٪</output></div>
         <div class="sep"></div>
@@ -746,6 +750,8 @@ body,header,#rail,#panel,#viewer,#inspector,#tl,.dlg,.pill,.rb,.lc,.card{transit
         <div class="row" style="margin-top:6px;flex-wrap:wrap"><button class="pill sm" id="sAiCheck">افحص المواقع المربوطة</button><span class="dim tiny" id="sAiChk"></span></div>
         <div class="row" style="margin-top:10px"><b class="grow tiny">صور وجهك (مرجع للمشاهد المولدة)</b><button class="pill sm" id="sFaceAdd">＋ أضف</button><input type="file" id="sFaceIn" hidden multiple accept="image/*,video/*"></div>
         <div class="row" id="sFaces" style="margin-top:6px;flex-wrap:wrap;gap:6px"></div></div></div>
+    <div class="f card"><b>شات جي بي تي وجيميناي (اشتراكاتك)</b><div class="muted tiny" style="margin:4px 0 8px;line-height:1.7">يشتغلون ويه المساعد بحسابك نفسه: يقرون الخطة ويعطون رأي ثاني، ويقترحون أفكار. ما يغيرون ملفاتك، والمساعد هو الي يطبّق. الربط مرة وحدة: نصّب، بعدين «اربط حسابك» (يفتح صفحة الدخول)، بعدين «جرّب».</div>
+      <div id="sBrains" style="display:grid;gap:8px"></div></div>
     <div class="f card"><b>ذوقك (المساعد يتعلمه لحاله)</b><div class="muted tiny" style="margin:4px 0 8px;line-height:1.7">كل تعديل تسويه ينحفظ، وبعد كل حلقة نهائية المساعد يكتب هنا شنو تحب وشنو تكره، ويمشي عليه بالحلقات الجاية من أول مرة. تگدر تصلّحه بيدك.</div>
       <div class="dim tiny" id="sLearnSt"></div>
       <textarea id="sTaste" rows="6" placeholder="لسه ما تعلم شي. بعد أول حلقة نهائية يطلع ذوقك هنا…" style="margin-top:6px"></textarea>
@@ -754,7 +760,8 @@ body,header,#rail,#panel,#viewer,#inspector,#tl,.dlg,.pill,.rb,.lc,.card{transit
       <div id="sCheckOut" class="tiny" style="display:grid;gap:4px"></div>
       <div class="row" style="margin-top:6px;gap:6px;flex-wrap:wrap"><button class="pill sm y" id="sCheck">افحص هسة</button><button class="pill sm" id="sCheckEp">افحص الحلقة المفتوحة بالكامل</button></div></div>
     <div class="f card"><b>الدعم والاقتراحات</b><div class="muted tiny" style="margin:4px 0 8px;line-height:1.7">تذكرت ميزة؟ اكتبها هنا. تنفتح صفحة الطلب بحسابك، تدوس الزر الأخضر، وتوصلني. من تنزل الميزة، التطبيق يحدّث نفسه.</div>
-      <textarea id="sIdea" rows="3" placeholder="اكتب الميزة الي تريدها…"></textarea><div class="row" style="margin-top:6px"><button class="pill sm y" id="sIdeaGo">ارسلها</button></div></div>
+      <textarea id="sIdea" rows="3" placeholder="اكتب الميزة الي تريدها…"></textarea><div class="row" style="margin-top:6px"><button class="pill sm y" id="sIdeaGo">ارسلها</button><button class="pill sm" id="sAppIdeas" title="شات جي بي تي وجيميناي يقترحون ميزات جديدة على حسب شغلك">اطلب أفكار من شات جي بي تي وجيميناي</button></div>
+      <div id="sAppIdeasOut" class="tiny" style="margin-top:8px;white-space:pre-wrap;line-height:1.7"></div></div>
     <div class="f card"><div class="row"><b class="grow">دبلجة بصوتك (إلفن لابس)</b><button class="pill sm" id="sElOff" hidden>افصله</button></div>
       <div class="muted tiny" style="margin:4px 0 8px;line-height:1.7" id="sElTxt">حتى الحلقة تطلع بصوتك بلغات ثانية. تسوي حساب بموقع إلفن لابس (اشتراك مدفوع)، ومن صفحة المفاتيح بحسابك تنسخ المفتاح وتلصقه هنا. المفتاح يبقى على حاسبتك بس.</div>
       <div class="row" id="sElRow"><input id="sElKey" type="password" class="ltr" placeholder="المفتاح"><button class="pill sm y" id="sElSave">احفظ</button><button class="pill sm" id="sElOpen">افتح الموقع</button></div></div>
@@ -830,7 +837,7 @@ let state = {episodes: []}, cur = null, ep = null, step = 1, job = {}, logNext =
 let data = {sentences: null, captions: null, plan: null, timeline: null, look: null, sound: null, review: {}};
 let planSub = 1, pendingFix = {}, pendingDel = new Set(), keepMap = {}, notes = [];
 const STEPS = [["الجمل", "sentences"], ["الصوت", "sound"], ["الكابشن", "captions"], ["الخطة", "plan"], ["البناء", "build"], ["الملاحظات", "notes"]];
-const RUNS = {prepare: 1, cut: 1, sentences: 1, captions: 3, plan: 4, images: 4, build: 5, final: 5, requests: 6, assist: 4, auto: 1, chat: 4, learn: 6, selfcheck: 5};
+const RUNS = {prepare: 1, cut: 1, sentences: 1, captions: 3, plan: 4, images: 4, build: 5, final: 5, requests: 6, assist: 4, auto: 1, chat: 4, learn: 6, selfcheck: 5, opinion: 4, "app-ideas": 6};
 
 async function refresh(){
   try { state = await api("/api/state"); } catch (_) { return; }
@@ -1147,7 +1154,9 @@ function stepPlan(){
       h += `<div style="margin:6px 0 10px;line-height:1.7">${esc(p.summary || "")}</div>
         <div class="row" style="margin-bottom:10px"><button class="pill sm" id="pImgs" ${job.running ? "disabled" : ""}>اصنع الصور (${ar(p.cards.filter(c => !c.img).length)})</button></div>
         <textarea id="pRe" rows="2" placeholder="اشرح للمساعد الخطة التي تريدها بكلامك…"></textarea>
-        <div class="row" style="margin:8px 0 12px"><button class="pill sm" id="pRedo" ${job.running ? "disabled" : ""}>أعد الخطة بكلامي</button><button class="pill sm" id="pBack">رجوع</button></div>
+        <div class="row" style="margin:8px 0 12px;flex-wrap:wrap;gap:6px"><button class="pill sm" id="pRedo" ${job.running ? "disabled" : ""}>أعد الخطة بكلامي</button><button class="pill sm" id="pBack">رجوع</button>
+          <button class="pill sm" id="pOpinion" ${job.running ? "disabled" : ""} title="شات جي بي تي وجيميناي يقرون الخطة ويقترحون تحسينات">🤝 رأي ثاني</button></div>
+        <div id="pOpinions"></div>
         <div class="sb">${p.cards.map(cardHtml).join("")}</div>`;
       foot = `<button class="pill y big" id="pOk" ${job.running ? "disabled" : ""}>وافق وابن ←</button>`;
     }
@@ -1164,6 +1173,13 @@ function stepPlan(){
   if ($("pWrite")) $("pWrite").onclick = async () => { await post(E() + "/idea", {text: $("pIdea").value}); planSub = 2; run("plan"); };
   if ($("pRedo")) $("pRedo").onclick = () => run("plan", $("pRe").value);
   if ($("pBack")) $("pBack").onclick = () => { planSub = 1; stepPlan(); };
+  if ($("pOpinion")) $("pOpinion").onclick = () => run("opinion");
+  if ($("pOpinions")) api(E() + "/opinions").then(o => { const box = $("pOpinions"); if (!box) return;
+    const names = {chatgpt: "شات جي بي تي", gemini: "جيميناي"};
+    box.innerHTML = Object.entries(o).map(([k, t]) => `<details class="card" style="padding:8px 10px;margin-bottom:8px" open><summary><b>رأي ${names[k] || k}</b></summary>
+      <div class="tiny" style="white-space:pre-wrap;line-height:1.8;margin-top:6px">${esc(t)}</div>
+      <div class="row" style="margin-top:6px"><button class="pill sm y" data-apply="${k}" ${job.running ? "disabled" : ""}>خلّي المساعد يطبّق الي يشوفه صح</button></div></details>`).join("");
+    box.querySelectorAll("[data-apply]").forEach(b => b.onclick = () => run("assist", "هذا رأي " + (names[b.dataset.apply] || "") + " بالخطة. طبّق الاقتراحات الي تشوفها تحسّن الحلقة فعلاً، واترك الباقي، وگول شنو طبقت:\n" + o[b.dataset.apply])); }).catch(() => {});
   if ($("pImgs")) $("pImgs").onclick = () => run("images");
   if ($("pOk")) $("pOk").onclick = () => { planSub = 3; stepPlan(); };
   if ($("pBuild")) $("pBuild").onclick = () => { step = 5; run("build"); };
@@ -1236,6 +1252,7 @@ function bindRun(){ $("stepbody").querySelectorAll("[data-run]").forEach(b => b.
 /* ---------- inspector: colours ---------- */
 let lookTab = "norm", thumbs = null, cmpOn = false;
 const GEN_LOG_LOOKS = ["log", "log-vivid", "none"];
+let lkGroup = "base", lkGroupSet = false, packThumbs = {}, packBusy = false;
 const NORM_LOOKS = ["cinema", "natural", "documentary", "vivid", "action", "golden", "warm-film", "soft-film", "teal-orange", "night", "bleach", "mono", "none"];
 const CAM_LOOKS = ["cinema", "natural", "documentary", "vivid", "action", "golden", "warm-film", "soft-film", "teal-orange", "night", "bleach", "mono", "none"];
 let thumbsBusy = false;
@@ -1255,8 +1272,24 @@ async function renderInspector(){
     post("/api/probe", {path: ep.source, source: wantSrc}).then(t => { thumbs = t; }).catch(() => {}).finally(() => { thumbsBusy = false; if (panelNow === "colors") renderInspector(); });
   }
   const names = (data.look && data.look.names) || {};
-  const keys = lookTab === "log" ? (src === "slog3" ? CAM_LOOKS : GEN_LOG_LOOKS) : NORM_LOOKS;
-  $("iLooks").innerHTML = keys.map(k => { const t = thumbs && thumbs.looks && thumbs.looks[k];
+  const groups = (data.look && data.look.groups) || {}, groupOf = (data.look && data.look.group_of) || {};
+  const showGroups = !(lookTab === "log" && src !== "slog3");
+  $("lkGroups").hidden = !showGroups;
+  if (s.look && groupOf[s.look] && !lkGroupSet){ lkGroup = groupOf[s.look]; lkGroupSet = true; }
+  $("lkGroups").innerHTML = [["base", "الأساسية"], ...Object.entries(groups)].map(([g, n]) => `<button class="chip ${lkGroup === g ? "on" : ""}" data-g="${g}">${esc(n)}${g !== "base" ? ` <small>${ar(Object.values(groupOf).filter(x => x === g).length)}</small>` : ""}</button>`).join("");
+  $("lkGroups").querySelectorAll("[data-g]").forEach(b => b.onclick = () => { lkGroup = b.dataset.g; lkGroupSet = true; renderInspector(); });
+  let keys = lookTab === "log" ? (src === "slog3" ? CAM_LOOKS : GEN_LOG_LOOKS) : NORM_LOOKS;
+  if (showGroups && lkGroup !== "base"){
+    keys = Object.keys(groupOf).filter(k => groupOf[k] === lkGroup);
+    const have = (packThumbs[wantSrc] = packThumbs[wantSrc] || {});
+    const missing = keys.filter(k => !have[k]);
+    if (missing.length && ep.source && !/^https?:/.test(ep.source) && !packBusy){
+      packBusy = true;   // pictures of this group are made once, in the background
+      post("/api/look-thumbs", {path: ep.source, source: wantSrc, ids: missing}).then(t => Object.assign(have, t)).catch(() => {}).finally(() => { packBusy = false; if (panelNow === "colors") renderInspector(); });
+    }
+  }
+  const pics = Object.assign({}, thumbs && thumbs.looks, packThumbs[wantSrc] || {});
+  $("iLooks").innerHTML = keys.map(k => { const t = pics[k];
     return `<button class="lk ${(s.look || "cinema") === k && !s.lut ? "on" : ""}" data-look="${k}">${t ? `<img src="/cache/${t.img}">` : ""}<span>${esc(names[k] || (t && t.name) || k)}</span></button>`; }).join("")
     + (s.lut ? `<button class="lk on" data-look="lut"><span>ملف ألوانك</span></button>` : "");
   $("iLooks").querySelectorAll("[data-look]").forEach(b => b.onclick = () => saveLook({look: b.dataset.look === "lut" ? s.look : b.dataset.look, lut: b.dataset.look === "lut"}));
@@ -1555,6 +1588,27 @@ async function elRefresh(){ const st = await api("/api/eleven").catch(() => ({})
 $("sElSave").onclick = async () => { try { await post("/api/eleven/key", {key: $("sElKey").value}); $("sElKey").value = ""; toast("انربط ✅"); elRefresh(); } catch (e){ toast(e.message); } };
 $("sElOff").onclick = async () => { await post("/api/eleven/unlink"); elRefresh(); };
 $("sElOpen").onclick = () => openUrl("https://elevenlabs.io/app/settings/api-keys");
+async function brainsRefresh(){
+  const st = await api("/api/brains").catch(() => ({}));
+  $("sBrains").innerHTML = Object.entries(st).map(([k, b]) => `<div class="row" style="flex-wrap:wrap;gap:6px;align-items:center">
+    <b class="grow">${esc(b.name)} <span class="dim tiny">من ${esc(b.by)}</span></b>
+    <span class="tiny ${b.linked ? "" : "dim"}">${b.busy ? esc(b.msg) : !b.installed ? "مو منصّب" : b.linked ? "مربوط ✅" : "منصّب، مو مربوط"}</span>
+    ${!b.installed ? `<button class="pill sm y" data-bi="${k}" ${b.busy ? "disabled" : ""}>نصّب</button>` : `
+      <button class="pill sm" data-bl="${k}">اربط حسابك</button><button class="pill sm" data-bt="${k}">جرّب</button>
+      ${b.linked ? `<button class="pill sm" data-bo="${k}" data-on="${b.on ? 0 : 1}">${b.on ? "طفّيه" : "شغّله"}</button>` : ""}`}
+    ${!b.busy && b.msg ? `<div class="dim tiny" style="flex-basis:100%">${esc(b.msg)}</div>` : ""}</div>`).join("");
+  const act = (k, a) => post(`/api/brains/${k}/${a}`).catch(e => toast(e.message));
+  $("sBrains").querySelectorAll("[data-bi]").forEach(b => b.onclick = async () => { await act(b.dataset.bi, "install"); toast("دا أنصّبه بالخلفية (دقيقة أو دقيقتين)"); brainsPoll(); });
+  $("sBrains").querySelectorAll("[data-bl]").forEach(b => b.onclick = async () => { await act(b.dataset.bl, "login"); toast("انفتح الطرفية وصفحة الدخول: سجّل بحسابك، وبعدها دوس «جرّب»"); });
+  $("sBrains").querySelectorAll("[data-bt]").forEach(b => b.onclick = async () => { b.textContent = "دا أجرب…"; b.disabled = true;
+    const r = await post(`/api/brains/${b.dataset.bt}/test`).catch(e => ({error: e.message}));
+    toast(r.ok ? "اشتغل ✅ جاوب: " + r.answer : (r.error || "ما جاوب")); brainsRefresh(); });
+  $("sBrains").querySelectorAll("[data-bo]").forEach(b => b.onclick = async () => { await act(b.dataset.bo, b.dataset.on === "1" ? "on" : "off"); brainsRefresh(); });
+  return st;
+}
+let brainsTimer = null;
+function brainsPoll(){ clearInterval(brainsTimer); brainsTimer = setInterval(async () => { const st = await brainsRefresh(); if (!Object.values(st).some(b => b.busy)) clearInterval(brainsTimer); }, 3000); }
+$("sAppIdeas").onclick = () => { if (!needEp()) return; $("dSet").hidden = true; run("app-ideas"); };
 async function learnRefresh(){ const st = await api("/api/learning").catch(() => ({}));
   $("sTaste").value = st.taste || "";
   $("sLearnSt").textContent = (st.lessons ? "تعلم من " + ar(st.lessons) + " مرة" : "لسه ما تعلم") + (st.pending ? " · " + ar(st.pending) + " تعديل جديد ينتظر" : ""); }
@@ -1567,7 +1621,7 @@ $("sCheck").onclick = async () => { $("sCheckOut").innerHTML = '<span class="dim
   const r = await api("/api/selfcheck").catch(() => []);
   $("sCheckOut").innerHTML = r.map(x => `<div>${x.ok ? "✅" : "⚠️"} ${esc(x.text)}</div>`).join("") || "ما گدرت أفحص"; };
 $("sCheckEp").onclick = () => { if (!needEp()) return; $("dSet").hidden = true; run("selfcheck"); };
-$("tSet").onclick = () => { ytRefresh(); drawThemes(); aiRefresh(); elRefresh(); learnRefresh();
+$("tSet").onclick = () => { ytRefresh(); drawThemes(); aiRefresh(); elRefresh(); learnRefresh(); brainsRefresh();
   const c = state.claude || {}; $("sClaude").textContent = !c.installed ? "مو منصّب. دوس «حدّث» تحت." : c.logged_in ? "مربوط بحسابك ✅" : "مو مربوط بعد: دوس «اربط حسابك» (مرة وحدة).";
   $("sLink").textContent = c.logged_in ? "اربطه من جديد" : "اربط حسابك";
   $("sFolder").textContent = state.folder || ""; const v = state.version || {}; $("sVer").textContent = v.commit ? `النسخة ${v.commit.slice(0, 7)} · ${v.date || ""}` : "يجيب آخر نسخة ويرجع يشتغل"; $("dSet").hidden = false; };
@@ -1836,7 +1890,7 @@ async function openExport(){
   $("xBody").innerHTML = (info.final ? `<div class="ycard">✅ الحلقة جاهزة · ${resName} · ${ar(info.size / 1e6)} ميگا</div>` : `<div class="card">الحلقة بعدها ما طلعت بالكامل.${resName ? ` راح تطلع بدقة ${resName}، وبعدها تگدر تصدرها بأي دقة ثانية.` : ""}</div>`)
     + `<div class="row f" style="flex-wrap:wrap">${info.final ? `<button class="pill y" id="xShow">📂 وين الملف؟</button><button class="pill" id="xSmall">نسخة أصغر للإرسال (٢٠٠ ميگا)</button>` : `<button class="pill y" id="xFinal">طلّع النسخة الكاملة</button>`}</div>`
     + (info.final ? `<div class="f"><b>يوتيوب</b> <span class="dim tiny">ينرفع كفيديو خاص بأعلى جودة عندك (${(info.exports || []).some(x => /-(2160|4320)p/.test(x.name)) ? "نسخة الـ٤ك أو ٨ك" : "النسخة الكاملة"})، وانت تكمّل العنوان والصورة وتنشر.</span>
-      <div class="row" style="margin-top:8px;flex-wrap:wrap"><button class="pill y" id="xYt">⬆️ ارفعها على قناتي</button><button class="pill" id="xYtSelf">ارفعها بنفسك</button>${info.youtube ? `<button class="pill sm" id="xYtOpen">افتحها باستوديو يوتيوب</button>` : ""}</div></div>` : "")
+      <div class="row" style="margin-top:8px;flex-wrap:wrap"><button class="pill y" id="xYt">⬆️ ارفعها على قناتي</button><button class="pill" id="xYtSelf">ارفعها بنفسك</button>${info.youtube ? `<button class="pill sm" id="xYtOpen">افتحها باستوديو يوتيوب</button><button class="pill sm y" id="xYtLangs" title="الترجمات الي سويتها تنرفع على الفيديو، والعنوان والوصف ينترجمون لنفس اللغات. المشاهد الأجنبي يشوفها بلغته">🌍 حط اللغات على يوتيوب</button>` : ""}</div></div>` : "")
     + (info.final ? `<div class="f"><b>اختار الدقة</b> <span class="dim tiny">${info.master ? `(الحلقة مصنوعة بـ ${ar(info.master[1])})` : ""} · بلا أي علامة مائية</span>
       <div class="grid2" style="margin-top:8px">${[[720, "٧٢٠", "خفيفة، للموبايل والإرسال"], [1080, "فول اتش دي", "الأشهر، كل مكان يقبلها"], [1440, "٢ك", "أوضح على الشاشات الكبيرة"], [2160, "٤ك", "أعلى جودة على يوتيوب"], [4320, "٨ك", "تكبير: يوتيوب يعطيها جودة ضغط أحسن، بس ما تضيف تفاصيل"]]
         .map(([h, n, d]) => `<button class="tile" data-res="${h}" style="text-align:right;padding:10px"><b>${n}</b><span class="dim tiny" style="display:block;margin-top:4px">${d}${info.master && h > info.master[1] ? " · أكبر من الأصل" : ""}</span></button>`).join("")}</div>
@@ -1860,6 +1914,7 @@ async function openExport(){
   $("xBody").querySelectorAll("[data-res]").forEach(b => b.onclick = () => { $("dExport").hidden = true; run("export", "res:" + b.dataset.res); });
   if ($("xYt")) $("xYt").onclick = async () => { await ytRefresh(); if (!ytState.linked){ $("dExport").hidden = true; $("dYt").hidden = false; return; } $("dExport").hidden = true; run("youtube", "main"); };
   if ($("xYtSelf")) $("xYtSelf").onclick = () => { post(E() + "/reveal", {what: "final"}); openUrl("https://www.youtube.com/upload"); toast("اسحب الملف من المجلد لصفحة الرفع"); };
+  if ($("xYtLangs")) $("xYtLangs").onclick = async () => { await ytRefresh(); if (ytState.linked && !ytState.langs){ toast("اربط يوتيوب مرة ثانية (يحتاج إذن الترجمات)، بعدين ارجع دوس"); $("dExport").hidden = true; $("dYt").hidden = false; return; } $("dExport").hidden = true; run("youtube-langs"); };
   if ($("xYtOpen")) $("xYtOpen").onclick = () => openUrl(`https://studio.youtube.com/video/${info.youtube}/edit`);
   if ($("xYtShort")) $("xYtShort").onclick = async () => { await ytRefresh(); if (!ytState.linked){ $("dExport").hidden = true; $("dYt").hidden = false; return; } $("dExport").hidden = true; run("youtube", "short:" + info.shorts.find(f => /shorts\/01-/.test(f))); };
   $("xLangs").querySelectorAll("[data-xl]").forEach(b => b.onclick = () => { const k = b.dataset.xl; xLangSel.has(k) ? xLangSel.delete(k) : xLangSel.add(k); b.classList.toggle("on"); $("xDub").dataset.ok = ""; $("xDubCost").textContent = ""; });

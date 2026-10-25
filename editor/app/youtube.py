@@ -21,7 +21,12 @@ AUTH = "https://accounts.google.com/o/oauth2/v2/auth"
 TOKEN = "https://oauth2.googleapis.com/token"
 UPLOAD = "https://www.googleapis.com/upload/youtube/v3/videos"
 CHANNELS = "https://www.googleapis.com/youtube/v3/channels"
-SCOPES = "https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly"
+# force-ssl: subtitles and titles in other languages on his own videos (owner, 2026-10-25). Linked before this?
+# The app asks him to link once more (status()["langs"] is False).
+SCOPES = ("https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly "
+          "https://www.googleapis.com/auth/youtube.force-ssl")
+API = "https://www.googleapis.com/youtube/v3"
+CAPTIONS = "https://www.googleapis.com/upload/youtube/v3/captions"
 CHUNK = 16 * 1024 * 1024
 PENDING: dict = {}      # state -> verifier, while he signs in
 
@@ -45,7 +50,8 @@ def _save(home: Path, d: dict) -> None:
 
 def status(home: Path) -> dict:
     d = load(home)
-    return {"client": bool(d.get("client_id")), "linked": bool(d.get("refresh_token")), "channel": d.get("channel", "")}
+    return {"client": bool(d.get("client_id")), "linked": bool(d.get("refresh_token")), "channel": d.get("channel", ""),
+            "langs": bool(d.get("langs"))}   # False: linked before subtitles were added, link once more
 
 
 def set_client(home: Path, client_id: str, client_secret: str) -> dict:
@@ -85,7 +91,8 @@ def finish(home: Path, code: str, state: str, redirect: str, session=None) -> di
         raise ValueError("گوگل رفض الربط: " + r.text[:200])
     tok = r.json()
     d.update(refresh_token=tok.get("refresh_token") or d.get("refresh_token"), access_token=tok["access_token"],
-             expires=time.time() + int(tok.get("expires_in", 3600)) - 60)
+             expires=time.time() + int(tok.get("expires_in", 3600)) - 60,
+             langs="force-ssl" in tok.get("scope", SCOPES))
     try:
         ch = s.get(CHANNELS, params={"part": "snippet", "mine": "true"},
                    headers={"Authorization": "Bearer " + d["access_token"]}, timeout=30).json()
@@ -160,3 +167,44 @@ def upload(home: Path, video: Path, title: str, description: str = "", tags: lis
             if progress:
                 progress(min(99, int(sent / size * 100)))
     raise ValueError("الرفع ما كمل")
+
+
+def upload_caption(home: Path, video_id: str, lang: str, srt: Path, name: str = "", session=None) -> str:
+    """One subtitle file on the video, in its language (a viewer in Spain gets Spanish captions)."""
+    import uuid
+    s = session or requests
+    boundary = "uru" + uuid.uuid4().hex
+    meta = json.dumps({"snippet": {"videoId": video_id, "language": lang, "name": name or lang, "isDraft": False}})
+    body = (f"--{boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n{meta}\r\n"
+            f"--{boundary}\r\nContent-Type: application/x-subrip\r\n\r\n").encode() + Path(srt).read_bytes() \
+        + f"\r\n--{boundary}--".encode()
+    r = s.post(CAPTIONS, params={"uploadType": "multipart", "part": "snippet"}, data=body, timeout=120,
+               headers={"Authorization": "Bearer " + _access(home, s),
+                        "Content-Type": f"multipart/related; boundary={boundary}"})
+    if r.status_code == 403 and "insufficient" in r.text.lower():
+        raise PermissionError("اربط يوتيوب مرة ثانية من الإعدادات (لازم إذن الترجمات)")
+    if r.status_code not in (200, 201):
+        raise ValueError(f"الترجمة ({lang}) ما انرفعت: " + r.text[:200])
+    return r.json().get("id", "")
+
+
+def set_languages(home: Path, video_id: str, locs: dict, session=None) -> None:
+    """The title and description in other languages: viewers see them in their own language."""
+    s = session or requests
+    auth = {"Authorization": "Bearer " + _access(home, s)}
+    r = s.get(API + "/videos", params={"part": "snippet,localizations", "id": video_id}, headers=auth, timeout=30)
+    items = r.json().get("items", []) if r.status_code == 200 else []
+    if not items:
+        raise ValueError("ما لگيت الفيديو بقناتك")
+    snip = items[0]["snippet"]
+    old = items[0].get("localizations") or {}
+    old.update({k: {"title": v["title"][:100], "description": v.get("description", "")[:4900]} for k, v in locs.items()})
+    body = {"id": video_id, "localizations": old,
+            "snippet": {"title": snip["title"], "description": snip.get("description", ""), "categoryId": snip.get("categoryId", "27"),
+                        "tags": snip.get("tags", []), "defaultLanguage": snip.get("defaultLanguage") or "ar"}}
+    r = s.put(API + "/videos", params={"part": "snippet,localizations"}, json=body, timeout=60,
+              headers={**auth, "Content-Type": "application/json"})
+    if r.status_code == 403 and "insufficient" in r.text.lower():
+        raise PermissionError("اربط يوتيوب مرة ثانية من الإعدادات (لازم إذن الترجمات)")
+    if r.status_code != 200:
+        raise ValueError("العناوين ما انحفظت: " + r.text[:200])

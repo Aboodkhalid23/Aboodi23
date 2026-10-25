@@ -72,7 +72,7 @@ while read -r repo path name; do
   (cd "$src/$path" && tar --exclude=.git --exclude=.github --exclude=node_modules --exclude=gallery --exclude=demos --exclude=showcase --exclude=videos \
       --exclude='*.mp4' --exclude='*.mov' --exclude='*.webm' --exclude='*.mkv' --exclude='*.gif' \
       -cf - .) | tar -xf - -C "$DEST/$name"
-  find "$DEST/$name" -type f -size +1M ! -iname '*.ttf' ! -iname '*.otf' ! -iname '*.woff*' -delete
+  find "$DEST/$name" -type f -size +5M ! -iname '*.ttf' ! -iname '*.otf' ! -iname '*.woff*' -delete
   cp -a "$keep/." "$DEST/$name/"
   awk -v n="$name" '$1!=n' "$LOCK" > "$LOCK.tmp"
   echo "$name $repo $new" >> "$LOCK.tmp"

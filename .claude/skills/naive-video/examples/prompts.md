@@ -1,0 +1,217 @@
+# Example Prompts
+
+## First Project
+
+```text
+用 $talking-head-video-pipeline 初始化视频项目。
+主视频：<path>
+我是第一次用，你帮我按默认流程走。
+```
+
+## Full Pipeline With Assets
+
+```text
+用 $talking-head-video-pipeline 制作成片。
+主视频：<path>
+字幕：<srt-path>
+
+12.5 秒插入截图 <image-path>，停留 2 秒。
+35 秒全屏播放 <demo-path>，素材静音，人物放左下角画中画。
+
+先给我官方预览，确认后再导出。
+```
+
+## Raw Footage With Optional Rough Cut
+
+```text
+用 $talking-head-video-pipeline 处理这批原片：<paths>
+我不会粗剪。请先告诉我可以删哪些口误、重复和明显停顿，等我确认策略后再执行。
+如果要转写，请说明云端词级转写的费用可能性和本地词级转写的差别，不要替我强制选择。
+```
+
+## Semantic Asset Placement
+
+```text
+这些截图和录屏需要放进视频：<paths>
+我不会看时间轴，请根据字幕语义决定每个素材的飞入、停留和飞出，并把依据写进 EDIT_PLAN.md。
+```
+
+## Exact Asset Placement
+
+```text
+说到“这里就是最终效果”时插入 <image-path>，停留 2 秒后飞出。
+72.16 秒左右同时插入 <image-a> 和 <image-b>。
+请用字幕轴解析准确时间；如果原话重复出现，先问我是哪一次。
+```
+
+## Hybrid Asset Placement
+
+```text
+关键演示视频固定在 28.09 秒全屏播放，其他截图你按口播语义安排。
+告诉我：我指定的时间会更精准，自动安排的部分会先在官方预览里让我确认。
+```
+
+## Captions Only
+
+```text
+只抽字幕轴，不动原视频。
+视频：<path>
+输出 SRT、CSV 和 transcript JSON。
+```
+
+## Existing Captions
+
+```text
+我已经有字幕轴，不需要重新转写。
+视频：<path>
+SRT：<path>
+CSV：<path>
+请进入风格设计和预览阶段。
+```
+
+## Content Logic Before Motion
+
+```text
+先读取现有字幕和词级转写，把口播按观众能理解的完整论证单元拆成 CONTENT_LOGIC.json。
+字幕保留我说了什么；每个逻辑组只保留观众要记住的结论。
+输入、关系、结果要按口播逐层累积，结论后整组退出。
+如果没有词级时间，请明确写 cue-level，不要用整句开始时间冒充关键词时间。
+先让我确认逻辑组，再制作动效。
+```
+
+## Fast Style Setup
+
+```text
+风格你帮我定，干净专业、蓝色强调、动效克制。
+截图正文和人脸绝对不能挡。
+```
+
+## Custom Style
+
+```text
+卡片用深色高对比，强调色 #FF4D4F。
+字幕用粗白字，关键词用强调色。
+动效 energetic，但展示截图时收敛。
+```
+
+## Screenshot Style Reference
+
+```text
+参考这张截图设计视频风格：<image-path>
+按这张图的视觉语言做，但不要复制其中的品牌和内容。
+我是第一次用，请使用推荐的 medium 强度，并先告诉我你提取了哪些设计规则。
+```
+
+## Semantic GSAP Motion
+
+```text
+根据现有字幕自动匹配 GSAP 语义动效。
+数字、列举、对比、警告、流程、确认和结果要用不同的本地动效配方。
+动效密度 energetic，但不能遮挡人脸、字幕或截图；先检查 MOTION_PLAN.json，再做官方预览。
+```
+
+## Automatic ShotCraft References
+
+```text
+使用新项目默认的 ShotCraft 精选镜头包，动效密度 balanced，最多选 3 个真正有价值的语义节点。
+只借镜头语言，不复制品牌、文案或完整 UI；截图、演示和产品证据区间禁用。
+优先用 HyperFrames + GSAP 适配，本机没装 ShotCraft 也要走原生 fallback，不要自动安装。
+先检查 MOTION_PLAN.json，再给我官方预览。
+```
+
+## Optional Complex Remotion Shot
+
+```text
+这个复杂镜头如果原生 GSAP 很难做好，先告诉我为什么需要 Remotion、会下载什么、装到哪里，以及许可证和渲染成本。
+先运行 remotion_runtime.py --plan，不要安装。等我明确确认后，才允许项目内安装；子片段必须静音并保留原生 fallback。
+```
+
+## Selected ShotCraft Cards
+
+```text
+我想参考 list-reveal、spotlight-hero-card 和 counter-confetti。
+请先检查它们是否与当前字幕语义匹配，只保留合适的；配色沿用当前 DESIGN.md。
+不要直接复制上游模板，优先 gsap-adapted 或 hyperframes-custom，并保留主音频时钟。
+```
+
+## Offline GSAP Package
+
+```text
+我已经下载了官方 GSAP 文件夹：<gsap-directory>
+先用 gsap_check.py 检查版本和可用插件，不要把整个下载目录复制进公开 Skill。
+这个视频只挑真正有语义价值的插件，并给每个插件动效准备 core fallback。
+```
+
+## Brand-Neutral Visual Quality
+
+```text
+先为这个项目写清字体、真实字重、字幕最多一行还是两行、换行规则和组件类型。
+正文和按钮文字必须水平对齐，不要细体大字、手绘感箭头或歪斜文字。
+需要状态提醒时可以用玻璃通知；Focus、Type 和 Split 动效必须由可 seek 的 GSAP 时间轴驱动。
+先运行 design_check.py，再做官方预览。
+```
+
+## Combined Beginner Setup
+
+```text
+用 $talking-head-video-pipeline 初始化这个口播项目：<video-path>
+我没有剪辑经验。请提醒我可以补一张喜欢的参考截图；如果我不提供，就用安全默认风格。
+设计完成后按字幕语义匹配 balanced GSAP 动效，并自动使用不依赖 ShotCraft/Remotion 的精选镜头包；先给官方预览，确认后再导出。
+```
+
+## Staged Keyframe Review
+
+```text
+这是第一次使用这个风格。不要马上渲染完整预览。
+先生成开场、每个主要逻辑组峰值、最复杂画面、截图或画中画、主要转场和结尾关键帧，写入 qa/KEYFRAME_REVIEW.md。
+我确认静态构图后，再给我官方动态预览。
+```
+
+## Scoped Revision
+
+```text
+只修改以下问题：
+12.4-14.0 秒，右侧结果卡遮住了截图正文，请缩小并移到左上安全区。
+其他已确认内容保持不变。
+先输出修改点关键帧，或前后各 3 秒的短片段；确认后再重建完整预览。
+```
+
+## Reusable Style Handoff
+
+```text
+这条视频已经确认完成。请根据最终 DESIGN.md、确认过的参考图、关键帧、VIDEO_LESSONS.md 和 VIDEO_RETRO.md 生成 STYLE_PROMPT.txt。
+删除本期台词、时间点、文件路径、人物和品牌素材，只保留下一条视频可复用的设计规则、确认节点、质量标准和禁止项。
+```
+
+## Resume
+
+```text
+用 $talking-head-video-pipeline 看一下这个视频项目做到哪一步，继续未完成的部分。
+```
+
+## Diagnose
+
+```text
+用 $talking-head-video-pipeline 只做体检，不要改文件，也不要重跑渲染。
+```
+
+## Explicit Learning
+
+```text
+这个圆形人物画中画是正确的。以后我的演示视频都用圆形，不要用矩形。
+请用 $talking-head-video-pipeline 记成长期风格规则。
+```
+
+## Direct Export
+
+```text
+我明确跳过预览，直接导出最终成片。
+保留原始主音频，只做文件参数检查，不抽帧。
+```
+
+## Delivery Retrospective
+
+```text
+用 $talking-head-video-pipeline 复盘这条成片。
+先区分具体故障、环境问题和我的长期风格偏好；只有我确认后，才把规则带到下一条视频。
+```

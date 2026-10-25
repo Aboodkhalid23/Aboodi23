@@ -139,3 +139,40 @@ Melvynx/video-agent-skills  skills/broll  mx-broll
 Melvynx/video-agent-skills  skills/clips  mx-clips
 Melvynx/video-agent-skills  skills/steal  mx-steal-style
 Melvynx/video-agent-skills  skills/short-translate  mx-short-translate
+
+# ---- 2026-10-25 (6): نسخة ٢ — موشن وستايلات أكثر (كلها انقرت ملفاتها: ما بيها سرقة بيانات ولا أوامر خطرة) ----
+# ٥٩ ستايل فلم بالكود (ينزّل مكتبة ستايلاته من ريبوه وقت الاستخدام)
+lemomo-ai/lemo-opuscar  plugin/skills/lemo-opuscar  lemo-opuscar
+# أنميشن لوتي (عناوين وأيقونات متحركة خفيفة)
+diffusionstudio/lottie  skills/text-to-lottie  text-to-lottie
+# شرح رياضي ورسوم متحركة بستايل 3Blue1Brown
+adithya-s-k/manim_skill  skills/manim-composer  manim-composer
+adithya-s-k/manim_skill  skills/manimce-best-practices  manimce-best-practices
+# رسم وأنميشن بالكود (دودل، رسوم يدوية، لوبات)
+alexgreensh/anidoodle  skills/anidoodle  anidoodle
+# يرفع جودة الموشن (يشيل شكل «الذكاء الاصطناعي الرخيص»)
+Tejashmakwana/motionmaxxing  .  motionmaxxing
+# تحريك الشعارات
+nolangz/pixel2motion  .  pixel2motion
+# موشن جرافك بريموشن: كاميرا سينمائية، تمييز مقالات وأخبار، رسوم
+Liamrjohnston/remotion-motion-graphics-skill  skills/motion-graphics  rmg-motion-graphics
+Liamrjohnston/remotion-motion-graphics-skill  skills/cinematic-camera  rmg-cinematic-camera
+Liamrjohnston/remotion-motion-graphics-skill  skills/article-highlights  rmg-article-highlights
+# قص السكتات والإعادات بالتسجيلات الطويلة
+louisedesadeleer/cut-video  .  cut-video
+# كلام للكاميرا ← فيديو بكابشن وأنميشن
+naive-kun/naive-video-skill  .  naive-video
+# شرح بقلم يرسم (ستايل خان أكاديمي)
+haiderfarooq3/khan-explainer  skills/khan-explainer  khan-explainer
+# أفلام موشن للشركات (مراجعة مستقلة، صوت وموسيقى)
+echris6/motion-video-kit  business-motion-film  business-motion-film
+vincentsch/explainroo  skills/explainroo  explainroo
+# أوپن مونتاج (٧١ ألف نجمة): المونتاج، فهم الفيديو، الستايل البصري، رسوم بيانات، ثلاثي الأبعاد
+calesthio/OpenMontage  .claude/skills/video-edit  om-video-edit
+calesthio/OpenMontage  .claude/skills/video-understand  om-video-understand
+calesthio/OpenMontage  .claude/skills/visual-style  om-visual-style
+calesthio/OpenMontage  .claude/skills/d3-viz  om-d3-viz
+calesthio/OpenMontage  .claude/skills/threejs-animation  om-threejs-animation
+calesthio/OpenMontage  .claude/skills/threejs-postprocessing  om-threejs-postprocessing
+calesthio/OpenMontage  .claude/skills/threejs-shaders  om-threejs-shaders
+calesthio/OpenMontage  .claude/skills/lottie-bodymovin  om-lottie-bodymovin

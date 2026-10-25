@@ -31,7 +31,7 @@ from datetime import date, datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from . import learning
+from . import brains, learning
 
 CODE = Path(__file__).resolve().parents[2]
 UI = Path(__file__).resolve().parent / "ui"
@@ -50,6 +50,10 @@ STEPS = {"all": ["prep", "plan", "render", "suite"], "from-plan": ["plan", "rend
          "auto": ["fetch", "script-names", "transcribe", "cut", "plan", "ai", "images", "render", "learn"], "chat": ["chat"],
          # the assistant learns his taste from what he changed (also after every final build), and the app checks itself
          "learn": ["learn"], "selfcheck": ["selfcheck"],
+         # ChatGPT and Gemini (his own subscriptions) read the plan and give a second opinion; ideas for the app
+         "opinion": ["opinion"], "app-ideas": ["app-ideas"],
+         # after the upload: subtitles in every language he translated, and the title/description in those languages
+         "youtube-langs": ["youtube-langs"],
          "shorts": ["shorts"], "export": ["export"],
          # a style from the Styles panel on the whole video: the assistant re-plans in it, then a new preview
          "restyle": ["plan", "ai", "images", "preview"],
@@ -58,7 +62,7 @@ STEPS = {"all": ["prep", "plan", "render", "suite"], "from-plan": ["plan", "rend
 STEP_NAMES = {"prep": "التجهيز", "plan": "خطة المونتير", "render": "النسخة الكاملة", "preview": "المعاينة",
               "suite": "غرفة المونتاج", "requests": "ملاحظاتك", "fetch": "تجهيز الفيديو", "transcribe": "تفريغ الكلام",
               "cut": "قص المقطع", "sentences": "المساعد يراجع الجمل", "captions": "المساعد يراجع الكابشن",
-              "images": "الصور", "assist": "المساعد", "chat": "المساعد", "shorts": "الريلز", "export": "التصدير", "reels-pick": "اختيار الريلز", "dub": "الدبلجة", "thumbs": "الصور المصغرة", "style-ref": "ستايل من فيديو", "script-names": "أسماء السكربت", "translate": "الترجمة", "ai": "مشاهد الذكاء الاصطناعي", "youtube": "الرفع على يوتيوب", "learn": "المساعد يتعلم ذوقك", "selfcheck": "فحص التطبيق والحلقة"}
+              "images": "الصور", "assist": "المساعد", "chat": "المساعد", "shorts": "الريلز", "export": "التصدير", "reels-pick": "اختيار الريلز", "dub": "الدبلجة", "thumbs": "الصور المصغرة", "style-ref": "ستايل من فيديو", "script-names": "أسماء السكربت", "translate": "الترجمة", "ai": "مشاهد الذكاء الاصطناعي", "youtube": "الرفع على يوتيوب", "learn": "المساعد يتعلم ذوقك", "selfcheck": "فحص التطبيق والحلقة", "opinion": "رأي شات جي بي تي وجيميناي", "youtube-langs": "اللغات على يوتيوب", "app-ideas": "أفكار للتطبيق"}
 CLAUDE_TOOLS = ["Read", "Write", "Edit", "Glob", "Grep", "WebSearch", "WebFetch", "TodoWrite",
                 "Bash(python -m editor.pipeline:*)", "Bash(python3 -m editor.pipeline:*)",
                 "Bash(ffprobe:*)", "Bash(ffmpeg:*)", "Bash(ls:*)"]
@@ -861,6 +865,68 @@ def _youtube_step(d: Path) -> int:
     return 0
 
 
+TITLES_PROMPT = """ترجم عنوان ووصف فيديو يوتيوب لصاحب القناة للغات هاي: {langs}.
+العنوان: {title}
+الوصف:
+{desc}
+
+قواعد: ترجمة طبيعية تجذب المشاهد بلغته (مو حرفية)، العنوان أقل من ٩٠ حرف، والوصف نفس معناه وطوله (الأوقات والروابط تبقى مثل ما هي).
+اكتب النتيجة بـ Write بالملف {out} بهالشكل بالضبط (JSON): {{"es": {{"title": "...", "description": "..."}}, ...}}، وما تغيّر أي ملف ثاني."""
+
+
+def _youtube_langs_step(d: Path) -> int:
+    """Subtitles for every language he translated, and the title/description in those languages, on the video he
+    uploaded. Dubbed voice tracks can only be added in YouTube Studio (Google gives no way to send them): the
+    folder with them opens for him to drag in."""
+    from . import youtube
+    from editor.pipeline.options import LANGS
+    yt = d / "edit" / "youtube.json"
+    if not yt.exists():
+        JOB.say("❌ ارفع الحلقة على يوتيوب أول")
+        return 1
+    vid = json.loads(yt.read_text(encoding="utf-8"))["id"]
+    srts = {f.stem.split("-", 1)[1]: f for f in sorted((d / "edit").glob("subtitles-*.srt"))}
+    if not srts:
+        JOB.say("❌ ماكو ترجمات. سوّ الترجمة من «التصدير» ← اللغات أول")
+        return 1
+    bad = 0
+    for lang, f in srts.items():
+        try:
+            youtube.upload_caption(HOME, vid, lang, f, LANGS.get(lang, lang))
+            JOB.say(f"✅ ترجمة {LANGS.get(lang, lang)} انرفعت")
+        except PermissionError as exc:
+            JOB.say(f"❌ {exc}")
+            return 1
+        except (ValueError, OSError) as exc:
+            JOB.say(f"⚠️ {exc}")
+            bad += 1
+    others = [x for x in srts if x != "ar"]
+    if others:
+        out = d / "edit" / "work" / "titles.json"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        desc = "\n\n".join((d / "edit" / f).read_text(encoding="utf-8").strip() for f in ("chapters.txt", "credits.txt")
+                            if (d / "edit" / f).exists())
+        JOB.say("✍️ المساعد يترجم العنوان والوصف…")
+        if _claude(TITLES_PROMPT.format(langs="، ".join(f"{LANGS.get(x, x)} ({x})" for x in others),
+                                        title=_meta(d).get("name", d.name), desc=desc or "(فارغ)", out=out)) == 0 and out.exists():
+            try:
+                locs = {k: v for k, v in json.loads(out.read_text(encoding="utf-8")).items() if k in others and v.get("title")}
+                youtube.set_languages(HOME, vid, locs)
+                JOB.say(f"✅ العنوان والوصف صاروا بـ {len(locs)} لغة")
+            except (ValueError, PermissionError, KeyError) as exc:
+                JOB.say(f"⚠️ {exc}")
+                bad += 1
+    dubs = d / "edit" / "dubs"
+    if dubs.exists() and any(dubs.glob("*.mp3")):
+        JOB.say("🎙️ الأصوات المدبلجة: گوگل ما يسمح ترفعها من برّه استوديو يوتيوب. افتح الحلقة بالاستوديو ← «اللغات» ← «أضف صوت»، واسحب الملفات من المجلد الي انفتح")
+        try:
+            reveal(dubs)
+        except (OSError, RuntimeError):
+            pass
+    JOB.say(f"كمّلها من هنا: https://studio.youtube.com/video/{vid}/translations")
+    return 0
+
+
 def _translate(d: Path) -> int:
     """Captions in other languages (owner, 2026-10-25: "ترجمة حقيقية ١٠٠٪… إسباني، صيني…"): his lines, translated by
     the assistant one language at a time, timed like his speech (edit/captions_<lang>.json) and written as subtitle
@@ -1189,6 +1255,83 @@ def _pipe(stage: str, d: Path, *extra: str) -> int:
     return _run([sys.executable, "-m", "editor.pipeline", stage, str(d), *extra])
 
 
+OPINION_PROMPT = """You are a senior YouTube documentary editor giving a second opinion to a colleague.
+The channel: an Iraqi creator who talks to camera about global topics (company stories, documentaries, world trends).
+Below is the edit plan for this episode (each scene: start–end seconds, kind, what is on screen) and what he says.
+{taste}
+Give the 8 most useful, concrete improvements: a stronger hook, a dull stretch to fix, a better picture or
+motion idea for a line, a cut, a sound moment. Each line: the time (m:ss), what to change, and why, in one or two
+short sentences. Write in simple Iraqi Arabic. No intro, no outro, only the numbered list.
+
+THE PLAN:
+{plan}
+
+WHAT HE SAYS (transcript):
+{words}
+"""
+
+APP_IDEAS_PROMPT = """You help improve URU, a Mac video-editing app for one YouTube creator (Iraqi, global topics,
+talking-head documentaries). The app already has: {features}.
+What he likes and asked for before:
+{taste}
+Suggest the 10 most valuable new features or improvements a world-class editor app would add next, ordered by
+value to him. Each: a short title, then one sentence on what it does for him. Simple Iraqi Arabic, numbered list,
+nothing else."""
+
+APP_FEATURES = ("automatic cutting of silences and retakes, transcription, Arabic captions with fonts, 85+ editing "
+                "styles, 128 colour looks, motion graphics, sound effects and generated music, AI image/video "
+                "generation (Higgsfield/Artlist), reels pack, YouTube private upload, subtitles in 14 languages, "
+                "dubbing in his voice, versions of each build, a learned-taste file, self-check")
+
+
+def _brain_answers(prompt: str, d: Path | None, out_dir: Path, label: str) -> int:
+    """Ask each linked brain (ChatGPT, Gemini), one after the other; save and show what each said."""
+    names = brains.active(HOME, HOME / "tools")
+    if not names:
+        JOB.say("❌ شات جي بي تي وجيميناي مو مربوطين. اربطهم من الإعدادات (مرة وحدة)")
+        return 1
+    out_dir.mkdir(parents=True, exist_ok=True)
+    got = 0
+    for k in names:
+        nm = brains.BRAINS[k]["name"]
+        JOB.say(f"🤝 أسأل {nm}…")
+        try:
+            ans = brains.ask(k, prompt, HOME / "tools", workdir=d)
+        except (RuntimeError, PermissionError, subprocess.SubprocessError, OSError) as exc:
+            JOB.say(f"⚠️ {exc}")
+            continue
+        (out_dir / f"{k}.md").write_text(ans + "\n", encoding="utf-8")
+        JOB.say(f"💬 {nm} ({label}):")
+        for line in ans.splitlines()[:30]:
+            JOB.say("   " + line)
+        got += 1
+    return 0 if got else 1
+
+
+def _opinion_step(d: Path) -> int:
+    plan_f = d / "edit" / "edit_plan.json"
+    if not plan_f.exists():
+        JOB.say("❌ اكتب الخطة أول، بعدين أسألهم")
+        return 1
+    plan = json.loads(plan_f.read_text(encoding="utf-8"))
+    rows = [f"{b.get('start', 0):.0f}-{b.get('end', 0):.0f}s {b.get('kind', '')}: "
+            + " | ".join(str(b.get(k)) for k in ("title", "caption", "query", "text", "effect") if b.get(k))
+            for b in plan.get("beats", [])]
+    try:
+        from editor.pipeline.paths import Episode
+        from editor.pipeline.transcribe import load_words
+        words = " ".join(w.t for w in load_words(Episode(d).clean_words))[:9000]
+    except Exception:   # the transcript is a bonus for them
+        words = "(not available)"
+    prompt = OPINION_PROMPT.format(plan="\n".join(rows)[:12000], words=words, taste=learning.prompt_block(HOME))
+    return _brain_answers(prompt, d, d / "edit" / "opinions", "رأيه بالخطة")
+
+
+def _app_ideas_step(d: Path) -> int:
+    prompt = APP_IDEAS_PROMPT.format(features=APP_FEATURES, taste=learning.taste(HOME) or "(nothing yet)")
+    return _brain_answers(prompt, None, HOME / "app-ideas", "أفكار للتطبيق")
+
+
 def _learn_step(d: Path) -> int:
     """After a final build: what he changed becomes his taste file. Never fails the job: learning is a bonus."""
     if not learning.pending(HOME) and not (d / "edit" / "versions").exists():
@@ -1410,6 +1553,12 @@ def run_job(ep_id: str, what: str) -> None:
             code = _chat_step(d)
         elif step == "assist":
             code = _claude(ASSIST_PROMPT.format(ep=d, message=JOB.message or "راجع الخطة وحسّنها") + learning.prompt_block(HOME))
+        elif step == "youtube-langs":
+            code = _youtube_langs_step(d)
+        elif step == "opinion":
+            code = _opinion_step(d)
+        elif step == "app-ideas":
+            code = _app_ideas_step(d)
         elif step == "learn":
             code = _learn_step(d)
         elif step == "selfcheck":
@@ -1797,6 +1946,12 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json(prefs())
             if path == "/api/learning":
                 return self._json(learning.status(HOME))
+            if path == "/api/brains":
+                return self._json(brains.status(HOME, HOME / "tools"))
+            m = re.match(r"^/api/episodes/([^/]+)/opinions$", path)
+            if m:   # what ChatGPT and Gemini said about this plan
+                od = episode_dir(m.group(1)) / "edit" / "opinions"
+                return self._json({k: (od / f"{k}.md").read_text(encoding="utf-8") for k in brains.BRAINS if (od / f"{k}.md").exists()})
             if path == "/api/selfcheck":
                 return self._json(selfcheck())
             if path == "/api/eleven":
@@ -1909,7 +2064,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(studio.timeline(ep))
         if what == "look":
             from editor.pipeline.grade import LOOK_NAMES, look_settings
-            return self._json({"settings": look_settings(ep), "names": LOOK_NAMES})
+            from editor.pipeline.grade import LOOK_GROUPS, PACK_CATS
+            return self._json({"settings": look_settings(ep), "names": LOOK_NAMES, "groups": LOOK_GROUPS, "group_of": PACK_CATS})
         if what == "sound":
             from editor.pipeline.compose import sound_settings
             return self._json(sound_settings(ep))
@@ -2066,6 +2222,13 @@ class Handler(BaseHTTPRequestHandler):
                 b = self._body()
                 return self._json(create_episode(b.get("name", ""), b.get("source", ""), b.get("script", ""),
                                                  b.get("look"), b.get("lut_key", "")))
+            if path == "/api/look-thumbs":   # one group of the big colour library
+                from .studio import group_thumbs
+                b = self._body()
+                src = Path(str(b.get("path", ""))).expanduser()
+                if not src.is_file():
+                    raise ValueError("ما لگيت الفيديو بهذا المكان")
+                return self._json(group_thumbs(src, HOME / "cache", str(b.get("source", "rec709")), [str(x) for x in b.get("ids", [])][:40]))
             if path == "/api/probe":
                 from .studio import probe_source
                 b = self._body()
@@ -2179,6 +2342,18 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json({"ok": True})
             if path == "/api/prefs":
                 return self._json(prefs(self._body()))
+            m = re.match(r"^/api/brains/(chatgpt|gemini)/(install|login|test|on|off)$", path)
+            if m:   # install the maker's tool, sign in with his account (in Terminal), check it answers
+                k, act = m.groups()
+                if act == "install":
+                    brains.install(k, HOME, HOME / "tools")
+                elif act == "login":
+                    open_terminal(brains.login_command(k, HOME / "tools").replace('"', '\\"'))
+                elif act == "test":
+                    return self._json(brains.test(k, HOME, HOME / "tools"))
+                else:
+                    brains.set_on(k, act == "on", HOME)
+                return self._json(brains.status(HOME, HOME / "tools"))
             if path == "/api/learning":   # he reads, corrects or clears what the assistant learned
                 learning.set_taste(HOME, str(self._body().get("taste", "")))
                 return self._json(learning.status(HOME))

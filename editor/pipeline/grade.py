@@ -45,6 +45,10 @@ LOOK_NAMES = {"none": "بدون تحويل", "natural": "طبيعي", "cinema": 
               "log-vivid": "لوگ ← حيوي", "warm-film": "فلم دافي", "soft-film": "فلم ناعم",
               "teal-orange": "سينما أكشن", "mono": "أبيض وأسود", "vivid": "ألوان قوية", "action": "أكشن قوي",
               "golden": "ذهبي دافي", "night": "ليل بارد", "bleach": "باهت سينمائي", "documentary": "وثائقي"}
+# the big library (128 looks in 12 groups, ours, made from numbers): editor/pipeline/look_pack.py
+from .look_pack import CATS as LOOK_GROUPS, PACK_CATS, PACK_LOOKS, PACK_NAMES  # noqa: E402
+LOOKS.update(PACK_LOOKS)
+LOOK_NAMES.update(PACK_NAMES)
 CINEMA_POLISH = "vibrance=intensity=0.08,unsharp=5:5:0.15:5:5:0"   # softer than POLISH: the film look is smooth
 POLISH = "vibrance=intensity=0.12,unsharp=5:5:0.35:5:5:0"   # vibrance lifts dull colours, leaves skin
 SAMPLES = 12
