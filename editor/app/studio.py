@@ -677,7 +677,9 @@ def effect_thumbs(ep: Episode) -> dict:
     return res
 
 
-EFFECT_NAMES = {"xray": "أشعة إكس", "glow": "توهّج", "shake": "اهتزاز", "vhs": "شريط قديم", "retro_shake": "قديم ويهتز", "bw": "أبيض وأسود", "night": "ليل مخيف",
+EFFECT_NAMES = {"xray": "أشعة إكس", "glow": "توهّج", "slow_push": "تقريب بطيء", "letterbox": "أشرطة سينما",
+                "sepia": "بني قديم", "warm": "دافي", "cold": "بارد", "spotlight": "بقعة ضوء", "pixel_in": "دخول بكسلات",
+                "blur_in": "دخول ضبابي", "punchy": "ألوان قوية", "dreamy_glow": "توهّج حالم", "shake": "اهتزاز", "vhs": "شريط قديم", "retro_shake": "قديم ويهتز", "bw": "أبيض وأسود", "night": "ليل مخيف",
                 "dream": "حلم", "rgb_split": "انقسام ألوان", "flash_in": "دخول بوميض", "sharpen": "حدّة", "film": "فلم سينما"}
 
 

@@ -167,7 +167,18 @@ def effect_filter(name: str | None, cv: "Canvas") -> str:
               "film": "noise=alls=8:allf=t,vignette=angle=0.5,curves=preset=increase_contrast",
               # his reference (2026-10-25): the negative "X-ray" look; and a soft bloom
               "xray": "negate,hue=s=0,curves=master='0/0 0.45/0.55 1/1',eq=contrast=1.35:brightness=0.04",
-              "glow": "split[g0][g1];[g1]gblur=sigma=18,eq=brightness=0.06[gb];[g0][gb]blend=all_mode=screen:all_opacity=0.45"}
+              "glow": "split[g0][g1];[g1]gblur=sigma=18,eq=brightness=0.06[gb];[g0][gb]blend=all_mode=screen:all_opacity=0.45",
+              # 2026-10-25 (owner: "المؤثرات كلش قليلة")
+              "slow_push": f"scale=w='trunc({w}*(1+0.08*min(t,5)/5)/2)*2':h=-2:eval=frame,crop={w}:{h},setsar=1",
+              "letterbox": f"drawbox=x=0:y=0:w=iw:h=ih*0.11:color=black:t=fill,drawbox=x=0:y=ih*0.89:w=iw:h=ih*0.11:color=black:t=fill",
+              "sepia": "colorchannelmixer=.393:.769:.189:0:.349:.686:.168:0:.272:.534:.131,eq=contrast=1.05",
+              "warm": "colorbalance=rs=0.08:gs=0.02:bs=-0.08:rm=0.06:bm=-0.05,eq=saturation=1.08",
+              "cold": "colorbalance=rs=-0.08:bs=0.1:rm=-0.04:bm=0.08,eq=saturation=0.92",
+              "spotlight": "vignette=angle=0.9:mode=forward,eq=brightness=0.02:contrast=1.08",
+              "pixel_in": "pixelize=w=28:h=28:enable='lt(t,0.2)',pixelize=w=10:h=10:enable='between(t,0.2,0.4)'",
+              "blur_in": "boxblur=20:2:enable='lt(t,0.25)',boxblur=8:1:enable='between(t,0.25,0.45)'",
+              "punchy": "eq=contrast=1.18:saturation=1.25,unsharp=5:5:0.6:5:5:0",
+              "dreamy_glow": "split[d0][d1];[d1]gblur=sigma=28,eq=brightness=0.08:saturation=1.2[db];[d0][db]blend=all_mode=screen:all_opacity=0.55"}
     return "," + chains[name] if name in chains else ""
 
 

@@ -51,12 +51,19 @@ def variants(name: str) -> list[Path]:
 
 
 def names() -> list[str]:
-    return sorted(set(RECIPES) | {d.name for d in LIBRARY.iterdir() if d.is_dir() and variants(d.name)})
+    from .sfx_synth import NAMES
+    return sorted(set(RECIPES) | set(NAMES) | {d.name for d in LIBRARY.iterdir() if d.is_dir() and variants(d.name)})
 
 
 def sfx_path(name: str, variant: int = 0) -> Path:
     """Normalised wav of `name`: recorded take number `variant` (wrapping), else the synthesised one."""
     takes = variants(name)
+    from .sfx_synth import NAMES as SYNTH, write as synth_write
+    if not takes and name in SYNTH:   # designed in code (sfx_synth.py): written once, then treated like a recording
+        raw = CACHE / "synth" / f"{name}.wav"
+        if not raw.exists():
+            synth_write(name, raw)
+        takes = [raw]
     if not takes and name not in RECIPES:   # a sound we don't have yet: free CC0 recordings, kept for next time
         from .free_audio import fetch_sfx
         takes = fetch_sfx(name, LIBRARY) and variants(name)

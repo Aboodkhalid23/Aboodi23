@@ -175,14 +175,19 @@ def lines_ass(lines: list[dict], offset: float, width: int, height: int, style: 
     return head + "\n".join(ev) + "\n"
 
 
+LANGS = {"en": "الإنگليزية", "es": "الإسبانية", "fr": "الفرنسية", "de": "الألمانية", "pt": "البرتغالية", "ru": "الروسية",
+         "zh": "الصينية", "ja": "اليابانية", "ko": "الكورية", "hi": "الهندية", "tr": "التركية", "id": "الإندونيسية",
+         "th": "التايلندية", "it": "الإيطالية", "fa": "الفارسية", "ur": "الأوردية"}
+
+
 def subtitles_srt(ep: Episode, lang: str = "ar") -> str:
     """A subtitle file for YouTube (its own captions, switchable by the viewer), on the final timeline."""
     from .plan import load_plan
     off = load_plan(ep.plan).teaser_total if ep.plan.exists() else 0.0
     if load_options(ep)["intro"]:
         off += INTRO_SECONDS
-    if lang == "en" and (ep.edit / "captions_en.json").exists():
-        lines = json.loads((ep.edit / "captions_en.json").read_text(encoding="utf-8"))
+    if lang != "ar" and (ep.edit / f"captions_{lang}.json").exists():
+        lines = json.loads((ep.edit / f"captions_{lang}.json").read_text(encoding="utf-8"))
     else:
         lines = caption_lines(ep)
     def t(x):

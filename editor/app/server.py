@@ -50,11 +50,11 @@ STEPS = {"all": ["prep", "plan", "render", "suite"], "from-plan": ["plan", "rend
          # a style from the Styles panel on the whole video: the assistant re-plans in it, then a new preview
          "restyle": ["plan", "ai", "images", "preview"],
          # the reels pack: the assistant picks 1 main short (< 1 min) + 5 clips, then they are cut tall
-         "reels": ["reels-pick", "shorts"], "thumbs": ["thumbs"], "style-ref": ["style-ref"], "translate": ["translate"], "youtube": ["youtube"]}
+         "reels": ["reels-pick", "shorts"], "dub": ["dub"], "thumbs": ["thumbs"], "style-ref": ["style-ref"], "translate": ["translate"], "youtube": ["youtube"]}
 STEP_NAMES = {"prep": "التجهيز", "plan": "خطة المونتير", "render": "النسخة الكاملة", "preview": "المعاينة",
               "suite": "غرفة المونتاج", "requests": "ملاحظاتك", "fetch": "تجهيز الفيديو", "transcribe": "تفريغ الكلام",
               "cut": "قص المقطع", "sentences": "المساعد يراجع الجمل", "captions": "المساعد يراجع الكابشن",
-              "images": "الصور", "assist": "المساعد", "chat": "المساعد", "shorts": "الريلز", "export": "التصدير", "reels-pick": "اختيار الريلز", "thumbs": "الصور المصغرة", "style-ref": "ستايل من فيديو", "script-names": "أسماء السكربت", "translate": "الترجمة", "ai": "مشاهد الذكاء الاصطناعي", "youtube": "الرفع على يوتيوب"}
+              "images": "الصور", "assist": "المساعد", "chat": "المساعد", "shorts": "الريلز", "export": "التصدير", "reels-pick": "اختيار الريلز", "dub": "الدبلجة", "thumbs": "الصور المصغرة", "style-ref": "ستايل من فيديو", "script-names": "أسماء السكربت", "translate": "الترجمة", "ai": "مشاهد الذكاء الاصطناعي", "youtube": "الرفع على يوتيوب"}
 CLAUDE_TOOLS = ["Read", "Write", "Edit", "Glob", "Grep", "WebSearch", "WebFetch", "TodoWrite",
                 "Bash(python -m editor.pipeline:*)", "Bash(python3 -m editor.pipeline:*)",
                 "Bash(ffprobe:*)", "Bash(ffmpeg:*)", "Bash(ls:*)"]
@@ -490,8 +490,8 @@ PLAN_PROMPT = """انت المونتير الآلي لقناة صاحب القن
 
 TRANSLATE_PROMPT = """انت مترجم ترجمة أفلام. ماكو أحد يجاوبك هسة، فلا تسأل.
 بالملف "{file}" كلام حلقة يوتيوب (عراقي محكي) سطر سطر: i رقم السطر، text الكلام.
-ترجم كل سطر للإنگليزي طبيعي وقصير ينقرا بسرعة على الشاشة (مو حرفي)، والأسماء بتهجئتها الصحيحة. {names}
-اكتب "{out}" بهالشكل بس (JSON): {{"lines": [{{"i": 0, "en": "..."}}]}} بنفس عدد الأسطر.
+ترجم كل سطر للغة «{lang}» ({code}): ترجمة حقيقية دقيقة بالمعنى (مو حرفية)، طبيعية وقصيرة تنقرا بسرعة على الشاشة، والأسماء بتهجئتها الصحيحة بهاي اللغة. {names}
+اكتب "{out}" بهالشكل بس (JSON): {{"lines": [{{"i": 0, "t": "..."}}]}} بنفس عدد الأسطر.
 لا تعدّل أي ملف ثاني."""
 
 NAMES_PROMPT = """انت مساعد المونتاج. ماكو أحد يجاوبك هسة، فلا تسأل.
@@ -684,6 +684,25 @@ def face_files(action: str, name: str = "", data: bytes = b"") -> dict:
     return prefs()
 
 
+def preload_libraries() -> None:
+    """Owner, 2026-10-25: "ألقاها كلها محملة": every sound effect made and levelled, every free font downloaded,
+    once, in the background (a missing one just tries again next start)."""
+    from editor.pipeline.sfx import names, sfx_path
+    for n in names():
+        try:
+            sfx_path(n)
+        except Exception:
+            pass
+    from . import fonts
+    have = fonts.installed(HOME)
+    for fam in fonts.ARABIC + fonts.LATIN:
+        if fam not in have:
+            try:
+                fonts.download(HOME, fam)
+            except Exception:
+                pass
+
+
 def _money_rule() -> str:
     """Paid AI only when he turned it on, within his budget (owner, 2026-10-25: "٣٠ لـ٤٠ دولار للحلقة ما عندي مشكلة")."""
     p = prefs()
@@ -746,6 +765,22 @@ def extract_text(name: str, data: bytes) -> str:
     return text.strip()
 
 
+def _duration_min(f: Path) -> float:
+    try:
+        from editor.pipeline.media import probe
+        return probe(f).duration / 60 if f.exists() else 0.0
+    except Exception:
+        return 0.0
+
+
+def _canvas(d: Path):
+    try:
+        f = json.loads((d / "edit" / "work" / "format.json").read_text(encoding="utf-8"))
+        return [f["width"], f["height"]]
+    except (OSError, ValueError, KeyError):
+        return None
+
+
 def _yt_redirect() -> str:
     return f"http://127.0.0.1:{PORT[0]}/oauth/youtube"
 
@@ -782,8 +817,27 @@ def _youtube_step(d: Path) -> int:
 
 
 def _translate(d: Path) -> int:
-    """English captions: his lines, translated by the assistant, timed like his speech (edit/captions_en.json)."""
-    from editor.pipeline.options import caption_lines
+    """Captions in other languages (owner, 2026-10-25: "ترجمة حقيقية ١٠٠٪… إسباني، صيني…"): his lines, translated by
+    the assistant one language at a time, timed like his speech (edit/captions_<lang>.json) and written as subtitle
+    files for YouTube (edit/subtitles-<lang>.srt). JOB.message "langs:en,es" (English alone when empty)."""
+    from editor.pipeline.options import LANGS, subtitles_srt
+    m = re.fullmatch(r"langs:([a-z,]+)", (JOB.message or "").strip())
+    langs = [x for x in (m.group(1).split(",") if m else ["en"]) if x in LANGS] or ["en"]
+    code = 0
+    for lang in langs:
+        code = _translate_one(d, lang) or code
+        if JOB.stop_asked:
+            break
+    from editor.pipeline.paths import Episode
+    ep = Episode(d)
+    for lang in langs:
+        if (d / "edit" / f"captions_{lang}.json").exists():
+            (d / "edit" / f"subtitles-{lang}.srt").write_text(subtitles_srt(ep, lang), encoding="utf-8")
+    return code
+
+
+def _translate_one(d: Path, lang: str) -> int:
+    from editor.pipeline.options import LANGS, caption_lines
     from editor.pipeline.paths import Episode
     ep = Episode(d)
     lines = caption_lines(ep)
@@ -792,19 +846,21 @@ def _translate(d: Path) -> int:
         return 1
     work = d / "edit" / "work" / "app"
     work.mkdir(parents=True, exist_ok=True)
-    src, out = work / "translate_in.json", work / "translate_out.json"
+    src, out = work / "translate_in.json", work / f"translate_{lang}.json"
     src.write_text(json.dumps([{"i": x["i"], "text": x["text"]} for x in lines], ensure_ascii=False), encoding="utf-8")
     out.unlink(missing_ok=True)
     names = f'الأسماء الصحيحة بـ "{d / "edit" / "script_names.json"}".' if (d / "edit" / "script_names.json").exists() else ""
-    code = _claude(TRANSLATE_PROMPT.format(file=src, out=out, names=names))
+    JOB.say(f"🌐 أترجم للغة {LANGS[lang]}…")
+    code = _claude(TRANSLATE_PROMPT.format(file=src, out=out, names=names, lang=LANGS[lang], code=lang))
     try:
-        en = {int(x["i"]): str(x["en"]).strip() for x in json.loads(out.read_text(encoding="utf-8"))["lines"]}
+        tr = {int(x["i"]): str(x.get("t") or x.get(lang) or x.get("en") or "").strip()
+              for x in json.loads(out.read_text(encoding="utf-8"))["lines"]}
     except (OSError, ValueError, KeyError):
-        JOB.say("❌ الترجمة ما كملت")
+        JOB.say(f"❌ ترجمة {LANGS[lang]} ما كملت")
         return code or 1
-    done = [{"s": x["s"], "e": x["e"], "text": en[x["i"]]} for x in lines if en.get(x["i"])]
-    (d / "edit" / "captions_en.json").write_text(json.dumps(done, ensure_ascii=False, indent=1), encoding="utf-8")
-    JOB.say(f"🌐 انترجم {len(done)} سطر للإنگليزي. تطلع بالبناء الجاي")
+    done = [{"s": x["s"], "e": x["e"], "text": tr[x["i"]]} for x in lines if tr.get(x["i"])]
+    (d / "edit" / f"captions_{lang}.json").write_text(json.dumps(done, ensure_ascii=False, indent=1), encoding="utf-8")
+    JOB.say(f"✅ {LANGS[lang]}: {len(done)} سطر")
     return 0
 
 
@@ -879,6 +935,38 @@ def style_from_reference(video: Path) -> int:
     return code
 
 
+def _dub_step(d: Path) -> int:
+    """The finished episode in his voice, in each language he ticked (ElevenLabs, his key and credit)."""
+    from . import dubbing
+    final = d / "edit" / "final.mp4"
+    if not final.exists():
+        JOB.say("❌ طلّع النسخة الكاملة أول")
+        return 1
+    m = re.fullmatch(r"langs:([a-z,]+)", (JOB.message or "").strip())
+    langs = [x for x in (m.group(1).split(",") if m else []) if x in dubbing.LANGS]
+    if not langs:
+        JOB.say("❌ اختار لغة وحدة أقل شي")
+        return 1
+    bad = 0
+    for k, lang in enumerate(langs):
+        JOB.say(f"🎙️ دبلجة {dubbing.LANGS[lang]} ({k + 1} من {len(langs)})…")
+        JOB.say(f"@@ {int(k / len(langs) * 100)}")
+        try:
+            out = dubbing.dub(HOME, final, lang, d / "edit" / "dubs", say=JOB.say)
+            JOB.say(f"✅ {dubbing.LANGS[lang]} جاهزة: {out.name}")
+        except (ValueError, requests_error(), subprocess.CalledProcessError) as exc:
+            JOB.say(f"❌ {dubbing.LANGS[lang]}: {exc}")
+            bad += 1
+        if JOB.stop_asked:
+            break
+    return 1 if bad == len(langs) else 0
+
+
+def requests_error():
+    import requests
+    return requests.RequestException
+
+
 def _thumbs_step(d: Path) -> int:
     """Three AI thumbnail ideas into edit/thumbs/ (only with paid AI on)."""
     import requests
@@ -926,7 +1014,11 @@ def _reels_pick(d: Path) -> int:
     src, out = work / "reels_input.txt", work / "reels.json"
     src.write_text("\n".join(transcript_lines(ep)), encoding="utf-8")
     out.unlink(missing_ok=True)
-    code = _claude(REELS_PROMPT.format(file=src, out=out, n=REELS_PACK, rest=REELS_PACK - 1))
+    n = REELS_PACK
+    m = re.fullmatch(r"n:(\d+)", (JOB.message or "").strip())
+    if m:
+        n = max(1, min(10, int(m.group(1))))
+    code = _claude(REELS_PROMPT.format(file=src, out=out, n=n, rest=max(n - 1, 0)))
     try:
         reels = json.loads(out.read_text(encoding="utf-8"))["reels"]
     except (OSError, ValueError, KeyError):
@@ -1186,6 +1278,8 @@ def run_job(ep_id: str, what: str) -> None:
             code = _translate(d)
         elif step == "script-names":
             code = _script_names(d)
+        elif step == "dub":
+            code = _dub_step(d)
         elif step == "thumbs":
             code = _thumbs_step(d)
         elif step == "style-ref":
@@ -1401,9 +1495,16 @@ def version() -> dict:
         return {}
 
 
-SFX_AR = {"whoosh": "ووش", "swoosh": "سحبة", "boom": "بووم", "pop": "طگة", "click": "كليك", "ding": "دينگ", "hit": "ضربة",
+SFX_AR = {"whoosh_soft": "ووش ناعم", "whoosh_fast": "ووش سريع", "whoosh_heavy": "ووش ثقيل", "impact": "ضربة سينمائية",
+          "impact_metal": "ضربة حديد", "riser_long": "صعود طويل", "downlifter": "نزول", "shutter": "كاميرا", "flash_pop": "فلاش",
+          "typewriter": "آلة كاتبة", "keyboard": "كيبورد", "cash": "صندوق فلوس", "heartbeat": "نبض قلب", "clock_tick": "ساعة",
+          "notification": "إشعار", "error_buzz": "غلط", "glitch_digital": "تشويش رقمي", "static_tv": "تلفزيون مشوّش",
+          "tape_stop": "شريط يوگف", "record_scratch": "سكراتش", "swipe_ui": "سحبة شاشة", "bubble_pop": "فقاعة", "bell": "جرس",
+          "gong": "گونگ", "drum_hit": "طبل", "laser": "ليزر", "sparkle": "لمعة", "page_flip": "قلب صفحة", "thunder": "رعد",
+          "wind": "هوا", "phone_vibrate": "موبايل يهتز", "door_slam": "باب ينسد", "suspense_hit": "ضربة كشف",
+          "transition_sweep": "انتقال", **{"whoosh": "ووش", "swoosh": "سحبة", "boom": "بووم", "pop": "طگة", "click": "كليك", "ding": "دينگ", "hit": "ضربة",
           "riser": "صعود", "paper": "ورق", "glitch": "تشويش", "tick": "تك تك", "switch": "مفتاح", "factory_machine": "مكينة مصنع",
-          "old_factory": "مصنع قديم", "robot_arm": "ذراع روبوت", "camera": "كاميرا", "typing": "طباعة", "heartbeat": "نبض قلب"}
+          "old_factory": "مصنع قديم", "robot_arm": "ذراع روبوت", "camera": "كاميرا", "typing": "طباعة", "heartbeat": "نبض قلب"}}
 STYLE_NAMES = {"investigation": "لوحة تحقيق", "noir": "سينما الليل", "retro-collage": "كولاج ريترو", "vox": "ورق وقص ولزق"}
 
 
@@ -1571,6 +1672,9 @@ class Handler(BaseHTTPRequestHandler):
                 return self._file(f) if f.is_relative_to(root) else self._err("لا", 403)
             if path == "/api/prefs":
                 return self._json(prefs())
+            if path == "/api/eleven":
+                from . import dubbing
+                return self._json(dubbing.status(HOME))
             if path == "/api/ai-check":
                 return self._json(ai_check())
             if path.startswith("/api/face-file/"):
@@ -1714,7 +1818,10 @@ class Handler(BaseHTTPRequestHandler):
                                "chapters": ch.read_text(encoding="utf-8") if ch.exists() else "",
                                "credits": cr.read_text(encoding="utf-8") if cr.exists() else "",
                                "shorts_plan": plan.get("shorts", []), "shorts": [str(f.relative_to(d)) for f in shorts],
-                               "exports": exports, "master": master,
+                               "exports": exports, "master": master, "canvas": _canvas(d),
+                               "subs": sorted(f.stem.split("-", 1)[1] for f in (d / "edit").glob("subtitles-*.srt")),
+                               "dubs": sorted(f.stem for f in (d / "edit" / "dubs").glob("*.mp3")) if (d / "edit" / "dubs").exists() else [],
+                               "minutes": round((master and 0) or _duration_min(final), 1),
                                "thumbs": [str(f.relative_to(d)) for f in sorted((d / "edit" / "thumbs").glob("*.png"))] if (d / "edit" / "thumbs").exists() else [],
                                "youtube": json.loads((d / "edit" / "youtube.json").read_text(encoding="utf-8")).get("id")
                                if (d / "edit" / "youtube.json").exists() else None,
@@ -1915,7 +2022,7 @@ class Handler(BaseHTTPRequestHandler):
                 elif act == "stop":
                     stop_job()
                 elif act == "reveal":
-                    target = {"final": d / "edit" / "final.mp4", "preview": d / "edit" / "preview.mp4", "exports": d / "edit" / "exports", "shorts": d / "edit" / "shorts", "edit": d / "edit", "thumbs": d / "edit" / "thumbs"}.get(b.get("what"), d)
+                    target = {"final": d / "edit" / "final.mp4", "preview": d / "edit" / "preview.mp4", "exports": d / "edit" / "exports", "shorts": d / "edit" / "shorts", "edit": d / "edit", "thumbs": d / "edit" / "thumbs", "dubs": d / "edit" / "dubs"}.get(b.get("what"), d)
                     reveal(target if target.exists() else d)
                 elif act == "rename":
                     meta = _meta(d)
@@ -1928,6 +2035,9 @@ class Handler(BaseHTTPRequestHandler):
                 with open(HOME / "ideas.jsonl", "a", encoding="utf-8") as f:
                     f.write(json.dumps({"t": time.time(), "text": str(self._body().get("text", ""))[:4000]}, ensure_ascii=False) + "\n")
                 return self._json({"ok": True})
+            if path in ("/api/eleven/key", "/api/eleven/unlink"):
+                from . import dubbing
+                return self._json(dubbing.set_key(HOME, str(self._body().get("key", ""))) if path.endswith("key") else dubbing.unlink(HOME))
             if path in ("/api/face/add", "/api/face/remove"):
                 n = int(self.headers.get("Content-Length") or 0)
                 if path.endswith("add"):
@@ -2084,6 +2194,7 @@ def main(argv=None):
     print(f"URU شغّال: http://127.0.0.1:{a.port}  (الحلقات: {EPISODES})", flush=True)
     threading.Timer(2.0, lambda: _safe(check_app)).start()
     threading.Timer(25.0, lambda: _safe(auto_update)).start()
+    threading.Timer(8.0, lambda: _safe(preload_libraries)).start()
     srv.serve_forever()
 
 

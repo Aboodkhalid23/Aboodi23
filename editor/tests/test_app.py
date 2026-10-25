@@ -461,3 +461,36 @@ def test_style_from_a_video_he_likes(tmp_path, monkeypatch):
     assert seen["p"].count("sheet_") == 3
     mine = [x for x in srv.styles_list() if x["category"] == "ستايلاتي"]
     assert mine and mine[0]["name"] == "ستايل مرجعي"
+
+
+def test_dubbing_in_his_voice_with_a_mocked_service(tmp_path):
+    import subprocess
+    from editor.app import dubbing
+    with pytest.raises(ValueError):
+        dubbing.set_key(tmp_path, "short")
+    dubbing.set_key(tmp_path, "sk_" + "x" * 30)
+    assert dubbing.status(tmp_path)["linked"] and oct((tmp_path / "elevenlabs.json").stat().st_mode & 0o777) == "0o600"
+    v = tmp_path / "final.mp4"
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "testsrc2=s=320x180:d=2", "-f", "lavfi", "-i",
+                    "sine=d=2", "-shortest", "-c:v", "libx264", "-pix_fmt", "yuv420p", str(v)], check=True)
+    dubbed = tmp_path / "dub.mp3"
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "sine=f=600:d=2", str(dubbed)], check=True)
+
+    class R:
+        def __init__(self, code=200, js=None, content=b""):
+            self.status_code, self._js, self.content, self.text = code, js or {}, content, ""
+        def json(self):
+            return self._js
+
+    class S:
+        polls = 0
+        def post(self, url, headers=None, files=None, data=None, timeout=None):
+            assert headers["xi-api-key"].startswith("sk_") and data["target_lang"] == "es" and data["source_lang"] == "ar"
+            return R(js={"dubbing_id": "D1"})
+        def get(self, url, headers=None, timeout=None):
+            if url.endswith("/audio/es"):
+                return R(content=dubbed.read_bytes())
+            S.polls += 1
+            return R(js={"status": "dubbed" if S.polls > 1 else "dubbing"})
+    out = dubbing.dub(tmp_path, v, "es", tmp_path / "dubs", say=lambda *_: None, session=S(), poll=0)
+    assert out.exists() and (tmp_path / "dubs" / "es.mp3").exists()
