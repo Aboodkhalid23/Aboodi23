@@ -878,3 +878,117 @@ def timeline(ep: Episode) -> dict:
     cache.parent.mkdir(parents=True, exist_ok=True)
     cache.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
     return d
+
+
+# ---------- smart tools (owner, 2026-10-25: "تقريب ذكي على الوجه"، "موسيقى على ضربات الإيقاع") ----------
+
+PUNCH_GAP = 8.0      # seconds at least between two punch-ins
+PUNCH_LEN = 1.6      # how long the punched-in shot holds
+
+
+def _pcm(path: Path, rate: int = 8000) -> np.ndarray:
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(path), "-vn", "-ac", "1", "-ar", str(rate), "-f", "s16le", "-"],
+                         capture_output=True).stdout
+    return np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
+
+
+def smart_punch(ep: Episode, most: int = 12) -> int:
+    """The YouTuber cut-in on the words he says loudest: a short face_punch scene inside a plain face scene.
+    Loudness per word from the cut video's sound; spaced out so it never becomes a tic. Returns how many."""
+    if not ep.plan.exists() or not ep.clean_words.exists() or not ep.clean_video.exists():
+        raise ValueError("اكتب الخطة أول")
+    snapshot(ep)
+    plan = json.loads(ep.plan.read_text(encoding="utf-8"))
+    words = [w for w in load_words(ep.clean_words) if len(re.sub(r"\W", "", w.text)) >= 3]
+    sig, rate = _pcm(ep.clean_video), 8000
+    if not len(sig) or not words:
+        return 0
+    loud = [(float(np.sqrt(np.mean(sig[int(w.start * rate):max(int(w.end * rate), int(w.start * rate) + 1)] ** 2))), w) for w in words]
+    cut = np.percentile([v for v, _ in loud], 88)
+    picks, last = [], -1e9
+    for v, w in sorted((x for x in loud if x[0] >= cut), key=lambda x: -x[0]):
+        if len(picks) >= most:
+            break
+        if all(abs(w.start - p.start) >= PUNCH_GAP for p in picks):
+            picks.append(w)
+    beats, added = plan["beats"], 0
+    for w in sorted(picks, key=lambda x: x.start):
+        i = next((k for k, b in enumerate(beats) if b["start"] <= w.start < b["end"]), None)
+        if i is None or beats[i]["kind"] != "face":
+            continue
+        b, t0 = beats[i], round(max(beats[i]["start"], w.start - 0.08), 3)
+        t1 = round(min(b["end"], t0 + PUNCH_LEN), 3)
+        if t1 - t0 < 1.0:
+            continue
+        rest = {k: v for k, v in b.items() if k not in ("start", "end", "transition", "sfx")}
+        pieces = ([{**b, "end": t0}] if t0 - b["start"] >= 0.6 else []) + [{**rest, "start": t0, "end": t1, "kind": "face_punch"}]
+        if b["end"] - t1 >= 0.6:
+            pieces.append({**rest, "start": t1, "end": b["end"]})
+        else:
+            pieces[-1]["end"] = b["end"]
+        if len(pieces) and pieces[0]["start"] != b["start"]:
+            pieces[0]["start"] = b["start"]
+        beats[i:i + 1] = pieces
+        added += 1
+    ep.plan.write_text(json.dumps(plan, ensure_ascii=False, indent=1), encoding="utf-8")
+    return added
+
+
+def music_beats(path: Path) -> list[float]:
+    """The beat times of a music file (seconds): onset strength, tempo from its autocorrelation (70–160 BPM), then the
+    phase that lands most beats on onsets."""
+    rate, hop = 8000, 128
+    sig = _pcm(path, rate)
+    if len(sig) < rate * 4:
+        return []
+    frames = len(sig) // hop
+    env = np.sqrt(np.mean(sig[:frames * hop].reshape(frames, hop) ** 2, axis=1))
+    onset = np.maximum(0, np.diff(env, prepend=0.0))
+    onset -= onset.mean()
+    fps = rate / hop
+    ac = np.correlate(onset, onset, "full")[len(onset) - 1:]
+    lo, hi = int(fps * 60 / 160), int(fps * 60 / 70)
+    p0 = lo + int(np.argmax(ac[lo:hi + 1]))
+    a, c = ac[p0 - 1], ac[min(p0 + 1, len(ac) - 1)]   # parabolic peak: a period between frames, so beats don't drift
+    period = p0 + (0.5 * (a - c) / (a - 2 * ac[p0] + c) if (a - 2 * ac[p0] + c) else 0.0)
+    grid = lambda ph: np.round(np.arange(ph, frames - 1, period)).astype(int)
+    phase = max(np.arange(0, period, 0.5), key=lambda ph: onset[grid(ph)].sum())
+    for _ in range(3):   # each beat snapped to its real onset, then one straight line through them all
+        guess = np.arange(phase, frames - 1, period)
+        w = max(1, int(period / 4))
+        real = np.array([max(0, int(round(g)) - w) + int(np.argmax(onset[max(0, int(round(g)) - w):int(round(g)) + w + 1]))
+                         for g in guess])
+        if len(real) < 4:
+            break
+        period, phase = np.polyfit(np.arange(len(real)), real, 1)
+    return [round(float(x) / fps, 3) for x in np.arange(phase, frames - 1, period) if x >= 0]
+
+
+def beat_sync(ep: Episode, reach: float = 0.18) -> int:
+    """Scene changes moved onto the music's beats (only when a beat is within `reach`, so speech stays in sync).
+    Needs the music the last build used (his own track, or the episode's music files)."""
+    from editor.pipeline.compose import sound_settings
+    from editor.pipeline.plan import load_plan
+    own = str(sound_settings(ep)["music"])
+    tracks = [ep.edit / "media" / own[4:]] if own.startswith("own:") else sorted(ep.assets.glob("music*.*"))
+    tracks = [t for t in tracks if t.is_file() and t.suffix.lower() in (".mp3", ".wav", ".m4a", ".aac", ".ogg", ".flac")]
+    if not tracks or not ep.plan.exists():
+        raise ValueError("ابني معاينة أول حتى تنجهز الموسيقى، أو اختار موسيقاك من «ملفاتي»")
+    beats_t = music_beats(tracks[0])
+    if not beats_t:
+        raise ValueError("ما گدرت أسمع الإيقاع بهالموسيقى")
+    snapshot(ep)
+    plan = json.loads(ep.plan.read_text(encoding="utf-8"))
+    shift = load_plan(ep.plan).teaser_total - plan["beats"][0]["start"]   # plan time → final timeline
+    grid = np.array(beats_t)
+    moved, bs = 0, plan["beats"]
+    for k in range(1, len(bs)):
+        t = bs[k]["start"] + shift
+        j = int(np.argmin(np.abs(grid - t)))
+        d = float(grid[j] - t)
+        if 0.02 < abs(d) <= reach and bs[k]["end"] - (bs[k]["start"] + d) > 0.6 and (bs[k]["start"] + d) - bs[k - 1]["start"] > 0.6:
+            new = round(bs[k]["start"] + d, 3)
+            bs[k - 1]["end"] = bs[k]["start"] = new
+            moved += 1
+    ep.plan.write_text(json.dumps(plan, ensure_ascii=False, indent=1), encoding="utf-8")
+    return moved

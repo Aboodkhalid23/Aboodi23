@@ -335,10 +335,12 @@ def _build_audio(ep: Episode, teaser, duration: float, out: Path,
     if not snd["sfx"]:
         cues = ()
     args, labels = [], ""
+    from .voicepatch import voice_source
+    voice = voice_source(ep)   # the cut video's sound, with any word he re-said in his own voice laid in
     for i, (s, e) in enumerate(teaser):
-        args += ["-ss", f"{s:.3f}", "-t", f"{e - s:.3f}", "-i", str(ep.clean_video)]
+        args += ["-ss", f"{s:.3f}", "-t", f"{e - s:.3f}", "-i", str(voice)]
         labels += f"[{i}:a]"
-    args += ["-i", str(ep.clean_video)]
+    args += ["-i", str(voice)]
     labels += f"[{len(teaser)}:a]"
     n = len(teaser) + 1
     graph = (f"{labels}concat=n={n}:v=0:a=1,{voice_chain(snd['clean'])},aformat=channel_layouts=stereo,"

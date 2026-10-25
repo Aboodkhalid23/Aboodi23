@@ -19,6 +19,7 @@ import json
 import mimetypes
 import os
 import re
+import secrets
 import shutil
 import signal
 import subprocess
@@ -31,7 +32,7 @@ from datetime import date, datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from . import brains, learning
+from . import brains, comfort, learning
 
 CODE = Path(__file__).resolve().parents[2]
 UI = Path(__file__).resolve().parent / "ui"
@@ -54,6 +55,8 @@ STEPS = {"all": ["prep", "plan", "render", "suite"], "from-plan": ["plan", "rend
          "opinion": ["opinion"], "app-ideas": ["app-ideas"],
          # after the upload: subtitles in every language he translated, and the title/description in those languages
          "youtube-langs": ["youtube-langs"],
+         # the smart tools panel (owner, 2026-10-25): one report or one careful change each; JOB.message = which
+         "smart": ["smart"],
          "shorts": ["shorts"], "export": ["export"],
          # a style from the Styles panel on the whole video: the assistant re-plans in it, then a new preview
          "restyle": ["plan", "council", "ai", "images", "preview"],
@@ -62,7 +65,7 @@ STEPS = {"all": ["prep", "plan", "render", "suite"], "from-plan": ["plan", "rend
 STEP_NAMES = {"prep": "التجهيز", "plan": "خطة المونتير", "render": "النسخة الكاملة", "preview": "المعاينة",
               "suite": "غرفة المونتاج", "requests": "ملاحظاتك", "fetch": "تجهيز الفيديو", "transcribe": "تفريغ الكلام",
               "cut": "قص المقطع", "sentences": "المساعد يراجع الجمل", "captions": "المساعد يراجع الكابشن",
-              "images": "الصور", "assist": "المساعد", "chat": "المساعد", "shorts": "الريلز", "export": "التصدير", "reels-pick": "اختيار الريلز", "dub": "الدبلجة", "thumbs": "الصور المصغرة", "style-ref": "ستايل من فيديو", "script-names": "أسماء السكربت", "translate": "الترجمة", "ai": "مشاهد الذكاء الاصطناعي", "youtube": "الرفع على يوتيوب", "learn": "المساعد يتعلم ذوقك", "selfcheck": "فحص التطبيق والحلقة", "opinion": "رأي شات جي بي تي وجيميناي", "council": "لمسات شات جي بي تي وجيميناي", "youtube-langs": "اللغات على يوتيوب", "app-ideas": "أفكار للتطبيق"}
+              "images": "الصور", "assist": "المساعد", "chat": "المساعد", "shorts": "الريلز", "export": "التصدير", "reels-pick": "اختيار الريلز", "dub": "الدبلجة", "thumbs": "الصور المصغرة", "style-ref": "ستايل من فيديو", "script-names": "أسماء السكربت", "translate": "الترجمة", "ai": "مشاهد الذكاء الاصطناعي", "youtube": "الرفع على يوتيوب", "learn": "المساعد يتعلم ذوقك", "selfcheck": "فحص التطبيق والحلقة", "opinion": "رأي شات جي بي تي وجيميناي", "council": "لمسات شات جي بي تي وجيميناي", "youtube-langs": "اللغات على يوتيوب", "smart": "الأدوات الذكية", "app-ideas": "أفكار للتطبيق"}
 CLAUDE_TOOLS = ["Read", "Write", "Edit", "Glob", "Grep", "WebSearch", "WebFetch", "TodoWrite",
                 "Bash(python -m editor.pipeline:*)", "Bash(python3 -m editor.pipeline:*)",
                 "Bash(ffprobe:*)", "Bash(ffmpeg:*)", "Bash(ls:*)"]
@@ -1208,6 +1211,14 @@ def _chat_step(d: Path) -> int:
     return code
 
 
+def _transcribe_file(f: Path) -> str:
+    code = ("import sys\nfrom faster_whisper import WhisperModel\nfrom editor.pipeline.transcribe import WHISPER_MODEL\n"
+            "m=WhisperModel(WHISPER_MODEL,device='cpu',compute_type='int8')\n"
+            "s,_=m.transcribe(sys.argv[1],language='ar')\nprint(' '.join(x.text.strip() for x in s))")
+    out = subprocess.run([sys.executable, "-c", code, str(f)], cwd=CODE, env=_env(), capture_output=True, text=True, timeout=300)
+    return out.stdout.strip()
+
+
 def _voice_text(d: Path, asset_id: str) -> str:
     f = next(iter(sorted((d / "edit" / "work" / "suite_assets").glob(f"{asset_id}.*"))), None)
     if not f:
@@ -1321,7 +1332,7 @@ def _opinion_step(d: Path) -> int:
     try:
         from editor.pipeline.paths import Episode
         from editor.pipeline.transcribe import load_words
-        words = " ".join(w.t for w in load_words(Episode(d).clean_words))[:9000]
+        words = " ".join(w.text for w in load_words(Episode(d).clean_words))[:9000]
     except Exception:   # the transcript is a bonus for them
         words = "(not available)"
     prompt = OPINION_PROMPT.format(plan="\n".join(rows)[:12000], words=words, taste=learning.prompt_block(HOME))
@@ -1343,6 +1354,83 @@ COUNCIL_APPLY_PROMPT = """انت المونتير الرئيسي لحلقة صا
 - إذا ماكو شي يستاهل، لا تغيّر شي. هذا مقبول.
 - عدّل {ep}/edit/edit_plan.json بـ Edit (نفس الشكل والحقول)، وبعدين اكتب {ep}/edit/opinions/applied.md: سطر لكل لمسة أخذتها (من منو، وشنو غيّرت)، وسطر قصير للي تركته وليش.
 بالآخر سطر واحد: كم لمسة أخذت."""
+
+
+SMART_COMMON = """انت مساعد المونتاج بتطبيق يو آر يو على حاسبة صاحب القناة (يوتيوبر عراقي، مواضيع عالمية: قصص شركات، وثائقيات، ترندات).
+ماكو أحد يجاوبك، فلا تسأل. ممنوع صرف فلوس. كل كلامك بالعربي العراقي البسيط.
+الحلقة: {ep} (اسمها: «{name}»). الخطة: {ep}/edit/edit_plan.json، والكلام بعد القص: {ep}/edit/clean_words.json (كل كلمة ووقتها).
+"""
+SMART = {
+    "competitors": ("المنافسين بنفس الموضوع", SMART_COMMON + """دوّر بالنت (WebSearch) على أنجح ٨ فيديوات يوتيوب بنفس موضوع الحلقة (عربي وإنگليزي).
+اكتب التقرير بـ Write بـ {out}: لكل فيديو: العنوان، القناة، المشاهدات تقريباً، شلون بدى الهوك بأول ١٥ ثانية، وشنو خلاه ينجح.
+بالآخر قسم «شنو ناخذ منهم»: ٥ أفكار عملية لحلقتنا (هوك، عنوان، صورة مصغرة، مشهد). لا تغيّر أي ملف ثاني."""),
+    "score": ("توقع النجاح", SMART_COMMON + """قيّم الحلقة قبل النشر مثل خبير يوتيوب: اقرا أول ٦٠ ثانية من الكلام والخطة.
+اكتب بـ {out}: درجة من ١٠ لكل وحدة: الهوك (أول ٣٠ ثانية)، الإيقاع (تغيير كل كم ثانية)، وضوح القصة، العنوان (اسم الحلقة).
+لكل درجة سطر «ليش» وسطر «شلون ترفعها». وبالآخر درجة عامة، و٣ أشياء لازم تتصلح قبل النشر. لا تغيّر أي ملف ثاني."""),
+    "package": ("عناوين ووصف وتاگات", SMART_COMMON + """جهّز النشر على يوتيوب. اكتب بـ {out}:
+١. ٥ عناوين (أقل من ٦٠ حرف، فضول بلا كذب)، وعلّم الأقوى.
+٢. وصف كامل (أول سطرين يجذبون)، وتحته الفصول بالأوقات (٠:٠٠ … من الخطة: كل قسم كبير فصل، أول فصل ٠:٠٠، كل فصل ١٠ ثواني بالأقل).
+٣. ١٥ تاگ (عربي وإنگليزي) و٣ هاشتاگات.
+٤. ٣ أفكار للصورة المصغرة (شنو بيها وشنو مكتوب).
+واكتب الفصول بس (سطر لكل فصل: الوقت والعنوان) بـ {ep}/edit/chapters.txt. لا تغيّر أي ملف ثاني."""),
+    "graphics": ("رسوم من كلامك", SMART_COMMON + """دوّر بالكلام على: أماكن وسفر بين دول (خرائط)، وأرقام مهمة (مبالغ، نسب، سنين)، ومقارنات.
+اختار الأقوى بس (٦ بالأكثر، بينهم ٢٠ ثانية بالأقل)، وحوّل المشهد الي بوقتها لرسم بالخطة: نوع graphic بـ type map (countries أو pins بأسماء عربية وlon/lat، أو route) أو number (value وlabel) أو chart، حسب سكيل editor.
+لا تشيل صور حقيقية مهمة، ولا تلمس الهوك إذا ما يحتاج. افحص بـ python -m editor.pipeline validate "{ep}" لحد ما يطلع ✅.
+اكتب بـ {out} سطر لكل رسم ضفته (الوقت وشنو)."""),
+    "retention": ("صلّح الأماكن المملة", SMART_COMMON + """هاي الأماكن الي ممكن المشاهد يمل بيها (من فحص المونتير): {dull}
+صلّح الأقوى منها (٥ بالأكثر): كسّر الوجه الطويل بصورة أو رسم أو تقريب، أو قصّر المشهد الثابت. لا تغيّر الستايل ولا ترتيب القصة.
+افحص بـ python -m editor.pipeline validate "{ep}" لحد ما يطلع ✅. اكتب بـ {out} سطر لكل تصليح."""),
+}
+
+
+def _smart_step(d: Path, kind: str) -> int:
+    if kind not in SMART:
+        JOB.say("❌ أداة مو معروفة")
+        return 1
+    if kind != "competitors" and not (d / "edit" / "edit_plan.json").exists():
+        JOB.say("❌ اكتب الخطة أول")
+        return 1
+    out = d / "edit" / "reports" / f"{kind}.md"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    dull = ""
+    if kind == "retention":
+        dull = "، ".join(f"{_mmss(a)}–{_mmss(b)} ({why})" for a, b, why in retention(d)["dull"]) or "(ماكو)"
+    if kind in ("graphics", "retention"):
+        from editor.pipeline.paths import Episode
+        from .studio import snapshot
+        snapshot(Episode(d))
+    JOB.say(f"🧠 {SMART[kind][0]}…")
+    code = _claude(SMART[kind][1].format(ep=d, name=_meta(d).get("name", d.name), out=out, dull=dull) + learning.prompt_block(HOME))
+    if code == 0 and out.exists():
+        JOB.say("✅ التقرير جاهز بلوحة «أدوات ذكية»")
+    return code
+
+
+def _mmss(t: float) -> str:
+    return f"{int(t // 60)}:{int(t % 60):02d}"
+
+
+def retention(d: Path) -> dict:
+    """Where a viewer may get bored (the editor's own review rules), as a curve for the timeline: 1 = gripping."""
+    from editor.pipeline.paths import Episode
+    from editor.pipeline.plan import load_plan
+    from editor.pipeline.review import dull_zones
+    ep = Episode(d)
+    if not ep.plan.exists():
+        return {"dull": [], "curve": [], "length": 0}
+    plan = load_plan(ep.plan)
+    dull = dull_zones(plan.beats)
+    length = plan.beats[-1].end if plan.beats else 0
+    curve, step = [], 2.0
+    t = 0.0
+    while t < length:   # interest drops inside dull zones and slowly recovers after each change of picture
+        since = min((t - b.start for b in plan.beats if b.start <= t), default=0)
+        v = max(0.15, 1 - since / 20)
+        if any(a <= t < b for a, b, _ in dull):
+            v = min(v, 0.35)
+        curve.append(round(v, 2))
+        t += step
+    return {"dull": [(round(a, 1), round(b, 1), w) for a, b, w in dull], "curve": curve, "step": step, "length": round(length, 1)}
 
 
 def _council_step(d: Path) -> int:
@@ -1592,6 +1680,8 @@ def run_job(ep_id: str, what: str) -> None:
             code = _chat_step(d)
         elif step == "assist":
             code = _claude(ASSIST_PROMPT.format(ep=d, message=JOB.message or "راجع الخطة وحسّنها") + learning.prompt_block(HOME))
+        elif step == "smart":
+            code = _smart_step(d, (JOB.message or "").strip())
         elif step == "youtube-langs":
             code = _youtube_langs_step(d)
         elif step == "opinion":
@@ -1658,6 +1748,10 @@ def _guard(ep_id, what):
     except Exception as exc:   # the log must say what happened, never a silent stop
         JOB.say(f"❌ خطأ غير متوقع: {exc}")
         JOB.ok, JOB.running = False, False
+    if what not in ("chat",):   # a Mac notification when something long ends (he may be in another app)
+        name = _meta(EPISODES / ep_id).get("name", ep_id) if (EPISODES / ep_id).exists() else ep_id
+        _safe(lambda: comfort.notify("يو آر يو", (f"✅ {STEP_NAMES.get(JOB.steps[-1] if JOB.steps else what, what)} خلص" if JOB.ok
+                                                 else "⚠️ وگف قبل ما يكمل") + f" · {name}"))
 
 
 def stop_job() -> None:
@@ -1987,8 +2081,19 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json(prefs())
             if path == "/api/learning":
                 return self._json(learning.status(HOME))
+            if path == "/api/comfort":   # templates, backup, phone page
+                ph = comfort.phone_settings(HOME)
+                return self._json({"templates": comfort.templates(HOME), "backup": comfort.backup_status(HOME),
+                                   "phone": {"on": bool(ph.get("on")), "url": f"http://{comfort.lan_ip()}:{PHONE_PORT}/m/{ph.get('code', '')}" if ph.get("on") else ""}})
             if path == "/api/brains":
                 return self._json(brains.status(HOME, HOME / "tools"))
+            m = re.match(r"^/api/episodes/([^/]+)/(reports|retention)$", path)
+            if m:   # the smart tools: their reports, and where the viewer may get bored
+                ed = episode_dir(m.group(1))
+                if m.group(2) == "retention":
+                    return self._json(retention(ed))
+                rd = ed / "edit" / "reports"
+                return self._json({k: (rd / f"{k}.md").read_text(encoding="utf-8") for k in SMART if (rd / f"{k}.md").exists()})
             m = re.match(r"^/api/episodes/([^/]+)/opinions$", path)
             if m:   # what ChatGPT and Gemini said about this plan
                 od = episode_dir(m.group(1)) / "edit" / "opinions"
@@ -2176,6 +2281,23 @@ class Handler(BaseHTTPRequestHandler):
             from editor.pipeline.options import save_options
             studio.snapshot(ep)
             return self._json(save_options(ep, b))
+        if what == "voicefix":   # a word re-said in his own voice (ElevenLabs); "remove" takes one back
+            from . import dubbing
+            lst = ep.edit / "voice_patches.json"
+            if b.get("remove") is not None:
+                items = [p for p in (json.loads(lst.read_text(encoding="utf-8")) if lst.exists() else []) if p["start"] != float(b["remove"])]
+                lst.write_text(json.dumps(items, ensure_ascii=False, indent=1), encoding="utf-8")
+                return self._json({"patches": items})
+            return self._json(dubbing.fix_word(HOME, d, float(b.get("start", 0)), float(b.get("end", 0)), str(b.get("text", ""))))
+        if what == "tool":   # one-click smart tools that change the plan right away (undo brings it back)
+            tool = b.get("tool")
+            if tool == "punch":
+                n = studio.smart_punch(ep)
+                return self._json({"message": f"ضفت {n} تقريب على كلماتك القوية. ابني معاينة حتى تشوفها" if n else "ما لگيت مكان مناسب للتقريب"})
+            if tool == "beats":
+                n = studio.beat_sync(ep)
+                return self._json({"message": f"{n} تبديل مشهد صار على ضربة الموسيقى" if n else "التبديلات أصلاً قريبة من الإيقاع"})
+            raise ValueError("أداة مو معروفة")
         if what == "version":   # save / use / rename / delete a version
             act, n = b.get("do"), int(b.get("n", 0))
             if act == "save":
@@ -2300,7 +2422,7 @@ class Handler(BaseHTTPRequestHandler):
                 learning.note(HOME, m.group(1), "طلب من المساعد", text)
                 start_job(m.group(1), "chat", text)
                 return self._json({"ok": True, "messages": chat_load(d)})
-            m = re.match(r"^/api/episodes/([^/]+)/(sentences|captions|look|sound|idea|beat|undo|redo|media|media-note|short|options|choose|restyle|srt|variant|version)$", path)
+            m = re.match(r"^/api/episodes/([^/]+)/(sentences|captions|look|sound|idea|beat|undo|redo|media|media-note|short|options|choose|restyle|srt|variant|version|tool|voicefix)$", path)
             if m:
                 b = self._body()
                 if m.group(2) not in ("media",):   # what he changes is how the assistant learns his taste
@@ -2383,6 +2505,39 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json({"ok": True})
             if path == "/api/prefs":
                 return self._json(prefs(self._body()))
+            if path == "/api/comfort":
+                b = self._body()
+                act = b.get("do")
+                if act == "phone":
+                    comfort.set_phone(HOME, bool(b.get("on")))
+                    phone_server(bool(b.get("on")))
+                elif act == "backup":
+                    r = comfort.backup(HOME, EPISODES)
+                    if not r.get("ok"):
+                        raise ValueError(r["why"])
+                elif act == "template-save":
+                    comfort.save_template(HOME, episode_dir(str(b.get("ep", ""))) / "edit", str(b.get("name", "")))
+                elif act == "template-use":
+                    ed = episode_dir(str(b.get("ep", ""))) / "edit"
+                    from editor.pipeline.paths import Episode
+                    from .studio import snapshot
+                    snapshot(Episode(ed.parent))
+                    comfort.apply_template(HOME, ed, str(b.get("name", "")))
+                elif act == "template-delete":
+                    comfort.delete_template(HOME, str(b.get("name", "")))
+                else:
+                    raise ValueError("شنو تريد؟")
+                ph = comfort.phone_settings(HOME)
+                return self._json({"templates": comfort.templates(HOME), "backup": comfort.backup_status(HOME),
+                                   "phone": {"on": bool(ph.get("on")), "url": f"http://{comfort.lan_ip()}:{PHONE_PORT}/m/{ph.get('code', '')}" if ph.get("on") else ""}})
+            if path == "/api/listen":   # a voice command: his recorded words → text (the app's own speech model)
+                n = int(self.headers.get("Content-Length") or 0)
+                if not 0 < n < 30 * 2**20:
+                    raise ValueError("التسجيل فارغ أو كبير")
+                f = HOME / "tmp" / ("voice" + (".webm" if "webm" in (self.headers.get("Content-Type") or "") else ".m4a"))
+                f.parent.mkdir(parents=True, exist_ok=True)
+                f.write_bytes(self.rfile.read(n))
+                return self._json({"text": _transcribe_file(f)})
             m = re.match(r"^/api/brains/(chatgpt|gemini)/link(/code|/cancel|/state)?$", path)
             if m:   # one button: install if needed, sign in in the browser, paste the code here if the page shows one
                 lk, sub = brains.LINKS[m.group(1)], m.group(2) or ""
@@ -2555,6 +2710,110 @@ def _safe(fn):
         print("app check:", exc, flush=True)
 
 
+PHONE_PORT = 47824
+PHONE_PAGE = """<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>يو آر يو</title><style>body{margin:0;font-family:-apple-system,sans-serif;background:#051F20;color:#DAF1DE;padding:16px}
+.c{background:#0B2B26;border:1px solid #235347;border-radius:16px;padding:14px;margin-bottom:12px}h1{font-size:20px;margin:0 0 12px}
+.s{color:#8EB69B;font-size:13px}.b{display:inline-block;margin:8px 6px 0 0;padding:10px 16px;border-radius:99px;border:0;font-size:15px;font-weight:700;background:#8EB69B;color:#051F20}
+.b.g{background:#163832;color:#DAF1DE}.log{font-size:12px;color:#b9d9c3;white-space:pre-wrap;line-height:1.6;margin-top:8px}.bar{height:5px;background:#235347;border-radius:3px;margin-top:8px}.bar i{display:block;height:100%;background:#8EB69B;border-radius:3px}</style></head>
+<body><h1>يو آر يو · من تلفونك</h1><div id="job"></div><div id="eps"></div><script>
+const B=location.pathname.replace(/\/$/,"");const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
+async function go(ep,what){await fetch(B+"/run",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({ep,what})});load();}
+async function load(){const d=await (await fetch(B+"/state")).json();const j=d.job;
+document.getElementById("job").innerHTML=j.running?`<div class="c"><b>⏳ شغّال هسة: ${esc(j.name)}</b><div class="s">${esc(j.step)}</div>${j.progress!=null?`<div class="bar"><i style="width:${j.progress}%"></i></div>`:""}<div class="log">${esc(j.lines.join("\n"))}</div><button class="b g" onclick="go('${esc(j.ep)}','stop')">وگّفه</button></div>`:(j.ep?`<div class="c"><b>${j.ok?"✅ آخر شغل خلص":"⚠️ آخر شغل وگف"}</b><div class="s">${esc(j.name)}</div></div>`:"");
+document.getElementById("eps").innerHTML=d.episodes.map(e=>`<div class="c"><b>${esc(e.name)}</b><div class="s">${esc(e.stage)}</div>
+${e.plan&&!e.running?`<button class="b" onclick="go('${esc(e.id)}','build')">ابني معاينة</button><button class="b g" onclick="go('${esc(e.id)}','final')">النسخة النهائية</button>`:""}</div>`).join("");}
+load();setInterval(load,4000);</script></body></html>"""
+
+
+class PhoneHandler(BaseHTTPRequestHandler):
+    """The phone page on his home Wi-Fi (owner, 2026-10-25): see what is running, start a preview or the final build,
+    stop a job. Nothing else is reachable, and every path needs his secret code."""
+
+    def log_message(self, *a):
+        pass
+
+    def _ok(self) -> str | None:
+        st = comfort.phone_settings(HOME)
+        parts = self.path.split("?")[0].strip("/").split("/")
+        if not st.get("on") or len(parts) < 2 or parts[0] != "m" or not secrets.compare_digest(parts[1].upper(), st.get("code", "-")):
+            self.send_response(404)
+            self.end_headers()
+            return None
+        return "/".join(parts[2:])
+
+    def _send(self, body: bytes, ctype: str):
+        self.send_response(200)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_GET(self):
+        rest = self._ok()
+        if rest is None:
+            return
+        if rest == "":
+            return self._send(PHONE_PAGE.encode("utf-8"), "text/html; charset=utf-8")
+        if rest == "state":
+            eps = []
+            for e in list_episodes()[:12]:
+                d = e["done"]
+                stage = "جاهزة" if d["render"] else "المعاينة جاهزة" if d["preview"] else "الخطة جاهزة" if d["plan"] else "انقصّت" if d["cut"] else "تتجهز"
+                eps.append({"id": e["id"], "name": e.get("name", e["id"]), "stage": stage, "plan": d["plan"], "running": e["running"]})
+            name = _meta(EPISODES / JOB.ep).get("name", JOB.ep) if JOB.ep and (EPISODES / JOB.ep).exists() else ""
+            job = {"running": JOB.running, "ok": JOB.ok, "ep": JOB.ep, "name": name, "progress": JOB.progress,
+                   "step": STEP_NAMES.get(JOB.step or "", ""), "lines": [x for x in JOB.lines if x.strip()][-6:]}
+            return self._send(json.dumps({"episodes": eps, "job": job}, ensure_ascii=False).encode("utf-8"), "application/json")
+        self.send_response(404)
+        self.end_headers()
+
+    def do_POST(self):
+        rest = self._ok()
+        if rest != "run":
+            if rest is not None:
+                self.send_response(404)
+                self.end_headers()
+            return
+        n = int(self.headers.get("Content-Length") or 0)
+        b = json.loads(self.rfile.read(min(n, 4096)) or b"{}")
+        what = b.get("what")
+        try:
+            if what == "stop":
+                stop_job()
+            elif what in ("build", "final"):
+                start_job(str(b.get("ep", "")), what)
+        except (ValueError, RuntimeError, FileNotFoundError) as exc:
+            return self._send(json.dumps({"error": str(exc)}, ensure_ascii=False).encode("utf-8"), "application/json")
+        return self._send(b'{"ok":true}', "application/json")
+
+
+PHONE = [None]
+
+
+def phone_server(on: bool) -> None:
+    """Start or stop the phone page's own little server (all addresses of this Mac, port 47824)."""
+    if on and PHONE[0] is None:
+        try:
+            ps = ThreadingHTTPServer(("0.0.0.0", PHONE_PORT), PhoneHandler)
+        except OSError:
+            return
+        ps.daemon_threads = True
+        PHONE[0] = ps
+        threading.Thread(target=ps.serve_forever, daemon=True).start()
+    elif not on and PHONE[0] is not None:
+        ps, PHONE[0] = PHONE[0], None
+        threading.Thread(target=ps.shutdown, daemon=True).start()
+
+
+def nightly_backup() -> None:
+    while True:
+        if comfort.backup_status(HOME).get("auto", True) and comfort.drive_folder() and comfort.backup_due(HOME) and not JOB.running:
+            _safe(lambda: comfort.backup(HOME, EPISODES))
+        time.sleep(3600)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="python -m editor.app.server")
     ap.add_argument("--port", type=int, default=47823)
@@ -2573,6 +2832,9 @@ def main(argv=None):
     threading.Timer(2.0, lambda: _safe(check_app)).start()
     threading.Timer(25.0, lambda: _safe(auto_update)).start()
     threading.Timer(8.0, lambda: _safe(preload_libraries)).start()
+    threading.Thread(target=nightly_backup, daemon=True).start()
+    if comfort.phone_settings(HOME).get("on"):
+        phone_server(True)
     srv.serve_forever()
 
 

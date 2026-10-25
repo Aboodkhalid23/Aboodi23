@@ -436,6 +436,126 @@ def test_one_button_link_opens_the_page_and_takes_the_code(app, tmp_path):
     assert brains.active(srv.HOME, srv.HOME / "tools") == ["chatgpt", "gemini"]
 
 
+def _talking_episode(app, tmp_path):
+    """A cut episode with a loud word at 5 s and a music track at 120 BPM."""
+    import subprocess
+    import numpy as np
+    from editor.pipeline.paths import Episode
+    d = srv.EPISODES / srv.create_episode("ميزات", str(app))["id"]
+    ep = Episode(d).ensure()
+    ep.work.mkdir(parents=True, exist_ok=True)
+    r = 16000
+    t = np.arange(r * 20) / r
+    x = 0.05 * np.sin(2 * np.pi * 200 * t)
+    x[r * 5:int(r * 5.5)] *= 12                                   # he says one word loud
+    raw = tmp_path / "v.raw"
+    (x * 20000).astype(np.int16).tofile(raw)
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "color=gray:s=160x90:d=20", "-f", "s16le", "-ar", str(r),
+                    "-ac", "1", "-i", str(raw), "-shortest", "-c:v", "libx264", "-c:a", "aac", str(ep.clean_video)], check=True)
+    words = [{"t": "كلمة" + str(k), "s": k * 0.5, "e": k * 0.5 + 0.45, "p": 1.0} for k in range(40)]
+    ep.clean_words.write_text(json.dumps(words, ensure_ascii=False), encoding="utf-8")
+    ep.plan.write_text(json.dumps({"style": {"primary": "noir", "sections": []}, "teaser": [],
+                                   "beats": [{"start": 0, "end": 10, "zone": "hook", "kind": "face"},
+                                             {"start": 10, "end": 20, "zone": "body", "kind": "face"}]}), encoding="utf-8")
+    return d, ep
+
+
+def test_smart_punch_beat_sync_and_retention(app, tmp_path):
+    import subprocess
+    import numpy as np
+    from editor.app import studio
+    d, ep = _talking_episode(app, tmp_path)
+    assert studio.smart_punch(ep) >= 1
+    beats = json.loads(ep.plan.read_text())["beats"]
+    punch = [b for b in beats if b["kind"] == "face_punch"]
+    assert punch and 4.8 <= punch[0]["start"] <= 5.1 and beats[0]["start"] == 0 and beats[-1]["end"] == 20
+    assert all(beats[k]["end"] == beats[k + 1]["start"] for k in range(len(beats) - 1))
+    with pytest.raises(ValueError):
+        studio.beat_sync(ep)                                      # no music yet
+    r = 22050
+    t = np.arange(r * 20) / r
+    m = np.zeros_like(t)
+    for bt in np.arange(0.0, 20, 0.5):
+        i = int(bt * r)
+        m[i:i + 600] += np.exp(-t[:600] * 50)
+    raw = tmp_path / "m.raw"
+    (m * 15000).astype(np.int16).tofile(raw)
+    ep.assets.mkdir(parents=True, exist_ok=True)
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "s16le", "-ar", str(r), "-ac", "1", "-i", str(raw), str(ep.assets / "music_0.wav")], check=True)
+    moved = studio.beat_sync(ep)
+    starts = [b["start"] for b in json.loads(ep.plan.read_text())["beats"]][1:]
+    assert moved >= 1 and sum(abs(x * 2 - round(x * 2)) < 0.03 for x in starts) >= moved
+    ret = srv.retention(d)
+    assert ret["length"] == 20 and ret["curve"] and ret["dull"]       # 10 s of plain face reads as dull
+
+
+def test_voice_fix_patch_is_laid_into_the_voice(app, tmp_path):
+    import subprocess
+    from editor.app import dubbing
+    from editor.pipeline.voicepatch import voice_source
+    d, ep = _talking_episode(app, tmp_path)
+    srv.HOME.mkdir(parents=True, exist_ok=True)
+    dubbing.set_key(srv.HOME, "k" * 30)
+    mp3 = tmp_path / "say.mp3"
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "sine=f=600:d=0.8", str(mp3)], check=True)
+
+    class R:
+        def __init__(self, code, js=None, content=b""):
+            self.status_code, self._js, self.content, self.text = code, js or {}, content, ""
+        def json(self):
+            return self._js
+
+    class S:
+        calls = []
+        def post(self, url, **kw):
+            self.calls.append(url)
+            return R(200, {"voice_id": "V1"}) if url.endswith("/voices/add") else R(200, content=mp3.read_bytes())
+
+    s = S()
+    out = dubbing.fix_word(srv.HOME, d, 2.0, 2.5, "صحيحة", session=s)
+    assert out["patches"][0]["text"] == "صحيحة" and any("/text-to-speech/V1" in c for c in s.calls)
+    assert json.loads((srv.HOME / "elevenlabs.json").read_text())["voice_id"] == "V1"
+    dubbing.fix_word(srv.HOME, d, 2.2, 2.6, "أصح", session=s)           # an overlapping fix replaces the old one
+    assert len(json.loads((ep.edit / "voice_patches.json").read_text())) == 1
+    v = voice_source(ep)
+    assert v.name == "voice_patched.wav" and v.stat().st_size > 1000 and voice_source(ep) == v
+
+
+def test_templates_backup_phone_page_and_notify(app, tmp_path, monkeypatch):
+    import urllib.error
+    from editor.app import comfort
+    d = srv.EPISODES / srv.create_episode("قالب", str(app))["id"]
+    (d / "edit").mkdir(parents=True, exist_ok=True)
+    (d / "edit" / "style.txt").write_text("noir")
+    (d / "edit" / "look.json").write_text('{"look": "cine-epic"}')
+    (d / "edit" / "edit_plan.json").write_text("{}")
+    with pytest.raises(ValueError):
+        comfort.save_template(srv.HOME, tmp_path / "empty", "x")
+    assert comfort.save_template(srv.HOME, d / "edit", "وثائقي")[0]["has"] == ["style.txt", "look.json"]
+    d2 = srv.EPISODES / srv.create_episode("ثانية", str(app))["id"]
+    comfort.apply_template(srv.HOME, d2 / "edit", "وثائقي")
+    assert (d2 / "edit" / "style.txt").read_text() == "noir"
+    st = comfort.backup(srv.HOME, srv.EPISODES, dest=tmp_path / "drive")
+    assert st["ok"] and (tmp_path / "drive" / "URU نسخة احتياطية" / d.name / "edit_plan.json").exists()
+    assert not comfort.backup_due(srv.HOME)
+    ph = comfort.set_phone(srv.HOME, True)
+    assert len(ph["code"]) == 6 and oct((srv.HOME / "phone.json").stat().st_mode & 0o777) == "0o600"
+    monkeypatch.setattr(srv, "PHONE_PORT", 0)
+    srv.phone_server(True)
+    port = srv.PHONE[0].server_address[1]
+    try:
+        with pytest.raises(urllib.error.HTTPError):
+            urllib.request.urlopen(f"http://127.0.0.1:{port}/m/WRONG1/state")
+        state = json.loads(urllib.request.urlopen(f"http://127.0.0.1:{port}/m/{ph['code']}/state").read())
+        assert {e["name"] for e in state["episodes"]} >= {"قالب", "ثانية"}
+        assert "يو آر يو" in urllib.request.urlopen(f"http://127.0.0.1:{port}/m/{ph['code'].lower()}").read().decode()
+        with pytest.raises(urllib.error.HTTPError):
+            urllib.request.urlopen(f"http://127.0.0.1:{port}/api/state")   # nothing else is reachable
+    finally:
+        srv.phone_server(False)
+    comfort.notify("a", "b")                                         # never fails off a Mac
+
+
 def test_optional_extras_and_suggestions(app, monkeypatch):
     from editor.app import studio
     from editor.pipeline import options
