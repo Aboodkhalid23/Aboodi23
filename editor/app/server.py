@@ -2342,6 +2342,17 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json({"ok": True})
             if path == "/api/prefs":
                 return self._json(prefs(self._body()))
+            m = re.match(r"^/api/brains/(chatgpt|gemini)/link(/code|/cancel|/state)?$", path)
+            if m:   # one button: install if needed, sign in in the browser, paste the code here if the page shows one
+                lk, sub = brains.LINKS[m.group(1)], m.group(2) or ""
+                if sub == "/code":
+                    return self._json(lk.submit(str(self._body().get("code", ""))))
+                if sub == "/cancel":
+                    lk.cancel()
+                    return self._json(lk.state())
+                if sub == "/state":
+                    return self._json(lk.state())
+                return self._json(lk.start(HOME, HOME / "tools", opener=(lambda u: subprocess.Popen(["open", u])) if MAC else None))
             m = re.match(r"^/api/brains/(chatgpt|gemini)/(install|login|test|on|off)$", path)
             if m:   # install the maker's tool, sign in with his account (in Terminal), check it answers
                 k, act = m.groups()

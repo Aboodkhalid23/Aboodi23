@@ -400,6 +400,31 @@ def test_youtube_subtitles_and_titles_in_other_languages(tmp_path):
     assert s.put_body["snippet"]["defaultLanguage"] == "ar" and s.put_body["snippet"]["title"] == "نوكيا"
 
 
+def test_one_button_link_opens_the_page_and_takes_the_code(app, tmp_path):
+    from editor.app import brains
+    tools = srv.HOME / "tools" / "brains" / "bin"
+    tools.mkdir(parents=True)
+    (tools / "codex").write_text("#!/bin/sh\necho 'Open https://auth.openai.com/oauth/authorize?x=1 to sign in'\nsleep 1\necho 'Successfully logged in'\n")
+    (tools / "agy").write_text("#!/bin/sh\necho 'Visit https://accounts.google.com/o/oauth2/auth?y=2'\necho 'Paste the code:'\nread c\n[ \"$c\" = 4/abc ] && echo ready\n")
+    for f in tools.iterdir():
+        f.chmod(0o755)
+    opened = []
+    for k in ("chatgpt", "gemini"):
+        brains.LINKS[k].start(srv.HOME, srv.HOME / "tools", opener=opened.append)
+    for _ in range(100):
+        if brains.LINKS["gemini"].state()["status"] == "waiting":
+            break
+        time.sleep(0.05)
+    brains.LINKS["gemini"].submit(" 4/abc ")
+    for _ in range(100):
+        if all(brains.LINKS[k].state()["status"] == "done" for k in brains.BRAINS):
+            break
+        time.sleep(0.05)
+    assert [brains.LINKS[k].state()["status"] for k in brains.BRAINS] == ["done", "done"]
+    assert any("auth.openai.com" in u for u in opened) and any("accounts.google.com" in u for u in opened)
+    assert brains.active(srv.HOME, srv.HOME / "tools") == ["chatgpt", "gemini"]
+
+
 def test_optional_extras_and_suggestions(app, monkeypatch):
     from editor.app import studio
     from editor.pipeline import options

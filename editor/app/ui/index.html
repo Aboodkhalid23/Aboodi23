@@ -1707,21 +1707,32 @@ $("sElOff").onclick = async () => { await post("/api/eleven/unlink"); elRefresh(
 $("sElOpen").onclick = () => openUrl("https://elevenlabs.io/app/settings/api-keys");
 async function brainsRefresh(){
   const st = await api("/api/brains").catch(() => ({}));
-  $("sBrains").innerHTML = Object.entries(st).map(([k, b]) => `<div class="row" style="flex-wrap:wrap;gap:6px;align-items:center">
-    <b class="grow">${esc(b.name)} <span class="dim tiny">من ${esc(b.by)}</span></b>
-    <span class="tiny ${b.linked ? "" : "dim"}">${b.busy ? esc(b.msg) : !b.installed ? "مو منصّب" : b.linked ? "مربوط ✅" : "منصّب، مو مربوط"}</span>
-    ${!b.installed ? `<button class="pill sm y" data-bi="${k}" ${b.busy ? "disabled" : ""}>نصّب</button>` : `
-      <button class="pill sm" data-bl="${k}">اربط حسابك</button><button class="pill sm" data-bt="${k}">جرّب</button>
-      ${b.linked ? `<button class="pill sm" data-bo="${k}" data-on="${b.on ? 0 : 1}">${b.on ? "طفّيه" : "شغّله"}</button>` : ""}`}
-    ${!b.busy && b.msg ? `<div class="dim tiny" style="flex-basis:100%">${esc(b.msg)}</div>` : ""}</div>`).join("");
-  const act = (k, a) => post(`/api/brains/${k}/${a}`).catch(e => toast(e.message));
-  $("sBrains").querySelectorAll("[data-bi]").forEach(b => b.onclick = async () => { await act(b.dataset.bi, "install"); toast("دا أنصّبه بالخلفية (دقيقة أو دقيقتين)"); brainsPoll(); });
-  $("sBrains").querySelectorAll("[data-bl]").forEach(b => b.onclick = async () => { await act(b.dataset.bl, "login"); toast("انفتح الطرفية وصفحة الدخول: سجّل بحسابك، وبعدها دوس «جرّب»"); });
-  $("sBrains").querySelectorAll("[data-bt]").forEach(b => b.onclick = async () => { b.textContent = "دا أجرب…"; b.disabled = true;
-    const r = await post(`/api/brains/${b.dataset.bt}/test`).catch(e => ({error: e.message}));
-    toast(r.ok ? "اشتغل ✅ جاوب: " + r.answer : (r.error || "ما جاوب")); brainsRefresh(); });
-  $("sBrains").querySelectorAll("[data-bo]").forEach(b => b.onclick = async () => { await act(b.dataset.bo, b.dataset.on === "1" ? "on" : "off"); brainsRefresh(); });
+  $("sBrains").innerHTML = Object.entries(st).map(([k, b]) => `<div class="card" style="padding:10px 12px" data-brow="${k}">
+    <div class="row" style="flex-wrap:wrap;gap:6px;align-items:center">
+      <b class="grow">${esc(b.name)} <span class="dim tiny">من ${esc(b.by)}</span></b>
+      ${b.linked ? `<span class="tiny">مربوط ✅</span><button class="pill sm" data-bo="${k}" data-on="${b.on ? 0 : 1}">${b.on ? "طفّيه" : "شغّله"}</button><button class="pill sm" data-blink="${k}">اربط من جديد</button>`
+                 : `<button class="pill sm y" data-blink="${k}">اربط بزر واحد</button>`}
+    </div><div class="tiny" data-bmsg="${k}" style="margin-top:6px;line-height:1.7"></div></div>`).join("");
+  $("sBrains").querySelectorAll("[data-blink]").forEach(b => b.onclick = () => brainLink(b.dataset.blink));
+  $("sBrains").querySelectorAll("[data-bo]").forEach(b => b.onclick = async () => { await post(`/api/brains/${b.dataset.bo}/${b.dataset.on === "1" ? "on" : "off"}`).catch(() => {}); brainsRefresh(); });
   return st;
+}
+const brainPolls = {};
+async function brainLink(k){
+  clearInterval(brainPolls[k]);
+  let s = await post(`/api/brains/${k}/link`).catch(e => ({status: "error", error: e.message}));
+  const draw = (s) => { const box = document.querySelector(`[data-bmsg="${k}"]`); if (!box) return;
+    const msg = {installing: "⏳ دا أنصّب أداته (دقيقة أو دقيقتين، مرة وحدة بس)…", starting: "⏳ دا أفتح صفحة الدخول…",
+      waiting: s.code ? "🌐 انفتحت صفحة الدخول بالمتصفح. سجّل بحسابك، وإذا الصفحة طلعتلك رمز دوس «انسخ» وبعدين الصقه هنا:" : "🌐 انفتحت صفحة الدخول بالمتصفح. سجّل بحسابك ووافق، وهو يكمل لحاله.",
+      checking: "⏳ دا أتأكد…", done: "✅ انربط!", error: "❌ " + (s.error || "ما زبط"), idle: ""}[s.status] || "";
+    if (box.dataset.st === s.status) return; box.dataset.st = s.status;
+    box.innerHTML = esc(msg) + (s.status === "waiting" ? `${s.url ? ` <a href="#" data-burl>افتح الصفحة مرة ثانية</a>` : ""}${s.code ? `<div class="row" style="margin-top:6px;gap:6px"><input data-bcode placeholder="الصق الرمز هنا" class="ltr" style="flex:1"><button class="pill sm y" data-bsend>تم</button></div>` : ""}` : "");
+    const u = box.querySelector("[data-burl]"); if (u) u.onclick = (e) => { e.preventDefault(); openUrl(s.url); };
+    const send = box.querySelector("[data-bsend]"); if (send) send.onclick = async () => { const r = await post(`/api/brains/${k}/link/code`, {code: box.querySelector("[data-bcode]").value}).catch(e => ({status: "error", error: e.message})); draw(r); };
+  };
+  draw(s);
+  brainPolls[k] = setInterval(async () => { s = await post(`/api/brains/${k}/link/state`).catch(() => s); draw(s);
+    if (s.status === "done" || s.status === "error" || s.status === "idle"){ clearInterval(brainPolls[k]); if (s.status === "done"){ toast("انربط ✅"); setTimeout(brainsRefresh, 1500); } } }, 2000);
 }
 let brainsTimer = null;
 function brainsPoll(){ clearInterval(brainsTimer); brainsTimer = setInterval(async () => { const st = await brainsRefresh(); if (!Object.values(st).some(b => b.busy)) clearInterval(brainsTimer); }, 3000); }

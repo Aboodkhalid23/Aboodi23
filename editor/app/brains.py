@@ -9,6 +9,7 @@ them (the Mac's keychain or their own folder), never in this app or the reposito
 """
 import json
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -160,3 +161,115 @@ def active(home: Path, tools: Path) -> list[str]:
     """The ones he linked and left switched on."""
     s = status(home, tools)
     return [k for k, v in s.items() if v["installed"] and v["linked"] and v["on"]]
+
+
+class Link:
+    """One-button linking inside the app (owner, 2026-10-25: "اريد ربط سريع وسهل"). The maker's login runs in a
+    hidden pseudo-terminal with the app's own Node on the PATH (the Mac's Terminal has no Node, so it failed there).
+    It installs the tool first when needed, opens the sign-in page in the browser, and when the page shows a code
+    (Gemini does) he pastes it in the app. ChatGPT finishes by itself once he approves in the browser."""
+    ANSI = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b\][^\x07]*\x07")
+
+    def __init__(self, name: str):
+        self.name, self.status, self.url, self.error, self.pid, self.fd, self.out = name, "idle", "", "", None, None, ""
+        self.lock = threading.Lock()
+
+    def state(self) -> dict:
+        return {"status": self.status, "url": self.url, "error": self.error, "code": self.name == "gemini"}
+
+    def start(self, home: Path, tools: Path, opener=None) -> dict:
+        self.cancel()
+        with self.lock:
+            self.status, self.url, self.error, self.out = "installing" if not exe(self.name, tools) else "starting", "", "", ""
+        threading.Thread(target=self._run, args=(home, tools, opener), daemon=True).start()
+        return self.state()
+
+    def _run(self, home: Path, tools: Path, opener) -> None:
+        import fcntl
+        import pty
+        import select
+        import struct
+        import termios
+        if not exe(self.name, tools):
+            install(self.name, home, tools)
+            for _ in range(900):
+                if not _jobs.get(self.name, {}).get("busy"):
+                    break
+                threading.Event().wait(1)
+            if not exe(self.name, tools):
+                self.status, self.error = "error", _jobs.get(self.name, {}).get("msg") or "ما گدرت أنصّبه"
+                return
+        e = exe(self.name, tools)
+        args = [e, "login"] if self.name == "chatgpt" else [e, "-p", "Reply with exactly one word: ready"]
+        env = _env(tools)
+        env["TERM"] = "xterm-256color"
+        pid, fd = pty.fork()
+        if pid == 0:
+            try:
+                os.chdir(tempfile.gettempdir())
+                os.execvpe(args[0], args, env)
+            finally:
+                os._exit(127)
+        fcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack("HHHH", 50, 1000, 0, 0))
+        with self.lock:
+            self.pid, self.fd, self.status = pid, fd, "starting"
+        while True:
+            try:
+                r, _, _ = select.select([fd], [], [], 1.0)
+                if not r:
+                    if self.status in ("idle",):
+                        break
+                    continue
+                chunk = os.read(fd, 4096)
+            except OSError:
+                break
+            if not chunk:
+                break
+            with self.lock:
+                self.out = (self.out + self.ANSI.sub(" ", chunk.decode("utf-8", "replace")))[-20000:]
+                m = re.search(r"https://(?:auth\.openai\.com|accounts\.google\.com|[\w.-]*google[\w.-]*|[\w.-]*openai[\w.-]*)/\S+", self.out)
+                if m and not self.url:
+                    self.url, self.status = m.group(0).rstrip(".,)"), "waiting"
+                    if opener:
+                        opener(self.url)
+        code = 1
+        try:
+            _, st = os.waitpid(pid, 0)
+            code = os.waitstatus_to_exitcode(st)
+        except (OSError, ChildProcessError):
+            pass
+        with self.lock:
+            self.pid, self.fd = None, None
+            if self.status == "idle":
+                return
+            if code == 0:
+                s = _state(home)
+                s.setdefault(self.name, {}).update(ok=True, on=True)
+                _save_state(home, s)
+                self.status = "done"
+            else:
+                tail = re.sub(r"\s+", " ", self.out)[-200:]
+                self.status, self.error = "error", "ما كمل الربط. جرّب مرة ثانية" + (f" ({tail})" if tail.strip() else "")
+
+    def submit(self, code: str) -> dict:
+        code = re.sub(r"\s+", "", code or "")
+        if not code:
+            raise ValueError("الصق الرمز أول")
+        with self.lock:
+            if self.fd is None:
+                raise RuntimeError("ابدأ الربط من جديد")
+            os.write(self.fd, code.encode() + b"\r")
+            self.status = "checking"
+        return self.state()
+
+    def cancel(self) -> None:
+        with self.lock:
+            if self.pid:
+                try:
+                    os.kill(self.pid, 15)
+                except OSError:
+                    pass
+            self.status = "idle"
+
+
+LINKS = {k: Link(k) for k in BRAINS}
