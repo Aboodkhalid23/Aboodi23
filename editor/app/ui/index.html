@@ -530,6 +530,36 @@ body.chatOn #inspector{visibility:hidden}
 :root[data-theme="calm"] #viewer{background:#121817!important}
 :root[data-theme="calm"] #ambientBase{background:var(--base)}
 :root[data-theme="calm"] .rb svg{filter:saturate(.8) brightness(.95)}
+
+/* 2.1 settings: sections with a side menu, like a real app's preferences */
+.setdlg{width:min(940px,96vw)!important;height:min(680px,90vh);display:grid!important;grid-template-columns:220px minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;gap:0 18px;padding:18px!important}
+.setnav{grid-row:1/3;display:flex;flex-direction:column;gap:4px;border-inline-end:1px solid var(--glassline);padding-inline-end:14px}
+.setnav h2{margin:0 6px 12px}
+.setnav button{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;font-size:13px;font-weight:600;color:var(--ink2);text-align:start}
+.setnav button span{font-size:16px;width:22px;text-align:center}
+.setnav button:hover{background:var(--glass2)}
+.setnav button.on{background:rgba(var(--yrgb),.16);color:var(--ink)}
+.setver{margin-top:auto;padding:8px 10px}
+.setbody{overflow:auto;padding-inline-end:4px;display:flex;flex-direction:column;gap:12px}
+.setbody .card{margin:0!important}
+.setdlg .foot{grid-column:2;margin-top:10px}
+@media (max-width:760px){.setdlg{grid-template-columns:1fr}.setnav{grid-row:auto;flex-direction:row;overflow-x:auto;border:0}}
+
+/* 2.1 editing helpers: grid, scopes, level meter, before/after, focus mode, his markers, the loop */
+#gridOv{position:absolute;inset:10px;pointer-events:none;z-index:3;background:
+  linear-gradient(90deg,transparent calc(33.33% - .5px),rgba(255,255,255,.35) 33.33%,transparent calc(33.33% + .5px),transparent calc(66.66% - .5px),rgba(255,255,255,.35) 66.66%,transparent calc(66.66% + .5px)),
+  linear-gradient(transparent calc(33.33% - .5px),rgba(255,255,255,.35) 33.33%,transparent calc(33.33% + .5px),transparent calc(66.66% - .5px),rgba(255,255,255,.35) 66.66%,transparent calc(66.66% + .5px));
+  outline:1px dashed rgba(255,255,255,.25);outline-offset:-6%}
+#scopeOv{position:absolute;top:14px;left:14px;z-index:4;padding:8px;border-radius:12px;background:rgba(0,0,0,.72);border:1px solid var(--glassline)}
+#vu{position:absolute;top:14px;right:14px;bottom:60px;width:12px;display:flex;gap:2px;z-index:3;pointer-events:none;opacity:.85}
+#vu i{flex:1;background:rgba(255,255,255,.08);border-radius:3px;position:relative;overflow:hidden}
+#vu i::after{content:"";position:absolute;left:0;right:0;bottom:0;height:var(--lv,0%);background:linear-gradient(0deg,#7fc497 0,#7fc497 70%,#e3c46b 85%,#e07a6c 100%);transition:height .06s}
+#baTag{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:4;padding:4px 12px;border-radius:999px;background:rgba(0,0,0,.7);font-size:12px;font-weight:700}
+body.focusMode main{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important}
+body.focusMode #panel,body.focusMode #inspector,body.focusMode #rail{display:none!important}
+.umk{position:absolute;top:0;width:12px;height:16px;margin-left:-6px;background:var(--y);clip-path:polygon(0 0,100% 0,100% 70%,50% 100%,0 70%);z-index:6;cursor:pointer}
+#loopZone{position:absolute;top:0;bottom:0;background:rgba(var(--yrgb),.12);border-inline:2px solid var(--y);pointer-events:none;z-index:2}
+.keys{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px}.keys kbd{justify-self:start;font-size:12px;padding:3px 8px}
 .lkgroups{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
 .lkgroups .chip{cursor:pointer}.lkgroups .chip.on{background:var(--y);color:var(--yink);border-color:var(--y)}
 .lkgroups .chip small{opacity:.6;font-size:10px}
@@ -724,12 +754,22 @@ body.chatOn #inspector{visibility:hidden}
         <button class="pill sm" id="insToggle" title="إعدادات المشهد">⚙ المشهد</button>
         <select id="vSafe" style="width:auto;height:30px;padding:0 8px" title="حدود المنصات"><option value="">بلا حدود</option><option value="youtube">حدود يوتيوب</option><option value="shorts">حدود شورتس</option><option value="tiktok">حدود تيك توك</option><option value="reels">حدود ريلز</option></select>
         <select id="vZoom" style="width:auto;height:30px;padding:0 8px"><option value="1">١٠٠٪</option><option value="0.75">٧٥٪</option><option value="0.5">٥٠٪</option></select>
+        <select id="vRate" style="width:auto;height:30px;padding:0 6px" title="سرعة المعاينة"><option value="0.5">٠٫٥×</option><option value="1" selected>١×</option><option value="1.5">١٫٥×</option><option value="2">٢×</option></select>
+        <button class="icobtn" id="vGrid" title="شبكة الأثلاث (ج)">▦</button>
+        <button class="icobtn" id="vScope" title="مقاييس الألوان: الإضاءة والألوان (ق)">📊</button>
+        <button class="icobtn" id="vStill" title="احفظ هاللقطة صورة">📸</button>
+        <button class="icobtn" id="vFocus" title="وضع التركيز: الفيديو والتايملاين بس (ف)">🎯</button>
+        <button class="icobtn" id="vKeys" title="اختصارات الكيبورد (؟)">⌨</button>
         <button class="icobtn" id="vFull" title="ملء الشاشة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
         <button class="pill sm" id="vReveal" hidden>📂 وين الملف؟</button>
       </div>
       <div class="vwrap" id="vwrap">
         <div class="empty" id="vEmpty"><div><h1>استوديو المونتاج</h1><div>لا يوجد مشروع مفتوح</div><div class="dim" style="margin-top:4px">اختر مشروعاً من المكتبة</div></div></div>
         <video id="video" playsinline preload="auto" hidden></video>
+        <div id="gridOv" hidden></div>
+        <div id="scopeOv" hidden><canvas id="scopeCv" width="260" height="190"></canvas><div class="tiny dim" style="text-align:center">الإضاءة (فوگ) · الألوان (جوه)</div></div>
+        <div id="vu" title="مستوى الصوت"><i id="vuL"></i><i id="vuR"></i></div>
+        <div id="baTag" hidden>قبل الألوان</div>
         <div id="safe" hidden></div>
         <button class="pill sm" id="theaterX" hidden>✕ رجوع</button>
         <div class="cmp" id="cmp" hidden><img id="cmpImg" alt=""><span class="lbl" id="cmpLbl"></span></div>
@@ -889,6 +929,21 @@ body.chatOn #inspector{visibility:hidden}
   </div>
 </div>
 
+<!-- keyboard shortcuts -->
+<div class="veil" id="dKeys" hidden>
+  <div class="dlg" style="width:min(560px,94vw)">
+    <h2>اختصارات الكيبورد</h2>
+    <div class="keys">
+      <kbd>مسافة</kbd><span>شغّل / وگّف</span><kbd>J</kbd><span>رجوع (دوسها أكثر من مرة تسرع)</span><kbd>K</kbd><span>وگّف</span><kbd>L</kbd><span>قدّام (أكثر من مرة تسرع)</span>
+      <kbd>← →</kbd><span>فريم وحد للورا / لقدّام</span><kbd>Shift + ← →</kbd><span>ثانية وحدة</span><kbd>↑ ↓</kbd><span>المشهد السابق / الجاي</span>
+      <kbd>M</kbd><span>علامة بهاللحظة (ويه ملاحظة)</span><kbd>I</kbd><span>بداية التكرار</span><kbd>O</kbd><span>نهاية التكرار (يعيد المقطع)</span><kbd>Esc</kbd><span>شيل التكرار</span>
+      <kbd>\</kbd><span>اضغط واستمر: قبل الألوان</span><kbd>G</kbd><span>شبكة الأثلاث</span><kbd>Q</kbd><span>مقاييس الألوان</span><kbd>F</kbd><span>وضع التركيز</span>
+      <kbd>⌘ + عجلة الماوس</kbd><span>كبّر وصغّر التايملاين</span><kbd>⌘ + K</kbd><span>دوّر على أي شي</span><kbd>⌘ + Z</kbd><span>تراجع</span><kbd>?</kbd><span>هالشاشة</span>
+    </div>
+    <div class="foot"><button class="pill big" data-close>تمام</button></div>
+  </div>
+</div>
+
 <!-- what's new in this version -->
 <div class="veil" id="dNews" hidden>
   <div class="dlg news">
@@ -953,16 +1008,29 @@ body.chatOn #inspector{visibility:hidden}
 
 <!-- settings -->
 <div class="veil" id="dSet" hidden>
-  <div class="dlg" style="width:min(560px,100%)">
-    <h2>الإعدادات</h2>
-    <div class="f card"><div class="row"><b class="grow">كلود (عقل المساعد)</b><button class="pill sm y" id="sLink">اربط حسابك</button></div>
+  <div class="dlg setdlg">
+    <nav class="setnav" id="setNav">
+      <h2>الإعدادات</h2>
+      <button data-go="accounts" class="on"><span>🔗</span>الحسابات والربط</button>
+      <button data-go="look"><span>🎨</span>الشكل والخط</button>
+      <button data-go="ai"><span>🧠</span>الذكاء والمساعدين</button>
+      <button data-go="tools"><span>🧰</span>الملفات والتلفون</button>
+      <button data-go="safety"><span>🛡️</span>الأمان والفحص والتحديث</button>
+      <button data-go="support"><span>💡</span>الدعم والأفكار</button>
+      <div class="dim tiny setver" id="setVer"></div>
+    </nav>
+    <div class="setbody" id="setBody">
+    <div data-sec="safety" class="f card"><b>🛡️ الأمان</b><div class="muted tiny" style="margin:4px 0 8px;line-height:1.7">كل مفاتيحك وحساباتك محفوظة على هالماك بس، بملفات ما يقراها غير حسابك. التطبيق ما يفتح أي باب للنت غير صفحة التلفون (إذا شغلتها، وبرمز سري).</div>
+      <div id="secOut" class="tiny" style="display:grid;gap:6px"></div>
+      <div class="row" style="margin-top:8px;gap:6px;flex-wrap:wrap"><button class="pill sm y" id="secFix">صلّح الصلاحيات</button><button class="pill sm" id="secAll">افصل كل الحسابات</button></div></div>
+    <div data-sec="accounts" class="f card"><div class="row"><b class="grow">كلود (عقل المساعد)</b><button class="pill sm y" id="sLink">اربط حسابك</button></div>
       <div class="muted" id="sClaude" style="margin-top:6px"></div></div>
-    <div class="f card"><b>الشكل</b>
+    <div data-sec="look" class="f card"><b>الشكل</b>
       <div class="row" style="margin-top:8px;flex-wrap:wrap;gap:8px" id="sThemes"></div>
       <div class="tiny" style="margin-top:12px;font-weight:700">خط التطبيق</div>
       <div class="row" style="margin-top:6px;flex-wrap:wrap;gap:8px" id="sUiFonts"></div>
       <div class="row" style="margin-top:10px"><b class="grow tiny">اللغة</b><div class="seg3" style="grid-template-columns:1fr 1fr;width:180px;margin:0"><button data-lang="ar">عربي</button><button data-lang="en">English</button></div></div></div>
-    <div class="f card"><div class="row"><b class="grow">الذكاء الاصطناعي المدفوع</b><button class="sw" id="sAi"></button></div>
+    <div data-sec="ai" class="f card"><div class="row"><b class="grow">الذكاء الاصطناعي المدفوع</b><button class="sw" id="sAi"></button></div>
       <div class="muted" style="margin-top:6px;line-height:1.7">المساعد يولّد صور ومقاطع (هيگزفيلد، آرتلست) بالأماكن الي ما إلها صورة حقيقية، بحدود ميزانيتك. يحتاج المواقع مربوطة بحساب كلود مالتك.</div>
       <div id="sAiBody">
         <div class="sl" style="margin-top:8px"><label>الحد للحلقة ($)</label><input type="range" id="sAiBudget" min="5" max="150" step="5"><output id="sAiB"></output></div>
@@ -970,31 +1038,32 @@ body.chatOn #inspector{visibility:hidden}
         <div class="row" style="margin-top:6px;flex-wrap:wrap"><button class="pill sm" id="sAiCheck">افحص المواقع المربوطة</button><span class="dim tiny" id="sAiChk"></span></div>
         <div class="row" style="margin-top:10px"><b class="grow tiny">صور وجهك (مرجع للمشاهد المولدة)</b><button class="pill sm" id="sFaceAdd">＋ أضف</button><input type="file" id="sFaceIn" hidden multiple accept="image/*,video/*"></div>
         <div class="row" id="sFaces" style="margin-top:6px;flex-wrap:wrap;gap:6px"></div></div></div>
-    <div class="f card"><b>شات جي بي تي وجيميناي (اشتراكاتك)</b><div class="muted tiny" style="margin:4px 0 8px;line-height:1.7">يشتغلون ويه المساعد بحسابك نفسه: يقرون الخطة ويعطون رأي ثاني، ويقترحون أفكار. ما يغيرون ملفاتك، والمساعد هو الي يطبّق. الربط مرة وحدة: نصّب، بعدين «اربط حسابك» (يفتح صفحة الدخول)، بعدين «جرّب».</div>
+    <div data-sec="ai" class="f card"><b>شات جي بي تي وجيميناي (اشتراكاتك)</b><div class="muted tiny" style="margin:4px 0 8px;line-height:1.7">يشتغلون ويه المساعد بحسابك نفسه: يقرون الخطة ويعطون رأي ثاني، ويقترحون أفكار. ما يغيرون ملفاتك، والمساعد هو الي يطبّق. الربط مرة وحدة: نصّب، بعدين «اربط حسابك» (يفتح صفحة الدخول)، بعدين «جرّب».</div>
       <div id="sBrains" style="display:grid;gap:8px"></div>
       <label class="row" style="margin-top:10px;gap:8px;align-items:center"><input type="checkbox" id="sCouncil" style="width:auto"><span class="tiny">بعد كل خطة يضيفون لمساتهم لحالهم (٣ بالأكثر، والمساعد يقرر شنو ياخذ)</span></label></div>
-    <div class="f card"><b>التلفون والنسخة الاحتياطية</b>
+    <div data-sec="tools" class="f card"><b>التلفون والنسخة الاحتياطية</b>
       <label class="row" style="margin-top:8px;gap:8px;align-items:center"><input type="checkbox" id="sPhone" style="width:auto"><span class="tiny">شغّل صفحة التلفون (بس على واي فاي البيت، وبرمز سري)</span></label>
       <div class="tiny" id="sPhoneUrl" style="margin:6px 0;line-height:1.8"></div>
       <div class="row" style="margin-top:8px;gap:6px;flex-wrap:wrap"><button class="pill sm y" id="sBackup">انسخ مشاريعي لدرايف هسة</button><span class="dim tiny" id="sBackupSt"></span></div></div>
-    <div class="f card"><b>ذوقك (المساعد يتعلمه لحاله)</b><div class="muted tiny" style="margin:4px 0 8px;line-height:1.7">كل تعديل تسويه ينحفظ، وبعد كل حلقة نهائية المساعد يكتب هنا شنو تحب وشنو تكره، ويمشي عليه بالحلقات الجاية من أول مرة. تگدر تصلّحه بيدك.</div>
+    <div data-sec="ai" class="f card"><b>ذوقك (المساعد يتعلمه لحاله)</b><div class="muted tiny" style="margin:4px 0 8px;line-height:1.7">كل تعديل تسويه ينحفظ، وبعد كل حلقة نهائية المساعد يكتب هنا شنو تحب وشنو تكره، ويمشي عليه بالحلقات الجاية من أول مرة. تگدر تصلّحه بيدك.</div>
       <div class="dim tiny" id="sLearnSt"></div>
       <textarea id="sTaste" rows="6" placeholder="لسه ما تعلم شي. بعد أول حلقة نهائية يطلع ذوقك هنا…" style="margin-top:6px"></textarea>
       <div class="row" style="margin-top:6px;flex-wrap:wrap;gap:6px"><button class="pill sm y" id="sTasteSave">احفظ</button><button class="pill sm" id="sLearnNow">تعلّم هسة من هاي الحلقة</button><button class="pill sm" id="sTasteClear">امسح الذوق</button></div></div>
-    <div class="f card"><b>افحص التطبيق</b><div class="muted tiny" style="margin:4px 0 8px;line-height:1.7">يفحص الأدوات والمساحة والإعدادات، والحلقة المفتوحة (صورة وصوت سليمين؟). وأي خطوة تعلگ ٢٥ دقيقة بلا حركة تنوگف لحالها، فالتطبيق ما يعلگ.</div>
+    <div data-sec="safety" class="f card"><b>افحص التطبيق</b><div class="muted tiny" style="margin:4px 0 8px;line-height:1.7">يفحص الأدوات والمساحة والإعدادات، والحلقة المفتوحة (صورة وصوت سليمين؟). وأي خطوة تعلگ ٢٥ دقيقة بلا حركة تنوگف لحالها، فالتطبيق ما يعلگ.</div>
       <div id="sCheckOut" class="tiny" style="display:grid;gap:4px"></div>
       <div class="row" style="margin-top:6px;gap:6px;flex-wrap:wrap"><button class="pill sm y" id="sCheck">افحص هسة</button><button class="pill sm" id="sCheckEp">افحص الحلقة المفتوحة بالكامل</button></div></div>
-    <div class="f card"><b>الدعم والاقتراحات</b><div class="muted tiny" style="margin:4px 0 8px;line-height:1.7">تذكرت ميزة؟ اكتبها هنا. تنفتح صفحة الطلب بحسابك، تدوس الزر الأخضر، وتوصلني. من تنزل الميزة، التطبيق يحدّث نفسه.</div>
+    <div data-sec="support" class="f card"><b>الدعم والاقتراحات</b><div class="muted tiny" style="margin:4px 0 8px;line-height:1.7">تذكرت ميزة؟ اكتبها هنا. تنفتح صفحة الطلب بحسابك، تدوس الزر الأخضر، وتوصلني. من تنزل الميزة، التطبيق يحدّث نفسه.</div>
       <textarea id="sIdea" rows="3" placeholder="اكتب الميزة الي تريدها…"></textarea><div class="row" style="margin-top:6px"><button class="pill sm y" id="sIdeaGo">ارسلها</button><button class="pill sm" id="sAppIdeas" title="شات جي بي تي وجيميناي يقترحون ميزات جديدة على حسب شغلك">اطلب أفكار من شات جي بي تي وجيميناي</button></div>
       <div id="sAppIdeasOut" class="tiny" style="margin-top:8px;white-space:pre-wrap;line-height:1.7"></div></div>
-    <div class="f card"><div class="row"><b class="grow">دبلجة بصوتك (إلفن لابس)</b><button class="pill sm" id="sElOff" hidden>افصله</button></div>
+    <div data-sec="accounts" class="f card"><div class="row"><b class="grow">دبلجة بصوتك (إلفن لابس)</b><button class="pill sm" id="sElOff" hidden>افصله</button></div>
       <div class="muted tiny" style="margin:4px 0 8px;line-height:1.7" id="sElTxt">حتى الحلقة تطلع بصوتك بلغات ثانية. تسوي حساب بموقع إلفن لابس (اشتراك مدفوع)، ومن صفحة المفاتيح بحسابك تنسخ المفتاح وتلصقه هنا. المفتاح يبقى على حاسبتك بس.</div>
       <div class="row" id="sElRow"><input id="sElKey" type="password" class="ltr" placeholder="المفتاح"><button class="pill sm y" id="sElSave">احفظ</button><button class="pill sm" id="sElOpen">افتح الموقع</button></div></div>
-    <div class="f card"><div class="row"><b class="grow">قناة يوتيوب</b><button class="pill sm y" id="sYt">اربط قناتي</button></div>
+    <div data-sec="accounts" class="f card"><div class="row"><b class="grow">قناة يوتيوب</b><button class="pill sm y" id="sYt">اربط قناتي</button></div>
       <div class="muted" id="sYtTxt" style="margin-top:6px">الحلقة تنرفع لحالها بأعلى جودة كفيديو خاص، وانت تكمّلها وتنشرها من استوديو يوتيوب.</div></div>
-    <div class="f card row"><div class="grow"><b>مجلد الحلقات</b><div class="dim tiny ltr" id="sFolder" style="text-align:right"></div></div><button class="pill sm" id="sOpen">افتحه</button></div>
-    <div class="f card row"><div class="grow"><b>تحديث URU</b><div class="dim tiny" id="sVer"></div></div><button class="pill sm" id="sUpdate">حدّث</button></div>
-    <div class="f card row" id="sAppRow" hidden><div class="grow"><b>نسخة جديدة من التطبيق نفسه</b><div class="dim tiny">الشكل والنافذة. ياخذ ثواني ويرجع ينفتح.</div></div><button class="pill sm y" id="sApp">حدّث التطبيق</button></div>
+    <div data-sec="tools" class="f card row"><div class="grow"><b>مجلد الحلقات</b><div class="dim tiny ltr" id="sFolder" style="text-align:right"></div></div><button class="pill sm" id="sOpen">افتحه</button></div>
+    <div data-sec="safety" class="f card row"><div class="grow"><b>تحديث URU</b><div class="dim tiny" id="sVer"></div></div><button class="pill sm" id="sUpdate">حدّث</button></div>
+    <div data-sec="safety" class="f card row" id="sAppRow" data-off="1" hidden><div class="grow"><b>نسخة جديدة من التطبيق نفسه</b><div class="dim tiny">الشكل والنافذة. ياخذ ثواني ويرجع ينفتح.</div></div><button class="pill sm y" id="sApp">حدّث التطبيق</button></div>
+    </div>
     <div class="foot"><button class="pill big" data-close>تمام</button></div>
   </div>
 </div>
@@ -1076,7 +1145,7 @@ async function refresh(){
 }
 function renderHeader(){
   $("dApp").hidden = !(job.running && job.step === "app");
-  if ($("sAppRow")) $("sAppRow").hidden = state.app_update !== "available";
+  if ($("sAppRow")){ $("sAppRow").dataset.off = state.app_update !== "available" ? "1" : ""; $("sAppRow").hidden = !!$("sAppRow").dataset.off || !document.querySelector('#setNav [data-go="safety"].on'); }
   if (state.app_update === "stuck" && !window._stuckShown){ window._stuckShown = true; $("dStuck").hidden = false; }
   if (state.app_update === "running") $("dApp").hidden = false;
   $("pName").textContent = ep ? ep.name : "لا يوجد مشروع مفتوح";
@@ -1140,6 +1209,7 @@ async function loadAll(){
   chatMsgs = await api(E() + "/chat").catch(() => []);
   renderSteps(); renderInspector(); renderTimeline(); renderScene(); drawToggles(); fxData = null; drawAsk();
   if (panelNow !== "steps") showPanel(panelNow);
+  loadMarkers();
 }
 
 /* ---------- video ---------- */
@@ -1881,7 +1951,17 @@ $("sCheck").onclick = async () => { $("sCheckOut").innerHTML = '<span class="dim
   const r = await api("/api/selfcheck").catch(() => []);
   $("sCheckOut").innerHTML = r.map(x => `<div>${x.ok ? "✅" : "⚠️"} ${esc(x.text)}</div>`).join("") || "ما گدرت أفحص"; };
 $("sCheckEp").onclick = () => { if (!needEp()) return; $("dSet").hidden = true; run("selfcheck"); };
-$("tSet").onclick = () => { ytRefresh(); drawThemes(); aiRefresh(); elRefresh(); learnRefresh(); brainsRefresh(); loadTemplates();
+function setSection(k){ document.querySelectorAll("#setNav [data-go]").forEach(b => b.classList.toggle("on", b.dataset.go === k));
+  document.querySelectorAll("#setBody [data-sec]").forEach(c => c.hidden = c.dataset.sec !== k || c.dataset.off === "1"); $("setBody").scrollTop = 0;
+  if (k === "safety") secRefresh(); }
+document.querySelectorAll("#setNav [data-go]").forEach(b => b.onclick = () => setSection(b.dataset.go));
+async function secRefresh(){ const r = await api("/api/security").catch(() => ({items: []}));
+  $("secOut").innerHTML = r.items.map(x => `<div class="row" style="gap:8px"><span>${x.ok ? "✅" : "⚠️"}</span><span class="grow">${esc(x.text)}</span></div>`).join("") || "ماكو شي محفوظ بعد"; }
+$("secFix").onclick = async () => { await post("/api/security", {do: "fix"}).catch(e => toast(e.message)); secRefresh(); toast("انصلحت"); };
+$("secAll").onclick = async (e) => { const b = e.currentTarget;
+  if (b.dataset.sure !== "1"){ b.dataset.sure = "1"; b.textContent = "أكيد؟ دوس مرة ثانية"; setTimeout(() => { b.dataset.sure = ""; b.textContent = "افصل كل الحسابات"; }, 4000); return; }
+  await post("/api/security", {do: "unlink-all"}).catch(e => toast(e.message)); secRefresh(); toast("انفصلت كل الحسابات"); };
+$("tSet").onclick = () => { setSection(document.querySelector("#setNav .on")?.dataset.go || "accounts"); $("setVer").textContent = "يو آر يو " + URU_VERSION; ytRefresh(); drawThemes(); aiRefresh(); elRefresh(); learnRefresh(); brainsRefresh(); loadTemplates();
   const c = state.claude || {}; $("sClaude").textContent = !c.installed ? "مو منصّب. دوس «حدّث» تحت." : c.logged_in ? "مربوط بحسابك ✅" : "مو مربوط بعد: دوس «اربط حسابك» (مرة وحدة).";
   $("sLink").textContent = c.logged_in ? "اربطه من جديد" : "اربط حسابك";
   $("sFolder").textContent = state.folder || ""; const v = state.version || {}; $("sVer").textContent = v.commit ? `النسخة ${v.commit.slice(0, 7)} · ${v.date || ""}` : "يجيب آخر نسخة ويرجع يشتغل"; $("dSet").hidden = false; };
@@ -1917,7 +1997,9 @@ document.querySelectorAll("[data-close]").forEach(b => b.onclick = () => b.close
 
 
 /* ---------- tool bar and its panels ---------- */
-const EFFECT_AR = {xray: "أشعة إكس", glow: "توهّج", slow_push: "تقريب بطيء", letterbox: "أشرطة سينما", sepia: "بني قديم", warm: "دافي",
+const EFFECT_AR = {old_tv: "تلفزيون قديم", thermal: "كاميرا حرارية", night_vision: "رؤية ليلية", mirror: "مراية", zoom_blur: "دخول بتقريب",
+  light_leak: "تسريب ضوء", vignette_pulse: "نبض الحواف", stabilize: "تثبيت الاهتزاز", posterize: "ألوان مسطحة", duotone: "لونين", film_grain: "حبيبات فلم",
+  bw_to_color: "من أبيض وأسود للألوان", cinema_bars_in: "أشرطة تدخل", xray: "أشعة إكس", glow: "توهّج", slow_push: "تقريب بطيء", letterbox: "أشرطة سينما", sepia: "بني قديم", warm: "دافي",
   cold: "بارد", spotlight: "بقعة ضوء", pixel_in: "دخول بكسلات", blur_in: "دخول ضبابي", punchy: "ألوان قوية", dreamy_glow: "توهّج حالم", shake: "اهتزاز", vhs: "شريط قديم", retro_shake: "قديم ويهتز", bw: "أبيض وأسود", night: "ليل مخيف", dream: "حلم",
   rgb_split: "انقسام ألوان", flash_in: "دخول بوميض", sharpen: "حدّة", film: "فلم سينما"};
 const TRANS_AR = {zoom: "تقريب", flash: "وميض", whip: "سحبة سريعة", glitch: "تشويش", tear: "ورقة تنشگ", burn: "حرق", dive: "غطسة",
@@ -1925,7 +2007,8 @@ const TRANS_AR = {zoom: "تقريب", flash: "وميض", whip: "سحبة سري�
 const STICK = [["stamp", "ختم", "🔖"], ["arrow", "سهم", "➜"], ["burst", "انفجار", "💥"], ["tape", "شريط لاصق", "🩹"], ["circle", "دائرة", "⭕"],
   ["scribble_circle", "دائرة باليد", "✍️"], ["scribble_arrow", "سهم باليد", "↗️"], ["scribble_underline", "خط تحت", "〰️"], ["censor", "تشويش", "▒"],
   ["name_tag", "بطاقة اسم", "🏷️"], ["bubble", "فقاعة كلام", "💬"], ["label", "مربع أحمر", "🟥"]];
-const TSTYLES = [["title", "عنوان سينمائي", "كلمة كبيرة بالنص"], ["words", "كتابة متحركة", "الكلمات تطلع وحدة وحدة"], ["card", "بطاقة نص", "جملة على ورقة"]];
+const TSTYLES = [["title", "عنوان سينمائي", "كلمة كبيرة بالنص"], ["words", "كتابة متحركة", "الكلمات تطلع وحدة وحدة"], ["card", "بطاقة نص", "جملة على ورقة"],
+  ["quote", "اقتباس", "الكلام | منو گاله"], ["number", "رقم يعد", "مثل: ٣ مليار دولار"], ["headline", "عنوان خبر", "مثل جريدة، آخر كلمة تضوي"]];
 let panelNow = "steps", fxData = null, mediaData = [], mediaKind = "all", tStyle = "title";
 function showPanel(k){
   panelNow = k;
@@ -1945,6 +2028,76 @@ function showPanel(k){
   if (k === "versions"){ loadVersions(); loadTemplates(); }
   if (k === "smart") loadSmart();
 }
+/* ---------- 2.1 editing helpers ---------- */
+$("vRate").onchange = () => { video.playbackRate = +$("vRate").value; };
+const togg = (id) => { $(id).hidden = !$(id).hidden; return !$(id).hidden; };
+$("vGrid").onclick = () => togg("gridOv");
+$("vFocus").onclick = () => { document.body.classList.toggle("focusMode"); window.dispatchEvent(new Event("resize")); };
+$("vKeys").onclick = () => { $("dKeys").hidden = false; };
+$("vStill").onclick = async () => { if (!needEp()) return; try { const r = await post(E() + "/still", {t: video.currentTime}); toast("انحفظت الصورة: " + r.file); } catch (e){ toast(e.message); } };
+// colour scopes: luma waveform + a vectorscope-like colour wheel from the frame under the playhead
+const scopeTmp = document.createElement("canvas"); scopeTmp.width = 160; scopeTmp.height = 90;
+function drawScope(){
+  if ($("scopeOv").hidden || video.hidden || !video.videoWidth) return;
+  const g = scopeTmp.getContext("2d", {willReadFrequently: true}); try { g.drawImage(video, 0, 0, 160, 90); } catch (_){ return; }
+  const px = g.getImageData(0, 0, 160, 90).data, c = $("scopeCv").getContext("2d"); c.fillStyle = "#0b0f0e"; c.fillRect(0, 0, 260, 190);
+  c.strokeStyle = "rgba(255,255,255,.12)"; [0, .5, 1].forEach(v => { c.beginPath(); c.moveTo(0, 6 + (1 - v) * 80); c.lineTo(260, 6 + (1 - v) * 80); c.stroke(); });
+  c.fillStyle = "rgba(156,220,170,.25)";
+  for (let y = 0; y < 90; y += 2) for (let x = 0; x < 160; x++){ const i = (y * 160 + x) * 4, l = (.2126 * px[i] + .7152 * px[i + 1] + .0722 * px[i + 2]) / 255; c.fillRect(x * 260 / 160, 6 + (1 - l) * 80, 1.6, 1.6); }
+  c.beginPath(); c.arc(130, 140, 44, 0, Math.PI * 2); c.strokeStyle = "rgba(255,255,255,.2)"; c.stroke();
+  c.beginPath(); c.moveTo(130, 140); c.lineTo(130 - 44 * Math.cos(2.18), 140 - 44 * Math.sin(2.18)); c.strokeStyle = "rgba(240,190,150,.5)"; c.stroke();   // skin line
+  for (let i = 0; i < px.length; i += 24){ const r = px[i], gg = px[i + 1], b = px[i + 2], u = -.169 * r - .331 * gg + .5 * b, v = .5 * r - .419 * gg - .081 * b;
+    c.fillStyle = `rgba(${r},${gg},${b},.6)`; c.fillRect(130 + u / 128 * 44, 140 - v / 128 * 44, 1.5, 1.5); }
+}
+$("vScope").onclick = () => { togg("scopeOv"); drawScope(); };
+setInterval(drawScope, 250);
+// live level meter
+let vuCtx = null;
+function vuStart(){ if (vuCtx) return; try { const A = window.AudioContext || window.webkitAudioContext; vuCtx = new A();
+  const src = vuCtx.createMediaElementSource(video), split = vuCtx.createChannelSplitter(2), an = [vuCtx.createAnalyser(), vuCtx.createAnalyser()];
+  src.connect(vuCtx.destination); src.connect(split); an.forEach((a, k) => { a.fftSize = 512; split.connect(a, k); });
+  const buf = new Float32Array(512);
+  (function loop(){ an.forEach((a, k) => { a.getFloatTimeDomainData(buf); let m = 0; for (const x of buf) m = Math.max(m, Math.abs(x));
+    const db = 20 * Math.log10(m || 1e-5), pct = Math.max(0, Math.min(100, (db + 48) / 48 * 100)); $(k ? "vuR" : "vuL").style.setProperty("--lv", pct + "%"); }); requestAnimationFrame(loop); })();
+  } catch (_){ vuCtx = {}; } }
+video.addEventListener("play", () => { vuStart(); if (vuCtx && vuCtx.resume) vuCtx.resume(); });
+// his own markers (M), and an I/O loop
+let umarks = [], loopIO = [null, null];
+async function loadMarkers(){ if (!ep) return; umarks = await api(E() + "/markers").catch(() => []); drawUMarks(); }
+function drawUMarks(){ if (!$("lane")) return; $("lane").querySelectorAll(".umk,#loopZone").forEach(m => m.remove());
+  umarks.forEach((m, k) => { const d = document.createElement("div"); d.className = "umk"; d.style.left = m.t * pps + "px"; d.title = (m.text || "علامة") + " · " + mmss(m.t) + " (دبل كلك تمسحها)";
+    d.onclick = () => { video.currentTime = m.t; }; d.ondblclick = async () => { umarks.splice(k, 1); await post(E() + "/markers", {items: umarks}); drawUMarks(); }; $("lane").appendChild(d); });
+  if (loopIO[0] != null && loopIO[1] != null){ const z = document.createElement("div"); z.id = "loopZone"; z.style.left = loopIO[0] * pps + "px"; z.style.width = (loopIO[1] - loopIO[0]) * pps + "px"; $("lane").appendChild(z); } }
+setInterval(() => { if (ep && $("lane") && !$("lane").querySelector(".umk") && umarks.length) drawUMarks(); }, 1500);
+video.addEventListener("timeupdate", () => { if (loopIO[0] != null && loopIO[1] != null && video.currentTime >= loopIO[1]) video.currentTime = loopIO[0]; });
+// before / after the colours: hold "\"
+function beforeAfter(on){ video.style.filter = on ? "none" : ""; $("baTag").hidden = !on; if (!on && typeof applyCssLook === "function" && data.look) applyCssLook(data.look.settings || {}); }
+// J/K/L shuttle, frame steps, scene jumps, markers, loop, toggles
+let shuttle = 0;
+document.addEventListener("keydown", (e) => {
+  if (e.target.closest("input,textarea,select") || e.metaKey || e.ctrlKey || !ep) return;
+  const k = ({KeyJ: "j", KeyK: "k", KeyL: "l", KeyM: "m", KeyI: "i", KeyO: "o", KeyG: "g", KeyQ: "q", KeyF: "f"})[e.code] || "", fps = 30;   // by key position: works on the Arabic keyboard too
+  if (k === "l"){ shuttle = Math.min(4, Math.max(1, shuttle + 1)); video.playbackRate = shuttle; video.play(); }
+  else if (k === "k"){ shuttle = 0; video.pause(); video.playbackRate = +$("vRate").value; }
+  else if (k === "j"){ shuttle = 0; video.pause(); video.currentTime = Math.max(0, video.currentTime - 2); }
+  else if (e.key === "ArrowRight"){ e.preventDefault(); video.pause(); video.currentTime += e.shiftKey ? 1 : 1 / fps; }
+  else if (e.key === "ArrowLeft"){ e.preventDefault(); video.pause(); video.currentTime = Math.max(0, video.currentTime - (e.shiftKey ? 1 : 1 / fps)); }
+  else if (e.key === "ArrowDown" || e.key === "ArrowUp"){ const cs = (data.timeline && data.timeline.scenes) || []; if (!cs.length) return; e.preventDefault();
+    const t = video.currentTime, nx = e.key === "ArrowDown" ? cs.find(c => c.s > t + 0.05) : [...cs].reverse().find(c => c.s < t - 0.3); if (nx) video.currentTime = nx.s; }
+  else if (k === "m"){ const t = +video.currentTime.toFixed(2); const text = ""; umarks.push({t, text}); post(E() + "/markers", {items: umarks}).then(r => { umarks = r; drawUMarks(); }); toast("انحطت علامة على " + mmss(t)); }
+  else if (k === "i"){ loopIO[0] = video.currentTime; if (loopIO[1] != null && loopIO[1] <= loopIO[0]) loopIO[1] = null; drawUMarks(); toast("بداية التكرار"); }
+  else if (k === "o"){ loopIO[1] = video.currentTime; if (loopIO[0] == null || loopIO[0] >= loopIO[1]) loopIO[0] = Math.max(0, loopIO[1] - 5); drawUMarks(); video.currentTime = loopIO[0]; video.play(); toast("يعيد المقطع"); }
+  else if (e.key === "Escape" && loopIO[0] != null){ loopIO = [null, null]; drawUMarks(); }
+  else if (e.code === "Backslash"){ beforeAfter(true); }
+  else if (k === "g"){ togg("gridOv"); }
+  else if (k === "q"){ togg("scopeOv"); drawScope(); }
+  else if (k === "f"){ $("vFocus").click(); }
+  else if (e.key === "?" || e.key === "؟"){ $("dKeys").hidden = false; }
+});
+document.addEventListener("keyup", (e) => { if (e.code === "Backslash") beforeAfter(false); });
+$("tscroll").addEventListener("wheel", (e) => { if (!(e.metaKey || e.ctrlKey)) return; e.preventDefault();
+  pps = Math.max(0.3, Math.min(200, pps * (e.deltaY < 0 ? 1.15 : 1 / 1.15))); renderTimeline(); drawUMarks(); }, {passive: false});
+
 /* templates, phone page, backup, voice commands */
 function drawComfort(c){
   $("tplList").innerHTML = (c.templates || []).map(t => `<div class="row" style="gap:6px;align-items:center"><b class="grow tiny">📐 ${esc(t.name)}</b><button class="pill sm" data-tuse="${esc(t.name)}">طبّق</button><button class="pill sm" data-tdel="${esc(t.name)}">🗑</button></div>`).join("") || `<div class="dim tiny">ماكو قوالب بعد.</div>`;
@@ -2158,6 +2311,7 @@ function renderScene(){
   const img = c.img ? `style="background-image:url('/files/${enc(cur)}/${c.img.split("/").map(enc).join("/")}')"` : "";
   $("insBody").innerHTML = `<div class="insthumb" ${img}>${c.img ? "" : esc(c.kind_ar)}</div>
     <div class="dim tiny" style="margin-top:6px">${esc(c.kind_ar)}${c.own ? " · من موادك" : ""}</div>
+    <div class="row" style="gap:6px;margin-top:8px"><button class="pill sm" id="iCopy" title="انسخ التأثير والانتقال والألوان والصوت مال هالمشهد">⧉ انسخ إعداداته</button><button class="pill sm" id="iPaste" title="الصق الإعدادات المنسوخة على هالمشهد">📋 الصق</button></div>
     <div class="field2"><label>النص على الشاشة</label><input id="iTxt" value="${esc(c.text || "")}" placeholder="بلا نص"></div>
     <div class="field2"><label>التأثير</label><select id="iFx"><option value="">بلا تأثير</option>${Object.entries(EFFECT_AR).map(([k, n]) => `<option value="${k}" ${c.effect === k ? "selected" : ""}>${n}</option>`).join("")}</select></div>
     <div class="field2"><label>الانتقال لهالمشهد</label><select id="iTr"><option value="">قطع مباشر</option>${Object.entries(TRANS_AR).map(([k, n]) => `<option value="${k}" ${c.transition === k ? "selected" : ""}>${n}</option>`).join("")}</select></div>
@@ -2171,6 +2325,8 @@ function renderScene(){
     <div class="field2"><label>ملاحظتك للمساعد</label><input id="iNote" value="${esc(c.note || "")}" placeholder="شنو تريد يتغيّر؟"></div>
     <div class="row" style="flex-wrap:wrap;margin-top:14px"><button class="pill sm y" id="iAsk">اسأل المساعد عنه</button><button class="pill sm" id="iSplit">قسّمه عند المؤشر</button><button class="pill sm" id="iDel">شيله</button></div>`;
   const i = c.i;
+  $("iCopy").onclick = async () => { try { await post(E() + "/scene-clip", {do: "copy", i}); toast("انسخت إعدادات المشهد. اختار مشهد ثاني ودوس «الصق»"); } catch (e){ toast(e.message); } };
+  $("iPaste").onclick = async () => { try { await post(E() + "/scene-clip", {do: "paste", i}); await loadAll(); toast("انلصقت ✅"); } catch (e){ toast(e.message); } };
   $("iTxt").onchange = () => changeScene(i, c.kind === "cinematic_title" ? {title: $("iTxt").value, caption: $("iTxt").value} : {caption: $("iTxt").value}, "انحفظ النص");
   $("iFx").onchange = () => changeScene(i, {effect: $("iFx").value}, "تغيّر التأثير");
   $("iTr").onchange = () => changeScene(i, {transition: $("iTr").value}, "تغيّر الانتقال");
@@ -2204,7 +2360,7 @@ $("tgSfx").onclick = async () => { const so = data.sound || {}; data.sound = awa
 async function undoRedo(w){ if (!ep) return; const r = await post(E() + "/" + w).catch(() => ({})); if (r.ok){ await loadAll(); toast(w === "undo" ? "رجعت خطوة" : "رجّعت الخطوة"); } else toast(w === "undo" ? "ماكو شي ترجع له" : "ماكو شي ترجّعه"); }
 $("tRedo").onclick = () => undoRedo("redo");
 document.addEventListener("keydown", (e) => { if (!(e.metaKey || e.ctrlKey) || e.target.closest("input,textarea")) return;
-  if (e.key.toLowerCase() === "z"){ e.preventDefault(); undoRedo(e.shiftKey ? "redo" : "undo"); } });
+  if (e.code === "KeyZ"){ e.preventDefault(); undoRedo(e.shiftKey ? "redo" : "undo"); } });
 
 /* export */
 const XLANGS = {en: "إنگليزي", es: "إسباني", fr: "فرنسي", de: "ألماني", pt: "برتغالي", ru: "روسي", zh: "صيني", ja: "ياباني",
@@ -2274,7 +2430,7 @@ new MutationObserver(() => { document.body.classList.toggle("chatOn", !$("chat")
   .observe($("chat"), {attributes: true, attributeFilter: ["hidden"]});
 
 /* ---------- 2.0: find anything (⌘K), the home's quick actions, what's new ---------- */
-const URU_VERSION = "2.0.0";
+const URU_VERSION = "2.1.0";
 const normAr = (t) => String(t).toLowerCase().replace(/[\u064B-\u065F\u0670]/g, "").replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/[گ]/g, "ك").replace(/[چ]/g, "ج").replace(/[پ]/g, "ب");
 const step_ = (n) => () => { if (!needEp()) return; showPanel("steps"); step = n; renderSteps(); loadVideo(); };
 const panel_ = (k) => () => { if (!needEp()) return; showPanel(k); };
@@ -2326,7 +2482,7 @@ $("findIn").onkeydown = (e) => {
   else if (e.key === "Enter"){ e.preventDefault(); doFind(findSel); }
   else if (e.key === "Escape") $("dFind").hidden = true; };
 $("dFind").onclick = (e) => { if (e.target === $("dFind")) $("dFind").hidden = true; };
-document.addEventListener("keydown", (e) => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k"){ e.preventDefault(); $("dFind").hidden ? openFind() : ($("dFind").hidden = true); } });
+document.addEventListener("keydown", (e) => { if ((e.metaKey || e.ctrlKey) && e.code === "KeyK"){ e.preventDefault(); $("dFind").hidden ? openFind() : ($("dFind").hidden = true); } });
 function showNews(){ $("dNews").hidden = false; try { localStorage.setItem("uru-seen", URU_VERSION); } catch (_) {} }
 $("newsX").onclick = $("newsOk").onclick = () => { $("dNews").hidden = true; };
 $("verBadge").onclick = showNews;

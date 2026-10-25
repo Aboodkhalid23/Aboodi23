@@ -21,7 +21,9 @@ STICKERS = ("stamp", "arrow", "burst", "tape", "circle", "scribble_circle", "scr
             "censor", "name_tag", "emoji", "icon", "bubble", "label")   # emoji: Noto animated; icon: Iconify; bubble: comic speech; label: red box typing
 # video effects on his own footage (the app's effects library; compose.effect_filter)
 EFFECTS = ("shake", "vhs", "retro_shake", "bw", "night", "dream", "rgb_split", "flash_in", "sharpen", "film", "xray", "glow",
-           "slow_push", "letterbox", "sepia", "warm", "cold", "spotlight", "pixel_in", "blur_in", "punchy", "dreamy_glow")
+           "slow_push", "letterbox", "sepia", "warm", "cold", "spotlight", "pixel_in", "blur_in", "punchy", "dreamy_glow",
+           "old_tv", "thermal", "night_vision", "mirror", "zoom_blur", "light_leak", "vignette_pulse", "stabilize", "posterize",
+           "duotone", "film_grain", "bw_to_color", "cinema_bars_in")
 MARKABLE = ("face_fx", "image", "ai_image", "graphic", "entity", "footage", "avatar")   # beats that can carry stickers
 
 HOOK_SECONDS = 30.0

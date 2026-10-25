@@ -178,7 +178,22 @@ def effect_filter(name: str | None, cv: "Canvas") -> str:
               "pixel_in": "pixelize=w=28:h=28:enable='lt(t,0.2)',pixelize=w=10:h=10:enable='between(t,0.2,0.4)'",
               "blur_in": "boxblur=20:2:enable='lt(t,0.25)',boxblur=8:1:enable='between(t,0.25,0.45)'",
               "punchy": "eq=contrast=1.18:saturation=1.25,unsharp=5:5:0.6:5:5:0",
-              "dreamy_glow": "split[d0][d1];[d1]gblur=sigma=28,eq=brightness=0.08:saturation=1.2[db];[d0][db]blend=all_mode=screen:all_opacity=0.55"}
+              "dreamy_glow": "split[d0][d1];[d1]gblur=sigma=28,eq=brightness=0.08:saturation=1.2[db];[d0][db]blend=all_mode=screen:all_opacity=0.55",
+              # 2.1 (owner: "كلشي يخص المونتاج"): 14 more, all ffmpeg (ours)
+              "old_tv": "noise=alls=10:allf=t,geq=lum='lum(X,Y)*(0.82+0.18*mod(Y,3))':cb='cb(X,Y)':cr='cr(X,Y)',vignette=angle=0.55,eq=saturation=0.8",
+              "thermal": "hue=s=0,pseudocolor=preset=heat",
+              "night_vision": "hue=s=0,curves=master='0/0 0.5/0.62 1/1',colorchannelmixer=.2:.2:.2:0:.7:.8:.7:0:.2:.2:.2,noise=alls=12:allf=t,vignette=angle=0.7",
+              "mirror": "crop=iw/2:ih:0:0,split[m0][m1];[m1]hflip[mf];[m0][mf]hstack",
+              "zoom_blur": f"scale=w='trunc({w}*(1+0.25*max(0,0.35-t)/0.35)/2)*2':h=-2:eval=frame,crop={w}:{h},boxblur=12:1:enable='lt(t,0.25)',setsar=1",
+              "light_leak": "split[l0][l1];[l1]geq=r='255*exp(-((X-W*0.85)^2+(Y-H*0.2)^2)/(W*W*0.08))':g='140*exp(-((X-W*0.85)^2+(Y-H*0.2)^2)/(W*W*0.08))':b='40*exp(-((X-W*0.85)^2+(Y-H*0.2)^2)/(W*W*0.08))',format=yuv420p[lk];[l0][lk]blend=all_mode=screen:all_opacity=0.6",
+              "vignette_pulse": "vignette=angle='0.45+0.15*sin(2*PI*t)':eval=frame",
+              "stabilize": "deshake=rx=32:ry=32",
+              "posterize": "lutrgb=r='trunc(val/48)*48':g='trunc(val/48)*48':b='trunc(val/48)*48',eq=saturation=1.2",
+              "duotone": "hue=s=0,colorchannelmixer=.55:.3:.1:0:.25:.35:.3:0:.45:.25:.6",
+              "film_grain": "noise=alls=16:allf=t+u,eq=contrast=1.04",
+              "bw_to_color": "hue=s='min(1,t/1.2)'",
+              "flash_out": "fade=t=out:st=0.0:d=0.01:color=white,fade=t=in:st=0:d=0.25:color=white",
+              "cinema_bars_in": f"drawbox=x=0:y=0:w=iw:h='ih*0.11*min(1,t/0.6)':color=black:t=fill,drawbox=x=0:y='ih-ih*0.11*min(1,t/0.6)':w=iw:h=ih*0.11:color=black:t=fill"}
     return "," + chains[name] if name in chains else ""
 
 

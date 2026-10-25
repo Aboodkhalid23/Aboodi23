@@ -474,6 +474,19 @@ def _text_scene(ins: dict) -> dict:
         return {"kind": "cinematic_title", "title": text, "caption": text}
     if style == "words":
         return {"kind": "kinetic", "caption": text}
+    if style == "quote":   # «الكلام | منو گاله»
+        said, _, who = text.partition("|")
+        return {"kind": "graphic", "caption": said.strip(), "graphic": {"type": "quote", "text": said.strip(), "who": who.strip()}}
+    if style == "number":   # «٣ مليار دولار»: the number counts up, the rest is its label
+        digits = text.translate(str.maketrans("٠١٢٣٤٥٦٧٨٩٫", "0123456789."))
+        m = re.search(r"\d[\d.,]*", digits)
+        value = float(m.group(0).replace(",", "")) if m else 0
+        mult = 1e9 if "مليار" in text else 1e6 if "مليون" in text else 1e3 if "ألف" in text or "الف" in text else 1
+        label = re.sub(r"[\d٠-٩.,٫]+", "", text).replace("مليار", "").replace("مليون", "").strip() or text
+        return {"kind": "graphic", "caption": text, "graphic": {"type": "number", "value": value * mult, "label": label}}
+    if style == "headline":   # a news headline, the last word highlighted
+        return {"kind": "graphic", "caption": text, "graphic": {"type": "headline", "outlet": "", "title": text,
+                                                               "highlight": text.split()[-1] if text.split() else ""}}
     return {"kind": "graphic", "caption": text, "graphic": {"type": "text", "text": text}}
 
 
@@ -688,7 +701,10 @@ def effect_thumbs(ep: Episode) -> dict:
 EFFECT_NAMES = {"xray": "أشعة إكس", "glow": "توهّج", "slow_push": "تقريب بطيء", "letterbox": "أشرطة سينما",
                 "sepia": "بني قديم", "warm": "دافي", "cold": "بارد", "spotlight": "بقعة ضوء", "pixel_in": "دخول بكسلات",
                 "blur_in": "دخول ضبابي", "punchy": "ألوان قوية", "dreamy_glow": "توهّج حالم", "shake": "اهتزاز", "vhs": "شريط قديم", "retro_shake": "قديم ويهتز", "bw": "أبيض وأسود", "night": "ليل مخيف",
-                "dream": "حلم", "rgb_split": "انقسام ألوان", "flash_in": "دخول بوميض", "sharpen": "حدّة", "film": "فلم سينما"}
+                "dream": "حلم", "rgb_split": "انقسام ألوان", "flash_in": "دخول بوميض", "sharpen": "حدّة", "film": "فلم سينما",
+                "old_tv": "تلفزيون قديم", "thermal": "كاميرا حرارية", "night_vision": "رؤية ليلية", "mirror": "مراية", "zoom_blur": "دخول بتقريب",
+                "light_leak": "تسريب ضوء", "vignette_pulse": "نبض الحواف", "stabilize": "تثبيت الاهتزاز", "posterize": "ألوان مسطحة",
+                "duotone": "لونين", "film_grain": "حبيبات فلم", "bw_to_color": "من أبيض وأسود للألوان", "cinema_bars_in": "أشرطة تدخل"}
 
 
 # ---------- undo / redo (the plan, colours, sound, cuts) ----------
@@ -992,3 +1008,40 @@ def beat_sync(ep: Episode, reach: float = 0.18) -> int:
             moved += 1
     ep.plan.write_text(json.dumps(plan, ensure_ascii=False, indent=1), encoding="utf-8")
     return moved
+
+
+
+# ---------- copy one scene's settings onto another (owner, 2026-10-25: "كلشي يخص المونتاج") ----------
+
+SCENE_STYLE = ("effect", "transition", "grade", "sfx", "fx", "treatment", "look")
+
+
+def copy_scene(ep: Episode, i: int, home: Path) -> dict:
+    b = json.loads(ep.plan.read_text(encoding="utf-8"))["beats"][int(i)]
+    clip = {k: b.get(k) for k in SCENE_STYLE if b.get(k) is not None}
+    (Path(home) / "scene_clip.json").write_text(json.dumps(clip, ensure_ascii=False), encoding="utf-8")
+    return clip
+
+
+def paste_scene(ep: Episode, i: int, home: Path) -> dict:
+    f = Path(home) / "scene_clip.json"
+    if not f.exists():
+        raise ValueError("انسخ إعدادات مشهد أول")
+    clip = json.loads(f.read_text(encoding="utf-8"))
+    snapshot(ep)
+    plan = json.loads(ep.plan.read_text(encoding="utf-8"))
+    plan["beats"][int(i)].update(clip)
+    ep.plan.write_text(json.dumps(plan, ensure_ascii=False, indent=1), encoding="utf-8")
+    return clip
+
+
+def markers(ep: Episode, items: list | None = None) -> list:
+    """His own flags on the timeline (M): a time and a short note, kept with the episode."""
+    f = ep.edit / "markers.json"
+    if items is not None:
+        clean = [{"t": round(float(m["t"]), 2), "text": str(m.get("text", ""))[:120]} for m in items][:300]
+        f.write_text(json.dumps(sorted(clean, key=lambda m: m["t"]), ensure_ascii=False), encoding="utf-8")
+    try:
+        return json.loads(f.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []

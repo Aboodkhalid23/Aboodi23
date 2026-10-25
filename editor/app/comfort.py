@@ -158,3 +158,40 @@ def lan_ip() -> str:
         return "127.0.0.1"
     finally:
         s.close()
+
+
+
+# ---------- security (owner, 2026-10-25: "أمان، فحص المشاكل") ----------
+
+SECRETS = {"claude_token": "رمز كلود", "youtube.json": "ربط يوتيوب", "elevenlabs.json": "مفتاح إلفن لابس",
+           "phone.json": "رمز صفحة التلفون", "brains.json": "ربط شات جي بي تي وجيميناي"}
+
+
+def security(home: Path) -> dict:
+    """Where each secret lives and whether only his user can read it; and what is open to the network."""
+    items = []
+    for f, name in SECRETS.items():
+        p = Path(home) / f
+        if not p.exists():
+            continue
+        mode = p.stat().st_mode & 0o777
+        ok = not mode & 0o077
+        items.append({"ok": ok, "text": f"{name}: محفوظ على هالماك" + ("، ومحد يقراه غيرك" if ok else "، بس ملفه مفتوح لغيرك: دوس «صلّح الصلاحيات»")})
+    ph = phone_settings(home)
+    items.append({"ok": True, "text": "التطبيق يشتغل على هالماك بس" + ("، وصفحة التلفون شغالة على واي فاي البيت برمز سري" if ph.get("on") else "، وما مفتوح لأي جهاز ثاني")})
+    return {"items": items}
+
+
+def fix_permissions(home: Path) -> dict:
+    for f in SECRETS:
+        p = Path(home) / f
+        if p.exists():
+            p.chmod(0o600)
+    return security(home)
+
+
+def unlink_all(home: Path) -> dict:
+    """Forget every linked account at once (his accounts stay; only this Mac forgets them)."""
+    for f in SECRETS:
+        (Path(home) / f).unlink(missing_ok=True)
+    return security(home)

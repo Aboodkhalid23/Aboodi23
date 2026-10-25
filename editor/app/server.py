@@ -2083,6 +2083,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json(prefs())
             if path == "/api/learning":
                 return self._json(learning.status(HOME))
+            if path == "/api/security":
+                return self._json(comfort.security(HOME))
             if path == "/api/comfort":   # templates, backup, phone page
                 ph = comfort.phone_settings(HOME)
                 return self._json({"templates": comfort.templates(HOME), "backup": comfort.backup_status(HOME),
@@ -2151,7 +2153,7 @@ class Handler(BaseHTTPRequestHandler):
             m = re.match(r"^/api/episodes/([^/]+)/cover$", path)
             if m:
                 return self._file(episode_cover(episode_dir(m.group(1))))
-            m = re.match(r"^/api/episodes/([^/]+)/(sentences|captions|plan|timeline|look|sound|idea|review|frame|voice-sample|media|effects|export-info|options|suggest|variants|versions)$", path)
+            m = re.match(r"^/api/episodes/([^/]+)/(sentences|captions|plan|timeline|look|sound|idea|review|frame|voice-sample|media|effects|export-info|options|suggest|variants|versions|markers)$", path)
             if m:
                 return self._studio_get(episode_dir(m.group(1)), m.group(2), q)
             m = re.match(r"^/api/db/([^/]+)/(doc|list)$", path)
@@ -2225,6 +2227,8 @@ class Handler(BaseHTTPRequestHandler):
         if what == "review":
             f = d / "edit" / "work" / "app" / f"{q.get('kind', 'captions')}_review.json"
             return self._json(json.loads(f.read_text(encoding="utf-8")) if f.exists() else None)
+        if what == "markers":
+            return self._json(studio.markers(ep))
         if what == "frame":
             return self._file(frame_with_look(ep, float(q.get("t") or 0), q.get("raw") == "1"))
         if what == "media":
@@ -2291,6 +2295,21 @@ class Handler(BaseHTTPRequestHandler):
                 lst.write_text(json.dumps(items, ensure_ascii=False, indent=1), encoding="utf-8")
                 return self._json({"patches": items})
             return self._json(dubbing.fix_word(HOME, d, float(b.get("start", 0)), float(b.get("end", 0)), str(b.get("text", ""))))
+        if what == "markers":
+            return self._json(studio.markers(ep, list(b.get("items", []))))
+        if what == "still":   # the frame under the playhead as a picture (with his colours), into edit/stills
+            t = float(b.get("t", 0))
+            src = frame_with_look(ep, t)
+            out = ep.edit / "stills"
+            out.mkdir(parents=True, exist_ok=True)
+            dest = out / f"still_{int(t // 60):02d}-{int(t % 60):02d}-{int((t % 1) * 100):02d}{src.suffix}"
+            shutil.copyfile(src, dest)
+            _safe(lambda: reveal(dest))
+            return self._json({"file": dest.name})
+        if what == "scene-clip":   # copy one scene's look (effect, transition, colours, sound) and paste it on another
+            if b.get("do") == "copy":
+                return self._json({"clip": studio.copy_scene(ep, int(b.get("i", 0)), HOME)})
+            return self._json({"clip": studio.paste_scene(ep, int(b.get("i", 0)), HOME)})
         if what == "tool":   # one-click smart tools that change the plan right away (undo brings it back)
             tool = b.get("tool")
             if tool == "punch":
@@ -2424,7 +2443,7 @@ class Handler(BaseHTTPRequestHandler):
                 learning.note(HOME, m.group(1), "طلب من المساعد", text)
                 start_job(m.group(1), "chat", text)
                 return self._json({"ok": True, "messages": chat_load(d)})
-            m = re.match(r"^/api/episodes/([^/]+)/(sentences|captions|look|sound|idea|beat|undo|redo|media|media-note|short|options|choose|restyle|srt|variant|version|tool|voicefix)$", path)
+            m = re.match(r"^/api/episodes/([^/]+)/(sentences|captions|look|sound|idea|beat|undo|redo|media|media-note|short|options|choose|restyle|srt|variant|version|tool|voicefix|markers|still|scene-clip)$", path)
             if m:
                 b = self._body()
                 if m.group(2) not in ("media",):   # what he changes is how the assistant learns his taste
@@ -2507,6 +2526,14 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json({"ok": True})
             if path == "/api/prefs":
                 return self._json(prefs(self._body()))
+            if path == "/api/security":
+                act = self._body().get("do")
+                if act == "fix":
+                    return self._json(comfort.fix_permissions(HOME))
+                if act == "unlink-all":
+                    phone_server(False)
+                    return self._json(comfort.unlink_all(HOME))
+                raise ValueError("شنو تريد؟")
             if path == "/api/comfort":
                 b = self._body()
                 act = b.get("do")
