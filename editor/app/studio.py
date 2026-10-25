@@ -724,6 +724,90 @@ def _restore(ep: Episode, frm: str, to: str) -> bool:
     return True
 
 
+# ---------- versions (owner, 2026-10-25: "مثل الطبقات… أختار هاي الطبقة الي أريد أشتغل عليها") ----------
+# A whole version of the episode: its editable files plus the preview it built, kept side by side. He watches any
+# of them and picks one to keep working on; the current state is kept as a version first, so nothing is lost.
+
+VERSION_FILES = UNDO_FILES + ("style.txt", "options.json", "idea.txt", "captions_en.json")
+KEEP_AUTO = 8
+
+
+def _vdir(ep: Episode) -> Path:
+    return ep.edit / "versions"
+
+
+def save_version(ep: Episode, name: str = "", auto: bool = False) -> dict:
+    import shutil
+    import time
+    root = _vdir(ep)
+    root.mkdir(parents=True, exist_ok=True)
+    n = max([int(p.name) for p in root.iterdir() if p.name.isdigit()] or [0]) + 1
+    d = root / f"{n:03d}"
+    d.mkdir()
+    for f in VERSION_FILES:
+        if (ep.edit / f).exists():
+            shutil.copyfile(ep.edit / f, d / f)
+    prev = ep.edit / "preview.mp4"
+    if prev.exists():
+        shutil.copyfile(prev, d / "preview.mp4")   # a real copy: a hard link would be overwritten by the next build
+        _ff(["-ss", "3", "-i", str(prev), "-frames:v", "1", "-vf", "scale=320:-2", str(d / "cover.jpg")])
+    style = (ep.edit / "style.txt").read_text(encoding="utf-8").strip() if (ep.edit / "style.txt").exists() else ""
+    if not style and ep.plan.exists():
+        style = (json.loads(ep.plan.read_text(encoding="utf-8")).get("style") or {}).get("primary", "")
+    meta = {"n": n, "name": name or f"النسخة {n}", "at": time.time(), "style": style, "auto": auto}
+    (d / "meta.json").write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
+    autos = sorted(p for p in root.iterdir() if p.name.isdigit() and json.loads((p / "meta.json").read_text(encoding="utf-8")).get("auto"))
+    for old in autos[:-KEEP_AUTO]:
+        shutil.rmtree(old, ignore_errors=True)
+    return meta
+
+
+def list_versions(ep: Episode) -> list[dict]:
+    root = _vdir(ep)
+    out = []
+    for d in sorted(root.iterdir(), reverse=True) if root.exists() else []:
+        try:
+            m = json.loads((d / "meta.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        m["preview"] = str((d / "preview.mp4").relative_to(ep.root)) if (d / "preview.mp4").exists() else None
+        m["cover"] = str((d / "cover.jpg").relative_to(ep.root)) if (d / "cover.jpg").exists() else None
+        out.append(m)
+    return out
+
+
+def use_version(ep: Episode, n: int) -> list[dict]:
+    import shutil
+    d = _vdir(ep) / f"{int(n):03d}"
+    if not d.is_dir():
+        raise ValueError("هاي النسخة مو موجودة")
+    snapshot(ep)
+    save_version(ep, "قبل ما ترجع للنسخة " + str(int(n)), auto=True)
+    for f in VERSION_FILES:
+        if (d / f).exists():
+            shutil.copyfile(d / f, ep.edit / f)
+        elif f in ("captions_en.json", "idea.txt", "style.txt") and (ep.edit / f).exists():
+            (ep.edit / f).unlink()
+    if (d / "preview.mp4").exists():
+        (ep.edit / "preview.mp4").unlink(missing_ok=True)
+        shutil.copyfile(d / "preview.mp4", ep.edit / "preview.mp4")
+    return list_versions(ep)
+
+
+def rename_version(ep: Episode, n: int, name: str) -> list[dict]:
+    f = _vdir(ep) / f"{int(n):03d}" / "meta.json"
+    m = json.loads(f.read_text(encoding="utf-8"))
+    m["name"], m["auto"] = str(name).strip()[:60] or m["name"], False   # a named version is never cleaned away
+    f.write_text(json.dumps(m, ensure_ascii=False), encoding="utf-8")
+    return list_versions(ep)
+
+
+def delete_version(ep: Episode, n: int) -> list[dict]:
+    import shutil
+    shutil.rmtree(_vdir(ep) / f"{int(n):03d}", ignore_errors=True)
+    return list_versions(ep)
+
+
 def undo(ep: Episode) -> bool:
     return _restore(ep, "undo", "redo")
 

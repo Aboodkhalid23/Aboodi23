@@ -38,7 +38,7 @@ textarea{resize:vertical}
 .num{font-variant-numeric:tabular-nums}
 
 /* ---------- app frame ---------- */
-#app{display:grid;grid-template-rows:50px minmax(0,1fr) 290px;height:100%}
+#app{display:grid;grid-template-rows:50px minmax(0,1fr) var(--th,290px);height:100%}
 header{display:flex;align-items:center;gap:10px;padding:0 12px;border-bottom:1px solid var(--line);background:var(--panel)}
 .brand{font-weight:900;font-size:15px;white-space:nowrap;letter-spacing:.5px;gap:8px}
 .brand small{color:var(--dim);font-weight:500;margin-inline-start:6px}
@@ -59,7 +59,7 @@ header{display:flex;align-items:center;gap:10px;padding:0 12px;border-bottom:1px
 .icobtn svg{width:16px;height:16px}
 
 /* RTL: the tool bar sits on the right edge, then its panel, the video, and the scene settings on the left */
-main{display:grid;grid-template-columns:72px minmax(330px,26%) minmax(0,1fr) 290px;gap:8px;padding:8px 8px 0;min-height:0}
+main{display:grid;grid-template-columns:72px var(--pw,minmax(330px,26%)) minmax(0,1fr) var(--iw,290px);gap:8px;padding:8px 8px 0;min-height:0}
 #rail{background:var(--panel);border:1px solid var(--line);border-radius:16px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0;overflow:auto}
 .rb{width:60px;min-height:56px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--mute);font-size:10.5px;flex:none}
 .rb svg{width:20px;height:20px}
@@ -337,7 +337,7 @@ header{border-width:0 0 1px 0!important;border-radius:0}
 .sfxrow{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid var(--glassline)}
 .sug{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
 .sug .tile img,.sug .tile video{width:100%;aspect-ratio:16/10;object-fit:cover;display:block;background:#000}
-.askbar{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);width:min(560px,86%);display:flex;align-items:center;gap:8px;padding:6px 6px 6px 14px;
+.askbar{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);width:min(400px,70%);display:flex;align-items:center;gap:6px;padding:3px 3px 3px 10px;font-size:12px;
   border-radius:999px;background:var(--float);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid var(--glassline);box-shadow:inset 0 1px 0 var(--glasshi),0 10px 30px rgba(0,0,0,.4);z-index:6}
 .askbar input{background:transparent!important;border:0!important;padding:8px 4px;outline:none!important}
 .askbar .spark{color:var(--y);flex:none;padding-inline-start:8px}
@@ -379,6 +379,19 @@ body,header,#rail,#panel,#viewer,#inspector,#tl,.dlg,.pill,.rb,.lc,.card{transit
   header .assist small{display:none}
 }
 #insToggle{display:none}
+/* drag handles between the boxes (owner: "أكبرها وأصغرها بالماوس") */
+.gh{position:fixed;z-index:35;background:transparent;transition:background .15s}
+.gh.v{width:8px;cursor:col-resize}.gh.h{height:8px;cursor:row-resize}
+.gh:hover,.gh.drag{background:rgba(var(--yrgb),.35);border-radius:4px}
+/* short windows: the side rail and timeline give room */
+@media (max-height:820px){ .rb{padding:5px 0!important;font-size:10px} .rb svg{width:18px;height:18px} #app{grid-template-rows:46px minmax(0,1fr) var(--th,230px)} }
+/* the video alone, as big as the window (when the system full screen is not allowed) */
+#vwrap.theater{position:fixed!important;inset:0;z-index:200;background:#000!important;border-radius:0}
+#vwrap.theater video{max-height:100vh}
+#theaterX{position:fixed;top:14px;left:14px;z-index:201}
+.askbar input{height:28px;font-size:12px;padding:4px 6px!important}.askbar .pill.sm{height:24px}
+.askbar:focus-within{width:min(560px,86%)}
+.tracks{overflow-y:auto!important;min-height:0}
 </style>
 </head>
 <body>
@@ -395,9 +408,10 @@ body,header,#rail,#panel,#viewer,#inspector,#tl,.dlg,.pill,.rb,.lc,.card{transit
       <button class="tool" id="tPlan" title="الخطة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1.3"/><circle cx="4.5" cy="12" r="1.3"/><circle cx="4.5" cy="18" r="1.3"/></svg>الخطة</button>
       <button class="tool" id="tInsp" title="الستايلات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 5v14M16 5v14"/></svg>الستايلات</button>
       <button class="assist" id="tAssist"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg><div>المساعد<small>يسوي الي تگوله</small></div></button>
-      <button class="icobtn" id="tUndo" title="تراجع"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button>
+
       <button class="icobtn" id="tSet" title="الإعدادات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
-      <button class="icobtn" id="tRedo" title="رجّع"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/></svg></button>
+      <button class="icobtn" id="tUndo" title="تراجع خطوة (آخر تعديل ينلغي)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button>
+      <button class="icobtn" id="tRedo" title="رجّع الخطوة الي لغيتها"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/></svg></button>
       <button class="pill" id="tNew" style="margin-inline-start:6px">＋ مقطع جديد</button>
       <button class="pill y" id="tExport"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12M7 8l5-5 5 5M5 21h14"/></svg>تصدير</button>
     </div>
@@ -415,7 +429,8 @@ body,header,#rail,#panel,#viewer,#inspector,#tl,.dlg,.pill,.rb,.lc,.card{transit
       <button class="rb" data-panel="sounds" title="الأصوات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg><span>الأصوات</span></button>
       <button class="rb" data-panel="extras" title="الإضافات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="10" rx="5"/><circle cx="15" cy="12" r="3"/></svg><span>الإضافات</span></button>
       <button class="rb" data-panel="colors" title="الألوان"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2a10 10 0 1 0 0 20c1 0 1.5-.8 1.5-1.6 0-.5-.2-.8-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.7-1.6 1.6-1.6H16a6 6 0 0 0 6-6c0-4.4-4.5-8.4-10-8.4z"/></svg><span>الألوان</span></button>
-      <button class="rb" data-panel="format" title="المقاس"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg><span>الريلز</span></button>
+      <button class="rb" data-panel="versions" title="النسخ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/><path d="M3 17.5l9 5 9-5" opacity=".5"/></svg><span>النسخ</span></button>
+      <button class="rb" data-panel="format" hidden title="المقاس"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg><span>الريلز</span></button>
       <span class="grow"></span>
       <button class="rb" hidden id="rChat" title="المساعد"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg><span>المساعد</span></button>
     </nav>
@@ -486,6 +501,11 @@ body,header,#rail,#panel,#viewer,#inspector,#tl,.dlg,.pill,.rb,.lc,.card{transit
         <div class="dim tiny" style="padding:0 14px 8px">كلها اختيارية: شغّل الي تريده وطفّي الباقي. تنطبق وقت البناء.</div>
         <div id="exBody" style="padding:0 14px 14px;display:grid;gap:10px"></div>
       </div>
+      <div class="pn" data-pn="versions" hidden>
+        <div class="pnh"><b>النسخ</b><button class="pill" id="verSave">＋ احفظ هاي</button></div>
+        <div class="dim tiny" style="padding:0 14px 8px">كل ما تبني معاينة أو الحلقة النهائية، تنحفظ نسخة لحالها (مثل الطبقات). شوف أي وحدة، واختار «اشتغل عليها» حتى ترجع إلها. شغلك الحالي ينحفظ قبلها، فما يضيع شي.</div>
+        <div id="verList" style="padding:0 14px 14px;display:grid;gap:10px"></div>
+      </div>
       <div class="pn" data-pn="colors" hidden>
         <div id="inspEmpty" class="dim" style="padding:14px">افتح مشروع حتى تشوف ألوانه.</div>
       <div id="inspBody" hidden>
@@ -540,6 +560,7 @@ body,header,#rail,#panel,#viewer,#inspector,#tl,.dlg,.pill,.rb,.lc,.card{transit
         <div class="empty" id="vEmpty"><div><h1>استوديو المونتاج</h1><div>لا يوجد مشروع مفتوح</div><div class="dim" style="margin-top:4px">اختر مشروعاً من المكتبة</div></div></div>
         <video id="video" playsinline preload="auto" hidden></video>
         <div id="safe" hidden></div>
+        <button class="pill sm" id="theaterX" hidden>✕ رجوع</button>
         <div class="cmp" id="cmp" hidden><img id="cmpImg" alt=""><span class="lbl" id="cmpLbl"></span></div>
         <div class="askreply" id="askReply" hidden></div>
         <div class="askbar" id="askBar" hidden><button class="icobtn" id="askOpen" title="افتح المحادثة">💬</button>
@@ -725,6 +746,13 @@ body,header,#rail,#panel,#viewer,#inspector,#tl,.dlg,.pill,.rb,.lc,.card{transit
         <div class="row" style="margin-top:6px;flex-wrap:wrap"><button class="pill sm" id="sAiCheck">افحص المواقع المربوطة</button><span class="dim tiny" id="sAiChk"></span></div>
         <div class="row" style="margin-top:10px"><b class="grow tiny">صور وجهك (مرجع للمشاهد المولدة)</b><button class="pill sm" id="sFaceAdd">＋ أضف</button><input type="file" id="sFaceIn" hidden multiple accept="image/*,video/*"></div>
         <div class="row" id="sFaces" style="margin-top:6px;flex-wrap:wrap;gap:6px"></div></div></div>
+    <div class="f card"><b>ذوقك (المساعد يتعلمه لحاله)</b><div class="muted tiny" style="margin:4px 0 8px;line-height:1.7">كل تعديل تسويه ينحفظ، وبعد كل حلقة نهائية المساعد يكتب هنا شنو تحب وشنو تكره، ويمشي عليه بالحلقات الجاية من أول مرة. تگدر تصلّحه بيدك.</div>
+      <div class="dim tiny" id="sLearnSt"></div>
+      <textarea id="sTaste" rows="6" placeholder="لسه ما تعلم شي. بعد أول حلقة نهائية يطلع ذوقك هنا…" style="margin-top:6px"></textarea>
+      <div class="row" style="margin-top:6px;flex-wrap:wrap;gap:6px"><button class="pill sm y" id="sTasteSave">احفظ</button><button class="pill sm" id="sLearnNow">تعلّم هسة من هاي الحلقة</button><button class="pill sm" id="sTasteClear">امسح الذوق</button></div></div>
+    <div class="f card"><b>افحص التطبيق</b><div class="muted tiny" style="margin:4px 0 8px;line-height:1.7">يفحص الأدوات والمساحة والإعدادات، والحلقة المفتوحة (صورة وصوت سليمين؟). وأي خطوة تعلگ ٢٥ دقيقة بلا حركة تنوگف لحالها، فالتطبيق ما يعلگ.</div>
+      <div id="sCheckOut" class="tiny" style="display:grid;gap:4px"></div>
+      <div class="row" style="margin-top:6px;gap:6px;flex-wrap:wrap"><button class="pill sm y" id="sCheck">افحص هسة</button><button class="pill sm" id="sCheckEp">افحص الحلقة المفتوحة بالكامل</button></div></div>
     <div class="f card"><b>الدعم والاقتراحات</b><div class="muted tiny" style="margin:4px 0 8px;line-height:1.7">تذكرت ميزة؟ اكتبها هنا. تنفتح صفحة الطلب بحسابك، تدوس الزر الأخضر، وتوصلني. من تنزل الميزة، التطبيق يحدّث نفسه.</div>
       <textarea id="sIdea" rows="3" placeholder="اكتب الميزة الي تريدها…"></textarea><div class="row" style="margin-top:6px"><button class="pill sm y" id="sIdeaGo">ارسلها</button></div></div>
     <div class="f card"><div class="row"><b class="grow">دبلجة بصوتك (إلفن لابس)</b><button class="pill sm" id="sElOff" hidden>افصله</button></div>
@@ -802,7 +830,7 @@ let state = {episodes: []}, cur = null, ep = null, step = 1, job = {}, logNext =
 let data = {sentences: null, captions: null, plan: null, timeline: null, look: null, sound: null, review: {}};
 let planSub = 1, pendingFix = {}, pendingDel = new Set(), keepMap = {}, notes = [];
 const STEPS = [["الجمل", "sentences"], ["الصوت", "sound"], ["الكابشن", "captions"], ["الخطة", "plan"], ["البناء", "build"], ["الملاحظات", "notes"]];
-const RUNS = {prepare: 1, cut: 1, sentences: 1, captions: 3, plan: 4, images: 4, build: 5, final: 5, requests: 6, assist: 4, auto: 1, chat: 4};
+const RUNS = {prepare: 1, cut: 1, sentences: 1, captions: 3, plan: 4, images: 4, build: 5, final: 5, requests: 6, assist: 4, auto: 1, chat: 4, learn: 6, selfcheck: 5};
 
 async function refresh(){
   try { state = await api("/api/state"); } catch (_) { return; }
@@ -1527,7 +1555,19 @@ async function elRefresh(){ const st = await api("/api/eleven").catch(() => ({})
 $("sElSave").onclick = async () => { try { await post("/api/eleven/key", {key: $("sElKey").value}); $("sElKey").value = ""; toast("انربط ✅"); elRefresh(); } catch (e){ toast(e.message); } };
 $("sElOff").onclick = async () => { await post("/api/eleven/unlink"); elRefresh(); };
 $("sElOpen").onclick = () => openUrl("https://elevenlabs.io/app/settings/api-keys");
-$("tSet").onclick = () => { ytRefresh(); drawThemes(); aiRefresh(); elRefresh();
+async function learnRefresh(){ const st = await api("/api/learning").catch(() => ({}));
+  $("sTaste").value = st.taste || "";
+  $("sLearnSt").textContent = (st.lessons ? "تعلم من " + ar(st.lessons) + " مرة" : "لسه ما تعلم") + (st.pending ? " · " + ar(st.pending) + " تعديل جديد ينتظر" : ""); }
+$("sTasteSave").onclick = async () => { await post("/api/learning", {taste: $("sTaste").value}); toast("انحفظ ذوقك"); learnRefresh(); };
+$("sTasteClear").onclick = async (e) => { const b = e.currentTarget;
+  if (b.dataset.sure !== "1"){ b.dataset.sure = "1"; b.textContent = "أكيد؟ دوس مرة ثانية"; setTimeout(() => { b.dataset.sure = ""; b.textContent = "امسح الذوق"; }, 4000); return; }
+  await post("/api/learning", {taste: ""}); toast("انمسح"); learnRefresh(); };
+$("sLearnNow").onclick = () => { if (!needEp()) return; $("dSet").hidden = true; run("learn"); };
+$("sCheck").onclick = async () => { $("sCheckOut").innerHTML = '<span class="dim">دا أفحص…</span>';
+  const r = await api("/api/selfcheck").catch(() => []);
+  $("sCheckOut").innerHTML = r.map(x => `<div>${x.ok ? "✅" : "⚠️"} ${esc(x.text)}</div>`).join("") || "ما گدرت أفحص"; };
+$("sCheckEp").onclick = () => { if (!needEp()) return; $("dSet").hidden = true; run("selfcheck"); };
+$("tSet").onclick = () => { ytRefresh(); drawThemes(); aiRefresh(); elRefresh(); learnRefresh();
   const c = state.claude || {}; $("sClaude").textContent = !c.installed ? "مو منصّب. دوس «حدّث» تحت." : c.logged_in ? "مربوط بحسابك ✅" : "مو مربوط بعد: دوس «اربط حسابك» (مرة وحدة).";
   $("sLink").textContent = c.logged_in ? "اربطه من جديد" : "اربط حسابك";
   $("sFolder").textContent = state.folder || ""; const v = state.version || {}; $("sVer").textContent = v.commit ? `النسخة ${v.commit.slice(0, 7)} · ${v.date || ""}` : "يجيب آخر نسخة ويرجع يشتغل"; $("dSet").hidden = false; };
@@ -1588,7 +1628,39 @@ function showPanel(k){
   if (k === "format") loadFormat();
   if (k === "sounds") loadSfx();
   if (k === "extras") loadExtras();
+  if (k === "versions") loadVersions();
 }
+/* versions: every build kept side by side; watch one, rename, or go back to it */
+let verOn = null;
+async function loadVersions(){
+  const box = $("verList"), vs = await api(E() + "/versions").catch(() => []);
+  if (!stData) stData = await api("/api/styles").catch(() => []);
+  const styleName = (id) => ((stData || []).find(x => x.id === id) || {}).name || id;
+  if (!vs.length){ box.innerHTML = `<div class="dim">لسه ماكو نسخ. أول ما تبني معاينة تنحفظ هنا لحالها.</div>`; return; }
+  const when = (t) => new Date(t * 1000).toLocaleString("ar-IQ", {weekday: "short", hour: "numeric", minute: "2-digit"});
+  box.innerHTML = vs.map(v => `<div class="card ver${verOn === v.n ? " on" : ""}" style="display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px;align-items:center;padding:8px">
+    <div style="aspect-ratio:16/9;border-radius:8px;overflow:hidden;background:var(--bg2,#0003)">${v.cover ? `<img src="/files/${enc(cur)}/${v.cover}" style="width:100%;height:100%;object-fit:cover">` : ""}</div>
+    <div style="min-width:0"><b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(v.name)}">${esc(v.name)}</b>
+      <div class="dim tiny">${v.style ? esc(styleName(v.style)) + " · " : ""}${when(v.at)}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+        ${v.preview ? `<button class="pill" data-vplay="${v.n}">▶ شوف</button>` : ""}
+        <button class="pill y" data-vuse="${v.n}">اشتغل عليها</button>
+        <button class="pill" data-vren="${v.n}" title="سمّيها">✎</button>
+        <button class="pill" data-vdel="${v.n}" title="امسحها">🗑</button></div></div></div>`).join("");
+  const byN = (n) => vs.find(v => v.n === +n);
+  box.querySelectorAll("[data-vplay]").forEach(b => b.onclick = () => { const v = byN(b.dataset.vplay); verOn = v.n; vSrc = `/files/${enc(cur)}/${v.preview}`; video.src = vSrc; video.hidden = false; $("vEmpty").hidden = true; $("vWhich").textContent = v.name; video.play().catch(() => {}); toast("دا تشوف «" + v.name + "»"); loadVersions(); });
+  box.querySelectorAll("[data-vuse]").forEach(b => b.onclick = async () => { const v = byN(b.dataset.vuse);
+    if (b.dataset.sure !== "1"){ b.dataset.sure = "1"; b.textContent = "متأكد؟ دوس مرة ثانية"; setTimeout(() => { b.dataset.sure = ""; b.textContent = "اشتغل عليها"; }, 4000); return; }
+    await post(E() + "/version", {do: "use", n: v.n}); verOn = null; await loadAll(); loadVersions(); toast("رجعت لـ«" + v.name + "». شغلك القديم انحفظ نسخة"); });
+  box.querySelectorAll("[data-vren]").forEach(b => b.onclick = () => { const v = byN(b.dataset.vren), row = b.closest(".ver").querySelector("b");
+    row.innerHTML = `<input value="${esc(v.name)}" style="width:100%" maxlength="60">`; const i = row.querySelector("input"); i.focus(); i.select();
+    const done = async () => { await post(E() + "/version", {do: "rename", n: v.n, name: i.value}); loadVersions(); };
+    i.onkeydown = (e) => { if (e.key === "Enter") done(); if (e.key === "Escape") loadVersions(); }; i.onblur = done; });
+  box.querySelectorAll("[data-vdel]").forEach(b => b.onclick = async () => {
+    if (b.dataset.sure !== "1"){ b.dataset.sure = "1"; b.textContent = "أكيد؟"; setTimeout(() => { b.dataset.sure = ""; b.textContent = "🗑"; }, 4000); return; }
+    await post(E() + "/version", {do: "delete", n: +b.dataset.vdel}); loadVersions(); });
+}
+$("verSave").onclick = async () => { if (!needEp()) return; await post(E() + "/version", {do: "save", name: ""}); loadVersions(); toast("انحفظت نسخة"); };
 document.querySelectorAll("#rail .rb[data-panel]").forEach(b => b.onclick = () => showPanel(b.dataset.panel));
 $("rChat").onclick = () => ep ? openChat() : toast("افتح مشروع أول");
 const off = () => (data.timeline && data.timeline.offset) || 0;
@@ -1810,7 +1882,43 @@ async function openExport(){
   $("xBody").querySelectorAll("[data-copy]").forEach(b => b.onclick = () => navigator.clipboard.writeText(info[b.dataset.copy]).then(() => toast("انسخ"), () => toast("ما گدرت أنسخ")));
 }
 $("tExport").onclick = openExport;
-$("vFull").onclick = () => { const v = $("vwrap"); (v.requestFullscreen || v.webkitRequestFullscreen || (() => {})).call(v); };
+function theater(on){ $("vwrap").classList.toggle("theater", on); $("theaterX").hidden = !on; }
+$("vFull").onclick = async () => {
+  const v = $("vwrap");
+  try { if (v.requestFullscreen) await v.requestFullscreen(); else if (v.webkitRequestFullscreen) v.webkitRequestFullscreen(); else throw 0; }
+  catch (_) { theater(true); }   // the window's own full size when the system full screen is refused
+};
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && $("vwrap").classList.contains("theater")) theater(false); });
+$("theaterX").onclick = () => theater(false);
+video.addEventListener("dblclick", () => $("vFull").click());
+
+/* ---------- resize the boxes with the mouse; double-click a handle to reset ---------- */
+(function grips(){
+  const root = document.documentElement.style, KEY = "uru-layout";
+  let saved = {}; try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (_) {}
+  for (const k of ["pw", "iw", "th"]) if (saved[k]) root.setProperty("--" + k, saved[k] + "px");
+  const mk = (cls) => { const g = document.createElement("div"); g.className = "gh " + cls; document.body.appendChild(g); return g; };
+  const gp = mk("v"), gi = mk("v"), gt = mk("h");
+  function place(){
+    const P = $("panel").getBoundingClientRect(), I = $("inspector").getBoundingClientRect(), T = $("tl").getBoundingClientRect();
+    const show = (g, ok) => g.style.display = ok && $("lib").hidden ? "block" : "none";
+    Object.assign(gp.style, {left: (P.left - 6) + "px", top: P.top + "px", height: P.height + "px"}); show(gp, P.width > 0);
+    Object.assign(gi.style, {left: (I.right - 2) + "px", top: I.top + "px", height: I.height + "px"}); show(gi, I.width > 0 && getComputedStyle($("inspector")).position !== "fixed");
+    Object.assign(gt.style, {left: T.left + "px", top: (T.top - 7) + "px", width: T.width + "px"}); show(gt, T.height > 0);
+  }
+  function drag(g, key, calc){
+    g.addEventListener("mousedown", (e) => { e.preventDefault(); g.classList.add("drag");
+      const move = (ev) => { const v = Math.round(calc(ev)); root.setProperty("--" + key, v + "px"); saved[key] = v; place(); window.dispatchEvent(new Event("resize")); };
+      const up = () => { g.classList.remove("drag"); document.removeEventListener("mousemove", move); document.removeEventListener("mouseup", up);
+        try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (_) {} };
+      document.addEventListener("mousemove", move); document.addEventListener("mouseup", up); });
+    g.addEventListener("dblclick", () => { root.removeProperty("--" + key); delete saved[key]; try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (_) {} setTimeout(place, 50); });
+  }
+  drag(gp, "pw", (ev) => Math.max(240, Math.min(window.innerWidth * 0.5, $("panel").getBoundingClientRect().right - ev.clientX)));
+  drag(gi, "iw", (ev) => Math.max(220, Math.min(520, ev.clientX - $("inspector").getBoundingClientRect().left)));
+  drag(gt, "th", (ev) => Math.max(150, Math.min(window.innerHeight * 0.6, window.innerHeight - ev.clientY - 8)));
+  window.addEventListener("resize", place); setInterval(place, 800); place();
+})();
 $("vZoom").onchange = () => { video.style.transform = `scale(${$("vZoom").value})`; };
 
 
@@ -1858,6 +1966,7 @@ const HELP = {
   "vSafe": ["حدود المنصات", "يرسم فوگ الفيديو الأماكن الي تغطيها أزرار وكتابة يوتيوب وتيك توك وريلز، حتى ما تحط كتابة مهمة بيها. ما يطلع بالفيديو."],
   "panel:sounds": ["الأصوات", "مؤثرات صوتية ملكك. «أضف» تحطها ببداية المشهد المحدد بس."],
   "panel:extras": ["الإضافات", "خيارات للحلقة كلها: كابشن الريلز، المساعد يتحكم بالرتم، الموسيقى، بداية ونهاية جاهزة. كلها تشتغل وتطفي، وتنطبق بالبناء الجاي."],
+  "panel:versions": ["النسخ", "كل بناء ينحفظ نسخة لحاله. تشوف النسخ القديمة وترجع لأي وحدة تريدها."],
   "panel:colors": ["الألوان", "لون الفيديو كله: لوك جاهز، حرارة، صبغة، إضاءة، وتحويل ألوان كاميرة سوني. وجهك يبقى طبيعي."],
   "panel:format": ["المقاس والريلز", "تختار مقاطع الريلز بإيدك (من وين لوين)، وتطلعها عمودية. الحلقة الأصلية ما تتغيّر."],
   "tLib": ["الرئيسية", "ترجع لمشاريعك. الشغل محفوظ لحاله."],

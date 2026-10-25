@@ -2,6 +2,7 @@
 import json
 import os
 import stat
+import sys
 import threading
 import time
 import urllib.parse
@@ -19,6 +20,12 @@ ev = lambda o: print(json.dumps(o, ensure_ascii=False), flush=True)
 if os.environ.get("FAKE_CLAUDE") == "login":
     ev({"type": "result", "subtype": "success", "is_error": True, "result": "Invalid API key · Please run /login"})
     sys.exit(1)
+t = re.search(r"ملف الذوق الحالي: (.+)", prompt)
+if t:   # the learning step: the taste file is rewritten from what he changed
+    seen = "كابشن أصفر" if "yellow" in prompt else "شي"
+    pathlib.Path(t.group(1).strip()).write_text("## الكابشن والخط\n- يحب " + seen + " (مرة وحدة)\n", encoding="utf-8")
+    ev({"type": "result", "subtype": "success", "is_error": False, "result": "تعلمت"})
+    sys.exit(0)
 m = re.search(r"الحلقة بالمجلد: (.+)", prompt)
 if m:
     ep = pathlib.Path(m.group(1).strip())
@@ -245,6 +252,70 @@ def test_scene_tools_and_undo(app, tmp_path):
     assert studio.undo(ep)            # back to the first snapshot: one face scene
     assert len(json.loads(ep.plan.read_text())["beats"]) == 1
     assert studio.redo(ep) and len(json.loads(ep.plan.read_text())["beats"]) == 3
+
+
+def test_versions_keep_every_build_and_go_back(app):
+    from editor.app import studio
+    from editor.pipeline.paths import Episode
+    d = srv.EPISODES / srv.create_episode("نسخ", str(app))["id"]
+    ep = Episode(d).ensure()
+    ep.plan.write_text('{"beats": [1]}', encoding="utf-8")
+    (ep.edit / "style.txt").write_text("noir", encoding="utf-8")
+    (ep.edit / "preview.mp4").write_bytes(b"first")
+    assert studio.save_version(ep, auto=True)["style"] == "noir"
+    ep.plan.write_text('{"beats": [1, 2]}', encoding="utf-8")
+    (ep.edit / "style.txt").write_text("retro-collage", encoding="utf-8")
+    (ep.edit / "preview.mp4").write_bytes(b"second")
+    studio.save_version(ep, "الثانية")
+    assert [(v["n"], v["style"]) for v in studio.list_versions(ep)] == [(2, "retro-collage"), (1, "noir")]
+    studio.use_version(ep, 1)                        # back to the first; the current work is kept as a version first
+    assert ep.plan.read_text() == '{"beats": [1]}' and (ep.edit / "preview.mp4").read_bytes() == b"first"
+    vs = studio.list_versions(ep)
+    assert vs[0]["n"] == 3 and (d / vs[0]["preview"]).read_bytes() == b"second"
+    (ep.edit / "preview.mp4").write_bytes(b"rebuilt")   # a new build never touches a kept version
+    assert (d / vs[-1]["preview"]).read_bytes() == b"first"
+    studio.rename_version(ep, 3, "قبل")
+    assert [v["name"] for v in studio.delete_version(ep, 2)] == ["قبل", "النسخة 1"]
+    for _ in range(studio.KEEP_AUTO + 3):            # old automatic versions are cleaned, named ones stay
+        studio.save_version(ep, auto=True)
+    vs = studio.list_versions(ep)
+    assert sum(v["auto"] for v in vs) == studio.KEEP_AUTO and "قبل" in [v["name"] for v in vs]
+    with pytest.raises(ValueError):
+        studio.use_version(ep, 99)
+
+
+def test_the_assistant_learns_his_taste_and_uses_it_next_time(app):
+    from editor.app import learning
+    e = srv.create_episode("ذوق", str(app))
+    d = srv.EPISODES / e["id"]
+    learning.note(srv.HOME, e["id"], "options", {"captions": {"color": "yellow"}, "words": ["كبير"] * 500})
+    assert "words" not in learning.events(srv.HOME)[0]["detail"]          # bulky parts are never logged
+    assert learning.status(srv.HOME)["pending"] == 1 and srv.learning.prompt_block(srv.HOME) == ""
+    srv.start_job(e["id"], "learn")
+    _wait()
+    assert srv.JOB.ok, srv.JOB.lines
+    st = learning.status(srv.HOME)
+    assert "كابشن أصفر" in st["taste"] and st["pending"] == 0 and st["lessons"] == 1
+    assert "كابشن أصفر" in srv._plan_extra(d)                              # the next plan starts from his taste
+    srv.start_job(e["id"], "learn")                                        # nothing new: no Claude call, still fine
+    _wait()
+    assert srv.JOB.ok and learning.status(srv.HOME)["lessons"] == 1
+    learning.set_taste(srv.HOME, "")
+    assert learning.taste(srv.HOME) == "" and srv.STEPS["final"][-1] == "learn"
+
+
+def test_self_check_and_a_stuck_step_is_stopped(app, monkeypatch, tmp_path):
+    (srv.HOME).mkdir(parents=True, exist_ok=True)
+    (srv.HOME / "prefs.json").write_text("{broken", encoding="utf-8")
+    rows = srv.selfcheck()
+    assert any("خربان" in r["text"] for r in rows) and not (srv.HOME / "prefs.json").exists()
+    assert any("المساحة" in r["text"] for r in rows)
+    monkeypatch.setattr(srv, "STALL_MIN", 0.02)                           # ~1 second of silence = stuck
+    real_sleep = time.sleep
+    monkeypatch.setattr(srv.time, "sleep", lambda s: real_sleep(0.2 if s == 15 else s))
+    t0 = time.monotonic()
+    code = srv._run([sys.executable, "-c", "import time; print('hi', flush=True); time.sleep(30)"])
+    assert time.monotonic() - t0 < 10 and code != 0 and any("علگت" in x for x in srv.JOB.lines)
 
 
 def test_optional_extras_and_suggestions(app, monkeypatch):

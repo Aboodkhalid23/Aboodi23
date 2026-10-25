@@ -31,6 +31,8 @@ from datetime import date, datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
+from . import learning
+
 CODE = Path(__file__).resolve().parents[2]
 UI = Path(__file__).resolve().parent / "ui"
 MAC = sys.platform == "darwin"
@@ -44,8 +46,10 @@ STEPS = {"all": ["prep", "plan", "render", "suite"], "from-plan": ["plan", "rend
          "suite": ["suite"], "requests": ["requests", "render"], "preview": ["preview"],
          # the studio's steps (one screen each)
          "prepare": ["fetch", "script-names", "transcribe"], "cut": ["cut"], "sentences": ["sentences"], "captions": ["captions"],
-         "images": ["images"], "build": ["preview"], "final": ["render"], "assist": ["assist"],
-         "auto": ["fetch", "script-names", "transcribe", "cut", "plan", "ai", "images", "render"], "chat": ["chat"],
+         "images": ["images"], "build": ["preview"], "final": ["render", "learn"], "assist": ["assist"],
+         "auto": ["fetch", "script-names", "transcribe", "cut", "plan", "ai", "images", "render", "learn"], "chat": ["chat"],
+         # the assistant learns his taste from what he changed (also after every final build), and the app checks itself
+         "learn": ["learn"], "selfcheck": ["selfcheck"],
          "shorts": ["shorts"], "export": ["export"],
          # a style from the Styles panel on the whole video: the assistant re-plans in it, then a new preview
          "restyle": ["plan", "ai", "images", "preview"],
@@ -54,7 +58,7 @@ STEPS = {"all": ["prep", "plan", "render", "suite"], "from-plan": ["plan", "rend
 STEP_NAMES = {"prep": "التجهيز", "plan": "خطة المونتير", "render": "النسخة الكاملة", "preview": "المعاينة",
               "suite": "غرفة المونتاج", "requests": "ملاحظاتك", "fetch": "تجهيز الفيديو", "transcribe": "تفريغ الكلام",
               "cut": "قص المقطع", "sentences": "المساعد يراجع الجمل", "captions": "المساعد يراجع الكابشن",
-              "images": "الصور", "assist": "المساعد", "chat": "المساعد", "shorts": "الريلز", "export": "التصدير", "reels-pick": "اختيار الريلز", "dub": "الدبلجة", "thumbs": "الصور المصغرة", "style-ref": "ستايل من فيديو", "script-names": "أسماء السكربت", "translate": "الترجمة", "ai": "مشاهد الذكاء الاصطناعي", "youtube": "الرفع على يوتيوب"}
+              "images": "الصور", "assist": "المساعد", "chat": "المساعد", "shorts": "الريلز", "export": "التصدير", "reels-pick": "اختيار الريلز", "dub": "الدبلجة", "thumbs": "الصور المصغرة", "style-ref": "ستايل من فيديو", "script-names": "أسماء السكربت", "translate": "الترجمة", "ai": "مشاهد الذكاء الاصطناعي", "youtube": "الرفع على يوتيوب", "learn": "المساعد يتعلم ذوقك", "selfcheck": "فحص التطبيق والحلقة"}
 CLAUDE_TOOLS = ["Read", "Write", "Edit", "Glob", "Grep", "WebSearch", "WebFetch", "TodoWrite",
                 "Bash(python -m editor.pipeline:*)", "Bash(python3 -m editor.pipeline:*)",
                 "Bash(ffprobe:*)", "Bash(ffmpeg:*)", "Bash(ls:*)"]
@@ -244,7 +248,7 @@ class Job:
     def __init__(self):
         self.ep, self.step, self.steps, self.lines = None, None, [], []
         self.running, self.ok, self.proc, self.stop_asked, self.need_login = False, None, None, False, False
-        self.claude_failed = False
+        self.claude_failed, self.stalled, self.last_out = False, False, 0.0
         self.progress, self.message, self.started, self.last_reply = None, "", 0.0, ""
         self.lock = threading.Lock()
 
@@ -412,17 +416,35 @@ class ClaudeLink:
 LINK = ClaudeLink()
 
 
+STALL_MIN = 25   # minutes without one line of output before a step counts as stuck
+
+
 def _run(cmd: list[str], on_line=None) -> int:
     JOB.say("")
     p = subprocess.Popen(cmd, cwd=CODE, env=_env(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                          start_new_session=True)
     JOB.proc = p
+    JOB.last_out = time.monotonic()
+
+    def watchdog():   # a step silent for STALL_MIN minutes is stuck: stop it so the app never hangs
+        while p.poll() is None:
+            time.sleep(15)
+            if time.monotonic() - JOB.last_out > STALL_MIN * 60 and p.poll() is None:
+                JOB.stalled = True
+                try:
+                    os.killpg(p.pid, signal.SIGTERM)
+                except OSError:
+                    pass
+                return
+    JOB.stalled = False
+    threading.Thread(target=watchdog, daemon=True).start()
     buf = b""
     while True:
         chunk = p.stdout.read1(4096) if hasattr(p.stdout, "read1") else p.stdout.read(4096)
         if not chunk:
             break
         buf += chunk
+        JOB.last_out = time.monotonic()
         parts = re.split(rb"[\r\n]", buf)
         buf = parts.pop()
         for raw in parts:
@@ -432,6 +454,8 @@ def _run(cmd: list[str], on_line=None) -> int:
         (on_line or JOB.say)(buf.decode("utf-8", "replace"))
     code = p.wait()
     JOB.proc = None
+    if JOB.stalled:
+        JOB.say(f"⏱️ هاي الخطوة علگت ({STALL_MIN} دقيقة بلا ولا حركة)، فوگفتها. دوسها مرة ثانية، وإذا رجعت تعلگ دز لنا من «اقترح ميزة»")
     return code
 
 
@@ -560,6 +584,27 @@ REQ_PROMPT = """انت المونتير الآلي، وشغّال من داخل 
 تعديلاته بالصفحة (المشاهد والصور والريلز) رجعت للخطة. نفّذ كل طلب بتعديل "{ep}/edit/edit_plan.json" (سكيل editor، قسم غرفة المونتاج)، وافحص بـ python -m editor.pipeline validate "{ep}" لحد ما يطلع ✅. لا تطلع النسخة الكاملة (التطبيق يطلعها بعدك). ممنوع صرف فلوس أو رصيد.
 بالآخر اكتب "{ep}/edit/work/requests_done.json" بهالشكل: {{"<id الطلب>": "رد قصير بالعربي العراقي: شنو سويت"}}. كل رسائلك عربي بس."""
 
+
+LEARN_PROMPT = """انت مساعد المونتاج بتطبيق URU على حاسبة صاحب القناة. شغلك هسة: تتعلم ذوقه من الي غيّره هو بيده، حتى الحلقات الجاية تطلع من أول مرة مثل ما يريد. ماكو أحد يجاوبك، فلا تسأل.
+
+هاي التعديلات الي سواها من آخر مرة تعلمت (كل سطر: الحلقة، نوع التعديل، التفاصيل):
+{events}
+
+الحلقة الأخيرة: {ep}
+- خطتها النهائية: {ep}/edit/edit_plan.json، ونسخها القديمة (الي بناها المساعد قبل تعديلاته) بـ {ep}/edit/versions/*/edit_plan.json. قارن أول نسخة بالأخيرة: شنو شال، شنو ضاف، شنو بدّل (مشاهد، صور، مؤثرات، انتقالات، ستايل، كابشن، ألوان، موسيقى، أصوات، رتم).
+- ملاحظاته ومحادثته ويه المساعد بـ {ep}/edit/ (إذا موجودة).
+
+ملف الذوق الحالي: {taste_file}
+{taste}
+
+اكتب ملف الذوق من جديد بـ Write على نفس المسار ({taste_file}):
+- قواعد قصيرة وواضحة بالعربي، كل وحدة سطر يبدي بـ «- »، مجمّعة تحت عناوين: الستايل والشكل، الكابشن والخط، الصور والمشاهد، المؤثرات والانتقالات، الصوت والموسيقى، الرتم والقص، أشياء يكرهها.
+- كل قاعدة لازم تجي من شي سواه هو فعلاً (تعديل تكرر، أو طلب صريح). لا تخمّن. إذا شي سواه مرة وحدة اكتب «(مرة وحدة)» بآخره، وإذا تكرر بأكثر من حلقة اكتب «(ثابت)».
+- إذا تعديل جديد يناقض قاعدة قديمة، الجديد يغلب: بدّل القديمة.
+- خلي الملف أقل من ٦٠ سطر: ادمج المتشابه، واحذف الي ما يفيد.
+- لا تغيّر أي ملف ثاني.
+بالآخر اكتب سطرين: شنو تعلمت جديد.
+"""
 
 CHAT_PROMPT = """انت مساعد المونتاج بتطبيق URU على حاسبة صاحب القناة، وتحچي وياه مثل مونتير صاحبه. هو يشوف الحلقة ويحچي وياك.
 الحلقة: {ep}
@@ -1079,7 +1124,7 @@ def _chat_step(d: Path) -> int:
     snapshot(Episode(d))   # what the assistant changes can be undone too
     JOB.last_reply = ""
     code = _claude(CHAT_PROMPT.format(ep=d, history=history, message=last["text"],
-                                      context=_chat_context(d, last.get("ctx") or {}) + _files_note(d),
+                                      context=_chat_context(d, last.get("ctx") or {}) + _files_note(d) + learning.prompt_block(HOME),
                                       looks="، ".join(LOOK_NAMES)))
     _own_media(d)
     after = json.loads(plan_f.read_text(encoding="utf-8")) if plan_f.exists() else {}
@@ -1144,6 +1189,74 @@ def _pipe(stage: str, d: Path, *extra: str) -> int:
     return _run([sys.executable, "-m", "editor.pipeline", stage, str(d), *extra])
 
 
+def _learn_step(d: Path) -> int:
+    """After a final build: what he changed becomes his taste file. Never fails the job: learning is a bonus."""
+    if not learning.pending(HOME) and not (d / "edit" / "versions").exists():
+        JOB.say("ماكو تعديلات جديدة أتعلم منها")
+        return 0
+    before = learning.taste(HOME)
+    code = _claude(LEARN_PROMPT.format(events=learning.digest(HOME), ep=d, taste_file=learning.taste_file(HOME),
+                                       taste=before or "(لسه فارغ: هاي أول مرة)"))
+    if code == 0:
+        learning.mark_learned(HOME)
+        JOB.say("🧠 تعلمت ذوقك من هاي الحلقة" if learning.taste(HOME) != before else "🧠 ذوقك نفسه، ما تغير شي")
+    else:
+        JOB.say("⚠️ ما گدرت أتعلم هالمرة. أحاول بالحلقة الجاية")
+    return 0
+
+
+def selfcheck(d: Path | None = None) -> list[dict]:
+    """The app checks itself: tools, disk, the engine's files, and (if there is one) the last build of the episode."""
+    out = []
+
+    def add(ok, text):
+        out.append({"ok": ok, "text": text})
+    for tool in ("ffmpeg", "ffprobe"):
+        add(bool(shutil.which(tool)), f"أداة {'الفيديو' if tool == 'ffmpeg' else 'فحص الفيديو'} موجودة" if shutil.which(tool) else f"أداة {tool} ناقصة: دوس «حدّث المونتير»")
+    add(bool(claude_bin()), "كلود منصّب" if claude_bin() else "كلود مو منصّب: دوس «حدّث المونتير»")
+    free = shutil.disk_usage(EPISODES if EPISODES.exists() else Path.home()).free / 2**30
+    add(free > 15, f"المساحة الفاضية {free:.0f} گيگا" + ("" if free > 15 else ": قليلة، الحلقة الطويلة تحتاج ٢٠ گيگا تقريباً. امسح حلقات قديمة"))
+    ui = Path(__file__).parent / "ui" / "index.html"
+    add(ui.exists() and ui.stat().st_size > 10000, "واجهة التطبيق سليمة" if ui.exists() else "واجهة التطبيق ناقصة: دوس «حدّث المونتير»")
+    for name in ("prefs.json",):
+        f = HOME / name
+        try:
+            if f.exists():
+                json.loads(f.read_text(encoding="utf-8"))
+            add(True, "إعداداتك سليمة")
+        except ValueError:
+            f.rename(f.with_suffix(".broken"))       # a broken settings file must never stop the app
+            add(False, "ملف إعداداتك كان خربان، رجّعته للأصل")
+    if d is not None:
+        for name, label in (("final.mp4", "الحلقة النهائية"), ("preview.mp4", "المعاينة")):
+            v = d / "edit" / name
+            if not v.exists():
+                continue
+            pr = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration:stream=codec_type", "-of", "json", str(v)],
+                                capture_output=True, text=True) if shutil.which("ffprobe") else None
+            try:
+                info = json.loads(pr.stdout) if pr else {}
+                kinds = {x.get("codec_type") for x in info.get("streams", [])}
+                dur = float(info.get("format", {}).get("duration", 0))
+                ok = {"video", "audio"} <= kinds and dur > 1
+                add(ok, f"{label}: {dur / 60:.1f} دقيقة، صورة وصوت سليمين" if ok else f"{label} بيها مشكلة (صورة أو صوت ناقص). ابنيها مرة ثانية")
+            except (ValueError, TypeError):
+                add(False, f"{label} خربانة. ابنيها مرة ثانية")
+    return out
+
+
+def _selfcheck_step(d: Path) -> int:
+    bad = 0
+    for r in selfcheck(d):
+        JOB.say(("✅ " if r["ok"] else "⚠️ ") + r["text"])
+        bad += not r["ok"]
+    final = d / "edit" / "final.mp4"
+    if final.exists():   # the editor's own review of the finished video: black frames, loudness, dull stretches
+        _run([sys.executable, "-m", "editor.pipeline", "qa", str(d)])
+    JOB.say("كلشي سليم 👌" if not bad else f"لگيت {bad} شي يحتاج انتباه، مكتوبة فوگ")
+    return 0
+
+
 def _plan_extra(d: Path) -> str:
     """The owner's idea, his chosen look and sound, and his notes on the old plan's cards, for the plan prompt."""
     lines = []
@@ -1192,7 +1305,7 @@ def _plan_extra(d: Path) -> str:
         pass
     if JOB.message:
         lines.append(f"- وطلب هسة: «{JOB.message}»")
-    return "\n".join(lines)
+    return "\n".join(lines) + learning.prompt_block(HOME)
 
 
 def _review_step(d: Path, kind: str) -> int:
@@ -1296,7 +1409,11 @@ def run_job(ep_id: str, what: str) -> None:
         elif step == "chat":
             code = _chat_step(d)
         elif step == "assist":
-            code = _claude(ASSIST_PROMPT.format(ep=d, message=JOB.message or "راجع الخطة وحسّنها"))
+            code = _claude(ASSIST_PROMPT.format(ep=d, message=JOB.message or "راجع الخطة وحسّنها") + learning.prompt_block(HOME))
+        elif step == "learn":
+            code = _learn_step(d)
+        elif step == "selfcheck":
+            code = _selfcheck_step(d)
         elif step == "plan":
             code = _claude(PLAN_PROMPT.format(ep=d, extra=_plan_extra(d) + _files_note(d), money=_money_rule()))
             if code == 0:
@@ -1324,6 +1441,12 @@ def run_job(ep_id: str, what: str) -> None:
             ok = False
             break
         JOB.say(f"✅ {STEP_NAMES[step]} خلص ({mins:.0f} دقيقة)" if mins >= 1 else f"✅ {STEP_NAMES[step]} خلص")
+        if step in ("preview", "render"):   # every build is kept as a version he can go back to
+            try:
+                v = studio.save_version(Episode(d), auto=True)
+                JOB.say(f"🗂️ انحفظت «{v['name']}» بالنسخ")
+            except Exception as exc:   # a version is a bonus, never a reason to fail the job
+                JOB.say(f"⚠️ ما گدرت أحفظ نسخة: {exc}")
     JOB.ok, JOB.running = ok and not JOB.stop_asked, False
 
 
@@ -1672,6 +1795,10 @@ class Handler(BaseHTTPRequestHandler):
                 return self._file(f) if f.is_relative_to(root) else self._err("لا", 403)
             if path == "/api/prefs":
                 return self._json(prefs())
+            if path == "/api/learning":
+                return self._json(learning.status(HOME))
+            if path == "/api/selfcheck":
+                return self._json(selfcheck())
             if path == "/api/eleven":
                 from . import dubbing
                 return self._json(dubbing.status(HOME))
@@ -1721,7 +1848,7 @@ class Handler(BaseHTTPRequestHandler):
             m = re.match(r"^/api/episodes/([^/]+)/cover$", path)
             if m:
                 return self._file(episode_cover(episode_dir(m.group(1))))
-            m = re.match(r"^/api/episodes/([^/]+)/(sentences|captions|plan|timeline|look|sound|idea|review|frame|voice-sample|media|effects|export-info|options|suggest|variants)$", path)
+            m = re.match(r"^/api/episodes/([^/]+)/(sentences|captions|plan|timeline|look|sound|idea|review|frame|voice-sample|media|effects|export-info|options|suggest|variants|versions)$", path)
             if m:
                 return self._studio_get(episode_dir(m.group(1)), m.group(2), q)
             m = re.match(r"^/api/db/([^/]+)/(doc|list)$", path)
@@ -1830,6 +1957,8 @@ class Handler(BaseHTTPRequestHandler):
         if what == "options":
             from editor.pipeline.options import load_options
             return self._json(load_options(ep))
+        if what == "versions":
+            return self._json(studio.list_versions(ep))
         if what == "variants":
             return self._json(studio.ai_variants(ep, int(q.get("i", -1))))
         if what == "suggest":
@@ -1850,6 +1979,18 @@ class Handler(BaseHTTPRequestHandler):
             from editor.pipeline.options import save_options
             studio.snapshot(ep)
             return self._json(save_options(ep, b))
+        if what == "version":   # save / use / rename / delete a version
+            act, n = b.get("do"), int(b.get("n", 0))
+            if act == "save":
+                studio.save_version(ep, str(b.get("name", "")))
+                return self._json(studio.list_versions(ep))
+            if act == "use":
+                return self._json(studio.use_version(ep, n))
+            if act == "rename":
+                return self._json(studio.rename_version(ep, n, str(b.get("name", ""))))
+            if act == "delete":
+                return self._json(studio.delete_version(ep, n))
+            raise ValueError("شنو تريد تسوي بالنسخة؟")
         if what == "variant":
             studio.snapshot(ep)
             return self._json(studio.ai_variants(ep, int(b.get("i", -1))) if not b.get("name") else
@@ -1952,11 +2093,18 @@ class Handler(BaseHTTPRequestHandler):
                 if JOB.running:
                     raise RuntimeError("المساعد مشغول هسة. انتظره يخلص")
                 chat_add(d, {"role": "owner", "text": text, "ctx": b.get("ctx") or {}})
+                learning.note(HOME, m.group(1), "طلب من المساعد", text)
                 start_job(m.group(1), "chat", text)
                 return self._json({"ok": True, "messages": chat_load(d)})
-            m = re.match(r"^/api/episodes/([^/]+)/(sentences|captions|look|sound|idea|beat|undo|redo|media|media-note|short|options|choose|restyle|srt|variant)$", path)
+            m = re.match(r"^/api/episodes/([^/]+)/(sentences|captions|look|sound|idea|beat|undo|redo|media|media-note|short|options|choose|restyle|srt|variant|version)$", path)
             if m:
-                return self._studio_post(episode_dir(m.group(1)), m.group(2), self._body())
+                b = self._body()
+                if m.group(2) not in ("media",):   # what he changes is how the assistant learns his taste
+                    try:
+                        learning.note(HOME, m.group(1), m.group(2), b)
+                    except OSError:
+                        pass
+                return self._studio_post(episode_dir(m.group(1)), m.group(2), b)
             if path == "/api/style-ref":   # a video he likes: saved beside his styles, then the style is made from it
                 name = Path(q.get("name", "")).name
                 if Path(name).suffix.lower() not in (".mp4", ".mov", ".m4v", ".webm") or name.startswith("."):
@@ -2031,6 +2179,9 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json({"ok": True})
             if path == "/api/prefs":
                 return self._json(prefs(self._body()))
+            if path == "/api/learning":   # he reads, corrects or clears what the assistant learned
+                learning.set_taste(HOME, str(self._body().get("taste", "")))
+                return self._json(learning.status(HOME))
             if path == "/api/idea":   # kept on his Mac too, in case the GitHub page was closed
                 with open(HOME / "ideas.jsonl", "a", encoding="utf-8") as f:
                     f.write(json.dumps({"t": time.time(), "text": str(self._body().get("text", ""))[:4000]}, ensure_ascii=False) + "\n")

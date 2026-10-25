@@ -21,10 +21,23 @@ def _loudness(video: Path) -> tuple[float | None, float | None]:
     return (float(i[-1]) if i else None, float(tp[-1]) if tp else None)
 
 
-def _black(video: Path) -> list[tuple[float, float]]:
-    log = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-i", str(video), "-vf", "blackdetect=d=0.4:pix_th=0.08",
+FROZEN_S = 6.0   # the picture not moving at all this long means a render got stuck (idea from mortiflix final-pass)
+
+
+def _black_and_frozen(video: Path) -> tuple[list[tuple[float, float]], list[tuple[float, float]]]:
+    """One decode for both: black stretches, and stretches where not one pixel moves."""
+    log = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-i", str(video), "-vf",
+                          f"blackdetect=d=0.4:pix_th=0.08,freezedetect=n=0.001:d={FROZEN_S}",
                           "-an", "-f", "null", "-"], capture_output=True, text=True).stderr
-    return [(float(a), float(b)) for a, b in re.findall(r"black_start:([\d.]+) black_end:([\d.]+)", log)]
+    blacks = [(float(a), float(b)) for a, b in re.findall(r"black_start:([\d.]+) black_end:([\d.]+)", log)]
+    starts = [float(x) for x in re.findall(r"freeze_start: ([\d.]+)", log)]
+    ends = [float(x) for x in re.findall(r"freeze_end: ([\d.]+)", log)]
+    frozen = [(a, ends[i] if i < len(ends) else None) for i, a in enumerate(starts)]
+    return blacks, frozen
+
+
+def _black(video: Path) -> list[tuple[float, float]]:
+    return _black_and_frozen(video)[0]
 
 
 def _ts(t: float) -> str:
@@ -79,9 +92,11 @@ def qa(ep: Episode, preview: bool = False) -> dict:
         issues.append(f"مستوى الصوت {lufs} LUFS (المطلوب قريب من −14)")
     if peak is not None and peak > -0.5:
         issues.append(f"ذروة الصوت عالية ({peak} dBFS)")
-    blacks = _black(video)
+    blacks, frozen = _black_and_frozen(video)
     if blacks:
         issues.append("فريمات سودة: " + "، ".join(f"{_ts(a)}–{_ts(b)}" for a, b in blacks[:5]))
+    if frozen:
+        issues.append("الصورة واگفة (ما تتحرك): " + "، ".join(f"{_ts(a)}–{_ts(b) if b else 'الآخر'}" for a, b in frozen[:5]))
     sheets = contact_sheets(video, plan.beats, ep.work)
     d = {"video": str(video), "duration": round(info.duration, 2), "size": f"{info.width}x{info.height}",
          "fps": info.fps, "lufs": lufs, "peak": peak, "issues": issues, "sheets": [str(s) for s in sheets]}

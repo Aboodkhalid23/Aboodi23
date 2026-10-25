@@ -29,6 +29,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         cfg.userContentController.add(self, name: "app")
         cfg.mediaTypesRequiringUserActionForPlayback = []
         cfg.preferences.setValue(true, forKey: "developerExtrasEnabled")
+        if #available(macOS 12.3, *) { cfg.preferences.isElementFullscreenEnabled = true }   // the video's own full screen
         web = WKWebView(frame: .zero, configuration: cfg)
         web.navigationDelegate = self
         web.uiDelegate = self
