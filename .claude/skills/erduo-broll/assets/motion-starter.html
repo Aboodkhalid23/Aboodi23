@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>资料分流与焦点接力</title>
+  <style>
+    @font-face {
+      font-family: "Noto Sans SC";
+      src: url("assets/NotoSansSC.ttf") format("truetype");
+      font-weight: 100 900;
+      font-style: normal;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #0b1022; }
+    body { font-family: "Noto Sans SC", sans-serif; }
+
+    #S01 {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      color: #f7f3ea;
+      background:
+        radial-gradient(circle at 49% 44%, rgba(83, 102, 170, 0.28), transparent 36%),
+        linear-gradient(145deg, #121a36 0%, #0b1022 58%, #080c19 100%);
+    }
+
+    #S01::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: 0.18;
+      background-image:
+        linear-gradient(rgba(255,255,255,.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.055) 1px, transparent 1px);
+      background-size: 72px 72px;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,.9), transparent 88%);
+    }
+
+    .topline {
+      position: absolute;
+      left: 92px;
+      right: 92px;
+      top: 68px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      z-index: 80;
+    }
+
+    .eyebrow { color: #ff9b67; font-size: 22px; font-weight: 760; letter-spacing: 4px; }
+    h1 { margin: 8px 0 0; font-size: 58px; line-height: 1.12; letter-spacing: -1px; font-weight: 840; }
+    .fiction { margin-top: 8px; color: #9ca9ca; font-size: 21px; font-weight: 520; letter-spacing: 1px; }
+
+    .stage-label {
+      position: absolute;
+      left: 92px;
+      top: 195px;
+      z-index: 5;
+      color: #7f8daf;
+      font-size: 19px;
+      font-weight: 650;
+      letter-spacing: 3px;
+    }
+
+    .material-shell { position: absolute; transform-origin: center; }
+    .material-surface {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: 0 28px 70px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.2);
+      transform-origin: center;
+    }
+
+    #interviewShell { left: 116px; top: 272px; width: 474px; height: 408px; z-index: 35; }
+    #uiShell { left: 684px; top: 246px; width: 554px; height: 354px; z-index: 25; }
+    #chartShell { left: 1327px; top: 286px; width: 455px; height: 372px; z-index: 15; }
+
+    .interview {
+      padding: 34px 38px;
+      color: #15203c;
+      background: linear-gradient(150deg, #fff8e9, #eee3cc);
+      border-radius: 9px 22px 12px 9px;
+    }
+    .interview::after {
+      content: "";
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 72px;
+      height: 72px;
+      background: linear-gradient(225deg, #cfc3aa 0 49%, transparent 50%);
+      opacity: .78;
+    }
+    .material-kicker { font-size: 19px; font-weight: 760; letter-spacing: 3px; color: #7d6f60; }
+    .interview h2 { margin: 14px 0 26px; font-size: 36px; line-height: 1.2; }
+    .quote {
+      margin: 0;
+      padding-left: 24px;
+      border-left: 7px solid #ff8155;
+      font-size: 29px;
+      line-height: 1.5;
+      font-weight: 660;
+    }
+    .speaker { margin-top: 27px; color: #716c66; font-size: 21px; font-weight: 560; }
+
+    .ui-shot { background: #f4f6fb; border-radius: 24px; color: #18213b; }
+    .browser-bar {
+      height: 57px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 22px;
+      background: #dfe4f0;
+      border-bottom: 1px solid #cbd1df;
+    }
+    .browser-bar i { display: block; width: 12px; height: 12px; border-radius: 50%; background: #9aa5bf; }
+    .browser-url { margin-left: 10px; width: 280px; height: 24px; border-radius: 12px; background: #eef1f7; }
+    .ui-body { padding: 26px 30px; }
+    .ui-title { display: flex; align-items: baseline; justify-content: space-between; }
+    .ui-title strong { font-size: 28px; }
+    .ui-title span { color: #6f7a97; font-size: 18px; }
+    .price-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 20px; }
+    .price {
+      height: 173px;
+      padding: 20px;
+      border-radius: 16px;
+      background: #fff;
+      border: 1px solid #d8deeb;
+    }
+    .price.active { border: 3px solid #ff8155; box-shadow: 0 10px 22px rgba(255,129,85,.13); }
+    .price b { display: block; font-size: 23px; }
+    .price em { display: block; margin-top: 10px; color: #526080; font-size: 17px; font-style: normal; }
+    .feature { display: block; width: 82%; height: 9px; margin-top: 18px; border-radius: 5px; background: #dce2ed; }
+    .feature.short { width: 58%; }
+
+    .chart-card {
+      padding: 31px 30px 24px;
+      border-radius: 38px 10px 38px 10px;
+      background: linear-gradient(155deg, rgba(35,48,86,.96), rgba(18,26,55,.98));
+    }
+    .chart-title { font-size: 27px; font-weight: 760; }
+    .chart-note { margin-top: 4px; color: #a9b5d3; font-size: 18px; }
+    .chart-svg { display: block; width: 100%; height: 228px; margin-top: 16px; }
+    .chart-grid { stroke: rgba(203,215,244,.18); stroke-width: 2; }
+    .chart-line { fill: none; stroke: #7ee0ca; stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; }
+    .chart-point { fill: #ff8155; stroke: #fff0df; stroke-width: 5; }
+    .chart-axis { fill: #8997b8; font-size: 17px; font-family: "Noto Sans SC", sans-serif; }
+
+    .route-tag {
+      position: absolute;
+      left: 24px;
+      bottom: -23px;
+      min-width: 156px;
+      height: 49px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 22px;
+      border-radius: 25px;
+      background: #eef1fb;
+      color: #1d2949;
+      box-shadow: 0 10px 26px rgba(0,0,0,.28);
+      font-size: 22px;
+      font-weight: 780;
+      letter-spacing: 1px;
+      z-index: 45;
+    }
+
+    #routes {
+      position: absolute;
+      inset: 0;
+      width: 1920px;
+      height: 1080px;
+      z-index: 8;
+      pointer-events: none;
+    }
+    .route-line { fill: none; stroke: rgba(126,224,202,.68); stroke-width: 6; stroke-linecap: round; }
+    .route-halo { fill: none; stroke: rgba(126,224,202,.12); stroke-width: 19; stroke-linecap: round; }
+
+    .focus-baton {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 184px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 18px;
+      border-radius: 24px;
+      background: #ff8155;
+      color: #1c1521;
+      box-shadow: 0 12px 30px rgba(255,129,85,.30);
+      font-size: 21px;
+      font-weight: 820;
+      z-index: 90;
+    }
+    .focus-baton i { width: 11px; height: 11px; border-radius: 50%; background: #fff7e8; }
+
+    .insight-shell {
+      position: absolute;
+      left: 330px;
+      top: 780px;
+      width: 1260px;
+      height: 205px;
+      z-index: 50;
+    }
+    .insight {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: 255px 1fr 250px;
+      align-items: center;
+      padding: 28px 36px;
+      border-radius: 30px;
+      background: linear-gradient(100deg, rgba(247,243,234,.98), rgba(225,231,246,.98));
+      color: #16203a;
+      box-shadow: 0 34px 80px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.85);
+    }
+    .insight-label { color: #7a6680; font-size: 19px; font-weight: 780; letter-spacing: 3px; }
+    .insight-label strong { display: block; margin-top: 8px; color: #ff6f45; font-size: 31px; letter-spacing: 0; }
+    .insight h2 { margin: 0; font-size: 41px; line-height: 1.26; letter-spacing: -.5px; }
+    .evidence-count { text-align: right; color: #65718e; font-size: 20px; }
+    .evidence-count b { display: block; color: #17223f; font-size: 39px; }
+
+    .settled {
+      position: absolute;
+      right: 94px;
+      bottom: 52px;
+      color: #8997b7;
+      font-size: 19px;
+      font-weight: 620;
+      letter-spacing: 2px;
+      z-index: 70;
+    }
+  </style>
+</head>
+<body>
+  <main id="S01" class="clip" data-composition-id="S01" data-start="0" data-duration="8" data-width="1920" data-height="1080">
+    <header class="topline" id="header">
+      <div>
+        <div class="eyebrow">资料分流 / FOCUS RELAY</div>
+        <h1>三份证据，去往三个明确位置</h1>
+      </div>
+      <div class="fiction">虚构演示 · 无真实产品数据</div>
+    </header>
+    <div class="stage-label" id="stageLabel">待处理资料簇</div>
+
+    <section class="material-shell" id="interviewShell">
+      <article class="material-surface interview" id="interviewSurface">
+        <div class="material-kicker">用户访谈摘录</div>
+        <h2>第 07 次深访</h2>
+        <p class="quote">“我愿意付费，但看不懂两个版本到底差在哪。”</p>
+        <div class="speaker">受访者 B · 小团队负责人</div>
+      </article>
+      <div class="route-tag" id="interviewTag">需求证据</div>
+    </section>
+
+    <section class="material-shell" id="uiShell">
+      <article class="material-surface ui-shot" id="uiSurface">
+        <div class="browser-bar"><i></i><i></i><i></i><span class="browser-url"></span></div>
+        <div class="ui-body">
+          <div class="ui-title"><strong>定价页截图</strong><span>演示界面</span></div>
+          <div class="price-row">
+            <div class="price"><b>基础版</b><em>适合个人开始</em><span class="feature"></span><span class="feature short"></span></div>
+            <div class="price active"><b>进阶版</b><em>适合协作团队</em><span class="feature"></span><span class="feature short"></span></div>
+          </div>
+        </div>
+      </article>
+      <div class="route-tag" id="uiTag">市场证据</div>
+    </section>
+
+    <section class="material-shell" id="chartShell">
+      <article class="material-surface chart-card" id="chartSurface">
+        <div class="chart-title">试用 → 付费留存</div>
+        <div class="chart-note">第 3 天出现明显回落</div>
+        <svg class="chart-svg" viewBox="0 0 390 220" role="img" aria-label="虚构留存曲线">
+          <path class="chart-grid" d="M38 35H370 M38 100H370 M38 165H370" />
+          <path class="chart-line" d="M42 42 C104 48,125 61,167 76 S224 139,270 151 S330 157,364 166" />
+          <circle class="chart-point" cx="219" cy="126" r="10" />
+          <text class="chart-axis" x="34" y="207">D1</text>
+          <text class="chart-axis" x="197" y="207">D3</text>
+          <text class="chart-axis" x="342" y="207">D7</text>
+        </svg>
+      </article>
+      <div class="route-tag" id="chartTag">行为证据</div>
+    </section>
+
+    <svg id="routes" viewBox="0 0 1920 1080" aria-label="三类证据汇入下一步">
+      <g id="routeGlow">
+        <path class="route-halo" d="M353 706 C430 760,570 784,700 828" />
+        <path class="route-halo" d="M961 624 C961 692,961 748,961 804" />
+        <path class="route-halo" d="M1554 682 C1460 742,1332 781,1220 828" />
+      </g>
+      <g id="routeLines">
+        <path class="route-line" d="M353 706 C430 760,570 784,700 828" />
+        <path class="route-line" d="M961 624 C961 692,961 748,961 804" />
+        <path class="route-line" d="M1554 682 C1460 742,1332 781,1220 828" />
+      </g>
+    </svg>
+
+    <div class="focus-baton" id="focusBaton"><i></i><span>焦点接力</span></div>
+
+    <section class="insight-shell" id="insightShell">
+      <div class="insight" id="insightSurface">
+        <div class="insight-label">EVIDENCE → ACTION<strong>下一步</strong></div>
+        <h2 id="insightText">先验证：用户是否看得懂版本差异</h2>
+        <div class="evidence-count"><b>03 / 03</b>资料已归位</div>
+      </div>
+    </section>
+
+    <div class="settled" id="settled">归位完成 · 进入阅读停稳</div>
+  </main>
+
+  <script src="assets/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+
+    gsap.set('#header', { opacity: 0.38, y: -22 });
+    gsap.set('#stageLabel', { opacity: 0.28 });
+    gsap.set('#interviewShell', { x: 570, y: 8, opacity: 0 });
+    gsap.set('#uiShell', { x: 205, y: 44, opacity: 0 });
+    gsap.set('#chartShell', { x: -405, y: 18, opacity: 0 });
+    gsap.set('#interviewSurface', { rotation: -7, scale: 0.94 });
+    gsap.set('#uiSurface', { rotation: 3.5, scale: 0.96 });
+    gsap.set('#chartSurface', { rotation: 7, scale: 0.92 });
+    gsap.set(['#interviewTag', '#uiTag', '#chartTag'], { opacity: 0, y: 14, scale: 0.92 });
+    gsap.set(['#routeGlow', '#routeLines'], { opacity: 0 });
+    gsap.set('#focusBaton', { x: 786, y: 189, opacity: 0, scale: 0.9 });
+    gsap.set('#insightShell', { opacity: 0, y: 44 });
+    gsap.set('#insightSurface', { scale: 0.97 });
+    gsap.set('#insightText', { opacity: 0, y: 16 });
+    gsap.set('#settled', { opacity: 0 });
+
+    const tl = gsap.timeline({ paused: true });
+    tl.to('#header', { opacity: 1, y: 0, duration: 0.62, ease: 'power3.out' }, 0.05)
+      .to('#stageLabel', { opacity: 1, duration: 0.32, ease: 'power2.out' }, 0.28)
+      .to('#interviewShell', { opacity: 1, duration: 0.42, ease: 'power2.out' }, 0.34)
+      .to('#uiShell', { opacity: 1, duration: 0.42, ease: 'power2.out' }, 0.55)
+      .to('#chartShell', { opacity: 1, duration: 0.42, ease: 'power2.out' }, 0.76)
+      .to('#focusBaton', { opacity: 1, scale: 1, duration: 0.38, ease: 'power3.out' }, 1.08)
+
+      .to('#focusBaton', { x: 156, y: 214, duration: 0.58, ease: 'power3.inOut' }, 1.34)
+      .to('#interviewShell', { x: 0, y: 0, duration: 0.76, ease: 'power3.inOut' }, 1.56)
+      .to('#interviewSurface', { rotation: 0, scale: 1, duration: 0.66, ease: 'power3.out' }, 1.64)
+      .to('#interviewTag', { opacity: 1, y: 0, scale: 1, duration: 0.36, ease: 'power3.out' }, 2.08)
+
+      .to('#focusBaton', { x: 724, y: 188, duration: 0.56, ease: 'power3.inOut' }, 2.35)
+      .to('#uiShell', { x: 0, y: 0, duration: 0.72, ease: 'power3.inOut' }, 2.58)
+      .to('#uiSurface', { rotation: 0, scale: 1, duration: 0.62, ease: 'power3.out' }, 2.64)
+      .to('#uiTag', { opacity: 1, y: 0, scale: 1, duration: 0.34, ease: 'power3.out' }, 3.12)
+
+      .to('#focusBaton', { x: 1367, y: 228, duration: 0.58, ease: 'power3.inOut' }, 3.37)
+      .to('#chartShell', { x: 0, y: 0, duration: 0.74, ease: 'power3.inOut' }, 3.58)
+      .to('#chartSurface', { rotation: 0, scale: 1, duration: 0.64, ease: 'power3.out' }, 3.64)
+      .to('#chartTag', { opacity: 1, y: 0, scale: 1, duration: 0.34, ease: 'power3.out' }, 4.10)
+
+      .to('#routeGlow', { opacity: 1, duration: 0.42, ease: 'power2.out' }, 4.34)
+      .to('#routeLines', { opacity: 1, duration: 0.52, ease: 'power2.out' }, 4.46)
+      .to('#focusBaton', { x: 368, y: 733, duration: 0.72, ease: 'power3.inOut' }, 4.56)
+      .to('#insightShell', { opacity: 1, y: 0, duration: 0.64, ease: 'power3.out' }, 4.88)
+      .to('#insightSurface', { scale: 1, duration: 0.55, ease: 'power3.out' }, 4.96)
+      .to('#insightText', { opacity: 1, y: 0, duration: 0.52, ease: 'power3.out' }, 5.22)
+      .to('#focusBaton', { x: 368, y: 754, scale: 0.84, opacity: 0, duration: 0.32, ease: 'power2.in' }, 5.50)
+      .to('#stageLabel', { opacity: 0.38, duration: 0.38, ease: 'power2.out' }, 5.54)
+      .to('#settled', { opacity: 1, duration: 0.42, ease: 'power2.out' }, 5.66);
+
+    window.__timelines['S01'] = tl;
+  </script>
+</body>
+</html>

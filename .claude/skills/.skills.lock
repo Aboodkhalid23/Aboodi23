@@ -4,7 +4,7 @@ animation-principles iart-ai/motion-design-skills 3c129f7
 bang-motion bangtutorial/bang-motion c1aa65e
 beat-sync-editing iart-ai/motion-design-skills 3c129f7
 business-motion-film echris6/motion-video-kit e4b1c00
-captions-overlay heygen-com/hyperframes 0ae48c9
+captions-overlay heygen-com/hyperframes 3aca806
 caveman JuliusBrussee/caveman 9b68f7e
 caveman-compress JuliusBrussee/caveman 9b68f7e
 ceo-assistant Claudefarid/claude-ceo-skill 65cc5f9
@@ -21,6 +21,7 @@ diagram-animation iart-ai/explainer-video-skills 3e2d411
 dispatching-parallel-agents obra/superpowers 2ce8aa1
 dumbify artemnovitckii/content-skills 1c6e909
 edl-tighten krusemediallc/video-editor-agent 1c9e578
+erduo-broll erduo1998-cell/erduo-broll-loop-engineering 741583e
 executing-plans obra/superpowers 2ce8aa1
 explainer-engaging Barty-Bart/motion-graphics 3d83d98
 explainroo vincentsch/explainroo e95232c
@@ -34,8 +35,8 @@ higgsfield-generate higgsfield-ai/skills f83af0b
 higgsfield-soul-id higgsfield-ai/skills f83af0b
 higgsfield-video-explainer higgsfield-ai/skills f83af0b
 higgsfield-youtube-thumbnail higgsfield-ai/skills f83af0b
-hyperframes heygen-com/hyperframes 0ae48c9
-hyperframes-cli heygen-com/hyperframes 0ae48c9
+hyperframes heygen-com/hyperframes 3aca806
+hyperframes-cli heygen-com/hyperframes 3aca806
 hyperframes-motion-reel Sunwood-ai-labs/hyperframes-motion-reel-skill be78681
 karpathy-guidelines multica-ai/andrej-karpathy-skills 2c60614
 khan-explainer haiderfarooq3/khan-explainer 326bf9b
@@ -44,11 +45,11 @@ long-form-youtube yaxeen/storytelling-skills 24ef3c1
 manim-composer adithya-s-k/manim_skill cef0450
 manimce-best-practices adithya-s-k/manim_skill cef0450
 map-animation iart-ai/map-animation-skills 390ca98
-media-use heygen-com/hyperframes 0ae48c9
+media-use heygen-com/hyperframes 3aca806
 motion-art-direction iart-ai/motion-design-skills 3c129f7
 motion-brief-writer charlie947/motion-graphics-skills 229022e
 motion-broll Barty-Bart/motion-graphics 3d83d98
-motion-doctrine heygen-com/hyperframes 0ae48c9
+motion-doctrine heygen-com/hyperframes 3aca806
 motion-effects charlie947/motion-graphics-skills 229022e
 motioner Tarquished/motioner 3db5be4
 motionmaxxing Tejashmakwana/motionmaxxing 8c8ec0f
@@ -92,7 +93,7 @@ retention-pass BusyBee3333/animated-explainer-skills c1dd704
 rmg-article-highlights Liamrjohnston/remotion-motion-graphics-skill b860c79
 rmg-cinematic-camera Liamrjohnston/remotion-motion-graphics-skill b860c79
 rmg-motion-graphics Liamrjohnston/remotion-motion-graphics-skill b860c79
-seam-craft heygen-com/hyperframes 0ae48c9
+seam-craft heygen-com/hyperframes 3aca806
 session-memory ssupppp/claude-session-memory c10e840
 shot-composition iart-ai/motion-design-skills 3c129f7
 sound-design krusemediallc/video-editor-agent 1c9e578
@@ -130,6 +131,12 @@ thinking-systems tjboudreaux/cc-thinking-skills 7b8fece
 thinking-via-negativa tjboudreaux/cc-thinking-skills 7b8fece
 title-sequence-3d charlie947/motion-graphics-skills 229022e
 titles-and-thumbnails yaxeen/storytelling-skills 24ef3c1
+tob-code-improver trailofbits/skills 196a907
+tob-differential-review trailofbits/skills 196a907
+tob-modern-python trailofbits/skills 196a907
+tob-property-based-testing trailofbits/skills 196a907
+tob-second-opinion trailofbits/skills 196a907
+tob-sharp-edges trailofbits/skills 196a907
 using-git-worktrees obra/superpowers 2ce8aa1
 verification-before-completion obra/superpowers 2ce8aa1
 video-clone edenfunf/reelmimic d445b23

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Erduo B-roll Loop Engineering"
+  short_description: "Create polished B-roll through focused roles and visual review."
+  default_prompt: "Use $erduo-broll-loop-engineering to turn my original SRT and design into recognisable, editable B-roll through an independent Director, fresh chapter creators and independent visual review; prioritize picture quality, preserve context boundaries, and repair visible defects before authorized final delivery."

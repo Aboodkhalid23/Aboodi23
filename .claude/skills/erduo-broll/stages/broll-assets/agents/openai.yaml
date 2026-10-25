@@ -1,0 +1,4 @@
+interface:
+  display_name: "B-roll Assets"
+  short_description: "Freeze shared assets while keeping shot choices open."
+  default_prompt: "Use $broll-assets to freeze known shared media, fonts, licenses, and provenance while preserving native, provided, search, generate, and mixed routes for each Chapter Builder."

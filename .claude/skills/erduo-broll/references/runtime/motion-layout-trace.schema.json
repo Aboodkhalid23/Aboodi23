@@ -1,0 +1,200 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/erduo1998-cell/erduo-broll-loop-engineering/blob/main/erduo-broll-loop-engineering/references/runtime/motion-layout-trace.schema.json",
+  "title": "Rendered motion and layout geometry trace",
+  "description": "Runtime-captured sampled or dense geometry consumed by motion-layout-lint. It is machine evidence, not an aesthetic score.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "runtime", "compositionId", "compositionIdentity", "capture", "fps", "width", "height", "startFrame", "endFrame", "frameStep", "safeArea", "shots"],
+  "properties": {
+    "schemaVersion": { "enum": ["1.0.0", "1.1.0", "1.2.0"] },
+    "runtime": { "enum": ["remotion", "hyperframes"] },
+    "compositionId": { "type": "string", "minLength": 1 },
+    "compositionIdentity": { "$ref": "#/$defs/sha256" },
+    "capture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "source"],
+      "properties": {
+        "mode": { "enum": ["rendered-dom-geometry", "rendered-scene-geometry"] },
+        "source": { "type": "string", "minLength": 1 }
+      }
+    },
+    "fps": { "type": "integer", "minimum": 1, "maximum": 240 },
+    "width": { "type": "integer", "minimum": 1 },
+    "height": { "type": "integer", "minimum": 1 },
+    "startFrame": { "type": "integer", "minimum": 0 },
+    "endFrame": { "type": "integer", "minimum": 1 },
+    "frameStep": {
+      "description": "Legacy dense traces use 1. Schema 1.2 sampled or escalated traces use 0 because their frame spacing is intentionally irregular.",
+      "enum": [0, 1]
+    },
+    "sampling": {
+      "description": "Schema 1.2 capture plan. Frames are Recipe/cut/hold samples plus any explicitly escalated dense windows.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "frames"],
+      "properties": {
+        "mode": { "enum": ["sampled", "escalated", "dense"] },
+        "frames": {
+          "type": "array", "minItems": 2, "uniqueItems": true,
+          "items": { "type": "integer", "minimum": 0 }
+        },
+        "denseWindows": {
+          "type": "array", "items": { "$ref": "#/$defs/window" }
+        }
+      }
+    },
+    "safeArea": { "$ref": "#/$defs/rectangle" },
+    "shots": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/shot" } }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "schemaVersion": { "const": "1.2.0" } } },
+      "then": { "required": ["sampling"] },
+      "else": { "properties": { "frameStep": { "const": 1 } } }
+    },
+    {
+      "if": {
+        "required": ["schemaVersion", "sampling"],
+        "properties": {
+          "schemaVersion": { "const": "1.2.0" },
+          "sampling": { "required": ["mode"], "properties": { "mode": { "const": "dense" } } }
+        }
+      },
+      "then": { "properties": { "frameStep": { "const": 1 } } }
+    },
+    {
+      "if": {
+        "required": ["schemaVersion", "sampling"],
+        "properties": {
+          "schemaVersion": { "const": "1.2.0" },
+          "sampling": { "required": ["mode"], "properties": { "mode": { "enum": ["sampled", "escalated"] } } }
+        }
+      },
+      "then": { "properties": { "frameStep": { "const": 0 } } }
+    }
+  ],
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "rectangle": {
+      "type": "object", "additionalProperties": false,
+      "required": ["left", "top", "right", "bottom"],
+      "properties": { "left": { "type": "number" }, "top": { "type": "number" }, "right": { "type": "number" }, "bottom": { "type": "number" } }
+    },
+    "shot": {
+      "type": "object", "additionalProperties": false,
+      "required": ["shotId", "startFrame", "endFrame", "readableHolds", "elements"],
+      "properties": {
+        "shotId": { "type": "string", "minLength": 1 },
+        "startFrame": { "type": "integer", "minimum": 0 },
+        "endFrame": { "type": "integer", "minimum": 1 },
+        "readableHolds": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/window" } },
+        "elements": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/element" } },
+        "diagramFrames": {
+          "description": "Optional runtime-captured readable-hold topology. Required by the lint when a Recipe selects a diagram-* craft entry.",
+          "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/diagramFrame" }
+        }
+      }
+    },
+    "window": {
+      "type": "object", "additionalProperties": false,
+      "required": ["startFrame", "endFrame"],
+      "properties": { "startFrame": { "type": "integer", "minimum": 0 }, "endFrame": { "type": "integer", "minimum": 1 } }
+    },
+    "element": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "role", "focusGroup", "layer", "visualWeight", "samples"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "role": { "enum": ["primary", "secondary", "text", "structural", "decorative"] },
+        "focusGroup": { "type": "string", "minLength": 1 },
+        "layer": { "type": "integer" },
+        "visualWeight": { "type": "number", "minimum": 0, "maximum": 1 },
+        "safeAreaPolicy": { "enum": ["inside", "may-bleed"] },
+        "allowOverlapWith": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "motions": { "type": "array", "items": { "$ref": "#/$defs/motion" } },
+        "samples": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/sample" } }
+      }
+    },
+    "motion": {
+      "type": "object", "additionalProperties": false,
+      "required": ["startFrame", "endFrame", "kind"],
+      "properties": {
+        "startFrame": { "type": "integer", "minimum": 0 },
+        "endFrame": { "type": "integer", "minimum": 1 },
+        "kind": { "enum": ["transition", "continuous", "cut"] },
+        "expectsSettle": { "type": "boolean" },
+        "beatIds": {
+          "description": "Recipe beats whose principal visible development this rendered motion fulfills. Ambient motion leaves this empty or omitted.",
+          "type": "array", "minItems": 1, "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "sample": {
+      "type": "object", "additionalProperties": false,
+      "required": ["frame", "x", "y", "width", "height", "opacity", "zIndex", "visible", "clipped", "visibleAreaRatio"],
+      "properties": {
+        "frame": { "type": "integer", "minimum": 0 },
+        "x": { "type": "number" }, "y": { "type": "number" },
+        "width": { "type": "number", "minimum": 0 }, "height": { "type": "number", "minimum": 0 },
+        "opacity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "zIndex": { "type": "number" },
+        "visible": { "type": "boolean" },
+        "clipped": { "type": "boolean" },
+        "visibleAreaRatio": { "type": "number", "minimum": 0, "maximum": 1 },
+        "appearanceHash": {
+          "description": "Optional SHA-256 of runtime-captured visible styling (for example fill, stroke, color, filter, clip, and rendered path state), excluding text content and hand-authored labels.",
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "diagramFrame": {
+      "type": "object", "additionalProperties": false,
+      "required": ["frame", "nodes", "connectors", "labels"],
+      "properties": {
+        "frame": { "type": "integer", "minimum": 0 },
+        "nodes": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/diagramNode" } },
+        "connectors": { "type": "array", "items": { "$ref": "#/$defs/diagramConnector" } },
+        "labels": { "type": "array", "items": { "$ref": "#/$defs/diagramLabel" } }
+      }
+    },
+    "diagramNode": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "x", "y", "width", "height"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "x": { "type": "number" }, "y": { "type": "number" },
+        "width": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "diagramConnector": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "fromNodeId", "toNodeId", "points"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "fromNodeId": { "type": "string", "minLength": 1 },
+        "toNodeId": { "type": "string", "minLength": 1 },
+        "points": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/diagramPoint" } }
+      }
+    },
+    "diagramPoint": {
+      "type": "object", "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": { "x": { "type": "number" }, "y": { "type": "number" } }
+    },
+    "diagramLabel": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "connectorId", "x", "y", "width", "height"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "connectorId": { "type": "string", "minLength": 1 },
+        "x": { "type": "number" }, "y": { "type": "number" },
+        "width": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    }
+  }
+}

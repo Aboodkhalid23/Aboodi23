@@ -1,0 +1,4 @@
+interface:
+  display_name: "B-roll Shot Export (Legacy)"
+  short_description: "Cut requested windows from an older verified master."
+  default_prompt: "Use $broll-shot-export only for an explicitly requested compatibility export from a verified pre-v1.0.1 master."

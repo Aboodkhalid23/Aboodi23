@@ -556,6 +556,40 @@ def test_templates_backup_phone_page_and_notify(app, tmp_path, monkeypatch):
     comfort.notify("a", "b")                                         # never fails off a Mac
 
 
+def test_editing_helpers_text_styles_scene_clip_markers_security(app, tmp_path):
+    import subprocess
+    from editor.app import comfort, studio
+    from editor.pipeline.compose import effect_filter
+    from editor.pipeline.plan import EFFECTS
+
+    class Cv:
+        width, height = 320, 180
+    for fx in EFFECTS:                                               # every effect is a working ffmpeg chain
+        r = subprocess.run(["ffmpeg", "-v", "error", "-f", "lavfi", "-i", "testsrc2=s=320x180:d=0.6", "-vf",
+                            effect_filter(fx, Cv)[1:], "-f", "null", "-"], capture_output=True, text=True)
+        assert r.returncode == 0, (fx, r.stderr[-200:])
+    q = studio._text_scene({"style": "quote", "text": "ما كنا نتوقع | المدير"})
+    assert q["graphic"] == {"type": "quote", "text": "ما كنا نتوقع", "who": "المدير"}
+    n = studio._text_scene({"style": "number", "text": "٣ مليار دولار"})
+    assert n["graphic"]["value"] == 3e9 and n["graphic"]["label"] == "دولار"
+    assert studio._text_scene({"style": "headline", "text": "نوكيا تعلن إفلاسها"})["graphic"]["highlight"] == "إفلاسها"
+    _, ep = _talking_episode(app, tmp_path)
+    plan = json.loads(ep.plan.read_text())
+    plan["beats"][0].update(effect="old_tv", transition="flash")
+    ep.plan.write_text(json.dumps(plan))
+    assert studio.copy_scene(ep, 0, srv.HOME) == {"effect": "old_tv", "transition": "flash"}
+    studio.paste_scene(ep, 1, srv.HOME)
+    assert json.loads(ep.plan.read_text())["beats"][1]["effect"] == "old_tv"
+    assert studio.undo(ep) and "effect" not in json.loads(ep.plan.read_text())["beats"][1]
+    assert studio.markers(ep, [{"t": 9, "text": "هنا"}, {"t": 2.555}]) == [{"t": 2.56, "text": ""}, {"t": 9.0, "text": "هنا"}]
+    (srv.HOME / "elevenlabs.json").write_text("{}")
+    (srv.HOME / "elevenlabs.json").chmod(0o644)
+    assert not comfort.security(srv.HOME)["items"][0]["ok"]
+    assert comfort.fix_permissions(srv.HOME)["items"][0]["ok"]
+    comfort.unlink_all(srv.HOME)
+    assert not (srv.HOME / "elevenlabs.json").exists()
+
+
 def test_optional_extras_and_suggestions(app, monkeypatch):
     from editor.app import studio
     from editor.pipeline import options

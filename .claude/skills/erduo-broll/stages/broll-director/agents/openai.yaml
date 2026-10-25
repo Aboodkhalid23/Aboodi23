@@ -1,0 +1,4 @@
+interface:
+  display_name: "B-roll Director"
+  short_description: "Separate immutable shot truth from revisable creative proposals."
+  default_prompt: "Use $broll-director with the complete original SRT and design to define semantic chapters, Recipe v4 truth and creativeProposal layers, a compact motion map, and three representative scenes without deciding solo authoring."

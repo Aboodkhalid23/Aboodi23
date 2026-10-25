@@ -1,0 +1,368 @@
+#!/usr/bin/env node
+
+import { createHash } from 'node:crypto';
+import { readFile, readdir } from 'node:fs/promises';
+import { readFileSync, realpathSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { validateCraftCatalog } from './craft-catalog.mjs';
+import { canonicalJson } from './runtime-schema-validator.mjs';
+
+const skillRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const runtimeRoot = path.join(skillRoot, 'references', 'runtime');
+const shotcraftRoot = path.join(skillRoot, 'references', 'shotcraft');
+const craftRoot = path.join(skillRoot, 'references', 'craft');
+const recipeV4Schema = JSON.parse(readFileSync(path.join(runtimeRoot, 'shot-recipe.schema.json'), 'utf8'));
+
+export function recipeWindow(recipe) {
+  return recipe?.schemaVersion === '4.0.0' ? recipe.truth?.srtWindowMs : recipe?.window;
+}
+
+export function computeRecipeTruthIdentity(recipe) {
+  if (!recipe?.shotId || !recipe?.truth) throw new Error('Recipe truth identity requires shotId and truth');
+  return createHash('sha256').update(canonicalJson({ shotId: recipe.shotId, truth: recipe.truth })).digest('hex');
+}
+
+export function computeRecipeIdentity(recipe) {
+  return createHash('sha256').update(canonicalJson(recipe)).digest('hex');
+}
+
+export function validateCreativeRevision(original, revised) {
+  if (original?.schemaVersion !== '4.0.0' || revised?.schemaVersion !== '4.0.0'
+    || original.shotId !== revised.shotId) {
+    throw new Error('creative revision requires the same Recipe v4 shot');
+  }
+  if (computeRecipeTruthIdentity(original) !== computeRecipeTruthIdentity(revised)) {
+    throw new Error(`${original.shotId}: truth is immutable`);
+  }
+  const withoutProposal = (value) => {
+    const clone = structuredClone(value);
+    delete clone.creativeProposal;
+    return clone;
+  };
+  if (canonicalJson(withoutProposal(original)) !== canonicalJson(withoutProposal(revised))) {
+    throw new Error(`${original.shotId}: only creativeProposal may change during Builder revision`);
+  }
+  const schemaErrors = [];
+  validateSchema(revised, recipeV4Schema, recipeV4Schema, '#', schemaErrors);
+  if (schemaErrors.length > 0) {
+    throw new Error(`${original.shotId}: revised Recipe is invalid:\n${schemaErrors.join('\n')}`);
+  }
+  return {
+    status: 'valid', shotId: revised.shotId,
+    truthIdentity: computeRecipeTruthIdentity(revised),
+    recipeIdentity: computeRecipeIdentity(revised),
+  };
+}
+
+function resolveLocalRef(rootSchema, reference) {
+  if (!reference.startsWith('#/')) throw new Error(`unsupported schema reference: ${reference}`);
+  return reference.slice(2).split('/').reduce((value, segment) => {
+    const key = segment.replaceAll('~1', '/').replaceAll('~0', '~');
+    if (!value || typeof value !== 'object' || !(key in value)) {
+      throw new Error(`unresolved schema reference: ${reference}`);
+    }
+    return value[key];
+  }, rootSchema);
+}
+
+function valueType(value) {
+  if (Array.isArray(value)) return 'array';
+  if (value === null) return 'null';
+  if (Number.isInteger(value)) return 'integer';
+  return typeof value;
+}
+
+function validateSchema(value, rule, rootSchema, pointer, errors) {
+  const resolved = rule.$ref ? resolveLocalRef(rootSchema, rule.$ref) : rule;
+  const actualType = valueType(value);
+
+  if (resolved.type) {
+    const typeMatches = resolved.type === 'number'
+      ? typeof value === 'number' && Number.isFinite(value)
+      : actualType === resolved.type;
+    if (!typeMatches) {
+      errors.push(`${pointer}: expected ${resolved.type}, received ${actualType}`);
+      return;
+    }
+  }
+
+  if ('const' in resolved && value !== resolved.const) {
+    errors.push(`${pointer}: must equal ${JSON.stringify(resolved.const)}`);
+  }
+  if (resolved.enum && !resolved.enum.includes(value)) {
+    errors.push(`${pointer}: value is outside the allowed enum`);
+  }
+  if (typeof value === 'number' && 'minimum' in resolved && value < resolved.minimum) {
+    errors.push(`${pointer}: must be at least ${resolved.minimum}`);
+  }
+  if (typeof value === 'string') {
+    if ('minLength' in resolved && value.length < resolved.minLength) {
+      errors.push(`${pointer}: must contain at least ${resolved.minLength} character(s)`);
+    }
+    if (resolved.pattern && !(new RegExp(resolved.pattern, 'u')).test(value)) {
+      errors.push(`${pointer}: does not match the required pattern`);
+    }
+  }
+
+  if (Array.isArray(value)) {
+    if ('minItems' in resolved && value.length < resolved.minItems) {
+      errors.push(`${pointer}: must contain at least ${resolved.minItems} item(s)`);
+    }
+    if ('maxItems' in resolved && value.length > resolved.maxItems) {
+      errors.push(`${pointer}: must contain at most ${resolved.maxItems} item(s)`);
+    }
+    if (resolved.uniqueItems) {
+      const encoded = value.map((item) => JSON.stringify(item));
+      if (new Set(encoded).size !== encoded.length) errors.push(`${pointer}: items must be unique`);
+    }
+    if (resolved.items) {
+      value.forEach((item, index) => {
+        validateSchema(item, resolved.items, rootSchema, `${pointer}/${index}`, errors);
+      });
+    }
+  }
+
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    const properties = resolved.properties ?? {};
+    for (const key of resolved.required ?? []) {
+      if (!(key in value)) errors.push(`${pointer}/${key}: required property is missing`);
+    }
+    if (resolved.additionalProperties === false) {
+      for (const key of Object.keys(value)) {
+        if (!(key in properties)) errors.push(`${pointer}/${key}: additional property is not allowed`);
+      }
+    }
+    for (const [key, child] of Object.entries(value)) {
+      if (key in properties) {
+        validateSchema(child, properties[key], rootSchema, `${pointer}/${key}`, errors);
+      }
+    }
+  }
+}
+
+function validateSemanticInvariants(
+  recipe,
+  capabilityIds,
+  unsupportedIds,
+  shotcraftCards,
+  shotcraftRevision,
+  craftEntries,
+  fileName,
+  errors,
+) {
+  const { startMs, endMs } = recipeWindow(recipe) ?? {};
+  if (Number.isInteger(startMs) && Number.isInteger(endMs) && endMs <= startMs) {
+    errors.push('#/window: endMs must be greater than startMs');
+  }
+
+  for (const [index, phase] of (recipe.motion?.phases ?? []).entries()) {
+    if (Number.isInteger(phase.startMs) && Number.isInteger(phase.endMs)) {
+      if (phase.endMs <= phase.startMs) {
+        errors.push(`#/motion/phases/${index}: endMs must be greater than startMs`);
+      }
+      if (Number.isInteger(startMs) && Number.isInteger(endMs)
+        && (phase.startMs < startMs || phase.endMs > endMs)) {
+        errors.push(`#/motion/phases/${index}: phase must stay inside the shot window`);
+      }
+    }
+  }
+
+  for (const [index, beat] of (recipe.microBeats ?? []).entries()) {
+    if (Number.isInteger(beat.startMs) && Number.isInteger(beat.endMs)) {
+      if (beat.endMs <= beat.startMs) errors.push(`#/microBeats/${index}: endMs must be greater than startMs`);
+      if (Number.isInteger(startMs) && Number.isInteger(endMs)
+        && (beat.startMs < startMs || beat.endMs > endMs)) {
+        errors.push(`#/microBeats/${index}: beat must stay inside the shot window`);
+      }
+    }
+    if (index > 0 && beat.startMs < recipe.microBeats[index - 1].endMs) {
+      errors.push(`#/microBeats/${index}: beats must not overlap or run out of order`);
+    }
+  }
+  if (['2.0.0', '3.0.0'].includes(recipe.schemaVersion) && recipe.microBeats?.length > 0
+    && Number.isInteger(startMs) && Number.isInteger(endMs)) {
+    if (recipe.microBeats[0].startMs !== startMs) {
+      errors.push('#/microBeats/0: beats must begin at the shot start');
+    }
+    for (let index = 1; index < recipe.microBeats.length; index += 1) {
+      if (recipe.microBeats[index].startMs !== recipe.microBeats[index - 1].endMs) {
+        errors.push(`#/microBeats/${index}: beats must cover the shot without an unplanned gap`);
+      }
+    }
+    if (recipe.microBeats.at(-1).endMs !== endMs) {
+      errors.push(`#/microBeats/${recipe.microBeats.length - 1}: beats must end at the shot end`);
+    }
+  }
+
+  const holdStartMs = recipe.readability?.holdStartMs;
+  const holdEndMs = recipe.readability?.holdEndMs;
+  if (Number.isInteger(holdStartMs) && Number.isInteger(holdEndMs)) {
+    if (holdEndMs <= holdStartMs) {
+      errors.push('#/readability: holdEndMs must be greater than holdStartMs');
+    }
+    if (Number.isInteger(startMs) && Number.isInteger(endMs)
+      && (holdStartMs < startMs || holdEndMs > endMs)) {
+      errors.push('#/readability: hold window must stay inside the shot window');
+    }
+  }
+  const compactHoldStartMs = recipe.readableHold?.startMs;
+  const compactHoldEndMs = recipe.readableHold?.endMs;
+  if (Number.isInteger(compactHoldStartMs) && Number.isInteger(compactHoldEndMs)) {
+    if (compactHoldEndMs <= compactHoldStartMs) errors.push('#/readableHold: endMs must be greater than startMs');
+    if (Number.isInteger(startMs) && Number.isInteger(endMs)
+      && (compactHoldStartMs < startMs || compactHoldEndMs > endMs)) {
+      errors.push('#/readableHold: hold window must stay inside the shot window');
+    }
+  }
+
+  if (recipe && typeof recipe === 'object'
+    && (Object.hasOwn(recipe, 'authoring') || recipe.authoring?.solo !== undefined)) {
+    errors.push('#/authoring: authoring.solo is forbidden; only Planner may create a closed-enum solo unit');
+  }
+
+  if (recipe.shotId && `${recipe.shotId}.json` !== fileName) {
+    errors.push('#/shotId: must match the recipe filename');
+  }
+  for (const capabilityId of recipe.requiredCapabilities ?? []) {
+    if (!capabilityIds.has(capabilityId)) {
+      errors.push(`#/requiredCapabilities: unknown capability ${capabilityId}`);
+    } else if (unsupportedIds.has(capabilityId)) {
+      errors.push(`#/requiredCapabilities: unsupported capability ${capabilityId}`);
+    }
+  }
+  if (['3.0.0', '4.0.0'].includes(recipe.schemaVersion)) {
+    const required = recipe.requiredCapabilities ?? [];
+    const explained = (recipe.capabilityReasons ?? []).map(({ capabilityId }) => capabilityId);
+    const duplicateReasons = explained.filter((id, index) => explained.indexOf(id) !== index);
+    if (duplicateReasons.length > 0) {
+      errors.push('#/capabilityReasons: each capability may have only one content-related reason');
+    }
+    if (JSON.stringify([...explained].toSorted()) !== JSON.stringify([...required].toSorted())) {
+      errors.push('#/capabilityReasons: must explain every required capability exactly once and no others');
+    }
+    const lifecycleIds = (recipe.elementLifecycles ?? []).map(({ elementId }) => elementId);
+    if (new Set(lifecycleIds).size !== lifecycleIds.length) {
+      errors.push('#/elementLifecycles: elementId values must be unique');
+    }
+  }
+
+  if (recipe.patternRef) {
+    const card = shotcraftCards.get(recipe.patternRef.cardId);
+    if (!card) {
+      errors.push(`#/patternRef/cardId: unknown Shotcraft card ${recipe.patternRef.cardId}`);
+    } else if (!card.styles.some(({ key }) => key === recipe.patternRef.styleKey)) {
+      errors.push(
+        `#/patternRef/styleKey: style ${recipe.patternRef.styleKey} does not belong to card ${card.name}`,
+      );
+    }
+    if (recipe.patternRef.sourceRevision !== shotcraftRevision) {
+      errors.push(
+        `#/patternRef/sourceRevision: must equal bundled Shotcraft revision ${shotcraftRevision}`,
+      );
+    }
+  }
+  for (const kind of ['primary', 'transition']) {
+    const reference = recipe.craft?.[kind];
+    if (reference && !craftEntries.has(reference.entryId)) {
+      errors.push(`#/craft/${kind}/entryId: unknown craft entry ${reference.entryId}`);
+    }
+    if (kind === 'transition' && reference
+      && craftEntries.get(reference.entryId)?.category !== 'transition') {
+      errors.push('#/craft/transition/entryId: transition locator must reference the transition category');
+    }
+    if (kind === 'primary' && reference
+      && craftEntries.get(reference.entryId)?.category === 'transition') {
+      errors.push('#/craft/primary/entryId: primary locator must not reference the transition category');
+    }
+  }
+}
+
+export async function validateRecipeDirectory(directory) {
+  const [schemas, matrix, shotcraft, craft] = await Promise.all([
+    Promise.all([
+      ['1.0.0', 'shot-recipe-v1.schema.json'],
+      ['2.0.0', 'shot-recipe-v2.schema.json'],
+      ['3.0.0', 'shot-recipe-v3.schema.json'],
+      ['4.0.0', 'shot-recipe.schema.json'],
+    ].map(async ([version, file]) => [version, JSON.parse(await readFile(path.join(runtimeRoot, file), 'utf8'))])).then((entries) => new Map(entries)),
+    readFile(path.join(runtimeRoot, 'capability-matrix.json'), 'utf8').then(JSON.parse),
+    readFile(path.join(shotcraftRoot, 'catalog.json'), 'utf8').then(JSON.parse),
+    readFile(path.join(craftRoot, 'catalog.json'), 'utf8').then(JSON.parse),
+  ]);
+  const capabilityIds = new Set(matrix.capabilities.map(({ id }) => id));
+  const unsupportedIds = new Set(
+    matrix.capabilities
+      .filter(({ classification }) => classification === 'unsupported')
+      .map(({ id }) => id),
+  );
+  const shotcraftCards = new Map(shotcraft.cards.map((card) => [card.name, card]));
+  const shotcraftRevision = shotcraft.upstream.commit;
+  const { entriesById: craftEntries } = validateCraftCatalog(craft);
+  const entries = await readdir(directory, { withFileTypes: true });
+  if (entries.length === 0) throw new Error('recipe directory is empty');
+
+  const failures = [];
+  const shotIds = new Set();
+  const recipeVersions = new Set();
+  let recipeCount = 0;
+  for (const entry of entries.toSorted((left, right) => left.name.localeCompare(right.name))) {
+    if (!entry.isFile() || path.extname(entry.name).toLowerCase() !== '.json') {
+      failures.push(`${entry.name}: only JSON recipe files are allowed`);
+      continue;
+    }
+    recipeCount += 1;
+    const errors = [];
+    let recipe;
+    try {
+      recipe = JSON.parse(await readFile(path.join(directory, entry.name), 'utf8'));
+    } catch {
+      failures.push(`${entry.name}: invalid JSON`);
+      continue;
+    }
+    const schema = schemas.get(recipe?.schemaVersion);
+    if (!schema) {
+      errors.push(`#/schemaVersion: unsupported recipe schema version ${JSON.stringify(recipe?.schemaVersion)}`);
+    } else {
+      recipeVersions.add(recipe.schemaVersion);
+      validateSchema(recipe, schema, schema, '#', errors);
+    }
+    validateSemanticInvariants(
+      recipe,
+      capabilityIds,
+      unsupportedIds,
+      shotcraftCards,
+      shotcraftRevision,
+      craftEntries,
+      entry.name,
+      errors,
+    );
+    if (recipe?.shotId) {
+      if (shotIds.has(recipe.shotId)) errors.push('#/shotId: duplicate shot ID');
+      shotIds.add(recipe.shotId);
+    }
+    failures.push(...errors.map((error) => `${entry.name}: ${error}`));
+  }
+
+  if (recipeVersions.size > 1) {
+    failures.push(`recipe directory mixes schema versions: ${[...recipeVersions].toSorted().join(', ')}; use one recipe schema version per directory`);
+  }
+
+  if (failures.length > 0) throw new Error(`shot recipe validation failed:\n${failures.join('\n')}`);
+  return { status: 'valid', recipes: recipeCount };
+}
+
+async function main() {
+  const [directory] = process.argv.slice(2);
+  if (!directory) throw new Error('usage: node scripts/validate-shot-recipes.mjs <recipe-directory>');
+  const result = await validateRecipeDirectory(path.resolve(directory));
+  process.stdout.write(`${JSON.stringify(result)}\n`);
+}
+
+if (process.argv[1]
+  && realpathSync(path.resolve(process.argv[1])) === realpathSync(fileURLToPath(import.meta.url))) {
+  main().catch((error) => {
+    process.stderr.write(`${error.message}\n`);
+    process.exitCode = 1;
+  });
+}

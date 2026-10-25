@@ -1,0 +1,7 @@
+interface:
+  display_name: "Legacy B-roll Runtime Planner"
+  short_description: "Inspect legacy runtime planning records."
+  default_prompt: "Use $broll-runtime-plan to inspect a pre-v0.9 runtime-planning record and return a read-only recovery report."
+
+policy:
+  allow_implicit_invocation: false

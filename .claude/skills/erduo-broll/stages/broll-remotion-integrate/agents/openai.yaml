@@ -1,0 +1,7 @@
+interface:
+  display_name: "Legacy Remotion Integrator"
+  short_description: "Inspect legacy Remotion integration records."
+  default_prompt: "Use $broll-remotion-integrate to inspect a pre-v0.9 Remotion integration record and return a read-only recovery report."
+
+policy:
+  allow_implicit_invocation: false

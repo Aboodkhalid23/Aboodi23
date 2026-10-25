@@ -1,0 +1,7 @@
+interface:
+  display_name: "Legacy HyperFrames Integrator"
+  short_description: "Inspect legacy HyperFrames integration records."
+  default_prompt: "Use $broll-master-integrate to inspect a pre-v0.9 HyperFrames integration record and return a read-only recovery report."
+
+policy:
+  allow_implicit_invocation: false

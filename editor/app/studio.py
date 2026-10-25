@@ -1019,6 +1019,7 @@ SCENE_STYLE = ("effect", "transition", "grade", "sfx", "fx", "treatment", "look"
 def copy_scene(ep: Episode, i: int, home: Path) -> dict:
     b = json.loads(ep.plan.read_text(encoding="utf-8"))["beats"][int(i)]
     clip = {k: b.get(k) for k in SCENE_STYLE if b.get(k) is not None}
+    Path(home).mkdir(parents=True, exist_ok=True)
     (Path(home) / "scene_clip.json").write_text(json.dumps(clip, ensure_ascii=False), encoding="utf-8")
     return clip
 
