@@ -392,6 +392,74 @@ body,header,#rail,#panel,#viewer,#inspector,#tl,.dlg,.pill,.rb,.lc,.card{transit
 .askbar input{height:28px;font-size:12px;padding:4px 6px!important}.askbar .pill.sm{height:24px}
 .askbar:focus-within{width:min(560px,86%)}
 .tracks{overflow-y:auto!important;min-height:0}
+/* ---------- 2.0: grouped rail, search, home dashboard, palette, what's new ---------- */
+.rsep{width:56px;display:flex;align-items:center;gap:4px;margin:6px 0 2px;color:var(--dim);font-size:9.5px;flex:none}
+.rsep:first-child{margin-top:0}
+.rsep span{margin:auto}
+.rsep::before,.rsep::after{content:"";flex:1;height:1px;background:var(--glassline)}
+.rb{min-height:44px;gap:3px}
+#rail{gap:2px}
+.rb svg{width:19px;height:19px}
+@media (max-height:820px){.rsep{margin:2px 0 0}.rsep span{display:none}.rb{min-height:37px}.rb span{display:none}}
+.ver{font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;background:var(--y);color:var(--yink);cursor:pointer;letter-spacing:0}
+.searchbtn{display:flex;align-items:center;gap:8px;height:32px;padding:0 10px;border-radius:999px;background:var(--glass2);border:1px solid var(--glassline);
+  color:var(--mute);font-size:12px;min-width:200px;max-width:300px;flex:1 1 220px;margin-inline-start:14px}
+.searchbtn:hover{color:var(--ink);border-color:rgba(var(--yrgb),.5)}
+.searchbtn svg{width:15px;height:15px;flex:none}.searchbtn span{flex:1;text-align:start;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+kbd{font:600 10px ui-monospace,monospace;padding:2px 5px;border-radius:5px;border:1px solid var(--glassline);background:var(--glass);color:var(--mute)}
+.urgrp{display:flex;border:1px solid var(--glassline);border-radius:999px;padding:1px;margin:0 4px}
+.urgrp .icobtn{border-radius:999px}
+@media (max-width:1180px){.searchbtn span,.searchbtn kbd{display:none}.searchbtn{min-width:0;flex:0 0 34px;padding:0 9px}}
+.lib{background:var(--base)!important;padding:0!important}
+.home{max-width:1180px;margin:0 auto;padding:30px 28px 60px}
+.hero{display:flex;align-items:center;gap:16px;padding:22px 24px;border-radius:24px;border:1px solid var(--glassline);
+  background:radial-gradient(600px 200px at 85% 0%,rgba(var(--yrgb),.18),transparent 70%),var(--glass)}
+.hlogo{height:58px;width:auto}
+.hh{font-size:24px;font-weight:900;margin-bottom:4px}
+.quick{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:16px 0 26px}
+.qk{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:16px;border-radius:18px;border:1px solid var(--glassline);background:var(--glass);text-align:start;min-height:112px}
+.qk:hover{border-color:rgba(var(--yrgb),.6);transform:translateY(-1px)}
+.qk .qi{font-size:20px;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--glass2);margin-bottom:4px}
+.qk b{font-size:14.5px}.qk small{color:var(--dim);font-size:11.5px;line-height:1.5}
+.qk.main{background:linear-gradient(160deg,rgba(var(--yrgb),.28),rgba(var(--yrgb),.08));border-color:rgba(var(--yrgb),.55)}
+.qk.main .qi{background:var(--y);color:var(--yink);font-weight:900}
+.home .h3{font-size:16px;font-weight:800;margin:0 4px 4px}
+.home .libgrid{margin-top:8px}
+.home .lc.new{display:none}
+.pal{position:absolute;top:12vh;left:50%;transform:translateX(-50%);width:min(620px,92vw);border-radius:20px;background:var(--dlg);border:1px solid var(--glassline);
+  -webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:0 30px 80px rgba(0,0,0,.5);overflow:hidden}
+.palin{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--glassline)}
+.palin svg{width:18px;height:18px;color:var(--mute);flex:none}
+.palin input{flex:1;background:transparent!important;border:0!important;font-size:16px;outline:none!important;padding:4px 0}
+.pallist{max-height:52vh;overflow:auto;padding:6px}
+.pi{display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;border-radius:12px;text-align:start}
+.pi .pe{width:28px;text-align:center;font-size:16px;flex:none}
+.pi b{font-weight:600;font-size:13.5px}.pi small{color:var(--dim);font-size:11.5px;margin-inline-start:auto;white-space:nowrap}
+.pi.on,.pi:hover{background:rgba(var(--yrgb),.16)}
+.palh{font-size:10.5px;color:var(--dim);padding:8px 12px 4px}
+.palfoot{padding:8px 14px;border-top:1px solid var(--glassline)}
+.news{width:min(760px,94vw)}
+.newsgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:16px}
+.newsgrid div{display:flex;flex-direction:column;gap:4px;padding:12px;border-radius:14px;background:var(--glass);border:1px solid var(--glassline)}
+.newsgrid span{color:var(--mute);font-size:12px;line-height:1.6}
+/* new themes (2.0) */
+:root[data-theme="black"]{--bg:#000;--panel:#0a0a0a;--panel2:#141414;--panel3:#1c1c1c;--line:#262626;--line2:#333;--ink:#f5f5f5;--ink2:#cfcfcf;--mute:#a3a3a3;--dim:#6b6b6b;
+  --y:#d4af37;--y2:#b8962e;--yhi:#f3d77a;--ydim:#1f1a0a;--yink:#0a0800;--yrgb:212,175,55;--chipbg:#1a1608;--chipink:#f3d77a;--chipline:#3a3112;
+  --base:#000;--amb1:#1a1608;--amb2:#0a0a0a;--dlg:rgba(14,14,14,.92);--float:rgba(14,14,14,.7);--float2:rgba(14,14,14,.88);--glass:rgba(255,255,255,.035);--glass2:rgba(255,255,255,.06);--glassline:rgba(255,255,255,.1);--glasshi:rgba(255,255,255,.12)}
+:root[data-theme="violet"]{--bg:#0f0a1f;--panel:#170f2e;--panel2:#22173f;--panel3:#2a1d4d;--line:#3a2a66;--line2:#4d3a85;--ink:#efe9ff;--ink2:#d2c6f2;--mute:#a998d9;--dim:#6f5fa3;
+  --y:#a78bfa;--y2:#8b6cf0;--yhi:#ddd2ff;--ydim:#22173f;--yink:#0f0a1f;--yrgb:167,139,250;--chipbg:#22173f;--chipink:#efe9ff;--chipline:#3a2a66;
+  --base:#0f0a1f;--amb1:#3a2a66;--amb2:#170f2e;--dlg:rgba(23,15,46,.88);--float:rgba(23,15,46,.6);--float2:rgba(23,15,46,.82);--glassline:rgba(167,139,250,.2)}
+:root[data-theme="carbon"]{--bg:#121214;--panel:#1a1a1d;--panel2:#232327;--panel3:#2b2b30;--line:#34343a;--line2:#44444b;--ink:#f1f1f3;--ink2:#cacace;--mute:#9a9aa2;--dim:#66666e;
+  --y:#ff4d4d;--y2:#e03c3c;--yhi:#ff9a9a;--ydim:#2a1414;--yink:#fff;--yrgb:255,77,77;--chipbg:#2a1414;--chipink:#ffd0d0;--chipline:#4a2020;
+  --base:#121214;--amb1:#2a1414;--amb2:#1a1a1d;--dlg:rgba(26,26,29,.9);--float:rgba(26,26,29,.65);--float2:rgba(26,26,29,.85);--glassline:rgba(255,255,255,.1)}
+:root[data-theme="sand"]{--bg:#f4ede1;--panel:#fbf7f0;--panel2:#f1e8d8;--panel3:#e8dcc6;--line:#dccdb2;--line2:#c4ad86;--ink:#2b2216;--ink2:#4a3c28;--mute:#7a6648;--dim:#9c8a6c;
+  --y:#b5651d;--y2:#9a5418;--yhi:#d9894a;--ydim:#efe0cc;--yink:#fff8ef;--yrgb:181,101,29;--chipbg:#efe0cc;--chipink:#5a3a14;--chipline:#d8bf9a;
+  --base:#f4ede1;--amb1:#e8d5b5;--amb2:#f1e8d8;--dlg:rgba(251,247,240,.94);--float:rgba(251,247,240,.8);--float2:rgba(251,247,240,.93);--glass:rgba(43,34,22,.035);--glass2:rgba(43,34,22,.06);--glassline:rgba(43,34,22,.13);--glasshi:rgba(255,255,255,.7);color-scheme:light}
+:root[data-theme="sky"]{--bg:#eaf3fb;--panel:#f7fbff;--panel2:#e3eef9;--panel3:#d4e5f5;--line:#c3d8ee;--line2:#94b8de;--ink:#0d2238;--ink2:#23405f;--mute:#4a6a8c;--dim:#7590ad;
+  --y:#1f6fd1;--y2:#185bb0;--yhi:#4d93e6;--ydim:#d9e8f8;--yink:#fff;--yrgb:31,111,209;--chipbg:#d9e8f8;--chipink:#0d2238;--chipline:#a9c7ea;
+  --base:#eaf3fb;--amb1:#c3d8ee;--amb2:#e3eef9;--dlg:rgba(247,251,255,.94);--float:rgba(247,251,255,.8);--float2:rgba(247,251,255,.93);--glass:rgba(13,34,56,.035);--glass2:rgba(13,34,56,.06);--glassline:rgba(13,34,56,.13);--glasshi:rgba(255,255,255,.75);color-scheme:light}
+:root[data-theme="sand"] .card,:root[data-theme="sand"] .lc,:root[data-theme="sand"] input,:root[data-theme="sand"] textarea,:root[data-theme="sand"] select,
+:root[data-theme="sky"] .card,:root[data-theme="sky"] .lc,:root[data-theme="sky"] input,:root[data-theme="sky"] textarea,:root[data-theme="sky"] select{background:rgba(0,0,0,.035)!important}
 .lkgroups{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
 .lkgroups .chip{cursor:pointer}.lkgroups .chip.on{background:var(--y);color:var(--yink);border-color:var(--y)}
 .lkgroups .chip small{opacity:.6;font-size:10px}
@@ -401,9 +469,10 @@ body,header,#rail,#panel,#viewer,#inspector,#tl,.dlg,.pill,.rb,.lc,.card{transit
 <div id="ambientBase"></div><div id="ambient"><canvas id="amb" width="32" height="18"></canvas></div>
 <div id="app">
   <header>
-    <div class="brand row"><img src="/ui/logo.png" alt="" style="height:28px;width:auto">URU<small>استوديو المونتاج</small></div>
+    <div class="brand row"><img src="/ui/logo.png" alt="" style="height:28px;width:auto">URU<span class="ver" id="verBadge" title="شنو الجديد">٢٫٠</span></div>
     <div class="proj"><span class="dim">|</span><b id="pName">لا يوجد مشروع مفتوح</b>
       <span class="saved" id="saved" hidden><i></i><span>محفوظ</span></span></div>
+    <button class="searchbtn" id="tFind" title="دوّر على أي أداة أو أمر (⌘ك)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>دوّر على أي شي…</span><kbd>⌘K</kbd></button>
     <div class="tools">
       <button class="tool" id="tLib" title="كل حلقاتك"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>الرئيسية</button>
       <button class="tool" id="tText" title="الكلام كله"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 11h16M4 16h10"/></svg>النص</button>
@@ -412,9 +481,11 @@ body,header,#rail,#panel,#viewer,#inspector,#tl,.dlg,.pill,.rb,.lc,.card{transit
       <button class="tool" id="tInsp" title="الستايلات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 5v14M16 5v14"/></svg>الستايلات</button>
       <button class="assist" id="tAssist"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg><div>المساعد<small>يسوي الي تگوله</small></div></button>
 
-      <button class="icobtn" id="tSet" title="الإعدادات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+      <div class="urgrp">
       <button class="icobtn" id="tUndo" title="تراجع خطوة (آخر تعديل ينلغي)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button>
       <button class="icobtn" id="tRedo" title="رجّع الخطوة الي لغيتها"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/></svg></button>
+      </div>
+      <button class="icobtn" id="tSet" title="الإعدادات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
       <button class="pill" id="tNew" style="margin-inline-start:6px">＋ مقطع جديد</button>
       <button class="pill y" id="tExport"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12M7 8l5-5 5 5M5 21h14"/></svg>تصدير</button>
     </div>
@@ -422,17 +493,20 @@ body,header,#rail,#panel,#viewer,#inspector,#tl,.dlg,.pill,.rb,.lc,.card{transit
 
   <main>
     <nav id="rail">
+      <div class="rsep"><span>الشغل</span></div>
       <button class="rb" data-panel="steps" title="الخطوات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1.3"/><circle cx="4.5" cy="12" r="1.3"/><circle cx="4.5" cy="18" r="1.3"/></svg><span>الخطوات</span></button>
       <button class="rb" data-panel="media" title="المواد"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="13" height="14" rx="2"/><path d="M16 10l5-3v10l-5-3"/></svg><span>ملفاتي</span></button>
+      <button class="rb" data-panel="versions" title="النسخ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/><path d="M3 17.5l9 5 9-5" opacity=".5"/></svg><span>النسخ</span></button>
+      <div class="rsep"><span>الشكل</span></div>
+      <button class="rb" data-panel="styles" title="الستايلات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1 0 1.6-.8 1.6-1.6 0-.5-.2-.8-.5-1.1-.3-.3-.5-.7-.5-1.1 0-.9.7-1.6 1.6-1.6H16a5 5 0 0 0 5-5c0-4.2-4-7.6-9-7.6z"/><circle cx="7.5" cy="11" r="1.2"/><circle cx="10.5" cy="7.5" r="1.2"/><circle cx="15" cy="7.5" r="1.2"/></svg><span>الستايلات</span></button>
+      <button class="rb" data-panel="colors" title="الألوان"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2a10 10 0 1 0 0 20c1 0 1.5-.8 1.5-1.6 0-.5-.2-.8-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.7-1.6 1.6-1.6H16a6 6 0 0 0 6-6c0-4.4-4.5-8.4-10-8.4z"/></svg><span>الألوان</span></button>
       <button class="rb" data-panel="effects" title="المؤثرات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8l1.4 1.4M17.8 6.2l1.4-1.4M3 21l9-9M12.2 6.2l-1.4-1.4"/></svg><span>المؤثرات</span></button>
       <button class="rb" data-panel="text" title="النص"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5h16v2M9 19h6M12 5v14"/></svg><span>النص</span></button>
-      <button class="rb" data-panel="stickers" title="الملصقات" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9.5L21 14.5V5a2 2 0 0 0-2-2z"/><path d="M14 21v-5a2 2 0 0 1 2-2h5"/></svg><span>الملصقات</span></button>
-      <button class="rb" data-panel="styles" title="الستايلات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1 0 1.6-.8 1.6-1.6 0-.5-.2-.8-.5-1.1-.3-.3-.5-.7-.5-1.1 0-.9.7-1.6 1.6-1.6H16a5 5 0 0 0 5-5c0-4.2-4-7.6-9-7.6z"/><circle cx="7.5" cy="11" r="1.2"/><circle cx="10.5" cy="7.5" r="1.2"/><circle cx="15" cy="7.5" r="1.2"/></svg><span>الستايلات</span></button>
       <button class="rb" data-panel="fonts" title="الخطوط"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l6-16 6 16M6.5 14h7"/><path d="M17 20h4"/></svg><span>الخطوط</span></button>
+      <div class="rsep"><span>الصوت</span></div>
       <button class="rb" data-panel="sounds" title="الأصوات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg><span>الأصوات</span></button>
       <button class="rb" data-panel="extras" title="الإضافات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="10" rx="5"/><circle cx="15" cy="12" r="3"/></svg><span>الإضافات</span></button>
-      <button class="rb" data-panel="colors" title="الألوان"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2a10 10 0 1 0 0 20c1 0 1.5-.8 1.5-1.6 0-.5-.2-.8-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.7-1.6 1.6-1.6H16a6 6 0 0 0 6-6c0-4.4-4.5-8.4-10-8.4z"/></svg><span>الألوان</span></button>
-      <button class="rb" data-panel="versions" title="النسخ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/><path d="M3 17.5l9 5 9-5" opacity=".5"/></svg><span>النسخ</span></button>
+      <button class="rb" data-panel="stickers" title="الملصقات" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9.5L21 14.5V5a2 2 0 0 0-2-2z"/><path d="M14 21v-5a2 2 0 0 1 2-2h5"/></svg><span>الملصقات</span></button>
       <button class="rb" data-panel="format" hidden title="المقاس"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg><span>الريلز</span></button>
       <span class="grow"></span>
       <button class="rb" hidden id="rChat" title="المساعد"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg><span>المساعد</span></button>
@@ -684,9 +758,50 @@ body,header,#rail,#panel,#viewer,#inspector,#tl,.dlg,.pill,.rb,.lc,.card{transit
 
 <!-- library -->
 <div class="lib" id="lib" hidden>
-  <div class="row"><img src="/ui/logo.png" alt="" style="height:44px;width:auto"><div><div class="h2" style="font-size:24px">مشاريعي</div><div class="muted">الي تشتغل عليها هسة، والي خلصتها</div></div>
-    <span class="grow"></span><button class="pill" id="libFolder">📁 افتح المجلد</button></div>
-  <div class="libgrid" id="libgrid"></div>
+  <div class="home">
+    <div class="hero">
+      <img src="/ui/logo.png" alt="" class="hlogo">
+      <div class="grow"><div class="hh">هلا بيك 👋 شنو نسوي اليوم؟</div><div class="muted">يو آر يو ٢٫٠ · كل شي بمكانه، ودوّر على أي أداة من <kbd>⌘K</kbd></div></div>
+      <button class="pill" id="libFolder">📁 افتح المجلد</button>
+    </div>
+    <div class="quick">
+      <button class="qk main" id="qNew"><span class="qi">＋</span><b>مشروع جديد</b><small>اختار الفيديو الخام، والباقي علينا</small></button>
+      <button class="qk" id="qLast" hidden><span class="qi">▶</span><b>كمّل آخر مشروع</b><small id="qLastName"></small></button>
+      <button class="qk" id="qStyles"><span class="qi">🎨</span><b>الستايلات والألوان</b><small>٨٥ ستايل و١٢٨ لون جاهز</small></button>
+      <button class="qk" id="qNewIn"><span class="qi">✨</span><b>شنو الجديد</b><small>كل الي انضاف بالنسخة ٢</small></button>
+      <button class="qk" id="qSet"><span class="qi">⚙️</span><b>الإعدادات والربط</b><small>يوتيوب، شات جي بي تي، جيميناي، ثيمات</small></button>
+    </div>
+    <div class="h3">مشاريعي</div>
+    <div class="libgrid" id="libgrid"></div>
+  </div>
+</div>
+
+<!-- command palette: every tool and action, searchable -->
+<div class="veil" id="dFind" hidden>
+  <div class="pal">
+    <div class="palin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="findIn" placeholder="اكتب شنو تريد: ألوان، ترجمة، تصدير، ثيم، نسخ…" autocomplete="off"></div>
+    <div class="pallist" id="findList"></div>
+    <div class="palfoot dim tiny">↑↓ تتنقل · ↵ تفتح · Esc تسكّر</div>
+  </div>
+</div>
+
+<!-- what's new in this version -->
+<div class="veil" id="dNews" hidden>
+  <div class="dlg news">
+    <div class="row"><img src="/ui/logo.png" alt="" style="height:40px"><div class="grow"><h2 style="margin:0">يو آر يو ٢٫٠</h2><div class="dim tiny">نسخة جديدة كاملة</div></div><button class="icobtn" id="newsX">✕</button></div>
+    <div class="newsgrid">
+      <div><b>🔎 دوّر على أي شي</b><span>اضغط ⌘K أو زر البحث فوگ، واكتب: «ألوان»، «ترجمة»، «تصدير»… ويفتحلك ياه.</span></div>
+      <div><b>🎨 ١٢٨ لون جديد</b><span>١٢ مجموعة: سينما، فلم قديم، نيون، أبيض وأسود، طبيعة… من لوحة «الألوان».</span></div>
+      <div><b>🤝 شات جي بي تي وجيميناي</b><span>اربط اشتراكاتك من الإعدادات، ويعطوك رأي ثاني على الخطة وأفكار.</span></div>
+      <div><b>🌍 اللغات على يوتيوب</b><span>الترجمات والعناوين بكل اللغات تنرفع على الفيديو، والأجنبي يشوفها بلغته.</span></div>
+      <div><b>🗂️ النسخ</b><span>كل بناء ينحفظ نسخة. ارجع لأي نسخة واشتغل عليها.</span></div>
+      <div><b>🧠 يتعلم ذوقك</b><span>بعد كل حلقة يكتب شنو تحب، ويمشي عليه بالجاية.</span></div>
+      <div><b>✨ ٢٣ سكيل موشن جديدة</b><span>موشن أقوى، ٥٩ ستايل فلم بالكود، أنميشن، لوتي، ثلاثي الأبعاد.</span></div>
+      <div><b>🖌️ شكل جديد وثيمات</b><span>رئيسية جديدة، أدوات مرتبة بمجموعات، و٥ ثيمات جديدة.</span></div>
+    </div>
+    <div class="row" style="justify-content:flex-end;margin-top:14px"><button class="pill y" id="newsOk">يلا نبدي</button></div>
+  </div>
 </div>
 
 <!-- new clip -->
@@ -862,6 +977,8 @@ function renderHeader(){
 }
 function renderLibrary(){
   const g = $("libgrid"); g.innerHTML = "";
+  const last = state.episodes.find(e => !e.done.render) || state.episodes[0];
+  $("qLast").hidden = !last; if (last){ $("qLastName").textContent = last.name; $("qLast").onclick = () => open(last.id); }
   const nb = document.createElement("button"); nb.className = "lc new";
   nb.innerHTML = `<span class="plus">＋</span><b>مشروع جديد</b><span class="dim tiny">اختار الفيديو الخام وابدي</span>`;
   nb.onclick = () => $("tNew").click(); g.appendChild(nb);
@@ -1937,6 +2054,64 @@ async function openExport(){
   $("xBody").querySelectorAll("[data-copy]").forEach(b => b.onclick = () => navigator.clipboard.writeText(info[b.dataset.copy]).then(() => toast("انسخ"), () => toast("ما گدرت أنسخ")));
 }
 $("tExport").onclick = openExport;
+
+/* ---------- 2.0: find anything (⌘K), the home's quick actions, what's new ---------- */
+const URU_VERSION = "2.0.0";
+const normAr = (t) => String(t).toLowerCase().replace(/[\u064B-\u065F\u0670]/g, "").replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/[گ]/g, "ك").replace(/[چ]/g, "ج").replace(/[پ]/g, "ب");
+const step_ = (n) => () => { if (!needEp()) return; showPanel("steps"); step = n; renderSteps(); loadVideo(); };
+const panel_ = (k) => () => { if (!needEp()) return; showPanel(k); };
+const setTheme = (k) => () => { if (k === "night") delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = k; try { localStorage.setItem("uru-theme", k); } catch (_) {} post("/api/prefs", {theme: k}).catch(() => {}); toast("تغيّر الثيم"); };
+function findItems(){
+  const T = [
+    ["الحلقة", [["📋", "الخطوات", "steps خطوات مراحل", panel_("steps")], ["✂️", "الجمل والقص", "قص جمل اعادات سكتات", step_(1)], ["🔊", "الصوت وتنظيفه", "صوت تنظيف ضوضاء طبيعي", step_(2)],
+      ["💬", "الكابشن", "كابشن ترجمه نص كلمات", step_(3)], ["🗺️", "الخطة والمشاهد", "خطه مشاهد صور هوك", step_(4)], ["🎬", "البناء والمعاينة", "بناء معاينه نهائيه رندر", step_(5)],
+      ["📝", "الملاحظات", "ملاحظات طلبات تعديل", step_(6)], ["🗂️", "النسخ", "نسخ طبقات رجوع versions", panel_("versions")], ["💾", "احفظ نسخة هسة", "حفظ نسخه", () => { if (needEp()) $("verSave").click(); }],
+      ["📁", "ملفاتي", "ملفات صور موسيقى مواد رفع", panel_("media")], ["↶", "تراجع", "تراجع undo", () => undoRedo("undo")], ["↷", "رجّع", "اعاده redo", () => undoRedo("redo")]]],
+    ["الشكل", [["🎨", "الستايلات", "ستايل شكل نمط", panel_("styles")], ["🌈", "الألوان واللوكات", "الوان لوك lut فلتر سينما", panel_("colors")], ["✨", "المؤثرات والانتقالات", "مؤثرات تاثيرات انتقالات", panel_("effects")],
+      ["🔤", "النص والعناوين", "نص عنوان كتابه", panel_("text")], ["🅰️", "الخطوط", "خطوط فونت", panel_("fonts")], ["🎞️", "ستايل من فيديو يعجبك", "ستايل فيديو مرجع نسخ", panel_("styles")]]],
+    ["الصوت", [["🔉", "الأصوات والمؤثرات الصوتية", "اصوات مؤثرات sfx", panel_("sounds")], ["🎵", "الموسيقى والإضافات", "موسيقى اضافات انترو اوترو", panel_("extras")]]],
+    ["الذكاء", [["💡", "المساعد", "مساعد شات كلود", () => $("tAssist").click()], ["🤝", "رأي شات جي بي تي وجيميناي", "رأي ثاني gpt gemini جيميناي شات", () => { if (needEp()) run("opinion"); }],
+      ["🧠", "علّم المساعد ذوقك هسة", "تعلم ذوق", () => { if (needEp()) run("learn"); }], ["🪄", "كمّل لحاله للآخر", "تلقائي اوتو", () => { if (needEp()) run("auto"); }]]],
+    ["التصدير والنشر", [["📤", "التصدير", "تصدير دقه 4k رفع", () => $("tExport").click()], ["📱", "الريلز", "ريلز شورتس تيك توك", () => $("tExport").click()],
+      ["🌍", "الترجمة واللغات والدبلجة", "ترجمه لغات دبلجه اسباني انكليزي", () => $("tExport").click()], ["▶️", "يوتيوب", "يوتيوب رفع قناه", () => $("tExport").click()]]],
+    ["التطبيق", [["⚙️", "الإعدادات", "اعدادات ربط", () => $("tSet").click()], ["🩺", "افحص التطبيق", "فحص مشكله يعلك", () => { $("tSet").click(); setTimeout(() => $("sCheck").click(), 300); }],
+      ["🏠", "الرئيسية", "رئيسيه مشاريع", () => goHome()], ["➕", "مشروع جديد", "جديد مشروع فيديو", () => $("tNew").click()], ["⛶", "كبّر الفيديو", "تكبير شاشه كامله", () => $("vFull").click()],
+      ["✨", "شنو الجديد", "جديد نسخه 2", () => showNews()], ["💡", "اقترح ميزة", "ميزه اقتراح دعم", () => { $("tSet").click(); setTimeout(() => $("sIdea").focus(), 300); }]]],
+    ["الثيمات", THEMES.map(([k, n]) => ["🖌️", "ثيم " + n, "ثيم لون شكل " + n, setTheme(k)])],
+  ];
+  return T.flatMap(([g, xs]) => xs.map(([e, n, kw, fn]) => ({g, e, n, key: normAr(n + " " + kw), fn})));
+}
+let findSel = 0, findShown = [];
+function drawFind(){
+  const q = normAr($("findIn").value.trim()), words = q.split(/\s+/).filter(Boolean);
+  findShown = findItems().filter(x => words.every(w => x.key.includes(w)));
+  findSel = Math.min(findSel, Math.max(0, findShown.length - 1));
+  let g = "", h = "";
+  findShown.forEach((x, i) => { if (x.g !== g){ g = x.g; h += `<div class="palh">${esc(g)}</div>`; }
+    h += `<button class="pi ${i === findSel ? "on" : ""}" data-i="${i}"><span class="pe">${x.e}</span><b>${esc(x.n)}</b></button>`; });
+  $("findList").innerHTML = h || `<div class="dim" style="padding:14px">ما لگيت شي بهالاسم. جرّب كلمة ثانية.</div>`;
+  $("findList").querySelectorAll("[data-i]").forEach(b => b.onclick = () => doFind(+b.dataset.i));
+  const on = $("findList").querySelector(".pi.on"); if (on) on.scrollIntoView({block: "nearest"});
+}
+function doFind(i){ const x = findShown[i]; if (!x) return; $("dFind").hidden = true; $("lib").hidden = !!ep ? true : $("lib").hidden; x.fn(); }
+function openFind(){ $("dFind").hidden = false; $("findIn").value = ""; findSel = 0; drawFind(); setTimeout(() => $("findIn").focus(), 30); }
+$("tFind").onclick = openFind;
+$("findIn").oninput = () => { findSel = 0; drawFind(); };
+$("findIn").onkeydown = (e) => {
+  if (e.key === "ArrowDown"){ e.preventDefault(); findSel = Math.min(findSel + 1, findShown.length - 1); drawFind(); }
+  else if (e.key === "ArrowUp"){ e.preventDefault(); findSel = Math.max(findSel - 1, 0); drawFind(); }
+  else if (e.key === "Enter"){ e.preventDefault(); doFind(findSel); }
+  else if (e.key === "Escape") $("dFind").hidden = true; };
+$("dFind").onclick = (e) => { if (e.target === $("dFind")) $("dFind").hidden = true; };
+document.addEventListener("keydown", (e) => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k"){ e.preventDefault(); $("dFind").hidden ? openFind() : ($("dFind").hidden = true); } });
+function showNews(){ $("dNews").hidden = false; try { localStorage.setItem("uru-seen", URU_VERSION); } catch (_) {} }
+$("newsX").onclick = $("newsOk").onclick = () => { $("dNews").hidden = true; };
+$("verBadge").onclick = showNews;
+$("qNew").onclick = () => $("tNew").click();
+$("qStyles").onclick = () => { const last = state.episodes[0]; if (!ep && last){ open(last.id).then(() => showPanel("styles")); } else if (ep){ $("lib").hidden = true; showPanel("styles"); } else toast("سوّ مشروع أول حتى تجرب الستايلات عليه"); };
+$("qNewIn").onclick = showNews;
+$("qSet").onclick = () => $("tSet").click();
+setTimeout(() => { let seen = ""; try { seen = localStorage.getItem("uru-seen") || ""; } catch (_) {} if (seen !== URU_VERSION) showNews(); }, 1200);
 function theater(on){ $("vwrap").classList.toggle("theater", on); $("theaterX").hidden = !on; }
 $("vFull").onclick = async () => {
   const v = $("vwrap");
@@ -2072,7 +2247,10 @@ document.addEventListener("mouseover", (e) => {
 
 /* ---------- themes and language ---------- */
 const THEMES = [["forest", "الغابة", "linear-gradient(135deg,#051F20,#235347 60%,#8EB69B)"], ["mint", "نعناعي فاتح", "linear-gradient(135deg,#DAF1DE,#8EB69B)"],
-  ["night", "ليل ذهبي", "linear-gradient(135deg,#07070a,#2a2350 60%,#F2C94C)"], ["ocean", "محيط", "linear-gradient(135deg,#06121f,#1f4a73 60%,#5ab0ff)"], ["rose", "وردي", "linear-gradient(135deg,#1a0b10,#5a2a38 60%,#ff7a9c)"]];
+  ["night", "ليل ذهبي", "linear-gradient(135deg,#07070a,#2a2350 60%,#F2C94C)"], ["ocean", "محيط", "linear-gradient(135deg,#06121f,#1f4a73 60%,#5ab0ff)"], ["rose", "وردي", "linear-gradient(135deg,#1a0b10,#5a2a38 60%,#ff7a9c)"],
+  ["black", "أسود فخم", "linear-gradient(135deg,#000,#141414 60%,#d4af37)"], ["violet", "بنفسجي", "linear-gradient(135deg,#0f0a1f,#3a2a66 60%,#a78bfa)"],
+  ["carbon", "كربون أحمر", "linear-gradient(135deg,#121214,#34343a 60%,#ff4d4d)"], ["sand", "رملي فاتح", "linear-gradient(135deg,#f4ede1,#dccdb2 60%,#b5651d)"],
+  ["sky", "سماوي فاتح", "linear-gradient(135deg,#eaf3fb,#c3d8ee 60%,#1f6fd1)"]];
 function curTheme(){ return document.documentElement.dataset.theme || "night"; }
 function drawThemes(){
   $("sThemes").innerHTML = THEMES.map(([k, n, g]) => `<button class="thm ${curTheme() === k ? "on" : ""}" data-th="${k}"><i style="background:${g}"></i>${n}</button>`).join("");

@@ -4,7 +4,7 @@
 # One binary for both chips (Apple and Intel), signed ad hoc (free; the owner opens it once from Settings).
 set -euo pipefail
 cd "$(dirname "$0")"
-VERSION="${1:-1.0}"
+VERSION="${1:-2.0.0}"
 OUT=build; APP="$OUT/URU.app"
 rm -rf "$OUT"; mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
