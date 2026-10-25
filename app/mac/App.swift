@@ -19,6 +19,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
     var window: NSWindow!
     var web: WKWebView!
     var server: Process?
+    var crashes: [Date] = []
     var setupProc: Process?
     var quitting = false
 
@@ -163,7 +164,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
                     guard let self = self else { return }
                     self.server = nil
                     if self.quitting { return }
-                    if proc.terminationStatus == updateExit { self.startServer() }
+                    if proc.terminationStatus == updateExit { self.startServer(); return }
+                    // the engine stopped by itself: start it again quietly (3 times in two minutes at most),
+                    // the page reconnects and the episode's work is all on disk (owner: "ما أريده يفصل ويطلع")
+                    let now = Date()
+                    self.crashes = self.crashes.filter { now.timeIntervalSince($0) < 120 } + [now]
+                    if self.crashes.count <= 3 { self.startServer() }
                     else { self.showSetup(error: true) }   // our own stops clear this handler first
                 }
             }

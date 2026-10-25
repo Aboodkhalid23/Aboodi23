@@ -43,16 +43,24 @@ def _master(ep: Episode) -> Path:
 
 def _caption_filter(ep: Episode, start: float, end: float, work: Path) -> str:
     """Reels-style captions for the tall clip when he turned captions on (empty otherwise)."""
-    from .options import FONTS, captions_ass, load_options
+    from .options import captions_ass, dress_ass, fonts_dir, load_options
     from .transcribe import load_words
     opts = load_options(ep)["captions"]
     if not opts["on"] or not ep.clean_words.exists():
         return ""
     off = load_plan(ep.plan).teaser_total
-    words = [(w.text, w.start, w.end) for w in load_words(ep.clean_words) if start - off <= w.start and w.end <= end - off]
     ass = work / "captions.ass"
-    ass.write_text(captions_ass(words, off - start, W, H, opts["style"], min(opts["words"], 3), until=end - start), encoding="utf-8")
-    return f",ass=filename='{ass}':fontsdir='{FONTS}':shaping=complex"
+    if opts.get("lang") == "en" and (ep.edit / "captions_en.json").exists():
+        import json
+        from .options import lines_ass
+        lines = [ln for ln in json.loads((ep.edit / "captions_en.json").read_text(encoding="utf-8"))
+                 if start - off <= ln["s"] and ln["e"] <= end - off]
+        ass.write_text(dress_ass(lines_ass(lines, off - start, W, H, opts["style"], until=end - start), opts, True), encoding="utf-8")
+        return f",ass=filename='{ass}':fontsdir='{fonts_dir(work, opts)}':shaping=complex"
+    words = [(w.text, w.start, w.end) for w in load_words(ep.clean_words) if start - off <= w.start and w.end <= end - off]
+    ass.write_text(dress_ass(captions_ass(words, off - start, W, H, opts["style"], min(opts["words"], 3), until=end - start), opts),
+                   encoding="utf-8")
+    return f",ass=filename='{ass}':fontsdir='{fonts_dir(work, opts)}':shaping=complex"
 
 
 def _pieces(beats, start: float, end: float):

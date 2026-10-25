@@ -164,7 +164,10 @@ def effect_filter(name: str | None, cv: "Canvas") -> str:
               "night": "curves=preset=darker,colorbalance=bs=0.15:bm=0.1,eq=saturation=0.6",
               "dream": "gblur=sigma=1.6,eq=brightness=0.03:saturation=1.12", "rgb_split": "chromashift=cbh=9:crh=-9:cbv=3:crv=-3",
               "flash_in": "fade=t=in:st=0:d=0.3:color=white", "sharpen": "unsharp=7:7:1.1:7:7:0",
-              "film": "noise=alls=8:allf=t,vignette=angle=0.5,curves=preset=increase_contrast"}
+              "film": "noise=alls=8:allf=t,vignette=angle=0.5,curves=preset=increase_contrast",
+              # his reference (2026-10-25): the negative "X-ray" look; and a soft bloom
+              "xray": "negate,hue=s=0,curves=master='0/0 0.45/0.55 1/1',eq=contrast=1.35:brightness=0.04",
+              "glow": "split[g0][g1];[g1]gblur=sigma=18,eq=brightness=0.06[gb];[g0][gb]blend=all_mode=screen:all_opacity=0.45"}
     return "," + chains[name] if name in chains else ""
 
 
@@ -296,7 +299,16 @@ def sound_settings(ep: Episode) -> dict:
             "sfx": bool(d.get("sfx", True))}
 
 
+# "طبيعي" (owner, 2026-10-25: "يتوضح بس مو كأنه متوضح بالذكاء الاصطناعي"): light denoise that leaves the room's air,
+# a soft de-esser, gentle compression and a touch of chest warmth — clear, but still his real voice
+NATURAL_VOICE = ("highpass=f=70,afftdn=nr=5:nf=-55:tn=1,deesser=i=0.25,"
+                 "acompressor=threshold=-22dB:ratio=1.8:attack=15:release=220:makeup=1,"
+                 "equalizer=f=180:t=q:w=1:g=1.2,loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000")
+
+
 def voice_chain(clean: int = 1) -> str:
+    if clean == 4:
+        return NATURAL_VOICE
     nr = CLEAN_NR.get(clean, 8)
     chain = VOICE_CHAIN.replace("afftdn=nr=8:nf=-50,", f"afftdn=nr={nr}:nf=-50," if nr else "")
     return chain.replace("highpass=f=80,", "highpass=f=80,equalizer=f=3000:t=q:w=1.2:g=2," if clean >= 2 else "highpass=f=80,")

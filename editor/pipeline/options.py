@@ -19,7 +19,10 @@ from .media import MediaError, probe
 from .paths import Episode
 
 FONTS = Path(__file__).resolve().parents[1] / "fonts"
-DEFAULTS = {"captions": {"on": False, "style": "pop", "words": 3}, "pace": "off", "intro": False, "outro": True}
+DEFAULTS = {"captions": {"on": False, "style": "pop", "words": 3, "lang": "ar", "font_ar": "Vazirmatn", "font_en": "Vazirmatn",
+                         "color": "#FFFFFF", "lit": "#FFD24C"}, "pace": "off", "intro": False, "outro": True,
+            "hook": 30}
+HOOKS = (10, 20, 30, 60)   # seconds the assistant fights hardest for the viewer (owner, 2026-10-25)
 PACE = {"calm": (0.7, 0.18), "normal": (0.45, 0.12), "fast": (0.28, 0.07)}   # (longest pause kept, breath at a cut)
 INTRO_SECONDS = 2.6
 
@@ -41,7 +44,14 @@ def save_options(ep: Episode, change: dict) -> dict:
         c["style"] = c["style"] if c.get("style") in ("pop", "clean", "box") else "pop"
         c["words"] = max(1, min(6, int(c.get("words", 3))))
         c["on"] = bool(c.get("on"))
+        c["lang"] = c.get("lang") if c.get("lang") in ("ar", "en") else "ar"
+        for k in ("color", "lit"):
+            c[k] = c[k] if re.fullmatch(r"#[0-9A-Fa-f]{6}", str(c.get(k, ""))) else DEFAULTS["captions"][k]
+        for k in ("font_ar", "font_en"):
+            c[k] = str(c.get(k) or "Vazirmatn")[:60]
         cur["captions"] = c
+    if change.get("hook") in HOOKS:
+        cur["hook"] = int(change["hook"])
     if change.get("pace") in ("off", "calm", "normal", "fast"):
         cur["pace"] = change["pace"]
     for k in ("intro", "outro"):
@@ -114,6 +124,73 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     return head + "\n".join(lines) + "\n"
 
 
+def _ass_colour(hex_rgb: str) -> str:
+    h = hex_rgb.lstrip("#")
+    return f"&H00{h[4:6]}{h[2:4]}{h[0:2]}&".upper()
+
+
+def dress_ass(ass: str, caps: dict, english: bool = False) -> str:
+    """His caption font and colours on an ASS file (the font from the app's font library)."""
+    font = caps.get("font_en" if english else "font_ar") or "Vazirmatn"
+    ass = ass.replace("Style: Cap,Vazirmatn,", f"Style: Cap,{font},", 1)
+    ass = re.sub(r"(Style: Cap,[^,]+,\d+,)&H00FFFFFF", lambda m: m.group(1) + _ass_colour(caps.get("color", "#FFFFFF")).rstrip("&"), ass, 1)
+    ass = ass.replace("\\c&HFFFFFF&", "\\c" + _ass_colour(caps.get("color", "#FFFFFF")))
+    return ass.replace("\\c&H4CD2FF&", "\\c" + _ass_colour(caps.get("lit", "#FFD24C")))
+
+
+def fonts_dir(work: Path, caps: dict) -> Path:
+    """The folder libass reads: our fonts plus the ones he chose in the app (from $MONTIER_HOME/fonts)."""
+    import os
+    from editor.app.fonts import caption_fonts_dir
+    home = Path(os.environ.get("MONTIER_HOME") or Path.home() / "Library/Application Support/Montier")
+    return caption_fonts_dir(home, work, [caps.get("font_ar", ""), caps.get("font_en", "")])
+
+
+def caption_lines(ep: Episode, gap: float = 0.55, most: int = 9) -> list[dict]:
+    """His speech as short subtitle lines on the cleaned timeline: [{"i", "s", "e", "text"}]."""
+    from .transcribe import load_words
+    words = load_words(ep.clean_words) if ep.clean_words.exists() else []
+    out, cur = [], []
+    for w in words:
+        if cur and (w.start - cur[-1].end > gap or len(cur) >= most or cur[-1].text.endswith((".", "،", "؟", "!", "?"))):
+            out.append(cur)
+            cur = []
+        cur.append(w)
+    if cur:
+        out.append(cur)
+    return [{"i": k, "s": round(ln[0].start, 2), "e": round(ln[-1].end, 2), "text": " ".join(x.text for x in ln)} for k, ln in enumerate(out)]
+
+
+def lines_ass(lines: list[dict], offset: float, width: int, height: int, style: str = "pop", until: float | None = None) -> str:
+    """Whole subtitle lines (the translated captions)."""
+    head = captions_ass([], 0, width, height, style).replace("Vazirmatn,", "Vazirmatn,", 1)
+    size = round(height * (0.05 if style == "pop" else 0.042))
+    head = re.sub(r"(Style: Cap,Vazirmatn,)\d+", lambda m: m.group(1) + str(size), head)
+    ev = []
+    for ln in lines:
+        s, e = ln["s"] + offset, ln["e"] + offset + 0.15
+        if until is not None and s >= until:
+            break
+        ev.append(f"Dialogue: 0,{_ass_time(s)},{_ass_time(min(e, until) if until else e)},Cap,,0,0,0,,{_clean(ln['text'])}")
+    return head + "\n".join(ev) + "\n"
+
+
+def subtitles_srt(ep: Episode, lang: str = "ar") -> str:
+    """A subtitle file for YouTube (its own captions, switchable by the viewer), on the final timeline."""
+    from .plan import load_plan
+    off = load_plan(ep.plan).teaser_total if ep.plan.exists() else 0.0
+    if load_options(ep)["intro"]:
+        off += INTRO_SECONDS
+    if lang == "en" and (ep.edit / "captions_en.json").exists():
+        lines = json.loads((ep.edit / "captions_en.json").read_text(encoding="utf-8"))
+    else:
+        lines = caption_lines(ep)
+    def t(x):
+        ms = int(round(x * 1000))
+        return f"{ms // 3600000:02d}:{ms // 60000 % 60:02d}:{ms // 1000 % 60:02d},{ms % 1000:03d}"
+    return "\n".join(f"{k + 1}\n{t(ln['s'] + off)} --> {t(ln['e'] + off + 0.15)}\n{ln['text']}\n" for k, ln in enumerate(lines))
+
+
 # ---------- the channel opening ----------
 
 def _channel_title() -> str:
@@ -181,12 +258,18 @@ def post_process(ep: Episode, final: Path, teaser_total: float) -> Path:
     work = ep.work / "post"
     work.mkdir(parents=True, exist_ok=True)
     chain = "[0:v]null"
-    if caps and ep.clean_words.exists():
-        words = [(w.text, w.start, w.end) for w in load_words(ep.clean_words)]
+    en = opts["captions"].get("lang") == "en" and (ep.edit / "captions_en.json").exists()
+    if caps and (en or ep.clean_words.exists()):
         ass = work / "captions.ass"
-        ass.write_text(captions_ass(words, teaser_total, info.width, info.height, opts["captions"]["style"],
-                                    opts["captions"]["words"], until=info.duration), encoding="utf-8")
-        chain = f"[0:v]ass=filename='{ass}':fontsdir='{FONTS}':shaping=complex"
+        if en:   # translated: whole lines in English, timed like his speech
+            lines = json.loads((ep.edit / "captions_en.json").read_text(encoding="utf-8"))
+            ass.write_text(dress_ass(lines_ass(lines, teaser_total, info.width, info.height, opts["captions"]["style"],
+                                               until=info.duration), opts["captions"], english=True), encoding="utf-8")
+        else:
+            words = [(w.text, w.start, w.end) for w in load_words(ep.clean_words)]
+            ass.write_text(dress_ass(captions_ass(words, teaser_total, info.width, info.height, opts["captions"]["style"],
+                                                  opts["captions"]["words"], until=info.duration), opts["captions"]), encoding="utf-8")
+        chain = f"[0:v]ass=filename='{ass}':fontsdir='{fonts_dir(work, opts['captions'])}':shaping=complex"
     inputs = ["-i", str(final)]
     if intro:
         clip = intro_clip(ep, info.width, info.height, round(info.fps or 30), work / "intro.mp4")

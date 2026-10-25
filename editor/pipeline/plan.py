@@ -20,7 +20,7 @@ TRANSITIONS = ("zoom", "flash", "whip", "glitch", "tear", "burn", "dive", "pan",
 STICKERS = ("stamp", "arrow", "burst", "tape", "circle", "scribble_circle", "scribble_arrow", "scribble_underline",
             "censor", "name_tag", "emoji", "icon", "bubble", "label")   # emoji: Noto animated; icon: Iconify; bubble: comic speech; label: red box typing
 # video effects on his own footage (the app's effects library; compose.effect_filter)
-EFFECTS = ("shake", "vhs", "retro_shake", "bw", "night", "dream", "rgb_split", "flash_in", "sharpen", "film")
+EFFECTS = ("shake", "vhs", "retro_shake", "bw", "night", "dream", "rgb_split", "flash_in", "sharpen", "film", "xray", "glow")
 MARKABLE = ("face_fx", "image", "ai_image", "graphic", "entity", "footage", "avatar")   # beats that can carry stickers
 
 HOOK_SECONDS = 30.0

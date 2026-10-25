@@ -490,6 +490,29 @@ def media_list(ep: Episode) -> list[dict]:
     return out
 
 
+def ai_variants(ep: Episode, i: int) -> list[dict]:
+    """The versions the generator made for one AI scene (ai_<i>.* is the one in use, ai_<i>_v2… the others)."""
+    out = []
+    for f in sorted(ep.assets.glob(f"ai_{i}.*")) + sorted(ep.assets.glob(f"ai_{i}_v*.*")):
+        out.append({"name": f.name, "video": f.suffix.lower() in VIDEO_EXT, "used": f.stem == f"ai_{i}",
+                    "path": str(f.relative_to(ep.root))})
+    return out
+
+
+def ai_choose(ep: Episode, i: int, name: str) -> list[dict]:
+    """Swap a version in: the chosen file becomes ai_<i>, the old one keeps its place among the versions."""
+    pick = ep.assets / Path(name).name
+    if not pick.is_file() or not pick.stem.startswith(f"ai_{i}_v"):
+        return ai_variants(ep, i)
+    cur = next(iter(sorted(ep.assets.glob(f"ai_{i}.*"))), None)
+    tmp = ep.assets / f"ai_{i}_swap{pick.suffix}"
+    pick.rename(tmp)
+    if cur:
+        cur.rename(ep.assets / f"{pick.stem}{cur.suffix}")
+    tmp.rename(ep.assets / f"ai_{i}{pick.suffix}")
+    return ai_variants(ep, i)
+
+
 def media_notes(ep: Episode) -> dict:
     try:
         return json.loads((ep.edit / "media" / ".notes.json").read_text(encoding="utf-8"))
@@ -654,7 +677,7 @@ def effect_thumbs(ep: Episode) -> dict:
     return res
 
 
-EFFECT_NAMES = {"shake": "اهتزاز", "vhs": "شريط قديم", "retro_shake": "قديم ويهتز", "bw": "أبيض وأسود", "night": "ليل مخيف",
+EFFECT_NAMES = {"xray": "أشعة إكس", "glow": "توهّج", "shake": "اهتزاز", "vhs": "شريط قديم", "retro_shake": "قديم ويهتز", "bw": "أبيض وأسود", "night": "ليل مخيف",
                 "dream": "حلم", "rgb_split": "انقسام ألوان", "flash_in": "دخول بوميض", "sharpen": "حدّة", "film": "فلم سينما"}
 
 

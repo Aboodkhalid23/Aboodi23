@@ -260,7 +260,8 @@ def test_optional_extras_and_suggestions(app, monkeypatch):
     assert o["captions"]["on"] is False and o["pace"] == "off" and o["intro"] is False and o["outro"] is True
     assert options.pace_gaps(ep) is None
     o = options.save_options(ep, {"captions": {"on": True, "words": 9, "style": "weird"}, "pace": "fast", "outro": False})
-    assert o["captions"] == {"on": True, "style": "pop", "words": 6} and options.pace_gaps(ep) == options.PACE["fast"]
+    assert {k: o["captions"][k] for k in ("on", "style", "words", "lang")} == {"on": True, "style": "pop", "words": 6, "lang": "ar"}
+    assert options.pace_gaps(ep) == options.PACE["fast"]
     assert json.loads(ep.plan.read_text())["end_screen"] == 0
     ass = options.captions_ass([("هلو", 0.0, 0.4), ("شلونكم", 0.4, 1.0), ("اليوم", 1.0, 1.5)], 2.0, 1920, 1080, "pop", 2)
     assert "Vazirmatn" in ass and "شلونكم" in ass and "0:00:02.00" in ass
@@ -384,3 +385,55 @@ def test_youtube_link_and_private_resumable_upload(tmp_path):
     seen = []
     assert youtube.upload(tmp_path, video, "حلقة", progress=seen.append, session=s) == "VID1"
     assert s.got == video.read_bytes() and s.meta["status"]["privacyStatus"] == "private" and seen[-1] == 100
+
+
+def test_script_word_file_translation_and_subtitles(app, monkeypatch):
+    import io, re, zipfile
+    from editor.pipeline import options
+    from editor.pipeline.paths import Episode
+    b = io.BytesIO(); z = zipfile.ZipFile(b, "w")
+    z.writestr("word/document.xml", "<w:p><w:r><w:t>ستيف جوبز</w:t></w:r></w:p>"); z.close()
+    assert srv.extract_text("s.docx", b.getvalue()) == "ستيف جوبز"
+    d = srv.EPISODES / srv.create_episode("حلقة", str(app))["id"]
+    ep = Episode(d).ensure()
+    ep.plan.write_text(json.dumps({"style": {"primary": "noir", "sections": []}, "teaser": [],
+                                   "beats": [{"start": 0, "end": 9, "zone": "hook", "kind": "face"}]}), encoding="utf-8")
+    ep.clean_words.write_text(json.dumps([{"t": "هلو", "s": 1.0, "e": 1.4}, {"t": "شلونكم.", "s": 1.5, "e": 2.0},
+                                          {"t": "اليوم", "s": 4.0, "e": 4.5}]), encoding="utf-8")
+
+    def fake(prompt):
+        out = re.search(r'اكتب "([^"]+)"', prompt).group(1)
+        open(out, "w").write(json.dumps({"lines": [{"i": 0, "en": "Hi, how are you?"}, {"i": 1, "en": "Today"}]}))
+        return 0
+    monkeypatch.setattr(srv, "_claude", fake)
+    assert srv._translate(d) == 0
+    options.save_options(ep, {"captions": {"on": True, "lang": "en"}, "hook": 10})
+    o = options.load_options(ep)
+    assert o["captions"]["lang"] == "en" and o["hook"] == 10
+    srt = options.subtitles_srt(ep, "en")
+    assert "00:00:01,000 --> 00:00:02,150\nHi, how are you?" in srt and "Today" in srt
+    assert "هلو شلونكم." in options.subtitles_srt(ep, "ar")
+    assert "أول 10 ثانية" in srv._plan_extra(d)
+
+
+def test_paid_ai_is_off_until_he_turns_it_on_and_versions_swap(app, tmp_path, monkeypatch):
+    from editor.app import studio
+    from editor.pipeline.paths import Episode
+    monkeypatch.setattr(srv, "HOME", tmp_path)
+    assert "ممنوع تصرف فلوس" in srv._money_rule()
+    p = srv.prefs({"ai_on": True, "ai_budget": 40, "ai_variants": 9, "theme": "nope"})
+    assert p["ai_on"] and p["ai_budget"] == 40 and p["ai_variants"] == 4 and p["theme"] == "forest"
+    srv.face_files("add", "وجهي.jpg", b"\xff\xd8 fake")
+    assert "40 دولار" in srv._money_rule() and "وجهي.jpg" in srv._money_rule()
+    with pytest.raises(ValueError):
+        srv.face_files("add", "x.exe", b"")
+    d = srv.EPISODES / srv.create_episode("حلقة", str(app))["id"]
+    ep = Episode(d).ensure()
+    (ep.assets / "ai_2.png").write_bytes(b"one"); (ep.assets / "ai_2_v2.png").write_bytes(b"two")
+    assert [v["used"] for v in studio.ai_variants(ep, 2)] == [True, False]
+    studio.ai_choose(ep, 2, "ai_2_v2.png")
+    assert (ep.assets / "ai_2.png").read_bytes() == b"two" and (ep.assets / "ai_2_v2.png").read_bytes() == b"one"
+    calls = []
+    monkeypatch.setattr(srv, "_claude", lambda prompt, tools=None: calls.append(tools) or 0)
+    ep.plan.write_text(json.dumps({"beats": [{"kind": "ai_video"}]}), encoding="utf-8")
+    assert srv._ai_step(d) == 0 and calls and "mcp__claude_ai_Higgsfield" in calls[0]

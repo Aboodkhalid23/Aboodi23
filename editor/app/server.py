@@ -40,24 +40,27 @@ UPDATE_EXIT = 75          # the app window restarts the server when it exits wit
 ANSI = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
 
 STEPS = {"all": ["prep", "plan", "render", "suite"], "from-plan": ["plan", "render", "suite"],
-         "from-render": ["render", "suite"], "prep": ["prep"], "plan": ["plan", "images"], "render": ["render"],
+         "from-render": ["render", "suite"], "prep": ["prep"], "plan": ["plan", "ai", "images"], "render": ["render"],
          "suite": ["suite"], "requests": ["requests", "render"], "preview": ["preview"],
          # the studio's steps (one screen each)
-         "prepare": ["fetch", "transcribe"], "cut": ["cut"], "sentences": ["sentences"], "captions": ["captions"],
+         "prepare": ["fetch", "script-names", "transcribe"], "cut": ["cut"], "sentences": ["sentences"], "captions": ["captions"],
          "images": ["images"], "build": ["preview"], "final": ["render"], "assist": ["assist"],
-         "auto": ["fetch", "transcribe", "cut", "plan", "images", "render"], "chat": ["chat"],
+         "auto": ["fetch", "script-names", "transcribe", "cut", "plan", "ai", "images", "render"], "chat": ["chat"],
          "shorts": ["shorts"], "export": ["export"],
          # a style from the Styles panel on the whole video: the assistant re-plans in it, then a new preview
-         "restyle": ["plan", "images", "preview"],
+         "restyle": ["plan", "ai", "images", "preview"],
          # the reels pack: the assistant picks 1 main short (< 1 min) + 5 clips, then they are cut tall
-         "reels": ["reels-pick", "shorts"], "youtube": ["youtube"]}
+         "reels": ["reels-pick", "shorts"], "translate": ["translate"], "youtube": ["youtube"]}
 STEP_NAMES = {"prep": "التجهيز", "plan": "خطة المونتير", "render": "النسخة الكاملة", "preview": "المعاينة",
               "suite": "غرفة المونتاج", "requests": "ملاحظاتك", "fetch": "تجهيز الفيديو", "transcribe": "تفريغ الكلام",
               "cut": "قص المقطع", "sentences": "المساعد يراجع الجمل", "captions": "المساعد يراجع الكابشن",
-              "images": "الصور", "assist": "المساعد", "chat": "المساعد", "shorts": "الريلز", "export": "التصدير", "reels-pick": "اختيار الريلز", "youtube": "الرفع على يوتيوب"}
+              "images": "الصور", "assist": "المساعد", "chat": "المساعد", "shorts": "الريلز", "export": "التصدير", "reels-pick": "اختيار الريلز", "script-names": "أسماء السكربت", "translate": "الترجمة", "ai": "مشاهد الذكاء الاصطناعي", "youtube": "الرفع على يوتيوب"}
 CLAUDE_TOOLS = ["Read", "Write", "Edit", "Glob", "Grep", "WebSearch", "WebFetch", "TodoWrite",
                 "Bash(python -m editor.pipeline:*)", "Bash(python3 -m editor.pipeline:*)",
                 "Bash(ffprobe:*)", "Bash(ffmpeg:*)", "Bash(ls:*)"]
+# the AI generators he connected to his Claude account (claude.ai connectors), allowed only in the AI step
+GEN_TOOLS = ["mcp__claude_ai_Higgsfield", "mcp__claude_ai_higgsfield", "mcp__Higgsfield", "mcp__higgsfield",
+             "mcp__claude_ai_artlist", "mcp__claude_ai_Artlist", "mcp__artlist", "mcp__Artlist"]
 
 
 # ---------- episodes ----------
@@ -460,14 +463,14 @@ def _claude_line(raw: str) -> None:
             JOB.claude_failed = True
 
 
-def _claude(prompt: str) -> int:
+def _claude(prompt: str, tools: list[str] | None = None) -> int:
     exe = claude_bin()
     if not exe:
         JOB.say("❌ كلود مو منصّب. دوس «حدّث المونتير» بالإعدادات حتى ينصبه")
         return 1
     JOB.claude_failed = False
     code = _run([exe, "-p", prompt, "--output-format", "stream-json", "--verbose",
-                 "--permission-mode", "acceptEdits", "--allowedTools", *CLAUDE_TOOLS], on_line=_claude_line)
+                 "--permission-mode", "acceptEdits", "--allowedTools", *CLAUDE_TOOLS, *(tools or [])], on_line=_claude_line)
     return 1 if JOB.claude_failed else code
 
 
@@ -480,8 +483,19 @@ PLAN_PROMPT = """انت المونتير الآلي لقناة صاحب القن
 - اكتب "{ep}/edit/edit_plan.json"، وافحصه بـ python -m editor.pipeline validate "{ep}" لحد ما يطلع ✅.
 {extra}
 - لا تطلع معاينة ولا النسخة الكاملة (التطبيق يجيب الصور ويطلعها بعدك).
-- ممنوع تصرف فلوس أو رصيد: لا ذكاء اصطناعي مدفوع (هيگزفيلد، آرتلست). الحقيقي والمجاني بس.
+{money}
 - كل رسائلك عربي عراقي بس. وبالآخر سطر: شنو الفكرة البصرية للحلقة."""
+
+TRANSLATE_PROMPT = """انت مترجم ترجمة أفلام. ماكو أحد يجاوبك هسة، فلا تسأل.
+بالملف "{file}" كلام حلقة يوتيوب (عراقي محكي) سطر سطر: i رقم السطر، text الكلام.
+ترجم كل سطر للإنگليزي طبيعي وقصير ينقرا بسرعة على الشاشة (مو حرفي)، والأسماء بتهجئتها الصحيحة. {names}
+اكتب "{out}" بهالشكل بس (JSON): {{"lines": [{{"i": 0, "en": "..."}}]}} بنفس عدد الأسطر.
+لا تعدّل أي ملف ثاني."""
+
+NAMES_PROMPT = """انت مساعد المونتاج. ماكو أحد يجاوبك هسة، فلا تسأل.
+بالملف "{script}" سكربت الحلقة الي صاحب القناة راح يقراه (عراقي). طلّع منه كل اسم علم: أشخاص، شركات، أماكن، منتجات، أحداث.
+اكتب "{out}" بهالشكل بس (JSON): {{"names": [{{"ar": "الاسم مثل ما مكتوب بالسكربت", "en": "الاسم الصحيح بالإنگليزي", "kind": "person|company|place|thing|event", "who": "سطر عربي قصير: منو أو شنو"}}]}}
+لا تعدّل أي ملف ثاني."""
 
 REELS_PROMPT = """انت مونتير ريلز وتيك توك لقناة صاحب القناة. ماكو أحد يجاوبك هسة، فلا تسأل.
 بالملف "{file}" كلام الحلقة الجاهزة سطر سطر، وكل سطر وقته [من–لحد] بالثواني على الحلقة النهائية.
@@ -589,6 +603,125 @@ def _changed_beats(before: dict, after: dict) -> list[int]:
     return out
 
 
+PREF_KEYS = {"theme": ("forest", "mint", "night", "ocean", "rose"), "lang": ("ar", "en"), "ai_on": (True, False)}
+PREF_NUMS = {"ai_budget": (0, 300), "ai_variants": (1, 4)}   # dollars per episode, versions per AI scene
+
+
+def prefs(change: dict | None = None) -> dict:
+    """His app choices (theme, language), kept beside the tools so they survive anything the window forgets."""
+    f = HOME / "prefs.json"
+    try:
+        cur = json.loads(f.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        cur = {}
+    if change:
+        for k, ok in PREF_KEYS.items():
+            if k in change and change[k] in ok:
+                cur[k] = change[k]
+        for k, (lo, hi) in PREF_NUMS.items():
+            if isinstance(change.get(k), (int, float)):
+                cur[k] = int(max(lo, min(hi, change[k])))
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.write_text(json.dumps(cur), encoding="utf-8")
+    return {"theme": cur.get("theme", "forest"), "lang": cur.get("lang", "ar"), "ai_on": bool(cur.get("ai_on", False)),
+            "ai_budget": int(cur.get("ai_budget", 30)), "ai_variants": int(cur.get("ai_variants", 2)),
+            "faces": [f.name for f in sorted((HOME / "face").glob("*")) if f.suffix.lower() in (".jpg", ".jpeg", ".png", ".mp4", ".mov")]
+            if (HOME / "face").exists() else []}
+
+
+def ai_check() -> dict:
+    """Which AI generators his Claude can reach (the connectors on his claude.ai account)."""
+    exe = claude_bin()
+    if not exe:
+        return {"ok": False, "found": [], "error": "كلود مو منصّب"}
+    try:
+        out = subprocess.run([exe, "mcp", "list"], capture_output=True, text=True, timeout=90, env=_env()).stdout
+    except (OSError, subprocess.TimeoutExpired):
+        return {"ok": False, "found": [], "error": "ما گدرت أفحص"}
+    found = []
+    for line in out.splitlines():
+        low = line.lower()
+        for name, ar in (("higgsfield", "هيگزفيلد"), ("artlist", "آرتلست")):
+            if name in low:
+                found.append({"name": ar, "connected": "connected" in low or "✓" in line})
+    return {"ok": True, "found": found}
+
+
+def face_files(action: str, name: str = "", data: bytes = b"") -> dict:
+    """His face photos / short face clips: the reference when an AI scene shows him."""
+    f = HOME / "face"
+    f.mkdir(parents=True, exist_ok=True)
+    name = Path(name).name
+    if action == "add":
+        if Path(name).suffix.lower() not in (".jpg", ".jpeg", ".png", ".mp4", ".mov") or name.startswith("."):
+            raise ValueError("صورة أو مقطع قصير بس")
+        (f / name).write_bytes(data)
+    elif action == "remove" and name:
+        (f / name).unlink(missing_ok=True)
+    return prefs()
+
+
+def _money_rule() -> str:
+    """Paid AI only when he turned it on, within his budget (owner, 2026-10-25: "٣٠ لـ٤٠ دولار للحلقة ما عندي مشكلة")."""
+    p = prefs()
+    if not p["ai_on"] or p["ai_budget"] <= 0:
+        return "- ممنوع تصرف فلوس أو رصيد: لا ذكاء اصطناعي مدفوع (هيگزفيلد، آرتلست). الحقيقي والمجاني بس."
+    faces = [str(HOME / "face" / f) for f in p["faces"]]
+    return (f"- الذكاء الاصطناعي المدفوع مسموح: ميزانية الحلقة {p['ai_budget']} دولار كحد أعلى. استعمله بس وين يفرق: الهوك، "
+            "اللحظات الكبيرة، الي ما إله صورة حقيقية (تاريخ ما مصوّر، تخيّل، شخصية بمشهد). الحقيقي أول دائماً. "
+            "حط بالخطة ai_image أو ai_video ويه prompt إنگليزي قوي، وai_budget بالرصيد."
+            + (f" صور وجه صاحب القناة (مرجع لما يطلع هو بمشهد مولّد): {', '.join(faces)}." if faces else ""))
+
+
+AI_PROMPT = """انت مولّد مشاهد الذكاء الاصطناعي لحلقة بالمجلد {ep}. ماكو أحد يجاوبك هسة، فلا تسأل.
+1. شغّل: python -m editor.pipeline ai-jobs "{ep}" واقرا "{ep}/edit/work/ai_jobs.json" (المشاهد الناقصة).
+2. لكل مشهد ناقص: ولّده بأدوات التوليد المربوطة بحسابك (هيگزفيلد أولاً، وآرتلست إذا أنسب). {variants} نسخة لكل مشهد،
+   الأولى تنزل بـ: python -m editor.pipeline ai-fetch "{ep}" --beat <رقم> --url <الرابط>
+   والباقي بـ --part v2 ثم v3… (صاحب القناة يختار بينهم بالتطبيق).
+3. سجّل الصرف بعد كل توليد بـ python -m editor.pipeline ai-log إذا موجود، وشيك الرصيد. الحد الأعلى للحلقة كلها {budget} دولار: إذا قربت توگف.
+4. {faces}
+إذا ماكو أدوات توليد مربوطة، اكتب سطر واحد: «أدوات التوليد مو مربوطة بحسابك» وخلّص.
+كل رسائلك عربي عراقي بس."""
+
+
+def _ai_step(d: Path) -> int:
+    p = prefs()
+    if not p["ai_on"] or p["ai_budget"] <= 0:
+        return 0
+    plan_f = d / "edit" / "edit_plan.json"
+    try:
+        kinds = [b.get("kind") for b in json.loads(plan_f.read_text(encoding="utf-8"))["beats"]]
+    except (OSError, ValueError, KeyError):
+        return 0
+    if not any(k in ("ai_image", "ai_video", "avatar") for k in kinds):
+        JOB.say("🤖 الخطة ما بيها مشاهد ذكاء اصطناعي")
+        return 0
+    faces = [str(HOME / "face" / f) for f in p["faces"]]
+    code = _claude(AI_PROMPT.format(ep=d, variants=p["ai_variants"], budget=p["ai_budget"],
+                                    faces=("صور وجه صاحب القناة للمرجع: " + "، ".join(faces)) if faces else ""), tools=GEN_TOOLS)
+    if code:   # generated scenes are a bonus: the episode builds anyway (missing ones become text)
+        JOB.say("⚠️ بعض مشاهد الذكاء ما تولدت، تنبني الحلقة بدونها")
+    return 0
+
+
+def extract_text(name: str, data: bytes) -> str:
+    """Plain text of a script file: .docx (Word), .rtf, or plain text."""
+    import io
+    import zipfile
+    low = name.lower()
+    if low.endswith(".docx"):
+        try:
+            xml = zipfile.ZipFile(io.BytesIO(data)).read("word/document.xml").decode("utf-8")
+        except (zipfile.BadZipFile, KeyError):
+            raise ValueError("ملف الوورد هذا ما ينقرا")
+        paras = re.findall(r"<w:p[ >].*?</w:p>", xml, re.S)
+        return "\n".join("".join(re.findall(r"<w:t[^>]*>(.*?)</w:t>", p, re.S)) for p in paras).strip()
+    text = data.decode("utf-8", errors="replace")
+    if low.endswith(".rtf"):
+        text = re.sub(r"\\[a-z]+-?\d* ?|[{}]", "", text)
+    return text.strip()
+
+
 def _yt_redirect() -> str:
     return f"http://127.0.0.1:{PORT[0]}/oauth/youtube"
 
@@ -622,6 +755,61 @@ def _youtube_step(d: Path) -> int:
     (d / "edit" / "youtube.json").write_text(json.dumps({"id": vid, "file": video.name, "at": time.time()}), encoding="utf-8")
     JOB.say(f"✅ انرفع (خاص). كمّله من استوديو يوتيوب: https://studio.youtube.com/video/{vid}/edit")
     return 0
+
+
+def _translate(d: Path) -> int:
+    """English captions: his lines, translated by the assistant, timed like his speech (edit/captions_en.json)."""
+    from editor.pipeline.options import caption_lines
+    from editor.pipeline.paths import Episode
+    ep = Episode(d)
+    lines = caption_lines(ep)
+    if not lines:
+        JOB.say("❌ قُصّ المقطع أول، حتى يكون اكو كلام أترجمه")
+        return 1
+    work = d / "edit" / "work" / "app"
+    work.mkdir(parents=True, exist_ok=True)
+    src, out = work / "translate_in.json", work / "translate_out.json"
+    src.write_text(json.dumps([{"i": x["i"], "text": x["text"]} for x in lines], ensure_ascii=False), encoding="utf-8")
+    out.unlink(missing_ok=True)
+    names = f'الأسماء الصحيحة بـ "{d / "edit" / "script_names.json"}".' if (d / "edit" / "script_names.json").exists() else ""
+    code = _claude(TRANSLATE_PROMPT.format(file=src, out=out, names=names))
+    try:
+        en = {int(x["i"]): str(x["en"]).strip() for x in json.loads(out.read_text(encoding="utf-8"))["lines"]}
+    except (OSError, ValueError, KeyError):
+        JOB.say("❌ الترجمة ما كملت")
+        return code or 1
+    done = [{"s": x["s"], "e": x["e"], "text": en[x["i"]]} for x in lines if en.get(x["i"])]
+    (d / "edit" / "captions_en.json").write_text(json.dumps(done, ensure_ascii=False, indent=1), encoding="utf-8")
+    JOB.say(f"🌐 انترجم {len(done)} سطر للإنگليزي. تطلع بالبناء الجاي")
+    return 0
+
+
+def _script_names(d: Path) -> int:
+    """With the script he gave (owner, 2026-10-25: "أسماء صعبة اللفظ… انت راح تعرف منو"): its proper names go to
+    the transcriber as words to expect (edit/vocab.txt) and to the assistant as who/what (edit/script_names.json)."""
+    from editor.pipeline.align import find_script
+    from editor.pipeline.paths import Episode
+    ep = Episode(d)
+    script = find_script(ep)
+    out = d / "edit" / "script_names.json"
+    if not script or out.exists():
+        return 0
+    if not claude_bin() or claude_logged_in() is False:
+        JOB.say("ℹ️ كلود مو مربوط: الأسماء من السكربت تتعرف بعدين")
+        return 0
+    (d / "edit").mkdir(parents=True, exist_ok=True)
+    code = _claude(NAMES_PROMPT.format(script=script, out=out))
+    try:
+        names = json.loads(out.read_text(encoding="utf-8"))["names"]
+    except (OSError, ValueError, KeyError):
+        JOB.say("⚠️ ما گدرت أطلّع الأسماء من السكربت (يكمل عادي)")
+        return 0
+    vocab = d / "edit" / "vocab.txt"
+    have = vocab.read_text(encoding="utf-8").split() if vocab.exists() else []
+    words = have + [w for n in names for w in str(n.get("ar", "")).split() if len(w) > 2]
+    vocab.write_text(" ".join(dict.fromkeys(words)), encoding="utf-8")
+    JOB.say(f"📜 لگيت {len(names)} اسم بالسكربت، والتفريغ راح يتوقعهم")
+    return 0 if code == 0 or names else code
 
 
 def _reels_pick(d: Path) -> int:
@@ -771,11 +959,16 @@ def _plan_extra(d: Path) -> str:
         lines.append("- فكرة صاحب القناة للحلقة (التزم بيها): «" + idea.read_text(encoding="utf-8").strip() + "»")
     try:
         opts = json.loads((d / "edit" / "options.json").read_text(encoding="utf-8"))
+        hook = int(opts.get("hook", 30))
+        if hook != 30:
+            lines.append(f"- الهوك: صاحب القناة يريد أول {hook} ثانية هي الأقوى بالحلقة: أسرع تغيير، أقوى صور وموشن، وأكبر سؤال يمسك المشاهد.")
         pace = {"calm": "هادئ (مشاهد أطول، وقفات أكثر)", "normal": "عادي", "fast": "سريع (مشاهد قصيرة، تغيير كل ٢–٤ ثواني، هوك سريع جداً)"}.get(opts.get("pace"))
         if pace:
             lines.append(f"- الرتم: صاحب القناة خلّاه عليك، وريده {pace}. اضبط طول المشاهد والانتقالات على هذا.")
     except (OSError, ValueError):
         pass
+    if (d / "edit" / "script_names.json").exists():
+        lines.append(f'- الأسماء بالسكربت ومنو هم: "{d / "edit" / "script_names.json"}". دوّر على صورهم ومقاطعهم الحقيقية بالإنگليزي (en)، وأول مرة ينذكر شخص مهم حط صورته (entity).')
     sf = d / "edit" / "style.txt"
     if sf.exists() and sf.read_text(encoding="utf-8").strip():
         sid = sf.read_text(encoding="utf-8").strip()
@@ -886,6 +1079,12 @@ def run_job(ep_id: str, what: str) -> None:
                 code = 0
         elif step == "youtube":
             code = _youtube_step(d)
+        elif step == "ai":
+            code = _ai_step(d)
+        elif step == "translate":
+            code = _translate(d)
+        elif step == "script-names":
+            code = _script_names(d)
         elif step == "reels-pick":
             code = _reels_pick(d)
         elif step == "shorts":
@@ -900,7 +1099,7 @@ def run_job(ep_id: str, what: str) -> None:
         elif step == "assist":
             code = _claude(ASSIST_PROMPT.format(ep=d, message=JOB.message or "راجع الخطة وحسّنها"))
         elif step == "plan":
-            code = _claude(PLAN_PROMPT.format(ep=d, extra=_plan_extra(d) + _files_note(d)))
+            code = _claude(PLAN_PROMPT.format(ep=d, extra=_plan_extra(d) + _files_note(d), money=_money_rule()))
             if code == 0:
                 _own_media(d)
             if code == 0 and not (d / "edit" / "edit_plan.json").exists():
@@ -1265,6 +1464,18 @@ class Handler(BaseHTTPRequestHandler):
                 root = (HOME / "cache").resolve()
                 f = (root / path[7:]).resolve()
                 return self._file(f) if f.is_relative_to(root) else self._err("لا", 403)
+            if path == "/api/prefs":
+                return self._json(prefs())
+            if path == "/api/ai-check":
+                return self._json(ai_check())
+            if path.startswith("/api/face-file/"):
+                return self._file(HOME / "face" / Path(path.rsplit("/", 1)[1]).name)
+            if path == "/api/fonts":
+                from . import fonts
+                return self._json(fonts.catalog(HOME))
+            if path.startswith("/api/font-file/"):   # his fonts, for the previews in the app
+                from . import fonts
+                return self._file(fonts.folder(HOME) / Path(path.rsplit("/", 1)[1]).name)
             if path == "/api/youtube":
                 from . import youtube
                 return self._json(youtube.status(HOME))
@@ -1301,7 +1512,7 @@ class Handler(BaseHTTPRequestHandler):
             m = re.match(r"^/api/episodes/([^/]+)/cover$", path)
             if m:
                 return self._file(episode_cover(episode_dir(m.group(1))))
-            m = re.match(r"^/api/episodes/([^/]+)/(sentences|captions|plan|timeline|look|sound|idea|review|frame|voice-sample|media|effects|export-info|options|suggest)$", path)
+            m = re.match(r"^/api/episodes/([^/]+)/(sentences|captions|plan|timeline|look|sound|idea|review|frame|voice-sample|media|effects|export-info|options|suggest|variants)$", path)
             if m:
                 return self._studio_get(episode_dir(m.group(1)), m.group(2), q)
             m = re.match(r"^/api/db/([^/]+)/(doc|list)$", path)
@@ -1406,6 +1617,8 @@ class Handler(BaseHTTPRequestHandler):
         if what == "options":
             from editor.pipeline.options import load_options
             return self._json(load_options(ep))
+        if what == "variants":
+            return self._json(studio.ai_variants(ep, int(q.get("i", -1))))
         if what == "suggest":
             text = (q.get("q") or "").strip()
             if not text:
@@ -1424,6 +1637,18 @@ class Handler(BaseHTTPRequestHandler):
             from editor.pipeline.options import save_options
             studio.snapshot(ep)
             return self._json(save_options(ep, b))
+        if what == "variant":
+            studio.snapshot(ep)
+            return self._json(studio.ai_variants(ep, int(b.get("i", -1))) if not b.get("name") else
+                              studio.ai_choose(ep, int(b.get("i", -1)), str(b["name"])))
+        if what == "srt":   # subtitle files for YouTube (Arabic and/or English), beside the episode
+            from editor.pipeline.options import subtitles_srt
+            lang = "en" if b.get("lang") == "en" else "ar"
+            if lang == "en" and not (d / "edit" / "captions_en.json").exists():
+                raise ValueError("ترجم أول: من «الإضافات» اختار كابشن إنگليزي")
+            f = d / "edit" / f"subtitles-{lang}.srt"
+            f.write_text(subtitles_srt(ep, lang), encoding="utf-8")
+            return self._json({"ok": True, "file": str(f.relative_to(d))})
         if what == "restyle":   # the whole video in one style: remembered, then re-planned and rebuilt
             ok = {x["id"] for x in styles_list()}
             if b.get("style") not in ok:
@@ -1463,7 +1688,7 @@ class Handler(BaseHTTPRequestHandler):
         if what == "look":
             return self._json(studio.save_look(ep, b))
         if what == "sound":
-            keep = {"clean": max(0, min(3, int(b.get("clean", 1)))), "music": str(b.get("music", "auto")),
+            keep = {"clean": max(0, min(4, int(b.get("clean", 1)))), "music": str(b.get("music", "auto")),
                     "level": max(-32.0, min(-16.0, float(b.get("level", -24)))), "sfx": bool(b.get("sfx", True))}
             (d / "edit" / "sound.json").write_text(json.dumps(keep, ensure_ascii=False, indent=1), encoding="utf-8")
             return self._json(keep)
@@ -1516,9 +1741,12 @@ class Handler(BaseHTTPRequestHandler):
                 chat_add(d, {"role": "owner", "text": text, "ctx": b.get("ctx") or {}})
                 start_job(m.group(1), "chat", text)
                 return self._json({"ok": True, "messages": chat_load(d)})
-            m = re.match(r"^/api/episodes/([^/]+)/(sentences|captions|look|sound|idea|beat|undo|redo|media|media-note|short|options|choose|restyle)$", path)
+            m = re.match(r"^/api/episodes/([^/]+)/(sentences|captions|look|sound|idea|beat|undo|redo|media|media-note|short|options|choose|restyle|srt|variant)$", path)
             if m:
                 return self._studio_post(episode_dir(m.group(1)), m.group(2), self._body())
+            if path == "/api/extract-text":   # the script as a Word file: its text
+                n = int(self.headers.get("Content-Length") or 0)
+                return self._json({"text": extract_text(q.get("name", ""), self.rfile.read(min(n, 50 * 1024 * 1024)))})
             m = re.match(r"^/api/episodes/([^/]+)/upload$", path)
             if m:
                 from editor.pipeline.paths import Episode
@@ -1564,13 +1792,32 @@ class Handler(BaseHTTPRequestHandler):
                 elif act == "stop":
                     stop_job()
                 elif act == "reveal":
-                    target = {"final": d / "edit" / "final.mp4", "preview": d / "edit" / "preview.mp4", "exports": d / "edit" / "exports", "shorts": d / "edit" / "shorts"}.get(b.get("what"), d)
+                    target = {"final": d / "edit" / "final.mp4", "preview": d / "edit" / "preview.mp4", "exports": d / "edit" / "exports", "shorts": d / "edit" / "shorts", "edit": d / "edit"}.get(b.get("what"), d)
                     reveal(target if target.exists() else d)
                 elif act == "rename":
                     meta = _meta(d)
                     meta["name"] = (b.get("name") or meta["name"]).strip()
                     _save_meta(d, meta)
                 return self._json({"ok": True})
+            if path == "/api/prefs":
+                return self._json(prefs(self._body()))
+            if path == "/api/idea":   # kept on his Mac too, in case the GitHub page was closed
+                with open(HOME / "ideas.jsonl", "a", encoding="utf-8") as f:
+                    f.write(json.dumps({"t": time.time(), "text": str(self._body().get("text", ""))[:4000]}, ensure_ascii=False) + "\n")
+                return self._json({"ok": True})
+            if path in ("/api/face/add", "/api/face/remove"):
+                n = int(self.headers.get("Content-Length") or 0)
+                if path.endswith("add"):
+                    return self._json(face_files("add", q.get("name", ""), self.rfile.read(min(n, 300 * 1024 * 1024))))
+                return self._json(face_files("remove", str(self._body().get("name", ""))))
+            if path in ("/api/fonts/get", "/api/fonts/remove"):
+                from . import fonts
+                fam = str(self._body().get("family", ""))
+                return self._json(fonts.download(HOME, fam) if path.endswith("get") else fonts.remove(HOME, fam))
+            if path == "/api/fonts/add":
+                from . import fonts
+                n = int(self.headers.get("Content-Length") or 0)
+                return self._json(fonts.add_own(HOME, q.get("name", ""), self.rfile.read(min(n, 30 * 1024 * 1024))))
             if path.startswith("/api/youtube/"):
                 from . import youtube
                 act, b = path.rsplit("/", 1)[1], self._body()
