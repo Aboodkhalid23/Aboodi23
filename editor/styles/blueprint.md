@@ -1,29 +1,29 @@
 ---
 name: "blueprint"
 title_ar: "المخطط الهندسي"
-category: "ورق وكولاج"
-summary: "المخطط الهندسي — أزرق المخططات، خطوط بيضة دقيقة، ومقاسات. شلون الأشياء مبنية."
-fits: ["هندسة", "اختراعات", "كيف يشتغل", "طيارات وسيارات"]
-palette: {"paper": "#0D3B66", "ink": "#FFFFFF", "accent": "#FAF0CA", "red": "#EE6C4D", "teal": "#98C1D9", "maroon": "#EE6C4D", "grid": "#0D3B66"}
+category: "تصميم حديث"
+summary: "المخطط الهندسي — خطوط بيضة على أزرق، مقاسات وأسهم، والأشياء تنرسم قدامك."
+fits: ["اختراعات", "هندسة", "مباني"]
+palette: {"paper": "#0B3A6E", "ink": "#EAF4FF", "accent": "#FFFFFF", "red": "#FF6B6B", "teal": "#7CC4FF", "maroon": "#FF6B6B", "grid": "#0B3A6E"}
 fonts: {"title": "Noto Kufi Arabic", "body": "Tajawal", "serif": "Noto Naskh Arabic", "latin_serif": "Source Serif 4", "hand": "Aref Ruqaa"}
-texture: "grain"
-image_treatment: "engraving_in_circle"
+texture: "clean"
+image_treatment: "band"
 transition: "slide"
 beat_seconds: 5
-music_mood: "curious wonder steady"
-sfx: ["click", "pop"]
+music_mood: "engineering curious steady"
+sfx: ["click", "pop", "whoosh"]
 ai_suffix: "technical blueprint drawing, white lines on blue"
-image_treatments: ["engraving_in_circle", "ken_burns"]
-text_variants: ["typewriter"]
-grade: "natural"
+image_treatments: ["band", "ken_burns"]
+text_variants: ["typewriter", "highlight"]
+grade: "cool-steel"
 layouts: ["graphic", "face_split"]
 ---
 
 # المخطط الهندسي
 
-أزرق المخططات، خطوط بيضة دقيقة، ومقاسات. شلون الأشياء مبنية.
+خطوط بيضة على أزرق، مقاسات وأسهم، والأشياء تنرسم قدامك.
 
 ## شلون ينبني
-- كل آلة مخطط بخطوط بيضة ومقاسات. الأرقام بالأصفر الباهت.
+- كل شي ينرسم بخط أبيض قبل ما يظهر. مقاسات وأسهم.
 - المشاهد الي يعتمد عليها: graphic, face_split.
 - الانتقال الأساسي: slide، وطول المشهد بالجسم حوالي 5 ثواني.

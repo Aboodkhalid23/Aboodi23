@@ -1913,7 +1913,11 @@ SFX_AR = {"whoosh_soft": "ووش ناعم", "whoosh_fast": "ووش سريع", "w
           "wind": "هوا", "phone_vibrate": "موبايل يهتز", "door_slam": "باب ينسد", "suspense_hit": "ضربة كشف",
           "transition_sweep": "انتقال", **{"whoosh": "ووش", "swoosh": "سحبة", "boom": "بووم", "pop": "طگة", "click": "كليك", "ding": "دينگ", "hit": "ضربة",
           "riser": "صعود", "paper": "ورق", "glitch": "تشويش", "tick": "تك تك", "switch": "مفتاح", "factory_machine": "مكينة مصنع",
-          "old_factory": "مصنع قديم", "robot_arm": "ذراع روبوت", "camera": "كاميرا", "typing": "طباعة", "heartbeat": "نبض قلب"}}
+          "old_factory": "مصنع قديم", "robot_arm": "ذراع روبوت", "camera": "كاميرا", "typing": "طباعة", "heartbeat": "نبض قلب", "boom_deep": "بوم عميق", "braam": "براام (تريلر)", "reverse_cymbal": "صنج معكوس", "whoosh_reverse": "ويش معكوس",
+          "tick_soft": "تكة ناعمة", "pop_soft": "بوب ناعم", "ui_click": "نقرة واجهة", "coin": "عملة", "level_up": "مستوى جديد",
+          "magic_chime": "رنة سحرية", "camera_flash": "فلاش كاميرا", "paper_slide": "ورقة تنسحب", "stamp": "ختم", "pen_scribble": "قلم يكتب",
+          "radar_ping": "رادار", "sonar": "سونار", "crowd_gasp": "شهقة ناس", "heartbeat_fast": "قلب سريع", "breath_in": "نفس",
+          "rumble": "هدير", "glass_break": "زجاج ينكسر", "power_down": "انطفاء", "swoosh_up": "ويش للفوگ", "drop_bass": "نزلة بيس"}}
 STYLE_NAMES = {"investigation": "لوحة تحقيق", "noir": "سينما الليل", "retro-collage": "كولاج ريترو", "vox": "ورق وقص ولزق"}
 
 

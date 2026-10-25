@@ -34,9 +34,19 @@ PROGRESSIONS = {
     "playful": [("C", (0, 4, 7)), ("A", (0, 3, 7)), ("F", (0, 4, 7, 9)), ("G", (0, 4, 7))],
     "luxury": [("E", (0, 4, 7, 11, 14)), ("C#", (0, 3, 7, 10)), ("A", (0, 4, 7, 11)), ("B", (0, 4, 7, 10, 14))],
     "hopeful": [("G", (0, 4, 7)), ("D", (0, 4, 7)), ("E", (0, 3, 7)), ("C", (0, 4, 7, 14))],
+    # 2.1 (owner: "موسيقى اكثر")
+    "noir": [("D", (0, 3, 7, 10)), ("G", (0, 3, 7, 10)), ("A", (0, 4, 7, 10)), ("D", (0, 3, 7, 11))],
+    "documentary": [("C", (0, 4, 7, 14)), ("E", (0, 3, 7)), ("F", (0, 4, 7, 11)), ("G", (0, 5, 7))],
+    "corporate": [("C", (0, 4, 7, 11)), ("G", (0, 4, 7)), ("A", (0, 3, 7, 10)), ("F", (0, 4, 7, 11))],
+    "middle_east": [("D", (0, 1, 4, 7)), ("D", (0, 1, 5, 8)), ("C", (0, 3, 7)), ("D", (0, 1, 4, 7))],
+    "space": [("E", (0, 7, 14, 19)), ("C", (0, 7, 11, 16)), ("A", (0, 7, 14, 15)), ("B", (0, 7, 10, 14))],
+    "heist": [("E", (0, 3, 7, 10)), ("E", (0, 3, 6, 10)), ("A", (0, 3, 7)), ("B", (0, 4, 7, 10))],
+    "triumph": [("C", (0, 4, 7)), ("G", (0, 4, 7)), ("A", (0, 3, 7)), ("F", (0, 4, 7, 9))],
+    "mystery_box": [("F#", (0, 3, 6, 9)), ("D", (0, 4, 8)), ("F#", (0, 3, 6, 10)), ("C#", (0, 4, 7, 10))],
 }
 TEMPO = {"tension": 76, "wonder": 84, "sad": 64, "drive": 108, "dark": 60, "calm": 70,
-         "epic": 90, "lofi": 78, "retro": 104, "playful": 112, "luxury": 72, "hopeful": 88}
+         "epic": 90, "lofi": 78, "retro": 104, "playful": 112, "luxury": 72, "hopeful": 88,
+         "noir": 68, "documentary": 80, "corporate": 100, "middle_east": 92, "space": 58, "heist": 96, "triumph": 116, "mystery_box": 72}
 KEYWORDS = {
     "tension": ("tension", "suspense", "investig", "mystery", "thriller", "توتر", "تشويق", "غموض"),
     "wonder": ("wonder", "curious", "discovery", "inspir", "hope", "light", "pizzicato", "فضول", "دهشة", "اكتشاف"),
@@ -50,6 +60,14 @@ KEYWORDS = {
     "playful": ("playful", "fun", "quirky", "مرح"),
     "luxury": ("luxury", "elegant", "classy", "فخم", "فخامة"),
     "hopeful": ("hopeful", "inspiring", "uplifting", "أمل", "ملهم"),
+    "noir": ("noir", "jazz", "detective", "نوار", "محقق"),
+    "documentary": ("documentary", "orchestral", "nature", "وثائقي", "طبيعة"),
+    "corporate": ("corporate", "business", "startup", "tech", "شركات", "أعمال"),
+    "middle_east": ("middle eastern", "arabic", "desert", "شرقي", "صحراء"),
+    "space": ("space", "cosmic", "sci-fi", "فضاء", "كون"),
+    "heist": ("heist", "spy", "sneak", "سرقة", "جاسوس"),
+    "triumph": ("triumph", "victory", "sport", "انتصار", "فوز", "رياضة"),
+    "mystery_box": ("mystery", "riddle", "strange", "لغز", "غريب"),
 }
 
 

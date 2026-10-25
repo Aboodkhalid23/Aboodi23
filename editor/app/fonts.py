@@ -12,13 +12,21 @@ ARABIC = ["Cairo", "Tajawal", "Almarai", "Changa", "Lalezar", "Reem Kufi", "El M
           "Noto Kufi Arabic", "Noto Naskh Arabic", "Noto Sans Arabic", "IBM Plex Sans Arabic", "Readex Pro", "Alexandria",
           "Baloo Bhaijaan 2", "Markazi Text", "Mada", "Harmattan", "Lateef", "Scheherazade New", "Marhey", "Vibes", "Blaka",
           "Kufam", "Zain", "Lemonada", "Jomhuria", "Mirza", "Katibeh", "Gulzar", "Badeen Display", "Qahiri", "Rubik",
-          "Noto Nastaliq Urdu", "Handjet", "Beiruti", "Playpen Sans Arabic", "Kalam"]
+          "Noto Nastaliq Urdu", "Handjet", "Beiruti", "Playpen Sans Arabic", "Kalam",
+          # 2.1 (owner: "خطوط اكثر")
+          "Vazirmatn", "Cairo Play", "Reem Kufi Fun", "Reem Kufi Ink", "Aref Ruqaa Ink", "Amiri Quran", "Ruwudu", "Alkalami",
+          "Fustat", "Noto Sans Arabic UI", "Blaka Hollow", "Blaka Ink"]
 LATIN = ["Inter", "Montserrat", "Poppins", "Bebas Neue", "Anton", "Oswald", "Archivo Black", "Space Grotesk", "Syne",
          "Unbounded", "League Spartan", "Manrope", "Sora", "Outfit", "Plus Jakarta Sans", "Barlow Condensed", "Teko",
          "Big Shoulders Display", "Roboto Condensed", "Playfair Display", "DM Serif Display", "Instrument Serif", "Fraunces",
          "Cormorant Garamond", "EB Garamond", "Libre Baskerville", "Cinzel", "Abril Fatface", "Caveat", "Permanent Marker",
          "Bangers", "Righteous", "Lobster", "Space Mono", "JetBrains Mono", "Special Elite", "Courier Prime", "Rubik Mono One",
-         "Black Ops One", "Monoton"]
+         "Black Ops One", "Monoton",
+         "Archivo", "Barlow", "Bricolage Grotesque", "DM Sans", "Figtree", "Instrument Sans", "Lexend", "Onest", "Red Hat Display",
+         "Schibsted Grotesk", "Urbanist", "Work Sans", "Bodoni Moda", "Libre Caslon Text", "Gloock", "Young Serif", "Shrikhand",
+         "Rubik Glitch", "Bungee", "Bungee Shade", "Press Start 2P", "VT323", "Silkscreen", "Major Mono Display", "Dancing Script",
+         "Pacifico", "Satisfy", "Shadows Into Light", "Rock Salt", "Kaushan Script", "Alfa Slab One", "Staatliches",
+         "Saira Condensed", "Chakra Petch", "Orbitron", "Audiowide", "Russo One", "Titan One", "Luckiest Guy"]
 EXT = (".ttf", ".otf")
 
 

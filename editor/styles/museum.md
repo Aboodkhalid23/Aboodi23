@@ -1,29 +1,29 @@
 ---
 name: "museum"
 title_ar: "المتحف"
-category: "وثائقي وصحافة"
-summary: "المتحف — خلفية رخام هادئة، صور داخل إطارات ذهبية، وبطاقات تعريف مثل المتحف. فخم وهادئ."
-fits: ["تاريخ", "فن", "حضارات", "اختراعات"]
-palette: {"paper": "#ECE7DF", "ink": "#2A2522", "accent": "#B08D57", "red": "#8E3B2F", "teal": "#41595C", "maroon": "#8E3B2F", "grid": "#ECE7DF"}
+category: "ورق وكولاج"
+summary: "المتحف — لوحات بإطارات ذهبية، بطاقات متحف صغيرة، وإضاءة بقع. كل صورة تحفة."
+fits: ["تاريخ", "فن", "حضارات"]
+palette: {"paper": "#F2EDE4", "ink": "#1E1A16", "accent": "#9C7A3C", "red": "#8C2F2F", "teal": "#4A5A4A", "maroon": "#8C2F2F", "grid": "#F2EDE4"}
 fonts: {"title": "Amiri", "body": "Noto Naskh Arabic", "serif": "Noto Naskh Arabic", "latin_serif": "Source Serif 4", "hand": "Aref Ruqaa"}
 texture: "paper"
 image_treatment: "engraving_in_circle"
 transition: "pan"
 beat_seconds: 6
-music_mood: "calm wonder classical soft"
-sfx: ["paper", "ding"]
-ai_suffix: "museum artifact photograph, soft gallery light"
+music_mood: "classical calm museum strings"
+sfx: ["paper", "whoosh"]
+ai_suffix: "museum painting, gold frame, gallery spotlight"
 image_treatments: ["engraving_in_circle", "ken_burns", "polaroid"]
-text_variants: ["marker", "highlight"]
-grade: "soft-film"
+text_variants: ["marker"]
+grade: "film-kodak"
 layouts: ["face_framed", "face_paper"]
 ---
 
 # المتحف
 
-خلفية رخام هادئة، صور داخل إطارات ذهبية، وبطاقات تعريف مثل المتحف. فخم وهادئ.
+لوحات بإطارات ذهبية، بطاقات متحف صغيرة، وإضاءة بقع. كل صورة تحفة.
 
 ## شلون ينبني
-- كل صورة بإطار وبطاقة صغيرة (اسم وتاريخ). حركة بطيئة جداً.
+- كل صورة بإطار وبطاقة صغيرة تحتها (الاسم والسنة). حركة كن بيرنز بطيئة.
 - المشاهد الي يعتمد عليها: face_framed, face_paper.
 - الانتقال الأساسي: pan، وطول المشهد بالجسم حوالي 6 ثواني.

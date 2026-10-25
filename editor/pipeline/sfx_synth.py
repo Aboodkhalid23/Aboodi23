@@ -191,6 +191,87 @@ def make(name: str, seed: int = 7) -> np.ndarray:
     elif name == "transition_sweep":
         d = 1.2; x = _moving_band_noise(d, 200, 8000, rng, 0.4) * np.sin(np.pi * np.linspace(0, 1, int(d * SR))) ** 2 + \
             0.3 * _sweep(200, 2000, d, 1.5) * np.sin(np.pi * np.linspace(0, 1, int(d * SR)))
+    # 2.1 (owner: "اصوات… ساوند افيكت اكثر")
+    elif name == "boom_deep":   # trailer boom: very low sine drop with a long tail
+        d = 3.0
+        x = _reverb(_sweep(70, 26, d, 0.4) * np.exp(-1.4 * _t(d)) + 0.3 * _bandpass(_noise(d, rng), 30, 300) * np.exp(-6 * _t(d)), 2.0, 0.3, rng)
+    elif name == "braam":   # the big brass blast of trailers
+        d = 2.6
+        t = _t(d)
+        x = sum(np.sign(np.sin(2 * np.pi * f * t)) * 0.25 for f in (55, 55.6, 82.4, 110.3)) * _env(int(d * SR), 0.05, 1.8)
+        x = _reverb(_bandpass(x, 40, 2200), 1.8, 0.35, rng)
+    elif name == "reverse_cymbal":
+        d = 2.2
+        x = (_bandpass(_noise(d, rng), 3000, 12000) * np.exp(-2.2 * _t(d)))[::-1]
+    elif name == "whoosh_reverse":
+        x = _moving_band_noise(0.8, 2500, 300, rng)[::-1] * np.linspace(0, 1, int(0.8 * SR)) ** 2
+    elif name == "tick_soft":
+        d = 0.08
+        x = np.sin(2 * np.pi * 2400 * _t(d)) * np.exp(-90 * _t(d))
+    elif name == "pop_soft":
+        d = 0.18
+        x = _sweep(900, 300, d, 0.5) * np.exp(-30 * _t(d))
+    elif name == "ui_click":
+        d = 0.05
+        x = _bandpass(_noise(d, rng), 2000, 8000) * np.exp(-140 * _t(d))
+    elif name == "coin":
+        d = 0.5
+        t = _t(d)
+        x = (np.sin(2 * np.pi * 988 * t) * (t < 0.08) + np.sin(2 * np.pi * 1319 * t) * (t >= 0.08)) * np.exp(-5 * t)
+    elif name == "level_up":
+        d = 0.9
+        t = _t(d)
+        notes = [523, 659, 784, 1047]
+        x = np.concatenate([np.sin(2 * np.pi * f * _t(d / 4)) * np.exp(-6 * _t(d / 4)) for f in notes])[:len(t)]
+    elif name == "magic_chime":
+        d = 1.6
+        t = _t(d)
+        x = sum(np.sin(2 * np.pi * f * t) * np.exp(-a * t) * (t > k * 0.07) for k, (f, a) in enumerate(((1568, 3), (2093, 3.5), (2637, 4), (3136, 5))))
+        x = _reverb(x, 1.4, 0.4, rng)
+    elif name == "camera_flash":
+        d = 0.9
+        x = 0.6 * _sweep(2500, 7000, d, 0.3) * np.exp(-9 * _t(d)) + 0.4 * _bandpass(_noise(d, rng), 1500, 9000) * np.exp(-30 * _t(d))
+    elif name == "paper_slide":
+        d = 0.5
+        x = _bandpass(_noise(d, rng, "pink"), 800, 5000) * np.sin(np.pi * np.linspace(0, 1, int(d * SR))) ** 2
+    elif name == "stamp":
+        d = 0.4
+        x = _bandpass(_noise(d, rng), 80, 1200) * np.exp(-35 * _t(d)) + 0.5 * np.sin(2 * np.pi * 95 * _t(d)) * np.exp(-25 * _t(d))
+    elif name == "pen_scribble":
+        d = 0.8
+        t = _t(d)
+        x = _bandpass(_noise(d, rng), 2500, 7000) * (0.5 + 0.5 * np.abs(np.sin(2 * np.pi * 9 * t))) * np.sin(np.pi * t / d)
+    elif name == "radar_ping":
+        d = 1.5
+        x = _reverb(np.sin(2 * np.pi * 1480 * _t(d)) * np.exp(-7 * _t(d)), 1.2, 0.45, rng)
+    elif name == "sonar":
+        d = 2.0
+        x = _reverb(_sweep(880, 840, d) * np.exp(-3 * _t(d)), 1.6, 0.5, rng)
+    elif name == "crowd_gasp":
+        d = 1.0
+        x = _bandpass(_noise(d, rng, "pink"), 300, 3000) * _env(int(d * SR), 0.15, 0.7)
+    elif name == "heartbeat_fast":
+        d = 1.6
+        t = _t(d)
+        x = sum(np.sin(2 * np.pi * 55 * t) * np.exp(-30 * np.clip(t - k, 0, None)) * (t >= k) for k in (0, 0.18, 0.75, 0.93))
+    elif name == "breath_in":
+        d = 1.1
+        x = _bandpass(_noise(d, rng, "pink"), 500, 4000) * _env(int(d * SR), 0.8, 0.25)
+    elif name == "rumble":
+        d = 3.0
+        x = _bandpass(_noise(d, rng, "brown"), 25, 160) * _env(int(d * SR), 0.8, 1.2)
+    elif name == "glass_break":
+        d = 1.2
+        t = _t(d)
+        x = _bandpass(_noise(d, rng), 3000, 12000) * np.exp(-8 * t) + 0.4 * sum(np.sin(2 * np.pi * f * t) * np.exp(-12 * t) for f in (2731, 3911, 5207))
+    elif name == "power_down":
+        d = 1.4
+        x = _sweep(440, 40, d, 0.7) * np.exp(-1.5 * _t(d))
+    elif name == "swoosh_up":
+        x = _moving_band_noise(0.6, 300, 6000, rng) * np.sin(np.pi * np.linspace(0, 1, int(0.6 * SR)))
+    elif name == "drop_bass":
+        d = 1.8
+        x = _sweep(160, 35, d, 0.3) * np.exp(-1.2 * _t(d))
     else:
         raise KeyError(name)
     x = np.asarray(x, dtype=np.float64)
@@ -203,7 +284,9 @@ NAMES = ["whoosh_soft", "whoosh_fast", "whoosh_heavy", "impact", "impact_metal",
          "flash_pop", "typewriter", "keyboard", "cash", "heartbeat", "clock_tick", "notification", "error_buzz",
          "glitch_digital", "static_tv", "tape_stop", "record_scratch", "swipe_ui", "bubble_pop", "bell", "gong",
          "drum_hit", "laser", "sparkle", "page_flip", "thunder", "wind", "phone_vibrate", "door_slam", "suspense_hit",
-         "transition_sweep"]
+         "transition_sweep", "boom_deep", "braam", "reverse_cymbal", "whoosh_reverse", "tick_soft", "pop_soft", "ui_click", "coin",
+         "level_up", "magic_chime", "camera_flash", "paper_slide", "stamp", "pen_scribble", "radar_ping", "sonar", "crowd_gasp",
+         "heartbeat_fast", "breath_in", "rumble", "glass_break", "power_down", "swoosh_up", "drop_bass"]
 
 
 def write(name: str, out: Path) -> Path:

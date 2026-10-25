@@ -731,7 +731,7 @@ def test_paid_ai_is_off_until_he_turns_it_on_and_versions_swap(app, tmp_path, mo
     monkeypatch.setattr(srv, "HOME", tmp_path)
     assert "ممنوع تصرف فلوس" in srv._money_rule()
     p = srv.prefs({"ai_on": True, "ai_budget": 40, "ai_variants": 9, "theme": "nope"})
-    assert p["ai_on"] and p["ai_budget"] == 40 and p["ai_variants"] == 4 and p["theme"] == "forest"
+    assert p["ai_on"] and p["ai_budget"] == 40 and p["ai_variants"] == 4 and p["theme"] == "calm"
     srv.face_files("add", "وجهي.jpg", b"\xff\xd8 fake")
     assert "40 دولار" in srv._money_rule() and "وجهي.jpg" in srv._money_rule()
     with pytest.raises(ValueError):

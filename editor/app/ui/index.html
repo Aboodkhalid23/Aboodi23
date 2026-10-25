@@ -1365,7 +1365,8 @@ function listenResult(){
 }
 
 /* 2 · الصوت */
-const MOODS = [["auto", "تلقائي"], ["tension", "توتر"], ["wonder", "دهشة"], ["sad", "حزن"], ["drive", "حماس"], ["dark", "ظلام"], ["calm", "هدوء"], ["epic", "ملحمي"], ["lofi", "هادئ دافي"], ["retro", "ريترو ثمانينات"], ["playful", "مرح"], ["luxury", "فخامة"], ["hopeful", "أمل"], ["off", "بلا موسيقى"]];
+const MOODS = [["auto", "تلقائي"], ["tension", "توتر"], ["wonder", "دهشة"], ["sad", "حزن"], ["drive", "حماس"], ["dark", "ظلام"], ["calm", "هدوء"], ["epic", "ملحمي"], ["lofi", "هادئ دافي"], ["retro", "ريترو ثمانينات"], ["playful", "مرح"], ["luxury", "فخامة"], ["hopeful", "أمل"], ["noir", "نوار جاز"], ["documentary", "وثائقي"], ["corporate", "شركات"], ["middle_east", "شرقي"],
+  ["space", "فضاء"], ["heist", "سرقة وجواسيس"], ["triumph", "انتصار"], ["mystery_box", "لغز"], ["off", "بلا موسيقى"]];
 function stepSound(){
   if (!ep.done.cut){ setBody(`<div class="h2">الصوت</div><p class="muted">قُصّ هذا المقطع أول.</p><button class="pill" id="goS1">عدّل اختيار الجمل</button>`); $("goS1").onclick = () => { step = 1; renderSteps(); loadVideo(); }; return; }
   const so = data.sound || {clean: 1, music: "auto", level: -24, sfx: true};
