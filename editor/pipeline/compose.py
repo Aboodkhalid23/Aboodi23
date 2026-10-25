@@ -1,6 +1,7 @@
 """Stage 6: build final.mp4 (or preview.mp4) — per-beat video clips + one continuous audio track."""
 import hashlib
 import json
+import re
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 
@@ -359,6 +360,64 @@ def _face_on_canvas(ep: Episode, cv: Canvas) -> tuple[float, float] | None:
     return round((1 - w) / 2 + f["cx"] * w, 3), round((1 - h) / 2 + f["cy"] * h, 3)
 
 
+def ep_index(out: Path) -> int:
+    return int(re.search(r"beat_(\d+)", out.name).group(1))
+
+
+def _fetch_one(ep: Episode, query: str, stem: str) -> Path | None:
+    """One free picture for `query` saved as assets/<stem>.<ext>; None when nothing comes (offline too)."""
+    import requests
+    from .sources import download, find
+    try:
+        s = requests.Session()
+        for c in find(query, "image", None, s, set(), [])[:3]:
+            try:
+                data = download(c, s)
+            except requests.RequestException:
+                continue
+            ext = Path(c.url.split("?")[0]).suffix.lower()
+            ep.assets.mkdir(parents=True, exist_ok=True)
+            dest = ep.assets / f"{stem}{ext if ext in ('.jpg', '.jpeg', '.png', '.webp') else '.jpg'}"
+            dest.write_bytes(data)
+            return dest
+    except Exception:   # never lose the build over one picture
+        return None
+    return None
+
+
+def _split(ep: Episode, b: Beat, frames: int, teaser, style: Style, cv: Canvas, grade: str,
+           pic: Path | None, out: Path) -> None:
+    """Split screen: the picture on one half, him on the other (wide: picture left, him right, as Arabic reads;
+    tall: picture on top, him below), a thin accent line between. No picture found: just him."""
+    if pic is None and b.query:   # set from the app after the pictures were fetched: get this one now
+        pic = _fetch_one(ep, b.query, f"img_{ep_index(out)}")
+    if pic is None:
+        _face_clip(ep, replace(b, kind="face"), frames, teaser, out, None, cv, grade=grade)
+        return
+    face = out.with_name(out.stem + "_face.mp4")
+    _face_clip(ep, replace(b, kind="face", transition=None), frames, teaser, face, None, cv,
+               encode=[*INTERMEDIATE, "-r", str(cv.fps)], grade=grade)
+    W, H, dur = cv.width, cv.height, max(b.duration, 0.1)
+    fx, fy = cv.face or (0.5, 0.42)
+    accent = style.palette.get("accent", "#FFFFFF").lstrip("#")
+    if W >= H:
+        hw = W // 2 // 2 * 2
+        cut = f"crop={hw}:{H}:x='max(0,min(iw-{hw},{fx:.3f}*iw-{hw}/2))':y=0"
+        pic_size, stack, line = (hw, H), "hstack=inputs=2", f"drawbox=x={hw}-3:y=0:w=6:h=ih:color=0x{accent}:t=fill"
+    else:
+        hh = H // 2 // 2 * 2
+        cut = f"crop={W}:{hh}:x=0:y='max(0,min(ih-{hh},{fy:.3f}*ih-{hh}/2))'"
+        pic_size, stack, line = (W, hh), "vstack=inputs=2", f"drawbox=x=0:y={hh}-3:w=iw:h=6:color=0x{accent}:t=fill"
+    pw, ph = pic_size
+    zw, zh = round(pw * 1.12 / 2) * 2, round(ph * 1.12 / 2) * 2   # a slow drift across the picture (alive, not a still)
+    graph = (f"[1:v]scale={zw}:{zh}:force_original_aspect_ratio=increase,crop={zw}:{zh},"
+             f"crop={pw}:{ph}:x='(iw-ow)*t/{dur:.3f}':y='(ih-oh)/2',fps={cv.fps},setsar=1[p];"
+             f"[0:v]{cut},setsar=1[f];[p][f]{stack},{line}{_transition_filter(b.transition, cv)},"
+             "tpad=stop_mode=clone:stop_duration=1")
+    run_ffmpeg(["-i", str(face), "-loop", "1", "-i", str(pic), "-filter_complex", graph,
+                "-frames:v", str(frames), "-an", *cv.encode, str(out)])
+
+
 def _cutout(ep: Episode, b: Beat, i: int, frames: int, teaser, style: Style, bundle: Path, cv: Canvas,
             grade: str, out: Path) -> None:
     """He is cut out of his room (precise video matting) and: stands on the episode's paper world ("paper"),
@@ -456,6 +515,8 @@ def compose(ep: Episode, preview: bool = False) -> Path:
             asset = ep.assets / f"footage_{i}.mp4"
             if not asset.exists():
                 raise MediaError(f"beat {i}: مقطع الأرشيف ناقص، شغّل مرحلة images أول")
+        elif b.kind == "face_split":
+            asset = _asset(ep.assets, f"img_{i}", IMAGE_EXT)
         elif b.kind == "graphic" and (b.graphic or {}).get("type") == "article":
             asset = ep.assets / f"article_{i}.png"
             if not asset.exists():
@@ -496,6 +557,8 @@ def compose(ep: Episode, preview: bool = False) -> Path:
                 job = _graphic_job(ep, b, i, style, bundle, cv, src=asset,
                                    extra_props={"name": e["name"], "role": e.get("role", ""),
                                                 "entityKind": e.get("kind", "person")})
+            elif b.kind == "face_split":
+                _split(ep, b, frames, teaser, style, cv, footage_grade, asset, out)
             elif b.kind == "face_cutout":
                 _cutout(ep, b, i, frames, teaser, style, bundle, cv, footage_grade, out)
             elif b.kind == "face_paper":
@@ -566,6 +629,9 @@ def compose(ep: Episode, preview: bool = False) -> Path:
     else:
         single = _asset(ep.assets, "music", AUDIO_EXT)
         music = [(0, single, 0.0, duration)] if single else []
+    own = str(sound_settings(ep)["music"])
+    if own.startswith("own:") and (ep.edit / "media" / own[4:]).is_file():   # music he bought or made: the whole episode
+        music = [(0, ep.edit / "media" / own[4:], 0.0, duration)]
     _build_audio(ep, teaser, duration, audio, sorted(cues), music)
     final = ep.edit / "preview.mp4" if preview else ep.final
     run_ffmpeg(["-f", "concat", "-safe", "0", "-i", str(listing), "-i", str(audio), "-map", "0:v", "-map", "1:a",

@@ -17,6 +17,7 @@ def rules() -> str:
 - الأنواع: {', '.join(KINDS)}.
 - face_paper (الأساس لما يذكر خبر أو وثيقة أو رقم أو تصريح): هو يبقى بالكادر والأوراق تطلع يمّه. papers 1–4، type من {', '.join(PAPER_TYPES)}،
   و at (ثانية من بداية المشهد، ورقة كل 2–3 ث). newspaper (title, highlight, query?)، document (title, lines, highlight?, stamp?)، photo (query)، quote (text, who)، number (value, label)، page (query). enter = fly|turn|drop، و link: true بكل ورقة = لوحة تحقيق بخيط أحمر.
+- face_split (شاشة مقسومة: هو بنص الشاشة والصورة بالنص الثاني، للمقارنة أو لما يشرح شي يحتاج يبين): query إنگليزي + caption عربي. ينحسب نصه وجه.
 - image / footage: query إنگليزي قصير + caption عربي (+ prompt إنگليزي إذا ممكن ما تنلگى صورة حقيقية: يتحول ai_image لحاله).
 - ai_image / ai_video / avatar: prompt إنگليزي + caption عربي؛ الحقيقي أول، وai_budget بالرصيد.
 - entity: id من entities.json، أول مرة ينذكر الاسم.

@@ -86,7 +86,7 @@ def collect_images(plan: EditPlan, ep: Episode, session=None) -> EditPlan:
     style = load_style(plan.style["primary"])
     used, fallbacks, credits = set(), [], []
     for i, b in enumerate(plan.beats):
-        if b.kind != "image" and not (b.kind == "face_cutout" and b.query):
+        if b.kind != "image" and not (b.kind in ("face_cutout", "face_split") and b.query):
             continue
         if (b.pick or {}).get("local") and any(ep.assets.glob(f"img_{i}.*")):   # his own picture (the app's media)
             credits.append(b.pick.get("credit") or f"صورة {i}: من ملفاتك")
@@ -110,7 +110,7 @@ def collect_images(plan: EditPlan, ep: Episode, session=None) -> EditPlan:
             dest.write_bytes(data)
             img = c
             break
-        if img is None and b.kind == "face_cutout":   # the cut-out simply shows its caption instead
+        if img is None and b.kind in ("face_cutout", "face_split"):   # the cut-out simply shows its caption instead
             continue
         if img is None and b.prompt:      # no real picture exists: generate it (owner's rule: AI only then)
             fallbacks.append({"beat": i, "query": b.query, "reason": reason[:300], "now": "ai_image"})

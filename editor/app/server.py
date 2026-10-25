@@ -46,11 +46,15 @@ STEPS = {"all": ["prep", "plan", "render", "suite"], "from-plan": ["plan", "rend
          "prepare": ["fetch", "transcribe"], "cut": ["cut"], "sentences": ["sentences"], "captions": ["captions"],
          "images": ["images"], "build": ["preview"], "final": ["render"], "assist": ["assist"],
          "auto": ["fetch", "transcribe", "cut", "plan", "images", "render"], "chat": ["chat"],
-         "shorts": ["shorts"], "export": ["export"]}
+         "shorts": ["shorts"], "export": ["export"],
+         # a style from the Styles panel on the whole video: the assistant re-plans in it, then a new preview
+         "restyle": ["plan", "images", "preview"],
+         # the reels pack: the assistant picks 1 main short (< 1 min) + 5 clips, then they are cut tall
+         "reels": ["reels-pick", "shorts"], "youtube": ["youtube"]}
 STEP_NAMES = {"prep": "التجهيز", "plan": "خطة المونتير", "render": "النسخة الكاملة", "preview": "المعاينة",
               "suite": "غرفة المونتاج", "requests": "ملاحظاتك", "fetch": "تجهيز الفيديو", "transcribe": "تفريغ الكلام",
               "cut": "قص المقطع", "sentences": "المساعد يراجع الجمل", "captions": "المساعد يراجع الكابشن",
-              "images": "الصور", "assist": "المساعد", "chat": "المساعد", "shorts": "الريلز", "export": "التصدير"}
+              "images": "الصور", "assist": "المساعد", "chat": "المساعد", "shorts": "الريلز", "export": "التصدير", "reels-pick": "اختيار الريلز", "youtube": "الرفع على يوتيوب"}
 CLAUDE_TOOLS = ["Read", "Write", "Edit", "Glob", "Grep", "WebSearch", "WebFetch", "TodoWrite",
                 "Bash(python -m editor.pipeline:*)", "Bash(python3 -m editor.pipeline:*)",
                 "Bash(ffprobe:*)", "Bash(ffmpeg:*)", "Bash(ls:*)"]
@@ -109,6 +113,24 @@ def episode_state(d: Path) -> dict:
                      "queued": sum(r.get("status") == "queued" for r in reqs)},
         "running": JOB.ep == d.name and JOB.running,
     }
+
+
+def episode_cover(d: Path) -> Path:
+    """A small picture of the episode for its card on the home page (made once, from the lightest video there)."""
+    out = d / "work" / "app" / "cover.jpg"
+    if out.exists():
+        return out
+    for v in (d / "edit" / "final.mp4", d / "work" / "app" / "proxy_clean.mp4", d / "work" / "app" / "proxy_source.mp4",
+              d / "work" / "source.mp4"):
+        if v.exists() and v.stat().st_size > 0:
+            out.parent.mkdir(parents=True, exist_ok=True)
+            subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", "8", "-i", str(v), "-frames:v", "1", "-vf", "scale=480:-2",
+                            "-q:v", "4", str(out)], timeout=30, check=False)
+            if not out.exists():   # a clip shorter than 8 s
+                subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(v), "-frames:v", "1", "-vf", "scale=480:-2",
+                                "-q:v", "4", str(out)], timeout=30, check=False)
+            break
+    return out
 
 
 def trash_episode(ep_id: str) -> None:
@@ -461,6 +483,16 @@ PLAN_PROMPT = """انت المونتير الآلي لقناة صاحب القن
 - ممنوع تصرف فلوس أو رصيد: لا ذكاء اصطناعي مدفوع (هيگزفيلد، آرتلست). الحقيقي والمجاني بس.
 - كل رسائلك عربي عراقي بس. وبالآخر سطر: شنو الفكرة البصرية للحلقة."""
 
+REELS_PROMPT = """انت مونتير ريلز وتيك توك لقناة صاحب القناة. ماكو أحد يجاوبك هسة، فلا تسأل.
+بالملف "{file}" كلام الحلقة الجاهزة سطر سطر، وكل سطر وقته [من–لحد] بالثواني على الحلقة النهائية.
+اختار {n} مقاطع تنفع ريلز (كل وحدة تنفهم لحالها بلا الحلقة):
+- الأولى "main": أقوى لحظة بالحلقة كلها، طولها بين 30 و59 ثانية (يوتيوب شورتس).
+- الباقي {rest}: كل وحدة بين 20 و90 ثانية، ما تتداخل ويه بعض، ومن أماكن مختلفة بالحلقة.
+- كل مقطع يبدي بجملة تمسك (سؤال، رقم صادم، كشف) ويخلص بنهاية جملة مو بنصها. ابدأ وخلّص على أوقات الأسطر بالضبط.
+اكتب "{out}" بهالشكل بس (JSON):
+{{"reels": [{{"from": 12.3, "to": 58.0, "main": true, "title": "عنوان قصير يطلع فوق الريل", "caption": "كابشن للنشر بالعراقي ويه سؤال للتعليقات", "hashtags": "#وسم #وسم"}}]}}
+لا تعدّل أي ملف ثاني. كل الكلام عربي عراقي."""
+
 SENT_PROMPT = """انت مساعد المونتاج بتطبيق المونتير على حاسبة صاحب القناة. ماكو أحد يجاوبك هسة، فلا تسأل.
 بالملف "{file}" جمل الحلقة كلها: i رقم الجملة، s ثانيتها بالخام، text الكلام، keep هل القص الآلي يخليها، why ليش انحذفت.
 راجع اختيار القص الآلي: الإعادات والبدايات المتعثرة والجمل الناقصة تنحذف، وإذا جملة انعادت أكثر من مرة تبقى أحسن نسخة (عادة الأخيرة).
@@ -557,6 +589,103 @@ def _changed_beats(before: dict, after: dict) -> list[int]:
     return out
 
 
+def _yt_redirect() -> str:
+    return f"http://127.0.0.1:{PORT[0]}/oauth/youtube"
+
+
+def _youtube_step(d: Path) -> int:
+    """Up to his channel, private, at the best quality there is: the biggest export (4K/8K) or the master; or one
+    reel ("short:<path>"). He finishes the page in YouTube Studio and publishes."""
+    from . import youtube
+    msg = JOB.message or ""
+    if msg.startswith("short:"):
+        video = d / msg[6:]
+        title = video.stem.split("-", 1)[-1].replace("-", " ") + " #shorts"
+        desc = ""
+    else:
+        exports = sorted((d / "edit" / "exports").glob("*.mp4"), key=lambda f: int(re.sub(r"\D", "", f.stem.rsplit("-", 1)[-1]) or 0)) \
+            if (d / "edit" / "exports").exists() else []
+        big = [f for f in exports if int(re.sub(r"\D", "", f.stem.rsplit("-", 1)[-1]) or 0) >= 2160]
+        video = big[-1] if big else d / "edit" / "final.mp4"
+        title = _meta(d).get("name", d.name)
+        parts = [(d / "edit" / f).read_text(encoding="utf-8").strip() for f in ("chapters.txt", "credits.txt") if (d / "edit" / f).exists()]
+        desc = "\n\n".join(p for p in parts if p)
+    if not video.is_file():
+        JOB.say("❌ الملف مو موجود. طلّع النسخة الكاملة أول")
+        return 1
+    JOB.say(f"⬆️ أرفع «{video.name}» ({video.stat().st_size / 1e6:.0f} ميگا) على قناتك كفيديو خاص…")
+    try:
+        vid = youtube.upload(HOME, video, title, desc, progress=lambda p: JOB.say(f"@@ {p}"))
+    except ValueError as exc:
+        JOB.say(f"❌ {exc}")
+        return 1
+    (d / "edit" / "youtube.json").write_text(json.dumps({"id": vid, "file": video.name, "at": time.time()}), encoding="utf-8")
+    JOB.say(f"✅ انرفع (خاص). كمّله من استوديو يوتيوب: https://studio.youtube.com/video/{vid}/edit")
+    return 0
+
+
+def _reels_pick(d: Path) -> int:
+    """The assistant picks the reels pack; it lands in plan.shorts (main first) and edit/shorts/posts.txt."""
+    from editor.pipeline.paths import Episode
+    from editor.pipeline.shorts import LIMITS, MAIN_MAX, REELS_PACK, transcript_lines
+    ep = Episode(d)
+    if not ep.plan.exists():
+        JOB.say("❌ ماكو خطة بعد: سوّ الحلقة أول")
+        return 1
+    work = d / "edit" / "work" / "app"
+    work.mkdir(parents=True, exist_ok=True)
+    src, out = work / "reels_input.txt", work / "reels.json"
+    src.write_text("\n".join(transcript_lines(ep)), encoding="utf-8")
+    out.unlink(missing_ok=True)
+    code = _claude(REELS_PROMPT.format(file=src, out=out, n=REELS_PACK, rest=REELS_PACK - 1))
+    try:
+        reels = json.loads(out.read_text(encoding="utf-8"))["reels"]
+    except (OSError, ValueError, KeyError):
+        JOB.say("❌ المساعد ما كتب الريلز")
+        return code or 1
+    plan = json.loads(ep.plan.read_text(encoding="utf-8"))
+    good = []
+    for k, r in enumerate(reels):
+        fr, to = float(r.get("from", 0)), float(r.get("to", 0))
+        top = MAIN_MAX if (r.get("main") or k == 0) else LIMITS[1]
+        to = min(to, fr + top)
+        if to - fr >= LIMITS[0]:
+            good.append({"from": round(fr, 2), "to": round(to, 2), "title": str(r.get("title", ""))[:60],
+                         "caption": str(r.get("caption", "")), "hashtags": str(r.get("hashtags", "")), "main": k == 0})
+    if not good:
+        JOB.say("❌ الريلز الي اختارها ما تنفع")
+        return 1
+    plan["shorts"] = good
+    ep.plan.write_text(json.dumps(plan, ensure_ascii=False, indent=1), encoding="utf-8")
+    posts = d / "edit" / "shorts"
+    posts.mkdir(parents=True, exist_ok=True)
+    (posts / "posts.txt").write_text("\n\n".join(
+        f"{k + 1}. {'(الرئيسي، يوتيوب شورتس) ' if r['main'] else ''}{r['title']} [{r['to'] - r['from']:.0f} ث]\n{r['caption']}\n{r['hashtags']}"
+        for k, r in enumerate(good)), encoding="utf-8")
+    JOB.say(f"✂️ اختار {len(good)} ريل")
+    return 0
+
+
+def _files_note(d: Path) -> str:
+    """His own files (the app's «ملفاتي») and what he asked for each, for the assistant."""
+    from editor.pipeline.paths import Episode
+    from .studio import media_for_assistant
+    lines = media_for_assistant(Episode(d))
+    return ("\n- ملفات صاحب القناة (بـ edit/media) وشنو يريد بيها:\n" + "\n".join(lines)) if lines else ""
+
+
+def _own_media(d: Path) -> None:
+    from editor.pipeline.paths import Episode
+    from .studio import apply_own_media
+    try:
+        n = apply_own_media(Episode(d))
+    except (OSError, ValueError) as exc:
+        JOB.say(f"⚠️ ما گدرت أحط ملفاتك: {exc}")
+        return
+    if n:
+        JOB.say(f"📁 حطيت {n} من ملفاتك بالمشاهد")
+
+
 def _chat_step(d: Path) -> int:
     from editor.pipeline.grade import LOOK_NAMES
     msgs = chat_load(d)
@@ -568,8 +697,10 @@ def _chat_step(d: Path) -> int:
     from .studio import snapshot
     snapshot(Episode(d))   # what the assistant changes can be undone too
     JOB.last_reply = ""
-    code = _claude(CHAT_PROMPT.format(ep=d, history=history, message=last["text"], context=_chat_context(d, last.get("ctx") or {}),
+    code = _claude(CHAT_PROMPT.format(ep=d, history=history, message=last["text"],
+                                      context=_chat_context(d, last.get("ctx") or {}) + _files_note(d),
                                       looks="، ".join(LOOK_NAMES)))
+    _own_media(d)
     after = json.loads(plan_f.read_text(encoding="utf-8")) if plan_f.exists() else {}
     changed = before != after
     redo = _changed_beats(before, after) if changed else []
@@ -647,7 +778,16 @@ def _plan_extra(d: Path) -> str:
         pass
     sf = d / "edit" / "style.txt"
     if sf.exists() and sf.read_text(encoding="utf-8").strip():
-        lines.append(f"- الستايل: صاحب القناة اختار «{sf.read_text(encoding='utf-8').strip()}» (style.primary).")
+        sid = sf.read_text(encoding="utf-8").strip()
+        lines.append(f"- الستايل: صاحب القناة اختار «{sid}» (style.primary = \"{sid}\"، إجباري). ابنِ الحلقة كلها على روحه:")
+        try:
+            from editor.pipeline.styles import load_style
+            st = load_style(sid)
+            lines.append("  " + st.notes.replace("\n", "\n  "))
+            if st.layouts:
+                lines.append(f"  - اعتمد أكثر على هالأنواع: {', '.join(st.layouts)}، والإيقاع حوالي {st.beat_seconds} ث بالجسم.")
+        except (KeyError, OSError, ValueError):
+            pass
     if (d / "edit" / "look.json").exists():
         lines.append('- الألوان اختارها صاحب القناة (edit/look.json): لا تحط "grade" بالخطة.')
     try:
@@ -744,8 +884,14 @@ def run_job(ep_id: str, what: str) -> None:
             if code:   # pictures are a nicety for the storyboard: a failed download never stops the episode
                 JOB.say("⚠️ بعض الصور ما نزلت، تنجاب وقت النسخة الكاملة")
                 code = 0
+        elif step == "youtube":
+            code = _youtube_step(d)
+        elif step == "reels-pick":
+            code = _reels_pick(d)
         elif step == "shorts":
             code = _pipe("shorts", d)
+        elif step == "export" and (JOB.message or "").startswith("res:"):   # a copy at the size he picked
+            code = _run([sys.executable, "-m", "editor.pipeline.export", str(d), JOB.message[4:]])
         elif step == "export":   # a smaller copy for sending (the full file stays as it is)
             mb = re.sub(r"[^0-9.]", "", JOB.message or "") or "200"
             code = _pipe("deliver", d, "--max-mb", mb)
@@ -754,7 +900,9 @@ def run_job(ep_id: str, what: str) -> None:
         elif step == "assist":
             code = _claude(ASSIST_PROMPT.format(ep=d, message=JOB.message or "راجع الخطة وحسّنها"))
         elif step == "plan":
-            code = _claude(PLAN_PROMPT.format(ep=d, extra=_plan_extra(d)))
+            code = _claude(PLAN_PROMPT.format(ep=d, extra=_plan_extra(d) + _files_note(d)))
+            if code == 0:
+                _own_media(d)
             if code == 0 and not (d / "edit" / "edit_plan.json").exists():
                 JOB.say("❌ كلود خلص بس ما كتب الخطة")
                 code = 1
@@ -847,7 +995,8 @@ def update_app() -> None:
 
 
 APP_RELEASE = "https://github.com/aboodkhalid23/aboodi23/releases/download/mac-app/app-version.txt"
-APP_STATE = {"update": None}   # None | "available" | "running"
+APP_STATE = {"update": None}
+PORT = [47823]   # None | "available" | "running"
 
 
 def _parent_app() -> str:
@@ -880,9 +1029,7 @@ def check_app() -> None:
     is installed too; otherwise a newer app is only offered in the settings."""
     if not MAC or not os.environ.get("MONTIER_APP") or ".app" not in _parent_app():
         return    # only when the app window started this server (never from a terminal or a test)
-    marker = HOME / "after_update"
-    after = marker.exists()
-    marker.unlink(missing_ok=True)
+    (HOME / "after_update").unlink(missing_ok=True)
     if not os.environ.get("URU_APP_PATH"):    # the first app (المونتير) does not say its version: always old
         installed = next((p for p in (Path("/Applications/URU.app"), Path.home() / "Applications" / "URU.app")
                           if (p / "Contents" / "MacOS" / "URU").exists()), None)
@@ -892,9 +1039,10 @@ def check_app() -> None:
         if installed and n >= 3:
             APP_STATE["update"] = "stuck"     # it keeps coming back: say where the new app is, stop trying
             return
-        if installed:   # already there (an earlier swap could not reopen it): just open it and close this one
-            APP_STATE["update"] = "running"
-            subprocess.Popen(["/bin/bash", "-c", f"sleep 1.5; kill {os.getppid()}; kill {os.getpid()}; sleep 1; open '{installed}'"],
+        if installed:   # already there: open it, close this one, and put the old one in the bin (the Dock icon too)
+            old = _parent_app()
+            trash = f"mv '{old}' ~/.Trash/ 2>/dev/null;" if old.startswith(("/Applications/", str(Path.home() / "Applications"))) else ""
+            subprocess.Popen(["/bin/bash", "-c", f"sleep 0.3; kill {os.getppid()}; kill {os.getpid()}; sleep 1; {trash} open '{installed}'"],
                              start_new_session=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             return
         upgrade_app()
@@ -906,10 +1054,40 @@ def check_app() -> None:
     except Exception:
         return
     if latest and latest != os.environ.get("URU_APP_VERSION", ""):
-        if after:
-            upgrade_app()
-        else:
-            APP_STATE["update"] = "available"
+        APP_STATE["app_pending"] = True     # swapped quietly when he closes the app (apply_on_exit)
+
+
+def auto_update() -> None:
+    """Owner, 2026-10-25: never "updating…" when he opens the app; it should just be new. So the newest code is
+    readied in the background (setup.sh --stage → code.next) while he works, and swapped in when the app closes."""
+    if not os.environ.get("MONTIER_APP") or not (CODE / "app" / "setup.sh").exists():
+        return
+    log = HOME / "logs" / "update.log"
+    log.parent.mkdir(parents=True, exist_ok=True)
+    with open(log, "a", encoding="utf-8") as f:
+        subprocess.run(["/bin/bash", str(CODE / "app" / "setup.sh"), "--stage"], stdout=f, stderr=f,
+                       env={**os.environ, "MONTIER_HOME": str(HOME)}, timeout=3600)
+
+
+def apply_on_exit() -> None:
+    """The app is closing: the staged code takes the place of the old (two renames), and a newer app window is
+    swapped in quietly (it opens new next time)."""
+    nxt, old = HOME / "code.next", HOME / "code.old"
+    if (nxt / ".uru_version.json").exists() and CODE == HOME / "code":
+        try:
+            nm_old, nm_new = CODE / "editor/remotion/node_modules", nxt / "editor/remotion/node_modules"
+            if nm_old.exists() and not nm_new.exists():
+                nm_old.rename(nm_new)
+            shutil.rmtree(old, ignore_errors=True)
+            CODE.rename(old)
+            nxt.rename(CODE)
+            (CODE / ".uru_version.json").replace(HOME / "version.json")
+            subprocess.Popen(["/bin/rm", "-rf", str(old)], start_new_session=True)
+        except OSError:
+            pass
+    if APP_STATE.get("app_pending") and MAC and (CODE / "app" / "setup.sh").exists():
+        subprocess.Popen(["/bin/bash", str(CODE / "app" / "setup.sh"), "--app", "quiet"], start_new_session=True,
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 def version() -> dict:
@@ -926,13 +1104,17 @@ STYLE_NAMES = {"investigation": "لوحة تحقيق", "noir": "سينما ال�
 
 
 def styles_list() -> list[dict]:
-    """The style library with Arabic names (the part of the summary before the dash)."""
+    """The style library for the app's Styles panel: Arabic name, group, colours and fonts (the card preview),
+    and what it does to the video."""
     from editor.pipeline.styles import _style_files, load_style
     out = []
     for f in _style_files():
         st = load_style(f.stem)
-        name = STYLE_NAMES.get(f.stem) or re.split(r"\s+—\s+|\.|،", st.summary, maxsplit=1)[0].strip()[:30]
-        out.append({"id": f.stem, "name": name, "summary": st.summary})
+        name = st.title_ar or STYLE_NAMES.get(f.stem) or re.split(r"\s+—\s+|\.|،", st.summary, maxsplit=1)[0].strip()[:30]
+        how = re.search(r"^- (.+)$", st.notes, re.M)
+        out.append({"id": f.stem, "name": name, "summary": re.sub(r"^[^—]{0,40}—\s*", "", st.summary),
+                    "category": st.category or "الأساسية", "palette": st.palette, "fonts": st.fonts,
+                    "texture": st.texture, "fits": st.fits, "how": how.group(1) if how else ""})
     return out
 
 
@@ -1083,6 +1265,24 @@ class Handler(BaseHTTPRequestHandler):
                 root = (HOME / "cache").resolve()
                 f = (root / path[7:]).resolve()
                 return self._file(f) if f.is_relative_to(root) else self._err("لا", 403)
+            if path == "/api/youtube":
+                from . import youtube
+                return self._json(youtube.status(HOME))
+            if path == "/oauth/youtube":   # Google sends him back here after he says yes
+                from . import youtube
+                try:
+                    st = youtube.finish(HOME, q.get("code", ""), q.get("state", ""), _yt_redirect())
+                    msg = f"✅ انربطت قناتك{(' «' + st['channel'] + '»') if st['channel'] else ''}. ارجع للتطبيق."
+                except ValueError as exc:
+                    msg = f"❌ {exc}"
+                body = (f'<!doctype html><meta charset="utf-8"><body style="font:20px system-ui;background:#111;color:#eee;'
+                        f'display:grid;place-items:center;height:90vh;direction:rtl">{msg}</body>').encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+                return
             if path == "/api/claude-link":
                 return self._json(LINK.state())
             if path == "/api/styles":
@@ -1098,6 +1298,9 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/sfx-sample":
                 from editor.pipeline.sfx import sfx_path
                 return self._file(sfx_path(q.get("name", "whoosh")))
+            m = re.match(r"^/api/episodes/([^/]+)/cover$", path)
+            if m:
+                return self._file(episode_cover(episode_dir(m.group(1))))
             m = re.match(r"^/api/episodes/([^/]+)/(sentences|captions|plan|timeline|look|sound|idea|review|frame|voice-sample|media|effects|export-info|options|suggest)$", path)
             if m:
                 return self._studio_get(episode_dir(m.group(1)), m.group(2), q)
@@ -1180,13 +1383,26 @@ class Handler(BaseHTTPRequestHandler):
         if what == "export-info":
             final = d / "edit" / "final.mp4"
             plan = json.loads(ep.plan.read_text(encoding="utf-8")) if ep.plan.exists() else {}
+            exports = [{"name": f.name, "size": f.stat().st_size} for f in sorted((d / "edit" / "exports").glob("*.mp4"))] \
+                if (d / "edit" / "exports").exists() else []
+            try:
+                from editor.pipeline.media import probe
+                mi = probe(final) if final.exists() else None
+                master = [mi.width, mi.height] if mi else None
+            except Exception:
+                master = None
             ch = d / "edit" / "chapters.txt"
             cr = d / "edit" / "credits.txt"
             shorts = sorted((d / "edit").glob("short_*.mp4")) + sorted((d / "edit" / "shorts").glob("*.mp4") if (d / "edit" / "shorts").exists() else [])
             return self._json({"final": final.exists(), "size": final.stat().st_size if final.exists() else 0,
                                "chapters": ch.read_text(encoding="utf-8") if ch.exists() else "",
                                "credits": cr.read_text(encoding="utf-8") if cr.exists() else "",
-                               "shorts_plan": plan.get("shorts", []), "shorts": [str(f.relative_to(d)) for f in shorts]})
+                               "shorts_plan": plan.get("shorts", []), "shorts": [str(f.relative_to(d)) for f in shorts],
+                               "exports": exports, "master": master,
+                               "youtube": json.loads((d / "edit" / "youtube.json").read_text(encoding="utf-8")).get("id")
+                               if (d / "edit" / "youtube.json").exists() else None,
+                               "posts": (d / "edit" / "shorts" / "posts.txt").read_text(encoding="utf-8")
+                               if (d / "edit" / "shorts" / "posts.txt").exists() else ""})
         if what == "options":
             from editor.pipeline.options import load_options
             return self._json(load_options(ep))
@@ -1208,6 +1424,18 @@ class Handler(BaseHTTPRequestHandler):
             from editor.pipeline.options import save_options
             studio.snapshot(ep)
             return self._json(save_options(ep, b))
+        if what == "restyle":   # the whole video in one style: remembered, then re-planned and rebuilt
+            ok = {x["id"] for x in styles_list()}
+            if b.get("style") not in ok:
+                raise ValueError("هذا الستايل مو موجود")
+            if not ep.plan.exists() and not (d / "work" / "plan_input.txt").exists():
+                (d / "edit").mkdir(parents=True, exist_ok=True)
+                (d / "edit" / "style.txt").write_text(b["style"], encoding="utf-8")
+                return self._json({"ok": True, "started": False})
+            studio.snapshot(ep)
+            (d / "edit" / "style.txt").write_text(b["style"], encoding="utf-8")
+            start_job(d.name, "restyle", "أعد الحلقة كلها بهذا الستايل")
+            return self._json({"ok": True, "started": True})
         if what == "choose":
             studio.snapshot(ep)
             return self._json(studio.suggest_choose(ep, int(b.get("i", -1)), b.get("cand") or {}))
@@ -1218,11 +1446,13 @@ class Handler(BaseHTTPRequestHandler):
             return self._json({"ok": ok, "plan": studio.storyboard(ep)})
         if what == "media":
             return self._json(studio.media_add(ep, str(b.get("path", ""))))
+        if what == "media-note":
+            return self._json(studio.media_note(ep, str(b.get("name", "")), b.get("note"), b.get("use")))
         if what == "short":
             plan = json.loads(ep.plan.read_text(encoding="utf-8"))
             fr, to = float(b.get("from", 0)), float(b.get("to", 30))
-            if not 10 <= to - fr <= 90:
-                raise ValueError("الريل لازم بين ١٠ و٩٠ ثانية")
+            if not 15 <= to - fr <= 90:
+                raise ValueError("الريل لازم بين ١٥ و٩٠ ثانية")
             plan["shorts"] = (plan.get("shorts") or []) + [{"from": round(fr, 2), "to": round(to, 2), "title": str(b.get("title", ""))}]
             ep.plan.write_text(json.dumps(plan, ensure_ascii=False, indent=1), encoding="utf-8")
             return self._json({"shorts": plan["shorts"]})
@@ -1286,9 +1516,31 @@ class Handler(BaseHTTPRequestHandler):
                 chat_add(d, {"role": "owner", "text": text, "ctx": b.get("ctx") or {}})
                 start_job(m.group(1), "chat", text)
                 return self._json({"ok": True, "messages": chat_load(d)})
-            m = re.match(r"^/api/episodes/([^/]+)/(sentences|captions|look|sound|idea|beat|undo|redo|media|short|options|choose)$", path)
+            m = re.match(r"^/api/episodes/([^/]+)/(sentences|captions|look|sound|idea|beat|undo|redo|media|media-note|short|options|choose|restyle)$", path)
             if m:
                 return self._studio_post(episode_dir(m.group(1)), m.group(2), self._body())
+            m = re.match(r"^/api/episodes/([^/]+)/upload$", path)
+            if m:
+                from editor.pipeline.paths import Episode
+                from .studio import MEDIA_EXT, media_list
+                d = episode_dir(m.group(1))
+                q = dict(urllib.parse.parse_qsl(urllib.parse.urlsplit(self.path).query))
+                name = Path(q.get("name", "")).name
+                if not name or Path(name).suffix.lower() not in MEDIA_EXT or name.startswith("."):
+                    raise ValueError("هذا مو صورة ولا فيديو ولا صوت")
+                n = int(self.headers.get("Content-Length") or 0)
+                if n > 8 * 1024 ** 3:
+                    raise ValueError("الملف كلش جبير")
+                folder = d / "edit" / "media"
+                folder.mkdir(parents=True, exist_ok=True)
+                with open(folder / name, "wb") as f:
+                    while n > 0:
+                        chunk = self.rfile.read(min(n, 1 << 20))
+                        if not chunk:
+                            break
+                        f.write(chunk)
+                        n -= len(chunk)
+                return self._json(media_list(Episode(d)))
             m = re.match(r"^/api/episodes/([^/]+)/(delete|media-delete)$", path)
             if m:
                 if m.group(2) == "delete":
@@ -1312,13 +1564,23 @@ class Handler(BaseHTTPRequestHandler):
                 elif act == "stop":
                     stop_job()
                 elif act == "reveal":
-                    target = {"final": d / "edit" / "final.mp4", "preview": d / "edit" / "preview.mp4"}.get(b.get("what"), d)
+                    target = {"final": d / "edit" / "final.mp4", "preview": d / "edit" / "preview.mp4", "exports": d / "edit" / "exports", "shorts": d / "edit" / "shorts"}.get(b.get("what"), d)
                     reveal(target if target.exists() else d)
                 elif act == "rename":
                     meta = _meta(d)
                     meta["name"] = (b.get("name") or meta["name"]).strip()
                     _save_meta(d, meta)
                 return self._json({"ok": True})
+            if path.startswith("/api/youtube/"):
+                from . import youtube
+                act, b = path.rsplit("/", 1)[1], self._body()
+                if act == "client":
+                    return self._json(youtube.set_client(HOME, str(b.get("id", "")), str(b.get("secret", ""))))
+                if act == "start":
+                    return self._json({"url": youtube.auth_url(HOME, _yt_redirect())})
+                if act == "unlink":
+                    return self._json(youtube.unlink(HOME))
+                return self._err("مو موجود", 404)
             if path == "/api/claude-link/start":
                 return self._json(LINK.start())
             if path == "/api/claude-link/code":
@@ -1440,15 +1702,18 @@ def main(argv=None):
     ap.add_argument("--port", type=int, default=47823)
     a = ap.parse_args(argv)
     EPISODES.mkdir(parents=True, exist_ok=True)
+    PORT[0] = a.port
     srv = ThreadingHTTPServer(("127.0.0.1", a.port), Handler)
     srv.daemon_threads = True
 
     def bye(*_):
         stop_job()
+        _safe(apply_on_exit)
         os._exit(0)
     signal.signal(signal.SIGTERM, bye)
     print(f"URU شغّال: http://127.0.0.1:{a.port}  (الحلقات: {EPISODES})", flush=True)
     threading.Timer(2.0, lambda: _safe(check_app)).start()
+    threading.Timer(25.0, lambda: _safe(auto_update)).start()
     srv.serve_forever()
 
 

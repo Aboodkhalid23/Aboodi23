@@ -277,3 +277,110 @@ def test_optional_extras_and_suggestions(app, monkeypatch):
                                   "query": "old factory", "credit": "t — a — cc"})
     b = json.loads(ep.plan.read_text())["beats"][0]
     assert b["kind"] == "image" and b["pick"]["local"] and (ep.assets / "img_0.png").read_bytes() == b"\x89PNG picked"
+
+
+def test_style_library_and_plan_prompt_follow_the_chosen_style(app):
+    import re
+    lst = srv.styles_list()
+    assert len(lst) >= 60 and len({x["category"] for x in lst}) >= 6
+    assert all(x["palette"]["paper"].startswith("#") and x["name"] and not re.search("[A-Za-z]", x["name"]) for x in lst)
+    d = srv.EPISODES / srv.create_episode("حلقة", str(app))["id"]
+    (d / "edit").mkdir(parents=True, exist_ok=True)
+    (d / "edit" / "style.txt").write_text("cyberpunk", encoding="utf-8")
+    extra = srv._plan_extra(d)
+    assert 'style.primary = "cyberpunk"' in extra and "face_cutout" in extra
+
+
+def test_my_files_notes_own_music_and_placement(app, tmp_path):
+    from editor.app import studio
+    from editor.pipeline.paths import Episode
+    d = srv.EPISODES / srv.create_episode("حلقة", str(app))["id"]
+    ep = Episode(d).ensure()
+    pic, song = tmp_path / "مصنع.png", tmp_path / "اغنية.mp3"
+    pic.write_bytes(b"\x89PNG fake"); song.write_bytes(b"ID3 fake")
+    studio.media_add(ep, str(pic)); studio.media_add(ep, str(song))
+    studio.media_note(ep, "مصنع.png", "حطها لما أحچي عن المصنع", "auto")
+    lst = studio.media_note(ep, "اغنية.mp3", "", "music")
+    assert {m["name"]: m["use"] for m in lst} == {"مصنع.png": "auto", "اغنية.mp3": "music"}
+    assert json.loads((ep.edit / "sound.json").read_text())["music"] == "own:اغنية.mp3"
+    note = srv._files_note(d)
+    assert "مصنع.png" in note and "حطها لما أحچي عن المصنع" in note and "موسيقى الحلقة" in note
+    plan = {"style": {"primary": "noir", "sections": []}, "teaser": [],
+            "beats": [{"start": 0, "end": 5, "zone": "hook", "kind": "image", "query": "factory",
+                       "pick": {"local": True, "file": "مصنع.png"}}]}
+    ep.plan.write_text(json.dumps(plan), encoding="utf-8")
+    assert studio.apply_own_media(ep) == 1 and (ep.assets / "img_0.png").read_bytes() == b"\x89PNG fake"
+    studio.media_note(ep, "اغنية.mp3", None, "")
+    assert json.loads((ep.edit / "sound.json").read_text())["music"] == "auto"
+
+
+def test_reels_pack_is_picked_main_first_and_trimmed(app, monkeypatch):
+    from editor.pipeline.paths import Episode
+    from editor.pipeline.shorts import transcript_lines
+    d = srv.EPISODES / srv.create_episode("حلقة", str(app))["id"]
+    ep = Episode(d).ensure()
+    plan = {"style": {"primary": "noir", "sections": []}, "teaser": [],
+            "beats": [{"start": 0, "end": 300, "zone": "body", "kind": "face"}]}
+    ep.plan.write_text(json.dumps(plan), encoding="utf-8")
+    ep.clean_words.write_text(json.dumps([{"t": "هلو", "s": 1.0, "e": 1.4}, {"t": "شلونكم", "s": 1.5, "e": 2.0},
+                                          {"t": "اليوم", "s": 4.0, "e": 4.5}]), encoding="utf-8")
+    assert transcript_lines(ep) == ["[1.0–2.0] هلو شلونكم", "[4.0–4.5] اليوم"]
+
+    def fake(prompt):
+        out = re.search(r'اكتب "([^"]+)"', prompt).group(1)
+        reels = [{"from": 10, "to": 95, "main": True, "title": "الرئيسي"}, {"from": 100, "to": 180, "title": "ثاني"},
+                 {"from": 200, "to": 203, "title": "قصير"}]
+        open(out, "w", encoding="utf-8").write(json.dumps({"reels": reels}, ensure_ascii=False))
+        return 0
+    import re
+    monkeypatch.setattr(srv, "_claude", fake)
+    assert srv._reels_pick(d) == 0
+    shorts = json.loads(ep.plan.read_text())["shorts"]
+    assert [(s["from"], s["to"], s["main"]) for s in shorts] == [(10, 69, True), (100, 180, False)]
+    assert "يوتيوب شورتس" in (d / "edit" / "shorts" / "posts.txt").read_text(encoding="utf-8")
+
+
+def test_youtube_link_and_private_resumable_upload(tmp_path):
+    from editor.app import youtube
+    import urllib.parse as up
+
+    class R:
+        def __init__(self, code, js=None, headers=None, text=""):
+            self.status_code, self._js, self.headers, self.text = code, js or {}, headers or {}, text
+        def json(self):
+            return self._js
+
+    class S:
+        def __init__(self):
+            self.calls, self.meta, self.got = [], None, b""
+        def post(self, url, data=None, json=None, params=None, headers=None, timeout=None):
+            self.calls.append(url)
+            if url == youtube.TOKEN:
+                return R(200, {"access_token": "AT", "refresh_token": "RT", "expires_in": 3600})
+            self.meta = json
+            return R(200, headers={"Location": "https://up/1"})
+        def get(self, url, params=None, headers=None, timeout=None):
+            return R(200, {"items": [{"snippet": {"title": "قناتي"}}]})
+        def put(self, url, data=None, headers=None, timeout=None):
+            self.got += data
+            a, b = headers["Content-Range"].split(" ")[1].split("/")[0].split("-")
+            if int(b) + 1 < int(headers["Content-Range"].split("/")[1]):
+                return R(308, headers={"Range": f"bytes=0-{b}"})
+            return R(200, {"id": "VID1"})
+
+    with pytest.raises(ValueError):
+        youtube.set_client(tmp_path, "nope", "short")
+    youtube.set_client(tmp_path, "123-abc.apps.googleusercontent.com", "GOCSPX-secret-value")
+    url = youtube.auth_url(tmp_path, "http://127.0.0.1:1/oauth/youtube")
+    q = dict(up.parse_qsl(up.urlsplit(url).query))
+    assert q["code_challenge_method"] == "S256" and "youtube.upload" in q["scope"]
+    s = S()
+    st = youtube.finish(tmp_path, "CODE", q["state"], "http://127.0.0.1:1/oauth/youtube", session=s)
+    assert st == {"client": True, "linked": True, "channel": "قناتي"}
+    assert oct((tmp_path / "youtube.json").stat().st_mode & 0o777) == "0o600"
+    video = tmp_path / "v.mp4"
+    video.write_bytes(b"x" * (youtube.CHUNK + 10))
+    youtube.CHUNK = 1024 * 1024
+    seen = []
+    assert youtube.upload(tmp_path, video, "حلقة", progress=seen.append, session=s) == "VID1"
+    assert s.got == video.read_bytes() and s.meta["status"]["privacyStatus"] == "private" and seen[-1] == 100

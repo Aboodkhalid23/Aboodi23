@@ -106,7 +106,10 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             start, end = s + offset, max(nxt, e) + offset
             if until is not None and start >= until:
                 break
-            shown = " ".join((lit + w + "{\\r}") if j == k else w for j, (w, _, _) in enumerate(group))
+            # libass lays tagged runs out left to right and merges look-alike neighbours: every word gets its own run
+            # (a different, invisible outline shade) and the runs go in reverse, so Arabic reads right to left
+            runs = [(lit[:-1] if j == k else "{\\c&HFFFFFF&\\fscx100\\fscy100") + f"\\3c&H00000{j % 10}&}}" + w for j, (w, _, _) in enumerate(group)]
+            shown = " ".join(reversed(runs))
             lines.append(f"Dialogue: 0,{_ass_time(start)},{_ass_time(min(end, until) if until else end)},Cap,,0,0,0,,{shown}")
     return head + "\n".join(lines) + "\n"
 
@@ -197,6 +200,7 @@ def post_process(ep: Episode, final: Path, teaser_total: float) -> Path:
     print("✍️  " + "، ".join(x for x in ("الكابشن على الفيديو" if caps else "", "البداية الجاهزة" if intro else "") if x) + "…", flush=True)
     run_ffmpeg([*inputs, *filter_script(gfile), "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-crf", "16", "-preset", "veryfast",
                 "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "320k", "-movflags", "+faststart", str(out)])
+    final.replace(work / "master_clean.mp4")   # kept for the reels (they get their own tall captions)
     out.replace(final)
     if intro:   # YouTube chapters move by the opening's length
         ch = ep.edit / "chapters.txt"

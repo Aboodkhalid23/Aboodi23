@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>URU · استوديو المونتاج</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Aref+Ruqaa:wght@700&family=Cairo:wght@800&family=Changa:wght@700&family=El+Messiri:wght@700&family=Lalezar&family=Noto+Kufi+Arabic:wght@800&family=Noto+Naskh+Arabic:wght@700&family=Rakkas&family=Reem+Kufi:wght@700&family=Tajawal:wght@800&display=swap">
 <style>
 :root{
   --bg:#0B0B0D; --panel:#121214; --panel2:#18181B; --panel3:#202024; --line:#2A2A2F; --line2:#3A3A40;
@@ -239,6 +240,10 @@ canvas.wave{position:absolute;inset:0;width:100%;height:100%}
 
 /* ---------- library / dialogs ---------- */
 .lib{position:fixed;inset:46px 0 0 0;background:var(--bg);z-index:30;overflow:auto;padding:28px}
+.lc.new{align-items:center;justify-content:center;min-height:190px;border:2px dashed rgba(242,201,76,.5);font-size:16px;color:#f2c94c}
+.lc.new .plus{font-size:40px;line-height:1}
+.lc .cv{height:120px;margin:-14px -14px 6px;border-radius:14px 14px 0 0;background:#000 center/cover no-repeat}
+.libh{grid-column:1/-1;font-weight:700;margin-top:8px;opacity:.8}
 .libgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin-top:18px}
 .lc{border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:14px;text-align:right;display:flex;flex-direction:column;gap:6px}
 .lc:hover{border-color:#55555c}
@@ -299,6 +304,21 @@ header{border-width:0 0 1px 0!important;border-radius:0}
 .blk.cap{background:rgba(124,104,255,.32)}.blk.sc{background:rgba(242,201,76,.16);border-color:rgba(242,201,76,.32)}.blk.sc.face{background:rgba(255,255,255,.05)}
 .vid{opacity:.8}
 /* the fixed box for talking to the assistant (always there, under the video) */
+#panel .pn[data-pn="media"].drop{outline:2px dashed #f2c94c;outline-offset:-8px}
+.mtag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:6px;background:#f2c94c;color:#111;margin-inline-start:4px}
+#helpbar{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);max-width:min(620px,92vw);z-index:120;padding:10px 14px;border-radius:14px;
+  background:rgba(20,20,28,.92);border:1px solid var(--glassline);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);font-size:13px;line-height:1.7;
+  box-shadow:0 10px 30px rgba(0,0,0,.4);pointer-events:none;transition:opacity .15s}
+#helpbar b{color:#f2c94c}
+.kbd{display:inline-block;font:600 12px ui-monospace,monospace;background:rgba(255,255,255,.08);border:1px solid var(--glassline);border-radius:6px;padding:2px 8px;margin:2px 0 6px}
+.stc{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--glassline);text-align:right;padding:0;background:none;cursor:pointer;color:inherit}
+.stc.on{outline:2px solid #f2c94c}
+.stc .pv{height:74px;padding:10px;display:flex;flex-direction:column;justify-content:space-between;position:relative}
+.stc .pv b{font-size:17px;line-height:1.1}
+.stc .pv i{display:block;height:5px;width:46%;border-radius:3px}
+.stc .pv .tx{position:absolute;inset:0;opacity:.18;background-image:radial-gradient(rgba(0,0,0,.6) 1px,transparent 1px);background-size:4px 4px;pointer-events:none}
+.stc .nm{padding:7px 9px;font-size:12px;background:rgba(255,255,255,.05)}
+.stbig .pv{height:120px}.stbig .pv b{font-size:26px}
 .sw{width:44px;height:26px;border-radius:999px;background:rgba(255,255,255,.12);position:relative;flex:none;border:1px solid var(--glassline)}
 .sw::after{content:"";position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:#ddd;transition:right .2s}
 .sw.on{background:linear-gradient(180deg,#ffe07a,#f2c94c)}.sw.on::after{right:20px;background:#fff}
@@ -323,11 +343,11 @@ header{border-width:0 0 1px 0!important;border-radius:0}
     <div class="proj"><span class="dim">|</span><b id="pName">لا يوجد مشروع مفتوح</b>
       <span class="saved" id="saved" hidden><i></i><span>محفوظ</span></span></div>
     <div class="tools">
-      <button class="tool" id="tLib" title="كل حلقاتك"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>المكتبة</button>
+      <button class="tool" id="tLib" title="كل حلقاتك"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>الرئيسية</button>
       <button class="tool" id="tText" title="الكلام كله"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 11h16M4 16h10"/></svg>النص</button>
       <button class="tool" id="tFiles" title="مجلد الحلقة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>الملفات</button>
       <button class="tool" id="tPlan" title="الخطة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1.3"/><circle cx="4.5" cy="12" r="1.3"/><circle cx="4.5" cy="18" r="1.3"/></svg>الخطة</button>
-      <button class="tool" id="tInsp" title="الستايلات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 5v14M16 5v14"/></svg>الإلهام</button>
+      <button class="tool" id="tInsp" title="الستايلات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 5v14M16 5v14"/></svg>الستايلات</button>
       <button class="assist" id="tAssist"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg><div>المساعد<small>يسوي الي تگوله</small></div></button>
       <button class="icobtn" id="tUndo" title="تراجع"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button>
       <button class="icobtn" id="tSet" title="الإعدادات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
@@ -340,10 +360,11 @@ header{border-width:0 0 1px 0!important;border-radius:0}
   <main>
     <nav id="rail">
       <button class="rb" data-panel="steps" title="الخطوات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1.3"/><circle cx="4.5" cy="12" r="1.3"/><circle cx="4.5" cy="18" r="1.3"/></svg><span>الخطوات</span></button>
-      <button class="rb" data-panel="media" title="المواد"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="13" height="14" rx="2"/><path d="M16 10l5-3v10l-5-3"/></svg><span>المواد</span></button>
+      <button class="rb" data-panel="media" title="المواد"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="13" height="14" rx="2"/><path d="M16 10l5-3v10l-5-3"/></svg><span>ملفاتي</span></button>
       <button class="rb" data-panel="effects" title="المؤثرات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8l1.4 1.4M17.8 6.2l1.4-1.4M3 21l9-9M12.2 6.2l-1.4-1.4"/></svg><span>المؤثرات</span></button>
       <button class="rb" data-panel="text" title="النص"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5h16v2M9 19h6M12 5v14"/></svg><span>النص</span></button>
       <button class="rb" data-panel="stickers" title="الملصقات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9.5L21 14.5V5a2 2 0 0 0-2-2z"/><path d="M14 21v-5a2 2 0 0 1 2-2h5"/></svg><span>الملصقات</span></button>
+      <button class="rb" data-panel="styles" title="الستايلات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1 0 1.6-.8 1.6-1.6 0-.5-.2-.8-.5-1.1-.3-.3-.5-.7-.5-1.1 0-.9.7-1.6 1.6-1.6H16a5 5 0 0 0 5-5c0-4.2-4-7.6-9-7.6z"/><circle cx="7.5" cy="11" r="1.2"/><circle cx="10.5" cy="7.5" r="1.2"/><circle cx="15" cy="7.5" r="1.2"/></svg><span>الستايلات</span></button>
       <button class="rb" data-panel="sounds" title="الأصوات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg><span>الأصوات</span></button>
       <button class="rb" data-panel="extras" title="الإضافات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="10" rx="5"/><circle cx="15" cy="12" r="3"/></svg><span>الإضافات</span></button>
       <button class="rb" data-panel="colors" title="الألوان"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2a10 10 0 1 0 0 20c1 0 1.5-.8 1.5-1.6 0-.5-.2-.8-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.7-1.6 1.6-1.6H16a6 6 0 0 0 6-6c0-4.4-4.5-8.4-10-8.4z"/></svg><span>الألوان</span></button>
@@ -359,8 +380,10 @@ header{border-width:0 0 1px 0!important;border-radius:0}
         <div class="stepfoot" id="stepfoot" hidden></div>
       </div>
       <div class="pn" data-pn="media" hidden>
-        <div class="pnh"><b>المواد</b><button class="pill sm y" id="mAdd">＋ أضف ملف</button></div>
-        <div class="dim tiny" style="padding:0 14px 8px">صورك ومقاطعك وأصواتك. دوس على وحدة حتى تحطها على المشهد المحدد.</div>
+        <div class="pnh"><b>ملفاتي</b><button class="pill sm y" id="mAdd">＋ أضف ملفات</button><input type="file" id="mFiles" multiple hidden accept="image/*,video/*,audio/*,.mov,.m4a"></div>
+        <div class="dim tiny" style="padding:0 14px 8px;line-height:1.7">صورك ومقاطعك وموسيقاك. دوس على أي ملف وگول للمساعد شنو يسوي بيه، أو خليه موسيقى الحلقة. وتگدر تسحب الملفات من حاسبتك وتذبها هنا.</div>
+        <div id="mUp" class="dim tiny" style="padding:0 14px 6px" hidden></div>
+        <div id="mOne" hidden style="padding:0 14px 10px"></div>
         <div class="seg3" id="mTabs"><button data-mk="all" class="on">الكل</button><button data-mk="video">فيديو</button><button data-mk="image">صور</button><button data-mk="audio">صوت</button></div>
         <div class="grid2" id="mGrid"></div>
       </div>
@@ -385,6 +408,14 @@ header{border-width:0 0 1px 0!important;border-radius:0}
         <div class="dim tiny" style="padding:0 14px 8px">تنحط على المشهد المحدد، بوقت المؤشر.</div>
         <div style="padding:0 14px 8px"><input id="stTxt" placeholder="الكلمة (للختم والملصق والفقاعة)"></div>
         <div class="grid3" id="stGrid"></div>
+      </div>
+      <div class="pn" data-pn="styles" hidden>
+        <div class="pnh"><b>الستايلات</b><span class="dim tiny" id="syCount"></span></div>
+        <div class="dim tiny" style="padding:0 14px 8px">كل ستايل يغيّر شكل الحلقة كلها: الألوان، الخطوط، شكل الصور والكتابة، الانتقالات، الإيقاع، والموسيقى. اختار واحد ودوس «طبّق».</div>
+        <div style="padding:0 14px 8px"><input id="syFind" placeholder="ابحث: رعب، فضاء، ورق…"></div>
+        <div id="syCats" class="row" style="padding:0 14px 8px;flex-wrap:wrap;gap:6px"></div>
+        <div id="syPick" hidden style="padding:0 14px 10px"></div>
+        <div id="syGrid" style="padding:0 14px 14px;display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
       </div>
       <div class="pn" data-pn="sounds" hidden>
         <div class="pnh"><b>الأصوات</b></div>
@@ -564,8 +595,8 @@ header{border-width:0 0 1px 0!important;border-radius:0}
 
 <!-- library -->
 <div class="lib" id="lib" hidden>
-  <div class="row"><div><div class="h2" style="font-size:22px">المكتبة</div><div class="muted">كل حلقاتك على هالحاسبة</div></div>
-    <span class="grow"></span><button class="pill" id="libFolder">📁 افتح المجلد</button><button class="pill y" id="libNew">＋ مقطع جديد</button></div>
+  <div class="row"><img src="/ui/logo.png" alt="" style="height:44px;width:auto"><div><div class="h2" style="font-size:24px">مشاريعي</div><div class="muted">الي تشتغل عليها هسة، والي خلصتها</div></div>
+    <span class="grow"></span><button class="pill" id="libFolder">📁 افتح المجلد</button></div>
   <div class="libgrid" id="libgrid"></div>
 </div>
 
@@ -615,10 +646,41 @@ header{border-width:0 0 1px 0!important;border-radius:0}
     <h2>الإعدادات</h2>
     <div class="f card"><div class="row"><b class="grow">كلود (عقل المساعد)</b><button class="pill sm y" id="sLink">اربط حسابك</button></div>
       <div class="muted" id="sClaude" style="margin-top:6px"></div></div>
+    <div class="f card"><div class="row"><b class="grow">قناة يوتيوب</b><button class="pill sm y" id="sYt">اربط قناتي</button></div>
+      <div class="muted" id="sYtTxt" style="margin-top:6px">الحلقة تنرفع لحالها بأعلى جودة كفيديو خاص، وانت تكمّلها وتنشرها من استوديو يوتيوب.</div></div>
     <div class="f card row"><div class="grow"><b>مجلد الحلقات</b><div class="dim tiny ltr" id="sFolder" style="text-align:right"></div></div><button class="pill sm" id="sOpen">افتحه</button></div>
     <div class="f card row"><div class="grow"><b>تحديث URU</b><div class="dim tiny" id="sVer"></div></div><button class="pill sm" id="sUpdate">حدّث</button></div>
     <div class="f card row" id="sAppRow" hidden><div class="grow"><b>نسخة جديدة من التطبيق نفسه</b><div class="dim tiny">الشكل والنافذة. ياخذ ثواني ويرجع ينفتح.</div></div><button class="pill sm y" id="sApp">حدّث التطبيق</button></div>
     <div class="foot"><button class="pill big" data-close>تمام</button></div>
+  </div>
+</div>
+
+<div id="helpbar" hidden></div>
+
+<!-- link his YouTube channel -->
+<div class="veil" id="dYt" hidden>
+  <div class="dlg" style="width:min(640px,100%);max-height:88vh;overflow:auto">
+    <h2>اربط قناة يوتيوب</h2>
+    <div class="muted" style="line-height:1.9">مرة وحدة بس، تاخذ ١٠ دقايق. گوگل يريد «مفتاح» خاص بيك حتى يسمح للتطبيق يرفع على قناتك. المفتاح يبقى على حاسبتك بس.
+      الصفحات بالإنگليزي، فراح أكتبلك اسم كل زر مثل ما مكتوب، وانت بس دوس عليه.</div>
+    <ol class="ytsteps" style="line-height:2;padding-inline-start:20px;margin-top:10px">
+      <li>سجّل دخول بحساب گوگل مال القناة، وسوّي مشروع جديد (اكتب اسمه URU) <button class="pill sm" data-url="https://console.cloud.google.com/projectcreate">افتح الصفحة</button>
+        <div class="dim tiny">الزر مكتوب عليه:</div><div class="ltr kbd">Create</div></li>
+      <li>شغّل مكتبة يوتيوب بالمشروع <button class="pill sm" data-url="https://console.cloud.google.com/apis/library/youtube.googleapis.com">افتح الصفحة</button>
+        <div class="dim tiny">الزر:</div><div class="ltr kbd">Enable</div></li>
+      <li>صفحة التعريف: دوس البداية، اكتب اسم التطبيق URU وبريدك، والنوع اختار الخارجي <button class="pill sm" data-url="https://console.cloud.google.com/auth/branding">افتح الصفحة</button>
+        <div class="dim tiny">الأزرار بالترتيب:</div><div class="ltr kbd">Get started → External → Create</div></li>
+      <li>بنفس القسم، صفحة الجمهور: دوس النشر حتى الربط ما ينتهي كل أسبوع <button class="pill sm" data-url="https://console.cloud.google.com/auth/audience">افتح الصفحة</button>
+        <div class="dim tiny">الزر:</div><div class="ltr kbd">Publish app → Confirm</div></li>
+      <li>سوّي المفتاح، والنوع «تطبيق حاسبة» <button class="pill sm" data-url="https://console.cloud.google.com/auth/clients/create">افتح الصفحة</button>
+        <div class="dim tiny">اختار النوع:</div><div class="ltr kbd">Desktop app → Create</div>
+        <div class="dim tiny">ويطلعلك رمزين. انسخهم مثل ما هم والصقهم هنا:</div></li>
+    </ol>
+    <div class="f"><label class="l">الرمز الأول</label><input id="ytId" class="ltr" placeholder="....apps.googleusercontent.com"></div>
+    <div class="f"><label class="l">الرمز الثاني (السري)</label><input id="ytSecret" class="ltr" type="password"></div>
+    <div class="err" id="ytErr"></div>
+    <div class="dim tiny" style="line-height:1.8">آخر شي: يفتح المتصفح، تختار القناة، ويگلك گوگل إن التطبيق «مو متحقق منه» (لأن هو تطبيقك انت). دوس «متقدم» وبعدها «روح للتطبيق»، ووافق.</div>
+    <div class="foot"><button class="pill y big" id="ytGo">احفظ وسجّل دخول بگوگل</button><button class="pill big" data-close>سكّر</button></div>
   </div>
 </div>
 
@@ -677,12 +739,19 @@ function renderHeader(){
 }
 function renderLibrary(){
   const g = $("libgrid"); g.innerHTML = "";
-  if (!state.episodes.length){ g.innerHTML = `<div class="muted">ماكو حلقات بعد. دوس «مقطع جديد».</div>`; return; }
-  for (const e of state.episodes){
+  const nb = document.createElement("button"); nb.className = "lc new";
+  nb.innerHTML = `<span class="plus">＋</span><b>مشروع جديد</b><span class="dim tiny">اختار الفيديو الخام وابدي</span>`;
+  nb.onclick = () => $("tNew").click(); g.appendChild(nb);
+  const now = state.episodes.filter(e => e.running || !e.done.render), done = state.episodes.filter(e => !e.running && e.done.render);
+  const list = [];
+  if (now.length) list.push("شغّالة هسة", ...now);
+  if (done.length) list.push("خلصانة", ...done);
+  for (const e of list){
+    if (typeof e === "string"){ const h = document.createElement("div"); h.className = "libh"; h.textContent = e; g.appendChild(h); continue; }
     const d = e.done, n = ["fetch", "transcribe", "cut", "plan", "render"].filter(k => d[k]).length;
     const st = e.running ? "دا يشتغل…" : d.render ? "جاهزة" : d.plan ? "الخطة جاهزة" : d.cut ? "انقصّت" : d.transcribe ? "انفرّغت" : d.fetch ? "الفيديو جاهز" : "جديدة";
     const b = document.createElement("button"); b.className = "lc";
-    b.innerHTML = `<div class="row"><b class="grow"></b><span class="icobtn lcdel" title="احذف">🗑</span></div><div class="s"></div><div class="p"><i style="width:${n * 20}%"></i></div>`;
+    b.innerHTML = `<div class="cv" style="background-image:url('/api/episodes/${enc(e.id)}/cover'),url('/ui/logo.png');background-size:cover,48px;background-color:#15151c"></div><div class="row"><b class="grow"></b><span class="icobtn lcdel" title="احذف">🗑</span></div><div class="s"></div><div class="p"><i style="width:${n * 20}%"></i></div>`;
     b.querySelector("b").textContent = e.name; b.querySelector(".s").textContent = st + " · " + (e.created || "").slice(0, 10);
     b.onclick = (ev) => { if (ev.target.closest(".lcdel")){ askDelete(e); return; } open(e.id); };
     g.appendChild(b);
@@ -861,7 +930,7 @@ function listenResult(){
 }
 
 /* 2 · الصوت */
-const MOODS = [["auto", "تلقائي"], ["tension", "توتر"], ["wonder", "دهشة"], ["sad", "حزن"], ["drive", "حماس"], ["dark", "ظلام"], ["calm", "هدوء"], ["off", "بلا موسيقى"]];
+const MOODS = [["auto", "تلقائي"], ["tension", "توتر"], ["wonder", "دهشة"], ["sad", "حزن"], ["drive", "حماس"], ["dark", "ظلام"], ["calm", "هدوء"], ["epic", "ملحمي"], ["lofi", "هادئ دافي"], ["retro", "ريترو ثمانينات"], ["playful", "مرح"], ["luxury", "فخامة"], ["hopeful", "أمل"], ["off", "بلا موسيقى"]];
 function stepSound(){
   if (!ep.done.cut){ setBody(`<div class="h2">الصوت</div><p class="muted">قُصّ هذا المقطع أول.</p><button class="pill" id="goS1">عدّل اختيار الجمل</button>`); $("goS1").onclick = () => { step = 1; renderSteps(); loadVideo(); }; return; }
   const so = data.sound || {clean: 1, music: "auto", level: -24, sfx: true};
@@ -1251,7 +1320,7 @@ function openNew(){
 function pick(what){ pickTarget = what; if (bridge) bridge.postMessage({cmd: "pick", types: what === "lut" ? ["cube", "CUBE"] : ["mp4", "mov", "m4v", "mkv", "MP4", "MOV"]}); }
 window.onPicked = async (path) => {
   if (pickTarget === "media"){
-    try { mediaData = await post(E() + "/media", {path}); drawMedia(); toast("انضاف للمواد"); } catch (e){ toast(e.message); }
+    try { mediaData = await post(E() + "/media", {path}); drawMedia(); toast("انضاف لملفاتك"); } catch (e){ toast(e.message); }
     return;
   }
   if (pickTarget === "lut"){
@@ -1287,10 +1356,12 @@ $("nGo").onclick = async () => {
     $("dNew").hidden = true; thumbs = probe; await open(e.id); step = 1; await run("prepare"); renderSteps();
   } catch (err){ $("nErr").textContent = err.message; }
 };
-$("tNew").onclick = openNew; $("libNew").onclick = openNew;
+$("tNew").onclick = openNew;
 
 /* ---------- top tools ---------- */
-$("tLib").onclick = () => { $("lib").hidden = !$("lib").hidden; refresh(); };
+function goHome(){ if (location.hash) location.hash = ""; $("lib").hidden = false; $("chat").hidden = true; try { video.pause(); } catch (_){ } refresh(); }
+$("tLib").onclick = goHome;
+window.addEventListener("hashchange", () => { const h = decodeURIComponent(location.hash.slice(1)); if (!h) goHome(); else if (h !== cur && state.episodes.find(e => e.id === h)) open(h); });
 $("tText").onclick = () => { if (!ep) return; step = 3; renderSteps(); loadVideo(); };
 $("tPlan").onclick = () => { if (!ep) return; step = 4; renderSteps(); loadVideo(); };
 $("tFiles").onclick = () => ep ? post(E() + "/reveal", {}).catch(e => toast(e.message)) : post("/api/open-folder").catch(e => toast(e.message));
@@ -1341,7 +1412,8 @@ $("chCtx").onchange = () => $("chCtxTxt").textContent = ctxText();
 video.addEventListener("pause", () => { if (!$("chat").hidden) $("chCtxTxt").textContent = ctxText(); });
 $("aGo").onclick = async () => { const m = $("aMsg").value.trim(); if (!m) return; $("dAssist").hidden = true; $("aMsg").value = ""; step = 4; planSub = 2; await run("assist", m); };
 $("tUndo").onclick = () => undoRedo("undo");
-$("tInsp").onclick = async () => {
+$("tInsp").onclick = () => showPanel("styles");
+const oldInspiration = async () => {
   const grid = $("inspGrid"); grid.innerHTML = `<div class="dim">…</div>`; $("dInsp").hidden = false;
   const st = await api("/api/styles").catch(() => []);
   grid.innerHTML = st.map(s => `<button class="lc" data-st="${esc(s.id)}"><b>${esc(s.name)}</b><div class="s">${esc(s.summary.replace(/[A-Za-z][\w\-]*/g, "").replace(/\(\s*\)/g, ""))}</div></button>`).join("") || `<div class="dim">ماكو ستايلات.</div>`;
@@ -1350,7 +1422,7 @@ $("tInsp").onclick = async () => {
     await post(E() + "/idea", {style: b.dataset.st}); $("dInsp").hidden = true; toast("انحفظ الستايل، والمساعد يكتب الخطة عليه"); step = 4; planSub = 1; renderSteps();
   });
 };
-$("tSet").onclick = () => {
+$("tSet").onclick = () => { ytRefresh();
   const c = state.claude || {}; $("sClaude").textContent = !c.installed ? "مو منصّب. دوس «حدّث» تحت." : c.logged_in ? "مربوط بحسابك ✅" : "مو مربوط بعد: دوس «اربط حسابك» (مرة وحدة).";
   $("sLink").textContent = c.logged_in ? "اربطه من جديد" : "اربط حسابك";
   $("sFolder").textContent = state.folder || ""; const v = state.version || {}; $("sVer").textContent = v.commit ? `النسخة ${v.commit.slice(0, 7)} · ${v.date || ""}` : "يجيب آخر نسخة ويرجع يشتغل"; $("dSet").hidden = false; };
@@ -1399,6 +1471,7 @@ function showPanel(k){
   panelNow = k;
   document.querySelectorAll("#rail .rb[data-panel]").forEach(b => b.classList.toggle("on", b.dataset.panel === k));
   document.querySelectorAll("#panel .pn").forEach(p => p.hidden = p.dataset.pn !== k);
+  if (k === "styles") loadStyles();
   if (!ep) return;
   if (k === "media") loadMedia();
   if (k === "effects") loadEffects();
@@ -1425,18 +1498,51 @@ async function loadMedia(){ mediaData = await api(E() + "/media").catch(() => []
 function drawMedia(){
   $("mTabs").querySelectorAll("[data-mk]").forEach(b => b.classList.toggle("on", b.dataset.mk === mediaKind));
   const list = mediaData.filter(m => mediaKind === "all" || m.kind === mediaKind);
-  $("mGrid").innerHTML = list.length ? list.map(m => `<button class="tile" data-m="${esc(m.name)}">${m.thumb ? `<img src="/files/${enc(cur)}/${m.thumb.split("/").map(enc).join("/")}">` : `<div class="ic">${m.kind === "audio" ? "🎵" : "🎞️"}</div>`}<span>${esc(m.name)}<i class="mdel" data-del="${esc(m.name)}" title="احذف" style="float:left;font-style:normal;opacity:.7">✕</i></span></button>`).join("")
-    : `<div class="dim" style="grid-column:1/-1;line-height:1.8">ماكو مواد بعد. دوس «أضف ملف» وجيب صورة أو مقطع من حاسبتك.</div>`;
+  $("mGrid").innerHTML = list.length ? list.map(m => `<button class="tile" data-m="${esc(m.name)}">${m.thumb ? `<img src="/files/${enc(cur)}/${m.thumb.split("/").map(enc).join("/")}">` : `<div class="ic">${m.kind === "audio" ? "🎵" : "🎞️"}</div>`}<span>${esc(m.name)}${m.use === "music" ? `<i class="mtag">موسيقى الحلقة</i>` : m.use === "auto" || m.note ? `<i class="mtag">للمساعد</i>` : ""}<i class="mdel" data-del="${esc(m.name)}" title="احذف" style="float:left;font-style:normal;opacity:.7">✕</i></span></button>`).join("")
+    : `<div class="dim" style="grid-column:1/-1;line-height:1.8">ماكو ملفات بعد. دوس «أضف ملفات» أو اسحبها من حاسبتك لهنا.</div>`;
   $("mGrid").querySelectorAll("[data-m]").forEach(b => b.onclick = async (ev) => {
     if (ev.target.closest(".mdel")){ mediaData = await post(E() + "/media-delete", {name: ev.target.dataset.del}).catch(() => mediaData); drawMedia(); return; }
-    const m = mediaData.find(x => x.name === b.dataset.m);
-    if (m.kind === "audio"){ toast("الأصوات: گول للمساعد وين تريدها"); openChat(`حط الصوت «${m.name}» من موادي بهالمكان`); return; }
-    changeScene(targetScene(), {media: m.name}, m.kind === "video" ? "انحط المقطع على المشهد" : "انحطت الصورة على المشهد");
+    mediaOne(mediaData.find(x => x.name === b.dataset.m));
   });
 }
+function mediaOne(m){
+  const box = $("mOne"), src = `/files/${enc(cur)}/edit/media/${enc(m.name)}`;
+  box.hidden = false;
+  const view = m.kind === "image" ? `<img src="${src}" style="width:100%;border-radius:12px">` : m.kind === "video" ? `<video src="${src}" controls style="width:100%;border-radius:12px"></video>` : `<audio src="${src}" controls style="width:100%"></audio>`;
+  box.innerHTML = `<div class="excard">${view}<div style="margin:8px 0 4px"><b>${esc(m.name)}</b></div>
+    <label class="tiny dim">شنو تريد المساعد يسوي بيه؟</label>
+    <textarea id="mNote" rows="3" style="width:100%;margin-top:4px" placeholder="${m.kind === "audio" ? "مثلاً: هاي الموسيقى مشتريها، خليها بالفيديو كله وواطية تحت صوتي" : "مثلاً: هاي صورة المصنع، حطها لما أحچي عن البداية، بشكل احترافي"}">${esc(m.note || "")}</textarea>
+    ${m.kind === "audio" ? `<div class="row" style="margin-top:8px"><b class="grow tiny">خليها موسيقى الحلقة كلها</b>${sw("mMusic", m.use === "music")}</div><div class="dim tiny">تتشغّل تحت صوتك بالحلقة كلها بدال الموسيقى المولّدة، وتنعاد لحالها إذا قصيرة.</div>`
+      : `<div class="row" style="margin-top:8px"><b class="grow tiny">خلّي المساعد يحطه بأنسب مكان</b>${sw("mAuto", m.use === "auto" || !!m.note)}</div><div class="dim tiny">ينحط وقت ما المساعد يسوي الخطة، أو هسة إذا دست «حطّها هسة».</div>`}
+    <div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="pill sm y" id="mSave">احفظ</button>
+      ${m.kind !== "audio" ? `<button class="pill sm" id="mHere">حطه على المشهد المحدد</button>` : ""}
+      <button class="pill sm" id="mNow">خلّي المساعد يحطها هسة</button><button class="pill sm" id="mClose">سكّر</button></div></div>`;
+  const save = async (use) => { try { mediaData = await post(E() + "/media-note", {name: m.name, note: $("mNote").value, use}); drawMedia(); toast(use === "music" ? "صارت موسيقى الحلقة. تنسمع بالبناء الجاي" : "انحفظ"); } catch (e){ toast(e.message); } };
+  $("mSave").onclick = () => save(m.kind === "audio" ? ($("mMusic").classList.contains("on") ? "music" : "") : ($("mAuto").classList.contains("on") ? "auto" : ""));
+  if ($("mMusic")) $("mMusic").onclick = () => { $("mMusic").classList.toggle("on"); save($("mMusic").classList.contains("on") ? "music" : ""); };
+  if ($("mAuto")) $("mAuto").onclick = () => $("mAuto").classList.toggle("on");
+  if ($("mHere")) $("mHere").onclick = () => changeScene(targetScene(), {media: m.name}, m.kind === "video" ? "انحط المقطع على المشهد" : "انحطت الصورة على المشهد");
+  $("mNow").onclick = async () => { await save(m.kind === "audio" ? m.use : "auto"); openChat(`حط ملفي «${m.name}» بأنسب مكان بالحلقة. ${$("mNote").value || ""}`); };
+  $("mClose").onclick = () => { box.hidden = true; };
+  box.scrollIntoView({behavior: "smooth", block: "nearest"});
+}
+async function uploadFiles(files){
+  if (!ep){ toast("افتح مشروع أول"); return; }
+  const list = [...files]; let k = 0;
+  for (const f of list){
+    k++; $("mUp").hidden = false; $("mUp").textContent = `دا أضيف ${ar(k)} من ${ar(list.length)}: ${f.name}`;
+    try { const r = await fetch(`${E()}/upload?name=${enc(f.name)}`, {method: "POST", body: f}); const j = await r.json(); if (!r.ok) throw new Error(j.error || "ما انضاف"); mediaData = j; drawMedia(); }
+    catch (e){ toast(f.name + ": " + e.message); }
+  }
+  $("mUp").hidden = true; toast("انضافت لملفاتك");
+}
+$("mFiles").onchange = () => { uploadFiles($("mFiles").files); $("mFiles").value = ""; };
+(() => { const pn = document.querySelector('#panel .pn[data-pn="media"]');
+  pn.addEventListener("dragover", (e) => { e.preventDefault(); pn.classList.add("drop"); });
+  pn.addEventListener("dragleave", () => pn.classList.remove("drop"));
+  pn.addEventListener("drop", (e) => { e.preventDefault(); pn.classList.remove("drop"); if (e.dataTransfer.files.length) uploadFiles(e.dataTransfer.files); }); })();
 $("mTabs").querySelectorAll("[data-mk]").forEach(b => b.onclick = () => { mediaKind = b.dataset.mk; drawMedia(); });
-$("mAdd").onclick = () => { if (!bridge){ toast("هاي تشتغل بالتطبيق"); return; } pickTarget = "media";
-  bridge.postMessage({cmd: "pick", types: ["mp4", "mov", "m4v", "jpg", "jpeg", "png", "webp", "mp3", "wav", "m4a", "MP4", "MOV", "JPG", "PNG"]}); };
+$("mAdd").onclick = () => $("mFiles").click();
 
 /* effects + transitions */
 async function loadEffects(){ if (!fxData) fxData = await api(E() + "/effects").catch(() => ({})); drawEffects(); }
@@ -1494,7 +1600,8 @@ function renderScene(){
     <div class="field2"><label>التأثير</label><select id="iFx"><option value="">بلا تأثير</option>${Object.entries(EFFECT_AR).map(([k, n]) => `<option value="${k}" ${c.effect === k ? "selected" : ""}>${n}</option>`).join("")}</select></div>
     <div class="field2"><label>الانتقال لهالمشهد</label><select id="iTr"><option value="">قطع مباشر</option>${Object.entries(TRANS_AR).map(([k, n]) => `<option value="${k}" ${c.transition === k ? "selected" : ""}>${n}</option>`).join("")}</select></div>
     <div class="field2"><label>الملصقات</label>${(c.stickers || []).length ? c.stickers.map((st, k) => `<div class="row" style="padding:4px 0"><span class="grow">${(STICK.find(x => x[0] === st.type) || [0, st.type])[1]}${st.text ? ` «${esc(st.text)}»` : ""}</span><button class="icobtn" data-rmst="${k}">✕</button></div>`).join("") : `<div class="dim tiny">ماكو. ضيفها من «الملصقات».</div>`}</div>
-    ${c.kind.startsWith("face") ? `<div class="field2"><label>الخلفية</label><select id="iBg"><option value="none">الأصلية</option><option value="paper" ${c.kind === "face_cutout" && c.treatment === "paper" ? "selected" : ""}>شيلها، وحط ورق القناة وراك</option><option value="title" ${c.kind === "face_cutout" && c.treatment === "title" ? "selected" : ""}>شيلها، وحط كلمة كبيرة وراك</option></select></div>` : ""}
+    ${c.kind.startsWith("face") ? `<div class="field2"><label>الخلفية</label><select id="iBg"><option value="none">الأصلية</option><option value="paper" ${c.kind === "face_cutout" && c.treatment === "paper" ? "selected" : ""}>شيلها، وحط ورق القناة وراك</option><option value="title" ${c.kind === "face_cutout" && c.treatment === "title" ? "selected" : ""}>شيلها، وحط كلمة كبيرة وراك</option><option value="split" ${c.kind === "face_split" ? "selected" : ""}>قسّم الشاشة: انت بنص والصورة بالنص الثاني</option></select>
+      <div class="dim tiny" style="margin-top:4px">يتغيّر بس هالمشهد. الصورة تنجاب من الي تكتبه بخانة «اقترح بدائل» جوّه.</div></div>` : ""}
     <div class="field2"><label>اقترح بدائل</label><div class="row"><input id="sugQ" placeholder="شنو تريد؟ مثلاً: معمل قديم" value="${esc(c.query_raw || "")}"></div>
       <div class="row" style="margin-top:6px"><button class="pill sm" id="sugImg">صور</button><button class="pill sm" id="sugVid">مقاطع</button><button class="pill sm" id="sugAsk">خلّي المساعد يقترح</button></div>
       <div class="sug" id="sugBox"></div></div>
@@ -1506,6 +1613,7 @@ function renderScene(){
   $("iTr").onchange = () => changeScene(i, {transition: $("iTr").value}, "تغيّر الانتقال");
   $("iNote").onchange = () => changeScene(i, {note: $("iNote").value}, "انحفظت الملاحظة");
   if ($("iBg")) $("iBg").onchange = () => { const v = $("iBg").value; const ch = {cutout: v};
+    if (v === "split"){ ch.query = ($("sugQ").value || "").trim(); if (!ch.query){ toast("اكتب بخانة «اقترح بدائل» شنو الصورة الي تريدها يمّك"); $("iBg").value = "none"; return; } }
     if (v === "title"){ ch.title = (c.text || "").trim() || prompt2("الكلمة الي تطلع ورا ظهرك"); if (!ch.title){ $("iBg").value = "none"; return; } }
     changeScene(i, ch, v === "none" ? "رجعت الخلفية" : "تنشال الخلفية وقت البناء"); };
   $("sugImg").onclick = () => suggestFor(i, "image");
@@ -1536,11 +1644,29 @@ async function openExport(){
   const info = await api(E() + "/export-info").catch(() => ({}));
   $("xBody").innerHTML = (info.final ? `<div class="ycard">✅ الحلقة جاهزة · ${ar(info.size / 1e6)} ميگا</div>` : `<div class="card">الحلقة بعدها ما طلعت بالكامل.</div>`)
     + `<div class="row f" style="flex-wrap:wrap">${info.final ? `<button class="pill y" id="xShow">📂 وين الملف؟</button><button class="pill" id="xSmall">نسخة أصغر للإرسال (٢٠٠ ميگا)</button>` : `<button class="pill y" id="xFinal">طلّع النسخة الكاملة</button>`}</div>`
+    + (info.final ? `<div class="f"><b>يوتيوب</b> <span class="dim tiny">ينرفع كفيديو خاص بأعلى جودة عندك (${(info.exports || []).some(x => /-(2160|4320)p/.test(x.name)) ? "نسخة الـ٤ك أو ٨ك" : "النسخة الكاملة"})، وانت تكمّل العنوان والصورة وتنشر.</span>
+      <div class="row" style="margin-top:8px;flex-wrap:wrap"><button class="pill y" id="xYt">⬆️ ارفعها على قناتي</button><button class="pill" id="xYtSelf">ارفعها بنفسك</button>${info.youtube ? `<button class="pill sm" id="xYtOpen">افتحها باستوديو يوتيوب</button>` : ""}</div></div>` : "")
+    + (info.final ? `<div class="f"><b>اختار الدقة</b> <span class="dim tiny">${info.master ? `(الحلقة مصنوعة بـ ${ar(info.master[1])})` : ""} · بلا أي علامة مائية</span>
+      <div class="grid2" style="margin-top:8px">${[[720, "٧٢٠", "خفيفة، للموبايل والإرسال"], [1080, "فول اتش دي", "الأشهر، كل مكان يقبلها"], [1440, "٢ك", "أوضح على الشاشات الكبيرة"], [2160, "٤ك", "أعلى جودة على يوتيوب"], [4320, "٨ك", "تكبير: يوتيوب يعطيها جودة ضغط أحسن، بس ما تضيف تفاصيل"]]
+        .map(([h, n, d]) => `<button class="tile" data-res="${h}" style="text-align:right;padding:10px"><b>${n}</b><span class="dim tiny" style="display:block;margin-top:4px">${d}${info.master && h > info.master[1] ? " · أكبر من الأصل" : ""}</span></button>`).join("")}</div>
+      ${(info.exports || []).length ? `<div class="dim tiny" style="margin-top:8px">جاهزة: ${info.exports.map(x => esc(x.name.replace(/^.*-(\d+)p\.mp4$/, "$1"))).join("، ")} · <button class="pill sm" id="xShowEx">وين؟</button></div>` : ""}</div>` : "")
+    + `<div class="f"><b>حزمة الريلز</b> <span class="dim tiny">ريل رئيسي أقل من دقيقة ليوتيوب شورتس، و٥ مقاطع للتيك توك والإنستغرام (تنشرها على أيام). عمودية بأعلى جودة، والكابشن عليها إذا مشغّله من «الإضافات».</span>
+      <div class="row" style="margin-top:8px;flex-wrap:wrap"><button class="pill ${info.final ? "y" : ""}" id="xReels">${(info.shorts || []).length ? "اختار وقص من جديد" : "سوّي الريلز"}</button>${(info.shorts || []).length ? `<button class="pill" id="xReelsShow">📂 وينها؟ (${ar(info.shorts.length)})</button>` : ""}${info.posts ? `<button class="pill sm" data-copy="posts">نسخ الكابشنات</button>` : ""}${(info.shorts || []).some(f => /shorts\/01-/.test(f)) ? `<button class="pill sm" id="xYtShort">⬆️ الرئيسي على يوتيوب شورتس</button>` : ""}</div>
+      ${(info.shorts || []).length ? `<div class="grid2" style="margin-top:8px">${info.shorts.map(f => `<video src="/files/${enc(cur)}/${f.split("/").map(enc).join("/")}" controls preload="metadata" style="width:100%;aspect-ratio:9/16;background:#000;border-radius:10px"></video>`).join("")}</div>` : ""}
+      ${info.posts ? `<pre class="log" style="margin-top:6px;white-space:pre-wrap">${esc(info.posts)}</pre>` : ""}</div>`
     + (info.chapters ? `<div class="f"><b>فصول يوتيوب</b> <button class="pill sm" data-copy="chapters">نسخ</button><pre class="log" style="margin-top:6px">${esc(info.chapters)}</pre></div>` : "")
     + (info.credits ? `<div class="f"><b>مصادر الصور (للوصف)</b> <button class="pill sm" data-copy="credits">نسخ</button><pre class="log" style="margin-top:6px">${esc(info.credits)}</pre></div>` : "");
   $("dExport").hidden = false;
   if ($("xShow")) $("xShow").onclick = () => post(E() + "/reveal", {what: "final"});
   if ($("xSmall")) $("xSmall").onclick = () => { $("dExport").hidden = true; run("export", "200"); };
+  $("xBody").querySelectorAll("[data-res]").forEach(b => b.onclick = () => { $("dExport").hidden = true; run("export", "res:" + b.dataset.res); });
+  if ($("xYt")) $("xYt").onclick = async () => { await ytRefresh(); if (!ytState.linked){ $("dExport").hidden = true; $("dYt").hidden = false; return; } $("dExport").hidden = true; run("youtube", "main"); };
+  if ($("xYtSelf")) $("xYtSelf").onclick = () => { post(E() + "/reveal", {what: "final"}); openUrl("https://www.youtube.com/upload"); toast("اسحب الملف من المجلد لصفحة الرفع"); };
+  if ($("xYtOpen")) $("xYtOpen").onclick = () => openUrl(`https://studio.youtube.com/video/${info.youtube}/edit`);
+  if ($("xYtShort")) $("xYtShort").onclick = async () => { await ytRefresh(); if (!ytState.linked){ $("dExport").hidden = true; $("dYt").hidden = false; return; } $("dExport").hidden = true; run("youtube", "short:" + info.shorts.find(f => /shorts\/01-/.test(f))); };
+  $("xReels").onclick = () => { if (!info.final){ toast("طلّع النسخة الكاملة أول"); return; } $("dExport").hidden = true; run("reels"); };
+  if ($("xReelsShow")) $("xReelsShow").onclick = () => post(E() + "/reveal", {what: "shorts"});
+  if ($("xShowEx")) $("xShowEx").onclick = () => post(E() + "/reveal", {what: "exports"});
   if ($("xFinal")) $("xFinal").onclick = () => { $("dExport").hidden = true; step = 5; showPanel("steps"); run("final"); };
   $("xBody").querySelectorAll("[data-copy]").forEach(b => b.onclick = () => navigator.clipboard.writeText(info[b.dataset.copy]).then(() => toast("انسخ"), () => toast("ما گدرت أنسخ")));
 }
@@ -1578,6 +1704,129 @@ $("askIn").onkeydown = (e) => { if (e.key === "Enter"){ e.preventDefault(); $("a
 $("askOpen").onclick = () => openChat();
 
 
+
+
+
+/* ---------- what every tool does to the video (owner, 2026-10-25: "اعرف هاي الميزة شنو تسوي قبل ما أدوسها") ---------- */
+const HELP = {
+  "panel:steps": ["الخطوات", "من الخام للحلقة: تجهيز، قص، صوت، كابشن، خطة، بناء. كل خطوة تراجعها قبل ما تكمل. ما تغيّر شي لحالها."],
+  "panel:media": ["ملفاتي", "صورك ومقاطعك وموسيقاك. تكتب للمساعد شنو يسوي بكل ملف، أو تحطه بإيدك على مشهد. الأصلي ما ينمس."],
+  "panel:effects": ["المؤثرات", "شكل يتطبق على المشهد المحدد بس (اهتزاز، شريط قديم، أبيض وأسود…) والانتقال الي يدخل بيه. باقي الفيديو ما يتأثر."],
+  "panel:text": ["النص", "يضيف مشهد كتابة (عنوان كبير، رقم، اقتباس) بمكان المؤشر. الكتابة تاخذ ألوان وخطوط الستايل."],
+  "panel:stickers": ["الملصقات", "ختم، سهم، دائرة… فوق المشهد المحدد بوقت المؤشر. صغيرة وما تغطي وجهك."],
+  "panel:styles": ["الستايلات", "شكل الحلقة كلها مرة وحدة: الألوان، الخطوط، الصور، الانتقالات، الموسيقى والإيقاع. «طبّق» يعيد الخطة والبناء، و«تراجع» يرجّع القديم."],
+  "panel:sounds": ["الأصوات", "مؤثرات صوتية ملكك. «أضف» تحطها ببداية المشهد المحدد بس."],
+  "panel:extras": ["الإضافات", "خيارات للحلقة كلها: كابشن الريلز، المساعد يتحكم بالرتم، الموسيقى، بداية ونهاية جاهزة. كلها تشتغل وتطفي، وتنطبق بالبناء الجاي."],
+  "panel:colors": ["الألوان", "لون الفيديو كله: لوك جاهز، حرارة، صبغة، إضاءة، وتحويل ألوان كاميرة سوني. وجهك يبقى طبيعي."],
+  "panel:format": ["المقاس والريلز", "تختار مقاطع الريلز بإيدك (من وين لوين)، وتطلعها عمودية. الحلقة الأصلية ما تتغيّر."],
+  "tLib": ["الرئيسية", "ترجع لمشاريعك. الشغل محفوظ لحاله."],
+  "tNew": ["مقطع جديد", "يفتح مشروع جديد من فيديو خام. المشاريع القديمة تبقى."],
+  "tExport": ["تصدير", "يطلّع الحلقة: الدقة الي تريدها (٧٢٠ لحد ٨ك)، حزمة الريلز، والرفع على يوتيوب كفيديو خاص."],
+  "tUndo": ["تراجع", "يرجّع آخر تغيير سويته (أو سواه المساعد)."], "tRedo": ["رجّع", "يرجّع الي تراجعت عنه."],
+  "tAssist": ["المساعد", "تحچي وياه عن أي لحظة: «هاي الصورة ما عجبتني»، «سرّع هنا». يعدّل الخطة بس، وتگدر تتراجع."],
+  "tSet": ["الإعدادات", "ربط كلود، ربط قناة يوتيوب، ومجلد الحلقات."],
+  "tInsp": ["الستايلات", "يفتح مكتبة الستايلات (أكثر من ٦٠ شكل للحلقة)."],
+  "tSplit": ["قسّم", "يقسم المشهد المحدد لنصين بمكان المؤشر، حتى تغيّر نص واحد بس."],
+  "tDel": ["شيل", "يشيل المشهد المحدد (صورته أو تأثيره) ويرجع وجهك بمكانه. كلامك ما ينقص."],
+  "tSnap": ["مغناطيس", "التقسيم والتحريك يلزگ على بدايات الكلمات، حتى ما ينقطع كلام بنصه."],
+  "tSkim": ["معاينة بالمرور", "تمرر الماوس على التايم لاين وتشوف الفريم بدون تشغيل."],
+  "tgMusic": ["الموسيقى", "تشغّل أو تطفي الموسيقى بالحلقة كلها."], "tgSfx": ["المؤثرات الصوتية", "تشغّل أو تطفي الووش والضغطات بالحلقة كلها."],
+  "tool:select": ["تحديد", "تختار مشهد حتى تشوف إعداداته يسار."], "tool:blade": ["تقسيم", "تدوس على مشهد فينقسم بمكان الدوسة."],
+  "tool:trim": ["تحريك المحتوى", "تسحب حافة المشهد حتى يطول أو يقصر. كلامك يبقى نفسه، بس شنو ينعرض فوگه يتغيّر."],
+  "xYt": ["ارفعها على قناتي", "ترفع الحلقة بأعلى جودة عندك كفيديو خاص. ما ينشاف لأحد لحد ما تنشره انت من استوديو يوتيوب."],
+  "xReels": ["الريلز", "المساعد يختار ريل رئيسي (أقل من دقيقة) و٥ مقاطع، ويقصها عمودية بأعلى جودة. الحلقة الأصلية ما تتغيّر."],
+};
+const FX_HELP = {shake: "يهز الصورة كأنها كاميرا بيد، للحظة صدمة.", vhs: "شكل شريط فيديو قديم: تشويش وألوان مايلة.", retro_shake: "شريط قديم ويهتز سوا.",
+  bw: "أبيض وأسود بتباين، للذكريات أو الجدية.", night: "معتم وبارد، للحظات المخيفة.", dream: "ناعم ومضوي، للخيال أو الحلم.",
+  rgb_split: "الألوان تنقسم، إحساس خلل أو صدمة.", flash_in: "يبدي بوميض أبيض.", sharpen: "يزيد الحدة شوية.", film: "حبيبات فلم وأطراف معتمة."};
+const TR_HELP = {zoom: "يدخل المشهد بتقريب سريع.", flash: "وميض أبيض بين المشهدين.", whip: "سحبة سريعة ويه ضبابية.", glitch: "تشويش رقمي لحظة.",
+  tear: "المشهد الجديد يطلع من ورقة تنشگ.", burn: "حرق فلم بين المشهدين.", dive: "غطسة للمشهد الجاي.", pan: "انزلاق جانبي.", shutter: "مثل غالق الكاميرا.", slide: "المشهد الجاي يدفع القديم."};
+function helpFor(el){
+  if (el.dataset.help) return el.dataset.help.split("|");
+  if (el.id && HELP[el.id]) return HELP[el.id];
+  if (el.dataset.panel && HELP["panel:" + el.dataset.panel]) return HELP["panel:" + el.dataset.panel];
+  if (el.dataset.tool && HELP["tool:" + el.dataset.tool]) return HELP["tool:" + el.dataset.tool];
+  if (el.dataset.fx !== undefined) return el.dataset.fx ? [EFFECT_AR[el.dataset.fx] || "تأثير", (FX_HELP[el.dataset.fx] || "") + " يتطبق على المشهد المحدد بس."] : ["بلا تأثير", "يشيل التأثير من المشهد المحدد."];
+  if (el.dataset.tr !== undefined) return el.dataset.tr ? [TRANS_AR[el.dataset.tr] || "انتقال", (TR_HELP[el.dataset.tr] || "") + " بين المشهد المحدد والي قبله بس."] : ["قطع مباشر", "بلا انتقال: أنظف شي للكلام."];
+  if (el.dataset.st && el.classList.contains("stc")){ const x = (stData || []).find(y => y.id === el.dataset.st); if (x) return [x.name, x.summary + " (يتغيّر شكل الحلقة كلها لما تدوس «طبّق».)"]; }
+  return null;
+}
+let helpT = null;
+document.addEventListener("mouseover", (e) => {
+  const el = e.target.closest("[data-help],[id],[data-panel],[data-tool],[data-fx],[data-tr],.stc");
+  let h = null;
+  for (let n = el; n && !h; n = n.parentElement && n.parentElement.closest("[data-help],[id],[data-panel],[data-tool],[data-fx],[data-tr],.stc")) h = helpFor(n);
+  clearTimeout(helpT);
+  if (!h){ helpT = setTimeout(() => $("helpbar").hidden = true, 150); return; }
+  helpT = setTimeout(() => { $("helpbar").innerHTML = `<b>${esc(h[0])}</b>: ${esc(h[1])}`; $("helpbar").hidden = false; }, 350);
+});
+
+/* ---------- his YouTube channel ---------- */
+let ytState = {};
+async function ytRefresh(){
+  ytState = await api("/api/youtube").catch(() => ({}));
+  $("sYt").textContent = ytState.linked ? "افصلها" : "اربط قناتي";
+  $("sYtTxt").textContent = ytState.linked ? `مربوطة ✅ ${ytState.channel ? "«" + ytState.channel + "»" : ""}. الرفع من نافذة «تصدير».` : "الحلقة تنرفع لحالها بأعلى جودة كفيديو خاص، وانت تكمّلها وتنشرها من استوديو يوتيوب.";
+}
+function openUrl(u){ if (bridge) bridge.postMessage({cmd: "open", url: u}); else window.open(u, "_blank"); }
+$("sYt").onclick = async () => {
+  if (ytState.linked){ ytState = await post("/api/youtube/unlink").catch(() => ytState); ytRefresh(); toast("انفصلت القناة"); return; }
+  $("dSet").hidden = true; $("dYt").hidden = false; $("ytErr").textContent = "";
+};
+document.querySelectorAll("#dYt [data-url]").forEach(b => b.onclick = () => openUrl(b.dataset.url));
+$("ytGo").onclick = async () => {
+  try {
+    if ($("ytId").value.trim() || !ytState.client) await post("/api/youtube/client", {id: $("ytId").value, secret: $("ytSecret").value});
+    const r = await post("/api/youtube/start"); openUrl(r.url);
+    $("ytErr").textContent = "انفتح المتصفح. وافق هناك وارجع هنا.";
+    const t = setInterval(async () => { await ytRefresh(); if (ytState.linked){ clearInterval(t); $("dYt").hidden = true; toast("انربطت قناتك ✅"); } }, 2000);
+    setTimeout(() => clearInterval(t), 300000);
+  } catch (e){ $("ytErr").textContent = e.message; }
+};
+
+/* ---------- styles library ---------- */
+let stData = null, stCat = "الكل", stCur = "";
+async function loadStyles(){
+  if (!stData) stData = await api("/api/styles").catch(() => []);
+  stCur = ep ? ((await api(E() + "/idea").catch(() => ({}))).style || "") : "";
+  $("syCount").textContent = ar(stData.length) + " ستايل";
+  const cats = ["الكل", ...new Set(stData.map(x => x.category))];
+  $("syCats").innerHTML = cats.map(c => `<button class="chip ${c === stCat ? "on" : ""}" data-c="${esc(c)}">${esc(c)}</button>`).join("");
+  $("syCats").querySelectorAll("[data-c]").forEach(b => b.onclick = () => { stCat = b.dataset.c; loadStyles(); });
+  drawStyles();
+}
+function stCard(x, big){
+  const p = x.palette, f = x.fonts || {};
+  return `<div class="pv" style="background:${p.paper};color:${p.ink};font-family:'${f.title}',system-ui"><span class="tx" style="${x.texture === "clean" ? "display:none" : ""}"></span>
+    <b>${esc(x.name)}</b><span style="display:flex;gap:6px;align-items:center"><i style="background:${p.accent}"></i><i style="background:${p.red || p.accent};width:14%"></i><i style="background:${p.teal || p.ink};width:14%"></i></span></div>`;
+}
+function drawStyles(){
+  const q = ($("syFind").value || "").trim();
+  const list = stData.filter(x => (stCat === "الكل" || x.category === stCat) && (!q || (x.name + x.summary + (x.fits || []).join(" ")).includes(q)));
+  $("syGrid").innerHTML = list.map(x => `<button class="stc ${x.id === stCur ? "on" : ""}" data-st="${esc(x.id)}" title="${esc(x.summary)}">${stCard(x)}<div class="nm">${x.id === stCur ? "✓ " : ""}${esc((x.fits || []).slice(0, 2).join("، "))}</div></button>`).join("") || `<div class="dim" style="grid-column:1/-1">ما لگيت. جرّب كلمة ثانية.</div>`;
+  $("syGrid").querySelectorAll("[data-st]").forEach(b => b.onclick = () => pickStyle(stData.find(x => x.id === b.dataset.st)));
+}
+function pickStyle(x){
+  const box = $("syPick"); box.hidden = false;
+  box.innerHTML = `<div class="stc stbig on" style="cursor:default">${stCard(x, true)}</div>
+    <div style="margin:10px 0 4px"><b>${esc(x.name)}</b> <span class="dim tiny">· ${esc(x.category)}</span></div>
+    <div class="tiny" style="line-height:1.7">${esc(x.summary)}</div>
+    <div class="tiny dim" style="margin-top:6px;line-height:1.7"><b>شنو يسوي بالفيديو:</b> ${esc((x.how || "").replace(/\(?[A-Za-z][\w\- :]*\)?/g, "").replace(/\s+([،.])/g, "$1"))}</div>
+    <div class="tiny dim" style="margin-top:4px">يناسب: ${esc((x.fits || []).join("، "))}</div>
+    <div class="excard" style="margin-top:10px"><div class="tiny" style="line-height:1.7">«طبّق» يخلّي المساعد يعيد خطة الحلقة كلها على هالستايل ويبني معاينة جديدة (ياخذ دقايق). القديمة ما تضيع: «تراجع» يرجعها.</div>
+      <div class="row" style="margin-top:8px"><button class="pill y" id="syApply">طبّق على الفيديو كله</button><button class="pill" id="syClose">سكّر</button></div></div>`;
+  $("syClose").onclick = () => { box.hidden = true; };
+  $("syApply").onclick = async () => {
+    if (!ep){ toast("افتح مشروع أول"); return; }
+    try { const r = await post(E() + "/restyle", {style: x.id}); stCur = x.id; box.hidden = true; drawStyles();
+      if (r.started){ toast("بدا يعيد الحلقة بستايل «" + x.name + "»"); lastLog = {running: true, what: "restyle"}; job = {...job, running: true, ep: cur, what: "restyle"}; }
+      else toast("انحفظ. الحلقة تنبني على «" + x.name + "» من تجهزها");
+    } catch (e){ toast(e.message); }
+  };
+  box.scrollIntoView({behavior: "smooth", block: "nearest"});
+}
+$("syFind").oninput = () => stData && drawStyles();
+
 /* ---------- sounds library ---------- */
 let sfxData = null;
 async function loadSfx(){ if (!sfxData) sfxData = await api("/api/sfx").catch(() => []); drawSfx(); }
@@ -1592,7 +1841,7 @@ $("sfxFind").oninput = drawSfx;
 
 /* ---------- optional extras ---------- */
 let opts = null;
-async function loadExtras(){ opts = await api(E() + "/options").catch(() => null); drawExtras(); }
+async function loadExtras(){ opts = await api(E() + "/options").catch(() => null); data.sound = await api(E() + "/sound").catch(() => data.sound); drawExtras(); }
 function sw(id, on){ return `<button class="sw ${on ? "on" : ""}" id="${id}" aria-pressed="${on}"></button>`; }
 function drawExtras(){
   if (!opts) return;
@@ -1605,6 +1854,9 @@ function drawExtras(){
     <div class="excard"><div class="row"><b class="grow">المساعد يتحكم بالرتم</b>${sw("exPace", opts.pace !== "off")}</div>
       <div class="dim tiny" style="margin-top:6px">يقرر شگد يشيل من الوقفات، وطول المشاهد، وسرعة الانتقالات.</div>
       ${opts.pace !== "off" ? `<div class="seg3" style="margin:10px 0 0;grid-template-columns:repeat(3,1fr)">${[["calm", "هادئ"], ["normal", "عادي"], ["fast", "سريع"]].map(([k, n]) => `<button data-pc="${k}" class="${opts.pace === k ? "on" : ""}">${n}</button>`).join("")}</div>` : ""}</div>
+    <div class="excard"><div class="row"><b class="grow">الموسيقى</b><span class="dim tiny">${String((data.sound || {}).music || "").startsWith("own:") ? "موسيقاك من «ملفاتي»" : ""}</span></div>
+      <div class="dim tiny" style="margin-top:6px">موسيقى نألفها بالكود لكل حلقة: ملكك، بلا حقوق، ببلاش. دوس ▶ حتى تسمع.</div>
+      <div class="moods" style="margin-top:8px">${MOODS.map(([k, n]) => `<span class="row" style="gap:2px"><button class="pill sm ${(data.sound || {}).music === k ? "on" : ""}" data-xm="${k}">${n}</button>${k !== "auto" && k !== "off" ? `<button class="icobtn" data-xh="${k}">▶</button>` : ""}</span>`).join("")}</div><audio id="xAud" hidden></audio></div>
     <div class="excard"><div class="row"><b class="grow">بداية جاهزة</b>${sw("exIntro", opts.intro)}</div><div class="dim tiny" style="margin-top:6px">صورة قناتك واسمك قبل الحلقة، ثانيتين ونص، ويه صوت.</div></div>
     <div class="excard"><div class="row"><b class="grow">نهاية جاهزة</b>${sw("exOutro", opts.outro)}</div><div class="dim tiny" style="margin-top:6px">شاشة النهاية مال يوتيوب (فيديو مقترح وزر الاشتراك)، ٢٠ ثانية.</div></div>
     <div class="excard"><div class="row"><b class="grow">قص الخلفية ورا وجهك</b></div><div class="dim tiny" style="margin-top:6px">حدد مشهد بالتايم لاين، ومن «الإعدادات» يسار اختار «الخلفية».</div></div>`;
@@ -1612,6 +1864,8 @@ function drawExtras(){
   $("exCap").onclick = () => save({captions: {on: !c.on}});
   $("exPace").onclick = () => save({pace: opts.pace === "off" ? "normal" : "off"});
   $("exIntro").onclick = () => save({intro: !opts.intro});
+  $("exBody").querySelectorAll("[data-xm]").forEach(b => b.onclick = async () => { data.sound = await post(E() + "/sound", {...(data.sound || {}), music: b.dataset.xm}).catch(e => (toast(e.message), data.sound)); toast("تنسمع بالبناء الجاي"); drawExtras(); });
+  $("exBody").querySelectorAll("[data-xh]").forEach(b => b.onclick = () => { const a = $("xAud"); a.src = "/api/music-sample?mood=" + b.dataset.xh; a.play(); });
   $("exOutro").onclick = () => save({outro: !opts.outro});
   $("exBody").querySelectorAll("[data-cs]").forEach(b => b.onclick = () => save({captions: {style: b.dataset.cs}}));
   $("exBody").querySelectorAll("[data-pc]").forEach(b => b.onclick = () => save({pace: b.dataset.pc}));
@@ -1639,7 +1893,7 @@ async function suggestFor(i, kind){
   await refresh();
   const h = decodeURIComponent(location.hash.slice(1));
   if (h && state.episodes.find(e => e.id === h)) await open(h);
-  else if (state.episodes.length) $("lib").hidden = false;
+  else $("lib").hidden = false;   // the app always opens on his projects (owner, 2026-10-25)
   renderTimeline(); pollLog();
   // not linked yet: the linking window opens by itself once (not while the app is swapping itself)
   setTimeout(() => { const c = state.claude || {}; if (c.installed && !c.logged_in && !linkAsked && !(job.running && job.step === "app")){ linkAsked = true; openLink(); } }, 1500);

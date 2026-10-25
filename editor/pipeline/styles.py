@@ -25,6 +25,9 @@ class Style:
     grade: str = "natural"                   # natural (correction) or none (grade.LOOKS)
     image_treatments: list[str] | None = None  # rotated over image beats so pictures never look the same
     text_variants: list[str] | None = None     # rotated over text cards
+    title_ar: str = ""                         # the name he sees in the app's Styles panel
+    category: str = ""                         # the panel's group
+    layouts: list[str] | None = None           # scene kinds this style leans on (the plan prompt gets them)
 
 
 def _style_files() -> list[Path]:

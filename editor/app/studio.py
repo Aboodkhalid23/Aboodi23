@@ -30,7 +30,7 @@ REASON_GROUP = {"إعادة": "إعادة", "إعادة (تكملة غلط)": "�
                 "بدأ الجملة من جديد": "بداية متعثرة", "كلمة مقطوعة": "بداية متعثرة", "تأتأة": "بداية متعثرة",
                 "حشو": "بلا كلام", "حذف يدوي": "حذفتها انت"}
 KIND_AR = {"face": "وجهك", "face_zoom_in": "وجهك، تقريب", "face_zoom_out": "وجهك، تبعيد", "face_punch": "وجهك، ضربة",
-           "face_paper": "أوراق يمّك", "face_fx": "وجهك ويه حركة", "face_cutout": "وجهك مقصوص", "image": "صورة حقيقية",
+           "face_paper": "أوراق يمّك", "face_fx": "وجهك ويه حركة", "face_cutout": "وجهك مقصوص", "face_split": "شاشة مقسومة", "image": "صورة حقيقية",
            "entity": "صورة شخص", "graphic": "موشن جرافك", "footage": "أرشيف حقيقي", "ai_image": "صورة ذكاء اصطناعي",
            "ai_video": "فيديو ذكاء اصطناعي", "avatar": "شخصيتك المرسومة", "cinematic_title": "عنوان سينمائي",
            "halftone_cutout": "مقصوص نقاط", "kinetic": "كتابة متحركة", "band": "شريط صورة وورقة", "desk": "مكتب ورق"}
@@ -419,13 +419,22 @@ def edit_beat(ep: Episode, i: int, change: dict) -> dict:
     elif "cutout" in change:   # his background removed for this scene: paper world behind him, or a word
         mode = change["cutout"]
         b = beats[i]
-        if mode in ("paper", "title"):
+        if mode == "split":   # him on one half, a picture on the other
+            q = str(change.get("query") or b.get("query") or "").strip()
+            if not q or q in ("own footage", "own picture", "chosen picture", "chosen footage"):
+                raise ValueError("اكتب بخانة «اقترح بدائل» شنو الصورة الي تطلع يمّك")
+            b.update(kind="face_split", query=q)
+            b.pop("treatment", None)
+            b.pop("pick", None)
+            for old in ep.assets.glob(f"img_{i}.*"):
+                old.unlink()
+        elif mode in ("paper", "title"):
             b.update(kind="face_cutout", treatment=mode)
             if mode == "title":
                 b["title"] = str(change.get("title") or b.get("title") or b.get("caption") or "").strip() or None
                 if not b["title"]:
                     raise ValueError("اكتب الكلمة الي تطلع ورا ظهرك")
-        elif b["kind"] == "face_cutout":
+        elif b["kind"] in ("face_cutout", "face_split"):
             b["kind"] = "face"
             b.pop("treatment", None)
     elif "choose" in change:   # one of the suggested pictures or clips (downloaded by suggest_choose)
@@ -466,7 +475,7 @@ def media_list(ep: Episode) -> list[dict]:
     folder = ep.edit / "media"
     if not folder.exists():
         return []
-    out = []
+    out, notes = [], media_notes(ep)
     for f in sorted(folder.iterdir()):
         if f.suffix.lower() not in MEDIA_EXT or f.name.startswith("."):
             continue
@@ -475,9 +484,93 @@ def media_list(ep: Episode) -> list[dict]:
         if kind == "video" and not thumb.exists():
             thumb.parent.mkdir(parents=True, exist_ok=True)
             _ff(["-ss", "0.5", "-i", str(f), "-frames:v", "1", "-vf", "scale=-2:180", str(thumb)])
-        out.append({"name": f.name, "kind": kind, "size": f.stat().st_size,
+        n = notes.get(f.name) or {}
+        out.append({"name": f.name, "kind": kind, "size": f.stat().st_size, "note": n.get("note", ""), "use": n.get("use", ""),
                     "thumb": str(thumb.relative_to(ep.root)) if kind != "audio" and thumb.exists() else None})
     return out
+
+
+def media_notes(ep: Episode) -> dict:
+    try:
+        return json.loads((ep.edit / "media" / ".notes.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def media_note(ep: Episode, name: str, note: str | None = None, use: str | None = None) -> list[dict]:
+    """What he wants done with one of his files (owner, 2026-10-25: "انطيها للذكاء الاصطناعي، أگله هاي الصورة خليها
+    بطريقة احترافية… هاي الموسيقى مشتريها، خليها بالفيديو"). `use`: "" | "auto" (the assistant places it) | "music"
+    (an audio file becomes the episode's music)."""
+    f = ep.edit / "media" / Path(name).name
+    if not f.is_file():
+        raise ValueError("هذا الملف مو موجود")
+    notes = media_notes(ep)
+    cur = notes.get(f.name) or {}
+    if note is not None:
+        cur["note"] = str(note).strip()[:600]
+    if use is not None:
+        cur["use"] = use if use in ("", "auto", "music") else ""
+    notes[f.name] = cur
+    if use == "music":   # one music for the episode: his
+        for k, v in notes.items():
+            if k != f.name and v.get("use") == "music":
+                v["use"] = ""
+    (ep.edit / "media" / ".notes.json").write_text(json.dumps(notes, ensure_ascii=False, indent=1), encoding="utf-8")
+    snd_f = ep.edit / "sound.json"
+    try:
+        snd = json.loads(snd_f.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        snd = {}
+    if use == "music":
+        snd["music"] = "own:" + f.name
+    elif use is not None and snd.get("music") == "own:" + f.name:
+        snd["music"] = "auto"
+    snd_f.write_text(json.dumps(snd, ensure_ascii=False, indent=1), encoding="utf-8")
+    return media_list(ep)
+
+
+def media_for_assistant(ep: Episode) -> list[str]:
+    """Lines for the plan/chat prompts: his files and what he wants done with each."""
+    out = []
+    for m in media_list(ep):
+        if m["use"] == "music":
+            out.append(f"  - «{m['name']}» (صوت): موسيقى الحلقة كلها (محطوطة لحالها، لا تحط plan.music).")
+        elif m["use"] == "auto" or m["note"]:
+            kind = {"image": "صورة", "video": "فيديو", "audio": "صوت"}[m["kind"]]
+            how = 'مشهد image بـ pick: {"local": true, "file": "' + m["name"] + '"}' if m["kind"] == "image" else \
+                  'مشهد footage بـ pick: {"local": true, "file": "' + m["name"] + '"}' if m["kind"] == "video" else 'sfx أو موسيقى'
+            out.append(f"  - «{m['name']}» ({kind}): {m['note'] or 'حطه بأنسب مكان'} → {how}، بأنسب لحظة بالكلام وبشكل احترافي.")
+    return out
+
+
+def apply_own_media(ep: Episode) -> int:
+    """After the assistant planned: scenes that point to one of his files get that file as their picture/clip."""
+    import shutil
+    if not ep.plan.exists():
+        return 0
+    plan = json.loads(ep.plan.read_text(encoding="utf-8"))
+    n = 0
+    for i, b in enumerate(plan.get("beats", [])):
+        name = (b.get("pick") or {}).get("file")
+        src = ep.edit / "media" / Path(name).name if name else None
+        if not src or not src.is_file():
+            continue
+        ep.assets.mkdir(parents=True, exist_ok=True)
+        for old in list(ep.assets.glob(f"img_{i}.*")) + list(ep.assets.glob(f"footage_{i}.*")):
+            old.unlink()
+        if src.suffix.lower() in VIDEO_EXT:
+            shutil.copyfile(src, ep.assets / f"footage_{i}.mp4")
+            (ep.assets / f"footage_{i}.json").write_text(json.dumps({"query": "own footage", "credit": "من ملفاتك"}), encoding="utf-8")
+            b["kind"] = "footage"
+        else:
+            shutil.copyfile(src, ep.assets / f"img_{i}{src.suffix.lower()}")
+            if b.get("kind") != "face_split":
+                b["kind"] = "image"
+        b.setdefault("query", "own picture")
+        b["pick"] = {"local": True, "file": src.name, "credit": "من ملفاتك"}
+        n += 1
+    ep.plan.write_text(json.dumps(plan, ensure_ascii=False, indent=1), encoding="utf-8")
+    return n
 
 
 def media_add(ep: Episode, path: str) -> list[dict]:

@@ -87,8 +87,8 @@ def review(ep: Episode, record: bool = True) -> dict:
         issues.append((8, f"الهوك هادي: {changes} تغيير بأول 30 ث (الأحسن 9 أو أكثر)"))
     if beats and beats[0].kind in PLAIN_FACE and beats[0].kind == "face":
         issues.append((4, "أول لقطة وجه ثابت: أول 15 فريم لازم بيها حركة (تقريب أو صورة أو رقم)"))
-    face_share = (sum((b.end - b.start) * (0.5 if b.kind == "face_paper" else 1)
-                      for b in body if b.kind in FACE_KINDS or b.kind == "face_paper")
+    face_share = (sum((b.end - b.start) * (0.5 if b.kind in ("face_paper", "face_split") else 1)
+                      for b in body if b.kind in FACE_KINDS or b.kind in ("face_paper", "face_split"))
                   / max(1e-6, sum(b.end - b.start for b in body))) if body else 0
     trans = sum(1 for b in beats if b.transition)
     per10 = trans / max(1.0, total / 600)

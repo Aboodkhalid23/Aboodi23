@@ -3,6 +3,8 @@
 #   app/setup.sh            أول تنصيب (التطبيق يشغله لحاله)
 #   app/setup.sh --update   يجيب آخر نسخة من الكود وينصب الجديد بس
 #   app/setup.sh --app <pid التطبيق القديم> <pid المحرك> <مسار التطبيق القديم>   يبدّل التطبيق نفسه (الاسم والشعار) بآخر نسخة
+#   app/setup.sh --app quiet                يبدّل التطبيق بصمت (وقت ما يتسكّر) بلا ما يفتحه
+#   app/setup.sh --stage                    يجهّز آخر نسخة من الكود بصمت بـ code.next (تتبدّل وقت ما يتسكّر التطبيق)
 # كل شي يروح لمجلد واحد ($MONTIER_HOME): الأدوات، والكود. الحلقات بمجلد ثاني وما تنمس.
 # للاختبار: MONTIER_CODE_SRC=<مسار ريبو محلي>  MONTIER_SKIP_CLAUDE=1  MONTIER_SKIP_MODEL=1
 # Written for the bash 3.2 that ships with macOS: no associative arrays, no ${x,,}.
@@ -58,9 +60,30 @@ if [ "${1:-}" = "--app" ]; then
     [ -d "$old" ] && { rm -rf "$old" 2>/dev/null || true; }
   done
   rm -f "$TMP/URU.dmg"
+  [ "$OLD_PID" = "quiet" ] && { echo "✅ انصّب URU (ينفتح الجديد المرة الجاية)"; exit 0; }
   echo "✅ انصّب URU. يفتح هسة…"
   # after this script and the old window are gone: close them, then open the new app
   nohup /bin/bash -c "sleep 2; ${OLD_PID:+kill $OLD_PID;} ${SERVER_PID:+kill $SERVER_PID;} sleep 1.5; open \"$DEST/URU.app\"; ${EJECT:+sleep 3; hdiutil detach \"$EJECT\" -force;}" >/dev/null 2>&1 &
+  exit 0
+fi
+
+# ---------- silent update: the newest code ready beside the running one (owner, 2026-10-25: "أفوت ألگاه محدّث") ----------
+if [ "${1:-}" = "--stage" ]; then
+  api="https://api.github.com/repos/$REPO"
+  COMMIT=$(curl -fsS --connect-timeout 15 "$api/commits/$BRANCH" 2>/dev/null | sed -n 's/^  "sha": "\([0-9a-f]*\)".*/\1/p' | head -1 || true)
+  [ -n "$COMMIT" ] || { echo "ماكو نت أو ما وصلت للكود"; exit 0; }
+  grep -q "$COMMIT" "$HOME_DIR/version.json" 2>/dev/null && { echo "محدّث"; exit 0; }
+  grep -q "$COMMIT" "$CODE.next/.uru_version.json" 2>/dev/null && { echo "جاهز من قبل"; exit 0; }
+  NEXT="$CODE.next.tmp"; rm -rf "$NEXT"; mkdir -p "$NEXT"
+  get "https://codeload.github.com/$REPO/tar.gz/$COMMIT" "$TMP/next.tar.gz"
+  tar -xzf "$TMP/next.tar.gz" -C "$NEXT" --strip-components 1; rm -f "$TMP/next.tar.gz"
+  if ! cmp -s "$CODE/editor/remotion/package-lock.json" "$NEXT/editor/remotion/package-lock.json"; then
+    (cd "$NEXT/editor/remotion" && npm ci --silent --no-audit --no-fund) || { rm -rf "$NEXT"; fail "ما گدرت أجهّز أدوات الرسم الجديدة"; }
+  fi
+  "$TOOLS/uv" pip install -q --python "$TOOLS/venv/bin/python" -r "$NEXT/editor/requirements.txt" || { rm -rf "$NEXT"; fail "ما گدرت أنصّب مكتبات بايثون"; }
+  printf '{"commit": "%s", "branch": "%s", "date": "%s"}\n' "$COMMIT" "$BRANCH" "$(date +%Y-%m-%d)" > "$NEXT/.uru_version.json"
+  rm -rf "$CODE.next"; mv "$NEXT" "$CODE.next"
+  echo "✅ النسخة ${COMMIT:0:7} جاهزة، تتبدّل وقت ما يتسكّر التطبيق"
   exit 0
 fi
 

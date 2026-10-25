@@ -27,8 +27,16 @@ PROGRESSIONS = {
     "drive": [("E", (0, 3, 7)), ("C", (0, 4, 7)), ("G", (0, 4, 7)), ("D", (0, 4, 7))],
     "dark": [("C", (0, 3, 7)), ("C#", (0, 4, 7)), ("C", (0, 3, 7)), ("G#", (0, 4, 7))],
     "calm": [("F", (0, 4, 7, 11)), ("C", (0, 4, 7, 14)), ("A", (0, 3, 7, 10)), ("G", (0, 5, 7))],
+    # added 2026-10-25 (owner: "موسيقى تولدها بالكود، كلها ببلاش، بلا حقوق")
+    "epic": [("D", (0, 3, 7)), ("A#", (0, 4, 7)), ("F", (0, 4, 7)), ("C", (0, 4, 7))],
+    "lofi": [("D", (0, 3, 7, 10, 14)), ("G", (0, 4, 7, 10, 14)), ("C", (0, 4, 7, 11, 14)), ("A", (0, 3, 7, 10))],
+    "retro": [("A", (0, 3, 7)), ("F", (0, 4, 7)), ("C", (0, 4, 7)), ("G", (0, 4, 7))],
+    "playful": [("C", (0, 4, 7)), ("A", (0, 3, 7)), ("F", (0, 4, 7, 9)), ("G", (0, 4, 7))],
+    "luxury": [("E", (0, 4, 7, 11, 14)), ("C#", (0, 3, 7, 10)), ("A", (0, 4, 7, 11)), ("B", (0, 4, 7, 10, 14))],
+    "hopeful": [("G", (0, 4, 7)), ("D", (0, 4, 7)), ("E", (0, 3, 7)), ("C", (0, 4, 7, 14))],
 }
-TEMPO = {"tension": 76, "wonder": 84, "sad": 64, "drive": 108, "dark": 60, "calm": 70}
+TEMPO = {"tension": 76, "wonder": 84, "sad": 64, "drive": 108, "dark": 60, "calm": 70,
+         "epic": 90, "lofi": 78, "retro": 104, "playful": 112, "luxury": 72, "hopeful": 88}
 KEYWORDS = {
     "tension": ("tension", "suspense", "investig", "mystery", "thriller", "توتر", "تشويق", "غموض"),
     "wonder": ("wonder", "curious", "discovery", "inspir", "hope", "light", "pizzicato", "فضول", "دهشة", "اكتشاف"),
@@ -36,6 +44,12 @@ KEYWORDS = {
     "drive": ("drive", "energetic", "upbeat", "action", "fast", "epic", "حماس", "سريع", "طاقة"),
     "dark": ("dark", "ominous", "war", "danger", "horror", "مظلم", "خطر", "حرب", "رعب"),
     "calm": ("calm", "ambient", "soft", "warm", "هادئ", "هدوء", "دافي"),
+    "epic": ("epic", "trailer", "heroic", "ملحمي", "ضخم"),
+    "lofi": ("lofi", "lo-fi", "chill", "study", "استرخاء"),
+    "retro": ("retro", "synth", "80s", "synthwave", "nostalgic", "ريترو"),
+    "playful": ("playful", "fun", "quirky", "مرح"),
+    "luxury": ("luxury", "elegant", "classy", "فخم", "فخامة"),
+    "hopeful": ("hopeful", "inspiring", "uplifting", "أمل", "ملهم"),
 }
 
 
@@ -102,7 +116,7 @@ def compose(duration: float, mood: str, seed: int) -> np.ndarray:
     shift = int(rng.integers(-2, 3))                  # every episode in a slightly different key
     bpm = TEMPO[mood] * (1 + rng.uniform(-0.04, 0.04))
     beat = 60 / bpm
-    bar = beat * 4 * (2 if mood in ("sad", "dark", "calm") else 1)
+    bar = beat * 4 * (2 if mood in ("sad", "dark", "calm", "luxury") else 1)
     n = int((duration + 2.5) * SR)
     t_all = np.arange(n) / SR
     pad = np.zeros(n)
@@ -126,8 +140,8 @@ def compose(duration: float, mood: str, seed: int) -> np.ndarray:
         pad[s0:s1] += chord
         # bass: the root, as a pulse (drive/tension) or held (the rest)
         fb = _hz(root, 1, shift)
-        if mood in ("drive", "tension"):
-            step = beat / (2 if mood == "drive" else 1)
+        if mood in ("drive", "tension", "epic", "retro"):
+            step = beat / (2 if mood in ("drive", "retro") else 1)
             k = 0
             while b * bar + k * step < (b + 1) * bar:
                 p0 = int((b * bar + k * step) * SR)
@@ -139,9 +153,9 @@ def compose(duration: float, mood: str, seed: int) -> np.ndarray:
             bass[s0:s1] += np.sin(2 * np.pi * fb * t) * _env(len(t), 0.8, 0.8) * 0.55
         # lead: plucks / bells on chord tones (none in dark)
         if mood != "dark":
-            notes = int(bar / (beat / (2 if mood in ("drive", "wonder") else 1)))
+            notes = int(bar / (beat / (2 if mood in ("drive", "wonder", "playful", "retro", "hopeful") else 1)))
             for k in range(notes):
-                if mood in ("sad", "calm") and rng.random() < 0.55:   # sparse: space is the emotion
+                if mood in ("sad", "calm", "lofi", "luxury") and rng.random() < 0.55:   # sparse: space is the emotion
                     continue
                 i = iv[int(rng.integers(0, len(iv)))] + (12 if rng.random() < 0.4 else 0)
                 p0 = s0 + int(k * bar / notes * SR)
@@ -161,10 +175,21 @@ def compose(duration: float, mood: str, seed: int) -> np.ndarray:
                 tex[p0:p0 + m] += rng.standard_normal(m) * np.exp(-np.linspace(0, 8, m)) * (0.18 if k % 2 else 0.1)
             k += 1
         tex = np.convolve(tex, [1, -0.95], "same")      # thin, high tick
+    if mood == "lofi":   # vinyl crackle: sparse clicks and a low hiss
+        clicks = (rng.random(n) < 0.0004) * rng.standard_normal(n) * 0.5
+        tex += np.convolve(clicks, [1, -0.9], "same") + rng.standard_normal(n) * 0.012
+    if mood == "epic":   # a deep drum on every bar
+        for b in range(bars):
+            p0 = int(b * bar * SR)
+            if p0 >= n:
+                break
+            m = min(n - p0, int(0.9 * SR))
+            tt = np.arange(m) / SR
+            tex[p0:p0 + m] += np.sin(2 * np.pi * (55 + 40 * np.exp(-25 * tt)) * tt) * np.exp(-5 * tt) * 1.2
     if mood == "dark":
         tex += np.sin(2 * np.pi * _hz("C", 0, shift) * t_all) * 0.25 * (0.6 + 0.4 * np.sin(2 * np.pi * 0.05 * t_all))
     pad = _lowpass(pad, 1400 + 600 * rng.random())
-    mixes = {"pad": 0.55, "bass": 0.45 if mood != "calm" else 0.3, "lead": 0.28 if mood != "drive" else 0.33, "tex": 0.35}
+    mixes = {"pad": 0.55, "bass": 0.45 if mood != "calm" else 0.3, "lead": 0.33 if mood in ("drive", "retro", "playful") else 0.28, "tex": 0.35}
     mono = mixes["pad"] * pad + mixes["bass"] * bass + mixes["tex"] * tex
     left = mono + mixes["lead"] * np.roll(lead, int(0.011 * SR))
     right = mono + mixes["lead"] * lead
@@ -211,6 +236,8 @@ def compose_music(ep, total: float) -> list[str]:
     credits_file = ep.work / "music_credits.json"
     credits = json.loads(credits_file.read_text(encoding="utf-8")) if credits_file.exists() else {}
     done = []
+    if str(_app_mood(ep) or "").startswith("own:"):   # his own music plays instead (compose)
+        return []
     for key, have, out, m, length in wanted:
         if have:
             continue

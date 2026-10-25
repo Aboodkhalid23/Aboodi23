@@ -6,7 +6,7 @@ from pathlib import Path
 from .grade import LOOKS
 
 KINDS = ("face", "face_zoom_in", "face_zoom_out", "face_framed", "face_punch", "face_fx", "face_cutout",
-         "image", "ai_image", "ai_video", "graphic", "entity", "footage", "avatar", "face_paper")
+         "image", "ai_image", "ai_video", "graphic", "entity", "footage", "avatar", "face_paper", "face_split")
 FACE_KINDS = KINDS[:7]
 AI_KINDS = ("ai_image", "ai_video", "avatar")   # avatar: him as a drawn character in the scene (avatar.py)
 GRAPHIC_TYPES = ("number", "headline", "quote", "map", "timeline", "chart", "text", "custom", "article", "headlines",
@@ -179,6 +179,8 @@ def validate_plan(plan: EditPlan, clean_duration: float, entities: set[str] | No
             errs.append(f"beat {i}: effect لازم من {', '.join(EFFECTS)}")
         if b.transition and b.transition not in TRANSITIONS:
             errs.append(f"beat {i}: transition لازم من {', '.join(TRANSITIONS)}")
+        if b.kind == "face_split" and not b.query:
+            errs.append(f"beat {i}: face_split يحتاج query (الصورة الي تطلع بالنص الثاني)")
         if b.kind == "face_cutout" and b.treatment and b.treatment not in ("paper", "title"):
             errs.append(f"beat {i}: face_cutout شكله paper (ورق القناة) أو title (كلام ورا ظهره)")
         elif b.kind == "face_cutout" and b.treatment == "title" and not (b.title or b.caption):
@@ -249,8 +251,10 @@ def validate_plan(plan: EditPlan, clean_duration: float, entities: set[str] | No
 
     for k, sh in enumerate(plan.shorts, 1):
         a, z = float(sh.get("from", -1)), float(sh.get("to", -1))
-        if not (0 <= a < z <= total + TOL) or not 15 <= z - a <= 60 or not sh.get("title"):
-            errs.append(f"short {k}: لازم from و to داخل الحلقة (15–60 ثانية) و title (هوك عربي قصير)")
+        if not (0 <= a < z <= total + TOL) or not 15 <= z - a <= 90 or not sh.get("title"):
+            errs.append(f"short {k}: لازم from و to داخل الحلقة (15–90 ثانية) و title (هوك عربي قصير)")
+            continue
+        if "main" in sh:   # the app's reels pack (picked from the finished episode by what is said): no montage rule
             continue
         # owner's rule: a reel is edited too (pictures, motion graphics), not just his face talking
         scenes = [(max(a, b.start), min(z, b.end)) for b in plan.beats if b.kind not in FACE_KINDS or b.kind == "face_fx"]
@@ -277,8 +281,8 @@ def validate_plan(plan: EditPlan, clean_duration: float, entities: set[str] | No
     body_time = sum(b.duration for b in body)
     if body_time > 0:
         # face_paper: he is on screen, but so are the papers — half of it counts as his face
-        share = sum(b.duration * (0.5 if b.kind == "face_paper" else 1) for b in body
-                    if b.kind in FACE_KINDS or b.kind == "face_paper") / body_time
+        share = sum(b.duration * (0.5 if b.kind in ("face_paper", "face_split") else 1) for b in body
+                    if b.kind in FACE_KINDS or b.kind in ("face_paper", "face_split")) / body_time
         if not (FACE_SHARE[0] <= share <= FACE_SHARE[1]):
             errs.append(f"beat {beats.index(body[0])}: الوجه {share:.0%} من الجسم، لازم بين 40% و 65%")
     return errs

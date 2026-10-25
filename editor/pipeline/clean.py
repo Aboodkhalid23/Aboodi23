@@ -38,6 +38,8 @@ PAD = 0.12             # s: breath kept on each side of a cut (when the sound al
 RETAKE_WINDOW = 30.0   # s: how far ahead a restart can come
 PUNCH = 1.08          # after a removed retake the picture steps in (or back out) by this much: the jump reads as a
 JUMP = 0.9            # deliberate second camera, not a hole. JUMP: seconds removed that make a cut "visible"
+SEEN_JUMP = 9.0       # mean change (0–255) of a tiny grey frame across a cut that the eye reads as a "jump"
+MIN_REFRAME = 1.5     # s: never change the framing again sooner than this (it would feel busy)
 SPAN_LIMIT = 12.0      # s: at most this much between a failed attempt and its restart is dropped with it
 FILLERS = {"اه", "ااه", "اااه", "ام", "امم", "اممم", "مم", "ممم", "اا", "ااا", "اهه", "همم", "هممم", "اوم", "ايي"}
 # Short words Iraqis double on purpose ("لا لا"، "اي اي"، "يا يا"): emphasis, not a stutter — said without a gap
@@ -361,6 +363,32 @@ def _report(ep: Episode, removed, duration: float, kept_secs: float, missed=()) 
     (ep.work / "cut_report.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def seen_jumps(video: Path, segs: list[tuple[float, float]], fps: int) -> set[int]:
+    """Cuts where his picture visibly jumps (head moved, leaned, hands): the last frame before the cut against the
+    first after it, on the app's light copy (one fast decode). Owner, 2026-10-25: "قص احترافي… ما يبين مقصص".
+    A pro hides these by changing the framing on the cut (a second-camera feel); a still head needs nothing."""
+    if not video.exists() or len(segs) < 2:
+        return set()
+    want = {}
+    for i in range(1, len(segs)):
+        want[max(0, round(segs[i - 1][1] * fps) - 1)] = (i, 0)
+        want[round(segs[i][0] * fps)] = (i, 1)
+    expr = "+".join(f"eq(n\\,{n})" for n in sorted(want))
+    script = video.with_name("jump_select.txt")
+    script.write_text(f"select={expr},scale=64:36,format=gray", encoding="utf-8")
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(video), "-filter_script:v", str(script), "-vsync", "0",
+                          "-f", "rawvideo", "-"], capture_output=True).stdout
+    frames = np.frombuffer(raw, np.uint8)
+    k = len(frames) // (64 * 36)
+    if k != len(want):
+        return set()
+    frames = frames[: k * 64 * 36].reshape(k, 36, 64).astype(np.int16)
+    got = {}
+    for (n, (i, side)), f in zip(sorted(want.items()), frames):
+        got.setdefault(i, [None, None])[side] = f
+    return {i for i, (a, b) in got.items() if a is not None and b is not None and float(np.abs(a - b).mean()) > SEEN_JUMP}
+
+
 def _punch_filter(ep: Episode) -> str:
     """Crop PUNCH× around his face and scale back: the closer framing used after a removed retake."""
     info = probe(ep.source)
@@ -404,12 +432,20 @@ def clean(ep: Episode, script: Path | None = None) -> float:
 
     parts, labels = [], []
     zoomed, punch = False, _punch_filter(ep)
+    try:
+        seen = seen_jumps(ep.work / "app" / "proxy_source.mp4", segs, fps)
+    except Exception:   # the check is a nicety: the old rule alone still cuts well
+        seen = set()
+    last_reframe, t_out = -99.0, 0.0
     for i, (s, e) in enumerate(segs):
         f0, f1 = round(s * fps), round(e * fps)
         d = (f1 - f0) / fps
         jump = i > 0 and s - segs[i - 1][1] >= JUMP
-        if jump:   # a retake was removed here: change the framing so the cut is felt as a camera change
+        if jump or (i in seen and t_out - last_reframe >= MIN_REFRAME):
+            # a retake was removed, or his picture visibly moved: change the framing so the cut reads as a camera change
             zoomed = not zoomed
+            last_reframe = t_out
+        t_out += d
         # the sound: a slightly longer fade on the big cuts, so no click and no sudden breath
         fade = min(0.025 if jump or (i + 1 < len(segs) and segs[i + 1][0] - e >= JUMP) else 0.012, d / 4)
         parts.append(f"[0:v]trim=start_frame={f0}:end_frame={f1},setpts=PTS-STARTPTS{punch if zoomed else ''}[v{i}];"
