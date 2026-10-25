@@ -42,12 +42,12 @@ UPDATE_EXIT = 75          # the app window restarts the server when it exits wit
 ANSI = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
 
 STEPS = {"all": ["prep", "plan", "render", "suite"], "from-plan": ["plan", "render", "suite"],
-         "from-render": ["render", "suite"], "prep": ["prep"], "plan": ["plan", "ai", "images"], "render": ["render"],
+         "from-render": ["render", "suite"], "prep": ["prep"], "plan": ["plan", "council", "ai", "images"], "render": ["render"],
          "suite": ["suite"], "requests": ["requests", "render"], "preview": ["preview"],
          # the studio's steps (one screen each)
          "prepare": ["fetch", "script-names", "transcribe"], "cut": ["cut"], "sentences": ["sentences"], "captions": ["captions"],
          "images": ["images"], "build": ["preview"], "final": ["render", "learn"], "assist": ["assist"],
-         "auto": ["fetch", "script-names", "transcribe", "cut", "plan", "ai", "images", "render", "learn"], "chat": ["chat"],
+         "auto": ["fetch", "script-names", "transcribe", "cut", "plan", "council", "ai", "images", "render", "learn"], "chat": ["chat"],
          # the assistant learns his taste from what he changed (also after every final build), and the app checks itself
          "learn": ["learn"], "selfcheck": ["selfcheck"],
          # ChatGPT and Gemini (his own subscriptions) read the plan and give a second opinion; ideas for the app
@@ -56,13 +56,13 @@ STEPS = {"all": ["prep", "plan", "render", "suite"], "from-plan": ["plan", "rend
          "youtube-langs": ["youtube-langs"],
          "shorts": ["shorts"], "export": ["export"],
          # a style from the Styles panel on the whole video: the assistant re-plans in it, then a new preview
-         "restyle": ["plan", "ai", "images", "preview"],
+         "restyle": ["plan", "council", "ai", "images", "preview"],
          # the reels pack: the assistant picks 1 main short (< 1 min) + 5 clips, then they are cut tall
          "reels": ["reels-pick", "shorts"], "dub": ["dub"], "thumbs": ["thumbs"], "style-ref": ["style-ref"], "translate": ["translate"], "youtube": ["youtube"]}
 STEP_NAMES = {"prep": "التجهيز", "plan": "خطة المونتير", "render": "النسخة الكاملة", "preview": "المعاينة",
               "suite": "غرفة المونتاج", "requests": "ملاحظاتك", "fetch": "تجهيز الفيديو", "transcribe": "تفريغ الكلام",
               "cut": "قص المقطع", "sentences": "المساعد يراجع الجمل", "captions": "المساعد يراجع الكابشن",
-              "images": "الصور", "assist": "المساعد", "chat": "المساعد", "shorts": "الريلز", "export": "التصدير", "reels-pick": "اختيار الريلز", "dub": "الدبلجة", "thumbs": "الصور المصغرة", "style-ref": "ستايل من فيديو", "script-names": "أسماء السكربت", "translate": "الترجمة", "ai": "مشاهد الذكاء الاصطناعي", "youtube": "الرفع على يوتيوب", "learn": "المساعد يتعلم ذوقك", "selfcheck": "فحص التطبيق والحلقة", "opinion": "رأي شات جي بي تي وجيميناي", "youtube-langs": "اللغات على يوتيوب", "app-ideas": "أفكار للتطبيق"}
+              "images": "الصور", "assist": "المساعد", "chat": "المساعد", "shorts": "الريلز", "export": "التصدير", "reels-pick": "اختيار الريلز", "dub": "الدبلجة", "thumbs": "الصور المصغرة", "style-ref": "ستايل من فيديو", "script-names": "أسماء السكربت", "translate": "الترجمة", "ai": "مشاهد الذكاء الاصطناعي", "youtube": "الرفع على يوتيوب", "learn": "المساعد يتعلم ذوقك", "selfcheck": "فحص التطبيق والحلقة", "opinion": "رأي شات جي بي تي وجيميناي", "council": "لمسات شات جي بي تي وجيميناي", "youtube-langs": "اللغات على يوتيوب", "app-ideas": "أفكار للتطبيق"}
 CLAUDE_TOOLS = ["Read", "Write", "Edit", "Glob", "Grep", "WebSearch", "WebFetch", "TodoWrite",
                 "Bash(python -m editor.pipeline:*)", "Bash(python3 -m editor.pipeline:*)",
                 "Bash(ffprobe:*)", "Bash(ffmpeg:*)", "Bash(ls:*)"]
@@ -675,7 +675,8 @@ def _changed_beats(before: dict, after: dict) -> list[int]:
     return out
 
 
-PREF_KEYS = {"theme": ("forest", "mint", "night", "ocean", "rose"), "lang": ("ar", "en"), "ai_on": (True, False)}
+PREF_KEYS = {"theme": ("forest", "mint", "night", "ocean", "rose", "black", "violet", "carbon", "sand", "sky"), "lang": ("ar", "en"),
+             "ai_on": (True, False), "council": (True, False)}
 PREF_NUMS = {"ai_budget": (0, 300), "ai_variants": (1, 4)}   # dollars per episode, versions per AI scene
 
 
@@ -696,7 +697,7 @@ def prefs(change: dict | None = None) -> dict:
         f.parent.mkdir(parents=True, exist_ok=True)
         f.write_text(json.dumps(cur), encoding="utf-8")
     return {"theme": cur.get("theme", "forest"), "lang": cur.get("lang", "ar"), "ai_on": bool(cur.get("ai_on", False)),
-            "ai_budget": int(cur.get("ai_budget", 30)), "ai_variants": int(cur.get("ai_variants", 2)),
+            "ai_budget": int(cur.get("ai_budget", 30)), "council": bool(cur.get("council", True)), "ai_variants": int(cur.get("ai_variants", 2)),
             "faces": [f.name for f in sorted((HOME / "face").glob("*")) if f.suffix.lower() in (".jpg", ".jpeg", ".png", ".mp4", ".mov")]
             if (HOME / "face").exists() else []}
 
@@ -1259,7 +1260,7 @@ OPINION_PROMPT = """You are a senior YouTube documentary editor giving a second 
 The channel: an Iraqi creator who talks to camera about global topics (company stories, documentaries, world trends).
 Below is the edit plan for this episode (each scene: start–end seconds, kind, what is on screen) and what he says.
 {taste}
-Give the 8 most useful, concrete improvements: a stronger hook, a dull stretch to fix, a better picture or
+Give the 5 most useful, concrete, SMALL improvements (the lead editor keeps the final say and will take only a few): a stronger hook, a dull stretch to fix, a better picture or
 motion idea for a line, a cut, a sound moment. Each line: the time (m:ss), what to change, and why, in one or two
 short sentences. Write in simple Iraqi Arabic. No intro, no outro, only the numbered list.
 
@@ -1325,6 +1326,44 @@ def _opinion_step(d: Path) -> int:
         words = "(not available)"
     prompt = OPINION_PROMPT.format(plan="\n".join(rows)[:12000], words=words, taste=learning.prompt_block(HOME))
     return _brain_answers(prompt, d, d / "edit" / "opinions", "رأيه بالخطة")
+
+
+COUNCIL_APPLY_PROMPT = """انت المونتير الرئيسي لحلقة صاحب القناة، والقرار الأخير إلك. ماكو أحد يجاوبك، فلا تسأل.
+شات جي بي تي وجيميناي قروا خطتك واقترحوا تحسينات. صاحب القناة يثق بيك أكثر: هم يضيفون لمسات صغيرة بس، ما ياخذون القرار.
+
+الحلقة: {ep}
+الخطة: {ep}/edit/edit_plan.json
+
+اقتراحاتهم:
+{ideas}
+
+القواعد:
+- طبّق **٣ لمسات صغيرة بالأكثر**، وبس الي تحسّن الحلقة فعلاً بعين المشاهد: صورة أوضح لجملة، كلمة بالعنوان، مؤثر أو انتقال بمكانه، لحظة صوت، مشهد ممل تكسره.
+- ممنوع: تغيّر الستايل، أو ترتيب الهوك والقصة، أو تشيل مشاهد كثيرة، أو تلمس أكثر من ٣ مشاهد، أو أي شي يعارض فكرة صاحب القناة وذوقه.
+- إذا ماكو شي يستاهل، لا تغيّر شي. هذا مقبول.
+- عدّل {ep}/edit/edit_plan.json بـ Edit (نفس الشكل والحقول)، وبعدين اكتب {ep}/edit/opinions/applied.md: سطر لكل لمسة أخذتها (من منو، وشنو غيّرت)، وسطر قصير للي تركته وليش.
+بالآخر سطر واحد: كم لمسة أخذت."""
+
+
+def _council_step(d: Path) -> int:
+    """ChatGPT and Gemini add small touches after every plan (owner, 2026-10-25: "يضيفون لمساتهم… قليلة، ما ياخذون
+    رأي الأكبر"): they suggest, Claude decides and applies at most three. Never fails the job."""
+    if not prefs().get("council", True) or not brains.active(HOME, HOME / "tools"):
+        JOB.say("تخطيت (شات جي بي تي وجيميناي مو مربوطين أو مطفيين)")
+        return 0
+    if _opinion_step(d) != 0:
+        JOB.say("⚠️ ما جاوبوا هالمرة. الخطة تبقى مثل ما هي")
+        return 0
+    od = d / "edit" / "opinions"
+    ideas = "\n\n".join(f"— {brains.BRAINS[k]['name']}:\n{(od / f'{k}.md').read_text(encoding='utf-8')[:4000]}"
+                         for k in brains.BRAINS if (od / f"{k}.md").exists())
+    from editor.pipeline.paths import Episode
+    from .studio import snapshot
+    snapshot(Episode(d))   # their touches can be undone like any edit
+    JOB.say("🎬 المساعد يختار من لمساتهم (٣ بالأكثر)…")
+    if _claude(COUNCIL_APPLY_PROMPT.format(ep=d, ideas=ideas) + learning.prompt_block(HOME)) != 0:
+        JOB.say("⚠️ ما گدرت أطبق لمساتهم هالمرة. الخطة تبقى مثل ما هي")
+    return 0
 
 
 def _app_ideas_step(d: Path) -> int:
@@ -1557,6 +1596,8 @@ def run_job(ep_id: str, what: str) -> None:
             code = _youtube_langs_step(d)
         elif step == "opinion":
             code = _opinion_step(d)
+        elif step == "council":
+            code = _council_step(d)
         elif step == "app-ideas":
             code = _app_ideas_step(d)
         elif step == "learn":
@@ -1951,7 +1992,7 @@ class Handler(BaseHTTPRequestHandler):
             m = re.match(r"^/api/episodes/([^/]+)/opinions$", path)
             if m:   # what ChatGPT and Gemini said about this plan
                 od = episode_dir(m.group(1)) / "edit" / "opinions"
-                return self._json({k: (od / f"{k}.md").read_text(encoding="utf-8") for k in brains.BRAINS if (od / f"{k}.md").exists()})
+                return self._json({k: (od / f"{k}.md").read_text(encoding="utf-8") for k in (*brains.BRAINS, "applied") if (od / f"{k}.md").exists()})
             if path == "/api/selfcheck":
                 return self._json(selfcheck())
             if path == "/api/eleven":

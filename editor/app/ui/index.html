@@ -866,7 +866,8 @@ kbd{font:600 10px ui-monospace,monospace;padding:2px 5px;border-radius:5px;borde
         <div class="row" style="margin-top:10px"><b class="grow tiny">صور وجهك (مرجع للمشاهد المولدة)</b><button class="pill sm" id="sFaceAdd">＋ أضف</button><input type="file" id="sFaceIn" hidden multiple accept="image/*,video/*"></div>
         <div class="row" id="sFaces" style="margin-top:6px;flex-wrap:wrap;gap:6px"></div></div></div>
     <div class="f card"><b>شات جي بي تي وجيميناي (اشتراكاتك)</b><div class="muted tiny" style="margin:4px 0 8px;line-height:1.7">يشتغلون ويه المساعد بحسابك نفسه: يقرون الخطة ويعطون رأي ثاني، ويقترحون أفكار. ما يغيرون ملفاتك، والمساعد هو الي يطبّق. الربط مرة وحدة: نصّب، بعدين «اربط حسابك» (يفتح صفحة الدخول)، بعدين «جرّب».</div>
-      <div id="sBrains" style="display:grid;gap:8px"></div></div>
+      <div id="sBrains" style="display:grid;gap:8px"></div>
+      <label class="row" style="margin-top:10px;gap:8px;align-items:center"><input type="checkbox" id="sCouncil" style="width:auto"><span class="tiny">بعد كل خطة يضيفون لمساتهم لحالهم (٣ بالأكثر، والمساعد يقرر شنو ياخذ)</span></label></div>
     <div class="f card"><b>ذوقك (المساعد يتعلمه لحاله)</b><div class="muted tiny" style="margin:4px 0 8px;line-height:1.7">كل تعديل تسويه ينحفظ، وبعد كل حلقة نهائية المساعد يكتب هنا شنو تحب وشنو تكره، ويمشي عليه بالحلقات الجاية من أول مرة. تگدر تصلّحه بيدك.</div>
       <div class="dim tiny" id="sLearnSt"></div>
       <textarea id="sTaste" rows="6" placeholder="لسه ما تعلم شي. بعد أول حلقة نهائية يطلع ذوقك هنا…" style="margin-top:6px"></textarea>
@@ -952,7 +953,7 @@ let state = {episodes: []}, cur = null, ep = null, step = 1, job = {}, logNext =
 let data = {sentences: null, captions: null, plan: null, timeline: null, look: null, sound: null, review: {}};
 let planSub = 1, pendingFix = {}, pendingDel = new Set(), keepMap = {}, notes = [];
 const STEPS = [["الجمل", "sentences"], ["الصوت", "sound"], ["الكابشن", "captions"], ["الخطة", "plan"], ["البناء", "build"], ["الملاحظات", "notes"]];
-const RUNS = {prepare: 1, cut: 1, sentences: 1, captions: 3, plan: 4, images: 4, build: 5, final: 5, requests: 6, assist: 4, auto: 1, chat: 4, learn: 6, selfcheck: 5, opinion: 4, "app-ideas": 6};
+const RUNS = {prepare: 1, cut: 1, sentences: 1, captions: 3, plan: 4, images: 4, build: 5, final: 5, requests: 6, assist: 4, auto: 1, chat: 4, learn: 6, selfcheck: 5, opinion: 4, "app-ideas": 6, council: 4};
 
 async function refresh(){
   try { state = await api("/api/state"); } catch (_) { return; }
@@ -1293,7 +1294,8 @@ function stepPlan(){
   if ($("pOpinion")) $("pOpinion").onclick = () => run("opinion");
   if ($("pOpinions")) api(E() + "/opinions").then(o => { const box = $("pOpinions"); if (!box) return;
     const names = {chatgpt: "شات جي بي تي", gemini: "جيميناي"};
-    box.innerHTML = Object.entries(o).map(([k, t]) => `<details class="card" style="padding:8px 10px;margin-bottom:8px" open><summary><b>رأي ${names[k] || k}</b></summary>
+    const applied = o.applied; delete o.applied;
+    box.innerHTML = (applied ? `<div class="card" style="padding:8px 10px;margin-bottom:8px"><b>🎬 الي أخذه المساعد من لمساتهم</b><div class="tiny" style="white-space:pre-wrap;line-height:1.8;margin-top:6px">${esc(applied)}</div></div>` : "") + Object.entries(o).map(([k, t]) => `<details class="card" style="padding:8px 10px;margin-bottom:8px" open><summary><b>رأي ${names[k] || k}</b></summary>
       <div class="tiny" style="white-space:pre-wrap;line-height:1.8;margin-top:6px">${esc(t)}</div>
       <div class="row" style="margin-top:6px"><button class="pill sm y" data-apply="${k}" ${job.running ? "disabled" : ""}>خلّي المساعد يطبّق الي يشوفه صح</button></div></details>`).join("");
     box.querySelectorAll("[data-apply]").forEach(b => b.onclick = () => run("assist", "هذا رأي " + (names[b.dataset.apply] || "") + " بالخطة. طبّق الاقتراحات الي تشوفها تحسّن الحلقة فعلاً، واترك الباقي، وگول شنو طبقت:\n" + o[b.dataset.apply])); }).catch(() => {});
@@ -1707,6 +1709,8 @@ $("sElOff").onclick = async () => { await post("/api/eleven/unlink"); elRefresh(
 $("sElOpen").onclick = () => openUrl("https://elevenlabs.io/app/settings/api-keys");
 async function brainsRefresh(){
   const st = await api("/api/brains").catch(() => ({}));
+  api("/api/prefs").then(p => { $("sCouncil").checked = p.council !== false; }).catch(() => {});
+  $("sCouncil").onchange = () => post("/api/prefs", {council: $("sCouncil").checked}).then(() => toast($("sCouncil").checked ? "يضيفون لمساتهم بعد كل خطة" : "انطفت لمساتهم التلقائية")).catch(() => {});
   $("sBrains").innerHTML = Object.entries(st).map(([k, b]) => `<div class="card" style="padding:10px 12px" data-brow="${k}">
     <div class="row" style="flex-wrap:wrap;gap:6px;align-items:center">
       <b class="grow">${esc(b.name)} <span class="dim tiny">من ${esc(b.by)}</span></b>

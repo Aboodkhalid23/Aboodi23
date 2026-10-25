@@ -26,6 +26,12 @@ if t:   # the learning step: the taste file is rewritten from what he changed
     pathlib.Path(t.group(1).strip()).write_text("## الكابشن والخط\n- يحب " + seen + " (مرة وحدة)\n", encoding="utf-8")
     ev({"type": "result", "subtype": "success", "is_error": False, "result": "تعلمت"})
     sys.exit(0)
+c = re.search(r"الخطة: (.+)/edit/edit_plan.json", prompt)
+if c and "اقتراحاتهم" in prompt:   # the lead editor picks a few of ChatGPT's and Gemini's touches
+    d = pathlib.Path(c.group(1).strip()) / "edit" / "opinions"
+    (d / "applied.md").write_text("- من شات جي بي تي: هوك بخريطة", encoding="utf-8")
+    ev({"type": "result", "subtype": "success", "is_error": False, "result": "لمسة وحدة"})
+    sys.exit(0)
 m = re.search(r"الحلقة بالمجلد: (.+)", prompt)
 if m:
     ep = pathlib.Path(m.group(1).strip())
@@ -362,6 +368,11 @@ echo '1. 0:40 هنا ممل، حط صورة أرشيف'
     assert "الهوك" in (d / "edit" / "opinions" / "chatgpt.md").read_text() and "أرشيف" in (d / "edit" / "opinions" / "gemini.md").read_text()
     calls = log.read_text()
     assert "--sandbox read-only" in calls and "workspace-write" not in calls
+    assert "council" in srv.STEPS["plan"] and srv.STEPS["plan"].index("council") == 1
+    assert srv._council_step(d) == 0 and "هوك" in (d / "edit" / "opinions" / "applied.md").read_text()
+    srv.prefs({"council": False})
+    (d / "edit" / "opinions" / "applied.md").unlink()
+    assert srv._council_step(d) == 0 and not (d / "edit" / "opinions" / "applied.md").exists()
     brains.set_on("gemini", False, srv.HOME)
     assert brains.active(srv.HOME, srv.HOME / "tools") == ["chatgpt"]
 

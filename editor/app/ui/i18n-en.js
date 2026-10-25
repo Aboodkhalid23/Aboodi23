@@ -317,5 +317,7 @@ window.URU_EN = {
 "من گوگل": "by Google",
 " تعديل جديد ينتظر": " new changes waiting",
 "تعديل جديد ينتظر": "new changes waiting",
-"يشتغلون ويه المساعد بحسابك نفسه: يقرون الخطة ويعطون رأي ثاني، ويقترحون أفكار. ما يغيرون ملفاتك، والمساعد هو الي يطبّق. الربط مرة وحدة: نصّب، بعدين «اربط حسابك» (يفتح صفحة الدخول)، بعدين «جرّب».": "They work beside the assistant with your own accounts: they read the plan, give a second opinion and suggest ideas. They never change your files; the assistant applies. Link once: Install, then “Link your account” (opens the sign-in page), then “Test”."
+"يشتغلون ويه المساعد بحسابك نفسه: يقرون الخطة ويعطون رأي ثاني، ويقترحون أفكار. ما يغيرون ملفاتك، والمساعد هو الي يطبّق. الربط مرة وحدة: نصّب، بعدين «اربط حسابك» (يفتح صفحة الدخول)، بعدين «جرّب».": "They work beside the assistant with your own accounts: they read the plan, give a second opinion and suggest ideas. They never change your files; the assistant applies. Link once: Install, then “Link your account” (opens the sign-in page), then “Test”.",
+"بعد كل خطة يضيفون لمساتهم لحالهم (٣ بالأكثر، والمساعد يقرر شنو ياخذ)": "After every plan they add their touches (3 at most; the assistant decides what to take)",
+"🎬 الي أخذه المساعد من لمساتهم": "🎬 What the assistant took from their touches"
 };
