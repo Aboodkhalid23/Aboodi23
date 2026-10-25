@@ -442,6 +442,8 @@ body,header,#rail,#panel,#viewer,#inspector,#tl,.dlg,.pill,.rb,.lc,.card{transit
       <div class="pn" data-pn="styles" hidden>
         <div class="pnh"><b>الستايلات</b><span class="dim tiny" id="syCount"></span></div>
         <div class="dim tiny" style="padding:0 14px 8px">كل ستايل يغيّر شكل الحلقة كلها: الألوان، الخطوط، شكل الصور والكتابة، الانتقالات، الإيقاع، والموسيقى. اختار واحد ودوس «طبّق».</div>
+        <div class="excard" style="margin:0 14px 8px"><div class="row"><b class="grow tiny">ستايل من فيديو يعجبك</b><button class="pill sm y" id="syRef">＋ دز فيديو</button><input type="file" id="syRefIn" hidden accept="video/*,.mov,.mp4"></div>
+          <div class="dim tiny" style="margin-top:4px;line-height:1.7">المساعد يقيس الفيديو (الألوان، سرعة القطع، الكتابة، الصور) ويسوي منه ستايل جديد بمجموعة «ستايلاتي»، وتطبقه على أي حلقة.</div></div>
         <div style="padding:0 14px 8px"><input id="syFind" placeholder="ابحث: رعب، فضاء، ورق…"></div>
         <div id="syCats" class="row" style="padding:0 14px 8px;flex-wrap:wrap;gap:6px"></div>
         <div id="syPick" hidden style="padding:0 14px 10px"></div>
@@ -1725,6 +1727,9 @@ async function openExport(){
       <div class="row" style="margin-top:8px;flex-wrap:wrap"><button class="pill ${info.final ? "y" : ""}" id="xReels">${(info.shorts || []).length ? "اختار وقص من جديد" : "سوّي الريلز"}</button>${(info.shorts || []).length ? `<button class="pill" id="xReelsShow">📂 وينها؟ (${ar(info.shorts.length)})</button>` : ""}${info.posts ? `<button class="pill sm" data-copy="posts">نسخ الكابشنات</button>` : ""}${(info.shorts || []).some(f => /shorts\/01-/.test(f)) ? `<button class="pill sm" id="xYtShort">⬆️ الرئيسي على يوتيوب شورتس</button>` : ""}</div>
       ${(info.shorts || []).length ? `<div class="grid2" style="margin-top:8px">${info.shorts.map(f => `<video src="/files/${enc(cur)}/${f.split("/").map(enc).join("/")}" controls preload="metadata" style="width:100%;aspect-ratio:9/16;background:#000;border-radius:10px"></video>`).join("")}</div>` : ""}
       ${info.posts ? `<pre class="log" style="margin-top:6px;white-space:pre-wrap">${esc(info.posts)}</pre>` : ""}</div>`
+    + `<div class="f"><b>الصورة المصغرة</b> <span class="dim tiny">٣ أفكار بالذكاء الاصطناعي (يحتاج الذكاء المدفوع شغّال، تقريباً دولار للوحدة).</span>
+      <div class="row" style="margin-top:8px"><button class="pill sm" id="xThumbs">سوّي صور مصغرة</button>${(info.thumbs || []).length ? `<button class="pill sm" id="xThumbsShow">📂 وينها؟</button>` : ""}</div>
+      ${(info.thumbs || []).length ? `<div class="grid2" style="margin-top:8px">${info.thumbs.map(f => `<img src="/files/${enc(cur)}/${f.split("/").map(enc).join("/")}" style="width:100%;border-radius:10px">`).join("")}</div>` : ""}</div>`
     + `<div class="f"><b>ملفات الترجمة</b> <span class="dim tiny">ترفعها على يوتيوب، والمشاهد يشغّل الترجمة إذا يريد.</span>
       <div class="row" style="margin-top:8px"><button class="pill sm" data-srt="ar">ترجمة عربية</button><button class="pill sm" data-srt="en">ترجمة إنگليزية</button></div></div>`
     + (info.chapters ? `<div class="f"><b>فصول يوتيوب</b> <button class="pill sm" data-copy="chapters">نسخ</button><pre class="log" style="margin-top:6px">${esc(info.chapters)}</pre></div>` : "")
@@ -1738,6 +1743,8 @@ async function openExport(){
   if ($("xYtOpen")) $("xYtOpen").onclick = () => openUrl(`https://studio.youtube.com/video/${info.youtube}/edit`);
   if ($("xYtShort")) $("xYtShort").onclick = async () => { await ytRefresh(); if (!ytState.linked){ $("dExport").hidden = true; $("dYt").hidden = false; return; } $("dExport").hidden = true; run("youtube", "short:" + info.shorts.find(f => /shorts\/01-/.test(f))); };
   $("xBody").querySelectorAll("[data-srt]").forEach(b => b.onclick = async () => { try { await post(E() + "/srt", {lang: b.dataset.srt}); post(E() + "/reveal", {what: "edit"}); toast("انحفظ ملف الترجمة"); } catch (e){ toast(e.message); } });
+  $("xThumbs").onclick = () => { $("dExport").hidden = true; run("thumbs"); };
+  if ($("xThumbsShow")) $("xThumbsShow").onclick = () => post(E() + "/reveal", {what: "thumbs"});
   $("xReels").onclick = () => { if (!info.final){ toast("طلّع النسخة الكاملة أول"); return; } $("dExport").hidden = true; run("reels"); };
   if ($("xReelsShow")) $("xReelsShow").onclick = () => post(E() + "/reveal", {what: "shorts"});
   if ($("xShowEx")) $("xShowEx").onclick = () => post(E() + "/reveal", {what: "exports"});
@@ -1984,6 +1991,11 @@ function pickStyle(x){
   box.scrollIntoView({behavior: "smooth", block: "nearest"});
 }
 $("syFind").oninput = () => stData && drawStyles();
+$("syRef").onclick = () => { if (!ep){ toast("افتح مشروع أول (الستايل يصير لكل الحلقات)"); return; } $("syRefIn").click(); };
+$("syRefIn").onchange = async () => { const f = $("syRefIn").files[0]; if (!f) return; toast("دا أرفع الفيديو…");
+  try { const r = await fetch(`/api/style-ref?name=${enc(f.name)}&ep=${enc(cur)}`, {method: "POST", body: f}); const j = await r.json(); if (!r.ok) throw new Error(j.error);
+        stData = null; lastLog = {running: true, what: "style-ref"}; job = {...job, running: true, ep: cur, what: "style-ref"}; toast("المساعد يدرس الستايل… يطلع بـ«ستايلاتي» من يخلص"); }
+  catch (e){ toast(e.message); } $("syRefIn").value = ""; };
 
 /* ---------- fonts ---------- */
 let fData = null, fTab = "arabic", fOpts = null;

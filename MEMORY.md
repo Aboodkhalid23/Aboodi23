@@ -262,3 +262,12 @@
   - حدود المنصات فوگ الفيديو، المحرك يرجع يشتغل لحاله (٣ مرات بدقيقتين)، اقتراح ميزة → صفحة طلب بالريبو (issue) + `ideas.jsonl`، صوت «طبيعي».
 - **صادق:** الذكاء المدفوع ما انجرّب (يعتمد إن الموصلات توصل لكلود الي بالتطبيق). معاينة الخطوط تحتاج نت.
 - **الجاي:** يجرب حلقة حقيقية؛ يربط يوتيوب؛ يشغّل الذكاء المدفوع ويفحص الموصلات؛ طلبات الميزات توصل كـ issues.
+
+## 2026-10-25 (3) · سكيلزات جديدة من برّه وربطها بالتطبيق
+- **طلبه:** يدوّر على أقوى سكيلزات المونتاج والموشن بالكود والتوليد بالذكاء، ويضيفها للتطبيق، بأمان كامل.
+- **البحث:** قائمة `zhuyansen/awesome-claude-video-skills` (٣٤٧ ريبو مفحوصة أمنياً) + بحث. انضاف ٢٨ سكيل (المجموع ١٠٦)، كلها انقرت قبل الإضافة (ملفات، شبكة، أوامر خطرة):
+  - هايبرفريمز الرسمي (هيجن): hyperframes، hyperframes-cli، media-use، motion-doctrine، captions-overlay، seam-craft. فيه عدّاد استخدام بـ media-use: مطفي بالتطبيق (`HYPERFRAMES_NO_TELEMETRY`، `DO_NOT_TRACK`).
+  - هيگزفيلد الرسمي: generate، soul-id، video-explainer، youtube-thumbnail. بداخلها سطر تنصيب أداة سطر أوامر: بالتطبيق ما ينفّذ (صلاحيات كلود محصورة)، والتوليد بالموصل بس.
+  - charlie947 (motion-effects، animated-chart، reference-to-motion، title-sequence-3d، vox-explainer، motion-brief-writer)، Barty-Bart (object-separation، explainer-engaging، motion-broll)، hyperframes-motion-reel، reelmimic (video-clone، talking-head-recut، whiteboard، faceless-explainer)، Melvynx (mx-broll، mx-clips، mx-steal-style، mx-short-translate).
+  - تركت الثقيلة (أصوات وموسيقى ٣–٧ ميگا) والي تحتاج مفاتيح غير موجودة.
+- **بالتطبيق:** «ستايل من فيديو يعجبك» (لوحة الستايلات): يقيس الفيديو (لقطات وسرعة القطع) وكلود يكتب ستايل بـ `$MONTIER_HOME/styles` (مجموعة «ستايلاتي»، `styles.user_styles_dir`). «صور مصغرة بالذكاء» بالتصدير (خطوة `thumbs`، تحتاج الذكاء المدفوع). خطوة `ai` تقرا سكيلات هيگزفيلد.

@@ -28,6 +28,9 @@
 | **منتجة حلقة من فيديو خام** (رابط درايف) | **`editor`** (المونتير الآلي؛ وعلى ماكه تطبيق **URU**: `app/README.md`). **الستايل الافتراضي من 2026-10-22: `noir` (سينما الليل، ولمسة سينمائية على الوجه)**، و`retro-collage` و`investigation` حسب الموضوع. قواعده بـ `editor/CRAFT.md`، وكل سكيلزات المونتاج (أكثر من 40) مرتبة بـ `editor/SKILLS_LIBRARY.md` |
 | **منين أجيب صور، فيديو، أرشيف، جرايد قديمة، أنميشن، موسيقى، مؤثرات** | **`media-sources`** (38+ مصدر ورخصها بـ `editor/sources/CATALOG.md`) |
 | **بداية أي مونتاج، ومراجعة قبل التسليم، وأي بطء أو خطأ** | **`editor-mind`** (عقل المونتير الخبير: يفكر قبل، يراجع بعين المشاهد بـ `review`، يصلح لحاله بـ `autofix`، ويتعلم من كل حلقة بـ `editor/LESSONS.md`) |
+| **موشن جرافك بالكود** (عناوين، رسوم بيانية، تأثيرات، شرح بلا وجه، لوح أبيض) | `hyperframes` (يبدي بـ `motion-doctrine`)، `motion-effects`، `animated-chart`، `title-sequence-3d`، `vox-explainer`، `faceless-explainer`، `whiteboard`، `talking-head-recut`، `motion-broll` |
+| **ستايل من فيديو يعجبه** | `video-clone`، `mx-steal-style`، `reference-to-motion` (وبالتطبيق: لوحة الستايلات ← «دز فيديو») |
+| **توليد بالذكاء الاصطناعي** (بموافقته على الفلوس) | `higgsfield-generate`، `higgsfield-soul-id` (وجهه)، `higgsfield-youtube-thumbnail`، `higgsfield-video-explainer` |
 | مشكلة صعبة انحلت، أو "شنو تعلمت" | `claudeception` (يحولها لسكيل)، و`writing-skills` (يكتبه صح) |
 | تحليل ليش فيديو ما نجح | `retention-audit`، `channel-formula` |
 | أي كود أو تعديل | `karpathy-guidelines` |

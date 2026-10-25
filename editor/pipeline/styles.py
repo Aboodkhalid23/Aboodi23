@@ -30,12 +30,24 @@ class Style:
     layouts: list[str] | None = None           # scene kinds this style leans on (the plan prompt gets them)
 
 
+def user_styles_dir() -> Path | None:
+    """Styles he made in the app from videos he likes ($MONTIER_HOME/styles): kept outside the code, so updates keep them."""
+    import os
+    home = os.environ.get("MONTIER_HOME")
+    return Path(home) / "styles" if home else None
+
+
 def _style_files() -> list[Path]:
-    return sorted(p for p in STYLES_DIR.glob("*.md") if p.name not in ("README.md", "performance.md", "channel-system.md", "COMPONENTS.md"))
+    skip = ("README.md", "performance.md", "channel-system.md", "COMPONENTS.md")
+    files = {p.stem: p for p in STYLES_DIR.glob("*.md") if p.name not in skip}
+    mine = user_styles_dir()
+    if mine and mine.exists():
+        files.update({p.stem: p for p in mine.glob("*.md")})
+    return sorted(files.values(), key=lambda p: p.stem)
 
 
 def load_style(name: str) -> Style:
-    path = STYLES_DIR / f"{name}.md"
+    path = next((p for p in _style_files() if p.stem == name), STYLES_DIR / f"{name}.md")
     if path not in _style_files():
         raise KeyError(f"ستايل '{name}' مو موجود بـ editor/styles")
     _, front, notes = path.read_text(encoding="utf-8").split("---", 2)

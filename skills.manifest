@@ -105,3 +105,37 @@ AgriciDaniel/claude-shorts  .  claude-shorts
 
 # ذاكرة بين الجلسات (توفير توكينز)
 ssupppp/claude-session-memory  skills/session-memory
+
+# ---- 2026-10-25: motion graphics by code, AI generation, reference-to-style (each read before adding; see MEMORY) ----
+# HyperFrames (HeyGen, official): HTML/GSAP → MP4 motion graphics, captions, seamless transitions. Telemetry is off in
+# the app (HYPERFRAMES_NO_TELEMETRY / DO_NOT_TRACK in editor/app/server.py _env).
+heygen-com/hyperframes  skills/hyperframes
+heygen-com/hyperframes  skills/hyperframes-cli
+heygen-com/hyperframes  skills/media-use
+heygen-com/hyperframes  .claude/skills/motion-doctrine
+heygen-com/hyperframes  .claude/skills/captions-overlay
+heygen-com/hyperframes  .claude/skills/seam-craft
+# Higgsfield (official): how to prompt and use its image/video models, Soul ID (his face), explainers, thumbnails.
+# In the app it runs through his connected Higgsfield (MCP), never the CLI install line inside these files.
+higgsfield-ai/skills  higgsfield-generate
+higgsfield-ai/skills  higgsfield-soul-id
+higgsfield-ai/skills  higgsfield-video-explainer
+higgsfield-ai/skills  higgsfield-youtube-thumbnail
+charlie947/motion-graphics-skills  skills/motion-effects
+charlie947/motion-graphics-skills  skills/animated-chart
+charlie947/motion-graphics-skills  skills/reference-to-motion
+charlie947/motion-graphics-skills  skills/title-sequence-3d
+charlie947/motion-graphics-skills  skills/vox-explainer
+charlie947/motion-graphics-skills  skills/motion-brief-writer
+Barty-Bart/motion-graphics  skills/object-separation
+Barty-Bart/motion-graphics  skills/explainer-engaging
+Barty-Bart/motion-graphics  skills/motion-broll
+Sunwood-ai-labs/hyperframes-motion-reel-skill  .  hyperframes-motion-reel
+edenfunf/reelmimic  .claude/skills/video-clone
+edenfunf/reelmimic  .claude/skills/talking-head-recut
+edenfunf/reelmimic  .claude/skills/whiteboard
+edenfunf/reelmimic  .claude/skills/faceless-explainer
+Melvynx/video-agent-skills  skills/broll  mx-broll
+Melvynx/video-agent-skills  skills/clips  mx-clips
+Melvynx/video-agent-skills  skills/steal  mx-steal-style
+Melvynx/video-agent-skills  skills/short-translate  mx-short-translate

@@ -437,3 +437,27 @@ def test_paid_ai_is_off_until_he_turns_it_on_and_versions_swap(app, tmp_path, mo
     monkeypatch.setattr(srv, "_claude", lambda prompt, tools=None: calls.append(tools) or 0)
     ep.plan.write_text(json.dumps({"beats": [{"kind": "ai_video"}]}), encoding="utf-8")
     assert srv._ai_step(d) == 0 and calls and "mcp__claude_ai_Higgsfield" in calls[0]
+
+
+def test_style_from_a_video_he_likes(tmp_path, monkeypatch):
+    import re, subprocess
+    monkeypatch.setattr(srv, "HOME", tmp_path)
+    monkeypatch.setenv("MONTIER_HOME", str(tmp_path))
+    v = tmp_path / "مرجع.mp4"
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "testsrc2=s=320x568:d=3", str(v)], check=True)
+    seen = {}
+
+    def fake(prompt, tools=None):
+        seen["p"] = prompt
+        out = re.search(r'بـ "([^"]+\.md)"', prompt).group(1)
+        sid = re.search(r"name: (mine-[^،]+)،", prompt).group(1)
+        noir = (srv.CODE / "editor" / "styles" / "noir.md").read_text(encoding="utf-8")
+        open(out, "w", encoding="utf-8").write(noir.replace("name: noir", f"name: {sid}", 1)
+                                               .replace("grade: cinema", 'grade: cinema\ntitle_ar: "ستايل مرجعي"\ncategory: "ستايلاتي"', 1))
+        return 0
+    monkeypatch.setattr(srv, "_claude", fake)
+    srv.JOB.ep = None
+    assert srv.style_from_reference(v) == 0
+    assert seen["p"].count("sheet_") == 3
+    mine = [x for x in srv.styles_list() if x["category"] == "ستايلاتي"]
+    assert mine and mine[0]["name"] == "ستايل مرجعي"

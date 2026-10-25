@@ -1,14 +1,26 @@
 <p align="center">
-  <img src="assets/logo.png" alt="Color Grading Skill: deterministic colour execution for AI agents" width="760">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="brand/app-icon-dark.png">
+    <img src="brand/app-icon.png" width="128" alt="color-grading-skill app icon">
+  </picture>
 </p>
 
-<h1 align="center">color-grading-skill</h1>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="brand/logo/color-grading-skill-wordmark-white.svg">
+    <img src="brand/logo/color-grading-skill-wordmark-black.svg" height="48" alt="color-grading-skill">
+  </picture>
+</p>
 
-<p align="center"><strong>Deterministic colour grading execution for AI video agents.</strong></p>
+<p align="center"><b>Deterministic colour grading execution for AI video agents.</b><br>
+Executes colour operations an AI agent has already decided on as a typed, deterministic operation graph on top of <a href="https://github.com/kajisho5/ffmpeg-skill">ffmpeg-skill</a>.<br>
+Typed operations · Validated artifacts · Full provenance · No LLM, no prompt, no automatic LUT or "look" selection.</p>
 
 <p align="center">
-  Typed operations · Validated artifacts · Full provenance<br>
-  Part of the AI Video Production Ecosystem · built on <a href="https://github.com/kajisho5/ffmpeg-skill">ffmpeg-skill</a>
+  <a href="#quick-start"><b>Quick start</b></a> ·
+  <a href="#how-it-works">How it works</a> ·
+  <a href="#supported-operations">Supported operations</a> ·
+  <a href="#docs">Docs</a>
 </p>
 
 <p align="center">
@@ -58,9 +70,9 @@ actually runs FFmpeg. Full boundary, including how this differs from `media-anal
 ## Quick start
 
 Requirements: Python 3.9+ (standard library only), an
-[ffmpeg-skill](https://github.com/kajisho5/ffmpeg-skill) checkout (0.12.1 ≤ version < 1.0, for `--audio-stream` and
-honest `dropped_non_av_streams` reporting across every colour operation), and `ffmpeg` / `ffprobe` on `PATH` for
-ffmpeg-skill itself.
+[ffmpeg-skill](https://github.com/kajisho5/ffmpeg-skill) checkout of any version that has the flags this skill
+emits (0.12.3 and every later release, 2.x included; there is no version window, `doctor` reports what it
+detected), and `ffmpeg` / `ffprobe` on `PATH` for ffmpeg-skill itself.
 
 ```bash
 # 1. install this skill
@@ -241,8 +253,10 @@ for its full flag list.
 
 This skill never calls `ffmpeg` or `ffprobe` itself. Every process it starts is
 `python3 <ffmpeg-skill>/scripts/{probe,color}.py` with a typed argv, verified against ffmpeg-skill's own
-machine-readable contract (`contract_version 1.0`) before use — flags this skill emits are checked against the live
-contract by `doctor`, and a version outside `[0.9.1, 1.0.0)` is refused rather than assumed to behave the same.
+machine-readable contract (`contract_version 1.0`) before use. Compatibility is detected, not looked up by version
+number: every flag this skill emits must be present in the located checkout's contract (or `--help`), the CRF flag is
+whichever of `--quality` (ffmpeg-skill ≥ 1.10) / `--crf` (before 2.0) it offers, and probe's HDR flag is read as
+`bt2020_or_hdr` where it exists (2.0 narrowed `hdr`). A checkout missing a flag is refused with that flag named.
 Exact tools, flags and every measured compatibility gap: [docs/ffmpeg-skill.md](docs/ffmpeg-skill.md).
 
 ## Error handling
@@ -290,14 +304,15 @@ export COLOR_GRADING_FFMPEG_SKILL_DIR=/path/to/ffmpeg-skill     # or clone it as
 python -m pytest -q
 ```
 
-255 tests, nothing skipped by default, nothing mocked in the integration layer: 152 unit (schema, graph, path
+284 tests, nothing skipped by default, nothing mocked in the integration layer: 152 unit (schema, graph, path
 policy, determinism), 49 security (injection, path/symlink escapes, argv audit), 5 contract (contract ⇔
-implementation, doctor), and 49 integration tests that run every operation against real video through a real
+implementation, doctor), 29 ffmpeg-skill compatibility (capability detection across old/new layouts and contracts), and 49 integration tests that run every operation against real video through a real
 ffmpeg-skill checkout and real FFmpeg — including deterministic pixel-level checks for `LUT_APPLY` and
 `PRIMARY_CORRECTION` (including its `gamma`/`lift`/`gain`/`levels_*`/`curves` parameters), `PRIMARY_CORRECTION`'s
 observed before/after `measurements`, and a reproduction of the
 exit-0-but-unchanged retag case above. CI (`.github/workflows/tests.yml`) runs Linux (Python 3.9, 3.11), Windows and
-macOS, each against a real FFmpeg install and a pinned ffmpeg-skill checkout. File-by-file coverage and what
+macOS, each against a real FFmpeg install and ffmpeg-skill main (also daily), plus one Linux job against the oldest
+supported ffmpeg-skill commit (0.12.3). File-by-file coverage and what
 real-media verification does and does not prove: [docs/testing.md](docs/testing.md).
 
 ## Docs

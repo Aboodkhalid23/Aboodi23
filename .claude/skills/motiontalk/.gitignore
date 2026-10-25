@@ -19,7 +19,11 @@ mg-output/
 # Local environment and credentials
 .env
 .env.*
+!.env.example
 *.pem
 *.key
 
 .renders/
+
+# Isolated Python setup
+.venv/

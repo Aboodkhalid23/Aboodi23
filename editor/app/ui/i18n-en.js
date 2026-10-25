@@ -199,6 +199,8 @@ window.URU_EN = {
 "انحفظ ملف الترجمة": "Subtitle file saved", "المساعد يترجم هسة…": "The assistant is translating…", "طبيعي": "Natural", "📄 ارفع ملف السكربت": "📄 Upload script file",
 "سكربت الحلقة (يُنصح بيه)": "Episode script (recommended)", "انحط السكربت ✓": "Script added ✓", "الصق السكربت هنا، أو ارفع الملف": "Paste the script here, or upload the file",
 "قسّم الشاشة: انت بنص والصورة بالنص الثاني": "Split screen: you on one half, the picture on the other", "الأخضر العتيق": "Vintage green", "من مراجعك": "From your references",
+"ستايل من فيديو يعجبك": "Style from a video you like", "＋ دز فيديو": "＋ Send a video", "ستايلاتي": "My styles",
+"المساعد يقيس الفيديو (الألوان، سرعة القطع، الكتابة، الصور) ويسوي منه ستايل جديد بمجموعة «ستايلاتي»، وتطبقه على أي حلقة.": "The assistant measures the video (colours, cut speed, type, pictures) and makes a new style in My styles that you can apply to any episode.",
 "الشكل": "Appearance", "الثيم": "Theme", "اللغة": "Language", "عربي": "Arabic", "الغابة": "Forest", "نعناعي فاتح": "Mint light", "ليل ذهبي": "Night gold", "محيط": "Ocean", "وردي": "Rose",
 "الدعم والاقتراحات": "Support & ideas", "اقترح ميزة": "Suggest a feature", "اكتب الميزة الي تريدها…": "Describe the feature you want…", "ارسلها": "Send it",
 "الذكاء الاصطناعي المدفوع": "Paid AI", "صورة وجهك": "Your face photo", "الخطوط": "Fonts", "خطوط عربية": "Arabic fonts", "خطوط إنگليزية": "Latin fonts", "أضف خط": "Add font",

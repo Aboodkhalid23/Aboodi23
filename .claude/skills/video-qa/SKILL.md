@@ -7,8 +7,10 @@ description: >-
   loudness (LUFS) or clipping problems, confirm a fix after a re-render, or build an
   inspection packet (contact sheet + waveform + transcript) for a suspect timestamp.
   L1 = ffmpeg/ffprobe technical checks, L2 = transcript edit-boundary checks mapped through
-  the EDL, L3 = optional Gemini watch+listen pass on a 480p proxy, L4 = targeted inspection
-  packets. Needs only ffmpeg/ffprobe; whisper and GEMINI_API_KEY unlock the deeper layers.
+  the EDL, LF = optional per-frame rule checks (text in the platform-UI zones of a vertical
+  video, a graphic covering a face, likeness against a reference photo for AI clones),
+  L3 = optional Gemini watch+listen pass on a 480p proxy, L4 = targeted inspection packets.
+  Needs only ffmpeg/ffprobe; whisper, TYPESAFE_API_KEY and GEMINI_API_KEY unlock the deeper layers.
 ---
 
 # video-qa — 4-layer QA for rendered video edits
@@ -25,6 +27,10 @@ CHEAP    L1  ffprobe/ffmpeg technical (blackdetect, freezedetect, flash frames,
          L2  transcript edit-boundary checks on EVERY dialogue cut
              (clipped words, duplicate phrases, seam dead-air, caption coverage,
              butt-splice clicks) + isolated seam re-probes
+         LF  per-frame rule checks with a typed-judgment model (TypeSafe Jev):
+             1 fps + every caption/graphic midpoint, ~0.1 s and ~$0.0001 a frame —
+             overlay text in the top 14% / bottom 26% of a vertical frame (the Reels
+             UI), a pasted graphic over a visible face, optional likeness drift
          L3  a multimodal model watches AND listens to a 480p proxy (audio intact),
              5fps sampling, enforced JSON — tells you WHERE to look (optional)
 EXPENSIVE L4 inspection packets: contact sheet + marked waveform + word-level
@@ -54,13 +60,18 @@ npm --prefix tools/video-qa run qa:inspect -- --manifest <p>/spec.qa-manifest.js
 npm --prefix tools/video-qa run qa:storyboard -- --storyboard <p>/storyboard.json \
     --html <p>/composition.html --video <p>/out.mp4
 
+# an AI-clone edit: also check every sampled face against a reference photo
+npm --prefix tools/video-qa run qa:video -- --video <p>/out.mp4 --likeness-ref <reference.jpg>
+
 # enforce completed technical + transcript checks before delivery
 npm --prefix tools/video-qa run qa:video -- --manifest <p>/spec.qa-manifest.json \
     --require-layers technical,transcript
 ```
 
 Flags: `--skip-semantic` (no Gemini), `--fps N`, `--instructions file.txt` (the original
-brief, given to Gemini), `--no-cache`, `--out dir`, `--json`. Exit **0** PASS · **1**
+brief, given to Gemini), `--no-cache`, `--out dir`, `--json`. Frame checks: `--skip-frames`,
+`--frames-fps N`, `--frames-max N`, `--safe-zone TOP,BOTTOM` (fractions; `off` disables),
+`--no-face-check`, `--likeness-ref photo.jpg`, `--likeness-threshold P`. Exit **0** PASS · **1**
 PASS_WITH_WARNINGS · **2** FAIL. Reports land in `<video dir>/_qa/<stem>/qa-report.{md,json}`
 with packets under `inspect/<issue-id>/`. Relative paths resolve from the directory you ran
 the command in; `.env` is read from there first, then from this pack's root. Full flag and
@@ -121,6 +132,7 @@ calibration gates, write the report. Each layer is a documented procedure, not a
 | edit-intent manifest (EDL / cut list / placements) | strongly recommended | L2 boundary checks, intentional-region gating, stable issue anchors |
 | source-time word timings (whisper of the SOURCE) | recommended | clipped-word + duplicate + caption checks |
 | source footage | optional | lets you transcribe the source yourself |
+| `TYPESAFE_API_KEY` in `.env` | optional | LF frame checks — skipped without it and then not counted as missing coverage |
 | `GEMINI_API_KEY` in `.env` at repo root | optional | L3 — skip gracefully without it, never crash |
 
 Manifest format, EDL adaptation, and the source→output word-mapping algorithm:
@@ -139,19 +151,28 @@ Work in a scratch dir next to the video: `<video dir>/_qa/<video stem>/`.
    [references/layer2-transcript.md](references/layer2-transcript.md). Runs on every
    dialogue cut; escalate marginal calls to isolated seam re-probes. Degrades (click checks
    only) when no word timings exist — never blocks.
-3. **L3 — semantic watch+listen.** Follow
+3. **LF — frame checks.** Runs inside `qa:video` when `TYPESAFE_API_KEY` is set (the
+   engine's `runQa()` only runs it when asked). One request per sampled frame; runs of
+   flagged frames become one issue each with the frame files as evidence under
+   `_qa/<stem>/frames/`. `text_in_unsafe_zone`, `face_covered` and `identity_drift` are
+   MEDIUM, `caption_over_face` is LOW. Text counts only when two yes/no answers AND a text
+   box reaching more than 2% into a zone agree; a covered face needs p ≥ 0.75 (faces inside
+   screen recordings scored 0.56–0.69 in calibration, pasted pictures over the speaker
+   0.77+). These are pointers, like L3: open the evidence frames before changing an edit.
+   A full-screen takeover has no visible face, so it is not flagged as a cover.
+4. **L3 — semantic watch+listen.** Follow
    [references/layer3-semantic.md](references/layer3-semantic.md). Build a 480p proxy with
    audio intact, upload to Gemini, get schema-enforced JSON. Skip cleanly if no key. Its
    timestamps are ±2s — its job is to tell you WHERE to look, never to be trusted blindly.
-4. **Aggregate.** Merge issues; a semantic finding overlapping a deterministic finding
+5. **Aggregate.** Merge issues; a semantic finding overlapping a deterministic finding
    (compatible defect categories plus the same event anchor, or overlapping time windows
    within 1s) is **corroborated** — raise confidence on
    both. Gemini-only issues never exceed HIGH.
-5. **L4 — inspect before you touch anything.** For every CRITICAL/HIGH issue (top ~4),
+6. **L4 — inspect before you touch anything.** For every CRITICAL/HIGH issue (top ~4),
    build an inspection packet per
    [references/layer4-inspection.md](references/layer4-inspection.md), look at it, and only
    then decide. Deterministic windows: pad ±0.5s. Gemini windows: pad ±1.5s.
-6. **Report.** Write `qa-report.md` (+ `.json` if scripting) in the `_qa` dir: verdict,
+7. **Report.** Write `qa-report.md` (+ `.json` if scripting) in the `_qa` dir: verdict,
    per-layer status, issues sorted severity-then-time, each with its stable anchor, evidence,
    and suggested fix. Packets live under `inspect/<issue-id>/`.
 

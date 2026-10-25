@@ -50,11 +50,11 @@ STEPS = {"all": ["prep", "plan", "render", "suite"], "from-plan": ["plan", "rend
          # a style from the Styles panel on the whole video: the assistant re-plans in it, then a new preview
          "restyle": ["plan", "ai", "images", "preview"],
          # the reels pack: the assistant picks 1 main short (< 1 min) + 5 clips, then they are cut tall
-         "reels": ["reels-pick", "shorts"], "translate": ["translate"], "youtube": ["youtube"]}
+         "reels": ["reels-pick", "shorts"], "thumbs": ["thumbs"], "style-ref": ["style-ref"], "translate": ["translate"], "youtube": ["youtube"]}
 STEP_NAMES = {"prep": "التجهيز", "plan": "خطة المونتير", "render": "النسخة الكاملة", "preview": "المعاينة",
               "suite": "غرفة المونتاج", "requests": "ملاحظاتك", "fetch": "تجهيز الفيديو", "transcribe": "تفريغ الكلام",
               "cut": "قص المقطع", "sentences": "المساعد يراجع الجمل", "captions": "المساعد يراجع الكابشن",
-              "images": "الصور", "assist": "المساعد", "chat": "المساعد", "shorts": "الريلز", "export": "التصدير", "reels-pick": "اختيار الريلز", "script-names": "أسماء السكربت", "translate": "الترجمة", "ai": "مشاهد الذكاء الاصطناعي", "youtube": "الرفع على يوتيوب"}
+              "images": "الصور", "assist": "المساعد", "chat": "المساعد", "shorts": "الريلز", "export": "التصدير", "reels-pick": "اختيار الريلز", "thumbs": "الصور المصغرة", "style-ref": "ستايل من فيديو", "script-names": "أسماء السكربت", "translate": "الترجمة", "ai": "مشاهد الذكاء الاصطناعي", "youtube": "الرفع على يوتيوب"}
 CLAUDE_TOOLS = ["Read", "Write", "Edit", "Glob", "Grep", "WebSearch", "WebFetch", "TodoWrite",
                 "Bash(python -m editor.pipeline:*)", "Bash(python3 -m editor.pipeline:*)",
                 "Bash(ffprobe:*)", "Bash(ffmpeg:*)", "Bash(ls:*)"]
@@ -275,7 +275,9 @@ JOB = Job()
 def _env() -> dict:
     env = dict(os.environ, PYTHONUNBUFFERED="1", MONTIER_APP="1",
                ABOODI_HISTORY=str(HOME / "learning" / "history.jsonl"),
-               BASH_DEFAULT_TIMEOUT_MS="3600000", BASH_MAX_TIMEOUT_MS="7200000")
+               BASH_DEFAULT_TIMEOUT_MS="3600000", BASH_MAX_TIMEOUT_MS="7200000",
+               # skills that ship usage counters (HyperFrames media-use): off, nothing about his work leaves the Mac
+               HYPERFRAMES_NO_TELEMETRY="1", DO_NOT_TRACK="1", MONTIER_HOME=str(HOME))
     (HOME / "learning").mkdir(parents=True, exist_ok=True)
     tok = HOME / "claude_token"
     if tok.exists() and tok.read_text(encoding="utf-8").strip():   # linked from the app (ClaudeLink)
@@ -497,6 +499,27 @@ NAMES_PROMPT = """انت مساعد المونتاج. ماكو أحد يجاوب
 اكتب "{out}" بهالشكل بس (JSON): {{"names": [{{"ar": "الاسم مثل ما مكتوب بالسكربت", "en": "الاسم الصحيح بالإنگليزي", "kind": "person|company|place|thing|event", "who": "سطر عربي قصير: منو أو شنو"}}]}}
 لا تعدّل أي ملف ثاني."""
 
+STYLE_REF_PROMPT = """انت مدير فني لمونتاج يوتيوب. صاحب القناة دزلك فيديو يعجبه ستايله، وتريد تسوي منه ستايل جديد لتطبيقه. ماكو أحد يجاوبك هسة، فلا تسأل.
+- صور من الفيديو (كل صورة شبكة لقطات بالترتيب): {sheets}
+- قياسات: المدة {dur:.0f} ث، قطع كل {cut:.1f} ث تقريباً، المقاس {size}.
+- اقرا الطريقة بسكيلات reference-to-motion وmx-steal-style (قِس، لا تخمّن).
+- شوف مثال ستايل جاهز: "{example}" (نفس الحقول بالضبط).
+اكتب ستايل جديد بـ "{out}" (ملف md: front matter بين --- ثم ملاحظات عربية):
+  name: {sid}، title_ar: اسم عربي قصير يوصف الشكل، category: ستايلاتي، summary: سطر يوصفه (يبدي بالاسم العربي ثم —)
+  palette: paper/ink/accent/red/maroon/teal/grid (ألوان hex من الفيديو نفسه)، fonts: title/body من: {fonts}
+  texture: clean|grain|paper، image_treatment و image_treatments من: {treatments}، text_variants من: highlight, marker, typewriter, ransom
+  transition من: cut, {transitions}، beat_seconds رقم (من قياس القطع)، music_mood إنگليزي، sfx من: whoosh, pop, click, ding, hit, riser, paper, glitch, boom
+  ai_suffix إنگليزي يوصف شكل الصور، grade من: {grades}، layouts من: {kinds}، fits: مواضيع تناسبه.
+  وبالملاحظات: «## شلون ينبني» وأول سطر بيه يبدي بـ "- " ويوصف شنو يسوي بالفيديو بالعربي بلا حروف إنگليزية.
+لا تعدّل أي ملف ثاني. بالآخر سطر عربي: شنو الي يميّز هالستايل."""
+
+THUMBS_PROMPT = """انت مصمم صور مصغرة يوتيوب. ماكو أحد يجاوبك هسة، فلا تسأل.
+الحلقة: {ep} (العنوان: «{title}»). اقرا خطتها "{ep}/edit/edit_plan.json" والسكربت إذا موجود حتى تعرف الموضوع الحقيقي.
+اقرا سكيل higgsfield-youtube-thumbnail واتبع طريقته (فجوة معلومة صادقة، وجه واضح، ٣ كلمات بالكثير)، بس ولّد بأدوات هيگزفيلد المربوطة (لا تنصّب شي).
+{faces}
+سوّ 3 أفكار مختلفة، كل وحدة صورة 1280×720. لا تنزّلها بنفسك: اكتب روابطها بـ "{out}" بهالشكل: {{"thumbs": [{{"url": "...", "idea": "سطر عربي"}}]}}.
+الحد الأعلى للصرف {budget} دولار. كل رسائلك عربي عراقي."""
+
 REELS_PROMPT = """انت مونتير ريلز وتيك توك لقناة صاحب القناة. ماكو أحد يجاوبك هسة، فلا تسأل.
 بالملف "{file}" كلام الحلقة الجاهزة سطر سطر، وكل سطر وقته [من–لحد] بالثواني على الحلقة النهائية.
 اختار {n} مقاطع تنفع ريلز (كل وحدة تنفهم لحالها بلا الحلقة):
@@ -674,6 +697,7 @@ def _money_rule() -> str:
 
 
 AI_PROMPT = """انت مولّد مشاهد الذكاء الاصطناعي لحلقة بالمجلد {ep}. ماكو أحد يجاوبك هسة، فلا تسأل.
+0. اقرا سكيل higgsfield-generate (شلون تكتب البرومبت لكل موديل)، وإذا المشهد بيه صاحب القناة اقرا higgsfield-soul-id. لا تنصّب أي شي: استعمل الأدوات المربوطة بس.
 1. شغّل: python -m editor.pipeline ai-jobs "{ep}" واقرا "{ep}/edit/work/ai_jobs.json" (المشاهد الناقصة).
 2. لكل مشهد ناقص: ولّده بأدوات التوليد المربوطة بحسابك (هيگزفيلد أولاً، وآرتلست إذا أنسب). {variants} نسخة لكل مشهد،
    الأولى تنزل بـ: python -m editor.pipeline ai-fetch "{ep}" --beat <رقم> --url <الرابط>
@@ -810,6 +834,83 @@ def _script_names(d: Path) -> int:
     vocab.write_text(" ".join(dict.fromkeys(words)), encoding="utf-8")
     JOB.say(f"📜 لگيت {len(names)} اسم بالسكربت، والتفريغ راح يتوقعهم")
     return 0 if code == 0 or names else code
+
+
+def style_from_reference(video: Path) -> int:
+    """A style made from a video he likes (owner, 2026-10-25: "أدزلك فيديوهات بالستايلات الي تعجبني"): frames and
+    cut rate are measured here, the assistant reads them and writes $MONTIER_HOME/styles/<id>.md, which the Styles
+    panel shows under «ستايلاتي» and «طبّق» uses like any other."""
+    from editor.pipeline.media import probe
+    from editor.pipeline.plan import EFFECTS, KINDS, TRANSITIONS
+    from editor.pipeline.grade import LOOKS
+    from editor.pipeline.styles import load_style
+    work = HOME / "refs" / (video.stem + ".work")
+    work.mkdir(parents=True, exist_ok=True)
+    info = probe(video)
+    dur = max(info.duration, 1.0)
+    sheets = []
+    for k, (a, b) in enumerate(((0, 0.34), (0.33, 0.67), (0.66, 1.0))):
+        out = work / f"sheet_{k}.jpg"
+        span = dur * (b - a)
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{dur * a:.2f}", "-t", f"{span:.2f}", "-i", str(video), "-vf",
+                        f"fps={12 / span:.4f},scale=360:-2,tile=4x3", "-frames:v", "1", str(out)], timeout=300)
+        if out.exists():
+            sheets.append(str(out))
+    scenes = subprocess.run(["ffmpeg", "-v", "info", "-i", str(video), "-vf", "select='gt(scene,0.3)',showinfo", "-f", "null", "-"],
+                            capture_output=True, text=True, timeout=600).stderr.count("pts_time:")
+    slug = re.sub(r"[^a-z0-9]+", "-", video.stem.lower()).strip("-")[:30]
+    sid = "mine-" + (slug or time.strftime("%Y%m%d-%H%M%S"))   # Arabic file names: a date instead
+    (HOME / "styles").mkdir(parents=True, exist_ok=True)
+    out = HOME / "styles" / f"{sid}.md"
+    code = _claude(STYLE_REF_PROMPT.format(
+        sheets="، ".join(f'"{s}"' for s in sheets), dur=dur, cut=dur / max(scenes, 1), size=f"{info.width}×{info.height}",
+        example=CODE / "editor" / "styles" / "noir.md", out=out, sid=sid,
+        fonts="Cairo, Tajawal, Changa, Lalezar, Reem Kufi, El Messiri, Rakkas, Amiri, Aref Ruqaa, Noto Kufi Arabic, Noto Naskh Arabic",
+        treatments="ken_burns, film_grain, parallax, cinematic_title, halftone_cutout, desk, silhouette, band, engraving_in_circle, newspaper, polaroid, crt, pinboard, paper_cutout",
+        transitions=", ".join(TRANSITIONS), grades=", ".join(k for k in LOOKS if k != "none"),
+        kinds=", ".join(k for k in KINDS)))
+    try:
+        st = load_style(sid)
+    except Exception as exc:   # a broken file never stays in his library
+        out.unlink(missing_ok=True)
+        JOB.say(f"❌ الستايل ما انكتب صح ({exc})")
+        return 1
+    JOB.say(f"🎨 انضاف ستايل «{st.title_ar or sid}» لستايلاتك")
+    return code
+
+
+def _thumbs_step(d: Path) -> int:
+    """Three AI thumbnail ideas into edit/thumbs/ (only with paid AI on)."""
+    import requests
+    p = prefs()
+    if not p["ai_on"]:
+        JOB.say("❌ شغّل «الذكاء الاصطناعي المدفوع» من الإعدادات أول")
+        return 1
+    out = d / "edit" / "work" / "app" / "thumbs.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.unlink(missing_ok=True)
+    faces = [str(HOME / "face" / f) for f in p["faces"]]
+    code = _claude(THUMBS_PROMPT.format(ep=d, title=_meta(d).get("name", d.name), out=out, budget=min(p["ai_budget"], 10),
+                                        faces=("صور وجه صاحب القناة (يطلع هو بالصورة): " + "، ".join(faces)) if faces else ""),
+                   tools=GEN_TOOLS)
+    try:
+        thumbs = json.loads(out.read_text(encoding="utf-8"))["thumbs"]
+    except (OSError, ValueError, KeyError):
+        JOB.say("❌ الصور المصغرة ما تولدت")
+        return code or 1
+    folder = d / "edit" / "thumbs"
+    folder.mkdir(parents=True, exist_ok=True)
+    n = 0
+    for t in thumbs[:6]:
+        try:
+            r = requests.get(str(t["url"]), timeout=120)
+            r.raise_for_status()
+        except (requests.RequestException, KeyError):
+            continue
+        n += 1
+        (folder / f"thumb-{int(time.time())}-{n}.png").write_bytes(r.content)
+    JOB.say(f"🖼️ انسوت {n} صورة مصغرة")
+    return 0 if n else 1
 
 
 def _reels_pick(d: Path) -> int:
@@ -1085,6 +1186,10 @@ def run_job(ep_id: str, what: str) -> None:
             code = _translate(d)
         elif step == "script-names":
             code = _script_names(d)
+        elif step == "thumbs":
+            code = _thumbs_step(d)
+        elif step == "style-ref":
+            code = style_from_reference(Path(JOB.message))
         elif step == "reels-pick":
             code = _reels_pick(d)
         elif step == "shorts":
@@ -1610,6 +1715,7 @@ class Handler(BaseHTTPRequestHandler):
                                "credits": cr.read_text(encoding="utf-8") if cr.exists() else "",
                                "shorts_plan": plan.get("shorts", []), "shorts": [str(f.relative_to(d)) for f in shorts],
                                "exports": exports, "master": master,
+                               "thumbs": [str(f.relative_to(d)) for f in sorted((d / "edit" / "thumbs").glob("*.png"))] if (d / "edit" / "thumbs").exists() else [],
                                "youtube": json.loads((d / "edit" / "youtube.json").read_text(encoding="utf-8")).get("id")
                                if (d / "edit" / "youtube.json").exists() else None,
                                "posts": (d / "edit" / "shorts" / "posts.txt").read_text(encoding="utf-8")
@@ -1744,6 +1850,23 @@ class Handler(BaseHTTPRequestHandler):
             m = re.match(r"^/api/episodes/([^/]+)/(sentences|captions|look|sound|idea|beat|undo|redo|media|media-note|short|options|choose|restyle|srt|variant)$", path)
             if m:
                 return self._studio_post(episode_dir(m.group(1)), m.group(2), self._body())
+            if path == "/api/style-ref":   # a video he likes: saved beside his styles, then the style is made from it
+                name = Path(q.get("name", "")).name
+                if Path(name).suffix.lower() not in (".mp4", ".mov", ".m4v", ".webm") or name.startswith("."):
+                    raise ValueError("دز فيديو (mp4 أو mov)")
+                n = int(self.headers.get("Content-Length") or 0)
+                dest = HOME / "refs" / name
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                with open(dest, "wb") as f:
+                    while n > 0:
+                        chunk = self.rfile.read(min(n, 1 << 20))
+                        if not chunk:
+                            break
+                        f.write(chunk)
+                        n -= len(chunk)
+                ep_id = q.get("ep") or ""
+                start_job(ep_id, "style-ref", str(dest))
+                return self._json({"ok": True})
             if path == "/api/extract-text":   # the script as a Word file: its text
                 n = int(self.headers.get("Content-Length") or 0)
                 return self._json({"text": extract_text(q.get("name", ""), self.rfile.read(min(n, 50 * 1024 * 1024)))})
@@ -1792,7 +1915,7 @@ class Handler(BaseHTTPRequestHandler):
                 elif act == "stop":
                     stop_job()
                 elif act == "reveal":
-                    target = {"final": d / "edit" / "final.mp4", "preview": d / "edit" / "preview.mp4", "exports": d / "edit" / "exports", "shorts": d / "edit" / "shorts", "edit": d / "edit"}.get(b.get("what"), d)
+                    target = {"final": d / "edit" / "final.mp4", "preview": d / "edit" / "preview.mp4", "exports": d / "edit" / "exports", "shorts": d / "edit" / "shorts", "edit": d / "edit", "thumbs": d / "edit" / "thumbs"}.get(b.get("what"), d)
                     reveal(target if target.exists() else d)
                 elif act == "rename":
                     meta = _meta(d)

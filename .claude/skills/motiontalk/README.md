@@ -1,99 +1,85 @@
-**English** · [简体中文](README.zh-CN.md)
+**简体中文** · [English](README_EN.md)
 
-# MotionTalk
+# DraftCut
 
-**From your audio recording to a complete social video.**
+## 只管说，让好想法变成好视频。
 
-Bring an audio file, optionally a folder of materials. MotionTalk handles transcription and matching subtitles internally, asks whether you want selective breath-gap trimming, develops the visual story with you, and produces an MP4 through Hyperframes. No presenter video or user-prepared SRT is required.
+把录音交给你的 Agent。DraftCut 保留你的声音，整理口头禅、口误和重说，让字幕、图解和画面跟着你的表达展开，做成一条精炼、精美的口播视频。
 
-[Get started](#quickstart) · [Creator work](#creator-work) · [工程案例](docs/harness-case-study.md)
+**一段录音就能开始。** 不用先拍人物视频、做字幕，或在时间线上逐帧摆素材。
 
-Non-commercial use under [CC BY-NC-SA 4.0](LICENSE.md). Commercial use requires prior written permission. Third-party materials keep their own licenses.
+[开始制作](#开始制作) · [看看效果](#让观众看懂你在说什么)
 
-## Quickstart
+![DraftCut：自然说话，经口播稿审核精炼为原声音频，再用图解、字幕和章节设计成精美视频。原创静态代表帧。](https://raw.githubusercontent.com/PoetCoderJun/DraftCut/cc359ed78804c0de897f394e2c3bf5d4857508a6/assets/readme/draftcut-story-zh.svg)
 
-Install the Skill in an Agent that can read local files/images and run commands:
+我们的愿景：让口播视频的人工剪辑投入缩短 **100 倍**，把时间还给表达。这个目标尚未经基准验证。
 
-```bash
-npx skills add PoetCoderJun/MotionTalk
-```
+## 还是你的声音，表达更利落
+
+录音时，你可以慢慢想、自然说。成片时，让讲述更紧凑。
+
+Agent 通读完整逐词转写与上下文，整理口头禅、口误、改口、冗余重说和停顿，留下完整自然的表达、思考与强调的节奏。先在当前命令行／对话看完整精炼口播稿与修改依据；明确批准后自动交付干净成片与旁挂字幕，不要求再发渲染指令或终端签名。试听可选；包装另外审核导演脚本。你确认后，再把原声剪成同一版本，字幕跟着声音走。
+
+## 让观众看懂你在说什么
+
+讲步骤，就让步骤逐个出现。讲差异，就把对象放在一起比较。讲产品，就让演示跟上讲解。
+
+你可以给一份素材、一条参考片，也可以只给录音，让 Agent 从内容设计画面。有人物素材，就把人物放进故事；没有，也能用图解和动态文字讲清楚。
+
+![作者既有 Vibe Working 成片的加速片段，展示图解、人物和录屏的配合](assets/examples/vibe-working-6x.gif)
+
+作者既有成片片段，**6 倍速、无声**。[示例说明](docs/getting-started.md#examples-and-validation)
+
+[再看一个图解示例](assets/examples/embodied-correction-6x.gif) · [作者的更多视频](https://www.xiaohongshu.com/user/profile/5b40fe744eacab72c9f480ef)
+
+## 在你习惯的 Agent 里使用
+
+DraftCut 是一份 Agent Skill，支持具备本地文件读写、命令执行和视听能力的 Agent。让它读懂制作方法，再调用本地工具完成视频。
+
+推荐模型：**Opus 5.5、ChatGPT 6 Astra、Kimi k3**。
+
+## 开始制作
+
+### 1. 把仓库链接发给 Agent
+
+把这段话发给具备本地文件与命令能力的 Agent：
 
 ```text
-Use $motiontalk with /data/my-audio.wav.
-I want a complete social video explaining the ideas in my recording.
-Optional materials: /data/materials.
+请读取 https://github.com/PoetCoderJun/DraftCut，为我安装配置 DraftCut。
+按仓库的 Agent 安装说明检查环境，复用已有依赖，补齐缺失项并执行健康检查。
+完成后告诉我检查结果，再使用 DraftCut 帮我制作口播视频。
+如需系统权限、密钥或云服务上传与费用授权，请通过安全方式提示我。
 ```
 
-If you have not said whether to trim breath gaps, the Agent asks first. If yes, it listens and selects suitable gaps, compressing only those gaps to 0.25 seconds by default. If no, it preserves the original timeline. Word gaps are not automatically classified as breaths; fillers, mistakes and retakes are not removed without separate instructions.
+Agent 会读取仓库内的[安装与健康检查说明](docs/agent-bootstrap.md)，负责配置并报告实际结果。API key [首次安全配置后自动复用](docs/configuration.md)，不粘贴到提示词或写进仓库。内置云转写需要上传音频且可能收费，使用前仍须你明确授权。
 
-The Agent progressively resolves the publishing format, creative idea, optional materials, visual style and optional reference videos. None of the optional inputs is required. Review the director plan before production, or explicitly authorize an unattended run. Publishing remains your action.
+### 2. 给它录音，说出你想要的效果
 
-## What you get
+把路径换成你的真实文件，向 Agent 发送：
 
-- A complete MP4 with the spoken story, visual explanation and pacing designed together.
-- Prepared audio and matching internal SRT, with a sample-based edit report.
-- A reviewable director plan, editable HTML/CSS/GSAP project and technical delivery report.
-
-The initializer creates a scaffold; the Agent still has to produce and inspect the visual story. A few title cards or a successful render do not establish creative quality.
-
-## Creator work
-
-### Vibe Working: visual explanations and screen demonstrations
-
-![Existing creator video showing animated workflow diagrams, a presenter and a screen demonstration at 6× speed](assets/examples/vibe-working-6x.gif)
-
-00:39–01:27 from Jun’s existing Vibe Working video, condensed to about 8 seconds at **6× speed**.
-
-### Embodied AI: diagrams that follow the argument
-
-![Existing embodied-AI explainer showing progressive diagrams, captions and a presenter at 6× speed](assets/examples/embodied-correction-6x.gif)
-
-The final 30 seconds of Jun’s existing embodied-AI explainer, condensed to about 5 seconds at **6× speed**.
-
-These silent GIFs are excerpts from the author’s existing finished videos, not end-to-end validation of this audio-first version.
-
-**[More example videos · 诗人程序员Jun.AI on Xiaohongshu](https://www.xiaohongshu.com/user/profile/5b40fe744eacab72c9f480ef)**
-
-## Setup and data path
-
-Python 3.10+, FFmpeg/ffprobe, Node >=22 and a local full Google Chrome are required. In the installed Skill directory, install the reviewed dependencies:
-
-```bash
-python3 -m pip install -r requirements.txt
-npm ci
+```text
+请使用 DraftCut 的 Skill，把 /绝对路径/我的录音.wav 做成一个视频。
+我想要的样式和风格是……
 ```
 
-The lockfile pins Hyperframes 0.8.30 and GSAP 3.14.2. The built-in DashScope ASR needs service configuration (including DASHSCOPE_API_KEY) and explicit upload/charge authorization. It uploads an audio proxy to the service, polls an asynchronous task and retrieves the result; it is not offline ASR. Local rendering does not make the entire workflow local. The selected Agent’s own data handling also applies. See [audio preparation](references/00-audio.md).
+有素材或参考片就一并提供。已有口播视频，也可以[使用其中的原声和画面](docs/getting-started.md#video-input)。
 
-Hardware H.264 and one worker are the default. An explicit software mode is available when hardware support is unsuitable; runtime and browser downloads are not automatic. Optional external assets/components need source and license checks.
+### 3. 确认画面怎么讲，收下成片
 
-## Checks and limitations
+先审核口播稿，再审核视频导演脚本。两次确认后，Agent 继续制作、预览和导出 MP4。可编辑工程保留，方便继续修改。[审核操作](docs/approvals.md)
 
-Transcription can mishear words or timestamps. Selective gap edits depend on listening review and usable word timings; they are not an automatic breath detector. Direct splicing can need manual boundary refinement. The no-trim path preserves timing while normalizing the audio container/sample rate.
+[安装与使用](docs/getting-started.md) · [工程与验证](docs/harness-case-study.md) · [集成范围与兼容](docs/audio-first-migration.md) · [第三方许可](THIRD_PARTY_NOTICES.md)
 
-Technical scripts check structure, sample-based editing, subtitle remapping, dimensions, codecs and audio/video duration. Continuous visual review and actual listening are separate. Approval/state fields are workflow records, not authenticated signatures. The renderer checks the recorded review state, not the truth of the evidence. No customers, deployment metrics, timing or cost savings are claimed.
+DraftCut 原名 MotionTalk；旧项目需[迁移后重新审核](docs/audio-first-migration.md)，原有素材与工程可保留。按 [CC BY-NC-SA 4.0](LICENSE.md) 提供，限非商业使用；商业使用需事先取得书面授权。
 
-## Engineering and local checks
-
-Read the [Harness case study](docs/harness-case-study.en.md) for the code’s current gates and limits. Run after installing the pinned dependencies:
-
-```bash
-python3 -m unittest discover -s tests -v
-python3 -m unittest discover -s scripts/tests -v
-node --test tests/*.test.mjs
-python3 examples/plan-validation/run.py
-```
-
-Tests use synthetic input/mock service results and do not call cloud models. A synthetic audio-only rendering smoke test is documented in [the example](examples/audio-only-smoke/README.md); it is a technical check, not a creator showcase.
-
-## Compatibility and licenses
-
-[clean-talking-video](https://github.com/PoetCoderJun/clean-talking-video) remains operational for the existing video-editing workflow. [dingtalk-style-minutes](https://github.com/PoetCoderJun/dingtalk-style-minutes) keeps its existing clean-talking-video dependency. Neither repository is archived or removed by this integration.
-
-See [migration notes](docs/audio-first-migration.md) and [third-party notices](THIRD_PARTY_NOTICES.md). The root license is unchanged; commercial use requires separate prior written permission.
-
-<!-- Compatibility anchors for previously published links. -->
+<!-- Compatibility anchors for previously published README links. -->
+<a id="quickstart"></a>
+<a id="creator-work"></a>
+<a id="what-you-get"></a>
+<a id="setup-and-data-path"></a>
 <a id="checks-and-limitations"></a>
+<a id="engineering-and-local-checks"></a>
+<a id="compatibility-and-licenses"></a>
 <a id="core-capabilities"></a>
 <a id="development"></a>
 <a id="first-run"></a>
