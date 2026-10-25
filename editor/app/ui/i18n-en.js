@@ -347,5 +347,12 @@ window.URU_EN = {
 "شغّل صفحة التلفون (بس على واي فاي البيت، وبرمز سري)": "Turn on the phone page (home Wi-Fi only, with a secret code)",
 "انسخ مشاريعي لدرايف هسة": "Back up my projects to Drive now",
 "ماكو قوالب بعد.": "No templates yet.",
-"احفظ ستايل وألوان وصوت وخطوط هالحلقة كقالب، وابدي منه الحلقة الجاية.": "Save this episode's style, colours, sound and fonts as a template and start the next one from it."
+"احفظ ستايل وألوان وصوت وخطوط هالحلقة كقالب، وابدي منه الحلقة الجاية.": "Save this episode's style, colours, sound and fonts as a template and start the next one from it.",
+"خط التطبيق": "App font",
+"ريدكس": "Readex",
+"بلكس": "Plex",
+"القاهرة": "Cairo",
+"تجوال": "Tajawal",
+"الإسكندرية": "Alexandria",
+"شنو نسوي اليوم؟": "What are we making today?"
 };

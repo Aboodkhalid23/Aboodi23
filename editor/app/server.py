@@ -514,6 +514,7 @@ PLAN_PROMPT = """انت المونتير الآلي لقناة صاحب القن
 - اقرا editor/LESSONS.md و"{ep}/edit/work/plan_input.txt".
 - إذا "{ep}/edit/work/names_check.txt" بيه أسماء، اعرفها من القصة، اكتب "{ep}/edit/names.json"، وعيد names وبعدها entities وbrief بـ python -m editor.pipeline.
 - اكتب "{ep}/edit/edit_plan.json"، وافحصه بـ python -m editor.pipeline validate "{ep}" لحد ما يطلع ✅.
+- قبل ما تسلّم، فكّر مثل مونتير كبير (سكيلات thinking-pre-mortem وthinking-second-order وsw-story-structure): تخيل المشاهد طلع بالدقيقة ٢، ليش؟ صلّح السبب. والهوك يفتح سؤال والقصة تتصاعد لحد الجواب. ولا تغيّر شي يعارض فكرة صاحب القناة.
 {extra}
 - لا تطلع معاينة ولا النسخة الكاملة (التطبيق يجيب الصور ويطلعها بعدك).
 {money}
@@ -679,7 +680,7 @@ def _changed_beats(before: dict, after: dict) -> list[int]:
 
 
 PREF_KEYS = {"theme": ("forest", "mint", "night", "ocean", "rose", "black", "violet", "carbon", "sand", "sky"), "lang": ("ar", "en"),
-             "ai_on": (True, False), "council": (True, False)}
+             "ai_on": (True, False), "council": (True, False), "uifont": ("plex", "cairo", "tajawal", "readex", "alexandria")}
 PREF_NUMS = {"ai_budget": (0, 300), "ai_variants": (1, 4)}   # dollars per episode, versions per AI scene
 
 
@@ -1352,6 +1353,7 @@ COUNCIL_APPLY_PROMPT = """انت المونتير الرئيسي لحلقة صا
 - طبّق **٣ لمسات صغيرة بالأكثر**، وبس الي تحسّن الحلقة فعلاً بعين المشاهد: صورة أوضح لجملة، كلمة بالعنوان، مؤثر أو انتقال بمكانه، لحظة صوت، مشهد ممل تكسره.
 - ممنوع: تغيّر الستايل، أو ترتيب الهوك والقصة، أو تشيل مشاهد كثيرة، أو تلمس أكثر من ٣ مشاهد، أو أي شي يعارض فكرة صاحب القناة وذوقه.
 - إذا ماكو شي يستاهل، لا تغيّر شي. هذا مقبول.
+- قبل ما تاخذ لمسة، اختبرها بطريقة the-fool (محامي الشيطان) وthinking-steel-manning: أقوى سبب يخليها صح، وأقوى سبب يخليها غلط. خذها بس إذا تصمد.
 - عدّل {ep}/edit/edit_plan.json بـ Edit (نفس الشكل والحقول)، وبعدين اكتب {ep}/edit/opinions/applied.md: سطر لكل لمسة أخذتها (من منو، وشنو غيّرت)، وسطر قصير للي تركته وليش.
 بالآخر سطر واحد: كم لمسة أخذت."""
 

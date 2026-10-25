@@ -31,6 +31,8 @@
 | **موشن جرافك بالكود** (عناوين، رسوم بيانية، تأثيرات، شرح بلا وجه، لوح أبيض) | `hyperframes` (يبدي بـ `motion-doctrine`)، `motion-effects`، `animated-chart`، `title-sequence-3d`، `vox-explainer`، `faceless-explainer`، `whiteboard`، `talking-head-recut`، `motion-broll`، وبالنسخة ٢: `motionmaxxing` (جودة الموشن)، `lemo-opuscar` (٥٩ ستايل فلم بالكود)، `anidoodle` (رسم وأنميشن)، `text-to-lottie`، `manim-composer`، `khan-explainer`، `rmg-*` (كاميرا سينمائية وتمييز مقالات)، `om-*` (أوپن مونتاج: فهم الفيديو، ستايل بصري، ثلاثي الأبعاد) |
 | **ستايل من فيديو يعجبه** | `video-clone`، `mx-steal-style`، `reference-to-motion` (وبالتطبيق: لوحة الستايلات ← «دز فيديو») |
 | **توليد بالذكاء الاصطناعي** (بموافقته على الفلوس) | `higgsfield-generate`، `higgsfield-soul-id` (وجهه)، `higgsfield-youtube-thumbnail`، `higgsfield-video-explainer` |
+| **قرار مهم، أو خطة تحتاج تحسين، أو فكرة تنفحص** | `thinking-model-router` (يختار الطريقة)، `the-fool` (محامي الشيطان)، `thinking-pre-mortem`، `thinking-second-order`، `thinking-first-principles`، `thinking-red-team` |
+| **قصة الحلقة وتسويقها** | `sw-story-structure`، `sw-scene-craft`، `sw-premise-theme`، `youtube-marketing`، وستايل الورق المقصوص `papercut-*` |
 | مشكلة صعبة انحلت، أو "شنو تعلمت" | `claudeception` (يحولها لسكيل)، و`writing-skills` (يكتبه صح) |
 | تحليل ليش فيديو ما نجح | `retention-audit`، `channel-formula` |
 | أي كود أو تعديل | `karpathy-guidelines` |

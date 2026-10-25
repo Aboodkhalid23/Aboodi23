@@ -176,3 +176,38 @@ calesthio/OpenMontage  .claude/skills/threejs-animation  om-threejs-animation
 calesthio/OpenMontage  .claude/skills/threejs-postprocessing  om-threejs-postprocessing
 calesthio/OpenMontage  .claude/skills/threejs-shaders  om-threejs-shaders
 calesthio/OpenMontage  .claude/skills/lottie-bodymovin  om-lottie-bodymovin
+
+# ---- 2026-10-25 (8): تفكير وقرارات أقوى + قصة وتسويق يوتيوب + ستايل الورق المقصوص (انقرت ملفاتها: نص بس، بلا أوامر خطرة) ----
+# تفكير: يختار الطريقة المناسبة، يدوّر الأخطاء قبل ما تصير، يشوف نتائج القرار البعيدة، يهاجم الفكرة حتى تقوى
+tjboudreaux/cc-thinking-skills  skills/thinking-model-router  thinking-model-router
+tjboudreaux/cc-thinking-skills  skills/thinking-first-principles  thinking-first-principles
+tjboudreaux/cc-thinking-skills  skills/thinking-pre-mortem  thinking-pre-mortem
+tjboudreaux/cc-thinking-skills  skills/thinking-second-order  thinking-second-order
+tjboudreaux/cc-thinking-skills  skills/thinking-red-team  thinking-red-team
+tjboudreaux/cc-thinking-skills  skills/thinking-steel-manning  thinking-steel-manning
+tjboudreaux/cc-thinking-skills  skills/thinking-via-negativa  thinking-via-negativa
+tjboudreaux/cc-thinking-skills  skills/thinking-five-whys-plus  thinking-five-whys-plus
+tjboudreaux/cc-thinking-skills  skills/thinking-opportunity-cost  thinking-opportunity-cost
+tjboudreaux/cc-thinking-skills  skills/thinking-reversibility  thinking-reversibility
+tjboudreaux/cc-thinking-skills  skills/thinking-probabilistic  thinking-probabilistic
+tjboudreaux/cc-thinking-skills  skills/thinking-systems  thinking-systems
+tjboudreaux/cc-thinking-skills  skills/thinking-socratic  thinking-socratic
+tjboudreaux/cc-thinking-skills  skills/thinking-jobs-to-be-done  thinking-jobs-to-be-done
+tjboudreaux/cc-thinking-skills  skills/thinking-model-combination  thinking-model-combination
+# محامي الشيطان: يختبر أي خطة أو قرار بخمس طرق
+Jeffallan/claude-skills  skills/the-fool  the-fool
+# القصة: البناء، المشهد، الفكرة، الحوار (حتى السكربت والمونتاج يمسكون المشاهد)
+jtydhr88/screenwriting-skills  plugins/screenwriting/skills/sw-story-structure  sw-story-structure
+jtydhr88/screenwriting-skills  plugins/screenwriting/skills/sw-scene-craft  sw-scene-craft
+jtydhr88/screenwriting-skills  plugins/screenwriting/skills/sw-premise-theme  sw-premise-theme
+jtydhr88/screenwriting-skills  plugins/screenwriting/skills/sw-dialogue  sw-dialogue
+jtydhr88/screenwriting-skills  plugins/screenwriting/skills/sw-truby-anatomy  sw-truby-anatomy
+jtydhr88/screenwriting-skills  plugins/screenwriting/skills/sw-genre-anatomy  sw-genre-anatomy
+# تسويق يوتيوب (عناوين، صور مصغرة، نمو)
+adityaarsharma/youtube-marketing-skills  skills/youtube-marketing  youtube-marketing
+# شرح بالورق المقصوص (مثل مراجعه): الهوك، الستوري بورد، البناء، الفحص
+0xS4N4TG/papercut-explainer  skills/papercut-explainer  papercut-explainer
+0xS4N4TG/papercut-explainer  skills/papercut-hook  papercut-hook
+0xS4N4TG/papercut-explainer  skills/papercut-storyboard  papercut-storyboard
+0xS4N4TG/papercut-explainer  skills/papercut-build  papercut-build
+0xS4N4TG/papercut-explainer  skills/papercut-qa  papercut-qa

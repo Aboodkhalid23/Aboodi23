@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
+<link rel="stylesheet" href="/ui/fonts/fonts.css">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>URU · استوديو المونتاج</title>
@@ -11,8 +12,16 @@
   --ink:#EDEDEE; --mute:#9C9CA3; --dim:#65656C; --y:#F2C94C; --y2:#D9AE2B; --ydim:#3A3218; --red:#E5484D; --redbg:#2A1414;
   --green:#7BD88F; --wave:#5FBF73; --cap:#3B3363; --capink:#D5CCFF; --vid:#1C2740; --img:#4A3A1A; --blue:#3B82F6;
   --r:10px; color-scheme:dark;
-  font-family:-apple-system,"SF Arabic","Geeza Pro","Segoe UI",Tahoma,sans-serif;
+  --uifont:"Readex Pro";
+  font-family:var(--uifont),-apple-system,"SF Arabic","Geeza Pro","Segoe UI",Tahoma,sans-serif;
 }
+/* the app's Arabic type (owner, 2026-10-25: "خط البرنامج يكون حلو ومرتب وشوية عريض"): fonts shipped with the app */
+:root[data-uifont="cairo"]{--uifont:"Cairo"}
+:root[data-uifont="tajawal"]{--uifont:"Tajawal"}
+:root[data-uifont="plex"]{--uifont:"IBM Plex Sans Arabic"}
+:root[data-uifont="alexandria"]{--uifont:"Alexandria"}
+body{font-weight:500;line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+b,strong,h1,h2,h3,.h2{font-weight:700}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
 body{background:var(--bg);color:var(--ink);font-size:13px;overflow:hidden;user-select:none}
@@ -887,6 +896,8 @@ kbd{font:600 10px ui-monospace,monospace;padding:2px 5px;border-radius:5px;borde
       <div class="muted" id="sClaude" style="margin-top:6px"></div></div>
     <div class="f card"><b>الشكل</b>
       <div class="row" style="margin-top:8px;flex-wrap:wrap;gap:8px" id="sThemes"></div>
+      <div class="tiny" style="margin-top:12px;font-weight:700">خط التطبيق</div>
+      <div class="row" style="margin-top:6px;flex-wrap:wrap;gap:8px" id="sUiFonts"></div>
       <div class="row" style="margin-top:10px"><b class="grow tiny">اللغة</b><div class="seg3" style="grid-template-columns:1fr 1fr;width:180px;margin:0"><button data-lang="ar">عربي</button><button data-lang="en">English</button></div></div></div>
     <div class="f card"><div class="row"><b class="grow">الذكاء الاصطناعي المدفوع</b><button class="sw" id="sAi"></button></div>
       <div class="muted" style="margin-top:6px;line-height:1.7">المساعد يولّد صور ومقاطع (هيگزفيلد، آرتلست) بالأماكن الي ما إلها صورة حقيقية، بحدود ميزانيتك. يحتاج المواقع مربوطة بحساب كلود مالتك.</div>
@@ -963,6 +974,7 @@ kbd{font:600 10px ui-monospace,monospace;padding:2px 5px;border-radius:5px;borde
 <script src="/ui/i18n-en.js"></script>
 <script>
 try { const t = localStorage.getItem("uru-theme") || "forest"; if (t !== "night") document.documentElement.dataset.theme = t;
+      const uf = localStorage.getItem("uru-uifont"); if (uf && uf !== "readex") document.documentElement.dataset.uifont = uf;
       if (localStorage.getItem("uru-lang") === "en") document.documentElement.dataset.lang = "en"; } catch (_) { document.documentElement.dataset.theme = "forest"; }
 const $ = (id) => document.getElementById(id);
 const bridge = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.app;
@@ -2392,7 +2404,16 @@ const THEMES = [["forest", "الغابة", "linear-gradient(135deg,#051F20,#2353
   ["carbon", "كربون أحمر", "linear-gradient(135deg,#121214,#34343a 60%,#ff4d4d)"], ["sand", "رملي فاتح", "linear-gradient(135deg,#f4ede1,#dccdb2 60%,#b5651d)"],
   ["sky", "سماوي فاتح", "linear-gradient(135deg,#eaf3fb,#c3d8ee 60%,#1f6fd1)"]];
 function curTheme(){ return document.documentElement.dataset.theme || "night"; }
+const UIFONTS = [["readex", "ريدكس", "Readex Pro"], ["plex", "بلكس", "IBM Plex Sans Arabic"], ["cairo", "القاهرة", "Cairo"], ["tajawal", "تجوال", "Tajawal"], ["alexandria", "الإسكندرية", "Alexandria"]];
+function drawUiFonts(){
+  const cur = document.documentElement.dataset.uifont || "readex";
+  $("sUiFonts").innerHTML = UIFONTS.map(([k, n, fam]) => `<button class="thm ${cur === k ? "on" : ""}" data-uf="${k}" style="font-family:'${fam}';font-size:15px;font-weight:600;padding:8px 12px">${n}<small style="display:block;font-weight:500;font-size:11px;opacity:.7">شنو نسوي اليوم؟</small></button>`).join("");
+  $("sUiFonts").querySelectorAll("[data-uf]").forEach(b => b.onclick = () => { const k = b.dataset.uf;
+    if (k === "readex") delete document.documentElement.dataset.uifont; else document.documentElement.dataset.uifont = k;
+    try { localStorage.setItem("uru-uifont", k); } catch (_) {} post("/api/prefs", {uifont: k}).catch(() => {}); drawUiFonts(); });
+}
 function drawThemes(){
+  drawUiFonts();
   $("sThemes").innerHTML = THEMES.map(([k, n, g]) => `<button class="thm ${curTheme() === k ? "on" : ""}" data-th="${k}"><i style="background:${g}"></i>${n}</button>`).join("");
   $("sThemes").querySelectorAll("[data-th]").forEach(b => b.onclick = () => { const k = b.dataset.th;
     if (k === "night") delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = k;
