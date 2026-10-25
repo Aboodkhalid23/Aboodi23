@@ -679,7 +679,7 @@ def _changed_beats(before: dict, after: dict) -> list[int]:
     return out
 
 
-PREF_KEYS = {"theme": ("forest", "mint", "night", "ocean", "rose", "black", "violet", "carbon", "sand", "sky"), "lang": ("ar", "en"),
+PREF_KEYS = {"theme": ("calm", "forest", "mint", "night", "ocean", "rose", "black", "violet", "carbon", "sand", "sky"), "lang": ("ar", "en"),
              "ai_on": (True, False), "council": (True, False), "uifont": ("plex", "cairo", "tajawal", "readex", "alexandria")}
 PREF_NUMS = {"ai_budget": (0, 300), "ai_variants": (1, 4)}   # dollars per episode, versions per AI scene
 
@@ -700,7 +700,7 @@ def prefs(change: dict | None = None) -> dict:
                 cur[k] = int(max(lo, min(hi, change[k])))
         f.parent.mkdir(parents=True, exist_ok=True)
         f.write_text(json.dumps(cur), encoding="utf-8")
-    return {"theme": cur.get("theme", "forest"), "lang": cur.get("lang", "ar"), "ai_on": bool(cur.get("ai_on", False)),
+    return {"theme": cur.get("theme", "calm"), "lang": cur.get("lang", "ar"), "ai_on": bool(cur.get("ai_on", False)),
             "ai_budget": int(cur.get("ai_budget", 30)), "council": bool(cur.get("council", True)), "ai_variants": int(cur.get("ai_variants", 2)),
             "faces": [f.name for f in sorted((HOME / "face").glob("*")) if f.suffix.lower() in (".jpg", ".jpeg", ".png", ".mp4", ".mov")]
             if (HOME / "face").exists() else []}

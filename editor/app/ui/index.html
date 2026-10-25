@@ -47,7 +47,7 @@ textarea{resize:vertical}
 .num{font-variant-numeric:tabular-nums}
 
 /* ---------- app frame ---------- */
-#app{display:grid;grid-template-rows:50px minmax(0,1fr) var(--th,290px);height:100%}
+#app{display:grid;grid-template-rows:50px minmax(0,1fr) var(--th,290px) 44px;height:100%}
 header{display:flex;align-items:center;gap:10px;padding:0 12px;border-bottom:1px solid var(--line);background:var(--panel)}
 .brand{font-weight:900;font-size:15px;white-space:nowrap;letter-spacing:.5px;gap:8px}
 .brand small{color:var(--dim);font-weight:500;margin-inline-start:6px}
@@ -477,6 +477,59 @@ kbd{font:600 10px ui-monospace,monospace;padding:2px 5px;border-radius:5px;borde
 #cmp2 .c2bar{grid-column:1/-1;display:flex;gap:8px;align-items:center}
 .smgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .smgrid .qk{min-height:96px;padding:12px}.smgrid .qk .qi{width:32px;height:32px;font-size:16px}
+
+/* ================= 2.1: the editing screen (owner, 2026-10-25: "أ و ب وشوية د… ألوان واضحة ومريحة للعين") =================
+   A: pro layout (files, viewer, inspector, a big timeline, the stages along the bottom)
+   B: a colourful tool bar on top, one soft colour per tool
+   D: the assistant docks on the side and talks while it edits */
+main{grid-template-columns:var(--pw,minmax(330px,26%)) minmax(0,1fr) var(--iw,290px)!important;grid-template-rows:74px minmax(0,1fr)}
+#rail{grid-column:1/-1;flex-direction:row!important;justify-content:center;align-items:center;gap:4px!important;padding:6px 10px!important;overflow-x:auto;overflow-y:hidden;border-radius:18px!important}
+#rail .grow{display:none}
+.rsep{width:1px!important;height:40px;margin:0 8px!important;background:var(--glassline);flex:none}
+.rsep::before,.rsep::after,.rsep span{display:none!important}
+.rb{width:auto!important;min-width:66px;min-height:0!important;height:62px;padding:4px 8px;gap:5px!important;font-size:11px!important;color:var(--ink2)!important;background:none!important;box-shadow:none!important;border-radius:14px}
+.rb span{display:block!important;white-space:nowrap}
+.rb svg{width:20px!important;height:20px!important;box-sizing:content-box;padding:8px;border-radius:12px;color:#fff;background:var(--rc,#6b8);transition:transform .18s cubic-bezier(.2,.8,.2,1.2),box-shadow .18s}
+.rb:hover svg{transform:translateY(-2px);box-shadow:0 6px 14px rgba(var(--rcrgb,100,180,140),.35)}
+.rb.on{color:var(--ink)!important}
+.rb.on svg{box-shadow:0 0 0 2px var(--base),0 0 0 4px var(--rc,#6b8)}
+.rb[data-panel="steps"]{--rc:#5b9b7a}.rb[data-panel="media"]{--rc:#3f9e86}.rb[data-panel="versions"]{--rc:#71808f}.rb[data-panel="smart"]{--rc:#c79a3c}
+.rb[data-panel="styles"]{--rc:#8a74c8}.rb[data-panel="colors"]{--rc:#c8697a}.rb[data-panel="effects"]{--rc:#c9893f}.rb[data-panel="text"]{--rc:#c06a9e}
+.rb[data-panel="fonts"]{--rc:#3f9aa3}.rb[data-panel="sounds"]{--rc:#5584c4}.rb[data-panel="extras"]{--rc:#c47a52}
+#stagebar{display:flex;align-items:center;gap:4px;padding:0 12px 8px;margin:0 8px}
+#stagebar button{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 14px;border-radius:999px;color:var(--ink2);font-size:12.5px;font-weight:600;border:1px solid transparent;transition:background .15s,color .15s}
+#stagebar button svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#stagebar button:hover{background:var(--glass2);color:var(--ink)}
+#stagebar button.on{background:var(--y);color:var(--yink)}
+#stagebar button.done:not(.on){color:var(--y)}
+#stagebar button.done:not(.on)::after{content:"✓";font-size:11px}
+#stagebar .sbx{border-color:var(--glassline)}
+@media (min-width:1321px){body.chatOn main{grid-template-columns:var(--pw,minmax(330px,26%)) minmax(0,1fr) 380px!important}}
+body.chatOn #inspector{visibility:hidden}
+#helpbar{bottom:58px!important}
+#inspBody{padding:0 14px 14px}
+.chat{top:140px!important;bottom:calc(var(--th,290px) + 52px)!important;left:8px!important;width:380px!important;border-radius:18px;border:1px solid var(--glassline)!important;box-shadow:0 18px 40px rgba(0,0,0,.25)!important}
+@media (max-width:1320px){main{grid-template-columns:minmax(280px,30%) minmax(0,1fr)!important}#inspector{top:142px!important}}
+@media (max-width:1050px){main{grid-template-columns:minmax(250px,34%) minmax(0,1fr)!important}.rb span{display:none!important}.rb{min-width:44px;height:48px}}
+@media (max-height:820px){main{grid-template-rows:60px minmax(0,1fr)}.rb{height:52px}.rb span{font-size:10px}.rb svg{padding:6px}}
+/* calmer motion everywhere: panels slide in softly, buttons answer the press */
+.pn:not([hidden]){animation:pnIn .22s cubic-bezier(.2,.8,.2,1)}
+@keyframes pnIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.pill,.qk,.lc,.card,.chip{transition:transform .12s,background-color .2s,border-color .2s,box-shadow .2s}
+.pill:active,.qk:active,.chip:active,.rb:active svg{transform:scale(.96)}
+.veil:not([hidden]) .dlg,.veil:not([hidden]) .pal{animation:dlgIn .22s cubic-bezier(.2,.8,.2,1)}
+@keyframes dlgIn{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* "مريح للعين" — the default from 2.1: soft dark green-grey, no pure white or black, gentle accent, little glare */
+:root[data-theme="calm"]{--bg:#1a2120;--panel:#1f2827;--panel2:#25302e;--panel3:#2b3735;--line:#33403d;--line2:#3e4d49;
+  --ink:#dfe8e2;--ink2:#c3d1c9;--mute:#a3b5ab;--dim:#76887f;--y:#9cc7ab;--y2:#86b597;--yhi:#c4e2cd;--ydim:#26332f;--yink:#13201a;--yrgb:156,199,171;
+  --chipbg:#26332f;--chipink:#d3e3d9;--chipline:#3a4a45;--base:#171d1c;--amb1:#22302c;--amb2:#1b2321;--dlg:rgba(31,40,39,.97);
+  --float:rgba(31,40,39,.92);--float2:rgba(31,40,39,.97);--glass:rgba(223,232,226,.035);--glass2:rgba(223,232,226,.06);--glassline:rgba(163,181,171,.16);--glasshi:rgba(223,232,226,.06);
+  --cap:#2f4a40;--capink:#dfe8e2;--vid:#22302c;--img:#3b4a35;--wave:#9cc7ab;--green:#9cc7ab;--red:#d98585;--redbg:#33201f;--blur:none}
+:root[data-theme="calm"] header,:root[data-theme="calm"] #rail,:root[data-theme="calm"] #panel,:root[data-theme="calm"] #inspector,:root[data-theme="calm"] #tl{background:var(--panel)!important;box-shadow:none!important}
+:root[data-theme="calm"] #viewer{background:#121817!important}
+:root[data-theme="calm"] #ambientBase{background:var(--base)}
+:root[data-theme="calm"] .rb svg{filter:saturate(.8) brightness(.95)}
 .lkgroups{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
 .lkgroups .chip{cursor:pointer}.lkgroups .chip.on{background:var(--y);color:var(--yink);border-color:var(--y)}
 .lkgroups .chip small{opacity:.6;font-size:10px}
@@ -738,6 +791,16 @@ kbd{font:600 10px ui-monospace,monospace;padding:2px 5px;border-radius:5px;borde
       </div>
     </div>
   </section>
+  <nav id="stagebar" aria-label="مراحل الحلقة">
+    <button data-stage="1"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.1 15.9M14.5 14.5L20 20M8.1 8.1L12 12"/></svg>القص</button>
+    <button data-stage="2"><svg viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>الصوت</button>
+    <button data-stage="3"><svg viewBox="0 0 24 24"><path d="M4 7V5h16v2M9 19h6M12 5v14"/></svg>الكابشن</button>
+    <button data-stage="4"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10"/></svg>الخطة</button>
+    <button data-stage="5"><svg viewBox="0 0 24 24"><path d="M6 4l13 8-13 8V4z"/></svg>البناء</button>
+    <button data-stage="6"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>الملاحظات</button>
+    <span class="grow"></span>
+    <button class="sbx" id="sbChat"><svg viewBox="0 0 24 24"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9z"/></svg>المساعد</button>
+  </nav>
 </div>
 
 <!-- delete a clip -->
@@ -973,7 +1036,8 @@ kbd{font:600 10px ui-monospace,monospace;padding:2px 5px;border-radius:5px;borde
 
 <script src="/ui/i18n-en.js"></script>
 <script>
-try { const t = localStorage.getItem("uru-theme") || "forest"; if (t !== "night") document.documentElement.dataset.theme = t;
+try { if (localStorage.getItem("uru-v") !== "2.1"){ localStorage.setItem("uru-theme", "calm"); localStorage.setItem("uru-v", "2.1"); }   // 2.1: the eye-friendly look once, then his choice
+      const t = localStorage.getItem("uru-theme") || "calm"; if (t !== "night") document.documentElement.dataset.theme = t;
       const uf = localStorage.getItem("uru-uifont"); if (uf && uf !== "readex") document.documentElement.dataset.uifont = uf;
       if (localStorage.getItem("uru-lang") === "en") document.documentElement.dataset.lang = "en"; } catch (_) { document.documentElement.dataset.theme = "forest"; }
 const $ = (id) => document.getElementById(id);
@@ -2201,6 +2265,13 @@ async function openExport(){
   $("xBody").querySelectorAll("[data-copy]").forEach(b => b.onclick = () => navigator.clipboard.writeText(info[b.dataset.copy]).then(() => toast("انسخ"), () => toast("ما گدرت أنسخ")));
 }
 $("tExport").onclick = openExport;
+document.querySelectorAll("#stagebar [data-stage]").forEach(b => b.onclick = () => { if (!needEp()) return; showPanel("steps"); step = +b.dataset.stage; renderSteps(); loadVideo(); drawStagebar(); });
+$("sbChat").onclick = () => $("tAssist").click();
+function drawStagebar(){ document.querySelectorAll("#stagebar [data-stage]").forEach(b => { const n = +b.dataset.stage;
+  b.classList.toggle("on", !!ep && step === n); b.classList.toggle("done", !!ep && typeof stepDone === "function" && !!stepDone(n)); }); }
+setInterval(drawStagebar, 1000);
+new MutationObserver(() => { document.body.classList.toggle("chatOn", !$("chat").hidden); window.dispatchEvent(new Event("resize")); })
+  .observe($("chat"), {attributes: true, attributeFilter: ["hidden"]});
 
 /* ---------- 2.0: find anything (⌘K), the home's quick actions, what's new ---------- */
 const URU_VERSION = "2.0.0";
@@ -2298,7 +2369,7 @@ video.addEventListener("dblclick", () => $("vFull").click());
   }
   drag(gp, "pw", (ev) => Math.max(240, Math.min(window.innerWidth * 0.5, $("panel").getBoundingClientRect().right - ev.clientX)));
   drag(gi, "iw", (ev) => Math.max(220, Math.min(520, ev.clientX - $("inspector").getBoundingClientRect().left)));
-  drag(gt, "th", (ev) => Math.max(150, Math.min(window.innerHeight * 0.6, window.innerHeight - ev.clientY - 8)));
+  drag(gt, "th", (ev) => Math.max(150, Math.min(window.innerHeight * 0.6, window.innerHeight - ev.clientY - 8 - ($("stagebar") ? $("stagebar").offsetHeight : 0))));
   window.addEventListener("resize", place); setInterval(place, 800); place();
 })();
 $("vZoom").onchange = () => { video.style.transform = `scale(${$("vZoom").value})`; };
@@ -2398,7 +2469,7 @@ document.addEventListener("mouseover", (e) => {
 
 
 /* ---------- themes and language ---------- */
-const THEMES = [["forest", "الغابة", "linear-gradient(135deg,#051F20,#235347 60%,#8EB69B)"], ["mint", "نعناعي فاتح", "linear-gradient(135deg,#DAF1DE,#8EB69B)"],
+const THEMES = [["calm", "مريح للعين", "linear-gradient(135deg,#1a2120,#33403d 60%,#9cc7ab)"], ["forest", "الغابة", "linear-gradient(135deg,#051F20,#235347 60%,#8EB69B)"], ["mint", "نعناعي فاتح", "linear-gradient(135deg,#DAF1DE,#8EB69B)"],
   ["night", "ليل ذهبي", "linear-gradient(135deg,#07070a,#2a2350 60%,#F2C94C)"], ["ocean", "محيط", "linear-gradient(135deg,#06121f,#1f4a73 60%,#5ab0ff)"], ["rose", "وردي", "linear-gradient(135deg,#1a0b10,#5a2a38 60%,#ff7a9c)"],
   ["black", "أسود فخم", "linear-gradient(135deg,#000,#141414 60%,#d4af37)"], ["violet", "بنفسجي", "linear-gradient(135deg,#0f0a1f,#3a2a66 60%,#a78bfa)"],
   ["carbon", "كربون أحمر", "linear-gradient(135deg,#121214,#34343a 60%,#ff4d4d)"], ["sand", "رملي فاتح", "linear-gradient(135deg,#f4ede1,#dccdb2 60%,#b5651d)"],
