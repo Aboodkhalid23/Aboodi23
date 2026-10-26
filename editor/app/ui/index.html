@@ -658,6 +658,28 @@ header #rail .rsep{height:28px!important;margin:0 4px!important}
 .pill.danger{background:#c62828!important;border-color:#c62828!important;color:#fff!important}
 .pill.danger:hover{background:#b71c1c!important}
 .dlg .foot .pill.big{min-width:96px;justify-content:center}
+
+/* ===== 2.5 (owner, 2026-10-26: "ما اريد المساعد يكون بخانة جنب شاشة المونتاج، كافي يكون فوك… والي بالنص احذفها") =====
+   the assistant opens as a floating window from its top button only; nothing sits over the picture;
+   the scene settings float in only when a scene is picked, so the picture takes their room; search is one icon. */
+#askBar,#askReply{display:none!important}
+main,body.chatOn main{grid-template-columns:var(--pw,minmax(360px,28%)) minmax(0,1fr)!important}
+#inspector{position:fixed!important;top:66px!important;left:12px;bottom:calc(var(--th,250px) + 18px);width:320px;z-index:45;display:none;
+  box-shadow:0 18px 50px #000a}
+#inspector.open{display:block!important;visibility:visible!important}
+#insToggle{display:inline-flex!important}
+.chat{top:66px!important;left:12px!important;bottom:calc(var(--th,250px) + 18px)!important;width:min(400px,46vw)!important;z-index:60!important;box-shadow:0 18px 50px #000b!important;background:var(--panel)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+#inspector{background:var(--panel)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.searchbtn span,.searchbtn kbd{display:none!important}
+.searchbtn{min-width:0!important;flex:0 0 36px!important;padding:0 10px!important;justify-content:center}
+
+@media (max-width:1300px){
+  #tNew{font-size:0!important;width:36px;padding:0!important;justify-content:center}
+  #tNew::before{content:"＋";font-size:18px}
+  #tAssist{font-size:0!important;padding:0 10px!important}
+  #tAssist svg{width:18px;height:18px}
+  #tFiles{display:none!important}
+}
 </style>
 </head>
 <body>
@@ -1044,10 +1066,12 @@ header #rail .rsep{height:28px!important;margin:0 4px!important}
 <!-- what's new in this version -->
 <div class="veil" id="dNews" hidden>
   <div class="dlg news">
-    <div class="row"><img src="/ui/logo.png" alt="" style="height:40px"><div class="grow"><h2 style="margin:0">يو آر يو ٢٫٤</h2><div class="dim tiny">شاشة مرتبة وبناء أسرع</div></div><button class="icobtn" id="newsX">✕</button></div>
+    <div class="row"><img src="/ui/logo.png" alt="" style="height:40px"><div class="grow"><h2 style="margin:0">يو آر يو ٢٫٥</h2><div class="dim tiny">شاشة مرتبة وبناء أسرع</div></div><button class="icobtn" id="newsX">✕</button></div>
     <div class="newsgrid">
       <div><b>🧭 شريط واحد فوگ</b><span>أدوات الألوان صارت بنفس الشريط الفوگاني، فالفيديو صار أكبر بسطر كامل.</span></div>
       <div><b>📤 «تصدير» دائماً ظاهر</b><span>الاسم الطويل ينقص بنقاط بدل ما يدفع الأزرار برّه الشاشة.</span></div>
+      <div><b>✨ المساعد من فوگ بس</b><span>يفتح نافذة عايمة من زره بالشريط الفوگاني، وانشالت خانة الكتابة من نص الفيديو.</span></div>
+      <div><b>⚙ إعدادات المشهد عند الحاجة</b><span>تطلع عايمة لما تختار مشهد أو تدوس «المشهد»، والفيديو ياخذ مكانها.</span></div>
       <div><b>⋯ أدوات العرض</b><span>الشبكة ومقاييس الألوان وحفظ لقطة ووضع التركيز صارت بزر واحد فوگ الفيديو.</span></div>
       <div><b>📏 بلا فراغات</b><span>الشريط الفارغ تحت التايملاين انشال، وكل شي محسوب على قياس الشاشة.</span></div>
       <div><b>⚡ المعاينة أسرع بكثير</b><span>تقرا من نسخة ٧٢٠ بدل الـ٤K، وعدة مشاهد تنسوّى بنفس الوقت ويه رسم الگرافيك.</span></div>
@@ -2672,7 +2696,7 @@ new MutationObserver(() => { document.body.classList.toggle("chatOn", !$("chat")
   .observe($("chat"), {attributes: true, attributeFilter: ["hidden"]});
 
 /* ---------- 2.0: find anything (⌘K), the home's quick actions, what's new ---------- */
-const URU_VERSION = "2.4.0";
+const URU_VERSION = "2.5.0";
 const normAr = (t) => String(t).toLowerCase().replace(/[\u064B-\u065F\u0670]/g, "").replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/[گ]/g, "ك").replace(/[چ]/g, "ج").replace(/[پ]/g, "ب");
 const step_ = (n) => () => { if (!needEp()) return; showPanel("steps"); step = n; renderSteps(); loadVideo(); };
 const panel_ = (k) => () => { if (!needEp()) return; showPanel(k); };
