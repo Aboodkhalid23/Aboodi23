@@ -19,6 +19,7 @@ import json
 import re
 import subprocess
 from difflib import SequenceMatcher
+from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
@@ -64,15 +65,20 @@ def split_phrases(words: list[Word], pause: float = PHRASE_PAUSE) -> list[list[W
     return phrases
 
 
+@lru_cache(maxsize=300_000)
 def same(a: str, b: str) -> bool:
-    """Two heard words are the same word: equal, nearly equal spelling, or one cut off from the other."""
+    """Two heard words are the same word: equal, nearly equal spelling, or one cut off from the other.
+    Remembered: an hour of talk asks the same pairs again and again (that made the cut slow)."""
     if a == b:
         return True
     if len(a) < 3 or len(b) < 3 or any(c.isdigit() for c in a + b):   # numbers must match exactly
         return False
     if a.startswith(b) or b.startswith(a):
         return min(len(a), len(b)) >= 3
-    return SequenceMatcher(None, a, b).ratio() >= 0.75
+    if 2 * min(len(a), len(b)) < 0.75 * (len(a) + len(b)):   # too different in length to ever reach 0.75
+        return False
+    m = SequenceMatcher(None, a, b)
+    return m.quick_ratio() >= 0.75 and m.ratio() >= 0.75
 
 
 def _tokens(p: list[Word]) -> list[str]:
@@ -174,7 +180,7 @@ def trim_phrase(p: list[Word], removed: list | None = None) -> list[Word]:
                     span = j - i
                     # a restart repeats the WHOLE abandoned piece (its last word may be cut off);
                     # "تشتغل شوكت متريد وتطفى شوكت متريد" repeats only part of it: that is how he talks
-                    if t[i] and len(t[i] + t[i + 1]) >= 5 and j + span - 1 <= len(t) and \
+                    if t[i] and len(t[i] + t[i + 1]) >= 5 and j + span - 1 < len(t) and \
                             all(same(t[i + k], t[j + k]) for k in range(span - 1)) and \
                             (same(t[j - 1], t[j + span - 1]) or t[j + span - 1].startswith(t[j - 1])):
                         cut = (i, j, "بدأ الجملة من جديد")
@@ -186,6 +192,46 @@ def trim_phrase(p: list[Word], removed: list | None = None) -> list[Word]:
                 words = words[:a] + words[b:]
                 changed = True
                 break
+    return words
+
+
+RESTART_WORDS = 15      # the second try starts at most this many words after the first
+RESTART_SECS = 12.0
+
+
+def drop_restarts(words: list[Word], removed: list | None = None) -> list[Word]:
+    """He starts a sentence, goes wrong, and says it again from the top without stopping (owner, 2026-10-26:
+    "يوم من الايام كان اكو رجل يوم من الايام عاش رجل…"). The first try goes, from its opening words up to where
+    the same opening is said again. Works on the whole talk, so pauses that split phrases don't hide it.
+    An opening of three words is enough anywhere; two words only at the start of a sentence (after a breath)."""
+    words = list(words)
+    t = [normalize_ar(w.text) for w in words]
+    i = 0
+    while i < len(words) - 3:
+        if not t[i] or t[i] in FILLERS:
+            i += 1
+            continue
+        starts = i == 0 or words[i].start - words[i - 1].end >= 0.3
+        cut = None
+        for j in range(i + 2, min(len(words) - 1, i + RESTART_WORDS + 1)):
+            if words[j].start - words[i].start > RESTART_SECS:
+                break
+            n = 0
+            while j + n < len(words) and i + n < j and t[i + n] and same(t[i + n], t[j + n]):
+                n += 1
+            long_enough = n >= 3 or (n == 2 and starts and len(t[i] + t[i + 1]) >= 7 and j - i <= 8)
+            # after a real stop, a long first try is a sentence of its own that starts alike
+            # ("هاي الشركة كانت تبني… / هاي الشركة كانت عليها ديون…"): the phrase rules judge those
+            stopped = words[j].start - words[j - 1].end >= 0.5
+            if long_enough and j + n < len(words) and not (stopped and j - i - n > 3):
+                cut = j
+                break
+        if cut is None:
+            i += 1
+            continue
+        if removed is not None:
+            removed.append((words[i:cut], "بدأ الجملة من جديد"))
+        del words[i:cut], t[i:cut]      # stay at i: a third take may follow the second
     return words
 
 
@@ -321,6 +367,7 @@ def decide(words: list[Word], overrides: dict | None = None) -> tuple[list[Word]
     kept_phrases = drop_retakes(split_phrases(words), dropped=dropped, reasons=reasons)
     removed += [(p, reasons.get(id(p), "إعادة")) for p in dropped]
     kept = [w for p in kept_phrases for w in trim_phrase(p, removed)]
+    kept = drop_restarts(kept, removed)
     overrides = overrides or {}
     for s, e in overrides.get("drop", []):
         out = [w for w in kept if s <= (w.start + w.end) / 2 < e]
@@ -430,13 +477,13 @@ def clean(ep: Episode, script: Path | None = None) -> float:
     kept_secs = sum(e - s for s, e in segs)
     _report(ep, removed, duration, kept_secs, unheard(env, words))
 
-    parts, labels = [], []
     zoomed, punch = False, _punch_filter(ep)
     try:
         seen = seen_jumps(ep.work / "app" / "proxy_source.mp4", segs, fps)
     except Exception:   # the check is a nicety: the old rule alone still cuts well
         seen = set()
     last_reframe, t_out = -99.0, 0.0
+    pieces = []      # (first frame, last frame, zoomed, fade) of every kept stretch
     for i, (s, e) in enumerate(segs):
         f0, f1 = round(s * fps), round(e * fps)
         d = (f1 - f0) / fps
@@ -448,11 +495,14 @@ def clean(ep: Episode, script: Path | None = None) -> float:
         t_out += d
         # the sound: a slightly longer fade on the big cuts, so no click and no sudden breath
         fade = min(0.025 if jump or (i + 1 < len(segs) and segs[i + 1][0] - e >= JUMP) else 0.012, d / 4)
-        parts.append(f"[0:v]trim=start_frame={f0}:end_frame={f1},setpts=PTS-STARTPTS{punch if zoomed else ''}[v{i}];"
-                     f"[0:a]atrim=start_sample={f0 * spf}:end_sample={f1 * spf},asetpts=PTS-STARTPTS,"
-                     f"afade=t=in:d={fade:.4f},afade=t=out:st={d - fade:.4f}:d={fade:.4f}[a{i}];")
-        labels.append(f"[v{i}][a{i}]")
-    graph = "".join(parts) + "".join(labels) + f"concat=n={len(segs)}:v=1:a=1[v0][a0];[v0]split=2[v][vp];[vp]scale=-2:720[pv];[a0]asplit=2[a][pa]"
+        pieces.append((f0, f1, zoomed, fade))
+    if len(pieces) > CHUNK:
+        try:
+            _encode_in_chunks(ep, pieces, fps, spf, punch)
+            return kept_secs
+        except Exception:   # noqa: BLE001 — the one-pass way below always works, only slower
+            pass
+    graph = _cut_graph(pieces, fps, spf, punch, 0) + "[v0]split=2[v][vp];[vp]scale=-2:720[pv];[a0]asplit=2[a][pa]"
     gfile = ep.work / "clean_filter.txt"
     gfile.write_text(graph, encoding="utf-8")
     run_ffmpeg(["-i", str(ep.source), *filter_script(gfile),
@@ -460,6 +510,58 @@ def clean(ep: Episode, script: Path | None = None) -> float:
                 "-b:a", "320k", str(ep.clean_video),
                 "-map", "[pv]", "-map", "[pa]", "-r", str(fps), *PROXY, str(_proxy(ep))])
     return kept_secs
+
+
+CHUNK = 60      # kept stretches per piece: an hour of talk is ~1000 stretches, cut as ~17 pieces at the same time
+
+
+def _cut_graph(pieces: list, fps: int, spf: int, punch: str, base: int) -> str:
+    """Trim every kept stretch out of one input (frames counted from `base`) and join them as [v0][a0]."""
+    parts, labels = [], []
+    for i, (f0, f1, zoomed, fade) in enumerate(pieces):
+        d = (f1 - f0) / fps
+        a0, a1 = f0 - base, f1 - base
+        parts.append(f"[0:v]trim=start_frame={a0}:end_frame={a1},setpts=PTS-STARTPTS{punch if zoomed else ''}[v{i}];"
+                     f"[0:a]atrim=start_sample={a0 * spf}:end_sample={a1 * spf},asetpts=PTS-STARTPTS,"
+                     f"afade=t=in:d={fade:.4f},afade=t=out:st={d - fade:.4f}:d={fade:.4f}[a{i}];")
+        labels.append(f"[v{i}][a{i}]")
+    return "".join(parts) + "".join(labels) + f"concat=n={len(pieces)}:v=1:a=1[v0][a0];"
+
+
+def _encode_in_chunks(ep: Episode, pieces: list, fps: int, spf: int, punch: str) -> None:
+    """Long videos: every filter branch sees every frame of its input, so one graph with 1000 stretches crawls.
+    Here each piece of ~60 stretches reads only its own part of the source (a fast seek) and the pieces are made
+    at the same time, then joined without re-encoding. The sound stays uncompressed until the join, so no gap."""
+    import os
+    from concurrent.futures import ThreadPoolExecutor
+    tmp = ep.work / "cut_chunks"
+    tmp.mkdir(parents=True, exist_ok=True)
+    groups = [pieces[i:i + CHUNK] for i in range(0, len(pieces), CHUNK)]
+
+    def one(k):
+        g = groups[k]
+        base = g[0][0]
+        gfile = tmp / f"g{k}.txt"
+        gfile.write_text(_cut_graph(g, fps, spf, punch, base) + "[v0]split=2[v][vp];[vp]scale=-2:720[pv];[a0]asplit=2[a][pa]",
+                         encoding="utf-8")
+        span = (g[-1][1] - base) / fps + 1.0
+        proxy_v = [x for x in PROXY if x not in ("-movflags", "+faststart")]
+        proxy_v = proxy_v[:proxy_v.index("-c:a")] if "-c:a" in proxy_v else proxy_v
+        run_ffmpeg(["-ss", f"{base / fps:.6f}", "-t", f"{span:.3f}", "-i", str(ep.source), *filter_script(gfile),
+                    "-map", "[v]", "-map", "[a]", "-r", str(fps), *WORK, "-c:a", "pcm_s16le", str(tmp / f"c{k}.mov"),
+                    "-map", "[pv]", "-map", "[pa]", "-r", str(fps), *proxy_v, "-c:a", "pcm_s16le", str(tmp / f"p{k}.mov")])
+
+    workers = max(2, min(4, (os.cpu_count() or 4) // 3))
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        list(pool.map(one, range(len(groups))))
+    for prefix, out, audio in (("c", ep.clean_video, ["-c:a", "pcm_s16le"] if ep.clean_video.suffix == ".mov"
+                                else ["-c:a", "aac", "-b:a", "320k"]),
+                               ("p", _proxy(ep), ["-c:a", "aac", "-b:a", "96k", "-movflags", "+faststart"])):
+        lst = tmp / f"{prefix}.txt"
+        lst.write_text("".join(f"file '{tmp / f'{prefix}{k}.mov'}'\n" for k in range(len(groups))), encoding="utf-8")
+        run_ffmpeg(["-f", "concat", "-safe", "0", "-i", str(lst), "-c:v", "copy", *audio, str(out)])
+    for f in tmp.iterdir():
+        f.unlink(missing_ok=True)
 
 
 def _proxy(ep: Episode) -> Path:

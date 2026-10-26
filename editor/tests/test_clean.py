@@ -192,3 +192,52 @@ def test_parallel_phrases_are_how_he_talks_not_a_restart():
 def test_two_things_side_by_side_are_not_a_restart():
     text, removed = kept_text(said(("تقدر تميز بين صورة القطة وصورة الكلب بسهولة", 4)))
     assert removed == []
+
+
+def _flow(text, secs):
+    """One breath with no pause at all (how he really restarts: straight on, no stop)."""
+    return phrase(text, 0, secs)
+
+
+@pytest.mark.parametrize("raw, want", [
+    # the owner's own example (2026-10-26): a wrong start, then the whole sentence again, in one breath
+    ("يوم من الايام كان اكو رجل يوم من الايام عاش رجل فقير بقرية صغيرة", "يوم من الايام عاش رجل فقير بقرية صغيرة"),
+    ("بسنة الفين وتسعة الشركة خسرت بسنة الفين وتسعة الشركة ربحت مليار دولار", "بسنة الفين وتسعة الشركة ربحت مليار دولار"),
+    ("هاي القصة بدت هاي القصة بدت من مطعم صغير بنيويورك", "هاي القصة بدت من مطعم صغير بنيويورك"),
+])
+def test_restart_with_a_wrong_continuation_in_one_breath(raw, want):
+    text, removed = kept_text(_flow(raw, len(raw.split()) * 0.4))
+    assert text == want and removed
+
+
+def test_restart_across_a_short_pause_with_a_long_wrong_tail():
+    text, _ = kept_text(said(("يوم من الايام كان اكو رجل", 2.5),
+                             ("يوم من الايام عاش رجل فقير بقرية صغيرة", 3)))
+    assert text == "يوم من الايام عاش رجل فقير بقرية صغيرة"
+
+
+def test_a_refrain_far_apart_stays():
+    words = _flow("يوم من الايام عاش رجل فقير بقرية صغيرة وكان يشتغل بالليل والنهار حتى يعيش اهله وبعدين "
+                  "صار غني جدا وبيوم من الايام رجع لقريته", 12)
+    text, removed = kept_text(words)
+    assert removed == []
+
+
+def test_long_cut_is_made_in_pieces_at_the_same_time(talking_video, tmp_path, monkeypatch):
+    """Many kept stretches: cut in pieces at once and joined; same length as the one-pass way."""
+    import editor.pipeline.clean as cl
+    monkeypatch.setattr(cl, "CHUNK", 3)
+    ep = Episode(tmp_path / "ep").ensure()
+    fetch(str(talking_video), ep)
+    dur = probe(ep.source).duration
+    words, t = [], 0.2
+    while t + 0.6 < dur:
+        words += phrase(f"كلمه{int(t * 10)} ثانيه", t, t + 0.5)
+        t += 1.1
+    save_words(words, ep.transcript)
+    clean(ep)
+    segs = json.loads(ep.cuts.read_text())
+    assert len(segs) > 3
+    total = sum(e - s for s, e in segs)
+    assert abs(probe(ep.clean_video).duration - total) <= 2 / 30
+    assert not any((ep.work / "cut_chunks").iterdir())

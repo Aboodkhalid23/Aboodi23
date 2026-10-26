@@ -32,7 +32,7 @@ from datetime import date, datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from . import brains, comfort, learning
+from . import brains, comfort, fastai, learning
 
 CODE = Path(__file__).resolve().parents[2]
 UI = Path(__file__).resolve().parent / "ui"
@@ -46,9 +46,9 @@ STEPS = {"all": ["prep", "plan", "render", "suite"], "from-plan": ["plan", "rend
          "from-render": ["render", "suite"], "prep": ["prep"], "plan": ["plan", "council", "ai", "images"], "render": ["render"],
          "suite": ["suite"], "requests": ["requests", "render"], "preview": ["preview"],
          # the studio's steps (one screen each)
-         "prepare": ["fetch", "script-names", "transcribe"], "cut": ["cut"], "sentences": ["sentences"], "captions": ["captions"],
+         "prepare": ["fetch", "script-names", "transcribe", "sentences"], "cut": ["cut"], "sentences": ["sentences"], "captions": ["captions"],
          "images": ["images"], "build": ["preview"], "final": ["render", "learn"], "assist": ["assist"],
-         "auto": ["fetch", "script-names", "transcribe", "cut", "plan", "council", "ai", "images", "render", "learn"], "chat": ["chat"],
+         "auto": ["fetch", "script-names", "transcribe", "sentences", "cut", "plan", "council", "ai", "images", "render", "learn"], "chat": ["chat"],
          # the assistant learns his taste from what he changed (also after every final build), and the app checks itself
          "learn": ["learn"], "selfcheck": ["selfcheck"],
          # ChatGPT and Gemini (his own subscriptions) read the plan and give a second opinion; ideas for the app
@@ -576,23 +576,6 @@ REELS_PROMPT = """انت مونتير ريلز وتيك توك لقناة صاح
 اكتب "{out}" بهالشكل بس (JSON):
 {{"reels": [{{"from": 12.3, "to": 58.0, "main": true, "title": "عنوان قصير يطلع فوق الريل", "caption": "كابشن للنشر بالعراقي ويه سؤال للتعليقات", "hashtags": "#وسم #وسم"}}]}}
 لا تعدّل أي ملف ثاني. كل الكلام عربي عراقي."""
-
-SENT_PROMPT = """انت مساعد المونتاج بتطبيق المونتير على حاسبة صاحب القناة. ماكو أحد يجاوبك هسة، فلا تسأل.
-بالملف "{file}" جمل الحلقة كلها: i رقم الجملة، s ثانيتها بالخام، text الكلام، keep هل القص الآلي يخليها، why ليش انحذفت.
-راجع اختيار القص الآلي: الإعادات والبدايات المتعثرة والجمل الناقصة تنحذف، وإذا جملة انعادت أكثر من مرة تبقى أحسن نسخة (عادة الأخيرة).
-المزحة والسالفة الجانبية والمعلومة الإضافية تبقى (قاعدة صاحب القناة). لا تحذف كلام مفيد.
-{message}
-اكتب "{out}" بهالشكل بس: {{"summary": "سطر عربي عراقي: شگد جملة اقترحت تنحذف وليش", "drop": [أرقام الجمل], "keep": [أرقام الجمل], "why": {{"رقم": "سبب قصير"}}}}.
-لا تعدّل أي ملف ثاني."""
-
-CAP_PROMPT = """انت مساعد المونتاج بتطبيق المونتير. ماكو أحد يجاوبك هسة، فلا تسأل.
-بالملف "{file}" كلام الحلقة بعد القص كلمة كلمة: i رقم الكلمة، t الكلمة، doubt إذا التفريغ مو متأكد منها. الكلام عراقي، والحلقة عن: {topic}.
-{context}
-صحّح بس الغلط الواضح: أسماء أشخاص وشركات وبلدان انكتبت غلط، وكلمة عراقية انكتبت فصحى (اكتبها مثل ما انگالت)، وكلمة ما إلها معنى بمكانها. لا تغيّر أسلوب كلامه.
-والكلمات الي مو متأكد منها، اسأله عنها بخيارات (لا تخمّن).
-{message}
-اكتب "{out}" بهالشكل بس: {{"summary": "سطر عربي: صححت كذا كلمة، وعندي كذا سؤال", "fixes": [{{"i": رقم, "old": "الكلمة", "new": "الصح", "why": "سبب قصير"}}], "questions": [{{"i": رقم, "q": "السؤال", "options": ["خيار", "خيار"]}}]}}.
-للتصحيح الي يشمل أكثر من كلمة، حط i أول كلمة وnew كل الكلام. لا تعدّل أي ملف ثاني."""
 
 ASSIST_PROMPT = """انت مساعد المونتاج بتطبيق المونتير على حاسبة صاحب القناة. ماكو أحد يجاوبك هسة غير هالرسالة، فلا تسأل.
 الحلقة: {ep}
@@ -1602,48 +1585,156 @@ def _plan_extra(d: Path) -> str:
     return "\n".join(lines) + learning.prompt_block(HOME)
 
 
-def _review_step(d: Path, kind: str) -> int:
-    """The assistant reads the sentences or the captions and writes its suggestions (the screen shows them)."""
+SENT_FAST = """راجع قص فيديو يوتيوب: صاحب القناة يحچي للكاميرا (عراقي) وما يوقف التصوير لما يغلط، يعيد الجملة.
+الحلقة عن: {topic}
+تحت جمل الكلام بالترتيب، كل سطر: رقم|حالة|كلام. الحالة: ✓ القص الآلي خلّاها، ✗ حذفها (وبعدها السبب).
+شغلك تلگى كل غلط ما انتبهله القص الآلي، وتصلّح الي حذفه غلط:
+- إذا گال جملة (أو بدايتها) وعادها، تنحذف كل المحاولات وتبقى الأخيرة الكاملة. انتبه: الإعادة مرات تكون بنفس السطر («يوم من الايام كان اكو يوم من الايام عاش رجل…»): هنا اكتب بـ cut الكلام الي ينحذف من السطر بالضبط مثل ما مكتوب.
+- البداية المتعثرة، والجملة الي انقطعت بنصها وما كملت، وكلام موجّه للي يصوّر («خلي اعيدها»، «من جديد»)، تنحذف.
+- المزحة والسالفة الجانبية والمعلومة الإضافية تبقى. لا تحذف كلام مفيد، ولا تحذف جملة بس لأنها تشبه جملة بعيدة.
+- إذا ✗ وهي كلام مفيد ما انعاد، رجّعها بـ keep.
+{message}
+{lines}
+جاوب JSON بس: {{"drop": [أرقام جمل كاملة تنحذف], "keep": [أرقام جمل ✗ ترجع], "cut": [{{"i": رقم, "text": "الكلمات الي تنحذف من السطر بالضبط"}}], "why": {{"رقم": "سبب قصير"}}}}"""
+
+CAP_FAST = """صحّح تفريغ كلام حلقة يوتيوب (عراقي محكي). الحلقة عن: {topic}
+{context}
+تحت الكلام كلمة كلمة: رقم:كلمة، و؟ بعد الكلمة الي التفريغ مو متأكد منها.
+صحّح بس الغلط الواضح: أسماء أشخاص وشركات وبلدان انكتبت غلط (اكتبها مثل السكربت أو الأسماء المعروفة)، وكلمة عراقية انكتبت فصحى (اكتبها مثل ما انگالت)، وكلمة ما إلها معنى بمكانها. لا تغيّر أسلوب كلامه ولا تضيف كلام.
+والكلمة الي مو متأكد منها وما تگدر تحسمها، اسأل عنها بخيارات.
+{message}
+{lines}
+جاوب JSON بس: {{"fixes": [{{"i": رقم, "old": "الكلمة", "new": "الصح", "why": "سبب قصير"}}], "questions": [{{"i": رقم, "q": "السؤال", "options": ["خيار", "خيار"]}}]}}
+للتصحيح الي يشمل أكثر من كلمة، حط i أول كلمة وnew كل الكلام."""
+
+SENT_PIECE, SENT_OVERLAP, CAP_PIECE = 160, 12, 450
+
+
+def _fast_json(prompt: str, tier: str = "mid") -> dict:
+    """One quick answer from Claude with the data inside the question (no agent, no tools): seconds, not minutes."""
+    exe = claude_bin()
+    if not exe:
+        raise RuntimeError("كلود مو منصّب. دوس «حدّث المونتير» بالإعدادات حتى ينصبه")
+    return fastai.ask(exe, prompt, _model_for(tier), env=_env())
+
+
+def _context_block(d: Path) -> str:
+    ctx = []
+    for name in ("04-script.md", "02-draft.md"):
+        if (d / name).exists():
+            ctx.append("السكربت الي قراه (للأسماء والكلمات):\n" + (d / name).read_text(encoding="utf-8")[:12000])
+            break
+    try:
+        ents = json.loads((d / "edit" / "entities.json").read_text(encoding="utf-8"))
+        names = [e.get("ar") or e.get("name") for e in (ents.get("entities", ents) if isinstance(ents, dict) else ents)
+                 if isinstance(e, dict)]
+        if names:
+            ctx.append("الأسماء المعروفة بالحلقة: " + "، ".join(n for n in names if n)[:2000])
+    except (OSError, ValueError, AttributeError):
+        pass
+    return "\n".join(ctx)
+
+
+def _sentences_ai(d: Path) -> dict:
+    """The AI pass over the cut: all pieces at once; whole sentences and words inside a sentence."""
+    from editor.pipeline.clean import normalize_ar
     from editor.pipeline.paths import Episode
     from . import studio
     ep = Episode(d)
+    items = studio.sentences(ep)["items"]
+    msg = f"وصاحب القناة يگول: «{JOB.message}»" if JOB.message else ""
+    topic = _meta(d).get("name", "")
+
+    def one(piece):
+        lines = "\n".join(f'{x["i"]}|{"✓" if x["keep"] else "✗ " + (x["why"] or "")}|{x["text"]}' for x in piece)
+        return _fast_json(SENT_FAST.format(topic=topic, message=msg, lines=lines), "mid")
+    pieces = fastai.chunks(items, SENT_PIECE, SENT_OVERLAP)
+    JOB.say(f"المساعد يقرأ {len(items)} جملة" + (f" ({len(pieces)} قطع سوة)" if len(pieces) > 1 else "") + "…")
+    answers = fastai.run_parallel(one, pieces)
+    bad = [a for a in answers if isinstance(a, Exception)]
+    if len(bad) == len(answers):
+        raise bad[0] if bad else RuntimeError("ماكو جمل")
+    drop, keep, cuts, why = set(), set(), [], {}
+    for a in answers:
+        if isinstance(a, Exception):
+            continue
+        drop |= {int(i) for i in a.get("drop", []) if str(i).lstrip("-").isdigit()}
+        keep |= {int(i) for i in a.get("keep", []) if str(i).lstrip("-").isdigit()}
+        cuts += [c for c in a.get("cut", []) if isinstance(c, dict)]
+        why.update({str(k): v for k, v in (a.get("why") or {}).items()})
+    keep -= drop
+    cur = {x["i"]: x["keep"] for x in items}
+    cur.update({i: False for i in drop if i in cur})
+    cur.update({i: True for i in keep if i in cur})
+    studio.set_sentences(ep, cur)
+    # words inside a sentence that stays: their times go to the cutter like a word he deleted himself
+    from editor.pipeline.transcribe import load_words
+    units = studio.units(load_words(ep.transcript))
+    spans = []
+    for c in cuts:
+        try:
+            i = int(c.get("i"))
+        except (TypeError, ValueError):
+            continue
+        if not 0 <= i < len(units) or i in drop:
+            continue
+        u = units[i]
+        hit = fastai.find_run([w.text for w in u], str(c.get("text", "")), normalize_ar)
+        if hit and hit[1] - hit[0] < len(u):
+            spans.append([round(u[hit[0]].start - 0.01, 3), round(u[hit[1] - 1].end + 0.01, 3)])
+    if spans:
+        ov = studio._overrides(ep)
+        ov["drop_words"] = ov.get("drop_words", []) + spans
+        ov["drop"] = ov.get("drop", []) + spans
+        (ep.edit / "cuts_override.json").write_text(json.dumps(ov, ensure_ascii=False, indent=1), encoding="utf-8")
+    n = len(drop & {x["i"] for x in items if x["keep"]})
+    summary = (f"حذفت {n} جملة معادة أو متعثرة" + (f"، وقصّيت إعادة من داخل {len(spans)} جملة" if spans else "")
+               + (f"، ورجّعت {len(keep)}" if keep else "") + (" (قطعة وحدة ما جاوبت)" if bad else ""))
+    return {"summary": summary if n or spans or keep else "ما لگيت إعادات زايدة 👍", "drop": sorted(drop),
+            "keep": sorted(keep), "cut": spans, "why": why}
+
+
+def _captions_ai(d: Path) -> dict:
+    from editor.pipeline.paths import Episode
+    from . import studio
+    ep = Episode(d)
+    caps = studio.captions(ep)
+    words = [w for line in caps["lines"] for w in line]
+    msg = f"وصاحب القناة يگول: «{JOB.message}»" if JOB.message else ""
+    topic, ctx = _meta(d).get("name", ""), _context_block(d)
+
+    def one(piece):
+        lines = " ".join(f'{w["i"]}:{w["t"]}{"؟" if w["doubt"] else ""}' for w in piece)
+        return _fast_json(CAP_FAST.format(topic=topic, context=ctx, message=msg, lines=lines), "mid")
+    pieces = fastai.chunks(words, CAP_PIECE)
+    JOB.say(f"المساعد يقرأ {len(words)} كلمة" + (f" ({len(pieces)} قطع سوة)" if len(pieces) > 1 else "") + "…")
+    answers = fastai.run_parallel(one, pieces)
+    if answers and all(isinstance(a, Exception) for a in answers):
+        raise answers[0]
+    fixes, qs = [], []
+    for a in answers:
+        if not isinstance(a, Exception):
+            fixes += [f for f in a.get("fixes", []) if isinstance(f, dict) and "i" in f and f.get("new")]
+            qs += [q for q in a.get("questions", []) if isinstance(q, dict) and "i" in q]
+    return {"summary": f"صححت {len(fixes)} كلمة" + (f"، وعندي {len(qs)} سؤال" if qs else ""), "fixes": fixes,
+            "questions": qs}
+
+
+def _review_step(d: Path, kind: str) -> int:
+    """The assistant reads the sentences or the captions and writes its suggestions (the screen shows them)."""
     app = d / "edit" / "work" / "app"
     app.mkdir(parents=True, exist_ok=True)
     out = app / f"{kind}_review.json"
     out.unlink(missing_ok=True)
-    msg = f"وصاحب القناة يگول: «{JOB.message}»" if JOB.message else ""
-    if kind == "sentences":
-        data = studio.sentences(ep)
-        f = app / "sentences_in.json"
-        f.write_text(json.dumps([{k: x[k] for k in ("i", "s", "text", "keep", "why")} for x in data["items"]],
-                                ensure_ascii=False), encoding="utf-8")
-        code = _claude(SENT_PROMPT.format(file=f, out=out, message=msg), tier="fast")
-    else:
-        caps = studio.captions(ep)
-        f = app / "captions_in.json"
-        f.write_text(json.dumps([{"i": w["i"], "t": w["t"], **({"doubt": True} if w["doubt"] else {})}
-                                 for line in caps["lines"] for w in line], ensure_ascii=False), encoding="utf-8")
-        ctx = []
-        for name in ("04-script.md", "02-draft.md"):
-            if (d / name).exists():
-                ctx.append(f'سكربت الحلقة الي قراه: "{d / name}".')
-                break
-        if (d / "edit" / "entities.json").exists():
-            ctx.append(f'الأسماء المعروفة بالحلقة: "{d / "edit" / "entities.json"}".')
-        code = _claude(CAP_PROMPT.format(file=f, out=out, message=msg, topic=_meta(d).get("name", ""),
-                                         context="\n".join(ctx)), tier="mid")
-    if code == 0 and not out.exists():
-        JOB.say("❌ المساعد خلص بس ما كتب اقتراحاته")
+    t0 = time.monotonic()
+    try:
+        rev = _sentences_ai(d) if kind == "sentences" else _captions_ai(d)
+    except (RuntimeError, ValueError, OSError, subprocess.SubprocessError) as exc:
+        JOB.say("❌ المساعد ما گدر يراجع: " + str(exc)[:200])
         return 1
-    if code == 0 and kind == "sentences":   # its choices go straight onto the list; he can still change any
-        rev = json.loads(out.read_text(encoding="utf-8"))
-        cur = {x["i"]: x["keep"] for x in studio.sentences(ep)["items"]}
-        cur.update({int(i): False for i in rev.get("drop", [])})
-        cur.update({int(i): True for i in rev.get("keep", [])})
-        studio.set_sentences(ep, cur)
-    if code == 0:
-        JOB.say("💡 " + json.loads(out.read_text(encoding="utf-8")).get("summary", "خلص"))
-    return code
+    out.write_text(json.dumps(rev, ensure_ascii=False), encoding="utf-8")
+    JOB.say(f"💡 {rev['summary']} ({time.monotonic() - t0:.0f} ثانية)")
+    return 0
 
 
 def run_job(ep_id: str, what: str) -> None:
@@ -1672,6 +1763,9 @@ def run_job(ep_id: str, what: str) -> None:
                 code = code or _pipe(stage, d)
         elif step in ("sentences", "captions"):
             code = _review_step(d, step)
+            if code and what != step:   # inside a longer job the rules' own cut still stands: carry on
+                JOB.say("⚠️ كمّلت بقص القواعد. تگدر تعيد مراجعة المساعد من شاشة الجمل")
+                code = 0
         elif step == "images":
             code = _pipe("images", d)
             if code:   # pictures are a nicety for the storyboard: a failed download never stops the episode

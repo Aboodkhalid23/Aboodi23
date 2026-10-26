@@ -154,7 +154,7 @@ window.URU_EN = {
 "مرة وحدة بس، تاخذ ١٠ دقايق. گوگل يريد «مفتاح» خاص بيك حتى يسمح للتطبيق يرفع على قناتك. المفتاح يبقى على حاسبتك بس.": "Once only, about 10 minutes. Google needs your own key to let the app upload to your channel. The key stays on your Mac.",
 "مرح": "Playful", "مسطّح لوگ": "Flat log", "مشاريعي": "My projects", "مشروع جديد": "New project", "مصادر الصور (للوصف)": "Picture credits (for the description)", "مطفية": "Off", "معاينة": "Preview",
 "معاينة بالمرور": "Skimming", "معاينة سريعة": "Quick preview", "معتم وبارد، للحظات المخيفة.": "Dark and cold, for scary moments.", "معلومات": "Info", "مغناطيس": "Snap", "مقاطع": "Clips", "مقطع جديد": "New clip",
-"ملء الشاشة": "Full screen", "ملاحظتك": "Your note", "ملاحظتك للمساعد": "Your note to the assistant", "ملحمي": "Epic", "ملف ألوانك": "Your LUT", "ملفاتي": "My files", "من": "from",
+"ملء الشاشة": "Full screen", "أكبر (بلا حواف)": "Bigger (no margins)", "ملاحظتك": "Your note", "ملاحظتك للمساعد": "Your note to the assistant", "ملحمي": "Epic", "ملف ألوانك": "Your LUT", "ملفاتي": "My files", "من": "from",
 "من الخام للحلقة: تجهيز، قص، صوت، كابشن، خطة، بناء. كل خطوة تراجعها قبل ما تكمل. ما تغيّر شي لحالها.": "From raw to episode: prepare, cut, sound, captions, plan, build. Review each step before moving on.",
 "من المؤشر": "From playhead", "من مكان المؤشر، ٨ ثواني": "From the playhead, 8 seconds", "مو مربوط بعد: دوس «اربط حسابك» (مرة وحدة).": "Not linked yet: press “Link your account” (once).",
 "مو منصّب. دوس «حدّث» تحت.": "Not installed. Press Update below.", "موسيقاك من «ملفاتي»": "Your music from My files", "موسيقى الحلقة": "Episode music",
