@@ -141,3 +141,20 @@ def test_viewer_step_scores_and_lists_moments(ep, monkeypatch):
     assert rv["score"] == 100 and [n["t"] for n in rv["notes"]] == [3, 12] and rv["notes"][0]["level"] == "mid"
     assert "يطلع: وجهه" in asked[0] or "[0.0–10.0]" in asked[0]
     assert srv.STEPS["hook"] == ["hook"] and srv.STEPS["viewer"] == ["viewer"]
+
+
+def test_jobs_send_only_the_tools_they_use():
+    from editor.app import fastai as fa
+    fa._HELP["fake-new"] = "--tools <tools...>  --strict-mcp-config"
+    fa._HELP["fake-old"] = "--model"
+    assert fa.lean_flags("fake-new", ["Read", "Bash"], mcp=False) == ["--tools", "Read,Bash", "--strict-mcp-config"]
+    assert fa.lean_flags("fake-new", ["Read"], mcp=True) == ["--tools", "Read"]     # the picture makers keep his connectors
+    assert fa.lean_flags("fake-old", ["Read"], mcp=False) == []                      # an older Claude still starts
+
+
+def test_planner_reads_only_steps_five_to_eight_of_the_editor_skill():
+    """The plan prompt names exact lines (fewer tokens): if the skill moves, this must be updated with it."""
+    from pathlib import Path
+    lines = (Path(srv.CODE) / ".claude/skills/editor/SKILL.md").read_text(encoding="utf-8").splitlines()
+    assert lines[59].startswith("5. **اقرا**") and lines[165].startswith("8. **افحص")
+    assert "الأسطر 60 لحد 166" in srv.PLAN_PROMPT and (Path(srv.CODE) / "editor/PLAN_RULES.md").exists()

@@ -69,6 +69,8 @@ STEP_NAMES = {"prep": "التجهيز", "plan": "خطة المونتير", "rend
 CLAUDE_TOOLS = ["Read", "Write", "Edit", "Glob", "Grep", "WebSearch", "WebFetch", "TodoWrite",
                 "Bash(python -m editor.pipeline:*)", "Bash(python3 -m editor.pipeline:*)",
                 "Bash(ffprobe:*)", "Bash(ffmpeg:*)", "Bash(ls:*)"]
+# the built-in tools the app's jobs use: the rest are left out (their descriptions cost tokens on every turn)
+LEAN_TOOLS = ["Read", "Write", "Edit", "Glob", "Grep", "Bash", "WebSearch", "WebFetch", "TodoWrite", "Skill"]
 # the AI generators he connected to his Claude account (claude.ai connectors), allowed only in the AI step
 GEN_TOOLS = ["mcp__claude_ai_Higgsfield", "mcp__claude_ai_higgsfield", "mcp__Higgsfield", "mcp__higgsfield",
              "mcp__claude_ai_artlist", "mcp__claude_ai_Artlist", "mcp__artlist", "mcp__Artlist"]
@@ -517,22 +519,23 @@ def _claude(prompt: str, tools: list[str] | None = None, tier: str = "best") -> 
         return 1
     JOB.claude_failed = False
     model = _model_for(tier)
+    gen = any(t.startswith("mcp__") for t in tools or [])
+    lean = fastai.lean_flags(exe, LEAN_TOOLS, gen)
     code = _run([exe, "-p", prompt, "--output-format", "stream-json", "--verbose", *(["--model", model] if model else []),
-                 "--permission-mode", "acceptEdits", "--allowedTools", *CLAUDE_TOOLS, *(tools or [])], on_line=_claude_line)
+                 *lean, "--permission-mode", "acceptEdits", "--allowedTools", *CLAUDE_TOOLS, *(tools or [])], on_line=_claude_line)
     return 1 if JOB.claude_failed else code
 
 
 PLAN_PROMPT = """انت المونتير الآلي لقناة صاحب القناة، وشغّال من داخل تطبيق المونتير على حاسبته. ماكو أحد يجاوبك هسة، فلا تسأل، قرر بنفسك.
 الحلقة بالمجلد: {ep}
 القص والتفريغ والأسماء خلصت (صاحب القناة راجع الجمل والكابشن بنفسه).
-اتبع سكيل editor من الخطوة 5 لحد 8، ويه سكيل editor-mind:
-- اقرا editor/LESSONS.md و"{ep}/edit/work/plan_input.txt".
+اقل توكن وأحسن جودة: لا تفتح سكيلزات كاملة. الي تحتاجه:
+- من ".claude/skills/editor/SKILL.md" الأسطر 60 لحد 166 بس (الخطوات 5–8: شكل الخطة والفحص) — اقراها بـ offset و limit.
+- "editor/PLAN_RULES.md" (خلاصة كل سكيلزات المونتاج بصفحة وحدة)، و editor/LESSONS.md، و "{ep}/edit/work/plan_input.txt".
 - إذا "{ep}/edit/work/names_check.txt" بيه أسماء، اعرفها من القصة، اكتب "{ep}/edit/names.json"، وعيد names وبعدها entities وbrief بـ python -m editor.pipeline.
-- اكتب "{ep}/edit/edit_plan.json"، وافحصه بـ python -m editor.pipeline validate "{ep}" لحد ما يطلع ✅.
-- السكيلزات الي تقويك هنا: storytelling-hooks وviral-hooks (أول ٣٠ ثانية)، retention-pass (كل كم ثانية يتغير شي، ولا مشهد ممل)، media-sources (صور ومقاطع حقيقية بجودة عالية تطابق الكلام بالضبط)، shot-composition (وين يوگف كل شي بالكادر)، beat-sync-editing (القطع على الإيقاع).
-- كل صورة لازم تطابق الكلام الي ينگال وياها بالضبط: إذا يحچي عن شخص، صورته هو؛ عن رقم، الرقم ينكتب كبير؛ عن مكان، المكان نفسه. لا صور عامة.
-- الموسيقى (music بالخطة): مقسّمة على أقسام القصة، كل قسم مزاجه من الي ينحچى وينعرض بيه (غموض، توتر، دهشة، حزن، انتصار)، وتتبدل لما تتغير القصة، مو موسيقى وحدة للحلقة كلها. هادئة وبلا غناء، تحت صوته دائماً.
-- قبل ما تسلّم، فكّر مثل مونتير كبير (سكيلات thinking-pre-mortem وthinking-second-order وsw-story-structure): تخيل المشاهد طلع بالدقيقة ٢، ليش؟ صلّح السبب. والهوك يفتح سؤال والقصة تتصاعد لحد الجواب. ولا تغيّر شي يعارض فكرة صاحب القناة.
+- اكتب "{ep}/edit/edit_plan.json" مرة وحدة كاملة (مو قطعة قطعة)، وافحصه بـ python -m editor.pipeline validate "{ep}" لحد ما يطلع ✅.
+- كل صورة لازم تطابق الكلام الي ينگال وياها بالضبط، والموسيقى مزاج لكل قسم (التفاصيل بـ PLAN_RULES).
+- قبل ما تسلّم سوّ «فحص الفشل» الي بآخر PLAN_RULES، ولا تغيّر شي يعارض فكرة صاحب القناة.
 {extra}
 - لا تطلع معاينة ولا النسخة الكاملة (التطبيق يجيب الصور ويطلعها بعدك).
 {money}
@@ -681,7 +684,8 @@ def _changed_beats(before: dict, after: dict) -> list[int]:
 
 
 PREF_KEYS = {"theme": ("calm", "forest", "mint", "night", "ocean", "rose", "black", "violet", "carbon", "sand", "sky"), "lang": ("ar", "en"),
-             "ai_on": (True, False), "council": (True, False), "speed": ("fastest", "balanced", "quality"), "uifont": ("alexandria", "plex", "cairo", "vazir")}
+             "ai_on": (True, False), "council": (True, False), "speed": ("fastest", "balanced", "quality"),
+             "dialect": ("auto", "iraqi", "gulf", "levant", "egypt", "msa"), "uifont": ("alexandria", "plex", "cairo", "vazir")}
 PREF_NUMS = {"ai_budget": (0, 300), "ai_variants": (1, 4)}   # dollars per episode, versions per AI scene
 
 
@@ -702,7 +706,7 @@ def prefs(change: dict | None = None) -> dict:
         f.parent.mkdir(parents=True, exist_ok=True)
         f.write_text(json.dumps(cur), encoding="utf-8")
     return {"theme": cur.get("theme", "calm"), "lang": cur.get("lang", "ar"), "ai_on": bool(cur.get("ai_on", False)),
-            "ai_budget": int(cur.get("ai_budget", 30)), "council": bool(cur.get("council", True)), "speed": cur.get("speed", "balanced"), "ai_variants": int(cur.get("ai_variants", 2)),
+            "ai_budget": int(cur.get("ai_budget", 30)), "council": bool(cur.get("council", True)), "speed": cur.get("speed", "balanced"), "dialect": cur.get("dialect", "auto"), "ai_variants": int(cur.get("ai_variants", 2)),
             "faces": [f.name for f in sorted((HOME / "face").glob("*")) if f.suffix.lower() in (".jpg", ".jpeg", ".png", ".mp4", ".mov")]
             if (HOME / "face").exists() else []}
 
@@ -1596,7 +1600,8 @@ def _plan_extra(d: Path) -> str:
     return "\n".join(lines) + learning.prompt_block(HOME)
 
 
-SENT_FAST = """راجع قص فيديو يوتيوب: صاحب القناة يحچي للكاميرا (عراقي) وما يوقف التصوير لما يغلط، يعيد الجملة.
+SENT_FAST = """راجع قص فيديو يوتيوب: صاحب القناة يحچي للكاميرا ({dialect}، ومرات فصحى) وما يوقف التصوير لما يغلط، يعيد الجملة.
+كلمات الغلط والإعادة بكل اللهجات: «خلي/خلني/خليني أعيدها»، «لا لا مو هيچ/مش هيك/مو كذا/مش كده»، «من جديد»، «عذراً»، «معليش».
 الحلقة عن: {topic}
 تحت جمل الكلام بالترتيب، كل سطر: رقم|حالة|كلام. الحالة: ✓ القص الآلي خلّاها، ✗ حذفها (وبعدها السبب).
 شغلك تلگى كل غلط ما انتبهله القص الآلي، وتصلّح الي حذفه غلط:
@@ -1608,10 +1613,10 @@ SENT_FAST = """راجع قص فيديو يوتيوب: صاحب القناة يح
 {lines}
 جاوب JSON بس: {{"drop": [أرقام جمل كاملة تنحذف], "keep": [أرقام جمل ✗ ترجع], "cut": [{{"i": رقم, "text": "الكلمات الي تنحذف من السطر بالضبط"}}], "why": {{"رقم": "سبب قصير"}}}}"""
 
-CAP_FAST = """صحّح تفريغ كلام حلقة يوتيوب (عراقي محكي). الحلقة عن: {topic}
+CAP_FAST = """صحّح تفريغ كلام حلقة يوتيوب. اللهجة: {dialect} (ومرات يحچي فصحى أو يخلط: كل جملة تبقى باللهجة الي انگالت بيها). الحلقة عن: {topic}
 {context}
 تحت الكلام كلمة كلمة: رقم:كلمة، و؟ بعد الكلمة الي التفريغ مو متأكد منها.
-صحّح بس الغلط الواضح: أسماء أشخاص وشركات وبلدان انكتبت غلط (اكتبها مثل السكربت أو الأسماء المعروفة)، وكلمة عراقية انكتبت فصحى (اكتبها مثل ما انگالت)، وكلمة ما إلها معنى بمكانها. لا تغيّر أسلوب كلامه ولا تضيف كلام.
+صحّح بس الغلط الواضح: أسماء أشخاص وشركات وبلدان انكتبت غلط (اكتبها مثل السكربت أو الأسماء المعروفة)، وكلمة عامية انكتبت فصحى أو بلهجة ثانية (اكتبها مثل ما انگالت بلهجتها وحروفها، مثل چ وگ بالعراقي)، وكلمة سمعها التفريغ غلط وما إلها معنى بمكانها (مثل «هل لا ولا» وهي «هلا والله»). لا تحوّل اللهجة لفصحى، ولا تغيّر أسلوبه، ولا تضيف كلام.
 والكلمة الي مو متأكد منها وما تگدر تحسمها، اسأل عنها بخيارات.
 {message}
 {lines}
@@ -1655,10 +1660,12 @@ def _sentences_ai(d: Path) -> dict:
     items = studio.sentences(ep)["items"]
     msg = f"وصاحب القناة يگول: «{JOB.message}»" if JOB.message else ""
     topic = _meta(d).get("name", "")
+    from editor.pipeline import dialects
+    dial = dialects.name(dialects.saved(d / "edit") or dialects.DEFAULT)
 
     def one(piece):
         lines = "\n".join(f'{x["i"]}|{"✓" if x["keep"] else "✗ " + (x["why"] or "")}|{x["text"]}' for x in piece)
-        return _fast_json(SENT_FAST.format(topic=topic, message=msg, lines=lines), "mid")
+        return _fast_json(SENT_FAST.format(topic=topic, message=msg, lines=lines, dialect=dial), "mid")
     pieces = fastai.chunks(items, SENT_PIECE, SENT_OVERLAP)
     JOB.say(f"المساعد يقرأ {len(items)} جملة" + (f" ({len(pieces)} قطع سوة)" if len(pieces) > 1 else "") + "…")
     answers = fastai.run_parallel(one, pieces)
@@ -1713,10 +1720,12 @@ def _captions_ai(d: Path) -> dict:
     words = [w for line in caps["lines"] for w in line]
     msg = f"وصاحب القناة يگول: «{JOB.message}»" if JOB.message else ""
     topic, ctx = _meta(d).get("name", ""), _context_block(d)
+    from editor.pipeline import dialects
+    dial = dialects.name(dialects.saved(d / "edit") or dialects.DEFAULT)
 
     def one(piece):
         lines = " ".join(f'{w["i"]}:{w["t"]}{"؟" if w["doubt"] else ""}' for w in piece)
-        return _fast_json(CAP_FAST.format(topic=topic, context=ctx, message=msg, lines=lines), "mid")
+        return _fast_json(CAP_FAST.format(topic=topic, context=ctx, message=msg, lines=lines, dialect=dial), "mid")
     pieces = fastai.chunks(words, CAP_PIECE)
     JOB.say(f"المساعد يقرأ {len(words)} كلمة" + (f" ({len(pieces)} قطع سوة)" if len(pieces) > 1 else "") + "…")
     answers = fastai.run_parallel(one, pieces)
@@ -1901,7 +1910,9 @@ def run_job(ep_id: str, what: str) -> None:
             code = _run([sys.executable, "-m", "editor.pipeline", "prep", str(d), "--source", meta.get("source", "")])
         elif step == "fetch":
             os.environ["ABOODI_PROGRESS"] = "1"
-            code = _pipe("fetch", d, "--source", meta.get("source", ""))
+            # «أسرع شي» at the speed setting works on a 1080p copy: a 4K hour of video is ~4x less to cut and build
+            fast = ["--max-height", "1080"] if prefs().get("speed") == "fastest" else []
+            code = _pipe("fetch", d, "--source", meta.get("source", ""), *fast)
         elif step == "transcribe":
             os.environ["ABOODI_PROGRESS"] = "1"
             code = _pipe("transcribe", d)

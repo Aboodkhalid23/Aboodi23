@@ -25,7 +25,7 @@ from pathlib import Path
 import numpy as np
 
 from .fmt import load_format
-from .media import PROXY, WORK, filter_script, probe, run_ffmpeg
+from .media import HWDEC, PROXY, WORK, filter_script, probe, run_ffmpeg
 from .paths import Episode
 from .transcribe import Word, load_words, save_words
 
@@ -45,8 +45,12 @@ SPAN_LIMIT = 12.0      # s: at most this much between a failed attempt and its r
 FILLERS = {"اه", "ااه", "اااه", "ام", "امم", "اممم", "مم", "ممم", "اا", "ااا", "اهه", "همم", "هممم", "اوم", "ايي"}
 # Short words Iraqis double on purpose ("لا لا"، "اي اي"، "يا يا"): emphasis, not a stutter — said without a gap
 EMPHATIC = {"لا", "اي", "يا", "بس", "هي", "هو", "اه"}
-CUE_STRONG = {"اعيد", "اعيدها", "نعيد", "نعيدها", "غلط", "ستوب", "استوب", "كت", "جديد", "لحظه", "سوري"}
-CUE_WORDS = CUE_STRONG | {"لا", "خلي", "خليني", "من", "مره", "ثانيه", "اوكي", "اوك", "عفوا", "ماكو", "شي", "يعني"}
+# "I got it wrong, again" in every dialect (owner, 2026-10-26): Iraqi, Gulf, Levantine, Egyptian and formal Arabic
+CUE_STRONG = {"اعيد", "اعيدها", "اعيده", "نعيد", "نعيدها", "عيدها", "بعيد", "بعيدها", "هعيد", "هعيدها", "غلط", "غلطت",
+              "خطا", "ستوب", "استوب", "كت", "كات", "جديد", "لحظه", "سوري", "معليش", "معلش", "عذرا", "اسف", "اسفه"}
+CUE_WORDS = CUE_STRONG | {"لا", "خلي", "خليني", "خلني", "خلينا", "دعني", "دعوني", "من", "مره", "ثانيه", "تانيه", "ثاني",
+                          "تاني", "اوكي", "اوك", "عفوا", "ماكو", "مو", "مب", "مش", "شي", "اشي", "يعني", "كذا", "هيك",
+                          "كده", "البدايه", "الاول", "طيب", "يلا", "ثواني"}
 
 
 def normalize_ar(text: str) -> str:
@@ -505,7 +509,7 @@ def clean(ep: Episode, script: Path | None = None) -> float:
     graph = _cut_graph(pieces, fps, spf, punch, 0) + "[v0]split=2[v][vp];[vp]scale=-2:720[pv];[a0]asplit=2[a][pa]"
     gfile = ep.work / "clean_filter.txt"
     gfile.write_text(graph, encoding="utf-8")
-    run_ffmpeg(["-i", str(ep.source), *filter_script(gfile),
+    run_ffmpeg([*HWDEC, "-i", str(ep.source), *filter_script(gfile),
                 "-map", "[v]", "-map", "[a]", "-r", str(fps), *WORK, "-c:a", "pcm_s16le" if ep.clean_video.suffix == ".mov" else "aac",
                 "-b:a", "320k", str(ep.clean_video),
                 "-map", "[pv]", "-map", "[pa]", "-r", str(fps), *PROXY, str(_proxy(ep))])
@@ -547,7 +551,7 @@ def _encode_in_chunks(ep: Episode, pieces: list, fps: int, spf: int, punch: str)
         span = (g[-1][1] - base) / fps + 1.0
         proxy_v = [x for x in PROXY if x not in ("-movflags", "+faststart")]
         proxy_v = proxy_v[:proxy_v.index("-c:a")] if "-c:a" in proxy_v else proxy_v
-        run_ffmpeg(["-ss", f"{base / fps:.6f}", "-t", f"{span:.3f}", "-i", str(ep.source), *filter_script(gfile),
+        run_ffmpeg([*HWDEC, "-ss", f"{base / fps:.6f}", "-t", f"{span:.3f}", "-i", str(ep.source), *filter_script(gfile),
                     "-map", "[v]", "-map", "[a]", "-r", str(fps), *WORK, "-c:a", "pcm_s16le", str(tmp / f"c{k}.mov"),
                     "-map", "[pv]", "-map", "[pa]", "-r", str(fps), *proxy_v, "-c:a", "pcm_s16le", str(tmp / f"p{k}.mov")])
 

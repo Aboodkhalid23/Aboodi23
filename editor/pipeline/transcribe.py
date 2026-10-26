@@ -146,20 +146,48 @@ def _model_for_length(seconds: float) -> tuple[str, str]:
     return name, f"mlx-community/whisper-{name}"
 
 
-def _prompt(ep: Episode) -> str:
-    hw = hotwords(ep)
-    return IRAQI_PROMPT + (" " + hw if hw else "")
+def _script_text(ep: Episode) -> str:
+    for name in ("04-script.md", "02-draft.md"):
+        f = ep.root / name
+        if f.exists():
+            return f.read_text(encoding="utf-8")
+    return ""
+
+
+def pick_dialect(ep: Episode, sample=None) -> str:
+    """His setting; else his script; else the first pieces of his talk heard without any example (`sample()`)."""
+    from . import dialects
+    key, how = dialects.chosen(), "setting"
+    if key == "auto":
+        text, how = _script_text(ep), "script"
+        if not text.strip() and sample is not None:
+            text, how = sample(), "voice"
+        key = dialects.detect(text) if text.strip() else dialects.DEFAULT
+    dialects.save(ep.edit, key, how)
+    print(f"🗣️ اللهجة: {dialects.name(key)}", flush=True)
+    return key
 
 
 def _run_chunks(ep: Episode, read_piece) -> list[Word]:
+    """`read_piece(audio, example sentence or None)` → segments. The dialect is found on the first pieces, then
+    every piece is read with that dialect's example (owner, 2026-10-26: every Arabic dialect)."""
+    from . import dialects
     audio = load_audio(ep.source)
     chunks = speech_chunks(audio)
     total = len(audio) / SR or 1.0
+    piece = lambda s, e: audio[int(s * SR):int(e * SR)]
+
+    def sample() -> str:
+        got = []
+        for s, e in chunks[:4]:
+            got += [w.text for w in _words_of(read_piece(piece(s, e), None), s, e)]
+        return " ".join(got)
+    hw = hotwords(ep)
+    example = dialects.prompt(pick_dialect(ep, sample)) + (" " + hw if hw else "")
     show = os.environ.get("ABOODI_PROGRESS")
     words, last = [], -1
     for s, e in chunks:
-        piece = audio[int(s * SR):int(e * SR)]
-        got = read_piece(piece)
+        got = read_piece(piece(s, e), example)
         words += [w for w in _clean_piece(_words_of(got, s, e)) if not words or w.start >= words[-1].start]
         pct = min(99, int(100 * e / total))
         if show and pct > last:
@@ -171,9 +199,8 @@ def _run_chunks(ep: Episode, read_piece) -> list[Word]:
 def _transcribe_mlx(ep: Episode, repo: str) -> list[Word]:
     import mlx_whisper
     print("⚡ التفريغ على شريحة الماك، جملة جملة حتى ما تضيع أي إعادة", flush=True)
-    prompt = _prompt(ep)
-    return _run_chunks(ep, lambda piece: mlx_whisper.transcribe(
-        piece, path_or_hf_repo=repo, language="ar", word_timestamps=True, initial_prompt=prompt,
+    return _run_chunks(ep, lambda piece, example: mlx_whisper.transcribe(
+        piece, path_or_hf_repo=repo, language="ar", word_timestamps=True, initial_prompt=example,
         condition_on_previous_text=False, temperature=0.0, verbose=None).get("segments", []))
 
 
@@ -194,11 +221,11 @@ def transcribe(ep: Episode, model_name: str | None = None, model=None) -> list[W
     if model is None:
         from faster_whisper import WhisperModel
         model = WhisperModel(model_name, device="cpu", compute_type="int8")
-    prompt, hw = IRAQI_PROMPT, hotwords(ep)
+    hw = hotwords(ep)
 
-    def read(piece):
+    def read(piece, example):
         segs, _ = model.transcribe(piece, language="ar", word_timestamps=True, vad_filter=False,
-                                   initial_prompt=prompt, hotwords=hw, beam_size=5,
+                                   initial_prompt=example, hotwords=hw if example else None, beam_size=5,
                                    condition_on_previous_text=False)
         return list(segs)
     words = _run_chunks(ep, read)

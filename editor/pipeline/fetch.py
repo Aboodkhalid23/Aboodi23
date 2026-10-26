@@ -13,6 +13,7 @@ VIDEO_EXTS = {".mp4", ".mov", ".mkv", ".m4v", ".avi", ".webm"}
 HDR_TRANSFERS = {"arib-std-b67", "smpte2084"}
 TONEMAP = ("zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=hable:desat=0,"
            "zscale=t=bt709:m=bt709:r=tv")
+from .media import HWDEC
 from .media import WORK as INTERMEDIATE  # visually lossless working copy (the Mac's video chip when there is one)
 DRIVE_RE = re.compile(r"^https://(drive|docs)\.google\.com/")
 
@@ -53,13 +54,21 @@ def _download_drive(url: str, work: Path) -> Path:
 WORK_MBPS = {1080: 30, 1440: 55, 2160: 110}
 
 
-def _check_disk(ep: Episode, seconds: float, height: int) -> None:
+def _check_disk(ep: Episode, seconds: float, height: int, copies: float = 3) -> None:
     """source.mp4 + clean.mp4 + beat clips ≈ 3 copies at working bitrate."""
-    need = seconds * WORK_MBPS[height] / 8 * 1e6 * 3
+    need = seconds * WORK_MBPS[height] / 8 * 1e6 * copies
     free = shutil.disk_usage(ep.work).free
     if free < need:
         raise MediaError(f"المساحة ما تكفي: الحلقة تحتاج تقريباً {need / 1e9:.0f} گيگا، والموجود {free / 1e9:.0f} گيگا. "
                          "جرّب --max-height 1080 (أسرع وأصغر)")
+
+
+def can_keep(info, fmt) -> bool:
+    """The camera's own video can be used as it is (no re-encode: minutes instead of hours on a 40 GB file):
+    H.264/HEVC, 8-bit 4:2:0, normal colours, upright, already the working size and an exact frame rate."""
+    return (info.codec in ("h264", "hevc") and info.pix_fmt in ("yuv420p", "yuvj420p")
+            and info.color_transfer not in HDR_TRANSFERS and not info.rotation
+            and info.width == fmt.width and info.height == fmt.height and abs(info.fps - fmt.fps) < 0.01)
 
 
 def fetch(source: str, ep: Episode, max_height: int | None = None) -> Path:
@@ -86,7 +95,8 @@ def fetch(source: str, ep: Episode, max_height: int | None = None) -> Path:
     raw = _download_drive(source, ep.work) if local is None else local
     info = probe(raw)
     fmt = decide_format(info, max_height)
-    _check_disk(ep, info.duration, fmt.height)
+    keep = can_keep(info, fmt)
+    _check_disk(ep, info.duration, fmt.height, 2 if keep else 3)
     # ffmpeg auto-rotates on decode. Only scale down to fit the canvas; never re-sample needlessly.
     vf = [f"scale=w='min({fmt.width},iw)':h='min({fmt.height},ih)':force_original_aspect_ratio=decrease"
           ":force_divisible_by=2"]
@@ -96,11 +106,20 @@ def fetch(source: str, ep: Episode, max_height: int | None = None) -> Path:
     partial = ep.work / "source.partial.mp4"
     proxy = ep.work / "app" / "proxy_source.mp4"   # the app plays this light copy (same pass, no extra decode)
     proxy.parent.mkdir(parents=True, exist_ok=True)
-    run_ffmpeg_progress(["-i", str(raw), "-filter_complex", f"[0:v]{','.join(vf)},split=2[v][p];[p]scale=-2:720[pv]",
-                         "-map", "[v]", "-map", "0:a?", *INTERMEDIATE,
-                         "-color_primaries", "bt709", "-color_trc", "bt709", "-colorspace", "bt709",
-                         "-c:a", "aac", "-ar", "48000", "-b:a", "192k", "-metadata:s:v", "rotate=0", str(partial),
-                         "-map", "[pv]", "-map", "0:a?", *PROXY, str(proxy)], info.duration)
+    if keep:   # the picture is copied as it is; only the light copy for the app is made
+        print("⚡ الفيديو جاهز بشكله: أنسخه بلا إعادة ترميز", flush=True)
+        run_ffmpeg_progress([*HWDEC, "-i", str(raw), "-filter_complex", "[0:v]scale=-2:720,format=yuv420p[pv]",
+                             "-map", "0:v:0", "-map", "0:a?", "-c:v", "copy", "-tag:v", "hvc1" if info.codec == "hevc" else "avc1",
+                             *(["-c:a", "copy"] if info.audio_codec == "aac" and info.audio_rate == 48000 else
+                               ["-c:a", "aac", "-ar", "48000", "-b:a", "192k"]),
+                             "-movflags", "+faststart", str(partial),
+                             "-map", "[pv]", "-map", "0:a?", *PROXY, str(proxy)], info.duration)
+    else:
+        run_ffmpeg_progress([*HWDEC, "-i", str(raw), "-filter_complex", f"[0:v]{','.join(vf)},split=2[v][p];[p]scale=-2:720[pv]",
+                             "-map", "[v]", "-map", "0:a?", *INTERMEDIATE,
+                             "-color_primaries", "bt709", "-color_trc", "bt709", "-colorspace", "bt709",
+                             "-c:a", "aac", "-ar", "48000", "-b:a", "192k", "-metadata:s:v", "rotate=0", str(partial),
+                             "-map", "[pv]", "-map", "0:a?", *PROXY, str(proxy)], info.duration)
     partial.replace(ep.source)
     save_format(ep, fmt)
     record.write_text(json.dumps({

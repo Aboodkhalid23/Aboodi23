@@ -101,3 +101,23 @@ def test_drive_file_id_from_share_links():
     assert _drive_id(f"https://drive.google.com/file/d/{fid}/view?usp=drivesdk") == fid
     assert _drive_id(f"https://drive.google.com/open?id={fid}") == fid
     assert _drive_id(f"https://drive.google.com/uc?export=download&id={fid}") == fid
+
+
+def test_camera_video_already_right_is_copied_not_reencoded(tmp_path):
+    """Owner, 2026-10-26: 40 GB episodes. A 1080p30 H.264 file is used as it is (seconds, not hours)."""
+    import subprocess
+    from editor.pipeline.fetch import can_keep
+    from editor.pipeline.fmt import decide_format
+    src = tmp_path / "cam.mp4"
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi", "-i", "testsrc2=size=1920x1080:rate=30:duration=3",
+                    "-f", "lavfi", "-i", "sine=f=440:sample_rate=48000:d=3", "-c:v", "libx264", "-preset", "ultrafast",
+                    "-pix_fmt", "yuv420p", "-c:a", "aac", "-shortest", str(src)], check=True)
+    info = probe(src)
+    assert can_keep(info, decide_format(info))
+    ep = Episode(tmp_path / "ep")
+    fetch(str(src), ep)
+    out = probe(ep.source)
+    assert (out.width, out.height, round(out.fps)) == (1920, 1080, 30) and out.codec == "h264"
+    assert abs(out.duration - 3) < 0.2 and (ep.work / "app" / "proxy_source.mp4").exists()
+    # 29.97 from a phone is not exact: it goes through the normal path (the cut counts whole frames)
+    assert not can_keep(type(info)(**{**info.__dict__, "fps": 29.97}), decide_format(info))

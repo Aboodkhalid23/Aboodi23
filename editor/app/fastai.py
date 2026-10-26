@@ -51,11 +51,37 @@ def parse_json(text: str) -> dict:
     raise ValueError("ما رجع جواب مفهوم")
 
 
+_HELP: dict[str, str] = {}
+
+
+def supports(exe: str, flag: str) -> bool:
+    """Whether his installed Claude knows a flag (an older one would refuse to start with it)."""
+    if exe not in _HELP:
+        try:
+            _HELP[exe] = subprocess.run([exe, "--help"], capture_output=True, text=True, timeout=30).stdout
+        except (OSError, subprocess.SubprocessError):
+            _HELP[exe] = ""
+    return flag in _HELP[exe]
+
+
+def lean_flags(exe: str, builtins: list[str], mcp: bool) -> list[str]:
+    """Only the tools a job uses (owner, 2026-10-26: "اقل توكن"): all built-in tool descriptions cost ~32,000 tokens
+    on every turn, the ones a plan needs ~4,000; his connectors only when the job generates pictures."""
+    out = []
+    if supports(exe, "--tools"):
+        out += ["--tools", ",".join(builtins)]
+    if not mcp and supports(exe, "--strict-mcp-config"):
+        out.append("--strict-mcp-config")
+    return out
+
+
 def ask(exe: str, prompt: str, model: str | None = None, timeout: int = TIMEOUT, env: dict | None = None,
         cwd: str | None = None, runner=subprocess.run) -> dict:
     """One question, one JSON answer. No tools: it can't read or change anything, it only answers."""
     # outside the project folder and with only his own settings: no project start-up hooks, no skills to load
-    cmd = [exe, "-p", "--output-format", "text", "--tools", "", "--strict-mcp-config", "--setting-sources", "user",
+    cmd = [exe, "-p", "--output-format", "text", *(["--tools", ""] if supports(exe, "--tools") else []),
+           *(["--strict-mcp-config"] if supports(exe, "--strict-mcp-config") else []),
+           *(["--setting-sources", "user"] if supports(exe, "--setting-sources") else []),
            "--system-prompt", SYSTEM, *(["--model", model] if model else [])]
     last = None
     for _ in range(2):          # one retry: a dropped connection or an answer that isn't JSON

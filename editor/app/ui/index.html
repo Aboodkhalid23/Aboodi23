@@ -1003,16 +1003,14 @@ body.focusMode #panel,body.focusMode #inspector,body.focusMode #rail{display:non
 <!-- what's new in this version -->
 <div class="veil" id="dNews" hidden>
   <div class="dlg news">
-    <div class="row"><img src="/ui/logo.png" alt="" style="height:40px"><div class="grow"><h2 style="margin:0">يو آر يو ٢٫٢</h2><div class="dim tiny">قلب المونتاج صار أقوى</div></div><button class="icobtn" id="newsX">✕</button></div>
+    <div class="row"><img src="/ui/logo.png" alt="" style="height:40px"><div class="grow"><h2 style="margin:0">يو آر يو ٢٫٣</h2><div class="dim tiny">كل اللهجات، أسرع، وأقل كلفة</div></div><button class="icobtn" id="newsX">✕</button></div>
     <div class="newsgrid">
-      <div><b>📋 الخانات بالطول، وصارت ١٠</b><span>الجمل، الصوت، الكابشن، الهوك، الخطة، الصور، الألوان، البناء، عين المشاهد، الملاحظات.</span></div>
-      <div><b>⚡ الهوك</b><span>المساعد يطلع ٣ بدايات من كلامك، تسمعها وتختار الأقوى، وتدخل الخطة.</span></div>
-      <div><b>🖼️ الصور</b><span>كل صورة جابها أو ولّدها المساعد بشبكة، تكبر بدوسة، وتبدلها أو تشيلها.</span></div>
-      <div><b>👁️ صور الخطة فوگ الفيديو</b><span>قبل البناء، وانت تشغّل الفيديو تشوف الصورة الي راح تطلع بكل لحظة.</span></div>
-      <div><b>🎨 الألوان</b><span>قبل وبعد جنب بعض على لحظة من فيديوك، ولوكات جاهزة بدوسة.</span></div>
-      <div><b>🧐 عين المشاهد</b><span>المساعد يتفرج كأنه مشاهد، يعطي درجة، ويعلّم وين ممكن يطلع ويصلّحها.</span></div>
-      <div><b>✂️ الإعادات تنشال</b><span>الصوت ينقرا قطعة قطعة فما تضيع أي إعادة، والكلمات الغلط تتصحح لحالها.</span></div>
-      <div><b>🎵 موسيقى أوطى</b><span>تنزل تحت صوتك وانت تحچي، ولكل قسم مزاجه.</span></div>
+      <div><b>🗣️ كل اللهجات العربية</b><span>عراقي، خليجي (سعودي وقطري)، شامي وأردني، مصري، وفصحى. يعرف لهجتك لحاله، أو تختارها من الإعدادات.</span></div>
+      <div><b>✂️ القص يفهم كل لهجة</b><span>«خلني أعيدها»، «مش هيك»، «مو كذا»، «معليش»: كلها تنفهم إعادة وتنشال.</span></div>
+      <div><b>✍️ التصحيح يحترم لهجتك</b><span>ما يحوّل كلامك لفصحى، ويكتب كل كلمة مثل ما انگالت.</span></div>
+      <div><b>⚡ فيديوات ٤٠ گيگا</b><span>إذا فيديو الكاميرا جاهز ما ينعاد ترميزه، وفك الفيديو صار على شريحة الماك.</span></div>
+      <div><b>💰 توكنز أقل بالثلثين</b><span>المساعد ياخذ بس الأدوات الي يحتاجها، ويقرا خلاصة القواعد بدل سكيلزات كاملة.</span></div>
+      <div><b>🚀 «الأسرع» للحلقات الطويلة</b><span>من الإعدادات: يشتغل على نسخة ١٠٨٠ حتى يكون أسرع بأربع مرات.</span></div>
     </div>
     <div class="row" style="justify-content:flex-end;margin-top:14px"><button class="pill y" id="newsOk">يلا نبدي</button></div>
   </div>
@@ -1096,6 +1094,8 @@ body.focusMode #panel,body.focusMode #inspector,body.focusMode #rail{display:non
         <div class="row" id="sFaces" style="margin-top:6px;flex-wrap:wrap;gap:6px"></div></div></div>
     <div data-sec="ai" class="f card"><b>⚡ سرعة المساعد</b><div class="muted tiny" style="margin:4px 0 8px;line-height:1.7">كل شغلة يسويها المساعد تاخذ العقل الي يناسبها: المراجعات السريعة (الجمل، الأسماء) بأسرع عقل، والخطة بعقل قوي. هنا تختار التوازن.</div>
       <div class="seg3" id="sSpeed" style="grid-template-columns:1fr 1fr 1fr"><button data-sp="fastest">الأسرع</button><button data-sp="balanced">متوازن</button><button data-sp="quality">أعلى جودة</button></div></div>
+    <div data-sec="ai" class="f card"><b>🗣️ لهجة الكلام</b><div class="muted tiny" style="margin:4px 0 8px;line-height:1.7">التفريغ والقص والتصحيح يفهمون لهجتك ويكتبونها مثل ما انگالت. «تلقائي» يعرفها من السكربت أو من أول كلامك، وإذا خلطت فصحى ويه اللهجة يفهم الاثنين.</div>
+      <div class="seg3" id="sDialect" style="grid-template-columns:repeat(3,1fr)"><button data-dl="auto">تلقائي</button><button data-dl="iraqi">عراقي</button><button data-dl="gulf">خليجي</button><button data-dl="levant">شامي وأردني</button><button data-dl="egypt">مصري</button><button data-dl="msa">فصحى</button></div></div>
     <div data-sec="ai" class="f card"><b>شات جي بي تي وجيميناي (اشتراكاتك)</b><div class="muted tiny" style="margin:4px 0 8px;line-height:1.7">يشتغلون ويه المساعد بحسابك نفسه: يقرون الخطة ويعطون رأي ثاني، ويقترحون أفكار. ما يغيرون ملفاتك، والمساعد هو الي يطبّق. الربط مرة وحدة: نصّب، بعدين «اربط حسابك» (يفتح صفحة الدخول)، بعدين «جرّب».</div>
       <div id="sBrains" style="display:grid;gap:8px"></div>
       <label class="row" style="margin-top:10px;gap:8px;align-items:center"><input type="checkbox" id="sCouncil" style="width:auto"><span class="tiny">بعد كل خطة يضيفون لمساتهم لحالهم (٣ بالأكثر، والمساعد يقرر شنو ياخذ)</span></label></div>
@@ -2104,9 +2104,11 @@ $("sElOff").onclick = async () => { await post("/api/eleven/unlink"); elRefresh(
 $("sElOpen").onclick = () => openUrl("https://elevenlabs.io/app/settings/api-keys");
 function speedRefresh(p){ document.querySelectorAll("#sSpeed [data-sp]").forEach(b => { b.classList.toggle("on", b.dataset.sp === (p.speed || "balanced"));
   b.onclick = async () => { await post("/api/prefs", {speed: b.dataset.sp}).catch(() => {}); speedRefresh({speed: b.dataset.sp}); toast("انحفظت السرعة"); }; }); }
+function dialectRefresh(p){ document.querySelectorAll("#sDialect [data-dl]").forEach(b => { b.classList.toggle("on", b.dataset.dl === (p.dialect || "auto"));
+  b.onclick = async () => { await post("/api/prefs", {dialect: b.dataset.dl}).catch(() => {}); dialectRefresh({dialect: b.dataset.dl}); toast("انحفظت اللهجة. تنطبق على التفريغ الجاي"); }; }); }
 async function brainsRefresh(){
   const st = await api("/api/brains").catch(() => ({}));
-  api("/api/prefs").then(p => { $("sCouncil").checked = p.council !== false; speedRefresh(p); }).catch(() => {});
+  api("/api/prefs").then(p => { $("sCouncil").checked = p.council !== false; speedRefresh(p); dialectRefresh(p); }).catch(() => {});
   $("sCouncil").onchange = () => post("/api/prefs", {council: $("sCouncil").checked}).then(() => toast($("sCouncil").checked ? "يضيفون لمساتهم بعد كل خطة" : "انطفت لمساتهم التلقائية")).catch(() => {});
   $("sBrains").innerHTML = Object.entries(st).map(([k, b]) => `<div class="card" style="padding:10px 12px" data-brow="${k}">
     <div class="row" style="flex-wrap:wrap;gap:6px;align-items:center">
@@ -2629,7 +2631,7 @@ new MutationObserver(() => { document.body.classList.toggle("chatOn", !$("chat")
   .observe($("chat"), {attributes: true, attributeFilter: ["hidden"]});
 
 /* ---------- 2.0: find anything (⌘K), the home's quick actions, what's new ---------- */
-const URU_VERSION = "2.2.0";
+const URU_VERSION = "2.3.0";
 const normAr = (t) => String(t).toLowerCase().replace(/[\u064B-\u065F\u0670]/g, "").replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/[گ]/g, "ك").replace(/[چ]/g, "ج").replace(/[پ]/g, "ب");
 const step_ = (n) => () => { if (!needEp()) return; showPanel("steps"); step = n; renderSteps(); loadVideo(); };
 const panel_ = (k) => () => { if (!needEp()) return; showPanel(k); };

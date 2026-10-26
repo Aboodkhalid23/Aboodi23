@@ -14,9 +14,11 @@ class FakeModel:
         self.words, self.calls = words, 0
 
     def transcribe(self, audio, **kwargs):
+        assert kwargs["language"] == "ar" and kwargs["word_timestamps"] is True
+        if kwargs.get("initial_prompt") is None:   # the dialect check on the first pieces
+            return iter([]), NS(language="ar")
         self.kwargs = kwargs
         self.calls += 1
-        assert kwargs["language"] == "ar" and kwargs["word_timestamps"] is True
         words = self.words if self.calls == 1 else []
         seg = NS(words=[NS(word=w, start=s, end=e) for w, s, e in words])
         return iter([seg] if words else []), NS(language="ar")
@@ -89,3 +91,27 @@ def test_whisper_credits_heard_in_silence_are_dropped():
     assert _clean_piece([Word("اشتركوا", 0, 1, 0.3), Word("في", 1, 1.2, 0.3), Word("القناة", 1.2, 2, 0.3)]) == []
     real = [Word("هواوي", 0, 1)]
     assert _clean_piece(real) == real
+
+
+def test_dialects_are_told_apart():
+    from editor.pipeline.dialects import detect
+    assert detect("شنو الي صار؟ هواية ناس گالوا هيچ، اكو قصة كلش غريبة") == "iraqi"
+    assert detect("وش صار الحين؟ ابغى اعرف ليش كذا، واجد ناس يقولون") == "gulf"
+    assert detect("شو صار هلأ؟ بدي احكيلكم قصة كتير غريبة، هيك صار") == "levant"
+    assert detect("ايه اللي حصل؟ النهارده عايز احكيلكم حاجة غريبة اوي كده") == "egypt"
+    assert detect("سنتحدث اليوم عن الشركة التي غيرت العالم، لقد كانت قصة غريبة ولكن ماذا حدث بعد ذلك") == "msa"
+    assert detect("") == "iraqi"
+
+
+def test_his_dialect_setting_wins_and_the_example_follows_it(talking_video, tmp_path, monkeypatch):
+    import json
+    home = tmp_path / "home"
+    home.mkdir()
+    (home / "prefs.json").write_text(json.dumps({"dialect": "levant"}), encoding="utf-8")
+    monkeypatch.setenv("MONTIER_HOME", str(home))
+    ep = Episode(tmp_path / "ep").ensure()
+    ep.source.write_bytes(talking_video.read_bytes())
+    model = FakeModel([("شو", 0, 1)])
+    transcribe(ep, model=model)
+    assert "رح نحكي" in model.kwargs["initial_prompt"]
+    assert json.loads((ep.edit / "dialect.json").read_text(encoding="utf-8"))["dialect"] == "levant"

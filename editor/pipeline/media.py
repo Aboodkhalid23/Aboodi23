@@ -19,6 +19,10 @@ class MediaInfo:
     has_audio: bool
     rotation: int
     color_transfer: str = ""
+    codec: str = ""
+    pix_fmt: str = ""
+    audio_codec: str = ""
+    audio_rate: int = 0
 
 
 def _fps(rate: str) -> float:
@@ -54,6 +58,10 @@ def probe(path: Path) -> MediaInfo:
         has_audio=any(s.get("codec_type") == "audio" for s in streams),
         rotation=rotation % 360,
         color_transfer=video.get("color_transfer", ""),
+        codec=video.get("codec_name", ""),
+        pix_fmt=video.get("pix_fmt", ""),
+        audio_codec=next((s.get("codec_name", "") for s in streams if s.get("codec_type") == "audio"), ""),
+        audio_rate=int(next((s.get("sample_rate", 0) for s in streams if s.get("codec_type") == "audio"), 0) or 0),
     )
 
 
@@ -117,6 +125,8 @@ HW = _videotoolbox()
 # working copies (source.mp4, clean.mp4, beat clips): visually lossless; on the Mac the video chip at a high bitrate
 WORK = (["-c:v", "h264_videotoolbox", "-b:v", "70M", "-maxrate", "110M", "-bufsize", "140M", "-allow_sw", "1", "-pix_fmt", "yuv420p"]
         if HW else ["-c:v", "libx264", "-crf", "12", "-preset", "veryfast", "-pix_fmt", "yuv420p"])
+# decode on the Mac's video chip too: a 40 GB 4K file reads several times faster (owner, 2026-10-26)
+HWDEC = ["-hwaccel", "videotoolbox"] if HW else []
 # the app's light copy for playing and scrubbing (720p, a keyframe every 12 frames, index first)
 PROXY = ([*(["-c:v", "h264_videotoolbox", "-b:v", "5M", "-allow_sw", "1"] if HW else ["-c:v", "libx264", "-preset", "veryfast", "-crf", "27"]),
           "-g", "12", "-keyint_min", "12", "-sc_threshold", "0",
