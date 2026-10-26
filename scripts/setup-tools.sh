@@ -2,7 +2,8 @@
 # تثبيت أدوات الاستوديو ببداية كل جلسة (الحاوية تنمسح، فلازم تنعاد).
 # faster-whisper: تفريغ الصوت للنص | edge-tts: صوت عراقي يقرا السكربت
 # trafilatura: سحب نص المقالات | internetarchive: البحث بأرشيف الإنترنت
-pip install -q faster-whisper edge-tts trafilatura internetarchive >/dev/null 2>&1 || true
+# yt-dlp: نصوص وتعليقات يوتيوب (يحتاجه yt-transcript.py)
+pip install -q faster-whisper edge-tts trafilatura internetarchive yt-dlp >/dev/null 2>&1 || true
 # داخل حاوية Claude بس: edge-tts يحتاج شهادة البروكسي داخل certifi
 if [ -f /root/.ccr/ca-bundle.crt ]; then
   CERT=$(python3 -c 'import certifi;print(certifi.where())' 2>/dev/null)

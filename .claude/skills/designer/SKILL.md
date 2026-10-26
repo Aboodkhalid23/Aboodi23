@@ -41,7 +41,7 @@ description: المصمم الخاص بالقناة. يصمم 3 أغلفة يو�
 
 ## قبل كلشي (كل جلسة)
 1. اقرا `studio/brand.md` و`studio/style-references.md` و`studio/channel.md` و`studio/thumbnail-tests.md` (شنو فاز قبل) و`studio/visual-metaphors.md` و`studio/thumbnail-research.md` و`studio/thumbnail-angles.md` و`studio/thumbnail-styles.md`.
-2. اقرا سكيلز `titles-and-thumbnails` و`thumbnail-design` بـ `.claude/skills/` وطبّق قواعدهن.
+2. اقرا سكيلز `titles-and-thumbnails` و`thumbnail-design` بـ `.claude/skills/` وطبّق قواعدهن، وأطر `higgsfield-youtube-thumbnail/references/thumbnail-frameworks.md` (فجوة المعلومة الصادقة). التوليد يبقى بأدوات Higgsfield المربوطة بالجلسة، مو ببرنامجهم.
 3. تأكد من المكتبات:
    ```bash
    python3 -c "import PIL, arabic_reshaper, bidi" || pip install -q -r designer/requirements.txt

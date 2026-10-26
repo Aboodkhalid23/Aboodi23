@@ -100,3 +100,13 @@ OthmanAdi/humanizer-semitic        skills/humanizer-ar-msa
 deeployCO/youtube-seo-skills       youtube-seo-competitor
 # أفكار حلقات من تعليقات الجمهور (لمكتشف المواضيع)
 ravsau/youtuber-skills             skills/youtube-comments-to-ideas
+
+# اكتشاف وتثبيت سكيلزات جديدة (أولوية: يُستخدم قبل ما نگول "ما عدنا أداة") — مفحوص: ملف تعليمات بس
+vercel-labs/skills  skills/find-skills
+
+# من مخزن skills.sh (أُضيفت 22 تشرين الأول 2026 بعد الفحص)
+higgsfield-ai/skills           higgsfield-youtube-thumbnail
+coreyhaines31/marketingskills  skills/marketing-psychology
+coreyhaines31/marketingskills  skills/social   social-content
+coreyhaines31/marketingskills  skills/video    ai-video
+remotion-dev/skills            skills/remotion-best-practices   remotion

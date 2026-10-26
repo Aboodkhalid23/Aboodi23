@@ -38,6 +38,7 @@ description: مدير أعمال صاحب القناة على السوشيال �
 | فهم الجمهور ولغته | `audience-research` (النتيجة تنكتب بـ `studio/growth/audience.md`) |
 | البايو والتثبيت والهايلايت | `profile-optimization` |
 | سكربت ريل قصير | `reels-script`، `youtube-shorts` |
+| كابشن، كاروسيل، قواعد وحدود كل منصة، تفكيك منشور ناجح | `social-content` |
 | أول 3 ثواني | `hook-writer`، `viral-hooks`، `storytelling-hooks` |
 | كابشن يطلع بالبحث | `instagram-seo` |
 | قص حلقة طويلة لمقاطع | `captions-and-clipping` |

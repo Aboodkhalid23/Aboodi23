@@ -235,8 +235,24 @@ def src_hn(q, limit, **_):
 
 
 def src_reddit(q, limit, **_):
-    data = http_get("https://www.reddit.com/search.json",
-                    {"q": q, "limit": limit, "sort": "relevance", "t": "year"}, retries=1)
+    try:
+        data = http_get("https://www.reddit.com/search.json",
+                        {"q": q, "limit": limit, "sort": "relevance", "t": "year"}, retries=1)
+    except Fail:
+        # ريديت صار يسد طلبات JSON من السيرفرات (403)، فنرجع لخلاصة RSS مالته
+        ns = {"a": "http://www.w3.org/2005/Atom"}
+        text = http_get("https://www.reddit.com/search.rss",
+                        {"q": q, "limit": limit, "sort": "relevance", "t": "year"},
+                        retries=1, as_json=False)
+        out = []
+        for e in parse_xml(text).findall("a:entry", ns)[:limit]:
+            link = e.find("a:link", ns)
+            cat = e.find("a:category", ns)
+            out.append(item("reddit", (e.findtext("a:updated", "", ns) or "")[:10],
+                            e.findtext("a:title", "", ns),
+                            link.get("href", "") if link is not None else "",
+                            cat.get("label", "") if cat is not None else ""))
+        return out
     out = []
     for c in data.get("data", {}).get("children", []):
         d = c.get("data", {})
