@@ -35,7 +35,7 @@ FX_CUES = {"fx:subscribe": [(0.0, "whoosh"), (1.6, "click"), (1.75, "ding")],
                          (3.0, "click"), (3.15, "ding")],
            "entity": [(0.0, "paper"), (0.45, "pop")]}
 SFX_GAIN = 0.4       # effects sit ~8 dB under the voice
-MUSIC_LUFS = -24     # music bed between sentences; the voice ducks it further
+MUSIC_LUFS = -28     # music bed between sentences (14 LU under his voice); the voice ducks it to ~-47 while he talks
 
 
 @dataclass
@@ -321,7 +321,10 @@ def sound_settings(ep: Episode) -> dict:
         d = json.loads((ep.edit / "sound.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
         d = {}
-    return {"clean": int(d.get("clean", 1)), "music": d.get("music", "auto"), "level": float(d.get("level", MUSIC_LUFS)),
+    level = float(d.get("level", MUSIC_LUFS))
+    if "v" not in d and level == -24:   # the old default, saved by the app before 2026-10-26 ("الموسيقى بمستوى صوتي")
+        level = MUSIC_LUFS
+    return {"clean": int(d.get("clean", 1)), "music": d.get("music", "auto"), "level": level,
             "sfx": bool(d.get("sfx", True))}
 
 
@@ -366,7 +369,7 @@ def _build_audio(ep: Episode, teaser, duration: float, out: Path,
         args += margs
         n += len(margs) // 2
         graph += (f",asplit=2[voice][key];{mgraph};[mus]apad,atrim=0:{duration:.4f}[mus2];"
-                  "[mus2][key]sidechaincompress=threshold=0.02:ratio=6:attack=30:release=500[bed]")
+                  "[mus2][key]sidechaincompress=threshold=0.012:ratio=10:attack=20:release=600[bed]")
         mix.append("[bed]")
     else:
         graph += "[voice]"

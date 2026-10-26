@@ -342,7 +342,12 @@ header{border-width:0 0 1px 0!important;border-radius:0}
 .stc .pv b{font-size:17px;line-height:1.1}
 .stc .pv i{display:block;height:5px;width:46%;border-radius:3px}
 .stc .pv .tx{position:absolute;inset:0;opacity:.18;background-image:radial-gradient(rgba(0,0,0,.6) 1px,transparent 1px);background-size:4px 4px;pointer-events:none}
-.stc .nm{padding:7px 9px;font-size:12px;background:rgba(255,255,255,.05)}
+.stc .nm{padding:7px 9px;font-size:13px;font-weight:600;background:rgba(255,255,255,.05);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stc .shot{aspect-ratio:16/9;background:#111;overflow:hidden;position:relative;display:grid;place-items:center}
+.stc .shot b{font-size:17px;padding:8px;text-align:center}
+.stc .shot img{position:absolute;inset:0}
+.stc .shot img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .25s}
+.stc:hover .shot img{transform:scale(1.04)}
 .stbig .pv{height:120px}.stbig .pv b{font-size:26px}
 .sw{width:44px;height:26px;border-radius:999px;background:rgba(255,255,255,.12);position:relative;flex:none;border:1px solid var(--glassline)}
 .sw::after{content:"";position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:#ddd;transition:right .2s}
@@ -663,10 +668,7 @@ body.focusMode #panel,body.focusMode #inspector,body.focusMode #rail{display:non
         <div class="grid3" id="stGrid"></div>
       </div>
       <div class="pn" data-pn="styles" hidden>
-        <div class="pnh"><b>الستايلات</b><span class="dim tiny" id="syCount"></span></div>
-        <div class="dim tiny" style="padding:0 14px 8px">كل ستايل يغيّر شكل الحلقة كلها: الألوان، الخطوط، شكل الصور والكتابة، الانتقالات، الإيقاع، والموسيقى. اختار واحد ودوس «طبّق».</div>
-        <div class="excard" style="margin:0 14px 8px"><div class="row"><b class="grow tiny">ستايل من فيديو يعجبك</b><button class="pill sm y" id="syRef">＋ دز فيديو</button><input type="file" id="syRefIn" hidden accept="video/*,.mov,.mp4"></div>
-          <div class="dim tiny" style="margin-top:4px;line-height:1.7">المساعد يقيس الفيديو (الألوان، سرعة القطع، الكتابة، الصور) ويسوي منه ستايل جديد بمجموعة «ستايلاتي»، وتطبقه على أي حلقة.</div></div>
+        <div class="pnh"><b>الستايلات</b><span class="dim tiny" id="syCount"></span><button class="pill sm" id="syRef" style="margin-inline-start:auto" title="المساعد يقيس فيديو يعجبك ويسوي منه ستايل جديد بمجموعة «ستايلاتي»">＋ من فيديو يعجبك</button><input type="file" id="syRefIn" hidden accept="video/*,.mov,.mp4"></div>
         <div style="padding:0 14px 8px"><input id="syFind" placeholder="ابحث: رعب، فضاء، ورق…"></div>
         <div id="syCats" class="row" style="padding:0 14px 8px;flex-wrap:wrap;gap:6px"></div>
         <div id="syPick" hidden style="padding:0 14px 10px"></div>
@@ -1385,7 +1387,7 @@ const MOODS = [["auto", "تلقائي"], ["tension", "توتر"], ["wonder", "د
   ["space", "فضاء"], ["heist", "سرقة وجواسيس"], ["triumph", "انتصار"], ["mystery_box", "لغز"], ["off", "بلا موسيقى"]];
 function stepSound(){
   if (!ep.done.cut){ setBody(`<div class="h2">الصوت</div><p class="muted">قُصّ هذا المقطع أول.</p><button class="pill" id="goS1">عدّل اختيار الجمل</button>`); $("goS1").onclick = () => { step = 1; renderSteps(); loadVideo(); }; return; }
-  const so = data.sound || {clean: 1, music: "auto", level: -24, sfx: true};
+  const so = data.sound || {clean: 1, music: "auto", level: -28, sfx: true};
   const lv = ["بدون", "خفيف", "وسط", "قوي", "طبيعي"];
   setBody(`<div class="h2">الصوت</div>
     <div class="card" style="margin-top:8px"><div class="row"><b class="grow">صوت نظيف</b><span class="dim tiny">يشيل الوشيش ويوضّح صوتك</span></div>
@@ -1393,7 +1395,7 @@ function stepSound(){
       <div class="row" style="margin-top:10px"><button class="pill sm" id="vBefore">▶ اسمع قبل</button><button class="pill sm" id="vAfter">▶ اسمع بعد</button><span class="dim tiny">من مكان المؤشر، ٨ ثواني</span></div></div>
     <div class="card" style="margin-top:10px"><div class="row"><b class="grow">الموسيقى</b><span class="dim tiny">مؤلفة بالكود، ملكك، بلا حقوق</span></div>
       <div class="moods" style="margin-top:10px">${MOODS.map(([k, n]) => `<span class="row" style="gap:2px"><button class="pill sm ${so.music === k ? "on" : ""}" data-mood="${k}">${n}</button>${k !== "auto" && k !== "off" ? `<button class="icobtn" data-hear="${k}" title="اسمع عينة">▶</button>` : ""}</span>`).join("")}</div>
-      <div class="sl" style="margin-top:12px"><label>العلو</label><input type="range" id="mLevel" min="-32" max="-16" value="${so.level}"><output id="oLevel">${ar(so.level)}</output></div></div>
+      <div class="sl" style="margin-top:12px"><label>العلو</label><input type="range" id="mLevel" min="-38" max="-18" value="${so.level}"><output id="oLevel">${ar(so.level)}</output></div></div>
     <div class="card row" style="margin-top:10px"><div class="grow"><b>المؤثرات الصوتية</b><div class="dim tiny">ووش، ضغطة، ورق… ويه الحركات</div></div><button class="pill sm ${so.sfx ? "on" : ""}" id="mSfx">${so.sfx ? "شغّالة" : "مطفية"}</button></div>
     <audio id="aud" hidden></audio>`);
   const save = async (ch) => { data.sound = await post(E() + "/sound", {...so, ...ch}).catch(e => (toast(e.message), so)); stepSound(); };
@@ -1418,9 +1420,10 @@ function stepCaptions(){
   if (running("captions")) h += jobStatus("يراجع المساعد كلامك ويصحّح…", {elapsed: true});
   if (rv && !running("captions")){
     h += `<div class="ycard" style="margin-top:10px">${esc(rv.summary || "")}</div>`;
-    if ((rv.fixes || []).length) h += rv.fixes.map((f, k) => `<div class="fix"><input type="checkbox" data-fx="${k}" checked><div><div class="a"><b>${esc(f.new)}</b> ← <s>${esc(f.old)}</s></div><div class="why">${esc(f.why || "")}</div></div><button class="dim tiny num" data-go="${f.i}">${wordTime(f.i)}</button></div>`).join("");
+    if (rv.applied && (rv.fixes || []).length) h += `<div class="dim tiny" style="margin-top:6px">تطبّقت لحالها. إذا وحدة منها غلط، دوس عليها بالكلام تحت وصحّحها.</div>` + rv.fixes.map(f => `<div class="fix"><span style="color:var(--g,#4ade80)">✓</span><div><div class="a"><b>${esc(f.new)}</b> ← <s>${esc(f.old)}</s></div><div class="why">${esc(f.why || "")}</div></div><button class="dim tiny num" data-go="${f.i}">${wordTime(f.i)}</button></div>`).join("");
+    else if ((rv.fixes || []).length) h += rv.fixes.map((f, k) => `<div class="fix"><input type="checkbox" data-fx="${k}" checked><div><div class="a"><b>${esc(f.new)}</b> ← <s>${esc(f.old)}</s></div><div class="why">${esc(f.why || "")}</div></div><button class="dim tiny num" data-go="${f.i}">${wordTime(f.i)}</button></div>`).join("");
     if ((rv.questions || []).length) h += `<div style="color:var(--y);margin-top:12px">أسئلة لك</div>` + rv.questions.map((q, k) => `<div class="q"><div class="row"><b class="grow">${esc(q.q)}</b><button class="dim tiny num" data-go="${q.i}">${wordTime(q.i)}</button></div><div class="opts">${(q.options || []).map((o, j) => `<button class="pill sm" data-qa="${k}" data-o="${j}">${esc(o)}</button>`).join("")}</div></div>`).join("");
-    h += `<div class="row" style="margin-top:10px"><button class="pill y" id="cApply">طبّق التصحيحات</button></div>`;
+    if (!rv.applied && (rv.fixes || []).length) h += `<div class="row" style="margin-top:10px"><button class="pill y" id="cApply">طبّق التصحيحات</button></div>`;
   }
   h += `<div class="sep"></div><div class="para" id="para">` + c.lines.map(l => `<p>` + l.map(w => {
     const t = pendingFix[w.i] ?? w.t; const cls = ["w", w.doubt && pendingFix[w.i] == null ? "doubt" : "", pendingDel.has(w.i) ? "del" : "", pendingFix[w.i] != null ? "fixed" : ""].join(" ");
@@ -2771,26 +2774,24 @@ async function loadStyles(){
   $("syCats").querySelectorAll("[data-c]").forEach(b => b.onclick = () => { stCat = b.dataset.c; loadStyles(); });
   drawStyles();
 }
-function stCard(x, big){
+function stCard(x){
+  // a real picture of the style, drawn by the episode's own graphics (scripts/make-style-previews.py); its colours if none
   const p = x.palette, f = x.fonts || {};
-  return `<div class="pv" style="background:${p.paper};color:${p.ink};font-family:'${f.title}',system-ui"><span class="tx" style="${x.texture === "clean" ? "display:none" : ""}"></span>
-    <b>${esc(x.name)}</b><span style="display:flex;gap:6px;align-items:center"><i style="background:${p.accent}"></i><i style="background:${p.red || p.accent};width:14%"></i><i style="background:${p.teal || p.ink};width:14%"></i></span></div>`;
+  return `<div class="shot" style="background:${p.paper}"><img src="/ui/styles/${enc(x.id)}.jpg" alt="" loading="lazy" onerror="this.remove()">
+    <b style="color:${p.ink};font-family:'${f.title}',system-ui">${esc(x.name)}</b></div>`;
 }
 function drawStyles(){
   const q = ($("syFind").value || "").trim();
   const list = stData.filter(x => (stCat === "الكل" || x.category === stCat) && (!q || (x.name + x.summary + (x.fits || []).join(" ")).includes(q)));
-  $("syGrid").innerHTML = list.map(x => `<button class="stc ${x.id === stCur ? "on" : ""}" data-st="${esc(x.id)}" title="${esc(x.summary)}">${stCard(x)}<div class="nm">${x.id === stCur ? "✓ " : ""}${esc((x.fits || []).slice(0, 2).join("، "))}</div></button>`).join("") || `<div class="dim" style="grid-column:1/-1">ما لگيت. جرّب كلمة ثانية.</div>`;
+  $("syGrid").innerHTML = list.map(x => `<button class="stc ${x.id === stCur ? "on" : ""}" data-st="${esc(x.id)}">${stCard(x)}<div class="nm">${x.id === stCur ? "✓ " : ""}${esc(x.name)}</div></button>`).join("") || `<div class="dim" style="grid-column:1/-1">ما لگيت. جرّب كلمة ثانية.</div>`;
   $("syGrid").querySelectorAll("[data-st]").forEach(b => b.onclick = () => pickStyle(stData.find(x => x.id === b.dataset.st)));
 }
 function pickStyle(x){
   const box = $("syPick"); box.hidden = false;
   box.innerHTML = `<div class="stc stbig on" style="cursor:default">${stCard(x, true)}</div>
-    <div style="margin:10px 0 4px"><b>${esc(x.name)}</b> <span class="dim tiny">· ${esc(x.category)}</span></div>
-    <div class="tiny" style="line-height:1.7">${esc(x.summary)}</div>
-    <div class="tiny dim" style="margin-top:6px;line-height:1.7"><b>شنو يسوي بالفيديو:</b> ${esc((x.how || "").replace(/\(?[A-Za-z][\w\- :]*\)?/g, "").replace(/\s+([،.])/g, "$1"))}</div>
-    <div class="tiny dim" style="margin-top:4px">يناسب: ${esc((x.fits || []).join("، "))}</div>
-    <div class="excard" style="margin-top:10px"><div class="tiny" style="line-height:1.7">«طبّق» يخلّي المساعد يعيد خطة الحلقة كلها على هالستايل ويبني معاينة جديدة (ياخذ دقايق). القديمة ما تضيع: «تراجع» يرجعها.</div>
-      <div class="row" style="margin-top:8px"><button class="pill y" id="syApply">طبّق على الفيديو كله</button><button class="pill" id="syClose">سكّر</button></div></div>`;
+    <div style="margin:10px 0 4px;font-size:16px"><b>${esc(x.name)}</b></div>
+    <div class="row" style="margin-top:8px"><button class="pill y" id="syApply">طبّق على الفيديو كله</button><button class="pill" id="syClose">سكّر</button></div>
+    <div class="tiny dim" style="margin-top:6px">الحلقة القديمة ما تضيع: «تراجع» يرجعها.</div>`;
   $("syClose").onclick = () => { box.hidden = true; };
   $("syApply").onclick = async () => {
     if (!ep){ toast("افتح مشروع أول"); return; }

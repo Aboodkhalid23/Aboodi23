@@ -75,6 +75,7 @@ class RenderJob:
     scale: float = 1.0
     still: bool = False
     alpha: bool = False   # transparent video (ProRes 4444), e.g. papers that go behind him
+    frame: int = 0        # stills: which frame (animations have settled by the end)
 
 
 def render_batch(jobs: list[RenderJob], bundle: Path) -> None:
@@ -83,7 +84,7 @@ def render_batch(jobs: list[RenderJob], bundle: Path) -> None:
         return
     spec = {"serveUrl": str(Path(bundle).resolve()), "browserExecutable": BROWSER, "concurrency": 4,
             "items": [{"comp": j.comp, "props": j.props, "out": str(Path(j.out).resolve()), "scale": j.scale,
-                       "still": j.still, "alpha": j.alpha} for j in jobs]}
+                       "still": j.still, "alpha": j.alpha, "frame": j.frame} for j in jobs]}
     spec_file = Path(jobs[0].out).resolve().parent / "render_jobs.json"
     spec_file.write_text(json.dumps(spec, ensure_ascii=False), encoding="utf-8")
     proc = subprocess.run(["node", "render-batch.mjs", str(spec_file)], cwd=REMOTION_DIR, capture_output=True, text=True)

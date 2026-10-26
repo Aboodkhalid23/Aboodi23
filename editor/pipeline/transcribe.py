@@ -1,8 +1,11 @@
-"""Stage 2: speech → words with timestamps (faster-whisper, CPU)."""
+"""Stage 2: speech → words with timestamps (Whisper: on the Mac's chip with mlx, else faster-whisper on the CPU)."""
 import json
 import os
+import subprocess
 from dataclasses import dataclass
 from pathlib import Path
+
+import numpy as np
 
 from .media import MediaError, probe
 from .paths import Episode
@@ -38,11 +41,8 @@ def hotwords(ep: Episode) -> str | None:
     return " ".join(dict.fromkeys(w for w in words if w)) or None
 
 
-# large-v3-turbo: ~4x faster than large-v3 on the CPU with the same Iraqi text on our test talk (2026-10-13:
-# 50 s of talk in 20 s instead of 83 s). ABOODI_WHISPER=large-v3 brings back the slower model if a talk needs it.
+# large-v3-turbo: ~4x faster than large-v3 on the CPU; large-v3 hears Iraqi words better (see _model_for_length).
 WHISPER_MODEL = os.environ.get("ABOODI_WHISPER", "large-v3-turbo")
-
-
 MLX_MODEL = "mlx-community/whisper-large-v3-turbo"
 
 
@@ -59,24 +59,133 @@ def mlx_ready() -> bool:
         return False
 
 
-def _transcribe_mlx(ep: Episode) -> list[Word]:
-    import mlx_whisper
-    print("⚡ التفريغ على شريحة الماك (أسرع)", flush=True)
-    out = mlx_whisper.transcribe(str(ep.source), path_or_hf_repo=MLX_MODEL, language="ar", word_timestamps=True,
-                                 initial_prompt=IRAQI_PROMPT, condition_on_previous_text=False, verbose=None)
-    words = []
-    for seg in out.get("segments", []):
-        words += [Word(w["word"].strip(), float(w["start"]), float(w["end"]), float(w.get("probability", 1.0) or 1.0))
-                  for w in (seg.get("words") or []) if w.get("word", "").strip()]
+SR = 16000
+CHUNK_MAX = 14.0     # seconds of talk per piece
+CHUNK_GAP = 0.3      # a pause this long ends a stretch of sound
+SPLIT_GAP = 0.5      # a pause this long always starts a new piece: a retake comes after a stop
+
+
+def load_audio(path: Path) -> np.ndarray:
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(path), "-ac", "1", "-ar", str(SR), "-f", "s16le", "-"],
+                         capture_output=True).stdout
+    return np.frombuffer(raw, np.int16).astype(np.float32) / 32768
+
+
+def speech_chunks(audio: np.ndarray, most: float = CHUNK_MAX, gap: float = CHUNK_GAP,
+                  split: float = SPLIT_GAP) -> list[tuple[float, float]]:
+    """Pieces of talk cut at his pauses (owner, 2026-10-26: his retakes never reached the timeline).
+    Whisper reads up to 30 s at once and quietly skips a sentence it hears twice ("it's a retake, write it once"),
+    so the first take was never written down and nothing could cut it. Short pieces, each read on its own, keep
+    every take. Every pause of `split` seconds starts a new piece; shorter ones join, up to `most` seconds."""
+    hop = SR // 100
+    n = len(audio) // hop
+    if n == 0:
+        return []
+    env = np.sqrt((audio[: n * hop].reshape(n, hop) ** 2).mean(axis=1))
+    floor, peak = float(np.percentile(env, 10)), float(np.percentile(env, 98))
+    loud = env > max(floor * 3, peak * 0.05, 3e-4)
+    # stretches of sound, with pauses shorter than `gap` filled in
+    runs, start, quiet = [], None, 0
+    for i, on in enumerate(loud):
+        if on:
+            if start is None:
+                start = i
+            quiet = 0
+        elif start is not None:
+            quiet += 1
+            if quiet >= gap * 100:
+                runs.append((start, i - quiet + 1))
+                start, quiet = None, 0
+    if start is not None:
+        runs.append((start, n - quiet))
+    runs = [(a, b) for a, b in runs if b - a >= 8]          # clicks and breaths shorter than 80 ms
+    out = []
+    for a, b in runs:
+        if out and (a - out[-1][1]) / 100 < split and (b - out[-1][0]) / 100 <= most:
+            out[-1] = (out[-1][0], b)
+        else:
+            out.append((a, b))
+    pad = 0.12
+    total = len(audio) / SR
+    return [(max(0.0, a / 100 - pad), min(total, b / 100 + pad)) for a, b in out]
+
+
+# what Whisper writes when it hears nothing useful (YouTube subtitle credits it learnt from)
+HALLUCINATIONS = ("اشتركوا في القناة", "اشترك في القناة", "ترجمة نانسي", "شكرا للمشاهدة", "شكراً للمشاهدة",
+                  "نانسي قنقر", "المترجم للقناة", "موسيقى", "Subtitles", "Amara")
+
+
+def _clean_piece(words: list[Word]) -> list[Word]:
+    text = " ".join(w.text for w in words)
+    if any(h in text for h in HALLUCINATIONS) and (len(words) <= 6 or sum(w.p for w in words) / len(words) < 0.5):
+        return []
     return words
 
 
-def transcribe(ep: Episode, model_name: str = WHISPER_MODEL, model=None) -> list[Word]:
-    if not probe(ep.source).has_audio:
+def _words_of(segments, offset: float, end: float) -> list[Word]:
+    out = []
+    for seg in segments:
+        ws = seg.get("words") if isinstance(seg, dict) else seg.words
+        for w in ws or []:
+            text = (w["word"] if isinstance(w, dict) else w.word).strip()
+            if not text:
+                continue
+            g = (lambda k: w[k]) if isinstance(w, dict) else (lambda k: getattr(w, k))
+            ws_, we = float(g("start")) + offset, float(g("end")) + offset
+            prob = float((w.get("probability") if isinstance(w, dict) else getattr(w, "probability", 1.0)) or 1.0)
+            out.append(Word(text, round(min(ws_, end), 3), round(min(we, end), 3), round(prob, 2)))
+    return out
+
+
+def _model_for_length(seconds: float) -> tuple[str, str]:
+    """(faster-whisper name, mlx repo). The full large-v3 hears Iraqi words better; turbo is ~3x faster.
+    Up to 20 minutes: the full model (a few minutes at most on the Mac's chip); longer talks: turbo, unless
+    ABOODI_WHISPER says otherwise."""
+    forced = os.environ.get("ABOODI_WHISPER")
+    name = forced or ("large-v3" if seconds <= 20 * 60 else "large-v3-turbo")
+    return name, f"mlx-community/whisper-{name}"
+
+
+def _prompt(ep: Episode) -> str:
+    hw = hotwords(ep)
+    return IRAQI_PROMPT + (" " + hw if hw else "")
+
+
+def _run_chunks(ep: Episode, read_piece) -> list[Word]:
+    audio = load_audio(ep.source)
+    chunks = speech_chunks(audio)
+    total = len(audio) / SR or 1.0
+    show = os.environ.get("ABOODI_PROGRESS")
+    words, last = [], -1
+    for s, e in chunks:
+        piece = audio[int(s * SR):int(e * SR)]
+        got = read_piece(piece)
+        words += [w for w in _clean_piece(_words_of(got, s, e)) if not words or w.start >= words[-1].start]
+        pct = min(99, int(100 * e / total))
+        if show and pct > last:
+            print(f"@@ {pct}", flush=True)
+            last = pct
+    return words
+
+
+def _transcribe_mlx(ep: Episode, repo: str) -> list[Word]:
+    import mlx_whisper
+    print("⚡ التفريغ على شريحة الماك، جملة جملة حتى ما تضيع أي إعادة", flush=True)
+    prompt = _prompt(ep)
+    return _run_chunks(ep, lambda piece: mlx_whisper.transcribe(
+        piece, path_or_hf_repo=repo, language="ar", word_timestamps=True, initial_prompt=prompt,
+        condition_on_previous_text=False, temperature=0.0, verbose=None).get("segments", []))
+
+
+def transcribe(ep: Episode, model_name: str | None = None, model=None) -> list[Word]:
+    info = probe(ep.source)
+    if not info.has_audio:
         raise MediaError("الصوت فارغ أو مو واضح")
+    auto_name, repo = _model_for_length(info.duration or 0)
+    model_name = model_name or auto_name
     if model is None and mlx_ready():
         try:
-            words = _transcribe_mlx(ep)
+            words = _transcribe_mlx(ep, repo)
             if words:
                 save_words(words, ep.transcript)
                 return words
@@ -85,21 +194,14 @@ def transcribe(ep: Episode, model_name: str = WHISPER_MODEL, model=None) -> list
     if model is None:
         from faster_whisper import WhisperModel
         model = WhisperModel(model_name, device="cpu", compute_type="int8")
-    segments, _info = model.transcribe(
-        str(ep.source), language="ar", word_timestamps=True, vad_filter=True,
-        initial_prompt=IRAQI_PROMPT, hotwords=hotwords(ep), beam_size=5,
-        condition_on_previous_text=False,  # long talks: stops Whisper repeating / inventing lines
-    )
-    total = probe(ep.source).duration or 1.0
-    show = os.environ.get("ABOODI_PROGRESS")   # the Mac app shows how far the transcription is ("@@ 41")
-    words, last = [], -1
-    for seg in segments:
-        words += [Word(w.word.strip(), float(w.start), float(w.end), float(getattr(w, "probability", 1.0) or 1.0))
-                  for w in (seg.words or []) if w.word.strip()]
-        pct = min(99, int(100 * getattr(seg, "end", 0) / total))
-        if show and pct > last:
-            print(f"@@ {pct}", flush=True)
-            last = pct
+    prompt, hw = IRAQI_PROMPT, hotwords(ep)
+
+    def read(piece):
+        segs, _ = model.transcribe(piece, language="ar", word_timestamps=True, vad_filter=False,
+                                   initial_prompt=prompt, hotwords=hw, beam_size=5,
+                                   condition_on_previous_text=False)
+        return list(segs)
+    words = _run_chunks(ep, read)
     if not words:
         raise MediaError("الصوت فارغ أو مو واضح")
     save_words(words, ep.transcript)

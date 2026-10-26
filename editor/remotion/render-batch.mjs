@@ -17,7 +17,7 @@ for (const it of job.items) {
     try {
       const composition = await selectComposition({...common, id: it.comp});
       if (it.still) {
-        await renderStill({...common, composition, output: it.out, scale: it.scale ?? 1, overwrite: true});
+        await renderStill({...common, composition, output: it.out, scale: it.scale ?? 1, overwrite: true, frame: it.frame ?? 0});
       } else {
         const enc = it.alpha   // a transparent layer (papers that go behind him): ProRes 4444 keeps the alpha
           ? {codec: 'prores', proResProfile: '4444', imageFormat: 'png', pixelFormat: 'yuva444p10le'}

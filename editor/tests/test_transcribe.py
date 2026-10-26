@@ -9,14 +9,17 @@ from editor.pipeline.transcribe import Word, load_words, transcribe
 
 
 class FakeModel:
+    """Hears `words` in the first piece of talk it is given (the talk is read piece by piece)."""
     def __init__(self, words):
-        self.words = words
+        self.words, self.calls = words, 0
 
     def transcribe(self, audio, **kwargs):
         self.kwargs = kwargs
+        self.calls += 1
         assert kwargs["language"] == "ar" and kwargs["word_timestamps"] is True
-        seg = NS(words=[NS(word=w, start=s, end=e) for w, s, e in self.words])
-        return iter([seg] if self.words else []), NS(language="ar")
+        words = self.words if self.calls == 1 else []
+        seg = NS(words=[NS(word=w, start=s, end=e) for w, s, e in words])
+        return iter([seg] if words else []), NS(language="ar")
 
 
 def test_transcribe_writes_words(talking_video, tmp_path):
@@ -65,3 +68,24 @@ def test_transcribe_passes_prompt_and_hotwords(talking_video, tmp_path):
     transcribe(ep, model=model)
     assert "إيفرغراند" in model.kwargs["hotwords"] and "هوي كا يان" in model.kwargs["hotwords"]
     assert "شلون" in model.kwargs["initial_prompt"]
+
+
+def test_talk_is_read_piece_by_piece_at_his_pauses():
+    """Owner, 2026-10-26: Whisper read 30 s at once and wrote a retake only once, so it was never cut.
+    Every half-second pause starts a new piece; short pauses inside a sentence don't."""
+    import numpy as np
+    from editor.pipeline.transcribe import SR, speech_chunks
+    t = np.arange(SR) / SR
+    talk = lambda secs: np.tile(0.3 * np.sin(2 * np.pi * 220 * t), int(secs))[: int(secs * SR)]
+    gap = lambda secs: np.zeros(int(secs * SR))
+    audio = np.concatenate([talk(2), gap(0.2), talk(1), gap(0.9), talk(3), gap(0.6), talk(2)]).astype(np.float32)
+    chunks = speech_chunks(audio)
+    assert len(chunks) == 3
+    assert chunks[0][1] < 3.4 < chunks[1][0] and chunks[1][1] < 7.3 < chunks[2][0]
+
+
+def test_whisper_credits_heard_in_silence_are_dropped():
+    from editor.pipeline.transcribe import _clean_piece
+    assert _clean_piece([Word("اشتركوا", 0, 1, 0.3), Word("في", 1, 1.2, 0.3), Word("القناة", 1.2, 2, 0.3)]) == []
+    real = [Word("هواوي", 0, 1)]
+    assert _clean_piece(real) == real

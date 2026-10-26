@@ -46,9 +46,9 @@ STEPS = {"all": ["prep", "plan", "render", "suite"], "from-plan": ["plan", "rend
          "from-render": ["render", "suite"], "prep": ["prep"], "plan": ["plan", "council", "ai", "images"], "render": ["render"],
          "suite": ["suite"], "requests": ["requests", "render"], "preview": ["preview"],
          # the studio's steps (one screen each)
-         "prepare": ["fetch", "script-names", "transcribe", "sentences"], "cut": ["cut"], "sentences": ["sentences"], "captions": ["captions"],
+         "prepare": ["fetch", "script-names", "transcribe", "sentences"], "cut": ["cut", "captions"], "sentences": ["sentences"], "captions": ["captions"],
          "images": ["images"], "build": ["preview"], "final": ["render", "learn"], "assist": ["assist"],
-         "auto": ["fetch", "script-names", "transcribe", "sentences", "cut", "plan", "council", "ai", "images", "render", "learn"], "chat": ["chat"],
+         "auto": ["fetch", "script-names", "transcribe", "sentences", "cut", "captions", "plan", "council", "ai", "images", "render", "learn"], "chat": ["chat"],
          # the assistant learns his taste from what he changed (also after every final build), and the app checks itself
          "learn": ["learn"], "selfcheck": ["selfcheck"],
          # ChatGPT and Gemini (his own subscriptions) read the plan and give a second opinion; ideas for the app
@@ -529,6 +529,7 @@ PLAN_PROMPT = """انت المونتير الآلي لقناة صاحب القن
 - اقرا editor/LESSONS.md و"{ep}/edit/work/plan_input.txt".
 - إذا "{ep}/edit/work/names_check.txt" بيه أسماء، اعرفها من القصة، اكتب "{ep}/edit/names.json"، وعيد names وبعدها entities وbrief بـ python -m editor.pipeline.
 - اكتب "{ep}/edit/edit_plan.json"، وافحصه بـ python -m editor.pipeline validate "{ep}" لحد ما يطلع ✅.
+- الموسيقى (music بالخطة): مقسّمة على أقسام القصة، كل قسم مزاجه من الي ينحچى وينعرض بيه (غموض، توتر، دهشة، حزن، انتصار)، وتتبدل لما تتغير القصة، مو موسيقى وحدة للحلقة كلها. هادئة وبلا غناء، تحت صوته دائماً.
 - قبل ما تسلّم، فكّر مثل مونتير كبير (سكيلات thinking-pre-mortem وthinking-second-order وsw-story-structure): تخيل المشاهد طلع بالدقيقة ٢، ليش؟ صلّح السبب. والهوك يفتح سؤال والقصة تتصاعد لحد الجواب. ولا تغيّر شي يعارض فكرة صاحب القناة.
 {extra}
 - لا تطلع معاينة ولا النسخة الكاملة (التطبيق يجيب الصور ويطلعها بعدك).
@@ -621,7 +622,7 @@ CHAT_PROMPT = """انت مساعد المونتاج بتطبيق URU على حا
 الملفات الي تگدر تغيّرها:
 - الخطة "{ep}/edit/edit_plan.json": المشاهد (beats) بأوقات الفيديو النهائي، حسب سكيل editor. صورة ما عجبته: غيّر query (كلمات بحث إنگليزية أدق) أو النوع، وامسح pick. موشن جرافك: graphic أو kinetic أو face_paper. صوت بمكان معيّن: sfx بالمشهد.
 - الألوان "{ep}/edit/look.json": look من ({looks})، source (rec709 أو slog3 لسوني لوگ ٣)، strength من 0 لـ 1، temp وtint من -100 لـ 100، exposure من -2 لـ 2.
-- الصوت "{ep}/edit/sound.json": clean من 0 لـ 3 (تنظيف الصوت)، music (auto أو tension أو wonder أو sad أو drive أو dark أو calm أو off)، level من -32 لـ -16 (علو الموسيقى)، sfx (true/false).
+- الصوت "{ep}/edit/sound.json": clean من 0 لـ 3 (تنظيف الصوت)، music (auto أو tension أو wonder أو sad أو drive أو dark أو calm أو off)، level من -38 لـ -18 (علو الموسيقى، الطبيعي -28: تحت صوته بوضوح)، sfx (true/false).
 - الجمل: "{ep}/edit/cuts_override.json" (drop/keep بثواني الخام) إذا يريد يشيل أو يرجّع كلام.
 نفّذ طلبه، وإذا غيّرت الخطة افحصها بـ python -m editor.pipeline validate "{ep}" لحد ما يطلع ✅. إذا طلبه مو واضح، اسأله سؤال واحد قصير بدال ما تخمّن.
 لا تطلع معاينة ولا نسخة كاملة (التطبيق يطلعها لما يريد). ممنوع صرف فلوس أو رصيد.
@@ -744,6 +745,7 @@ def preload_libraries() -> None:
         if mlx_ready():
             from huggingface_hub import snapshot_download
             snapshot_download(MLX_MODEL)
+            snapshot_download("mlx-community/whisper-large-v3")   # the sharper one, for talks up to 20 minutes
     except Exception as exc:
         print("mlx model:", exc, flush=True)
     from editor.pipeline.sfx import names, sfx_path
@@ -1716,8 +1718,22 @@ def _captions_ai(d: Path) -> dict:
         if not isinstance(a, Exception):
             fixes += [f for f in a.get("fixes", []) if isinstance(f, dict) and "i" in f and f.get("new")]
             qs += [q for q in a.get("questions", []) if isinstance(q, dict) and "i" in q]
-    return {"summary": f"صححت {len(fixes)} كلمة" + (f"، وعندي {len(qs)} سؤال" if qs else ""), "fixes": fixes,
-            "questions": qs}
+    # the fixes go straight into the words (owner, 2026-10-26: "التصحيح… ابد مكاعد يصلح"); he can still retype any
+    n_words = len(words)
+    by_i = {}
+    for f in fixes:
+        try:
+            i = int(f["i"])
+        except (TypeError, ValueError):
+            continue
+        new = str(f["new"]).strip()
+        if 0 <= i < n_words and new and new != words[i]["t"]:
+            by_i[i] = new
+    if by_i:
+        studio.edit_words(ep, by_i, [])
+    fixes = [f for f in fixes if str(f.get("i")).isdigit() and int(f["i"]) in by_i]
+    return {"summary": (f"صححت {len(fixes)} كلمة بالكلام" if fixes else "ما لگيت كلمات غلط") +
+            (f"، وعندي {len(qs)} سؤال" if qs else ""), "fixes": fixes, "questions": qs, "applied": bool(fixes)}
 
 
 def _review_step(d: Path, kind: str) -> int:
@@ -2503,7 +2519,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(studio.save_look(ep, b))
         if what == "sound":
             keep = {"clean": max(0, min(4, int(b.get("clean", 1)))), "music": str(b.get("music", "auto")),
-                    "level": max(-32.0, min(-16.0, float(b.get("level", -24)))), "sfx": bool(b.get("sfx", True))}
+                    "level": max(-38.0, min(-18.0, float(b.get("level", -28)))), "sfx": bool(b.get("sfx", True)), "v": 2}
             (d / "edit" / "sound.json").write_text(json.dumps(keep, ensure_ascii=False, indent=1), encoding="utf-8")
             return self._json(keep)
         if what == "idea":
