@@ -46,9 +46,9 @@ STEPS = {"all": ["prep", "plan", "render", "suite"], "from-plan": ["plan", "rend
          "from-render": ["render", "suite"], "prep": ["prep"], "plan": ["plan", "council", "ai", "images"], "render": ["render"],
          "suite": ["suite"], "requests": ["requests", "render"], "preview": ["preview"],
          # the studio's steps (one screen each)
-         "prepare": ["fetch", "script-names", "transcribe", "sentences"], "cut": ["cut", "captions"], "sentences": ["sentences"], "captions": ["captions"],
+         "prepare": ["fetch", "script-names", "transcribe", "sentences"], "cut": ["cut", "captions"], "sentences": ["sentences"], "captions": ["captions"], "hook": ["hook"], "viewer": ["viewer"],
          "images": ["images"], "build": ["preview"], "final": ["render", "learn"], "assist": ["assist"],
-         "auto": ["fetch", "script-names", "transcribe", "sentences", "cut", "captions", "plan", "council", "ai", "images", "render", "learn"], "chat": ["chat"],
+         "auto": ["fetch", "script-names", "transcribe", "sentences", "cut", "captions", "hook", "plan", "council", "ai", "images", "render", "learn"], "chat": ["chat"],
          # the assistant learns his taste from what he changed (also after every final build), and the app checks itself
          "learn": ["learn"], "selfcheck": ["selfcheck"],
          # ChatGPT and Gemini (his own subscriptions) read the plan and give a second opinion; ideas for the app
@@ -64,7 +64,7 @@ STEPS = {"all": ["prep", "plan", "render", "suite"], "from-plan": ["plan", "rend
          "reels": ["reels-pick", "shorts"], "dub": ["dub"], "thumbs": ["thumbs"], "style-ref": ["style-ref"], "translate": ["translate"], "youtube": ["youtube"]}
 STEP_NAMES = {"prep": "التجهيز", "plan": "خطة المونتير", "render": "النسخة الكاملة", "preview": "المعاينة",
               "suite": "غرفة المونتاج", "requests": "ملاحظاتك", "fetch": "تجهيز الفيديو", "transcribe": "تفريغ الكلام",
-              "cut": "قص المقطع", "sentences": "المساعد يراجع الجمل", "captions": "المساعد يراجع الكابشن",
+              "cut": "قص المقطع", "sentences": "المساعد يراجع الجمل", "captions": "المساعد يراجع الكابشن", "hook": "المساعد يدوّر الهوك", "viewer": "عين المشاهد",
               "images": "الصور", "assist": "المساعد", "chat": "المساعد", "shorts": "الريلز", "export": "التصدير", "reels-pick": "اختيار الريلز", "dub": "الدبلجة", "thumbs": "الصور المصغرة", "style-ref": "ستايل من فيديو", "script-names": "أسماء السكربت", "translate": "الترجمة", "ai": "مشاهد الذكاء الاصطناعي", "youtube": "الرفع على يوتيوب", "learn": "المساعد يتعلم ذوقك", "selfcheck": "فحص التطبيق والحلقة", "opinion": "رأي شات جي بي تي وجيميناي", "council": "لمسات شات جي بي تي وجيميناي", "youtube-langs": "اللغات على يوتيوب", "smart": "الأدوات الذكية", "app-ideas": "أفكار للتطبيق"}
 CLAUDE_TOOLS = ["Read", "Write", "Edit", "Glob", "Grep", "WebSearch", "WebFetch", "TodoWrite",
                 "Bash(python -m editor.pipeline:*)", "Bash(python3 -m editor.pipeline:*)",
@@ -529,6 +529,8 @@ PLAN_PROMPT = """انت المونتير الآلي لقناة صاحب القن
 - اقرا editor/LESSONS.md و"{ep}/edit/work/plan_input.txt".
 - إذا "{ep}/edit/work/names_check.txt" بيه أسماء، اعرفها من القصة، اكتب "{ep}/edit/names.json"، وعيد names وبعدها entities وbrief بـ python -m editor.pipeline.
 - اكتب "{ep}/edit/edit_plan.json"، وافحصه بـ python -m editor.pipeline validate "{ep}" لحد ما يطلع ✅.
+- السكيلزات الي تقويك هنا: storytelling-hooks وviral-hooks (أول ٣٠ ثانية)، retention-pass (كل كم ثانية يتغير شي، ولا مشهد ممل)، media-sources (صور ومقاطع حقيقية بجودة عالية تطابق الكلام بالضبط)، shot-composition (وين يوگف كل شي بالكادر)، beat-sync-editing (القطع على الإيقاع).
+- كل صورة لازم تطابق الكلام الي ينگال وياها بالضبط: إذا يحچي عن شخص، صورته هو؛ عن رقم، الرقم ينكتب كبير؛ عن مكان، المكان نفسه. لا صور عامة.
 - الموسيقى (music بالخطة): مقسّمة على أقسام القصة، كل قسم مزاجه من الي ينحچى وينعرض بيه (غموض، توتر، دهشة، حزن، انتصار)، وتتبدل لما تتغير القصة، مو موسيقى وحدة للحلقة كلها. هادئة وبلا غناء، تحت صوته دائماً.
 - قبل ما تسلّم، فكّر مثل مونتير كبير (سكيلات thinking-pre-mortem وthinking-second-order وsw-story-structure): تخيل المشاهد طلع بالدقيقة ٢، ليش؟ صلّح السبب. والهوك يفتح سؤال والقصة تتصاعد لحد الجواب. ولا تغيّر شي يعارض فكرة صاحب القناة.
 {extra}
@@ -1552,6 +1554,13 @@ def _plan_extra(d: Path) -> str:
             lines.append(f"- الرتم: صاحب القناة خلّاه عليك، وريده {pace}. اضبط طول المشاهد والانتقالات على هذا.")
     except (OSError, ValueError):
         pass
+    try:   # the opening he picked in the hook step (owner, 2026-10-26)
+        hk = json.loads((d / "edit" / "hook.json").read_text(encoding="utf-8"))
+        lines.append(f"- الهوك الي اختاره صاحب القناة: حط كلامه من {hk['from']:.2f} لـ {hk['to']:.2f} ثانية (على الفيديو المقصوص) "
+                     f"كتيزر بأول الحلقة (teaser: [[{hk['from']:.2f}, {hk['to']:.2f}]])، وأقوى صور وحركة على هذا الكلام: «{hk.get('text', '')}». "
+                     f"الفكرة: {hk.get('title', '')}.")
+    except (OSError, ValueError, KeyError, TypeError):
+        pass
     if (d / "edit" / "script_names.json").exists():
         lines.append(f'- الأسماء بالسكربت ومنو هم: "{d / "edit" / "script_names.json"}". دوّر على صورهم ومقاطعهم الحقيقية بالإنگليزي (en)، وأول مرة ينذكر شخص مهم حط صورته (entity).')
     sf = d / "edit" / "style.txt"
@@ -1736,6 +1745,129 @@ def _captions_ai(d: Path) -> dict:
             (f"، وعندي {len(qs)} سؤال" if qs else ""), "fixes": fixes, "questions": qs, "applied": bool(fixes)}
 
 
+HOOK_FAST = """انت مونتير يوتيوب خبير بالهوك (أول ٣٠ ثانية تحدد إذا المشاهد يكمل). الحلقة عن: {topic}
+تحت كلام صاحب القناة بعد القص، كل سطر: [من–لحد بالثواني] الكلام.
+اختار ٣ هوكات مختلفة من كلامه هو (ما تكتب كلام جديد)، كل واحد مقطع متصل طوله بين ٤ و٢٠ ثانية يبدي ويخلص على حدود الأسطر بالضبط:
+١) سؤال أو لغز يخلي المشاهد يريد يعرف الجواب. ٢) رقم أو معلومة صادمة. ٣) أقوى لحظة بالقصة (من النص أو الآخر) تنعرض أول كتيزر.
+لا تختار مقطع يكشف نهاية القصة كاملة.
+{lines}
+جاوب JSON بس: {{"hooks": [{{"title": "اسم قصير للفكرة", "from": 12.3, "to": 21.0, "text": "الكلام بالضبط", "why": "ليش يمسك المشاهد، سطر واحد"}}]}}"""
+
+VIEWER_FAST = """انت مشاهد يوتيوب عادي، صبرك قليل، وتتفرج على حلقة عن: {topic}. وبعدين انت مونتير خبير يصلّح.
+تحت الحلقة ثانية بثانية: الكلام، وشنو يطلع بالشاشة بكل مشهد، ومناطق خطر الملل الي لگتها القواعد.
+{lines}
+لگّي اللحظات الي ممكن تخليك تطلع أو ما تفهم: مشهد طويل بلا تغيير، صورة ما إلها علاقة بالكلام، كلام معاد، شرح ثقيل بلا رسم، هوك ضعيف، نهاية تطول.
+لكل وحدة: الثانية، المشكلة بسطر، والتصليح بسطر (شي يگدر المونتير يسويه: صورة، رسم، تقريب، قص، موسيقى، نص على الشاشة).
+وأعطِ الحلقة درجة من ١٠٠ لاحتمال إن المشاهد يكمل لآخرها.
+جاوب JSON بس: {{"score": 70, "summary": "سطرين عربي عراقي", "notes": [{{"t": 12.5, "issue": "المشكلة", "fix": "التصليح", "level": "high|mid|low"}}]}}"""
+
+
+def _clean_lines(ep) -> list[tuple[float, float, str]]:
+    from editor.pipeline.transcribe import load_words
+    words = load_words(ep.clean_words) if ep.clean_words.exists() else []
+    out, cur = [], []
+    for w in words:
+        if cur and (w.start - cur[-1].end > 0.45 or len(cur) >= 14):
+            out.append((cur[0].start, cur[-1].end, " ".join(x.text for x in cur)))
+            cur = []
+        cur.append(w)
+    if cur:
+        out.append((cur[0].start, cur[-1].end, " ".join(x.text for x in cur)))
+    return out
+
+
+def _hook_step(d: Path) -> int:
+    """Three openings from his own words; he picks one in the hook step (owner, 2026-10-26)."""
+    from editor.pipeline.paths import Episode
+    ep = Episode(d)
+    lines = _clean_lines(ep)
+    if not lines:
+        JOB.say("❌ قُص المقطع أول")
+        return 1
+    text = "\n".join(f"[{a:.1f}–{b:.1f}] {t}" for a, b, t in lines[:400])
+    JOB.say(f"المساعد يدوّر أقوى بداية بين {len(lines)} سطر…")
+    try:
+        r = _fast_json(HOOK_FAST.format(topic=_meta(d).get("name", ""), lines=text), "best")
+    except (RuntimeError, ValueError, OSError, subprocess.SubprocessError) as exc:
+        JOB.say("❌ ما گدر: " + str(exc)[:200])
+        return 1
+    hooks = []
+    for h in r.get("hooks", [])[:3]:
+        try:
+            a, b = float(h["from"]), float(h["to"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if 2 <= b - a <= 30:
+            hooks.append({"title": str(h.get("title", "")), "from": round(a, 2), "to": round(b, 2),
+                          "text": str(h.get("text", "")), "why": str(h.get("why", ""))})
+    out = d / "edit" / "work" / "app" / "hook_review.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps({"hooks": hooks}, ensure_ascii=False), encoding="utf-8")
+    if hooks and len(JOB.steps) > 1 and not (d / "edit" / "hook.json").exists():   # the one-button mode: the first
+        save_hook(d, 0)
+        JOB.say(f"💡 اخترت الهوك «{hooks[0]['title']}». تگدر تبدله من خانة الهوك")
+        return 0
+    JOB.say(f"💡 طلّعت {len(hooks)} بدايات. شوفها واختار")
+    if not hooks and len(JOB.steps) > 1:
+        return 0      # never stops the one-button mode
+    return 0 if hooks else 1
+
+
+def _viewer_step(d: Path) -> int:
+    """The built episode through a bored viewer's eyes, then an editor's fixes (owner, 2026-10-26: «عين المشاهد»)."""
+    from editor.pipeline.paths import Episode
+    from . import studio
+    ep = Episode(d)
+    if not ep.plan.exists():
+        JOB.say("❌ اكتب الخطة أول")
+        return 1
+    plan = json.loads(ep.plan.read_text(encoding="utf-8"))
+    off = sum(e - s for s, e in plan.get("teaser", []))
+    lines = _clean_lines(ep)
+    rows = []
+    for b in plan.get("beats", []):
+        said = " ".join(t for a, e, t in lines if b["start"] - off <= a < b["end"] - off)
+        shows = studio.KIND_AR.get(b["kind"], b["kind"])
+        what = studio.ar(b.get("title")) or studio.ar(b.get("caption")) or (b.get("query") or "")
+        rows.append(f"[{b['start']:.1f}–{b['end']:.1f}] يطلع: {shows}{(' (' + what + ')') if what else ''} | يحچي: {said[:220]}")
+    try:
+        dull = retention(d).get("dull", [])
+    except Exception:   # noqa: BLE001 — the rules' curve is a help; the AI still watches without it
+        dull = []
+    text = "\n".join(rows[:300]) + ("\nمناطق ملل: " + "، ".join(f"{a}–{b} ({w})" for a, b, w in dull) if dull else "")
+    JOB.say(f"المساعد يتفرج على {len(rows)} مشهد كأنه مشاهد…")
+    try:
+        r = _fast_json(VIEWER_FAST.format(topic=_meta(d).get("name", ""), lines=text), "best")
+    except (RuntimeError, ValueError, OSError, subprocess.SubprocessError) as exc:
+        JOB.say("❌ ما گدر: " + str(exc)[:200])
+        return 1
+    notes = []
+    for n in r.get("notes", []):
+        try:
+            notes.append({"t": round(float(n["t"]), 1), "issue": str(n.get("issue", "")), "fix": str(n.get("fix", "")),
+                          "level": n.get("level") if n.get("level") in ("high", "mid", "low") else "mid"})
+        except (KeyError, TypeError, ValueError):
+            continue
+    notes.sort(key=lambda n: n["t"])
+    try:
+        score = max(0, min(100, int(r.get("score", 0))))
+    except (TypeError, ValueError):
+        score = None
+    out = d / "edit" / "work" / "app" / "viewer_review.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps({"score": score, "summary": str(r.get("summary", "")), "notes": notes},
+                              ensure_ascii=False), encoding="utf-8")
+    JOB.say(f"💡 لگيت {len(notes)} لحظة ممكن المشاهد يطلع بيها")
+    return 0
+
+
+def save_hook(d: Path, k: int) -> dict:
+    rv = json.loads((d / "edit" / "work" / "app" / "hook_review.json").read_text(encoding="utf-8"))
+    h = rv["hooks"][int(k)]
+    (d / "edit" / "hook.json").write_text(json.dumps(h, ensure_ascii=False), encoding="utf-8")
+    return h
+
+
 def _review_step(d: Path, kind: str) -> int:
     """The assistant reads the sentences or the captions and writes its suggestions (the screen shows them)."""
     app = d / "edit" / "work" / "app"
@@ -1777,6 +1909,13 @@ def run_job(ep_id: str, what: str) -> None:
             code = 0
             for stage in ("clean", "names", "entities", "brief"):
                 code = code or _pipe(stage, d)
+        elif step == "hook":
+            code = _hook_step(d)
+            if code and what != step:   # the plan picks its own opening then
+                JOB.say("⚠️ كمّلت بلا هوك مختار. تگدر تختاره من خانة الهوك")
+                code = 0
+        elif step == "viewer":
+            code = _viewer_step(d)
         elif step in ("sentences", "captions"):
             code = _review_step(d, step)
             if code and what != step:   # inside a longer job the rules' own cut still stands: carry on
@@ -2361,10 +2500,16 @@ class Handler(BaseHTTPRequestHandler):
             name = next((x["name"] for x in styles_list() if x["id"] == style), "")
             return self._json({"text": f.read_text(encoding="utf-8") if f.exists() else "", "style": style, "style_name": name})
         if what == "review":
-            f = d / "edit" / "work" / "app" / f"{q.get('kind', 'captions')}_review.json"
+            kind = q.get("kind", "captions")
+            if kind not in ("captions", "sentences", "hook", "viewer"):
+                return self._err("لا", 400)
+            f = d / "edit" / "work" / "app" / f"{kind}_review.json"
             return self._json(json.loads(f.read_text(encoding="utf-8")) if f.exists() else None)
         if what == "markers":
             return self._json(studio.markers(ep))
+        if what == "hook":
+            f = d / "edit" / "hook.json"
+            return self._json(json.loads(f.read_text(encoding="utf-8")) if f.exists() else None)
         if what == "frame":
             return self._file(frame_with_look(ep, float(q.get("t") or 0), q.get("raw") == "1"))
         if what == "media":
@@ -2511,6 +2656,8 @@ class Handler(BaseHTTPRequestHandler):
             plan["shorts"] = (plan.get("shorts") or []) + [{"from": round(fr, 2), "to": round(to, 2), "title": str(b.get("title", ""))}]
             ep.plan.write_text(json.dumps(plan, ensure_ascii=False, indent=1), encoding="utf-8")
             return self._json({"shorts": plan["shorts"]})
+        if what == "hook":
+            return self._json(save_hook(d, int(b.get("pick", 0))))
         if what == "sentences":
             return self._json(studio.set_sentences(ep, b.get("keep") or {}))
         if what == "captions":

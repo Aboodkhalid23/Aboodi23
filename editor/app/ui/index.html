@@ -68,7 +68,7 @@ header{display:flex;align-items:center;gap:10px;padding:0 12px;border-bottom:1px
 .icobtn svg{width:16px;height:16px}
 
 /* RTL: the tool bar sits on the right edge, then its panel, the video, and the scene settings on the left */
-main{display:grid;grid-template-columns:72px var(--pw,minmax(330px,26%)) minmax(0,1fr) var(--iw,290px);gap:8px;padding:8px 8px 0;min-height:0}
+main{display:grid;grid-template-columns:72px var(--pw,minmax(380px,29%)) minmax(0,1fr) var(--iw,290px);gap:8px;padding:8px 8px 0;min-height:0}
 #rail{background:var(--panel);border:1px solid var(--line);border-radius:16px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0;overflow:auto}
 .rb{width:60px;min-height:56px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--mute);font-size:10.5px;flex:none}
 .rb svg{width:20px;height:20px}
@@ -100,13 +100,24 @@ main{display:grid;grid-template-columns:72px var(--pw,minmax(330px,26%)) minmax(
 .insthumb{height:130px;border-radius:10px;background:#0e0e10 center/cover no-repeat;display:grid;place-items:center;color:var(--dim);margin-top:4px}
 
 /* ---------- steps ---------- */
-.stepbar{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;padding:10px 10px 8px}
-.st{position:relative;height:48px;border-radius:10px;border:1.5px solid var(--line2);background:var(--panel2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--mute);font-size:12px}
-.st .n{font-size:11px;color:var(--dim);font-weight:700;width:18px;height:18px;border-radius:50%;display:grid;place-items:center}
-.st.on{border-color:#d8d8dc;color:var(--ink);background:var(--panel3)}
-.st.on .n{background:var(--y);color:var(--yink)}
-.st.done .n{color:var(--green)}
-.st.run .n{background:var(--ydim);color:var(--y);animation:pulse 1s infinite}
+/* the steps stand in a column beside their page (owner, 2026-10-26: "ما اريدها بالعرض اريدها بالطول") */
+#steps:not([hidden]){display:grid!important;grid-template-columns:112px minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;height:100%;min-height:0}
+#steps>.stepbar{grid-row:1/3;grid-column:1}
+#steps>.stepbody{grid-column:2;grid-row:1}
+#steps>.stepfoot{grid-column:2;grid-row:2}
+.stepbar{display:flex;flex-direction:column;gap:4px;padding:10px 6px;overflow-y:auto;border-inline-end:1px solid var(--glassline)}
+.st{position:relative;min-height:42px;border-radius:12px;border:1px solid transparent;background:none!important;display:flex;align-items:center;gap:7px;padding:6px 8px;color:var(--mute);font-size:12.5px;text-align:start;transition:background .15s,color .15s}
+.st:hover{background:rgba(255,255,255,.05)!important;color:var(--ink)}
+.st .ic{position:relative;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex:none;background:rgba(255,255,255,.06)}
+.st .ic svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.st .nm{flex:1;min-width:0;line-height:1.2;font-weight:600}
+.st .n{display:none}
+.st .ok{position:absolute;top:-4px;inset-inline-end:-4px;width:13px;height:13px;border-radius:50%;background:var(--green);color:#06210f;font-size:8px;display:grid;place-items:center;font-weight:800}
+.st.on{color:var(--ink);background:rgba(255,255,255,.08)!important;border-color:var(--glassline)}
+.st.on .ic{background:var(--y);color:var(--yink)}
+.st.done .ic{color:var(--green)}
+.st.run .ic{background:var(--ydim);color:var(--y);animation:pulse 1s infinite}
+#stagebar{display:none!important}
 .stepbody{flex:1;overflow:auto;padding:4px 14px 14px;min-height:0}
 .stepfoot{padding:10px 14px 12px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
 .h2{font-size:15px;font-weight:800;margin:6px 0 2px}
@@ -581,6 +592,34 @@ body.focusMode #panel,body.focusMode #inspector,body.focusMode #rail{display:non
 .lkgroups{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
 .lkgroups .chip{cursor:pointer}.lkgroups .chip.on{background:var(--y);color:var(--yink);border-color:var(--y)}
 .lkgroups .chip small{opacity:.6;font-size:10px}
+
+/* plan pictures over the cut video before anything is built (owner, 2026-10-26: "ما اكدر اشوف شنو ولد الذكاء الاصطناعي") */
+#peek{position:absolute;inset:10px;z-index:2;pointer-events:none;background:#000;border-radius:6px}
+#peek img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+#peek span{position:absolute;top:8px;inset-inline-start:8px;background:#000b;color:#fff;font-size:11.5px;padding:3px 9px;border-radius:999px}
+#vPeek.on{background:var(--y);color:var(--yink)}
+/* the new steps */
+.hk{border:1px solid var(--glassline);border-radius:14px;padding:12px;margin-top:10px;background:rgba(255,255,255,.04)}
+.hk.on{outline:2px solid var(--y)}
+.hk q{display:block;margin:8px 0;line-height:1.8;font-size:14px}
+.igrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:10px}
+.itile{position:relative;border-radius:10px;overflow:hidden;aspect-ratio:16/10;background:#0e0e10;border:1px solid var(--glassline);cursor:zoom-in;padding:0}
+.itile img{width:100%;height:100%;object-fit:cover;display:block}
+.itile .k{position:absolute;top:5px;inset-inline-start:5px;background:#000b;color:#fff;font-size:10.5px;padding:1px 7px;border-radius:999px}
+.itile .miss{display:grid;place-items:center;height:100%;color:var(--dim);font-size:11px;text-align:center;padding:6px}
+#lbox{position:fixed;inset:0;z-index:400;background:#000e;display:grid;grid-template-rows:minmax(0,1fr) auto;padding:20px;gap:12px}
+#lbox img{max-width:100%;max-height:100%;object-fit:contain;margin:auto;border-radius:10px}
+#lbox .bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:#eee;max-width:1100px;margin:0 auto;width:100%}
+#lbox .bar .said{flex:1 1 300px;line-height:1.7;font-size:14px}
+.cmpimgs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.cmpimgs figure{margin:0}.cmpimgs img{width:100%;border-radius:8px;display:block;background:#0e0e10;aspect-ratio:16/9;object-fit:cover}
+.cmpimgs figcaption{font-size:11px;color:var(--dim);text-align:center;margin-top:3px}
+.lkq{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:10px}
+.lkq .pill{width:100%;justify-content:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vn{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;padding:10px 0;border-bottom:1px solid var(--glassline)}
+.vn .lv{width:9px;height:9px;border-radius:50%;margin-top:6px}
+.vn .lv.high{background:#ef4444}.vn .lv.mid{background:#f59e0b}.vn .lv.low{background:#60a5fa}
+.score{font-size:40px;font-weight:800;line-height:1}
 </style>
 </head>
 <body>
@@ -770,6 +809,7 @@ body.focusMode #panel,body.focusMode #inspector,body.focusMode #rail{display:non
         <select id="vSafe" style="width:auto;height:30px;padding:0 8px" title="حدود المنصات"><option value="">بلا حدود</option><option value="youtube">حدود يوتيوب</option><option value="shorts">حدود شورتس</option><option value="tiktok">حدود تيك توك</option><option value="reels">حدود ريلز</option></select>
         <select id="vZoom" style="width:auto;height:30px;padding:0 8px"><option value="1">١٠٠٪</option><option value="0.75">٧٥٪</option><option value="0.5">٥٠٪</option></select>
         <select id="vRate" style="width:auto;height:30px;padding:0 6px" title="سرعة المعاينة"><option value="0.5">٠٫٥×</option><option value="1" selected>١×</option><option value="1.5">١٫٥×</option><option value="2">٢×</option></select>
+        <button class="icobtn on" id="vPeek" title="صور الخطة فوگ الفيديو: تشوف شنو راح يطلع بكل لحظة قبل البناء">🖼</button>
         <button class="icobtn" id="vGrid" title="شبكة الأثلاث (ج)">▦</button>
         <button class="icobtn" id="vScope" title="مقاييس الألوان: الإضاءة والألوان (ق)">📊</button>
         <button class="icobtn" id="vStill" title="احفظ هاللقطة صورة">📸</button>
@@ -781,6 +821,7 @@ body.focusMode #panel,body.focusMode #inspector,body.focusMode #rail{display:non
       <div class="vwrap" id="vwrap">
         <div class="empty" id="vEmpty"><div><h1>استوديو المونتاج</h1><div>لا يوجد مشروع مفتوح</div><div class="dim" style="margin-top:4px">اختر مشروعاً من المكتبة</div></div></div>
         <video id="video" playsinline preload="auto" hidden></video>
+        <div id="peek" hidden><img id="peekImg" alt=""><span id="peekLbl"></span></div>
         <div id="gridOv" hidden></div>
         <div id="scopeOv" hidden><canvas id="scopeCv" width="260" height="190"></canvas><div class="tiny dim" style="text-align:center">الإضاءة (فوگ) · الألوان (جوه)</div></div>
         <div id="vu" title="مستوى الصوت"><i id="vuL"></i><i id="vuR"></i></div>
@@ -962,16 +1003,16 @@ body.focusMode #panel,body.focusMode #inspector,body.focusMode #rail{display:non
 <!-- what's new in this version -->
 <div class="veil" id="dNews" hidden>
   <div class="dlg news">
-    <div class="row"><img src="/ui/logo.png" alt="" style="height:40px"><div class="grow"><h2 style="margin:0">يو آر يو ٢٫٠</h2><div class="dim tiny">نسخة جديدة كاملة</div></div><button class="icobtn" id="newsX">✕</button></div>
+    <div class="row"><img src="/ui/logo.png" alt="" style="height:40px"><div class="grow"><h2 style="margin:0">يو آر يو ٢٫٢</h2><div class="dim tiny">قلب المونتاج صار أقوى</div></div><button class="icobtn" id="newsX">✕</button></div>
     <div class="newsgrid">
-      <div><b>🎬 شاشة مونتاج جديدة</b><span>أدوات ملونة فوگ، المراحل جوه، والمساعد يرسى على الجنب ويحچي وياك.</span></div>
-      <div><b>👁️ مريح للعين</b><span>ألوان هادئة بلا أبيض ولا أسود صافي، وخط ريدكس الواضح. تگدر تبدّل من الإعدادات.</span></div>
-      <div><b>✨ ١٤ مؤثر جديد</b><span>تلفزيون قديم، حرارية، رؤية ليلية، مراية، تسريب ضوء، تثبيت الاهتزاز، وأكثر.</span></div>
-      <div><b>📊 أدوات مونتير</b><span>مقاييس الألوان، شبكة الأثلاث، عداد الصوت، قبل وبعد الألوان، وحفظ لقطة صورة.</span></div>
-      <div><b>⌨️ اختصارات احترافية</b><span>ج ك ل، فريم بفريم، علامات، تكرار مقطع، ووضع تركيز. دوس ؟ تشوفها كلها.</span></div>
-      <div><b>📋 انسخ والصق المشهد</b><span>انسخ مؤثر وانتقال وألوان مشهد والصقها على غيره.</span></div>
-      <div><b>🎨 ٢٥ ستايل جديد</b><span>صار ١١٠ ستايل، و٢٤ صوت جديد، و٨ أمزجة موسيقى، وخطوط أكثر.</span></div>
-      <div><b>🛡️ إعدادات احترافية</b><span>أقسام مرتبة، وقسم أمان يفحص ويصلّح الصلاحيات ويفصل الحسابات.</span></div>
+      <div><b>📋 الخانات بالطول، وصارت ١٠</b><span>الجمل، الصوت، الكابشن، الهوك، الخطة، الصور، الألوان، البناء، عين المشاهد، الملاحظات.</span></div>
+      <div><b>⚡ الهوك</b><span>المساعد يطلع ٣ بدايات من كلامك، تسمعها وتختار الأقوى، وتدخل الخطة.</span></div>
+      <div><b>🖼️ الصور</b><span>كل صورة جابها أو ولّدها المساعد بشبكة، تكبر بدوسة، وتبدلها أو تشيلها.</span></div>
+      <div><b>👁️ صور الخطة فوگ الفيديو</b><span>قبل البناء، وانت تشغّل الفيديو تشوف الصورة الي راح تطلع بكل لحظة.</span></div>
+      <div><b>🎨 الألوان</b><span>قبل وبعد جنب بعض على لحظة من فيديوك، ولوكات جاهزة بدوسة.</span></div>
+      <div><b>🧐 عين المشاهد</b><span>المساعد يتفرج كأنه مشاهد، يعطي درجة، ويعلّم وين ممكن يطلع ويصلّحها.</span></div>
+      <div><b>✂️ الإعادات تنشال</b><span>الصوت ينقرا قطعة قطعة فما تضيع أي إعادة، والكلمات الغلط تتصحح لحالها.</span></div>
+      <div><b>🎵 موسيقى أوطى</b><span>تنزل تحت صوتك وانت تحچي، ولكل قسم مزاجه.</span></div>
     </div>
     <div class="row" style="justify-content:flex-end;margin-top:14px"><button class="pill y" id="newsOk">يلا نبدي</button></div>
   </div>
@@ -1147,11 +1188,25 @@ const post = (path, body = {}) => api(path, {method: "POST", body: JSON.stringif
 const E = () => `/api/episodes/${enc(cur)}`;
 
 /* ---------- state ---------- */
-let state = {episodes: []}, cur = null, ep = null, step = 1, job = {}, logNext = 0, logLines = [];
+let state = {episodes: []}, cur = null, ep = null, step = "sentences", job = {}, logNext = 0, logLines = [];
 let data = {sentences: null, captions: null, plan: null, timeline: null, look: null, sound: null, review: {}};
 let planSub = 1, pendingFix = {}, pendingDel = new Set(), keepMap = {}, notes = [];
-const STEPS = [["الجمل", "sentences"], ["الصوت", "sound"], ["الكابشن", "captions"], ["الخطة", "plan"], ["البناء", "build"], ["الملاحظات", "notes"]];
-const RUNS = {prepare: 1, cut: 1, sentences: 1, captions: 3, plan: 4, images: 4, build: 5, final: 5, requests: 6, assist: 4, auto: 1, chat: 4, learn: 6, selfcheck: 5, opinion: 4, "app-ideas": 6, council: 4, smart: 4};
+// the ten steps, top to bottom (owner, 2026-10-26: "بالطول"; he picked the hook, pictures, colours and the viewer's eye)
+const STEPS = [["الجمل", "sentences", "M6 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM20 4L8.1 15.9M14.5 14.5L20 20M8.1 8.1L12 12"],
+  ["الصوت", "sound", "M11 5L6 9H2v6h4l5 4V5zM15.5 8.5a5 5 0 0 1 0 7"],
+  ["الكابشن", "captions", "M4 7V5h16v2M9 19h6M12 5v14"],
+  ["الهوك", "hook", "M13 2L3 14h8l-1 8 10-12h-8l1-8z"],
+  ["الخطة", "plan", "M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 10h18M9 10v10"],
+  ["الصور", "images", "M3 5h18v14H3zM3 16l5-5 4 4 3-3 6 6M15.5 9.5a1.5 1.5 0 1 0 0-.01"],
+  ["الألوان", "colors", "M12 3a9 9 0 1 0 0 18c1 0 1.5-.8 1.5-1.5 0-1-.8-1.4-.8-2.3 0-.9.7-1.5 1.6-1.5H17a4 4 0 0 0 4-4c0-4.7-4-8.7-9-8.7zM7.5 11.5h.01M10.5 7.5h.01M15.5 7.5h.01"],
+  ["البناء", "build", "M6 4l13 8-13 8V4z"],
+  ["عين المشاهد", "viewer", "M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"],
+  ["الملاحظات", "notes", "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"]];
+const ORDER = STEPS.map(x => x[1]);
+function pos(k){ return ORDER.indexOf(k); }
+const RUNS = {prepare: "sentences", cut: "sentences", sentences: "sentences", captions: "captions", hook: "hook", plan: "plan", images: "images",
+  build: "build", final: "build", requests: "notes", assist: "plan", auto: "sentences", chat: "plan", learn: "notes", selfcheck: "build",
+  opinion: "plan", "app-ideas": "notes", council: "plan", smart: "plan", viewer: "viewer", restyle: "plan"};
 
 async function refresh(){
   try { state = await api("/api/state"); } catch (_) { return; }
@@ -1222,7 +1277,8 @@ async function loadAll(){
   Object.assign(data, {sentences: s, captions: c, plan: p, timeline: t, look: l, sound: so});
   if (firstTl || (t && t.ready && Math.abs((t.duration || 0) - tlDur) > 1)) pps = Math.max(0.3, ($("tscroll").clientWidth - 20) / Math.max(1, t.duration));
   notes = n.map(x => ({id: x.id, ...x.data})).filter(x => typeof x.t === "number").sort((a, b) => a.t - b.t);
-  for (const k of ["captions", "sentences"]) data.review[k] = await api(E() + "/review?kind=" + k).catch(() => null);
+  for (const k of ["captions", "sentences", "hook", "viewer"]) data.review[k] = await api(E() + "/review?kind=" + k).catch(() => null);
+  data.hookPick = await api(E() + "/hook").catch(() => null);
   keepMap = {}; (s && s.items || []).forEach(x => keepMap[x.i] = x.keep);
   chatMsgs = await api(E() + "/chat").catch(() => []);
   renderSteps(); renderInspector(); renderTimeline(); renderScene(); drawToggles(); fxData = null; drawAsk();
@@ -1236,9 +1292,9 @@ let vSrc = "";
 function wantedVideo(){
   if (!ep) return ["", ""];
   const d = ep.done;
-  if (step >= 5 && d.render) return [`/files/${enc(cur)}/edit/final.mp4`, "النسخة الكاملة"];
-  if (step >= 5 && d.preview) return [`/files/${enc(cur)}/edit/preview.mp4`, "معاينة"];
-  if (step >= 2 && d.cut) return [`/files/${enc(cur)}/edit/work/${d.proxy_clean ? "app/proxy_clean.mp4" : "clean.mp4"}`, "بعد القص"];
+  if (pos(step) >= pos("build") && d.render) return [`/files/${enc(cur)}/edit/final.mp4`, "النسخة الكاملة"];
+  if (pos(step) >= pos("build") && d.preview) return [`/files/${enc(cur)}/edit/preview.mp4`, "معاينة"];
+  if (pos(step) >= pos("sound") && d.cut) return [`/files/${enc(cur)}/edit/work/${d.proxy_clean ? "app/proxy_clean.mp4" : "clean.mp4"}`, "بعد القص"];
   if (d.fetch) return [`/files/${enc(cur)}/edit/work/${d.proxy_source ? "app/proxy_source.mp4" : "source.mp4"}`, "الخام"];
   return ["", ""];
 }
@@ -1249,7 +1305,7 @@ function loadVideo(force){
   if (!src && ep){ $("vEmpty").hidden = false; drawPreparing(); }
   if (!ep){ $("vEmpty").innerHTML = `<div><h1>استوديو المونتاج</h1><div>لا يوجد مشروع مفتوح</div><div class="dim" style="margin-top:4px">اختر مشروعاً من المكتبة</div></div>`; }
   if (src && (src !== vSrc || force)){ const t = src === vSrc ? video.currentTime : 0; vSrc = src; video.src = src; video.addEventListener("loadedmetadata", () => { video.currentTime = Math.min(t, video.duration || t); }, {once: true}); }
-  $("vReveal").hidden = !(ep && ep.done.render && step >= 5);
+  $("vReveal").hidden = !(ep && ep.done.render && pos(step) >= pos("build"));
   applyCssLook();
 }
 function drawPreparing(){
@@ -1281,19 +1337,26 @@ document.addEventListener("keydown", (e) => {
 });
 
 /* ---------- steps ---------- */
-function stepDone(i){ const d = ep.done; return [d.cut, d.cut && !!data.sound, d.cut && !!data.review.captions, d.plan, d.render, ep.requests && ep.requests.open === 0 && notes.length > 0][i - 1]; }
+function stepDone(k){ const d = ep.done, v = data.review || {};
+  return {sentences: d.cut, sound: d.cut && !!data.sound, captions: d.cut && !!v.captions, hook: !!data.hookPick, plan: d.plan,
+    images: d.plan && !!data.plan && data.plan.cards && data.plan.cards.length > 0 && data.plan.cards.every(c => c.img || /^face/.test(c.kind)),
+    colors: !!(data.look && data.look.settings && data.look.settings.look), build: d.render, viewer: !!v.viewer,
+    notes: ep.requests && ep.requests.open === 0 && notes.length > 0}[k]; }
 function running(what){ return job.running && job.ep === cur && (!what || (Array.isArray(what) ? what.includes(job.what) : job.what === what)); }
 function renderSteps(){
   const bar = $("stepbar"); bar.innerHTML = "";
-  STEPS.forEach(([name], k) => {
-    const i = k + 1, b = document.createElement("button");
-    const isRun = job.running && job.ep === cur && RUNS[job.what] === i;
-    b.className = "st" + (i === step ? " on" : "") + (stepDone(i) && i !== step ? " done" : "") + (isRun ? " run" : "");
-    b.innerHTML = `<span class="n">${stepDone(i) && i !== step ? "✓" : ar(i)}</span><span>${name}</span>`;
-    b.onclick = () => { step = i; renderSteps(); loadVideo(); };
+  if (!ORDER.includes(step)) step = "sentences";
+  STEPS.forEach(([name, key, icon], k) => {
+    const b = document.createElement("button"), done = stepDone(key) && key !== step;
+    const isRun = job.running && job.ep === cur && RUNS[job.what] === key;
+    b.className = "st" + (key === step ? " on" : "") + (done ? " done" : "") + (isRun ? " run" : "");
+    b.title = name;
+    b.innerHTML = `<span class="ic"><svg viewBox="0 0 24 24"><path d="${icon}"/></svg>${done ? `<span class="ok">✓</span>` : ""}</span><span class="nm">${name}</span>`;
+    b.onclick = () => { step = key; renderSteps(); loadVideo(); };
     bar.appendChild(b);
   });
-  ({1: stepSentences, 2: stepSound, 3: stepCaptions, 4: stepPlan, 5: stepBuild, 6: stepNotes})[step]();
+  ({sentences: stepSentences, sound: stepSound, captions: stepCaptions, hook: stepHook, plan: stepPlan, images: stepImages,
+    colors: stepColors, build: stepBuild, viewer: stepViewer, notes: stepNotes})[step]();
 }
 function setBody(html, foot){ $("stepbody").innerHTML = html; $("stepfoot").hidden = !foot; $("stepfoot").innerHTML = foot || ""; }
 function jobStatus(text, opts = {}){
@@ -1370,8 +1433,8 @@ function miniMap(s){
     return `<i style="left:${100 * x.s / dur}%;width:${Math.max(0.15, 100 * (x.e - x.s) / dur)}%;background:${k ? "var(--wave)" : "var(--red)"}"></i>`; }).join("") + `<b id="miniHead"></b></div>`;
 }
 function seekRaw(t){
-  if (ep.done.cut && step >= 2){ toast("هاي على الخام: ارجع لخطوة الجمل"); return; }
-  if (!/source\.mp4$/.test(vSrc)){ step = 1; loadVideo(); }
+  if (ep.done.cut && pos(step) >= pos("sound")){ toast("هاي على الخام: ارجع لخطوة الجمل"); return; }
+  if (!/source\.mp4$/.test(vSrc)){ step = "sentences"; loadVideo(); }
   video.currentTime = t;
 }
 function listenResult(){
@@ -1386,7 +1449,7 @@ function listenResult(){
 const MOODS = [["auto", "تلقائي"], ["tension", "توتر"], ["wonder", "دهشة"], ["sad", "حزن"], ["drive", "حماس"], ["dark", "ظلام"], ["calm", "هدوء"], ["epic", "ملحمي"], ["lofi", "هادئ دافي"], ["retro", "ريترو ثمانينات"], ["playful", "مرح"], ["luxury", "فخامة"], ["hopeful", "أمل"], ["noir", "نوار جاز"], ["documentary", "وثائقي"], ["corporate", "شركات"], ["middle_east", "شرقي"],
   ["space", "فضاء"], ["heist", "سرقة وجواسيس"], ["triumph", "انتصار"], ["mystery_box", "لغز"], ["off", "بلا موسيقى"]];
 function stepSound(){
-  if (!ep.done.cut){ setBody(`<div class="h2">الصوت</div><p class="muted">قُصّ هذا المقطع أول.</p><button class="pill" id="goS1">عدّل اختيار الجمل</button>`); $("goS1").onclick = () => { step = 1; renderSteps(); loadVideo(); }; return; }
+  if (!ep.done.cut){ setBody(`<div class="h2">الصوت</div><p class="muted">قُصّ هذا المقطع أول.</p><button class="pill" id="goS1">عدّل اختيار الجمل</button>`); $("goS1").onclick = () => { step = "sentences"; renderSteps(); loadVideo(); }; return; }
   const so = data.sound || {clean: 1, music: "auto", level: -28, sfx: true};
   const lv = ["بدون", "خفيف", "وسط", "قوي", "طبيعي"];
   setBody(`<div class="h2">الصوت</div>
@@ -1412,7 +1475,7 @@ function stepSound(){
 /* 3 · الكابشن */
 function stepCaptions(){
   const c = data.captions, rv = data.review.captions;
-  if (!ep.done.cut || !c || !c.ready){ setBody(`<div class="h2">الكابشن</div><p class="muted">قُصّ المقطع أول، وبعدها يطلع كلامك هنا كلمة كلمة.</p><button class="pill" id="goS1">عدّل اختيار الجمل</button>`); $("goS1").onclick = () => { step = 1; renderSteps(); loadVideo(); }; return; }
+  if (!ep.done.cut || !c || !c.ready){ setBody(`<div class="h2">الكابشن</div><p class="muted">قُصّ المقطع أول، وبعدها يطلع كلامك هنا كلمة كلمة.</p><button class="pill" id="goS1">عدّل اختيار الجمل</button>`); $("goS1").onclick = () => { step = "sentences"; renderSteps(); loadVideo(); }; return; }
   let h = `<div class="row" style="margin-top:4px"><input id="cFind" placeholder="ابحث في الكلام"></div>
     <div class="dim tiny" style="margin:8px 0">اكتب على أي كلمة لتصحيحها، واحذف كلمات لقصها من الفيديو.</div>
     <div class="row" style="flex-wrap:wrap"><button class="pill sm on" id="cAsk" ${job.running ? "disabled" : ""}>راجع الكابشن مع المساعد</button>
@@ -1519,7 +1582,7 @@ function stepPlan(){
     box.querySelectorAll("[data-apply]").forEach(b => b.onclick = () => run("assist", "هذا رأي " + (names[b.dataset.apply] || "") + " بالخطة. طبّق الاقتراحات الي تشوفها تحسّن الحلقة فعلاً، واترك الباقي، وگول شنو طبقت:\n" + o[b.dataset.apply])); }).catch(() => {});
   if ($("pImgs")) $("pImgs").onclick = () => run("images");
   if ($("pOk")) $("pOk").onclick = () => { planSub = 3; stepPlan(); };
-  if ($("pBuild")) $("pBuild").onclick = () => { step = 5; run("build"); };
+  if ($("pBuild")) $("pBuild").onclick = () => { step = "build"; run("build"); };
   if ($("pBig")) $("pBig").onclick = () => { $("bigCards").innerHTML = p.cards.map(cardHtml).join(""); bindCards($("bigCards")); $("bigsb").hidden = false; };
   bindCards($("stepbody"));
 }
@@ -1543,6 +1606,119 @@ function bindCards(root){
 }
 function refreshPlanViews(){ stepPlan(); if (!$("bigsb").hidden){ $("bigCards").innerHTML = data.plan.cards.map(cardHtml).join(""); bindCards($("bigCards")); } reloadTimeline(); }
 $("bigClose").onclick = () => $("bigsb").hidden = true;
+
+/* الهوك */
+function stepHook(){
+  const rv = data.review.hook, pick = data.hookPick;
+  let h = `<div class="h2">الهوك</div><div class="muted" style="line-height:1.8">أول ٣٠ ثانية تقرر إذا المشاهد يكمل. المساعد يختار ٣ بدايات من كلامك، وانت تختار.</div>`;
+  if (!ep.done.cut){ setBody(h + `<p class="muted">قُص المقطع أول.</p>`); return; }
+  if (running("hook")) h += jobStatus("يدوّر أقوى بداية بكلامك…", {elapsed: true});
+  else h += `<div class="row" style="margin-top:10px"><button class="pill ${rv && rv.hooks ? "" : "y"}" id="hkRun" ${job.running ? "disabled" : ""}>${rv && rv.hooks ? "طلّع غيرها" : "طلّع ٣ بدايات"}</button></div>`;
+  if (rv && rv.hooks) h += rv.hooks.map((x, k) => { const on = pick && pick.from === x.from && pick.to === x.to;
+    return `<div class="hk ${on ? "on" : ""}"><div class="row"><b class="grow">${on ? "✓ " : ""}${esc(x.title)}</b><span class="dim tiny num">${mmss(x.from)}–${mmss(x.to)}</span></div>
+      <q>${esc(x.text)}</q><div class="dim tiny">${esc(x.why)}</div>
+      <div class="row" style="margin-top:8px"><button class="pill sm" data-hplay="${k}">▶ اسمعها</button><button class="pill sm ${on ? "" : "y"}" data-hpick="${k}">${on ? "مختارة" : "اختارها"}</button></div></div>`; }).join("");
+  const foot = pick ? `<div class="dim tiny" style="margin-bottom:6px">${ep.done.plan ? "حتى تدخل الخطة، أعد كتابتها:" : "تدخل الخطة لما تكتبها."}</div><button class="pill y big" id="hkPlan" ${job.running ? "disabled" : ""}>${ep.done.plan ? "أعد الخطة على هالهوك" : "روح للخطة ←"}</button>` : "";
+  setBody(h, foot);
+  if ($("hkRun")) $("hkRun").onclick = () => run("hook");
+  $("stepbody").querySelectorAll("[data-hplay]").forEach(b => b.onclick = () => { const x = rv.hooks[+b.dataset.hplay];
+    video.currentTime = x.from; video.play(); const stop = () => { if (video.currentTime >= x.to){ video.pause(); video.removeEventListener("timeupdate", stop); } };
+    video.addEventListener("timeupdate", stop); });
+  $("stepbody").querySelectorAll("[data-hpick]").forEach(b => b.onclick = async () => {
+    try { data.hookPick = await post(E() + "/hook", {pick: +b.dataset.hpick}); toast("انحفظ الهوك"); stepHook(); renderSteps(); } catch (e){ toast(e.message); } });
+  if ($("hkPlan")) $("hkPlan").onclick = () => { step = "plan"; if (ep.done.plan){ planSub = 2; run("plan"); } else { planSub = 1; renderSteps(); } };
+}
+
+/* الصور: كل صورة جابها أو ولّدها المساعد، كبيرة */
+let lbI = -1;
+function imgCards(){ return ((data.plan && data.plan.cards) || []).filter(c => !/^face/.test(c.kind) || c.kind === "face_paper"); }
+function imgSrc(c){ return c.img ? `/files/${enc(cur)}/${c.img.split("/").map(enc).join("/")}` : ""; }
+function stepImages(){
+  const cs = imgCards(), miss = cs.filter(c => !c.img).length;
+  let h = `<div class="row"><div class="h2 grow">الصور</div>${cs.length ? `<span class="dim tiny">${ar(cs.length)} صورة</span>` : ""}</div>`;
+  if (!ep.done.plan){ setBody(h + `<p class="muted">اكتب الخطة أول، وهنا تطلع كل صورها.</p>`); return; }
+  if (running(["images", "plan", "assist"])) h += jobStatus(job.what === "images" ? "يجيب ويصنع الصور…" : "المساعد يشتغل على الخطة…", {elapsed: true});
+  else if (miss) h += `<div class="row" style="margin-top:8px"><button class="pill y" id="imMake" ${job.running ? "disabled" : ""}>جيب الصور الناقصة (${ar(miss)})</button></div>`;
+  h += `<div class="dim tiny" style="margin-top:8px">دوس على أي صورة حتى تكبر، وتگدر تبدلها أو تشيلها.</div><div class="igrid">` + cs.map((c, k) =>
+    `<button class="itile" data-lb="${k}">${c.img ? `<img src="${imgSrc(c)}" loading="lazy" alt="">` : `<span class="miss">${esc(c.title || c.kind_ar)}<br>ما انصنعت</span>`}<span class="k">${ar(c.i + 1)} · ${mmss(c.start)}</span></button>`).join("") + `</div>`;
+  setBody(h);
+  if ($("imMake")) $("imMake").onclick = () => run("images");
+  $("stepbody").querySelectorAll("[data-lb]").forEach(b => b.onclick = () => openLb(+b.dataset.lb));
+}
+function openLb(k){
+  const cs = imgCards(); if (!cs.length) return; lbI = (k + cs.length) % cs.length; const c = cs[lbI];
+  let box = $("lbox"); if (!box){ box = document.createElement("div"); box.id = "lbox"; document.body.appendChild(box); }
+  box.hidden = false;
+  box.innerHTML = `${c.img ? `<img src="${imgSrc(c)}" alt="">` : `<div style="margin:auto;color:#aaa">ما انصنعت بعد</div>`}
+    <div class="bar"><b>${ar(c.i + 1)}</b><span class="said">${esc(c.said || c.title || "")}<span class="dim tiny"> · ${esc(c.kind_ar)} · ${mmss(c.start)}</span></span>
+      <button class="pill sm" data-x="prev">→ السابقة</button><button class="pill sm" data-x="next">التالية ←</button>
+      <button class="pill sm" data-x="seek">▶ بالفيديو</button><button class="pill sm y" data-x="swap">🔁 بدّلها</button><button class="pill sm" data-x="del">✕ شيلها</button><button class="pill sm" data-x="close">سكّر</button></div>`;
+  box.querySelectorAll("[data-x]").forEach(b => b.onclick = async () => { const x = b.dataset.x;
+    if (x === "prev") openLb(lbI - 1); else if (x === "next") openLb(lbI + 1);
+    else if (x === "close") box.hidden = true;
+    else if (x === "seek"){ box.hidden = true; const off = (data.timeline && data.timeline.offset) || 0; video.currentTime = Math.max(0, c.start - off) + 0.05 + tOff(); }
+    else if (x === "swap"){ box.hidden = true; openChat("ما عجبتني هالصورة. جيب بدالها صورة أحسن تناسب الكلام: ", c.i); }
+    else if (x === "del"){ data.plan = await post(E() + "/beat", {i: c.i, change: {remove: true}}).catch(e => (toast(e.message), data.plan)); box.hidden = true; reloadTimeline(); stepImages(); } });
+}
+document.addEventListener("keydown", (e) => { const box = $("lbox"); if (!box || box.hidden) return;
+  if (e.key === "Escape") box.hidden = true; else if (e.key === "ArrowLeft") openLb(lbI + 1); else if (e.key === "ArrowRight") openLb(lbI - 1); }, true);
+
+/* الألوان */
+function stepColors(){
+  let h = `<div class="h2">الألوان</div><div class="muted" style="line-height:1.8">شلون تطلع الألوان والإضاءة على وجهك وبالحلقة كلها.</div>`;
+  if (!ep.done.cut){ setBody(h + `<p class="muted">قُص المقطع أول.</p>`); return; }
+  const s = (data.look && data.look.settings) || {}, names = (data.look && data.look.names) || {}, t = (video.currentTime || 0).toFixed(2);
+  h += `<div class="cmpimgs"><figure><img id="clA" src="${E()}/frame?t=${t}&raw=1&r=${Date.now()}"><figcaption>قبل</figcaption></figure><figure><img id="clB" src="${E()}/frame?t=${t}&r=${Date.now()}"><figcaption>بعد: ${esc(names[s.look] || s.look || "")}</figcaption></figure></div>
+    <div class="row" style="margin-top:6px"><button class="pill sm" id="clNow">🔄 على هاللحظة من الفيديو</button></div>
+    <div class="lkq">${NORM_LOOKS.map(k => `<button class="pill sm ${s.look === k ? "on" : ""}" data-lk="${k}">${esc(names[k] || k)}</button>`).join("")}</div>
+    <div class="sl" style="margin-top:12px"><label>القوة</label><input type="range" id="clStr" min="0" max="100" value="${Math.round((s.strength ?? 1) * 100)}"><output>${ar(Math.round((s.strength ?? 1) * 100))}٪</output></div>`;
+  setBody(h, `<button class="pill big" id="clAll">كل الألوان (١٢٨) ←</button>`);
+  const again = () => stepColors();
+  $("clNow").onclick = again;
+  $("stepbody").querySelectorAll("[data-lk]").forEach(b => b.onclick = async () => { await saveLook({look: b.dataset.lk}, true); again(); });
+  $("clStr").onchange = async () => { await saveLook({strength: +$("clStr").value / 100}, true); again(); };
+  $("clAll").onclick = () => showPanel("colors");
+}
+
+/* عين المشاهد */
+function stepViewer(){
+  const rv = data.review.viewer, d = ep.done;
+  let h = `<div class="h2">عين المشاهد</div><div class="muted" style="line-height:1.8">المساعد يتفرج على الحلقة كأنه مشاهد صبره قليل، ويعلّم وين ممكن يطلع، وشلون تتصلح.</div>`;
+  if (!d.plan){ setBody(h + `<p class="muted">اكتب الخطة أول.</p>`); return; }
+  if (running("viewer")) h += jobStatus("يتفرج على الحلقة…", {elapsed: true});
+  else h += `<div class="row" style="margin-top:10px"><button class="pill ${rv ? "" : "y"}" id="vwRun" ${job.running ? "disabled" : ""}>${rv ? "خلّيه يتفرج مرة ثانية" : "خلّي المساعد يتفرج"}</button></div>`;
+  if (rv){
+    h += `<div class="card" style="margin-top:10px;display:flex;gap:14px;align-items:center"><div class="score" style="color:${rv.score >= 75 ? "var(--green)" : rv.score >= 55 ? "var(--y)" : "#ef4444"}">${ar(rv.score ?? 0)}</div><div class="tiny" style="line-height:1.7">احتمال يكمل لآخرها (من ١٠٠)<br>${esc(rv.summary || "")}</div></div>`;
+    h += (rv.notes || []).map((n, k) => `<div class="vn"><span class="lv ${n.level}"></span><div><div class="row"><b class="grow">${esc(n.issue)}</b><button class="dim tiny num" data-vt="${n.t}">${mmss(n.t)}</button></div>
+      <div class="tiny" style="margin-top:3px;color:var(--green)">✎ ${esc(n.fix)}</div><div class="row" style="margin-top:6px"><button class="pill sm" data-vfix="${k}" ${job.running ? "disabled" : ""}>صلّحها</button></div></div></div>`).join("");
+  }
+  const foot = rv && (rv.notes || []).length ? `<button class="pill y big" id="vwAll" ${job.running ? "disabled" : ""}>صلّح الكل (${ar(rv.notes.length)}) وابنِ</button>` : "";
+  setBody(h, foot);
+  if ($("vwRun")) $("vwRun").onclick = () => run("viewer");
+  const off = () => (data.timeline && data.timeline.offset) || 0;
+  $("stepbody").querySelectorAll("[data-vt]").forEach(b => b.onclick = () => { video.currentTime = Math.max(0, +b.dataset.vt - off()) + tOff(); });
+  $("stepbody").querySelectorAll("[data-vfix]").forEach(b => b.onclick = () => { const n = rv.notes[+b.dataset.vfix];
+    step = "plan"; planSub = 2; run("assist", `مشاهد يگول بالثانية ${n.t} من الحلقة: «${n.issue}». صلّحها بالخطة هيچ: ${n.fix}`); });
+  if ($("vwAll")) $("vwAll").onclick = () => { step = "plan"; planSub = 2;
+    run("assist", "مشاهد تفرج على الحلقة ولگى هالمشاكل. صلّحها كلها بالخطة (كل وحدة بثانيتها على الحلقة النهائية)، وبعدين گول شنو صلّحت:\n" + rv.notes.map(n => `- ${n.t} ث: ${n.issue} ← ${n.fix}`).join("\n")); };
+}
+
+/* صور الخطة فوگ الفيديو */
+let peekOn = true;
+function tOff(){ return /(preview|final)\.mp4/.test(vSrc || "") ? ((data.timeline && data.timeline.offset) || 0) : 0; }
+function updatePeek(){
+  const box = $("peek"); if (!box) return;
+  const built = /(preview|final)\.mp4/.test(vSrc || "");
+  const scs = (data.timeline && data.timeline.scenes) || [];
+  const t = video.currentTime || 0;
+  const sc = !peekOn || built || !ep || !ep.done.plan || video.hidden ? null : scs.find(x => x.img && t >= x.s && t < x.e);
+  if (!sc){ box.hidden = true; return; }
+  const src = `/files/${enc(cur)}/${sc.img.split("/").map(enc).join("/")}`;
+  if ($("peekImg").getAttribute("src") !== src) $("peekImg").src = src;
+  $("peekLbl").textContent = `المشهد ${ar(sc.i + 1)} · ${sc.label || sc.kind_ar || ""}`; box.hidden = false;
+}
+$("vPeek").onclick = () => { peekOn = !peekOn; $("vPeek").classList.toggle("on", peekOn); updatePeek(); };
+video.addEventListener("seeked", updatePeek);
 
 /* 5 · البناء */
 function stepBuild(){
@@ -1582,7 +1758,7 @@ function stepNotes(){
 async function loadNotes(){
   const n = await api(`/api/db/${enc(cur)}/list?path=requests`).catch(() => []);
   notes = n.map(x => ({id: x.id, ...x.data})).filter(x => typeof x.t === "number").sort((a, b) => a.t - b.t);
-  if (step === 6) stepNotes(); renderMarks();
+  if (step === "notes") stepNotes(); renderMarks();
 }
 function bindRun(){ $("stepbody").querySelectorAll("[data-run]").forEach(b => b.onclick = () => run(b.dataset.run)); }
 
@@ -1662,7 +1838,7 @@ $("bReset").onclick = () => saveLook({temp: 0, tint: 0, exposure: 0});
 function applyCssLook(s){
   // a live, approximate preview on the player (the render uses the exact filters; «صورة دقيقة» shows them)
   s = s || (data.look && data.look.settings) || {};
-  if (!ep || step >= 5 || cmpOn){ video.style.filter = ""; return; }
+  if (!ep || pos(step) >= pos("build") || cmpOn){ video.style.filter = ""; return; }
   const base = {none: "", natural: "contrast(1.04) saturate(1.06)", cinema: "contrast(1.05) saturate(0.98) brightness(0.99)", log: "contrast(1.35) saturate(1.45)",
     "log-vivid": "contrast(1.45) saturate(1.75)", "warm-film": "sepia(0.18) saturate(0.95) contrast(1.02)", "soft-film": "contrast(0.94) saturate(0.86) brightness(1.03)",
     "teal-orange": "contrast(1.06) saturate(1.12) hue-rotate(-4deg)", mono: "grayscale(1) contrast(1.05)"}[s.look || "cinema"] || "";
@@ -1721,16 +1897,17 @@ function drawWave(w, hop){
 }
 function renderMarks(){
   $("lane").querySelectorAll(".mk").forEach(m => m.remove());
-  if (step < 5 && !(ep && ep.done.render)) return;
-  notes.forEach((n, k) => { const m = document.createElement("div"); m.className = "mk"; m.style.left = n.t * pps + "px"; m.textContent = ar(k + 1); m.title = n.text || ""; m.onclick = () => { video.currentTime = n.t; step = 6; renderSteps(); }; $("lane").appendChild(m); });
+  if (pos(step) < pos("build") && !(ep && ep.done.render)) return;
+  notes.forEach((n, k) => { const m = document.createElement("div"); m.className = "mk"; m.style.left = n.t * pps + "px"; m.textContent = ar(k + 1); m.title = n.text || ""; m.onclick = () => { video.currentTime = n.t; step = "notes"; renderSteps(); }; $("lane").appendChild(m); });
 }
 function tick(){
   const t = video.currentTime || 0, d = video.duration || tlDur || 0;
   $("time").innerHTML = `${clock(t)} <span>/ ${clock(d)}</span>`;
-  $("ph").style.left = t * pps + "px";
+  $("ph").style.left = Math.max(0, t - tOff()) * pps + "px";
+  updatePeek();
   const sc = $("tscroll"); if (!video.paused && (t * pps > sc.scrollLeft + sc.clientWidth - 40 || t * pps < sc.scrollLeft)) sc.scrollLeft = t * pps - 80;
   if ($("miniHead") && data.sentences && /source\.mp4$/.test(vSrc)) $("miniHead").style.left = (100 * t / (data.sentences.raw || 1)) + "%";
-  if (step === 1 && /source\.mp4$/.test(vSrc)){ const rows = $("stepbody").querySelectorAll(".sent"); rows.forEach(r => r.classList.toggle("cur", t >= +r.dataset.s && t < +(r.nextElementSibling ? r.nextElementSibling.dataset.s : 1e9))); }
+  if (step === "sentences" && /source\.mp4$/.test(vSrc)){ const rows = $("stepbody").querySelectorAll(".sent"); rows.forEach(r => r.classList.toggle("cur", t >= +r.dataset.s && t < +(r.nextElementSibling ? r.nextElementSibling.dataset.s : 1e9))); }
 }
 function timeAt(e){ const r = $("lane").getBoundingClientRect(); return Math.max(0, Math.min(tlDur, (e.clientX - r.left) / pps)); }
 function snapT(t){
@@ -1746,25 +1923,25 @@ $("lane").addEventListener("mousedown", async (e) => {
   const t = timeAt(e);
   if (sc && tool === "blade"){
     const off = (data.timeline && data.timeline.offset) || 0;
-    try { data.plan = await post(E() + "/beat", {i: +sc.dataset.sc, change: {split: snapT(t) + off}}); toast("انقسم المشهد"); reloadTimeline(); if (step === 4) stepPlan(); } catch (err){ toast(err.message); }
+    try { data.plan = await post(E() + "/beat", {i: +sc.dataset.sc, change: {split: snapT(t) + off}}); toast("انقسم المشهد"); reloadTimeline(); if (step === "plan") stepPlan(); } catch (err){ toast(err.message); }
     return;
   }
   if (sc){ selScene = +sc.dataset.sc; renderScene(); $("inspector").classList.add("open"); if (panelNow === "effects") drawEffects(); }
-  video.currentTime = t; tick();
+  video.currentTime = Math.min(t + tOff(), (video.duration || 1e9) - 0.05); tick();
   renderTimelineSel();
 });
 $("lane").addEventListener("dblclick", (e) => { const sc = e.target.closest("[data-sc]"); if (sc) openChat("", +sc.dataset.sc); });
 function renderTimelineSel(){ $("rImg").querySelectorAll("[data-sc]").forEach(b => b.classList.toggle("sel", +b.dataset.sc === selScene)); }
 document.addEventListener("mousemove", (e) => {
   if (drag){ const s = data.timeline.scenes.find(x => x.i === drag.i); const t = snapT(timeAt(e)); drag.t = t; drag.el.style.width = Math.max(3, (t - s.s) * pps - 2) + "px"; return; }
-  if (e.target.closest("#lane")){ const t = timeAt(e); $("hov").hidden = false; $("hov").style.left = t * pps + "px"; if (skim && video.paused && video.src) video.currentTime = t; }
+  if (e.target.closest("#lane")){ const t = timeAt(e); $("hov").hidden = false; $("hov").style.left = t * pps + "px"; if (skim && video.paused && video.src) video.currentTime = Math.min(t + tOff(), (video.duration || 1e9) - 0.05); }
   else $("hov").hidden = true;
 });
 document.addEventListener("mouseup", async () => {
   if (!drag) return; const d = drag; drag = null;
   if (d.t == null) return;
   const off = (data.timeline && data.timeline.offset) || 0;
-  try { data.plan = await post(E() + "/beat", {i: d.i, change: {edge: d.t + off}}); reloadTimeline(); if (step === 4) stepPlan(); } catch (err){ toast(err.message); renderTimeline(); }
+  try { data.plan = await post(E() + "/beat", {i: d.i, change: {edge: d.t + off}}); reloadTimeline(); if (step === "plan") stepPlan(); } catch (err){ toast(err.message); renderTimeline(); }
 });
 $("zIn").onclick = () => { pps = Math.min(200, pps * 1.6); renderTimeline(); };
 $("zOut").onclick = () => { pps = Math.max(0.3, pps / 1.6); renderTimeline(); };
@@ -1788,11 +1965,11 @@ async function pollLog(){
       if (d.need_login) openLink();
       if (d.what === "chat" && d.ep === cur){ chatMsgs = await api(E() + "/chat").catch(() => chatMsgs); askFresh = $("chat").hidden; renderChat(); }
       else toast(d.ok ? "خلص ✅" : "ما كمل، شوف التفاصيل");
-      if (d.ok && d.what === "prepare" && d.ep === cur){ step = 1; renderSteps(); }
-      if (d.ok && d.what === "cut" && d.ep === cur){ step = 3; renderSteps(); loadVideo(true); }
-      if (d.ok && d.what === "build" && d.ep === cur){ step = 5; renderSteps(); loadVideo(true); }
-      if (d.ok && ["plan", "assist", "images"].includes(d.what) && d.ep === cur){ step = 4; planSub = 2; renderSteps(); }
-      if (d.ok && d.what === "final" && d.ep === cur){ step = 5; renderSteps(); loadVideo(true); }
+      if (d.ok && d.what === "prepare" && d.ep === cur){ step = "sentences"; renderSteps(); }
+      if (d.ok && d.what === "cut" && d.ep === cur){ step = "captions"; renderSteps(); loadVideo(true); }
+      if (d.ok && d.what === "build" && d.ep === cur){ step = "build"; renderSteps(); loadVideo(true); }
+      if (d.ok && ["plan", "assist", "images"].includes(d.what) && d.ep === cur){ step = "plan"; planSub = 2; renderSteps(); }
+      if (d.ok && d.what === "final" && d.ep === cur){ step = "build"; renderSteps(); loadVideo(true); }
     }
     if (d.running && d.ep === cur && d.what === "prepare" && d.step === "transcribe" && !vSrc){ await refresh(); loadVideo(); }
   } catch (_) {}
@@ -1842,7 +2019,7 @@ $("nGo").onclick = async () => {
   try {
     const look = {look: chosenLook === "lut" ? (probe.flat ? "log" : "natural") : chosenLook, source: probe.source || "rec709", strength: 1};
     const e = await post("/api/episodes", {name: $("nName").value, source, script: $("nScript").value, look, lut_key: chosenLook === "lut" ? lutKey : ""});
-    $("dNew").hidden = true; thumbs = probe; await open(e.id); step = 1; await run($("nAuto").classList.contains("on") ? "auto" : "prepare"); renderSteps();
+    $("dNew").hidden = true; thumbs = probe; await open(e.id); step = "sentences"; await run($("nAuto").classList.contains("on") ? "auto" : "prepare"); renderSteps();
   } catch (err){ $("nErr").textContent = err.message; }
 };
 $("tNew").onclick = openNew;
@@ -1858,8 +2035,8 @@ function goHome(){ if (location.hash) location.hash = ""; $("lib").hidden = fals
 $("tLib").onclick = goHome;
 window.addEventListener("hashchange", () => { const h = decodeURIComponent(location.hash.slice(1)); if (!h) goHome(); else if (h !== cur && state.episodes.find(e => e.id === h)) open(h); });
 function needEp(){ if (!ep){ toast("افتح مشروع أول من «مشاريعي»"); return false; } $("lib").hidden = true; return true; }
-$("tText").onclick = () => { if (!needEp()) return; showPanel("steps"); step = 3; renderSteps(); loadVideo(); };
-$("tPlan").onclick = () => { if (!needEp()) return; showPanel("steps"); step = 4; planSub = 1; renderSteps(); loadVideo(); };
+$("tText").onclick = () => { if (!needEp()) return; showPanel("steps"); step = "captions"; renderSteps(); loadVideo(); };
+$("tPlan").onclick = () => { if (!needEp()) return; showPanel("steps"); step = "plan"; planSub = 1; renderSteps(); loadVideo(); };
 $("tFiles").onclick = () => { if (!needEp()) return; showPanel("media"); };
 $("insToggle").onclick = () => $("inspector").classList.toggle("open");
 $("insClose").onclick = () => $("inspector").classList.remove("open");
@@ -1897,7 +2074,7 @@ function renderChat(){
     + (thinking ? `<div class="msg ai"><div class="row"><div class="spinner"></div><span class="muted">يفكّر ويعدّل… ${esc((lastLines(1).match(/>([^<]+)<\/div><\/div>$/) || [])[1] || "")}</span></div></div>` : "");
   $("msgs").scrollTop = $("msgs").scrollHeight;
   $("chSend").disabled = !!job.running;
-  $("msgs").querySelectorAll("[data-act]").forEach(b => b.onclick = () => { if (b.dataset.act === "build"){ step = 5; run("build"); } else { step = 4; planSub = 2; renderSteps(); } });
+  $("msgs").querySelectorAll("[data-act]").forEach(b => b.onclick = () => { if (b.dataset.act === "build"){ step = "build"; run("build"); } else { step = "plan"; planSub = 2; renderSteps(); } });
 }
 $("chSend").onclick = async () => {
   const text = $("chMsg").value.trim(); if (!text) return;
@@ -1908,7 +2085,7 @@ $("chMsg").onkeydown = (e) => { if (e.key === "Enter" && !e.shiftKey){ e.prevent
 $("chClose").onclick = () => $("chat").hidden = true;
 $("chCtx").onchange = () => $("chCtxTxt").textContent = ctxText();
 video.addEventListener("pause", () => { if (!$("chat").hidden) $("chCtxTxt").textContent = ctxText(); });
-$("aGo").onclick = async () => { const m = $("aMsg").value.trim(); if (!m) return; $("dAssist").hidden = true; $("aMsg").value = ""; step = 4; planSub = 2; await run("assist", m); };
+$("aGo").onclick = async () => { const m = $("aMsg").value.trim(); if (!m) return; $("dAssist").hidden = true; $("aMsg").value = ""; step = "plan"; planSub = 2; await run("assist", m); };
 $("tUndo").onclick = () => undoRedo("undo");
 $("tInsp").onclick = () => { $("lib").hidden = true; showPanel("styles"); };
 const oldInspiration = async () => {
@@ -1917,7 +2094,7 @@ const oldInspiration = async () => {
   grid.innerHTML = st.map(s => `<button class="lc" data-st="${esc(s.id)}"><b>${esc(s.name)}</b><div class="s">${esc(s.summary.replace(/[A-Za-z][\w\-]*/g, "").replace(/\(\s*\)/g, ""))}</div></button>`).join("") || `<div class="dim">ماكو ستايلات.</div>`;
   grid.querySelectorAll("[data-st]").forEach(b => b.onclick = async () => {
     if (!ep){ toast("افتح مشروع أول"); return; }
-    await post(E() + "/idea", {style: b.dataset.st}); $("dInsp").hidden = true; toast("انحفظ الستايل، والمساعد يكتب الخطة عليه"); step = 4; planSub = 1; renderSteps();
+    await post(E() + "/idea", {style: b.dataset.st}); $("dInsp").hidden = true; toast("انحفظ الستايل، والمساعد يكتب الخطة عليه"); step = "plan"; planSub = 1; renderSteps();
   });
 };
 async function elRefresh(){ const st = await api("/api/eleven").catch(() => ({})); $("sElRow").hidden = !!st.linked; $("sElOff").hidden = !st.linked;
@@ -2439,7 +2616,7 @@ async function openExport(){
   $("xReels").onclick = () => { if (!info.final){ toast("طلّع النسخة الكاملة أول"); return; } $("dExport").hidden = true; run("reels", "n:" + Math.max(1, Math.min(10, +$("xReelN").value || 3))); };
   if ($("xReelsShow")) $("xReelsShow").onclick = () => post(E() + "/reveal", {what: "shorts"});
   if ($("xShowEx")) $("xShowEx").onclick = () => post(E() + "/reveal", {what: "exports"});
-  if ($("xFinal")) $("xFinal").onclick = () => { $("dExport").hidden = true; step = 5; showPanel("steps"); run("final"); };
+  if ($("xFinal")) $("xFinal").onclick = () => { $("dExport").hidden = true; step = "build"; showPanel("steps"); run("final"); };
   $("xBody").querySelectorAll("[data-copy]").forEach(b => b.onclick = () => navigator.clipboard.writeText(info[b.dataset.copy]).then(() => toast("انسخ"), () => toast("ما گدرت أنسخ")));
 }
 $("tExport").onclick = openExport;
@@ -2452,7 +2629,7 @@ new MutationObserver(() => { document.body.classList.toggle("chatOn", !$("chat")
   .observe($("chat"), {attributes: true, attributeFilter: ["hidden"]});
 
 /* ---------- 2.0: find anything (⌘K), the home's quick actions, what's new ---------- */
-const URU_VERSION = "2.1.0";
+const URU_VERSION = "2.2.0";
 const normAr = (t) => String(t).toLowerCase().replace(/[\u064B-\u065F\u0670]/g, "").replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/[گ]/g, "ك").replace(/[چ]/g, "ج").replace(/[پ]/g, "ب");
 const step_ = (n) => () => { if (!needEp()) return; showPanel("steps"); step = n; renderSteps(); loadVideo(); };
 const panel_ = (k) => () => { if (!needEp()) return; showPanel(k); };
@@ -2566,7 +2743,7 @@ function drawAsk(){
   if (busy) { $("askReply").hidden = false; $("askReply").innerHTML = `<div class="row"><div class="spinner"></div><span class="muted">المساعد يشتغل على طلبك…</span></div>`; }
   else if (last && last.role !== "owner" && askFresh){ $("askReply").hidden = false;
     $("askReply").innerHTML = `${esc(last.text)}<div class="row" style="margin-top:8px">${last.changed ? `<button class="pill sm y" id="arBuild">طلّع معاينة</button>` : ""}<button class="pill sm" id="arMore">كمّل المحادثة</button><button class="pill sm" id="arX">✕</button></div>`;
-    if ($("arBuild")) $("arBuild").onclick = () => { askFresh = false; drawAsk(); step = 5; showPanel("steps"); run("build"); };
+    if ($("arBuild")) $("arBuild").onclick = () => { askFresh = false; drawAsk(); step = "build"; showPanel("steps"); run("build"); };
     $("arMore").onclick = () => { askFresh = false; drawAsk(); openChat(); };
     $("arX").onclick = () => { askFresh = false; drawAsk(); };
   } else $("askReply").hidden = true;

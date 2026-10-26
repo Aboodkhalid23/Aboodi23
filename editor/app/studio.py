@@ -871,7 +871,7 @@ def timeline(ep: Episode) -> dict:
     if not video.exists():
         return {"ready": False}
     cache = ep.work / "app" / "timeline.json"
-    stamp = f"v3:{video}:{video.stat().st_mtime}:{ep.plan.stat().st_mtime if ep.plan.exists() else 0}"
+    stamp = f"v4:{video}:{video.stat().st_mtime}:{ep.plan.stat().st_mtime if ep.plan.exists() else 0}"
     if cache.exists():
         d = json.loads(cache.read_text(encoding="utf-8"))
         if d.get("stamp") == stamp:
@@ -885,7 +885,8 @@ def timeline(ep: Episode) -> dict:
     scenes = [{"i": i, "s": round(b["start"] - off, 2), "e": round(b["end"] - off, 2), "kind": b["kind"],
                "face": b["kind"].startswith("face") and b["kind"] != "face_paper", "kind_ar": KIND_AR.get(b["kind"], b["kind"]),
                "label": ar(b.get("title")) or ar(b.get("caption")) or KIND_AR.get(b["kind"], "مشهد"),
-               "effect": b.get("effect")}
+               "effect": b.get("effect"), "img": None if b["kind"].startswith("face") and b["kind"] != "face_paper"
+               else _beat_image(ep, i, b)}
               for i, b in enumerate(plan.get("beats", []))]
     sounds = [{"s": round(m.get("t", 0) - off, 2), "label": m.get("mood") or "موسيقى"} for m in plan.get("music", [])]
     d = {"ready": True, "stamp": stamp, "offset": off, "video": str(video.relative_to(ep.root)), "duration": round(dur, 2),

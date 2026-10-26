@@ -111,3 +111,33 @@ def test_captions_review_reads_all_pieces(ep, monkeypatch):
     assert srv._review_step(d, "captions") == 0
     rev = json.loads((d / "edit/work/app/captions_review.json").read_text(encoding="utf-8"))
     assert len(got) == 3 and len(rev["fixes"]) == 3
+
+
+def test_hook_step_keeps_three_openings_and_his_pick_reaches_the_plan(ep, monkeypatch):
+    d, e = ep
+    save_words([Word(w, i * 0.5, i * 0.5 + 0.4) for i, w in enumerate("هواوي بدت بخمسة آلاف دولار بس".split())], e.clean_words)
+    monkeypatch.setattr(srv, "_fast_json", lambda prompt, tier="mid": {"hooks": [
+        {"title": "رقم", "from": 0, "to": 2.9, "text": "هواوي بدت بخمسة آلاف دولار بس", "why": "صادم"},
+        {"title": "طويل كلش", "from": 0, "to": 90, "text": "x"}, {"title": "ناقص"}]})
+    assert srv._hook_step(d) == 0
+    rv = json.loads((d / "edit/work/app/hook_review.json").read_text(encoding="utf-8"))
+    assert [h["title"] for h in rv["hooks"]] == ["رقم"]
+    srv.save_hook(d, 0)
+    extra = srv._plan_extra(d)
+    assert "teaser: [[0.00, 2.90]]" in extra and "هواوي بدت" in extra
+
+
+def test_viewer_step_scores_and_lists_moments(ep, monkeypatch):
+    d, e = ep
+    save_words([Word("كلمة", i, i + 0.5) for i in range(20)], e.clean_words)
+    e.plan.write_text(json.dumps({"style": {"primary": "noir"}, "teaser": [], "beats": [
+        {"start": 0, "end": 10, "kind": "face", "zone": "hook"}, {"start": 10, "end": 20, "kind": "image", "query": "x", "zone": "body"}]}), encoding="utf-8")
+    asked = []
+    monkeypatch.setattr(srv, "_fast_json", lambda prompt, tier="mid": asked.append(prompt) or {
+        "score": 140, "summary": "زين", "notes": [{"t": 12, "issue": "ممل", "fix": "صورة", "level": "high"},
+                                                  {"t": 3, "issue": "ضعيف", "fix": "قص", "level": "??"}, {"bad": 1}]})
+    assert srv._viewer_step(d) == 0
+    rv = json.loads((d / "edit/work/app/viewer_review.json").read_text(encoding="utf-8"))
+    assert rv["score"] == 100 and [n["t"] for n in rv["notes"]] == [3, 12] and rv["notes"][0]["level"] == "mid"
+    assert "يطلع: وجهه" in asked[0] or "[0.0–10.0]" in asked[0]
+    assert srv.STEPS["hook"] == ["hook"] and srv.STEPS["viewer"] == ["viewer"]

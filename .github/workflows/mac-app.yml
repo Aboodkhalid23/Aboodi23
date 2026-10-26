@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build the app
-        run: bash app/mac/build.sh "2.1.${{ github.run_number }}"
+        run: bash app/mac/build.sh "2.2.${{ github.run_number }}"
       - name: Launch smoke test
         run: |
           APP="app/mac/build/URU.app/Contents/MacOS/URU"
