@@ -670,7 +670,7 @@ def test_reels_pack_is_picked_main_first_and_trimmed(app, monkeypatch):
                                           {"t": "اليوم", "s": 4.0, "e": 4.5}]), encoding="utf-8")
     assert transcript_lines(ep) == ["[1.0–2.0] هلو شلونكم", "[4.0–4.5] اليوم"]
 
-    def fake(prompt):
+    def fake(prompt, tools=None, tier=None):
         out = re.search(r'اكتب "([^"]+)"', prompt).group(1)
         reels = [{"from": 10, "to": 95, "main": True, "title": "الرئيسي"}, {"from": 100, "to": 180, "title": "ثاني"},
                  {"from": 200, "to": 203, "title": "قصير"}]
@@ -744,7 +744,7 @@ def test_script_word_file_translation_and_subtitles(app, monkeypatch):
     ep.clean_words.write_text(json.dumps([{"t": "هلو", "s": 1.0, "e": 1.4}, {"t": "شلونكم.", "s": 1.5, "e": 2.0},
                                           {"t": "اليوم", "s": 4.0, "e": 4.5}]), encoding="utf-8")
 
-    def fake(prompt):
+    def fake(prompt, tools=None, tier=None):
         out = re.search(r'اكتب "([^"]+)"', prompt).group(1)
         open(out, "w").write(json.dumps({"lines": [{"i": 0, "en": "Hi, how are you?"}, {"i": 1, "en": "Today"}]}))
         return 0
@@ -790,7 +790,7 @@ def test_style_from_a_video_he_likes(tmp_path, monkeypatch):
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "testsrc2=s=320x568:d=3", str(v)], check=True)
     seen = {}
 
-    def fake(prompt, tools=None):
+    def fake(prompt, tools=None, tier=None):
         seen["p"] = prompt
         out = re.search(r'بـ "([^"]+\.md)"', prompt).group(1)
         sid = re.search(r"name: (mine-[^،]+)،", prompt).group(1)

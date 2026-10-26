@@ -496,13 +496,28 @@ def _claude_line(raw: str) -> None:
             JOB.claude_failed = True
 
 
-def _claude(prompt: str, tools: list[str] | None = None) -> int:
+# Speed (owner, 2026-10-26: "فيديو دقيقتين طوّل ٢٥ دقيقة… أريد سرعة"): every Claude task gets the model it needs.
+# Quick checks (sentences, names, learning) use the fastest model; careful ones (captions, plan, chat) a strong and
+# quick one; his "speed" setting can move everything up (quality) or down (fastest).
+TIERS = {"fast": "haiku", "mid": "sonnet", "best": None}   # None: Claude Code's own default (the strongest)
+SPEED_MAP = {"fastest": {"fast": "fast", "mid": "fast", "best": "mid"},
+             "balanced": {"fast": "fast", "mid": "mid", "best": "mid"},
+             "quality": {"fast": "mid", "mid": "best", "best": "best"}}
+
+
+def _model_for(tier: str) -> str | None:
+    speed = prefs().get("speed", "balanced")
+    return TIERS[SPEED_MAP.get(speed, SPEED_MAP["balanced"]).get(tier, tier)]
+
+
+def _claude(prompt: str, tools: list[str] | None = None, tier: str = "best") -> int:
     exe = claude_bin()
     if not exe:
         JOB.say("❌ كلود مو منصّب. دوس «حدّث المونتير» بالإعدادات حتى ينصبه")
         return 1
     JOB.claude_failed = False
-    code = _run([exe, "-p", prompt, "--output-format", "stream-json", "--verbose",
+    model = _model_for(tier)
+    code = _run([exe, "-p", prompt, "--output-format", "stream-json", "--verbose", *(["--model", model] if model else []),
                  "--permission-mode", "acceptEdits", "--allowedTools", *CLAUDE_TOOLS, *(tools or [])], on_line=_claude_line)
     return 1 if JOB.claude_failed else code
 
@@ -680,7 +695,7 @@ def _changed_beats(before: dict, after: dict) -> list[int]:
 
 
 PREF_KEYS = {"theme": ("calm", "forest", "mint", "night", "ocean", "rose", "black", "violet", "carbon", "sand", "sky"), "lang": ("ar", "en"),
-             "ai_on": (True, False), "council": (True, False), "uifont": ("plex", "cairo", "tajawal", "readex", "alexandria")}
+             "ai_on": (True, False), "council": (True, False), "speed": ("fastest", "balanced", "quality"), "uifont": ("alexandria", "plex", "cairo", "vazir")}
 PREF_NUMS = {"ai_budget": (0, 300), "ai_variants": (1, 4)}   # dollars per episode, versions per AI scene
 
 
@@ -701,7 +716,7 @@ def prefs(change: dict | None = None) -> dict:
         f.parent.mkdir(parents=True, exist_ok=True)
         f.write_text(json.dumps(cur), encoding="utf-8")
     return {"theme": cur.get("theme", "calm"), "lang": cur.get("lang", "ar"), "ai_on": bool(cur.get("ai_on", False)),
-            "ai_budget": int(cur.get("ai_budget", 30)), "council": bool(cur.get("council", True)), "ai_variants": int(cur.get("ai_variants", 2)),
+            "ai_budget": int(cur.get("ai_budget", 30)), "council": bool(cur.get("council", True)), "speed": cur.get("speed", "balanced"), "ai_variants": int(cur.get("ai_variants", 2)),
             "faces": [f.name for f in sorted((HOME / "face").glob("*")) if f.suffix.lower() in (".jpg", ".jpeg", ".png", ".mp4", ".mov")]
             if (HOME / "face").exists() else []}
 
@@ -741,6 +756,13 @@ def face_files(action: str, name: str = "", data: bytes = b"") -> dict:
 def preload_libraries() -> None:
     """Owner, 2026-10-25: "ألقاها كلها محملة": every sound effect made and levelled, every free font downloaded,
     once, in the background (a missing one just tries again next start)."""
+    try:   # the fast speech model for Apple Silicon (1.6 GB once), so the first episode does not wait for it
+        from editor.pipeline.transcribe import MLX_MODEL, mlx_ready
+        if mlx_ready():
+            from huggingface_hub import snapshot_download
+            snapshot_download(MLX_MODEL)
+    except Exception as exc:
+        print("mlx model:", exc, flush=True)
     from editor.pipeline.sfx import names, sfx_path
     for n in names():
         try:
@@ -913,7 +935,7 @@ def _youtube_langs_step(d: Path) -> int:
                             if (d / "edit" / f).exists())
         JOB.say("✍️ المساعد يترجم العنوان والوصف…")
         if _claude(TITLES_PROMPT.format(langs="، ".join(f"{LANGS.get(x, x)} ({x})" for x in others),
-                                        title=_meta(d).get("name", d.name), desc=desc or "(فارغ)", out=out)) == 0 and out.exists():
+                                        title=_meta(d).get("name", d.name), desc=desc or "(فارغ)", out=out), tier="mid") == 0 and out.exists():
             try:
                 locs = {k: v for k, v in json.loads(out.read_text(encoding="utf-8")).items() if k in others and v.get("title")}
                 youtube.set_languages(HOME, vid, locs)
@@ -967,7 +989,7 @@ def _translate_one(d: Path, lang: str) -> int:
     out.unlink(missing_ok=True)
     names = f'الأسماء الصحيحة بـ "{d / "edit" / "script_names.json"}".' if (d / "edit" / "script_names.json").exists() else ""
     JOB.say(f"🌐 أترجم للغة {LANGS[lang]}…")
-    code = _claude(TRANSLATE_PROMPT.format(file=src, out=out, names=names, lang=LANGS[lang], code=lang))
+    code = _claude(TRANSLATE_PROMPT.format(file=src, out=out, names=names, lang=LANGS[lang], code=lang), tier="mid")
     try:
         tr = {int(x["i"]): str(x.get("t") or x.get(lang) or x.get("en") or "").strip()
               for x in json.loads(out.read_text(encoding="utf-8"))["lines"]}
@@ -994,7 +1016,7 @@ def _script_names(d: Path) -> int:
         JOB.say("ℹ️ كلود مو مربوط: الأسماء من السكربت تتعرف بعدين")
         return 0
     (d / "edit").mkdir(parents=True, exist_ok=True)
-    code = _claude(NAMES_PROMPT.format(script=script, out=out))
+    code = _claude(NAMES_PROMPT.format(script=script, out=out), tier="fast")
     try:
         names = json.loads(out.read_text(encoding="utf-8"))["names"]
     except (OSError, ValueError, KeyError):
@@ -1134,7 +1156,7 @@ def _reels_pick(d: Path) -> int:
     m = re.fullmatch(r"n:(\d+)", (JOB.message or "").strip())
     if m:
         n = max(1, min(10, int(m.group(1))))
-    code = _claude(REELS_PROMPT.format(file=src, out=out, n=n, rest=max(n - 1, 0)))
+    code = _claude(REELS_PROMPT.format(file=src, out=out, n=n, rest=max(n - 1, 0)), tier="mid")
     try:
         reels = json.loads(out.read_text(encoding="utf-8"))["reels"]
     except (OSError, ValueError, KeyError):
@@ -1196,7 +1218,7 @@ def _chat_step(d: Path) -> int:
     JOB.last_reply = ""
     code = _claude(CHAT_PROMPT.format(ep=d, history=history, message=last["text"],
                                       context=_chat_context(d, last.get("ctx") or {}) + _files_note(d) + learning.prompt_block(HOME),
-                                      looks="، ".join(LOOK_NAMES)))
+                                      looks="، ".join(LOOK_NAMES)), tier="mid")
     _own_media(d)
     after = json.loads(plan_f.read_text(encoding="utf-8")) if plan_f.exists() else {}
     changed = before != after
@@ -1253,7 +1275,7 @@ def _requests_step(d: Path) -> int:
                         for r in todo], ensure_ascii=False, indent=1)
     done_file = d / "edit" / "work" / "requests_done.json"
     done_file.unlink(missing_ok=True)
-    code = _claude(REQ_PROMPT.format(ep=d, reqs=lines))
+    code = _claude(REQ_PROMPT.format(ep=d, reqs=lines), tier="mid")
     try:
         replies = json.loads(done_file.read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -1402,7 +1424,7 @@ def _smart_step(d: Path, kind: str) -> int:
         from .studio import snapshot
         snapshot(Episode(d))
     JOB.say(f"🧠 {SMART[kind][0]}…")
-    code = _claude(SMART[kind][1].format(ep=d, name=_meta(d).get("name", d.name), out=out, dull=dull) + learning.prompt_block(HOME))
+    code = _claude(SMART[kind][1].format(ep=d, name=_meta(d).get("name", d.name), out=out, dull=dull) + learning.prompt_block(HOME), tier="mid")
     if code == 0 and out.exists():
         JOB.say("✅ التقرير جاهز بلوحة «أدوات ذكية»")
     return code
@@ -1451,7 +1473,7 @@ def _council_step(d: Path) -> int:
     from .studio import snapshot
     snapshot(Episode(d))   # their touches can be undone like any edit
     JOB.say("🎬 المساعد يختار من لمساتهم (٣ بالأكثر)…")
-    if _claude(COUNCIL_APPLY_PROMPT.format(ep=d, ideas=ideas) + learning.prompt_block(HOME)) != 0:
+    if _claude(COUNCIL_APPLY_PROMPT.format(ep=d, ideas=ideas) + learning.prompt_block(HOME), tier="mid") != 0:
         JOB.say("⚠️ ما گدرت أطبق لمساتهم هالمرة. الخطة تبقى مثل ما هي")
     return 0
 
@@ -1468,7 +1490,7 @@ def _learn_step(d: Path) -> int:
         return 0
     before = learning.taste(HOME)
     code = _claude(LEARN_PROMPT.format(events=learning.digest(HOME), ep=d, taste_file=learning.taste_file(HOME),
-                                       taste=before or "(لسه فارغ: هاي أول مرة)"))
+                                       taste=before or "(لسه فارغ: هاي أول مرة)"), tier="fast")
     if code == 0:
         learning.mark_learned(HOME)
         JOB.say("🧠 تعلمت ذوقك من هاي الحلقة" if learning.taste(HOME) != before else "🧠 ذوقك نفسه، ما تغير شي")
@@ -1595,7 +1617,7 @@ def _review_step(d: Path, kind: str) -> int:
         f = app / "sentences_in.json"
         f.write_text(json.dumps([{k: x[k] for k in ("i", "s", "text", "keep", "why")} for x in data["items"]],
                                 ensure_ascii=False), encoding="utf-8")
-        code = _claude(SENT_PROMPT.format(file=f, out=out, message=msg))
+        code = _claude(SENT_PROMPT.format(file=f, out=out, message=msg), tier="fast")
     else:
         caps = studio.captions(ep)
         f = app / "captions_in.json"
@@ -1609,7 +1631,7 @@ def _review_step(d: Path, kind: str) -> int:
         if (d / "edit" / "entities.json").exists():
             ctx.append(f'الأسماء المعروفة بالحلقة: "{d / "edit" / "entities.json"}".')
         code = _claude(CAP_PROMPT.format(file=f, out=out, message=msg, topic=_meta(d).get("name", ""),
-                                         context="\n".join(ctx)))
+                                         context="\n".join(ctx)), tier="mid")
     if code == 0 and not out.exists():
         JOB.say("❌ المساعد خلص بس ما كتب اقتراحاته")
         return 1
@@ -1681,7 +1703,7 @@ def run_job(ep_id: str, what: str) -> None:
         elif step == "chat":
             code = _chat_step(d)
         elif step == "assist":
-            code = _claude(ASSIST_PROMPT.format(ep=d, message=JOB.message or "راجع الخطة وحسّنها") + learning.prompt_block(HOME))
+            code = _claude(ASSIST_PROMPT.format(ep=d, message=JOB.message or "راجع الخطة وحسّنها") + learning.prompt_block(HOME), tier="mid")
         elif step == "smart":
             code = _smart_step(d, (JOB.message or "").strip())
         elif step == "youtube-langs":
@@ -1697,7 +1719,7 @@ def run_job(ep_id: str, what: str) -> None:
         elif step == "selfcheck":
             code = _selfcheck_step(d)
         elif step == "plan":
-            code = _claude(PLAN_PROMPT.format(ep=d, extra=_plan_extra(d) + _files_note(d), money=_money_rule()))
+            code = _claude(PLAN_PROMPT.format(ep=d, extra=_plan_extra(d) + _files_note(d), money=_money_rule()), tier="best")
             if code == 0:
                 _own_media(d)
             if code == 0 and not (d / "edit" / "edit_plan.json").exists():

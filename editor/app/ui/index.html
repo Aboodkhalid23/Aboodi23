@@ -12,14 +12,14 @@
   --ink:#EDEDEE; --mute:#9C9CA3; --dim:#65656C; --y:#F2C94C; --y2:#D9AE2B; --ydim:#3A3218; --red:#E5484D; --redbg:#2A1414;
   --green:#7BD88F; --wave:#5FBF73; --cap:#3B3363; --capink:#D5CCFF; --vid:#1C2740; --img:#4A3A1A; --blue:#3B82F6;
   --r:10px; color-scheme:dark;
-  --uifont:"Readex Pro";
+  --uifont:"Alexandria";
   font-family:var(--uifont),-apple-system,"SF Arabic","Geeza Pro","Segoe UI",Tahoma,sans-serif;
 }
 /* the app's Arabic type (owner, 2026-10-25: "خط البرنامج يكون حلو ومرتب وشوية عريض"): fonts shipped with the app */
 :root[data-uifont="cairo"]{--uifont:"Cairo"}
-:root[data-uifont="tajawal"]{--uifont:"Tajawal"}
+:root[data-uifont="vazir"]{--uifont:"Vazirmatn"}
 :root[data-uifont="plex"]{--uifont:"IBM Plex Sans Arabic"}
-:root[data-uifont="alexandria"]{--uifont:"Alexandria"}
+
 body{font-weight:500;line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 b,strong,h1,h2,h3,.h2{font-weight:700}
 *{box-sizing:border-box}
@@ -62,7 +62,7 @@ header{display:flex;align-items:center;gap:10px;padding:0 12px;border-bottom:1px
 .tool svg{width:17px;height:17px;margin-bottom:2px}
 .tool:hover,.tool.on{background:var(--panel3);color:var(--ink)}
 .assist{display:flex;align-items:center;gap:7px;height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--chipline);background:var(--chipbg);color:var(--chipink);font-weight:700;margin-inline-start:6px}
-.assist small{display:block;font-size:9.5px;color:#b59a4a;font-weight:500;margin-top:-2px}
+.assist small{display:none;font-size:9.5px;color:#b59a4a;font-weight:500;margin-top:-2px}
 .icobtn{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:var(--mute)}
 .icobtn:hover{background:var(--panel3);color:var(--ink)}
 .icobtn svg{width:16px;height:16px}
@@ -560,6 +560,12 @@ body.focusMode #panel,body.focusMode #inspector,body.focusMode #rail{display:non
 .umk{position:absolute;top:0;width:12px;height:16px;margin-left:-6px;background:var(--y);clip-path:polygon(0 0,100% 0,100% 70%,50% 100%,0 70%);z-index:6;cursor:pointer}
 #loopZone{position:absolute;top:0;bottom:0;background:rgba(var(--yrgb),.12);border-inline:2px solid var(--y);pointer-events:none;z-index:2}
 .keys{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px}.keys kbd{justify-self:start;font-size:12px;padding:3px 8px}
+.askbar .aibadge{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,var(--y),var(--yhi));color:var(--yink);flex:none}
+.askbar .aibadge svg,.askbar .micbtn svg{width:16px;height:16px}
+.askbar .micbtn{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:var(--ink2);flex:none}
+.askbar .micbtn:hover{background:var(--glass2);color:var(--ink)}
+.askbar .micbtn.rec{background:#d9534f;color:#fff;animation:pulse 1.2s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 6px rgba(217,83,79,.25)}}
 .lkgroups{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
 .lkgroups .chip{cursor:pointer}.lkgroups .chip.on{background:var(--y);color:var(--yink);border-color:var(--y)}
 .lkgroups .chip small{opacity:.6;font-size:10px}
@@ -579,7 +585,7 @@ body.focusMode #panel,body.focusMode #inspector,body.focusMode #rail{display:non
       <button class="tool" id="tFiles" title="مجلد الحلقة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>الملفات</button>
       <button class="tool" id="tPlan" title="الخطة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1.3"/><circle cx="4.5" cy="12" r="1.3"/><circle cx="4.5" cy="18" r="1.3"/></svg>الخطة</button>
       <button class="tool" id="tInsp" title="الستايلات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 5v14M16 5v14"/></svg>الستايلات</button>
-      <button class="assist" id="tAssist"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg><div>المساعد<small>يسوي الي تگوله</small></div></button>
+      <button class="assist" id="tAssist" title="المساعد: يسوي الي تگوله"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg><div>المساعد<small>يسوي الي تگوله</small></div></button>
 
       <div class="urgrp">
       <button class="icobtn" id="tUndo" title="تراجع خطوة (آخر تعديل ينلغي)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button>
@@ -774,8 +780,8 @@ body.focusMode #panel,body.focusMode #inspector,body.focusMode #rail{display:non
         <button class="pill sm" id="theaterX" hidden>✕ رجوع</button>
         <div class="cmp" id="cmp" hidden><img id="cmpImg" alt=""><span class="lbl" id="cmpLbl"></span></div>
         <div class="askreply" id="askReply" hidden></div>
-        <div class="askbar" id="askBar" hidden><button class="icobtn" id="askOpen" title="افتح المحادثة">💬</button>
-          <input id="askIn" placeholder="احچي ويه المساعد عن هاللحظة… مثلاً: هالصورة ما عجبتني"><button class="icobtn" id="askMic" title="احچي بدال ما تكتب: دوس، احچي، ودوس مرة ثانية">🎙️</button><span class="spark">✦</span><button class="pill sm y" id="askGo">ارسل</button></div>
+        <div class="askbar" id="askBar" hidden><button class="icobtn aibadge" id="askOpen" title="المساعد (الذكاء الاصطناعي): افتح المحادثة كاملة"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg></button>
+          <input id="askIn" placeholder="احچي ويه المساعد…" title="اكتب للمساعد شنو تريد بهاللحظة، مثلاً: هالصورة ما عجبتني"><button class="icobtn micbtn" id="askMic" title="احچي بصوتك بدال ما تكتب: دوس، احچي، ودوس مرة ثانية"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button class="pill sm y" id="askGo">ارسل</button></div>
       </div>
     </section>
 
@@ -1038,6 +1044,8 @@ body.focusMode #panel,body.focusMode #inspector,body.focusMode #rail{display:non
         <div class="row" style="margin-top:6px;flex-wrap:wrap"><button class="pill sm" id="sAiCheck">افحص المواقع المربوطة</button><span class="dim tiny" id="sAiChk"></span></div>
         <div class="row" style="margin-top:10px"><b class="grow tiny">صور وجهك (مرجع للمشاهد المولدة)</b><button class="pill sm" id="sFaceAdd">＋ أضف</button><input type="file" id="sFaceIn" hidden multiple accept="image/*,video/*"></div>
         <div class="row" id="sFaces" style="margin-top:6px;flex-wrap:wrap;gap:6px"></div></div></div>
+    <div data-sec="ai" class="f card"><b>⚡ سرعة المساعد</b><div class="muted tiny" style="margin:4px 0 8px;line-height:1.7">كل شغلة يسويها المساعد تاخذ العقل الي يناسبها: المراجعات السريعة (الجمل، الأسماء) بأسرع عقل، والخطة بعقل قوي. هنا تختار التوازن.</div>
+      <div class="seg3" id="sSpeed" style="grid-template-columns:1fr 1fr 1fr"><button data-sp="fastest">الأسرع</button><button data-sp="balanced">متوازن</button><button data-sp="quality">أعلى جودة</button></div></div>
     <div data-sec="ai" class="f card"><b>شات جي بي تي وجيميناي (اشتراكاتك)</b><div class="muted tiny" style="margin:4px 0 8px;line-height:1.7">يشتغلون ويه المساعد بحسابك نفسه: يقرون الخطة ويعطون رأي ثاني، ويقترحون أفكار. ما يغيرون ملفاتك، والمساعد هو الي يطبّق. الربط مرة وحدة: نصّب، بعدين «اربط حسابك» (يفتح صفحة الدخول)، بعدين «جرّب».</div>
       <div id="sBrains" style="display:grid;gap:8px"></div>
       <label class="row" style="margin-top:10px;gap:8px;align-items:center"><input type="checkbox" id="sCouncil" style="width:auto"><span class="tiny">بعد كل خطة يضيفون لمساتهم لحالهم (٣ بالأكثر، والمساعد يقرر شنو ياخذ)</span></label></div>
@@ -1107,7 +1115,8 @@ body.focusMode #panel,body.focusMode #inspector,body.focusMode #rail{display:non
 <script>
 try { if (localStorage.getItem("uru-v") !== "2.1"){ localStorage.setItem("uru-theme", "calm"); localStorage.setItem("uru-v", "2.1"); }   // 2.1: the eye-friendly look once, then his choice
       const t = localStorage.getItem("uru-theme") || "calm"; if (t !== "night") document.documentElement.dataset.theme = t;
-      const uf = localStorage.getItem("uru-uifont"); if (uf && uf !== "readex") document.documentElement.dataset.uifont = uf;
+      let uf = localStorage.getItem("uru-uifont"); if (uf === "readex" || uf === "tajawal" || uf === "alexandria"){ uf = null; localStorage.removeItem("uru-uifont"); }   // those two lacked گ چ پ: letters broke apart
+      if (uf) document.documentElement.dataset.uifont = uf;
       if (localStorage.getItem("uru-lang") === "en") document.documentElement.dataset.lang = "en"; } catch (_) { document.documentElement.dataset.theme = "forest"; }
 const $ = (id) => document.getElementById(id);
 const bridge = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.app;
@@ -1906,9 +1915,11 @@ async function elRefresh(){ const st = await api("/api/eleven").catch(() => ({})
 $("sElSave").onclick = async () => { try { await post("/api/eleven/key", {key: $("sElKey").value}); $("sElKey").value = ""; toast("انربط ✅"); elRefresh(); } catch (e){ toast(e.message); } };
 $("sElOff").onclick = async () => { await post("/api/eleven/unlink"); elRefresh(); };
 $("sElOpen").onclick = () => openUrl("https://elevenlabs.io/app/settings/api-keys");
+function speedRefresh(p){ document.querySelectorAll("#sSpeed [data-sp]").forEach(b => { b.classList.toggle("on", b.dataset.sp === (p.speed || "balanced"));
+  b.onclick = async () => { await post("/api/prefs", {speed: b.dataset.sp}).catch(() => {}); speedRefresh({speed: b.dataset.sp}); toast("انحفظت السرعة"); }; }); }
 async function brainsRefresh(){
   const st = await api("/api/brains").catch(() => ({}));
-  api("/api/prefs").then(p => { $("sCouncil").checked = p.council !== false; }).catch(() => {});
+  api("/api/prefs").then(p => { $("sCouncil").checked = p.council !== false; speedRefresh(p); }).catch(() => {});
   $("sCouncil").onchange = () => post("/api/prefs", {council: $("sCouncil").checked}).then(() => toast($("sCouncil").checked ? "يضيفون لمساتهم بعد كل خطة" : "انطفت لمساتهم التلقائية")).catch(() => {});
   $("sBrains").innerHTML = Object.entries(st).map(([k, b]) => `<div class="card" style="padding:10px 12px" data-brow="${k}">
     <div class="row" style="flex-wrap:wrap;gap:6px;align-items:center">
@@ -2119,12 +2130,12 @@ $("askMic").onclick = async () => {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({audio: true}), chunks = [];
     micRec = new MediaRecorder(stream); micRec.ondataavailable = (e) => chunks.push(e.data);
-    micRec.onstop = async () => { stream.getTracks().forEach(t => t.stop()); micRec = null; $("askMic").textContent = "⏳";
+    micRec.onstop = async () => { stream.getTracks().forEach(t => t.stop()); micRec = null; $("askMic").classList.remove("rec"); $("askMic").style.opacity = ".5";
       const blob = new Blob(chunks, {type: chunks[0] && chunks[0].type || "audio/webm"});
       try { const r = await fetch("/api/listen", {method: "POST", headers: {"Content-Type": blob.type}, body: blob}).then(x => x.json());
         if (r.text){ $("askIn").value = r.text; $("askGo").click(); } else toast("ما سمعت شي. جرّب مرة ثانية"); }
-      catch (_){ toast("ما گدرت أسمعك"); } $("askMic").textContent = "🎙️"; };
-    micRec.start(); $("askMic").textContent = "⏹"; toast("دا أسمعك… احچي ودوس مرة ثانية لما تخلص");
+      catch (_){ toast("ما گدرت أسمعك"); } $("askMic").style.opacity = ""; };
+    micRec.start(); $("askMic").classList.add("rec"); toast("دا أسمعك… احچي ودوس مرة ثانية لما تخلص");
   } catch (_){ toast("اسمح للتطبيق يستخدم المايك من إعدادات الماك"); }
 };
 
@@ -2632,12 +2643,13 @@ const THEMES = [["calm", "مريح للعين", "linear-gradient(135deg,#1a2120,
   ["carbon", "كربون أحمر", "linear-gradient(135deg,#121214,#34343a 60%,#ff4d4d)"], ["sand", "رملي فاتح", "linear-gradient(135deg,#f4ede1,#dccdb2 60%,#b5651d)"],
   ["sky", "سماوي فاتح", "linear-gradient(135deg,#eaf3fb,#c3d8ee 60%,#1f6fd1)"]];
 function curTheme(){ return document.documentElement.dataset.theme || "night"; }
-const UIFONTS = [["readex", "ريدكس", "Readex Pro"], ["plex", "بلكس", "IBM Plex Sans Arabic"], ["cairo", "القاهرة", "Cairo"], ["tajawal", "تجوال", "Tajawal"], ["alexandria", "الإسكندرية", "Alexandria"]];
+// every one has the Iraqi letters (گ چ پ ڤ): a font without them breaks the word into loose letters
+const UIFONTS = [["alexandria", "الإسكندرية", "Alexandria"], ["plex", "بلكس", "IBM Plex Sans Arabic"], ["cairo", "القاهرة", "Cairo"], ["vazir", "وزير", "Vazirmatn"]];
 function drawUiFonts(){
-  const cur = document.documentElement.dataset.uifont || "readex";
-  $("sUiFonts").innerHTML = UIFONTS.map(([k, n, fam]) => `<button class="thm ${cur === k ? "on" : ""}" data-uf="${k}" style="font-family:'${fam}';font-size:15px;font-weight:600;padding:8px 12px">${n}<small style="display:block;font-weight:500;font-size:11px;opacity:.7">شنو نسوي اليوم؟</small></button>`).join("");
+  const cur = document.documentElement.dataset.uifont || "alexandria";
+  $("sUiFonts").innerHTML = UIFONTS.map(([k, n, fam]) => `<button class="thm ${cur === k ? "on" : ""}" data-uf="${k}" style="font-family:'${fam}';font-size:15px;font-weight:600;padding:8px 12px">${n}<small style="display:block;font-weight:500;font-size:11px;opacity:.7">شنو نسوي اليوم؟ گلي وچايتك</small></button>`).join("");
   $("sUiFonts").querySelectorAll("[data-uf]").forEach(b => b.onclick = () => { const k = b.dataset.uf;
-    if (k === "readex") delete document.documentElement.dataset.uifont; else document.documentElement.dataset.uifont = k;
+    if (k === "alexandria") delete document.documentElement.dataset.uifont; else document.documentElement.dataset.uifont = k;
     try { localStorage.setItem("uru-uifont", k); } catch (_) {} post("/api/prefs", {uifont: k}).catch(() => {}); drawUiFonts(); });
 }
 function drawThemes(){

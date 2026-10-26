@@ -138,6 +138,9 @@ if [ ! -x "$TOOLS/venv/bin/python" ]; then
   "$TOOLS/uv" venv --seed --python "$PY_VERSION" "$TOOLS/venv" -q
 fi
 "$TOOLS/uv" pip install -q --python "$TOOLS/venv/bin/python" -r "$CODE/editor/requirements.txt" || fail "ما گدرت أنصّب مكتبات بايثون"
+if [ "$OS" = "Darwin" ] && [ "$ARCH" = "arm64" ]; then   # the Mac chip's own speech model: transcribes many times faster
+  "$TOOLS/uv" pip install -q --python "$TOOLS/venv/bin/python" "mlx-whisper>=0.4" || say "التفريغ السريع ما انصّب، يشتغل العادي"
+fi
 say "بايثون جاهز"
 
 # ---------- 4. برنامج الفيديو ----------

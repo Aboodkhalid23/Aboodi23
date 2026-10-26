@@ -43,9 +43,45 @@ def hotwords(ep: Episode) -> str | None:
 WHISPER_MODEL = os.environ.get("ABOODI_WHISPER", "large-v3-turbo")
 
 
+MLX_MODEL = "mlx-community/whisper-large-v3-turbo"
+
+
+def mlx_ready() -> bool:
+    """Apple Silicon with mlx-whisper: the same turbo model on the Mac's GPU (owner, 2026-10-26: "أريد سرعة")."""
+    import platform
+    import sys
+    if sys.platform != "darwin" or platform.machine() != "arm64" or os.environ.get("ABOODI_NO_MLX"):
+        return False
+    try:
+        import mlx_whisper  # noqa: F401
+        return True
+    except Exception:
+        return False
+
+
+def _transcribe_mlx(ep: Episode) -> list[Word]:
+    import mlx_whisper
+    print("⚡ التفريغ على شريحة الماك (أسرع)", flush=True)
+    out = mlx_whisper.transcribe(str(ep.source), path_or_hf_repo=MLX_MODEL, language="ar", word_timestamps=True,
+                                 initial_prompt=IRAQI_PROMPT, condition_on_previous_text=False, verbose=None)
+    words = []
+    for seg in out.get("segments", []):
+        words += [Word(w["word"].strip(), float(w["start"]), float(w["end"]), float(w.get("probability", 1.0) or 1.0))
+                  for w in (seg.get("words") or []) if w.get("word", "").strip()]
+    return words
+
+
 def transcribe(ep: Episode, model_name: str = WHISPER_MODEL, model=None) -> list[Word]:
     if not probe(ep.source).has_audio:
         raise MediaError("الصوت فارغ أو مو واضح")
+    if model is None and mlx_ready():
+        try:
+            words = _transcribe_mlx(ep)
+            if words:
+                save_words(words, ep.transcript)
+                return words
+        except Exception as exc:   # any trouble: the CPU model below does it
+            print(f"⚠️ التفريغ السريع ما زبط ({exc}). أكمّل بالعادي", flush=True)
     if model is None:
         from faster_whisper import WhisperModel
         model = WhisperModel(model_name, device="cpu", compute_type="int8")

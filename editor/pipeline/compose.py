@@ -79,7 +79,7 @@ class Canvas:
         return s if (1080 * s).is_integer() else 0.5
 
 
-INTERMEDIATE = ["-c:v", "libx264", "-crf", "12", "-preset", "veryfast", "-pix_fmt", "yuv420p"]
+from .media import WORK as INTERMEDIATE  # noqa: E402  (the Mac's video chip when there is one)
 
 
 def make_canvas(ep: Episode, preview: bool) -> Canvas:

@@ -13,7 +13,7 @@ VIDEO_EXTS = {".mp4", ".mov", ".mkv", ".m4v", ".avi", ".webm"}
 HDR_TRANSFERS = {"arib-std-b67", "smpte2084"}
 TONEMAP = ("zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=hable:desat=0,"
            "zscale=t=bt709:m=bt709:r=tv")
-INTERMEDIATE = ["-c:v", "libx264", "-crf", "14", "-preset", "veryfast"]  # visually lossless working copy
+from .media import WORK as INTERMEDIATE  # visually lossless working copy (the Mac's video chip when there is one)
 DRIVE_RE = re.compile(r"^https://(drive|docs)\.google\.com/")
 
 

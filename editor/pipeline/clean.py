@@ -24,7 +24,7 @@ from pathlib import Path
 import numpy as np
 
 from .fmt import load_format
-from .media import PROXY, filter_script, probe, run_ffmpeg
+from .media import PROXY, WORK, filter_script, probe, run_ffmpeg
 from .paths import Episode
 from .transcribe import Word, load_words, save_words
 
@@ -456,8 +456,7 @@ def clean(ep: Episode, script: Path | None = None) -> float:
     gfile = ep.work / "clean_filter.txt"
     gfile.write_text(graph, encoding="utf-8")
     run_ffmpeg(["-i", str(ep.source), *filter_script(gfile),
-                "-map", "[v]", "-map", "[a]", "-r", str(fps), "-c:v", "libx264", "-crf", "12",
-                "-preset", "veryfast", "-c:a", "pcm_s16le" if ep.clean_video.suffix == ".mov" else "aac",
+                "-map", "[v]", "-map", "[a]", "-r", str(fps), *WORK, "-c:a", "pcm_s16le" if ep.clean_video.suffix == ".mov" else "aac",
                 "-b:a", "320k", str(ep.clean_video),
                 "-map", "[pv]", "-map", "[pa]", "-r", str(fps), *PROXY, str(_proxy(ep))])
     return kept_secs

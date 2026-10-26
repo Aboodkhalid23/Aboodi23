@@ -95,9 +95,32 @@ def run_ffmpeg_progress(args: list[str], duration: float) -> None:
         raise MediaError(f"فشل ffmpeg: {err.strip()[-800:]}")
 
 
+def _videotoolbox() -> bool:
+    """The Mac's own video chip (owner, 2026-10-26: "أريد سرعة"): encodes many times faster than the CPU, so preparing,
+    cutting and building stop waiting on x264. Off with ABOODI_NO_HW=1, and never off a Mac."""
+    import os
+    import sys
+    if sys.platform != "darwin" or os.environ.get("ABOODI_NO_HW"):
+        return False
+    try:
+        out = subprocess.run(["ffmpeg", "-hide_banner", "-encoders"], capture_output=True, text=True, timeout=20).stdout
+        if "h264_videotoolbox" not in out:
+            return False
+        test = subprocess.run(["ffmpeg", "-v", "error", "-f", "lavfi", "-i", "color=black:s=320x240:d=0.2", "-c:v",
+                               "h264_videotoolbox", "-b:v", "1M", "-f", "null", "-"], capture_output=True, timeout=30)
+        return test.returncode == 0
+    except (OSError, subprocess.SubprocessError):
+        return False
+
+
+HW = _videotoolbox()
+# working copies (source.mp4, clean.mp4, beat clips): visually lossless; on the Mac the video chip at a high bitrate
+WORK = (["-c:v", "h264_videotoolbox", "-b:v", "70M", "-maxrate", "110M", "-bufsize", "140M", "-allow_sw", "1", "-pix_fmt", "yuv420p"]
+        if HW else ["-c:v", "libx264", "-crf", "12", "-preset", "veryfast", "-pix_fmt", "yuv420p"])
 # the app's light copy for playing and scrubbing (720p, a keyframe every 12 frames, index first)
-PROXY = ["-c:v", "libx264", "-preset", "veryfast", "-crf", "27", "-g", "12", "-keyint_min", "12", "-sc_threshold", "0",
-         "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-c:a", "aac", "-b:a", "96k"]
+PROXY = ([*(["-c:v", "h264_videotoolbox", "-b:v", "5M", "-allow_sw", "1"] if HW else ["-c:v", "libx264", "-preset", "veryfast", "-crf", "27"]),
+          "-g", "12", "-keyint_min", "12", "-sc_threshold", "0",
+          "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-c:a", "aac", "-b:a", "96k"])
 
 
 def run_ffmpeg(args: list[str]) -> None:
