@@ -650,6 +650,14 @@ header #rail .rsep{height:28px!important;margin:0 4px!important}
 #vMore{flex:none}
 #vMoreBox{position:absolute;top:44px;inset-inline-end:10px;z-index:30;display:flex;gap:4px;padding:6px;border-radius:12px;background:var(--panel);border:1px solid var(--glassline);box-shadow:0 12px 30px #0007}
 #viewer{position:relative}
+.chat{top:64px!important}
+
+/* readable on every theme (owner, 2026-10-26: "تطلع هاي العلامة وبيها كلام كلشي ما مبين") */
+.toast{background:var(--panel)!important;color:var(--ink)!important;border:1px solid var(--glassline);box-shadow:0 10px 30px #0008;
+  max-width:min(560px,90vw);text-align:center;line-height:1.6;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.pill.danger{background:#c62828!important;border-color:#c62828!important;color:#fff!important}
+.pill.danger:hover{background:#b71c1c!important}
+.dlg .foot .pill.big{min-width:96px;justify-content:center}
 </style>
 </head>
 <body>
@@ -935,7 +943,7 @@ header #rail .rsep{height:28px!important;margin:0 4px!important}
 <!-- delete a clip -->
 <div class="veil" id="dDel" hidden><div class="dlg" style="width:min(440px,100%)">
   <h2>تحذف هالحلقة؟</h2><div class="muted" style="margin-top:6px">«<span id="delName"></span>» تروح لسلة المحذوفات بالماك، وتگدر ترجّعها من هناك.</div>
-  <div class="foot"><button class="pill big" id="delGo" style="background:var(--red);border-color:var(--red);color:#fff">احذفها</button><button class="pill big" data-close>لا</button></div></div></div>
+  <div class="foot"><button class="pill big danger" id="delGo">احذفها</button><button class="pill big" data-close>لا</button></div></div></div>
 
 <!-- export -->
 <div class="veil" id="dExport" hidden><div class="dlg" style="width:min(620px,100%)">
