@@ -47,6 +47,7 @@ class Canvas:
     encode: list[str]
     face: tuple[float, float] | None = None   # face centre on the canvas (fractions), for the zooms
     src_aspect: float | None = None           # footage width/height; None = unknown (use the safe path)
+    footage: Path | None = None               # the cut video to read him from (the preview reads the 720p copy)
 
     @property
     def fit(self) -> str:
@@ -85,15 +86,35 @@ from .media import WORK as INTERMEDIATE  # noqa: E402  (the Mac's video chip whe
 def make_canvas(ep: Episode, preview: bool) -> Canvas:
     fmt = load_format(ep)
     common = ["-pix_fmt", "yuv420p", "-r", str(fmt.fps), "-video_track_timescale", "15360"]
+    from .media import HW
     if preview:
-        # 720p: sharp enough for the owner to judge on a phone, ~2x faster than the final
-        return Canvas(1280, 720, fmt.fps, ep.work / "preview",
-                      ["-c:v", "libx264", "-crf", "23", "-preset", "veryfast", *common])
+        # 720p: sharp enough for the owner to judge on a phone; read from the 720p copy of the cut (not the 4K one)
+        proxy = ep.work / "app" / "proxy_clean.mp4"
+        enc = (["-c:v", "h264_videotoolbox", "-b:v", "6M", "-allow_sw", "1"] if HW else
+               ["-c:v", "libx264", "-crf", "23", "-preset", "veryfast"])
+        return Canvas(1280, 720, fmt.fps, ep.work / "preview", [*enc, *common],
+                      footage=proxy if proxy.exists() and proxy.stat().st_mtime >= ep.clean_video.stat().st_mtime else None)
     # The beat clips ARE the final encode: one lossy generation, then stream copy. Owner's rule: the highest
     # quality, file size no object (CRF 12 ≈ visually lossless; aq-mode 3 keeps dark gradients free of banding).
+    # On the Mac, unless he set «أعلى جودة», the video chip at a very high bitrate: ~5x faster for a 4K hour
+    # (owner, 2026-10-26: "يتاخر كلش"), and YouTube re-encodes it anyway.
+    if HW and _speed() != "quality":
+        mbps = {1080: 40, 1440: 70, 2160: 120}.get(fmt.height, 60)
+        return Canvas(fmt.width, fmt.height, fmt.fps, ep.work,
+                      ["-c:v", "h264_videotoolbox", "-b:v", f"{mbps}M", "-maxrate", f"{int(mbps * 1.5)}M",
+                       "-bufsize", f"{mbps * 2}M", "-profile:v", "high", "-allow_sw", "1", *common])
     return Canvas(fmt.width, fmt.height, fmt.fps, ep.work,
                   ["-c:v", "libx264", "-crf", "12", "-preset", "medium", "-profile:v", "high",
                    "-x264-params", "aq-mode=3", *common])
+
+
+def _speed() -> str:
+    """His «سرعة المساعد» setting in the app (prefs.json beside the tools)."""
+    import os
+    try:
+        return json.loads((Path(os.environ.get("MONTIER_HOME", "")) / "prefs.json").read_text(encoding="utf-8")).get("speed", "balanced")
+    except (OSError, ValueError):
+        return "balanced"
 
 
 def source_ranges(start: float, end: float, teaser: list[tuple[float, float]]) -> list[tuple[float, float]]:
@@ -205,7 +226,7 @@ def _face_clip(ep: Episode, beat: Beat, frames: int, teaser, out: Path, frame_bg
         raise MediaError(f"الـ beat ({beat.start}–{beat.end}) برا الفيديو المنظف")
     args, labels = [], ""
     for i, (s, e) in enumerate(ranges):
-        args += ["-ss", f"{s:.3f}", "-t", f"{e - s + 0.1:.3f}", "-i", str(ep.clean_video)]
+        args += ["-ss", f"{s:.3f}", "-t", f"{e - s + 0.1:.3f}", "-i", str(cv.footage or ep.clean_video)]
         labels += f"[{i}:v]"
     joined = (f"{labels}concat=n={len(ranges)}:v=1:a=0,fps={cv.fps}" if len(ranges) > 1
               else f"[0:v]fps={cv.fps}")
@@ -538,7 +559,7 @@ def compose(ep: Episode, preview: bool = False) -> Path:
     # chosen in the Mac app (camera, look, strength, LUT, balance sliders): one chain for the whole episode
     app_grade = app_chain(ep, correct) if look_settings(ep) else None
     design = _source_hash()   # a changed graphic design re-renders the clips that use it
-    clips, missing, pending = [], [], []   # pending: Remotion renders, done together with one browser
+    clips, missing, pending, local = [], [], [], []   # pending: Remotion renders, done together with one browser
     for i, b in enumerate(plan.beats):
         # Frame-grid boundaries: the sum of clip lengths equals the timeline exactly (no drift).
         frames = round(b.end * cv.fps) - round(b.start * cv.fps)
@@ -627,19 +648,35 @@ def compose(ep: Episode, preview: bool = False) -> Path:
                            encode=[*INTERMEDIATE, "-r", str(cv.fps)], grade=footage_grade)
                 job = face_fx_job(b, style, face, cv.work / f"fx_{i}.mp4", cv.fps, channel, bundle,
                                   scale=cv.remotion_scale, avatar=avatar)
-            else:
-                _face_clip(ep, b, frames, teaser, out, frame_bg, cv, grade=footage_grade)
+            else:   # plain shots of him: made several at a time below, while the graphics draw
+                local.append((lambda b=b, frames=frames, out=out, g=footage_grade:
+                              _face_clip(ep, b, frames, teaser, out, frame_bg, cv, grade=g), stamp, key))
+                job = False
             if job is None:
                 stamp.write_text(key)
-            else:
+            elif job:
                 pending.append((job, frames, out, b.transition, stamp, key))
         clips.append(out)
-    if pending:
-        print(f"   🎨 أرسم {len(pending)} گرافيك سوه…", flush=True)
-        render_batch([p[0] for p in pending], bundle)
-        for job, frames, out, transition, stamp, key in pending:
-            _finish(job.out, frames, out, cv, transition)
-            stamp.write_text(key)
+    # owner, 2026-10-26: "يبني و يتاخر كلش": his shots on 3 encoders at once, beside the one graphics browser
+    from concurrent.futures import ThreadPoolExecutor
+
+    def make(task):
+        fn, stamp, key = task
+        fn()
+        stamp.write_text(key)
+    pool = ThreadPoolExecutor(max_workers=3)
+    made = [pool.submit(make, t) for t in local]
+    try:
+        if pending:
+            print(f"   🎨 أرسم {len(pending)} گرافيك سوه…", flush=True)
+            render_batch([p[0] for p in pending], bundle)
+            for job, frames, out, transition, stamp, key in pending:
+                _finish(job.out, frames, out, cv, transition)
+                stamp.write_text(key)
+    finally:
+        pool.shutdown(wait=True)
+    for f in made:
+        f.result()     # an error in any shot stops the build like before
     for i, b in enumerate(plan.beats):
         if b.transition in WIPES and i > 0:
             clips[i] = apply_wipe(b.transition, clips[i - 1], clips[i], cv.work / f"beat_{i}_{b.transition}.mp4",

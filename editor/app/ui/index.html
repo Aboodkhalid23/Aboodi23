@@ -101,16 +101,16 @@ main{display:grid;grid-template-columns:72px var(--pw,minmax(380px,29%)) minmax(
 
 /* ---------- steps ---------- */
 /* the steps stand in a column beside their page (owner, 2026-10-26: "ما اريدها بالعرض اريدها بالطول") */
-#steps:not([hidden]){display:grid!important;grid-template-columns:112px minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;height:100%;min-height:0}
+#steps:not([hidden]){display:grid!important;grid-template-columns:124px minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;height:100%;min-height:0}
 #steps>.stepbar{grid-row:1/3;grid-column:1}
 #steps>.stepbody{grid-column:2;grid-row:1}
 #steps>.stepfoot{grid-column:2;grid-row:2}
 .stepbar{display:flex;flex-direction:column;gap:4px;padding:10px 6px;overflow-y:auto;border-inline-end:1px solid var(--glassline)}
-.st{position:relative;min-height:42px;border-radius:12px;border:1px solid transparent;background:none!important;display:flex;align-items:center;gap:7px;padding:6px 8px;color:var(--mute);font-size:12.5px;text-align:start;transition:background .15s,color .15s}
+.st{position:relative;min-height:42px;border-radius:12px;border:1px solid transparent;background:none!important;display:flex;align-items:center;gap:6px;padding:6px 5px;color:var(--mute);font-size:12.5px;text-align:start;transition:background .15s,color .15s}
 .st:hover{background:rgba(255,255,255,.05)!important;color:var(--ink)}
 .st .ic{position:relative;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex:none;background:rgba(255,255,255,.06)}
 .st .ic svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.st .nm{flex:1;min-width:0;line-height:1.2;font-weight:600}
+.st .nm{flex:1;min-width:0;line-height:1.2;font-weight:600;font-size:11.5px;white-space:normal}
 .st .n{display:none}
 .st .ok{position:absolute;top:-4px;inset-inline-end:-4px;width:13px;height:13px;border-radius:50%;background:var(--green);color:#06210f;font-size:8px;display:grid;place-items:center;font-weight:800}
 .st.on{color:var(--ink);background:rgba(255,255,255,.08)!important;border-color:var(--glassline)}
@@ -620,6 +620,36 @@ body.focusMode #panel,body.focusMode #inspector,body.focusMode #rail{display:non
 .vn .lv{width:9px;height:9px;border-radius:50%;margin-top:6px}
 .vn .lv.high{background:#ef4444}.vn .lv.mid{background:#f59e0b}.vn .lv.low{background:#60a5fa}
 .score{font-size:40px;font-weight:800;line-height:1}
+
+/* ===== 2.4 layout (owner, 2026-10-26: "كلشي داخل بعض… تصدير مختفي… مساحات فارغة") =====
+   one top bar carries the colour tools too (a whole row back for the picture); nothing in it can push «تصدير» away;
+   the empty strip under the timeline is gone; rarely used viewer buttons sit behind «⋯». */
+#app{grid-template-rows:56px minmax(0,1fr) var(--th,250px)!important}
+header{gap:8px!important;padding:0 10px!important;min-width:0}
+header .brand{flex:none}
+header .proj{flex:0 1 auto;min-width:110px;overflow:hidden}
+header .proj b{max-width:200px!important}
+header .proj .dim{flex:none}
+header .tools{flex:none;margin-inline-start:0!important}
+#tText,#tPlan,#tInsp{display:none!important}
+header .tool{width:36px!important;height:36px!important;font-size:0!important}
+header .tool svg{margin:0!important}
+#tNew,#tExport,#tAssist{flex:none;white-space:nowrap}
+main{grid-template-rows:minmax(0,1fr)!important}
+header #rail{grid-column:auto;flex:1 1 auto;min-width:0;height:56px;background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;
+  padding:0 4px!important;justify-content:center;gap:0!important;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+header #rail::-webkit-scrollbar{display:none}
+header #rail .rb{height:52px!important;min-width:48px!important;padding:2px 4px!important;gap:2px!important;font-size:10px!important}
+header #rail .rb svg{width:15px!important;height:15px!important;padding:6px!important;border-radius:9px!important}
+header #rail .rsep{height:28px!important;margin:0 4px!important}
+@media (max-width:1700px){header #rail .rb span{display:none!important}header #rail .rb{min-width:34px!important}}
+@media (max-width:1180px){header .brand img+*,#verBadge{display:none}header .proj b{max-width:130px!important}}
+@media (max-height:820px){#app{grid-template-rows:50px minmax(0,1fr) var(--th,210px)!important}header #rail{height:50px}header #rail .rb{height:46px!important}}
+.vbar{flex-wrap:nowrap!important;overflow:hidden;gap:6px!important;padding:6px 10px!important}
+.vbar select{max-width:118px;flex:0 1 auto;min-width:56px}
+#vMore{flex:none}
+#vMoreBox{position:absolute;top:44px;inset-inline-end:10px;z-index:30;display:flex;gap:4px;padding:6px;border-radius:12px;background:var(--panel);border:1px solid var(--glassline);box-shadow:0 12px 30px #0007}
+#viewer{position:relative}
 </style>
 </head>
 <body>
@@ -810,11 +840,14 @@ body.focusMode #panel,body.focusMode #inspector,body.focusMode #rail{display:non
         <select id="vZoom" style="width:auto;height:30px;padding:0 8px"><option value="1">١٠٠٪</option><option value="0.75">٧٥٪</option><option value="0.5">٥٠٪</option></select>
         <select id="vRate" style="width:auto;height:30px;padding:0 6px" title="سرعة المعاينة"><option value="0.5">٠٫٥×</option><option value="1" selected>١×</option><option value="1.5">١٫٥×</option><option value="2">٢×</option></select>
         <button class="icobtn on" id="vPeek" title="صور الخطة فوگ الفيديو: تشوف شنو راح يطلع بكل لحظة قبل البناء">🖼</button>
+        <button class="icobtn" id="vMore" title="أدوات العرض: الشبكة، مقاييس الألوان، حفظ لقطة، وضع التركيز، الاختصارات">⋯</button>
+        <div id="vMoreBox" hidden>
         <button class="icobtn" id="vGrid" title="شبكة الأثلاث (ج)">▦</button>
         <button class="icobtn" id="vScope" title="مقاييس الألوان: الإضاءة والألوان (ق)">📊</button>
         <button class="icobtn" id="vStill" title="احفظ هاللقطة صورة">📸</button>
         <button class="icobtn" id="vFocus" title="وضع التركيز: الفيديو والتايملاين بس (ف)">🎯</button>
         <button class="icobtn" id="vKeys" title="اختصارات الكيبورد (؟)">⌨</button>
+        </div>
         <button class="icobtn" id="vFull" title="ملء الشاشة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
         <button class="pill sm" id="vReveal" hidden>📂 وين الملف؟</button>
       </div>
@@ -1003,14 +1036,14 @@ body.focusMode #panel,body.focusMode #inspector,body.focusMode #rail{display:non
 <!-- what's new in this version -->
 <div class="veil" id="dNews" hidden>
   <div class="dlg news">
-    <div class="row"><img src="/ui/logo.png" alt="" style="height:40px"><div class="grow"><h2 style="margin:0">يو آر يو ٢٫٣</h2><div class="dim tiny">كل اللهجات، أسرع، وأقل كلفة</div></div><button class="icobtn" id="newsX">✕</button></div>
+    <div class="row"><img src="/ui/logo.png" alt="" style="height:40px"><div class="grow"><h2 style="margin:0">يو آر يو ٢٫٤</h2><div class="dim tiny">شاشة مرتبة وبناء أسرع</div></div><button class="icobtn" id="newsX">✕</button></div>
     <div class="newsgrid">
-      <div><b>🗣️ كل اللهجات العربية</b><span>عراقي، خليجي (سعودي وقطري)، شامي وأردني، مصري، وفصحى. يعرف لهجتك لحاله، أو تختارها من الإعدادات.</span></div>
-      <div><b>✂️ القص يفهم كل لهجة</b><span>«خلني أعيدها»، «مش هيك»، «مو كذا»، «معليش»: كلها تنفهم إعادة وتنشال.</span></div>
-      <div><b>✍️ التصحيح يحترم لهجتك</b><span>ما يحوّل كلامك لفصحى، ويكتب كل كلمة مثل ما انگالت.</span></div>
-      <div><b>⚡ فيديوات ٤٠ گيگا</b><span>إذا فيديو الكاميرا جاهز ما ينعاد ترميزه، وفك الفيديو صار على شريحة الماك.</span></div>
-      <div><b>💰 توكنز أقل بالثلثين</b><span>المساعد ياخذ بس الأدوات الي يحتاجها، ويقرا خلاصة القواعد بدل سكيلزات كاملة.</span></div>
-      <div><b>🚀 «الأسرع» للحلقات الطويلة</b><span>من الإعدادات: يشتغل على نسخة ١٠٨٠ حتى يكون أسرع بأربع مرات.</span></div>
+      <div><b>🧭 شريط واحد فوگ</b><span>أدوات الألوان صارت بنفس الشريط الفوگاني، فالفيديو صار أكبر بسطر كامل.</span></div>
+      <div><b>📤 «تصدير» دائماً ظاهر</b><span>الاسم الطويل ينقص بنقاط بدل ما يدفع الأزرار برّه الشاشة.</span></div>
+      <div><b>⋯ أدوات العرض</b><span>الشبكة ومقاييس الألوان وحفظ لقطة ووضع التركيز صارت بزر واحد فوگ الفيديو.</span></div>
+      <div><b>📏 بلا فراغات</b><span>الشريط الفارغ تحت التايملاين انشال، وكل شي محسوب على قياس الشاشة.</span></div>
+      <div><b>⚡ المعاينة أسرع بكثير</b><span>تقرا من نسخة ٧٢٠ بدل الـ٤K، وعدة مشاهد تنسوّى بنفس الوقت ويه رسم الگرافيك.</span></div>
+      <div><b>🎬 النسخة الكاملة أسرع</b><span>على شريحة الماك بجودة عالية جداً. إذا تريد أبطأ وأعلى شي: «أعلى جودة» بالإعدادات.</span></div>
     </div>
     <div class="row" style="justify-content:flex-end;margin-top:14px"><button class="pill y" id="newsOk">يلا نبدي</button></div>
   </div>
@@ -2631,7 +2664,7 @@ new MutationObserver(() => { document.body.classList.toggle("chatOn", !$("chat")
   .observe($("chat"), {attributes: true, attributeFilter: ["hidden"]});
 
 /* ---------- 2.0: find anything (⌘K), the home's quick actions, what's new ---------- */
-const URU_VERSION = "2.3.0";
+const URU_VERSION = "2.4.0";
 const normAr = (t) => String(t).toLowerCase().replace(/[\u064B-\u065F\u0670]/g, "").replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/[گ]/g, "ك").replace(/[چ]/g, "ج").replace(/[پ]/g, "ب");
 const step_ = (n) => () => { if (!needEp()) return; showPanel("steps"); step = n; renderSteps(); loadVideo(); };
 const panel_ = (k) => () => { if (!needEp()) return; showPanel(k); };
@@ -3105,6 +3138,11 @@ async function suggestFor(i, kind){
   setTimeout(() => { const c = state.claude || {}; if (c.installed && !c.logged_in && !linkAsked && !(job.running && job.step === "app")){ linkAsked = true; openLink(); } }, 1500);
   setInterval(pollLog, 1000); setInterval(refresh, 5000);
 })();
+
+/* 2.4: the colour tools live in the top bar (one row less), and the rare viewer buttons behind ⋯ */
+(() => { const rail = $("rail"), find = $("tFind"); if (rail && find && find.parentElement) find.parentElement.insertBefore(rail, find); })();
+$("vMore").onclick = (e) => { e.stopPropagation(); $("vMoreBox").hidden = !$("vMoreBox").hidden; };
+document.addEventListener("click", (e) => { if (!e.target.closest("#vMoreBox") && !e.target.closest("#vMore")) $("vMoreBox").hidden = true; });
 </script>
 </body>
 </html>
