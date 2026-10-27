@@ -12,7 +12,7 @@
 <link rel="icon" href="avatar.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@500;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Cuneiform&family=Reem+Kufi:wght@500;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#0a0506; --ink:#f6efe6; --muted:#b9a9a3;
@@ -50,12 +50,45 @@
   .bio{color:var(--muted); font-size:15px; line-height:1.8; margin:12px auto 0; max-width:330px; animation:rise .8s .2s ease both}
   .bio b{color:var(--ink)}
 
-  /* شعار سالوفة */
-  .brand{display:inline-flex; align-items:center; gap:12px; margin:22px auto 30px; padding:10px 18px 10px 14px; border-radius:999px;
-    background:linear-gradient(135deg,rgba(217,165,33,.14),rgba(196,40,60,.12)); border:1px solid rgba(217,165,33,.28);
+  /* شعار سالوفة: عربي + مسماري + إنگليزي */
+  .brand{position:relative; display:inline-flex; align-items:center; justify-content:center; gap:14px; margin:22px auto 30px;
     text-decoration:none; color:var(--ink); animation:rise .8s .28s ease both}
-  .brand img{height:30px; width:auto; display:block}
-  .brand span{font-size:12px; color:var(--gold-2); border-inline-start:1px solid rgba(217,165,33,.35); padding-inline-start:12px; line-height:1.4; text-align:right}
+  .brand .ar{font-family:"Reem Kufi"; font-weight:700; font-size:22px; line-height:1}
+  .brand .cu{font-family:"Noto Sans Cuneiform",serif; font-size:19px; letter-spacing:3px; color:var(--gold-2); line-height:1}
+  .brand .en{font-weight:800; font-size:12px; letter-spacing:.35em; color:var(--muted); margin-left:-.35em}
+  .sep{width:8px; height:14px; flex:none; background:var(--gold); clip-path:polygon(0 0,100% 0,62% 38%,56% 100%,44% 100%,38% 38%)}
+
+  /* ب1: كبسولة بحافة ذهبية تلمع */
+  .b1 .brand{padding:12px 22px; border-radius:999px; background:rgba(20,10,12,.6); isolation:isolate; overflow:hidden}
+  .b1 .brand::before{content:""; position:absolute; inset:0; border-radius:inherit; padding:1px; z-index:-1;
+    background:linear-gradient(90deg,rgba(217,165,33,.2),var(--gold-2),rgba(217,165,33,.2)); background-size:200% 100%; animation:sheen 4s linear infinite;
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude}
+  @keyframes sheen{to{background-position:-200% 0}}
+
+  /* ب2: شعار طابقي بدون إطار */
+  .b2 .brand{flex-direction:column; gap:8px; padding:4px 40px}
+  .b2 .brand .cu{order:-1; font-size:24px; text-shadow:0 0 18px rgba(217,165,33,.55)}
+  .b2 .brand .ar{font-size:32px}
+  .b2 .brand .sep{display:none}
+  .b2 .brand::before,.b2 .brand::after{content:""; position:absolute; top:50%; width:34px; height:1px; background:linear-gradient(90deg,transparent,var(--gold))}
+  .b2 .brand::before{left:0}.b2 .brand::after{right:0; transform:scaleX(-1)}
+
+  /* ب3: لوح طين مسماري */
+  .b3 .brand{flex-direction:column; gap:6px; padding:14px 30px 12px; border-radius:14px 14px 18px 18px;
+    background:radial-gradient(120% 90% at 30% 20%,#c98a52,#9a5c2c 55%,#6e3c18);
+    box-shadow:inset 0 2px 0 rgba(255,255,255,.25), inset 0 -6px 14px rgba(0,0,0,.35), 0 14px 30px -14px #000}
+  .b3 .brand .cu{font-size:24px; color:#5a2f12; text-shadow:0 1px 0 rgba(255,220,180,.45),0 -1px 0 rgba(0,0,0,.35)}
+  .b3 .brand .ar{color:#fff4e2; font-size:24px}
+  .b3 .brand .en{color:#ffe2bd; font-size:11px}
+  .b3 .brand .sep{display:none}
+
+  /* ب4: ثلاث قطع متصلة */
+  .b4 .brand{gap:0; border-radius:16px; overflow:hidden; border:1px solid rgba(217,165,33,.35)}
+  .b4 .brand>span{padding:11px 14px; display:flex; align-items:center; height:48px}
+  .b4 .brand .ar{background:linear-gradient(135deg,var(--gold-2),var(--gold)); color:#1a0a0c}
+  .b4 .brand .cu{background:rgba(20,10,12,.7)}
+  .b4 .brand .en{background:rgba(196,40,60,.25); color:var(--ink); margin:0; letter-spacing:.25em}
+  .b4 .brand .sep{display:none}
 
   /* ===== الأزرار: الأساس ===== */
   .links{display:flex; flex-direction:column; gap:12px}
@@ -123,7 +156,7 @@
   @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important; transition:none!important}}
 </style>
 </head>
-<body class="s1">
+<body class="s1 b1">
 <div class="aurora"><span></span><span></span><span></span></div>
 <div class="grain"></div>
 
@@ -139,7 +172,7 @@
   <p class="bio"><b>صانع محتوى</b> • قصص شركات عالمية، وثائقيات، وأسئلة غريبة محد يسأل عنها.</p>
 
   <a class="brand" href="https://www.youtube.com/@abood.khaliid23" target="_blank" rel="noopener" aria-label="سالوفة">
-    <img src="salofa.png" alt="سالوفة"><span>سوالف من<br>الزمن الأول</span>
+    <span class="ar">سالوفة</span><i class="sep"></i><span class="cu">𒊓𒇻𒉺</span><i class="sep"></i><span class="en">SALOFA</span>
   </a>
 
   <section class="links">
@@ -168,8 +201,9 @@
 
 <script>
   // ?s=رقم للتجربة بين الستايلات
-  const s = new URLSearchParams(location.search).get('s');
-  if (/^[1-6]$/.test(s || '')) document.body.className = 's' + s;
+  const q = new URLSearchParams(location.search), s = q.get('s'), b = q.get('b');
+  if (/^[1-6]$/.test(s || '')) document.body.className = document.body.className.replace(/s\d/, 's' + s);
+  if (/^[1-4]$/.test(b || '')) document.body.className = document.body.className.replace(/b\d/, 'b' + b);
   document.getElementById('y').textContent = new Date().getFullYear();
   document.getElementById('share').addEventListener('click', async () => {
     const url = location.origin + location.pathname;
