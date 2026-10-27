@@ -21,7 +21,7 @@
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--bg); color:var(--ink); font-family:"Tajawal",system-ui,sans-serif;
-    display:flex; justify-content:center; min-height:100vh; overflow-x:hidden; -webkit-font-smoothing:antialiased}
+    position:fixed; inset:0; height:100dvh; overflow:hidden; overscroll-behavior:none; touch-action:none; display:flex; align-items:center; justify-content:center; -webkit-font-smoothing:antialiased}
   .aurora{position:fixed; inset:-20%; z-index:0; filter:blur(70px); opacity:.85; pointer-events:none}
   .aurora span{position:absolute; border-radius:50%; mix-blend-mode:screen; animation:float 18s ease-in-out infinite}
   .aurora span:nth-child(1){width:55vmax;height:55vmax;background:radial-gradient(circle,var(--wine) 0,transparent 65%);top:-10%;right:-10%}
@@ -31,13 +31,9 @@
   .grain{position:fixed; inset:0; z-index:1; pointer-events:none; opacity:.08;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
 
-  main{position:relative; z-index:2; width:100%; max-width:440px; padding:56px 16px 40px; text-align:center}
-  .share{position:absolute; top:18px; left:16px; width:42px; height:42px; border-radius:50%;
-    background:var(--card); border:1px solid var(--card-b); color:var(--ink);
-    display:grid; place-items:center; cursor:pointer; backdrop-filter:blur(12px)}
-  .share svg{width:19px;height:19px}
+  main{position:relative; z-index:2; width:100%; max-width:440px; max-height:100dvh; padding:max(env(safe-area-inset-top),2dvh) 16px max(env(safe-area-inset-bottom),2dvh); text-align:center}
 
-  .avatar{position:relative; width:124px; height:124px; margin:0 auto 18px; animation:rise .8s ease both}
+  .avatar{position:relative; width:clamp(80px,14dvh,124px); height:clamp(80px,14dvh,124px); margin:0 auto clamp(10px,2dvh,18px); animation:rise .8s ease both}
   .avatar::before{content:""; position:absolute; inset:-4px; border-radius:50%;
     background:conic-gradient(from 0deg,var(--gold),var(--wine-2),#2a0a10,var(--gold)); animation:spin 6s linear infinite}
   .avatar img{position:relative; width:100%; height:100%; border-radius:50%; object-fit:cover; border:4px solid var(--bg)}
@@ -47,11 +43,11 @@
   h1 .en{display:block; font-family:"Tajawal"; font-weight:800; font-size:.55em; letter-spacing:.16em; text-transform:uppercase; margin-top:6px;
     background:linear-gradient(90deg,var(--gold),var(--gold-2),var(--gold)); -webkit-background-clip:text; background-clip:text; color:transparent}
   .badge{display:inline-flex; vertical-align:middle; width:21px; height:21px; margin-inline-start:6px}
-  .bio{color:var(--muted); font-size:15px; line-height:1.8; margin:12px auto 0; max-width:330px; animation:rise .8s .2s ease both}
+  .bio{color:var(--muted); font-size:15px; line-height:1.8; margin:clamp(6px,1.4dvh,12px) auto 0; max-width:330px; animation:rise .8s .2s ease both}
   .bio b{color:var(--ink)}
 
   /* شعار سالوفة: عربي + مسماري + إنگليزي */
-  .brand{position:relative; display:inline-flex; align-items:center; justify-content:center; gap:14px; margin:22px auto 30px;
+  .brand{position:relative; display:inline-flex; align-items:center; justify-content:center; gap:14px; margin:clamp(12px,2.6dvh,22px) auto clamp(14px,3.2dvh,30px);
     text-decoration:none; color:var(--ink); animation:rise .8s .28s ease both}
   .brand .ar{font-family:"Reem Kufi"; font-weight:700; font-size:22px; line-height:1}
   .brand .cu{font-family:"Noto Sans Cuneiform",serif; font-size:19px; letter-spacing:3px; color:var(--gold-2); line-height:1}
@@ -91,7 +87,7 @@
   .b4 .brand .sep{display:none}
 
   /* ===== الأزرار: الأساس ===== */
-  .links{display:flex; flex-direction:column; gap:12px}
+  .links{display:flex; flex-direction:column; gap:clamp(8px,1.5dvh,12px)}
   .link{position:relative; display:flex; align-items:center; gap:12px; text-decoration:none; color:var(--ink); overflow:hidden;
     transition:transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .3s, background .3s; animation:rise .7s ease both}
   .link:nth-child(1){animation-delay:.36s}.link:nth-child(2){animation-delay:.44s}.link:nth-child(3){animation-delay:.52s}.link:nth-child(4){animation-delay:.6s}
@@ -131,8 +127,8 @@
   .s4 .tx{position:relative; z-index:1; width:100%}.s4 .tx strong{font-size:17px}.s4 .tx small{font-size:11px; color:rgba(255,255,255,.8)}
 
   /* 5) أبيض بسيط */
-  .s5 .link{height:58px; padding:0 6px 0 8px; border-radius:999px; background:#f6efe6; color:#170a0c; box-shadow:0 8px 24px -14px #000}
-  .s5 .ic{width:46px; height:46px}
+  .s5 .link{height:clamp(50px,7.4dvh,58px); padding:0 6px 0 8px; border-radius:999px; background:#f6efe6; color:#170a0c; box-shadow:0 8px 24px -14px #000}
+  .s5 .ic{width:clamp(40px,6dvh,46px); height:clamp(40px,6dvh,46px)}
   .s5 .tx strong{font-size:16px}.s5 .tx small{font-size:12px; color:#7a6a66}
 
   /* 6) نيون */
@@ -151,10 +147,7 @@
   @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,59,59,.55)}50%{box-shadow:0 0 0 7px rgba(255,59,59,0)}}
   .s2 .pill,.s4 .pill{display:none}
 
-  footer{margin-top:38px; color:var(--muted); font-size:12px}
-  .toast{position:fixed; bottom:24px; left:50%; transform:translate(-50%,120px); z-index:5; padding:12px 20px; border-radius:999px;
-    background:#1b1012; border:1px solid var(--card-b); font-weight:700; transition:transform .35s}
-  .toast.show{transform:translate(-50%,0)}
+  footer{margin-top:clamp(12px,3dvh,32px); color:var(--muted); font-size:12px}
   @keyframes rise{from{opacity:0; transform:translateY(14px)}to{opacity:1; transform:none}}
   @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important; transition:none!important}}
 </style>
@@ -164,10 +157,6 @@
 <div class="grain"></div>
 
 <main>
-  <button class="share" id="share" aria-label="مشاركة الصفحة">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>
-  </button>
-
   <div class="avatar"><img src="avatar.jpg" alt="عبدالله خالد" width="124" height="124"></div>
   <h1>عبدالله خالد<svg class="badge" viewBox="0 0 24 24"><path fill="#d9a521" d="M12 1l2.9 2.1 3.6-.1 1.1 3.4 2.9 2.1-1.1 3.5 1.1 3.4-2.9 2.1-1.1 3.4-3.6-.1L12 23l-2.9-2.1-3.6.1-1.1-3.4-2.9-2.1 1.1-3.4L1.5 8.6l2.9-2.1L5.5 3l3.6.1z"/><path d="M8 12.2l2.6 2.6L16.2 9" fill="none" stroke="#0a0506" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
     <span class="en">Abdullah Khalid</span>
@@ -203,7 +192,6 @@
 
   <footer>© <span id="y"></span> عبدالله خالد</footer>
 </main>
-<div class="toast" id="toast">انتسخ الرابط ✓</div>
 
 <script>
   // ?s=رقم للتجربة بين الستايلات
@@ -211,15 +199,6 @@
   if (/^[1-6]$/.test(s || '')) document.body.className = document.body.className.replace(/s\d/, 's' + s);
   if (/^[1-4]$/.test(b || '')) document.body.className = document.body.className.replace(/b\d/, 'b' + b);
   document.getElementById('y').textContent = new Date().getFullYear();
-  document.getElementById('share').addEventListener('click', async () => {
-    const url = location.origin + location.pathname;
-    try {
-      if (navigator.share) { await navigator.share({ title: document.title, url }); return; }
-      await navigator.clipboard.writeText(url);
-    } catch (e) { return; }
-    const t = document.getElementById('toast');
-    t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 1800);
-  });
 </script>
 </body>
 </html>
