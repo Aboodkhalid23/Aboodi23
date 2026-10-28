@@ -302,9 +302,10 @@ def _env() -> dict:
         env["URU_COOL"] = "1" if c == "on" else "0"
     else:
         env.pop("URU_COOL", None)
-    # hearing the talk on ElevenLabs (his key, his choice): «تلقائي» = whenever he linked ElevenLabs
+    # hearing the talk on ElevenLabs only when he picked it himself (owner, 2026-10-28: "ما اريد استخدم اداة مدفوعة
+    # ما مجربها"): free on his own computer by default, even if ElevenLabs is linked for dubbing
     env.pop("ELEVENLABS_API_KEY", None)
-    if prefs().get("hearing", "auto") != "local":
+    if prefs().get("hearing", "local") == "cloud":
         try:
             k = json.loads((HOME / "elevenlabs.json").read_text(encoding="utf-8")).get("key", "")
         except (OSError, ValueError):
@@ -760,7 +761,7 @@ def prefs(change: dict | None = None) -> dict:
         f.parent.mkdir(parents=True, exist_ok=True)
         f.write_text(json.dumps(cur), encoding="utf-8")
     return {"theme": cur.get("theme", "calm"), "lang": cur.get("lang", "ar"), "ai_on": bool(cur.get("ai_on", False)),
-            "ai_budget": int(cur.get("ai_budget", 30)), "council": bool(cur.get("council", False)), "speed": cur.get("speed", "balanced"), "dialect": cur.get("dialect", "auto"), "cool": cur.get("cool", "auto"), "hearing": cur.get("hearing", "auto"), "ai_variants": int(cur.get("ai_variants", 2)),
+            "ai_budget": int(cur.get("ai_budget", 30)), "council": bool(cur.get("council", False)), "speed": cur.get("speed", "balanced"), "dialect": cur.get("dialect", "auto"), "cool": cur.get("cool", "auto"), "hearing": cur.get("hearing", "local"), "ai_variants": int(cur.get("ai_variants", 2)),
             "faces": [f.name for f in sorted((HOME / "face").glob("*")) if f.suffix.lower() in (".jpg", ".jpeg", ".png", ".mp4", ".mov")]
             if (HOME / "face").exists() else []}
 

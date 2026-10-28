@@ -1201,8 +1201,8 @@ body.director #tAssist.on{background:var(--y);color:var(--yink)}
         <div class="row" id="sFaces" style="margin-top:6px;flex-wrap:wrap;gap:6px"></div></div></div>
     <div data-sec="ai" class="f card"><b>⚡ سرعة المساعد</b><div class="muted tiny" style="margin:4px 0 8px;line-height:1.7">كل شغلة يسويها المساعد تاخذ العقل الي يناسبها: المراجعات السريعة (الجمل، الأسماء) بأسرع عقل، والخطة بعقل قوي. هنا تختار التوازن.</div>
       <div class="seg3" id="sSpeed" style="grid-template-columns:1fr 1fr 1fr"><button data-sp="fastest">الأسرع</button><button data-sp="balanced">متوازن</button><button data-sp="quality">أعلى جودة</button></div></div>
-    <div data-sec="ai" class="f card"><b>☁️ تفريغ الكلام</b><div class="muted tiny" style="margin:4px 0 8px;line-height:1.7">«سحابي» يفرّغ على سيرفرات إلفن لابس (حسابك نفسه الي بالحسابات): أسرع وأدق بكل اللهجات، ويكتب الإعادات حرف بحرف حتى تنقص، والماك ما يحمى. ينحسب من رصيد حسابك بإلفن لابس. «تلقائي» = سحابي إذا ربطت إلفن لابس، وإلا على الماك مجاناً.</div>
-      <div class="seg3" id="sHear" style="grid-template-columns:1fr 1fr 1fr"><button data-hr="auto">تلقائي</button><button data-hr="cloud">سحابي</button><button data-hr="local">على الماك</button></div></div>
+    <div data-sec="ai" class="f card"><b>☁️ تفريغ الكلام</b><div class="muted tiny" style="margin:4px 0 8px;line-height:1.7">«سحابي» يفرّغ على سيرفرات إلفن لابس (حسابك نفسه الي بالحسابات): أسرع وأدق بكل اللهجات، ويكتب الإعادات حرف بحرف حتى تنقص، والماك ما يحمى. ينحسب من رصيد حسابك بإلفن لابس، فما يشتغل إلا إذا اخترته أنت. الأساس: على جهازك ومجاني.</div>
+      <div class="seg3" id="sHear" style="grid-template-columns:1fr 1fr"><button data-hr="local">على جهازك (مجاني)</button><button data-hr="cloud">سحابي (مدفوع)</button></div></div>
     <div data-sec="ai" class="f card"><b>🌡️ تشغيل هادئ (حرارة أقل)</b><div class="muted tiny" style="margin:4px 0 8px;line-height:1.7">المونتاج شغل ثقيل. بالتشغيل الهادئ البرنامج يسوي أشغال أقل بنفس الوقت وبأولوية واطية، فالماك يبقى أبرد وتگدر تستخدمه، بس المونتاج ياخذ وقت أطول شوية. «تلقائي» يشغّله لحاله على الماك الي ما بيه مروحة (ماك بوك إير).</div>
       <div class="seg3" id="sCool" style="grid-template-columns:1fr 1fr 1fr"><button data-cl="auto">تلقائي</button><button data-cl="on">دائماً هادئ</button><button data-cl="off">أقصى سرعة</button></div></div>
     <div data-sec="ai" class="f card"><b>🗣️ لهجة الكلام</b><div class="muted tiny" style="margin:4px 0 8px;line-height:1.7">التفريغ والقص والتصحيح يفهمون لهجتك ويكتبونها مثل ما انگالت. «تلقائي» يعرفها من السكربت أو من أول كلامك، وإذا خلطت فصحى ويه اللهجة يفهم الاثنين.</div>
@@ -2219,7 +2219,7 @@ $("sElOff").onclick = async () => { await post("/api/eleven/unlink"); elRefresh(
 $("sElOpen").onclick = () => openUrl("https://elevenlabs.io/app/settings/api-keys");
 function speedRefresh(p){ document.querySelectorAll("#sSpeed [data-sp]").forEach(b => { b.classList.toggle("on", b.dataset.sp === (p.speed || "balanced"));
   b.onclick = async () => { await post("/api/prefs", {speed: b.dataset.sp}).catch(() => {}); speedRefresh({speed: b.dataset.sp}); toast("انحفظت السرعة"); }; }); }
-function hearRefresh(p){ document.querySelectorAll("#sHear [data-hr]").forEach(b => { b.classList.toggle("on", b.dataset.hr === (p.hearing || "auto"));
+function hearRefresh(p){ document.querySelectorAll("#sHear [data-hr]").forEach(b => { b.classList.toggle("on", b.dataset.hr === (p.hearing === "cloud" ? "cloud" : "local"));
   b.onclick = async () => { await post("/api/prefs", {hearing: b.dataset.hr}).catch(() => {}); hearRefresh({hearing: b.dataset.hr}); toast("انحفظ. ينطبق على التفريغ الجاي"); }; }); }
 function coolRefresh(p){ document.querySelectorAll("#sCool [data-cl]").forEach(b => { b.classList.toggle("on", b.dataset.cl === (p.cool || "auto"));
   b.onclick = async () => { await post("/api/prefs", {cool: b.dataset.cl}).catch(() => {}); coolRefresh({cool: b.dataset.cl}); toast("انحفظ. ينطبق على الشغل الجاي"); }; }); }
