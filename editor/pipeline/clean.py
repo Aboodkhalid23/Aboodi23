@@ -555,7 +555,8 @@ def _encode_in_chunks(ep: Episode, pieces: list, fps: int, spf: int, punch: str)
                     "-map", "[v]", "-map", "[a]", "-r", str(fps), *WORK, "-c:a", "pcm_s16le", str(tmp / f"c{k}.mov"),
                     "-map", "[pv]", "-map", "[pa]", "-r", str(fps), *proxy_v, "-c:a", "pcm_s16le", str(tmp / f"p{k}.mov")])
 
-    workers = max(2, min(4, (os.cpu_count() or 4) // 3))
+    from .media import workers as _w
+    workers = _w(max(2, min(4, (os.cpu_count() or 4) // 3)))
     with ThreadPoolExecutor(max_workers=workers) as pool:
         list(pool.map(one, range(len(groups))))
     for prefix, out, audio in (("c", ep.clean_video, ["-c:a", "pcm_s16le"] if ep.clean_video.suffix == ".mov"

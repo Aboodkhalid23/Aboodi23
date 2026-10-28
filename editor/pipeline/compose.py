@@ -664,7 +664,8 @@ def compose(ep: Episode, preview: bool = False) -> Path:
         fn, stamp, key = task
         fn()
         stamp.write_text(key)
-    pool = ThreadPoolExecutor(max_workers=3)
+    from .media import workers
+    pool = ThreadPoolExecutor(max_workers=workers(3))
     made = [pool.submit(make, t) for t in local]
     try:
         if pending:

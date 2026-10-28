@@ -138,11 +138,10 @@ def _words_of(segments, offset: float, end: float) -> list[Word]:
 
 
 def _model_for_length(seconds: float) -> tuple[str, str]:
-    """(faster-whisper name, mlx repo). The full large-v3 hears Iraqi words better; turbo is ~3x faster.
-    Up to 20 minutes: the full model (a few minutes at most on the Mac's chip); longer talks: turbo, unless
-    ABOODI_WHISPER says otherwise."""
-    forced = os.environ.get("ABOODI_WHISPER")
-    name = forced or ("large-v3" if seconds <= 20 * 60 else "large-v3-turbo")
+    """(faster-whisper name, mlx repo): turbo always. Measured 2026-10-28 on a talk with six retakes: turbo kept every
+    take in the right order in 7 reads; the full large-v3 dropped a take and swapped two sentences in long windows,
+    and is ~3x slower (owner: "ترتيب الجمل فاشل… نص ساعة"). ABOODI_WHISPER can still force another model."""
+    name = os.environ.get("ABOODI_WHISPER") or "large-v3-turbo"
     return name, f"mlx-community/whisper-{name}"
 
 
@@ -168,31 +167,48 @@ def pick_dialect(ep: Episode, sample=None) -> str:
     return key
 
 
+WINDOW = 25.0     # seconds per reading window (Whisper always pays for a 30 s window, however short the piece)
+
+
 def _run_chunks(ep: Episode, read_piece) -> list[Word]:
-    """`read_piece(audio, example sentence or None)` → segments. The dialect is found on the first pieces, then
-    every piece is read with that dialect's example (owner, 2026-10-26: every Arabic dialect)."""
+    """`read_piece(audio, example sentence or None)` → segments.
+    Pass 1 reads the talk in windows of up to 25 s cut at pauses: as fast as Whisper gets (reading every short piece
+    on its own made a 10-minute talk ~15x slower: owner, 2026-10-28 "التفريغ… نص ساعة").
+    Pass 2 finds every stretch of voice that got no words — the retakes Whisper skipped as "said twice" — and reads
+    only those again, alone. The dialect is found on the first pieces first (owner, 2026-10-26)."""
     from . import dialects
     audio = load_audio(ep.source)
-    chunks = speech_chunks(audio)
     total = len(audio) / SR or 1.0
-    piece = lambda s, e: audio[int(s * SR):int(e * SR)]
+    pieces = speech_chunks(audio)                                   # every breath-to-pause stretch
+    windows = speech_chunks(audio, most=WINDOW, split=10 ** 9)      # the same, packed into reading windows
+    cut = lambda s, e: audio[int(s * SR):int(e * SR)]
 
-    def sample() -> str:
-        got = []
-        for s, e in chunks[:4]:
-            got += [w.text for w in _words_of(read_piece(piece(s, e), None), s, e)]
-        return " ".join(got)
+    def sample() -> str:   # one reading of the first window, with no example, tells the dialect
+        if not windows:
+            return ""
+        s, e = windows[0]
+        return " ".join(w.text for w in _words_of(read_piece(cut(s, e), None), s, e))
     hw = hotwords(ep)
     example = dialects.prompt(pick_dialect(ep, sample)) + (" " + hw if hw else "")
     show = os.environ.get("ABOODI_PROGRESS")
     words, last = [], -1
-    for s, e in chunks:
-        got = read_piece(piece(s, e), example)
-        words += [w for w in _clean_piece(_words_of(got, s, e)) if not words or w.start >= words[-1].start]
-        pct = min(99, int(100 * e / total))
+    for s, e in windows:
+        words += _clean_piece(_words_of(read_piece(cut(s, e), example), s, e))
+        pct = min(90, int(90 * e / total))
         if show and pct > last:
             print(f"@@ {pct}", flush=True)
             last = pct
+    words.sort(key=lambda w: w.start)
+    # pass 2: voice with no words in it (a skipped take) is read again on its own
+    mids = [(w.start + w.end) / 2 for w in words]
+    missed = [(s, e) for s, e in pieces if e - s >= 0.6 and not any(s <= m <= e for m in mids)]
+    if missed:
+        print(f"🔁 {len(missed)} مقطع صوت ما انكتب (إعادات غالباً): أقراها وحدها", flush=True)
+    for s, e in missed:
+        words += _clean_piece(_words_of(read_piece(cut(s, e), example), s, e))
+    words.sort(key=lambda w: w.start)
+    if show:
+        print("@@ 99", flush=True)
     return words
 
 
@@ -220,6 +236,7 @@ def transcribe(ep: Episode, model_name: str | None = None, model=None) -> list[W
             print(f"⚠️ التفريغ السريع ما زبط ({exc}). أكمّل بالعادي", flush=True)
     if model is None:
         from faster_whisper import WhisperModel
+        print(f"🎧 التفريغ على المعالج ({model_name})", flush=True)
         model = WhisperModel(model_name, device="cpu", compute_type="int8")
     hw = hotwords(ep)
 

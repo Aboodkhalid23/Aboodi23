@@ -122,6 +122,32 @@ def _videotoolbox() -> bool:
 
 
 HW = _videotoolbox()
+
+
+def fanless() -> bool:
+    """A MacBook Air has no fan: long heavy work heats it up and slows it down (owner, 2026-10-28: "يحمى كلش")."""
+    import sys
+    if sys.platform != "darwin":
+        return False
+    try:
+        model = subprocess.run(["sysctl", "-n", "hw.model"], capture_output=True, text=True, timeout=5).stdout
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return model.startswith("MacBookAir") or model.startswith("Mac14,2") or model.startswith("Mac14,15") \
+        or model.startswith("Mac15,12") or model.startswith("Mac15,13")
+
+
+def cool() -> bool:
+    """«تشغيل هادئ»: fewer jobs at once and a lower priority, so the Mac stays cool. The app passes his choice in
+    URU_COOL ("1"/"0"); without it, on by itself on a Mac with no fan."""
+    import os
+    v = os.environ.get("URU_COOL")
+    return v == "1" if v in ("0", "1") else fanless()
+
+
+def workers(normal: int) -> int:
+    """How many heavy jobs to run side by side: half (at least one) when keeping cool."""
+    return max(1, normal // 2) if cool() else normal
 # working copies (source.mp4, clean.mp4, beat clips): visually lossless; on the Mac the video chip at a high bitrate
 WORK = (["-c:v", "h264_videotoolbox", "-b:v", "70M", "-maxrate", "110M", "-bufsize", "140M", "-allow_sw", "1", "-pix_fmt", "yuv420p"]
         if HW else ["-c:v", "libx264", "-crf", "12", "-preset", "veryfast", "-pix_fmt", "yuv420p"])

@@ -295,6 +295,11 @@ def _env() -> dict:
     tok = HOME / "claude_token"
     if tok.exists() and tok.read_text(encoding="utf-8").strip():   # linked from the app (ClaudeLink)
         env["CLAUDE_CODE_OAUTH_TOKEN"] = tok.read_text(encoding="utf-8").strip()
+    c = prefs().get("cool", "auto")      # «تشغيل هادئ»: auto = on by itself on a Mac with no fan
+    if c in ("on", "off"):
+        env["URU_COOL"] = "1" if c == "on" else "0"
+    else:
+        env.pop("URU_COOL", None)
     for k, v in media_keys().items():   # free picture and video libraries (Pexels, Pixabay): his own keys
         env[MEDIA_ENV[k]] = v
     py = Path(sys.executable).parent
@@ -456,10 +461,19 @@ LINK = ClaudeLink()
 STALL_MIN = 25   # minutes without one line of output before a step counts as stuck
 
 
+def _cool(env: dict) -> bool:
+    from editor.pipeline.media import fanless
+    v = env.get("URU_COOL")
+    return v == "1" if v in ("0", "1") else fanless()
+
+
 def _run(cmd: list[str], on_line=None) -> int:
     JOB.say("")
-    p = subprocess.Popen(cmd, cwd=CODE, env=_env(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                         start_new_session=True)
+    env = _env()
+    # in «تشغيل هادئ» the job runs at a low priority: the Mac stays usable and the heat builds up slower
+    nice = (lambda: os.nice(10)) if _cool(env) else None
+    p = subprocess.Popen(cmd, cwd=CODE, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                         start_new_session=True, preexec_fn=nice)
     JOB.proc = p
     JOB.last_out = time.monotonic()
 
@@ -713,7 +727,8 @@ def _changed_beats(before: dict, after: dict) -> list[int]:
 
 PREF_KEYS = {"theme": ("slate", "calm", "forest", "mint", "night", "ocean", "rose", "black", "violet", "carbon", "sand", "sky"), "lang": ("ar", "en"),
              "ai_on": (True, False), "council": (True, False), "speed": ("fastest", "balanced", "quality"),
-             "dialect": ("auto", "iraqi", "gulf", "levant", "egypt", "msa"), "uifont": ("alexandria", "plex", "cairo", "vazir")}
+             "dialect": ("auto", "iraqi", "gulf", "levant", "egypt", "msa"),
+             "cool": ("auto", "on", "off"), "uifont": ("alexandria", "plex", "cairo", "vazir")}
 PREF_NUMS = {"ai_budget": (0, 300), "ai_variants": (1, 4)}   # dollars per episode, versions per AI scene
 
 
@@ -734,7 +749,7 @@ def prefs(change: dict | None = None) -> dict:
         f.parent.mkdir(parents=True, exist_ok=True)
         f.write_text(json.dumps(cur), encoding="utf-8")
     return {"theme": cur.get("theme", "calm"), "lang": cur.get("lang", "ar"), "ai_on": bool(cur.get("ai_on", False)),
-            "ai_budget": int(cur.get("ai_budget", 30)), "council": bool(cur.get("council", True)), "speed": cur.get("speed", "balanced"), "dialect": cur.get("dialect", "auto"), "ai_variants": int(cur.get("ai_variants", 2)),
+            "ai_budget": int(cur.get("ai_budget", 30)), "council": bool(cur.get("council", True)), "speed": cur.get("speed", "balanced"), "dialect": cur.get("dialect", "auto"), "cool": cur.get("cool", "auto"), "ai_variants": int(cur.get("ai_variants", 2)),
             "faces": [f.name for f in sorted((HOME / "face").glob("*")) if f.suffix.lower() in (".jpg", ".jpeg", ".png", ".mp4", ".mov")]
             if (HOME / "face").exists() else []}
 
@@ -779,7 +794,6 @@ def preload_libraries() -> None:
         if mlx_ready():
             from huggingface_hub import snapshot_download
             snapshot_download(MLX_MODEL)
-            snapshot_download("mlx-community/whisper-large-v3")   # the sharper one, for talks up to 20 minutes
     except Exception as exc:
         print("mlx model:", exc, flush=True)
     from editor.pipeline.sfx import names, sfx_path

@@ -82,7 +82,8 @@ def render_batch(jobs: list[RenderJob], bundle: Path) -> None:
     """Render all jobs with one Node process and one browser (render-batch.mjs)."""
     if not jobs:
         return
-    spec = {"serveUrl": str(Path(bundle).resolve()), "browserExecutable": BROWSER, "concurrency": 4,
+    from .media import workers
+    spec = {"serveUrl": str(Path(bundle).resolve()), "browserExecutable": BROWSER, "concurrency": workers(4),
             "items": [{"comp": j.comp, "props": j.props, "out": str(Path(j.out).resolve()), "scale": j.scale,
                        "still": j.still, "alpha": j.alpha, "frame": j.frame} for j in jobs]}
     spec_file = Path(jobs[0].out).resolve().parent / "render_jobs.json"
