@@ -186,3 +186,25 @@ def test_a_video_sent_in_the_chat_becomes_the_episode_style(ep, monkeypatch):
     srv.run_job(d.name, "style-ref-apply")
     assert (d / "edit" / "style.txt").read_text(encoding="utf-8") == "mine-test"
     assert srv.STEPS["style-ref-apply"][:2] == ["style-ref", "plan"]
+
+
+def test_plan_is_one_answer_and_only_real_mistakes_go_back(ep, monkeypatch):
+    """Owner, 2026-10-28: a 2-minute test took an hour; the plan agent alone was 5 minutes and 27 turns."""
+    d, e = ep
+    (e.work / "plan_input.txt").write_text("[00:00.0] هلو شلونكم", encoding="utf-8")
+    asked, checks = [], iter([["❌ beat 1: صورة ما تطابق"], []])
+    answers = iter([{"plan": {"beats": [{"kind": "face"}]}, "idea": "فكرة"},
+                    {"plan": {"beats": [{"kind": "face"}, {"kind": "image"}]}}])
+    monkeypatch.setattr(srv, "_fast_json", lambda prompt, tier="mid": asked.append(prompt) or next(answers))
+    monkeypatch.setattr(srv, "_plan_errors", lambda d: next(checks))
+    assert srv._fast_plan(d) == 0
+    assert "PLAN_RULES" not in asked[0] and "هلو شلونكم" in asked[0] and "صورة ما تطابق" in asked[1]
+    assert len(json.loads((e.edit / "edit_plan.json").read_text(encoding="utf-8"))["beats"]) == 2
+    assert srv.prefs()["council"] is False     # ChatGPT and Gemini only when he turns them on
+
+
+def test_plan_falls_back_to_the_agent_when_the_answer_is_no_plan(ep, monkeypatch):
+    d, e = ep
+    (e.work / "plan_input.txt").write_text("x", encoding="utf-8")
+    monkeypatch.setattr(srv, "_fast_json", lambda prompt, tier="mid": {"oops": 1})
+    assert srv._fast_plan(d) == -1 and not (e.edit / "edit_plan.json").exists()

@@ -46,10 +46,14 @@ def _words(*parts) -> str:
     return " ".join(out)[:2000]
 
 
+SEARCH_TIMEOUT = 12   # s per library: a slow one is skipped, not waited on (owner, 2026-10-28: "ساعة لدقيقتين")
+MAX_IMAGE_BYTES = 25 * 2**20
+
+
 def _json(session, url, **params):
     """One polite retry when a library is busy (429 / 5xx: loc.gov has short outages)."""
     for attempt in range(2):
-        r = session.get(url, params=params, headers=HEADERS, timeout=45)
+        r = session.get(url, params=params, headers=HEADERS, timeout=SEARCH_TIMEOUT)
         if getattr(r, "status_code", 200) in (429, 500, 502, 503, 504) and attempt == 0:
             import time
             wait = str(getattr(r, "headers", {}).get("Retry-After", ""))
@@ -351,17 +355,26 @@ def find(query: str, kind: str = "image", source: str | None = None, session=Non
     order = IMAGE_ORDER[src] if kind == "image" else VIDEO_ORDER.get(src, VIDEO_ORDER["archive"])
     min_w = MIN_IMAGE_WIDTH if kind == "image" else MIN_VIDEO_WIDTH
     scored = []
-    for rank, search in enumerate(order):
+
+    def ask(search):   # every library at the same time (one slow library used to hold the whole beat for minutes)
+        own = requests.Session() if session.__class__ is requests.Session else session
         try:
-            results = search(query, session)
+            results = search(query, own)
             plain = re.sub(r"\b\d{3,4}s?\b", " ", query).strip()
             if not results and plain != query and plain:   # catalogues often miss "1950s": try without dates
-                results = search(plain, session)
+                results = search(plain, own)
+            return results, None
         except (requests.RequestException, ValueError, KeyError, AttributeError, TypeError) as exc:
+            return None, f"{search.__name__}: {str(exc)[:120]}"
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=max(1, len(order))) as pool:
+        answers = list(pool.map(ask, order))
+    for rank, (search, (results, err)) in enumerate(zip(order, answers)):
+        if err:
             if errors is not None:
-                errors.append(f"{search.__name__}: {str(exc)[:120]}")
+                errors.append(err)
             continue
-        for pos, f in enumerate(results):
+        for pos, f in enumerate(results or []):
             if f.url in used or f.width < min_w:
                 continue
             rel = relevance(query, f.words or f.title)
@@ -376,6 +389,12 @@ def download(f: Found, session) -> bytes:
     if f.provider == "Wikimedia Commons" or "wikimedia.org" in f.url:   # also Openverse results hosted there
         from .wikimedia import _get
         return _get(session, f.url).content
-    r = session.get(f.url, headers=HEADERS, timeout=90)
+    url = f.url.replace("~orig.", "~large.") if "images-assets.nasa.gov" in f.url else f.url   # NASA originals: 50 MB+
+    r = session.get(url, headers=HEADERS, timeout=40, stream=True)
     r.raise_for_status()
-    return r.content
+    data = bytearray()
+    for chunk in r.iter_content(1 << 16):
+        data += chunk
+        if len(data) > MAX_IMAGE_BYTES:
+            raise requests.RequestException("الملف كبير كلش")
+    return bytes(data)

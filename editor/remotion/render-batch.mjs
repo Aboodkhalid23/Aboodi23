@@ -8,9 +8,14 @@ import {openBrowser, renderMedia, renderStill, selectComposition} from '@remotio
 
 const job = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
 const {serveUrl, browserExecutable, concurrency = 4} = job;
+// Short clips (2-6 s) can't keep every core busy one at a time: start-up and the last frames run on one tab. So
+// several clips render at once, sharing the frame workers (2-minute test: 2.5 minutes of graphics → see MEMORY).
+const lanes = Math.max(1, Math.min(job.lanes ?? 3, job.items.length));
+const perClip = Math.max(1, Math.ceil(concurrency / lanes));
 const browser = await openBrowser('chrome', {browserExecutable});
 let failed = 0;
-for (const it of job.items) {
+const queue = [...job.items];
+async function one(it) {
   const common = {serveUrl, inputProps: it.props, puppeteerInstance: browser, browserExecutable, logLevel: 'error',
     timeoutInMilliseconds: 120000};
   for (let attempt = 0; attempt < 2; attempt++) {   // a busy machine can miss a frame deadline once
@@ -23,7 +28,7 @@ for (const it of job.items) {
           ? {codec: 'prores', proResProfile: '4444', imageFormat: 'png', pixelFormat: 'yuva444p10le'}
           : {codec: 'h264', crf: 10};
         await renderMedia({...common, composition, ...enc, outputLocation: it.out, muted: true,
-          concurrency, scale: it.scale ?? 1, overwrite: true});
+          concurrency: perClip, scale: it.scale ?? 1, overwrite: true});
       }
       console.log(JSON.stringify({ok: it.out}));
       break;
@@ -35,5 +40,8 @@ for (const it of job.items) {
     }
   }
 }
+await Promise.all(Array.from({length: lanes}, async () => {
+  while (queue.length) await one(queue.shift());
+}));
 await browser.close({silent: true});
 process.exit(failed ? 2 : 0);

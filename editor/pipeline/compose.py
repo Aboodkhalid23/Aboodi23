@@ -521,11 +521,23 @@ def _end_screen(plan, style: Style, cv: Canvas, bundle: Path, channel: dict, ava
     key = hashlib.sha1(json.dumps([plan.end_screen, style.name, channel, cv.encode, cv.width, _stamp(avatar),
                                    _source_hash()]).encode()).hexdigest()
     if not (out.exists() and stamp.exists() and stamp.read_text() == key):
-        ch = dict(channel, avatar=_publish(bundle, avatar, "channel_avatar" + avatar.suffix) if avatar else None)
-        job = RenderJob("end-screen", {"style": _style_props(style), "durationSec": plan.end_screen, "channel": ch},
-                        cv.work / "end_screen_raw.mp4", cv.remotion_scale)
-        render_batch([job], bundle)
-        _finish(job.out, round(plan.end_screen * cv.fps), out, cv, None)
+        # the same in every episode of a style: drawn once (~1 minute) and kept for the next episodes
+        import os
+        import shutil
+        shared = Path(os.environ.get("MONTIER_HOME") or Path.home() / ".cache" / "uru") / "end_screens" / f"{key}.mp4"
+        if shared.exists():
+            shutil.copyfile(shared, out)
+        else:
+            ch = dict(channel, avatar=_publish(bundle, avatar, "channel_avatar" + avatar.suffix) if avatar else None)
+            job = RenderJob("end-screen", {"style": _style_props(style), "durationSec": plan.end_screen, "channel": ch},
+                            cv.work / "end_screen_raw.mp4", cv.remotion_scale)
+            render_batch([job], bundle)
+            _finish(job.out, round(plan.end_screen * cv.fps), out, cv, None)
+            try:
+                shared.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(out, shared)
+            except OSError:
+                pass
         stamp.write_text(key)
     return out
 
@@ -659,6 +671,35 @@ def compose(ep: Episode, preview: bool = False) -> Path:
         clips.append(out)
     # owner, 2026-10-26: "يبني و يتاخر كلش": his shots on 3 encoders at once, beside the one graphics browser
     from concurrent.futures import ThreadPoolExecutor
+    audio = cv.work / "audio.m4a"
+
+    def mix_audio():
+        total_frames = (round(plan.beats[-1].end * cv.fps) - round(plan.beats[0].start * cv.fps)
+                        + round(plan.end_screen * cv.fps))
+        cues = beat_cues(plan.beats, FX_CUES)
+        for b in plan.beats:
+            cues += [(b.start + float(st.get("at", 0.3)), "pop") for st in (b.stickers or [])]
+            cues += graphic_cues(b) + paper_cues(b)
+        cues += chapter_cues(plan)
+        duration = total_frames / cv.fps
+        music = []
+        if plan.music:
+            for k, start, end in segments(plan, duration):
+                path = music_asset(ep, k)
+                if path:
+                    music.append((k, path, start, end))
+                else:
+                    print(f"⚠️  موسيقى المقطع {k} ناقصة (ينسمع بدون موسيقى من {start:.0f} ث)")
+        else:
+            single = _asset(ep.assets, "music", AUDIO_EXT)
+            music = [(0, single, 0.0, duration)] if single else []
+        own = str(sound_settings(ep)["music"])
+        if own.startswith("own:") and (ep.edit / "media" / own[4:]).is_file():   # music he bought or made: the whole episode
+            music = [(0, ep.edit / "media" / own[4:], 0.0, duration)]
+        _build_audio(ep, teaser, duration, audio, sorted(cues), music)
+
+    # the voice, music and sound effects only need the plan: mixed beside the pictures, not after them
+    sound = ThreadPoolExecutor(max_workers=1).submit(mix_audio)
 
     def make(task):
         fn, stamp, key = task
@@ -671,9 +712,12 @@ def compose(ep: Episode, preview: bool = False) -> Path:
         if pending:
             print(f"   🎨 أرسم {len(pending)} گرافيك سوه…", flush=True)
             render_batch([p[0] for p in pending], bundle)
-            for job, frames, out, transition, stamp, key in pending:
+
+            def finish(p):
+                job, frames, out, transition, stamp, key = p
                 _finish(job.out, frames, out, cv, transition)
                 stamp.write_text(key)
+            made += [pool.submit(finish, p) for p in pending]
     finally:
         pool.shutdown(wait=True)
     for f in made:
@@ -690,30 +734,7 @@ def compose(ep: Episode, preview: bool = False) -> Path:
 
     listing = cv.work / "concat.txt"
     listing.write_text("".join(f"file '{c.resolve()}'\n" for c in clips), encoding="utf-8")
-    audio = cv.work / "audio.m4a"
-    total_frames = (round(plan.beats[-1].end * cv.fps) - round(plan.beats[0].start * cv.fps)
-                    + round(plan.end_screen * cv.fps))
-    cues = beat_cues(plan.beats, FX_CUES)
-    for b in plan.beats:
-        cues += [(b.start + float(st.get("at", 0.3)), "pop") for st in (b.stickers or [])]
-        cues += graphic_cues(b) + paper_cues(b)
-    cues += chapter_cues(plan)
-    duration = total_frames / cv.fps
-    music = []
-    if plan.music:
-        for k, start, end in segments(plan, duration):
-            path = music_asset(ep, k)
-            if path:
-                music.append((k, path, start, end))
-            else:
-                print(f"⚠️  موسيقى المقطع {k} ناقصة (ينسمع بدون موسيقى من {start:.0f} ث)")
-    else:
-        single = _asset(ep.assets, "music", AUDIO_EXT)
-        music = [(0, single, 0.0, duration)] if single else []
-    own = str(sound_settings(ep)["music"])
-    if own.startswith("own:") and (ep.edit / "media" / own[4:]).is_file():   # music he bought or made: the whole episode
-        music = [(0, ep.edit / "media" / own[4:], 0.0, duration)]
-    _build_audio(ep, teaser, duration, audio, sorted(cues), music)
+    sound.result()     # the sound was mixed while the pictures were made
     final = ep.edit / "preview.mp4" if preview else ep.final
     run_ffmpeg(["-f", "concat", "-safe", "0", "-i", str(listing), "-i", str(audio), "-map", "0:v", "-map", "1:a",
                 "-c", "copy", "-movflags", "+faststart", str(final)])

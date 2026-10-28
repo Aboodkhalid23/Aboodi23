@@ -22,11 +22,11 @@ RETRIES = 4
 def _get(session, url, **kw):
     """GET that honours Wikimedia's 429 Retry-After (shared cloud IPs hit the anonymous limit)."""
     for attempt in range(RETRIES):
-        resp = session.get(url, headers=HEADERS, timeout=60, **kw)
+        resp = session.get(url, headers=HEADERS, timeout=30, **kw)
         if resp.status_code != 429:
             resp.raise_for_status()
             return resp
-        time.sleep(min(60, int(resp.headers.get("Retry-After", 5 * (attempt + 1)))))
+        time.sleep(min(8, int(resp.headers.get("Retry-After", 3 * (attempt + 1)))))
     resp.raise_for_status()
     return resp
 
@@ -85,14 +85,30 @@ def collect_images(plan: EditPlan, ep: Episode, session=None) -> EditPlan:
     session = session or requests.Session()
     style = load_style(plan.style["primary"])
     used, fallbacks, credits = set(), [], []
+    # the searches for every picture run together first (owner, 2026-10-28: one episode's pictures took 10 minutes)
+    wanted = [(i, b) for i, b in enumerate(plan.beats)
+              if (b.kind == "image" or (b.kind in ("face_cutout", "face_split") and b.query))
+              and not ((b.pick or {}).get("local") and any(ep.assets.glob(f"img_{i}.*")))]
+    from concurrent.futures import ThreadPoolExecutor
+    found: dict[int, tuple[list, list]] = {}
+
+    def look(item):
+        i, b = item
+        errs: list = []
+        own = requests.Session() if session.__class__ is requests.Session else session   # one per thread
+        return i, find(b.query, "image", b.source, own, frozenset(), errs), errs
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        for i, cands, errs in pool.map(look, wanted):
+            found[i] = (cands, errs)
     for i, b in enumerate(plan.beats):
         if b.kind != "image" and not (b.kind in ("face_cutout", "face_split") and b.query):
             continue
         if (b.pick or {}).get("local") and any(ep.assets.glob(f"img_{i}.*")):   # his own picture (the app's media)
             credits.append(b.pick.get("credit") or f"صورة {i}: من ملفاتك")
             continue
-        img, errors = None, []
-        candidates = find(b.query, "image", b.source, session, used, errors)
+        img = None
+        candidates, errors = found.get(i, ([], []))
+        candidates = [c for c in candidates if c.url not in used]
         if b.pick and b.pick.get("url"):   # chosen by the owner on the suite page: that one first
             fields = Found.__dataclass_fields__
             candidates = [Found(**{k: v for k, v in b.pick.items() if k in fields})] + candidates

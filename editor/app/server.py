@@ -760,7 +760,7 @@ def prefs(change: dict | None = None) -> dict:
         f.parent.mkdir(parents=True, exist_ok=True)
         f.write_text(json.dumps(cur), encoding="utf-8")
     return {"theme": cur.get("theme", "calm"), "lang": cur.get("lang", "ar"), "ai_on": bool(cur.get("ai_on", False)),
-            "ai_budget": int(cur.get("ai_budget", 30)), "council": bool(cur.get("council", True)), "speed": cur.get("speed", "balanced"), "dialect": cur.get("dialect", "auto"), "cool": cur.get("cool", "auto"), "hearing": cur.get("hearing", "auto"), "ai_variants": int(cur.get("ai_variants", 2)),
+            "ai_budget": int(cur.get("ai_budget", 30)), "council": bool(cur.get("council", False)), "speed": cur.get("speed", "balanced"), "dialect": cur.get("dialect", "auto"), "cool": cur.get("cool", "auto"), "hearing": cur.get("hearing", "auto"), "ai_variants": int(cur.get("ai_variants", 2)),
             "faces": [f.name for f in sorted((HOME / "face").glob("*")) if f.suffix.lower() in (".jpg", ".jpeg", ".png", ".mp4", ".mov")]
             if (HOME / "face").exists() else []}
 
@@ -1513,7 +1513,7 @@ def retention(d: Path) -> dict:
 def _council_step(d: Path) -> int:
     """ChatGPT and Gemini add small touches after every plan (owner, 2026-10-25: "يضيفون لمساتهم… قليلة، ما ياخذون
     رأي الأكبر"): they suggest, Claude decides and applies at most three. Never fails the job."""
-    if not prefs().get("council", True) or not brains.active(HOME, HOME / "tools"):
+    if not prefs().get("council", False) or not brains.active(HOME, HOME / "tools"):
         JOB.say("تخطيت (شات جي بي تي وجيميناي مو مربوطين أو مطفيين)")
         return 0
     if _opinion_step(d) != 0:
@@ -1686,6 +1686,113 @@ CAP_FAST = """صحّح تفريغ كلام حلقة يوتيوب. اللهجة: 
 للتصحيح الي يشمل أكثر من كلمة، حط i أول كلمة وnew كل الكلام."""
 
 SENT_PIECE, SENT_OVERLAP, CAP_PIECE = 160, 12, 450
+
+
+PLAN_FAST = """انت المونتير الآلي لقناة صاحب القناة. ماكو أحد يجاوبك، فلا تسأل: قرر بنفسك.
+القص والتفريغ خلصوا. اكتب خطة المونتاج الكاملة (edit_plan.json) لهاي الحلقة، مرة وحدة كاملة.
+
+شكل الخطة وقواعدها (من سكيل المونتير):
+<<<
+{skill}
+>>>
+
+خلاصة قواعد المونتاج:
+<<<
+{rules}
+>>>
+
+دروس من حلقات سابقة:
+<<<
+{lessons}
+>>>
+
+مدخل الخطة (الكلام بالثواني على الفيديو المقصوص، والصور والأسماء المتوفرة):
+<<<
+{plan_input}
+>>>
+{names}
+{extra}
+{money}
+- كل صورة لازم تطابق الكلام الي ينگال وياها بالضبط، والموسيقى مزاج لكل قسم.
+- قبل ما تجاوب سوّ «فحص الفشل» الي بآخر القواعد بعقلك.
+
+جاوب بـ JSON بس بهالشكل:
+{{"plan": {{...الخطة كاملة بنفس شكل edit_plan.json...}}, "names": {{"الي انسمع": {{"name": "...", "en": "...", "kind": "person|company|place", "role": "..."}}}}, "idea": "سطر عراقي: شنو الفكرة البصرية للحلقة"}}
+names: بس للأسماء الي بقائمة «أسماء ما انعرفت» إذا تعرفها من القصة، وإلا خليه {{}}."""
+
+PLAN_FIX = """هاي خطة المونتاج الي كتبتها، والفاحص طلع بيها أخطاء. صلّحها كلها وارجع الخطة كاملة.
+الأخطاء:
+{errors}
+
+الخطة:
+{plan}
+
+جاوب بـ JSON بس: {{"plan": {{...الخطة كاملة بعد التصليح...}}}}"""
+
+
+def _plan_errors(d: Path) -> list[str]:
+    """Mechanical slips fixed by the engine itself (autofix), then what is left for Claude."""
+    for stage in ("autofix", "validate"):
+        r = subprocess.run([sys.executable, "-m", "editor.pipeline", stage, str(d)], capture_output=True, text=True,
+                           cwd=str(CODE), env=_env())
+    out = (r.stdout or "") + (r.stderr or "")
+    errs = [ln.strip() for ln in out.splitlines() if ln.strip().startswith("❌")]
+    return errs if (errs or r.returncode == 0) else [out.strip()[-600:] or "الفحص فشل"]
+
+
+def _fast_plan(d: Path) -> int:
+    """The plan in one answer instead of an agent (owner, 2026-10-28: "مقطع دقيقتين يطول ساعة"). Measured on a
+    2-minute episode: the agent took 5 minutes, 27 turns and 1.2 million tokens (it read files, wrote, validated,
+    rewrote); here the same files go inside one question, the engine fixes the mechanical slips, and only real
+    mistakes go back once more. Any failure → the agent, like before."""
+    edit = d / "edit"
+    try:
+        lines = (CODE / ".claude" / "skills" / "editor" / "SKILL.md").read_text(encoding="utf-8").splitlines()
+        names_check = edit / "work" / "names_check.txt"
+        nc = names_check.read_text(encoding="utf-8").strip() if names_check.exists() else ""
+        prompt = PLAN_FAST.format(
+            skill="\n".join(lines[59:166]), rules=(CODE / "editor" / "PLAN_RULES.md").read_text(encoding="utf-8"),
+            lessons=(CODE / "editor" / "LESSONS.md").read_text(encoding="utf-8")[:6000],
+            plan_input=(edit / "work" / "plan_input.txt").read_text(encoding="utf-8")[:60000],
+            names=("\nأسماء ما انعرفت (انسمعت هيچ):\n" + nc[:4000]) if nc else "",
+            extra=_plan_extra(d) + _files_note(d), money=_money_rule())
+        JOB.say("🧠 المونتير يكتب الخطة (جواب واحد)…")
+        ans = _fast_json(prompt, tier="best")
+        plan = ans.get("plan")
+        if not isinstance(plan, dict) or not plan.get("beats"):
+            raise ValueError("ما رجعت خطة")
+    except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as exc:
+        JOB.say(f"⚠️ الطريقة السريعة ما ظبطت ({str(exc)[:120]})، أكتبها بالطريقة الكاملة")
+        return -1
+    names = ans.get("names")
+    if isinstance(names, dict) and names:
+        f = edit / "names.json"
+        try:
+            old = json.loads(f.read_text(encoding="utf-8")) if f.exists() else {}
+        except ValueError:
+            old = {}
+        f.write_text(json.dumps({**old, **names}, ensure_ascii=False, indent=1), encoding="utf-8")
+        for stage in ("names", "entities", "brief"):
+            _pipe(stage, d)
+    target = edit / "edit_plan.json"
+    for attempt in range(3):
+        target.write_text(json.dumps(plan, ensure_ascii=False, indent=1), encoding="utf-8")
+        errs = _plan_errors(d)
+        if not errs:
+            if ans.get("idea"):
+                JOB.say("🎬 " + str(ans["idea"])[:300])
+            return 0
+        if attempt == 2:
+            break
+        JOB.say(f"🔧 أصلّح {len(errs)} ملاحظة بالخطة…")
+        try:
+            plan = _fast_json(PLAN_FIX.format(errors="\n".join(errs[:40]),
+                                              plan=target.read_text(encoding="utf-8")), tier="best").get("plan") or plan
+        except (ValueError, RuntimeError, subprocess.SubprocessError):
+            break
+    target.unlink(missing_ok=True)
+    JOB.say("⚠️ الخطة السريعة بيها أخطاء، أكتبها بالطريقة الكاملة")
+    return -1
 
 
 def _fast_json(prompt: str, tier: str = "mid") -> dict:
@@ -2046,7 +2153,9 @@ def run_job(ep_id: str, what: str) -> None:
         elif step == "selfcheck":
             code = _selfcheck_step(d)
         elif step == "plan":
-            code = _claude(PLAN_PROMPT.format(ep=d, extra=_plan_extra(d) + _files_note(d), money=_money_rule()), tier="best")
+            code = _fast_plan(d)
+            if code == -1:
+                code = _claude(PLAN_PROMPT.format(ep=d, extra=_plan_extra(d) + _files_note(d), money=_money_rule()), tier="best")
             if code == 0:
                 _own_media(d)
             if code == 0 and not (d / "edit" / "edit_plan.json").exists():

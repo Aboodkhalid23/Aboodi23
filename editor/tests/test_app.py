@@ -369,6 +369,7 @@ echo '1. 0:40 هنا ممل، حط صورة أرشيف'
     calls = log.read_text()
     assert "--sandbox read-only" in calls and "workspace-write" not in calls
     assert "council" in srv.STEPS["plan"] and srv.STEPS["plan"].index("council") == 1
+    srv.prefs({"council": True})          # off by itself now: slow (up to 15 minutes) and he rarely needs it
     assert srv._council_step(d) == 0 and "هوك" in (d / "edit" / "opinions" / "applied.md").read_text()
     srv.prefs({"council": False})
     (d / "edit" / "opinions" / "applied.md").unlink()

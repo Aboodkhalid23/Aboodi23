@@ -82,10 +82,20 @@ def render_batch(jobs: list[RenderJob], bundle: Path) -> None:
     """Render all jobs with one Node process and one browser (render-batch.mjs)."""
     if not jobs:
         return
-    from .media import workers
+    from .media import cool, workers
+    # the same picture twice (a repeated card, a recurring number) is drawn once and copied
+    first, copies = {}, []
+    for j in jobs:
+        key = json.dumps([j.comp, j.props, j.scale, j.still, j.alpha, j.frame, Path(j.out).suffix], sort_keys=True)
+        if key in first:
+            copies.append((first[key], j))
+        else:
+            first[key] = j
+    unique = list(first.values())
     spec = {"serveUrl": str(Path(bundle).resolve()), "browserExecutable": BROWSER, "concurrency": workers(4),
+            "lanes": 1 if cool() else 3,
             "items": [{"comp": j.comp, "props": j.props, "out": str(Path(j.out).resolve()), "scale": j.scale,
-                       "still": j.still, "alpha": j.alpha, "frame": j.frame} for j in jobs]}
+                       "still": j.still, "alpha": j.alpha, "frame": j.frame} for j in unique]}
     spec_file = Path(jobs[0].out).resolve().parent / "render_jobs.json"
     spec_file.write_text(json.dumps(spec, ensure_ascii=False), encoding="utf-8")
     proc = subprocess.run(["node", "render-batch.mjs", str(spec_file)], cwd=REMOTION_DIR, capture_output=True, text=True)
@@ -97,6 +107,9 @@ def render_batch(jobs: list[RenderJob], bundle: Path) -> None:
             continue
         if "error" in d:
             errors.append(f"{Path(d['error']).name}: {d['message']}")
+    for src, dst in copies:
+        if Path(src.out).exists():
+            shutil.copyfile(src.out, dst.out)
     missing = [j for j in jobs if not Path(j.out).exists()]
     if errors or missing or proc.returncode not in (0, 2):
         detail = "\n".join(errors) or (proc.stderr or proc.stdout).strip()[-800:]

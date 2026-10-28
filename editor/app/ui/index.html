@@ -1209,7 +1209,7 @@ body.director #tAssist.on{background:var(--y);color:var(--yink)}
       <div class="seg3" id="sDialect" style="grid-template-columns:repeat(3,1fr)"><button data-dl="auto">تلقائي</button><button data-dl="iraqi">عراقي</button><button data-dl="gulf">خليجي</button><button data-dl="levant">شامي وأردني</button><button data-dl="egypt">مصري</button><button data-dl="msa">فصحى</button></div></div>
     <div data-sec="ai" class="f card"><b>شات جي بي تي وجيميناي (اشتراكاتك)</b><div class="muted tiny" style="margin:4px 0 8px;line-height:1.7">يشتغلون ويه المساعد بحسابك نفسه: يقرون الخطة ويعطون رأي ثاني، ويقترحون أفكار. ما يغيرون ملفاتك، والمساعد هو الي يطبّق. الربط مرة وحدة: نصّب، بعدين «اربط حسابك» (يفتح صفحة الدخول)، بعدين «جرّب».</div>
       <div id="sBrains" style="display:grid;gap:8px"></div>
-      <label class="row" style="margin-top:10px;gap:8px;align-items:center"><input type="checkbox" id="sCouncil" style="width:auto"><span class="tiny">بعد كل خطة يضيفون لمساتهم لحالهم (٣ بالأكثر، والمساعد يقرر شنو ياخذ)</span></label></div>
+      <label class="row" style="margin-top:10px;gap:8px;align-items:center"><input type="checkbox" id="sCouncil" style="width:auto"><span class="tiny">بعد كل خطة يضيفون لمساتهم لحالهم (٣ بالأكثر). مطفي بالأساس لأنه يأخر الحلقة لحد ربع ساعة</span></label></div>
     <div data-sec="tools" class="f card"><b>التلفون والنسخة الاحتياطية</b>
       <label class="row" style="margin-top:8px;gap:8px;align-items:center"><input type="checkbox" id="sPhone" style="width:auto"><span class="tiny">شغّل صفحة التلفون (بس على واي فاي البيت، وبرمز سري)</span></label>
       <div class="tiny" id="sPhoneUrl" style="margin:6px 0;line-height:1.8"></div>
@@ -2227,7 +2227,7 @@ function dialectRefresh(p){ document.querySelectorAll("#sDialect [data-dl]").for
   b.onclick = async () => { await post("/api/prefs", {dialect: b.dataset.dl}).catch(() => {}); dialectRefresh({dialect: b.dataset.dl}); toast("انحفظت اللهجة. تنطبق على التفريغ الجاي"); }; }); }
 async function brainsRefresh(){
   const st = await api("/api/brains").catch(() => ({}));
-  api("/api/prefs").then(p => { $("sCouncil").checked = p.council !== false; speedRefresh(p); dialectRefresh(p); coolRefresh(p); hearRefresh(p); }).catch(() => {});
+  api("/api/prefs").then(p => { $("sCouncil").checked = p.council === true; speedRefresh(p); dialectRefresh(p); coolRefresh(p); hearRefresh(p); }).catch(() => {});
   $("sCouncil").onchange = () => post("/api/prefs", {council: $("sCouncil").checked}).then(() => toast($("sCouncil").checked ? "يضيفون لمساتهم بعد كل خطة" : "انطفت لمساتهم التلقائية")).catch(() => {});
   $("sBrains").innerHTML = Object.entries(st).map(([k, b]) => `<div class="card" style="padding:10px 12px" data-brow="${k}">
     <div class="row" style="flex-wrap:wrap;gap:6px;align-items:center">
@@ -2750,7 +2750,7 @@ new MutationObserver(() => { document.body.classList.toggle("chatOn", !$("chat")
   .observe($("chat"), {attributes: true, attributeFilter: ["hidden"]});
 
 /* ---------- 2.0: find anything (⌘K), the home's quick actions, what's new ---------- */
-const URU_VERSION = "2.6.0";
+const URU_VERSION = "2.7.0";
 const normAr = (t) => String(t).toLowerCase().replace(/[\u064B-\u065F\u0670]/g, "").replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/[گ]/g, "ك").replace(/[چ]/g, "ج").replace(/[پ]/g, "ب");
 const step_ = (n) => () => { if (!needEp()) return; showPanel("steps"); step = n; renderSteps(); loadVideo(); };
 const panel_ = (k) => () => { if (!needEp()) return; showPanel(k); };

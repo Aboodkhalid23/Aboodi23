@@ -15,7 +15,7 @@ from .plan import EditPlan
 from .wikimedia import API, HEADERS, _strip_html, license_ok
 
 ARCHIVE_SEARCH = "https://archive.org/advancedsearch.php"
-MAX_DOWNLOAD = 600e6       # bytes: skip films larger than this
+MAX_DOWNLOAD = 150e6       # bytes: skip films larger than this (owner, 2026-10-28: a 2-minute test took an hour)
 MIN_WIDTH = 480
 
 
@@ -92,25 +92,57 @@ def cut(src: Path, seconds: float, out: Path) -> Path:
     return out
 
 
+def cut_remote(c: Clip, seconds: float, out: Path) -> Path:
+    """Only the few seconds needed, read straight from the library (ffmpeg jumps inside the file over the web),
+    instead of downloading a whole film to keep 4 seconds of it."""
+    start = max(0.0, (c.duration - seconds) * 0.35) if c.duration > seconds else 0.0
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-rw_timeout", "30000000", "-ss", f"{start:.2f}",
+                    "-t", f"{seconds + 0.5:.2f}", "-i", c.url, "-vf", "scale='min(1920,iw)':-2", "-an",
+                    "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(out)],
+                   check=True, timeout=120, capture_output=True)
+    if probe(out).duration < min(seconds, 1.0):
+        raise MediaError("short piece")
+    return out
+
+
 def collect_footage(plan: EditPlan, ep: Episode, session=None) -> tuple[list[dict], list[str]]:
     """Returns (fallbacks, credits). Searches every footage library (sources.find); `source` steers the order."""
     from .sources import find
     session = session or requests.Session()
     fallbacks, credits, used = [], [], set()
+
+    def done(i, b):
+        out = ep.assets / f"footage_{i}.mp4"
+        meta = out.with_suffix(".json")
+        return out.exists() and meta.exists() and json.loads(meta.read_text())["query"] == b.query
+
+    # every search at the same time (each waits on the web, not on the Mac); a real session per thread
+    wanted = [(i, b) for i, b in enumerate(plan.beats) if b.kind == "footage" and not done(i, b)]
+
+    def search(ib):
+        errors = []
+        own = requests.Session() if session.__class__ is requests.Session else session
+        return find(ib[1].query, "video", ib[1].source, own, set(), errors), errors
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        found = dict(zip((i for i, _ in wanted), pool.map(search, wanted)))
     for i, b in enumerate(plan.beats):
         if b.kind != "footage":
             continue
         out = ep.assets / f"footage_{i}.mp4"
         meta = out.with_suffix(".json")
-        if out.exists() and meta.exists() and json.loads(meta.read_text())["query"] == b.query:
+        if i not in found:
             credits.append(json.loads(meta.read_text())["credit"])
             continue
-        errors = []
-        clips = find(b.query, "video", b.source, session, used, errors)
+        clips, errors = found[i]
+        clips = [c for c in clips if c.url not in used]
         got, reason = None, "no free footage" + (f" ({'; '.join(errors)})" if errors else "")
         for c in clips[:3]:
             try:
-                cut(_download(c.url, ep.work / "footage_cache", session), b.duration, out)
+                try:
+                    cut_remote(c, b.duration, out)
+                except (subprocess.SubprocessError, MediaError, OSError):
+                    cut(_download(c.url, ep.work / "footage_cache", session), b.duration, out)
             except (requests.RequestException, subprocess.CalledProcessError, MediaError) as exc:
                 reason = f"download: {exc}"
                 continue
