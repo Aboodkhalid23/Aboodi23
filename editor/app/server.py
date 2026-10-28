@@ -61,11 +61,13 @@ STEPS = {"all": ["prep", "plan", "render", "suite"], "from-plan": ["plan", "rend
          # a style from the Styles panel on the whole video: the assistant re-plans in it, then a new preview
          "restyle": ["plan", "council", "ai", "images", "preview"],
          # the reels pack: the assistant picks 1 main short (< 1 min) + 5 clips, then they are cut tall
-         "reels": ["reels-pick", "shorts"], "dub": ["dub"], "thumbs": ["thumbs"], "style-ref": ["style-ref"], "translate": ["translate"], "youtube": ["youtube"]}
+         "reels": ["reels-pick", "shorts"], "dub": ["dub"], "thumbs": ["thumbs"], "style-ref": ["style-ref"],
+         # a video he sent in the chat: learn its style, then re-plan and preview the episode in it
+         "style-ref-apply": ["style-ref", "plan", "council", "ai", "images", "preview"], "translate": ["translate"], "youtube": ["youtube"]}
 STEP_NAMES = {"prep": "التجهيز", "plan": "خطة المونتير", "render": "النسخة الكاملة", "preview": "المعاينة",
               "suite": "غرفة المونتاج", "requests": "ملاحظاتك", "fetch": "تجهيز الفيديو", "transcribe": "تفريغ الكلام",
               "cut": "قص المقطع", "sentences": "المساعد يراجع الجمل", "captions": "المساعد يراجع الكابشن", "hook": "المساعد يدوّر الهوك", "viewer": "عين المشاهد",
-              "images": "الصور", "assist": "المساعد", "chat": "المساعد", "shorts": "الريلز", "export": "التصدير", "reels-pick": "اختيار الريلز", "dub": "الدبلجة", "thumbs": "الصور المصغرة", "style-ref": "ستايل من فيديو", "script-names": "أسماء السكربت", "translate": "الترجمة", "ai": "مشاهد الذكاء الاصطناعي", "youtube": "الرفع على يوتيوب", "learn": "المساعد يتعلم ذوقك", "selfcheck": "فحص التطبيق والحلقة", "opinion": "رأي شات جي بي تي وجيميناي", "council": "لمسات شات جي بي تي وجيميناي", "youtube-langs": "اللغات على يوتيوب", "smart": "الأدوات الذكية", "app-ideas": "أفكار للتطبيق"}
+              "images": "الصور", "assist": "المساعد", "chat": "المساعد", "shorts": "الريلز", "export": "التصدير", "reels-pick": "اختيار الريلز", "dub": "الدبلجة", "thumbs": "الصور المصغرة", "style-ref": "ستايل من فيديو", "style-ref-apply": "ستايل من فيديو", "script-names": "أسماء السكربت", "translate": "الترجمة", "ai": "مشاهد الذكاء الاصطناعي", "youtube": "الرفع على يوتيوب", "learn": "المساعد يتعلم ذوقك", "selfcheck": "فحص التطبيق والحلقة", "opinion": "رأي شات جي بي تي وجيميناي", "council": "لمسات شات جي بي تي وجيميناي", "youtube-langs": "اللغات على يوتيوب", "smart": "الأدوات الذكية", "app-ideas": "أفكار للتطبيق"}
 CLAUDE_TOOLS = ["Read", "Write", "Edit", "Glob", "Grep", "WebSearch", "WebFetch", "TodoWrite",
                 "Bash(python -m editor.pipeline:*)", "Bash(python3 -m editor.pipeline:*)",
                 "Bash(ffprobe:*)", "Bash(ffmpeg:*)", "Bash(ls:*)"]
@@ -1103,6 +1105,7 @@ def style_from_reference(video: Path) -> int:
         JOB.say(f"❌ الستايل ما انكتب صح ({exc})")
         return 1
     JOB.say(f"🎨 انضاف ستايل «{st.title_ar or sid}» لستايلاتك")
+    JOB.new_style = sid
     return code
 
 
@@ -1268,9 +1271,17 @@ def _chat_step(d: Path) -> int:
 
 
 def _transcribe_file(f: Path) -> str:
-    code = ("import sys\nfrom faster_whisper import WhisperModel\nfrom editor.pipeline.transcribe import WHISPER_MODEL\n"
-            "m=WhisperModel(WHISPER_MODEL,device='cpu',compute_type='int8')\n"
-            "s,_=m.transcribe(sys.argv[1],language='ar')\nprint(' '.join(x.text.strip() for x in s))")
+    """A short voice message → text: on the Mac's chip when it can (seconds), else the processor."""
+    code = ("import sys\nfrom editor.pipeline.transcribe import MLX_MODEL, WHISPER_MODEL, mlx_ready\n"
+            "if mlx_ready():\n"
+            "    import mlx_whisper\n"
+            "    r=mlx_whisper.transcribe(sys.argv[1],path_or_hf_repo=MLX_MODEL,language='ar',verbose=None)\n"
+            "    print(r.get('text','').strip())\n"
+            "else:\n"
+            "    from faster_whisper import WhisperModel\n"
+            "    m=WhisperModel(WHISPER_MODEL,device='cpu',compute_type='int8')\n"
+            "    s,_=m.transcribe(sys.argv[1],language='ar',beam_size=1)\n"
+            "    print(' '.join(x.text.strip() for x in s))")
     out = subprocess.run([sys.executable, "-c", code, str(f)], cwd=CODE, env=_env(), capture_output=True, text=True, timeout=300)
     return out.stdout.strip()
 
@@ -1993,6 +2004,11 @@ def run_job(ep_id: str, what: str) -> None:
             code = _thumbs_step(d)
         elif step == "style-ref":
             code = style_from_reference(Path(JOB.message))
+            if code == 0 and what == "style-ref-apply" and getattr(JOB, "new_style", ""):
+                (d / "edit").mkdir(parents=True, exist_ok=True)
+                (d / "edit" / "style.txt").write_text(JOB.new_style, encoding="utf-8")
+                JOB.message = "صاحب القناة دز فيديو يعجبه: ابنِ الحلقة كلها على ستايله (الإيقاع، الألوان، الكتابة، الموسيقى)"
+                JOB.say("🎬 هسة أعيد خطة الحلقة على هالستايل")
         elif step == "reels-pick":
             code = _reels_pick(d)
         elif step == "shorts":
@@ -2806,7 +2822,7 @@ class Handler(BaseHTTPRequestHandler):
                         f.write(chunk)
                         n -= len(chunk)
                 ep_id = q.get("ep") or ""
-                start_job(ep_id, "style-ref", str(dest))
+                start_job(ep_id, "style-ref-apply" if q.get("apply") == "1" and ep_id else "style-ref", str(dest))
                 return self._json({"ok": True})
             if path == "/api/extract-text":   # the script as a Word file: its text
                 n = int(self.headers.get("Content-Length") or 0)

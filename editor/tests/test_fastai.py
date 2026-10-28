@@ -170,3 +170,19 @@ def test_free_media_keys_stay_private_and_reach_the_pipeline(tmp_path, monkeypat
     with pytest.raises(ValueError):
         srv.media_keys({"pixabay": "bad key!"})
     assert srv.media_keys({"pexels": "-"}) == {}
+
+
+def test_a_video_sent_in_the_chat_becomes_the_episode_style(ep, monkeypatch):
+    d, _ = ep
+    seen = []
+
+    def fake_ref(path):
+        srv.JOB.new_style = "mine-test"
+        return 0
+    monkeypatch.setattr(srv, "style_from_reference", fake_ref)
+    monkeypatch.setattr(srv, "_run", lambda *a, **k: seen.append(a[0]) or 0)
+    monkeypatch.setattr(srv, "_council_step", lambda d: 0, raising=False)
+    srv.JOB.message = "/tmp/ref.mp4"
+    srv.run_job(d.name, "style-ref-apply")
+    assert (d / "edit" / "style.txt").read_text(encoding="utf-8") == "mine-test"
+    assert srv.STEPS["style-ref-apply"][:2] == ["style-ref", "plan"]

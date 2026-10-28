@@ -719,7 +719,9 @@ body.director .chat .quick{padding:0 12px 8px;display:flex;flex-wrap:wrap;gap:6p
 body.director .chat .quick .pill{width:auto!important;height:28px;font-size:11.5px;padding:0 10px}
 body.director .msg.ai{background:none;border-inline-start:2px solid var(--wave);border-radius:0;padding:2px 10px}
 body.director #tAssist.on{background:var(--y);color:var(--yink)}
-#chAttach{flex:none}
+#chAttach,#chMic{flex:none}
+#chMic.rec{background:#c62828!important;color:#fff!important;animation:pulse 1s infinite}
+.chat.drop{outline:2px dashed var(--y);outline-offset:-6px}
 </style>
 </head>
 <body>
@@ -1020,7 +1022,7 @@ body.director #tAssist.on{background:var(--y);color:var(--yink)}
   <div class="quick" id="quick"></div>
   <div class="cbox">
     <label class="ctxchip"><input type="checkbox" id="chCtx" checked><span id="chCtxTxt">عن هاللحظة</span></label>
-    <div class="row"><button class="icobtn" id="chAttach" title="ارفع فيديو يعجبك: المساعد يتعلم ستايله (الإيقاع، الألوان، الكتابة) ويطبقه على حلقتك">📎</button><textarea id="chMsg" rows="2" placeholder="شنو القصة الي تريد تحچيها؟ أو گول شنو يتغيّر بالمونتاج…"></textarea>
+    <div class="row"><button class="icobtn" id="chAttach" title="ارفع فيديو يعجبك: المساعد يتعلم ستايله (الإيقاع، الألوان، الكتابة) ويطبقه على حلقتك">📎</button><input type="file" id="chAttachIn" hidden accept="video/*,.mov,.mp4"><button class="icobtn micbtn" id="chMic" title="احچي بصوتك بدال ما تكتب: دوس، احچي، ودوس مرة ثانية"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><textarea id="chMsg" rows="2" placeholder="شنو القصة الي تريد تحچيها؟ أو گول شنو يتغيّر بالمونتاج…"></textarea>
     <button class="pill y" id="chSend" style="height:auto;align-self:stretch">ارسل</button></div>
   </div>
 </aside>
@@ -1110,7 +1112,10 @@ body.director #tAssist.on{background:var(--y);color:var(--yink)}
     <div class="newsgrid">
       <div><b>🎬 ترتيب «المخرج»</b><span>المساعد مفتوح بطول الشاشة على جهة، والأدوات بعمود رفيع على الجهة الثانية، والفيديو بالوسط. تسكّره وتفتحه من زره فوگ.</span></div>
       <div><b>🌙 ثيم «مخرج هادئ»</b><span>رمادي كحلي هادئ. تگدر تبدله من الإعدادات.</span></div>
-      <div><b>📎 فيديو يعجبك بالمحادثة</b><span>ارفعه من زر المشبك، والمساعد يتعلم ستايله ويطبقه على حلقتك.</span></div>
+      <div><b>📎 فيديو يعجبك بالمحادثة</b><span>ارفعه من زر المشبك أو اسحبه على المحادثة: المساعد يتعلم ستايله ويعيد الحلقة عليه.</span></div>
+      <div><b>🎙️ احچي ويه المساعد بصوتك</b><span>زر المايك بالمحادثة: دوس، احچي، ودوس مرة ثانية. يتحول لكلام على شريحة الماك بثواني.</span></div>
+      <div><b>⚡ التفريغ أسرع بكثير</b><span>يقرا الصوت بشبابيك كاملة، ويرجع بس للإعادات الي تخطاها. حلقة دقيقتين بثواني بدل دقايق.</span></div>
+      <div><b>🌡️ تشغيل هادئ</b><span>على ماك بوك إير يخفف الأشغال الي تشتغل سوة، حتى ما يحمى الجهاز.</span></div>
       <div><b>🎞️ مقاطع حقيقية</b><span>اربط حسابين مجانيين (بيكسلز وبيكسباي) من الإعدادات، والمساعد يجيب مقاطع فيديو حقيقية لكل جملة.</span></div>
       <div><b>🧩 خلطة قوية</b><span>المخطط صار يخلط صور ومقاطع حقيقية ورسوم وموسيقى بكل دقيقة، ويه عناوين ضخمة ولحظات أبيض وأسود.</span></div>
     </div>
@@ -1314,7 +1319,7 @@ const ORDER = STEPS.map(x => x[1]);
 function pos(k){ return ORDER.indexOf(k); }
 const RUNS = {prepare: "sentences", cut: "sentences", sentences: "sentences", captions: "captions", hook: "hook", plan: "plan", images: "images",
   build: "build", final: "build", requests: "notes", assist: "plan", auto: "sentences", chat: "plan", learn: "notes", selfcheck: "build",
-  opinion: "plan", "app-ideas": "notes", council: "plan", smart: "plan", viewer: "viewer", restyle: "plan"};
+  opinion: "plan", "app-ideas": "notes", council: "plan", smart: "plan", viewer: "viewer", restyle: "plan", "style-ref-apply": "plan"};
 
 async function refresh(){
   try { state = await api("/api/state"); } catch (_) { return; }
@@ -3235,7 +3240,37 @@ document.addEventListener("click", (e) => { if (!e.target.closest("#vMoreBox") &
   $("chClose").onclick = () => setMin(true);
   const showWhenOpen = () => { if (ep && $("lib").hidden && !min && chat.hidden) openChat(); };
   setInterval(showWhenOpen, 800);
-  $("chAttach").onclick = () => { if (!ep){ toast("افتح مشروع أول"); return; } $("syRefIn").click(); };
+  $("chAttach").onclick = () => { if (!ep){ toast("افتح مشروع أول"); return; } $("chAttachIn").click(); };
+  // a video he likes, from the 📎 or dropped on the chat: its style is learnt, then the episode is rebuilt in it
+  const sendRef = async (f) => {
+    if (!f || !/\.(mp4|mov|m4v|webm)$/i.test(f.name)){ toast("دز فيديو (mp4 أو mov)"); return; }
+    toast("دا أرفع الفيديو…");
+    try { const r = await fetch(`/api/style-ref?name=${enc(f.name)}&ep=${enc(cur)}&apply=1`, {method: "POST", body: f}); const j = await r.json();
+      if (!r.ok) throw new Error(j.error);
+      stData = null; lastLog = {running: true, what: "style-ref-apply"}; job = {...job, running: true, ep: cur, what: "style-ref-apply"};
+      toast("المساعد يدرس ستايل الفيديو، وبعدها يعيد الحلقة عليه"); renderChat(); }
+    catch (e){ toast(e.message); } };
+  $("chAttachIn").onchange = () => { sendRef($("chAttachIn").files[0]); $("chAttachIn").value = ""; };
+  chat.addEventListener("dragover", (e) => { e.preventDefault(); chat.classList.add("drop"); });
+  chat.addEventListener("dragleave", () => chat.classList.remove("drop"));
+  chat.addEventListener("drop", (e) => { e.preventDefault(); chat.classList.remove("drop"); sendRef(e.dataTransfer.files[0]); });
+  // voice: record, turn to text on the Mac, send
+  let rec = null;
+  $("chMic").onclick = async () => {
+    if (rec){ rec.stop(); return; }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({audio: true}), parts = [];
+      rec = new MediaRecorder(stream); rec.ondataavailable = (e) => parts.push(e.data);
+      rec.onstop = async () => { stream.getTracks().forEach(t => t.stop()); rec = null; $("chMic").classList.remove("rec");
+        $("chMsg").placeholder = "دا أكتب كلامك…";
+        const blob = new Blob(parts, {type: parts[0] && parts[0].type || "audio/webm"});
+        try { const r = await fetch("/api/listen", {method: "POST", headers: {"Content-Type": blob.type}, body: blob}).then(x => x.json());
+          if (r.text){ $("chMsg").value = r.text; $("chSend").click(); } else toast("ما سمعت شي. جرّب مرة ثانية"); }
+        catch (_){ toast("ما گدرت أسمعك"); }
+        $("chMsg").placeholder = "شنو القصة الي تريد تحچيها؟ أو گول شنو يتغيّر بالمونتاج…"; };
+      rec.start(); $("chMic").classList.add("rec"); $("chMsg").placeholder = "دا أسمعك… دوس المايك مرة ثانية لما تخلص";
+    } catch (_){ toast("اسمح للتطبيق يستخدم المايك من إعدادات الماك ← الخصوصية ← المايكروفون"); }
+  };
 })();
 
 /* free stock libraries: his keys for real video b-roll */
