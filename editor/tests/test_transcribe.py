@@ -115,3 +115,31 @@ def test_his_dialect_setting_wins_and_the_example_follows_it(talking_video, tmp_
     transcribe(ep, model=model)
     assert "رح نحكي" in model.kwargs["initial_prompt"]
     assert json.loads((ep.edit / "dialect.json").read_text(encoding="utf-8"))["dialect"] == "levant"
+
+
+def test_cloud_hearing_keeps_every_word_and_falls_back_to_the_mac(talking_video, tmp_path, monkeypatch):
+    import json
+    import editor.pipeline.transcribe as tr
+
+    class R:
+        status_code = 200
+        def json(self):
+            return {"words": [{"text": "يوم", "start": 0.1, "end": 0.4, "type": "word", "logprob": -0.1},
+                              {"text": " ", "start": 0.4, "end": 0.5, "type": "spacing"},
+                              {"text": "يوم", "start": 0.6, "end": 0.9, "type": "word", "logprob": -0.2},
+                              {"text": "(ضحك)", "start": 1, "end": 1.2, "type": "audio_event"}]}
+
+    class S:
+        def post(self, url, headers=None, data=None, files=None, timeout=None):
+            assert headers["xi-api-key"] == "k" * 30 and data["language_code"] == "ara"
+            return R()
+    ep = Episode(tmp_path / "ep").ensure()
+    ep.source.write_bytes(talking_video.read_bytes())
+    words = tr._scribe(ep, "k" * 30, session=S())
+    assert [w.text for w in words] == ["يوم", "يوم"] and words[0].p > 0.85     # the retake is kept, not merged
+    # no internet: the Mac's own model takes over
+    monkeypatch.setenv("ELEVENLABS_API_KEY", "k" * 30)
+    monkeypatch.setattr(tr, "_scribe", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("offline")))
+    monkeypatch.setattr(tr, "cloud_key", lambda: "k" * 30)
+    model = FakeModel([("شركة", 0, 1)])
+    assert [w.text for w in tr.transcribe(ep, model=model)] == ["شركة"]

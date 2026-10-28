@@ -220,12 +220,61 @@ def _transcribe_mlx(ep: Episode, repo: str) -> list[Word]:
         condition_on_previous_text=False, temperature=0.0, verbose=None).get("segments", []))
 
 
+SCRIBE_URL = "https://api.elevenlabs.io/v1/speech-to-text"
+
+
+def _scribe(ep: Episode, key: str, session=None) -> list[Word]:
+    """ElevenLabs Scribe: the talk is heard on their servers (owner, 2026-10-28: "ادوات اشتريها… بس نحل هل مشاكل").
+    Verbatim (every retake and slip is written, so the cut can remove it), every Arabic dialect, word times, and
+    nothing heavy runs on his Mac. Only a small voice-only copy is sent (mono, 32 kb/s), never the picture."""
+    import math
+    import requests
+    voice = ep.work / "scribe_voice.ogg"
+    voice.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(ep.source), "-vn", "-ac", "1", "-ar", "16000",
+                    "-c:a", "libopus", "-b:a", "32k", str(voice)], check=True, capture_output=True)
+    print("☁️ التفريغ على سيرفرات إلفن لابس (سريع، وما يحمّي الماك)", flush=True)
+    sess = session or requests.Session()
+    with open(voice, "rb") as fh:
+        r = sess.post(SCRIBE_URL, headers={"xi-api-key": key}, timeout=900,
+                      data={"model_id": "scribe_v2", "language_code": "ara", "timestamps_granularity": "word",
+                            "tag_audio_events": "false", "diarize": "false"},
+                      files={"file": ("voice.ogg", fh, "audio/ogg")})
+    voice.unlink(missing_ok=True)
+    if r.status_code != 200:
+        raise RuntimeError(f"إلفن لابس رفض ({r.status_code}): {r.text[:200]}")
+    words = []
+    for w in r.json().get("words", []):
+        if w.get("type") != "word" or w.get("start") is None or not str(w.get("text", "")).strip():
+            continue
+        lp = w.get("logprob")
+        words.append(Word(str(w["text"]).strip(), round(float(w["start"]), 3), round(float(w["end"]), 3),
+                          round(min(1.0, math.exp(lp)), 2) if isinstance(lp, (int, float)) else 1.0))
+    return words
+
+
+def cloud_key() -> str | None:
+    """His ElevenLabs key when he chose (or left on «تلقائي») cloud hearing; the app passes it as ELEVENLABS_API_KEY."""
+    return os.environ.get("ELEVENLABS_API_KEY") or None
+
+
 def transcribe(ep: Episode, model_name: str | None = None, model=None) -> list[Word]:
     info = probe(ep.source)
     if not info.has_audio:
         raise MediaError("الصوت فارغ أو مو واضح")
     auto_name, repo = _model_for_length(info.duration or 0)
     model_name = model_name or auto_name
+    key = cloud_key() if model is None else None
+    if key:
+        try:
+            words = _scribe(ep, key)
+            if words:
+                from . import dialects
+                dialects.save(ep.edit, dialects.detect(" ".join(w.text for w in words[:400])), "cloud")
+                save_words(words, ep.transcript)
+                return words
+        except Exception as exc:   # no internet, no balance: the Mac does it as before
+            print(f"⚠️ التفريغ السحابي ما زبط ({str(exc)[:160]}). أكمّل على الماك", flush=True)
     if model is None and mlx_ready():
         try:
             words = _transcribe_mlx(ep, repo)
