@@ -295,9 +295,37 @@ def _env() -> dict:
     tok = HOME / "claude_token"
     if tok.exists() and tok.read_text(encoding="utf-8").strip():   # linked from the app (ClaudeLink)
         env["CLAUDE_CODE_OAUTH_TOKEN"] = tok.read_text(encoding="utf-8").strip()
+    for k, v in media_keys().items():   # free picture and video libraries (Pexels, Pixabay): his own keys
+        env[MEDIA_ENV[k]] = v
     py = Path(sys.executable).parent
     env["PATH"] = os.pathsep.join([str(py), str(Path.home() / ".local" / "bin"), env.get("PATH", "")])
     return env
+
+
+# free accounts at two stock libraries unlock real video b-roll (owner, 2026-10-28: "اريد صور وفديوات"); the keys stay
+# on his Mac only (mode 600), never in the repository
+MEDIA_ENV = {"pexels": "PEXELS_API_KEY", "pixabay": "PIXABAY_API_KEY"}
+
+
+def media_keys(change: dict | None = None) -> dict:
+    f = HOME / "media_keys.json"
+    try:
+        cur = json.loads(f.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        cur = {}
+    if change is not None:
+        for k in MEDIA_ENV:
+            v = str(change.get(k, "")).strip()
+            if v == "-":
+                cur.pop(k, None)
+            elif v:
+                if not re.fullmatch(r"[A-Za-z0-9_\-]{10,100}", v):
+                    raise ValueError("المفتاح مو صحيح. انسخه كامل من الموقع")
+                cur[k] = v
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.write_text(json.dumps(cur), encoding="utf-8")
+        os.chmod(f, 0o600)
+    return {k: v for k, v in cur.items() if k in MEDIA_ENV and v}
 
 
 def claude_bin() -> str | None:
@@ -683,7 +711,7 @@ def _changed_beats(before: dict, after: dict) -> list[int]:
     return out
 
 
-PREF_KEYS = {"theme": ("calm", "forest", "mint", "night", "ocean", "rose", "black", "violet", "carbon", "sand", "sky"), "lang": ("ar", "en"),
+PREF_KEYS = {"theme": ("slate", "calm", "forest", "mint", "night", "ocean", "rose", "black", "violet", "carbon", "sand", "sky"), "lang": ("ar", "en"),
              "ai_on": (True, False), "council": (True, False), "speed": ("fastest", "balanced", "quality"),
              "dialect": ("auto", "iraqi", "gulf", "levant", "egypt", "msa"), "uifont": ("alexandria", "plex", "cairo", "vazir")}
 PREF_NUMS = {"ai_budget": (0, 300), "ai_variants": (1, 4)}   # dollars per episode, versions per AI scene
@@ -2346,6 +2374,9 @@ class Handler(BaseHTTPRequestHandler):
             if path.startswith("/ui/"):
                 f = (UI / path[4:]).resolve()
                 return self._file(f) if f.is_relative_to(UI) else self._err("لا", 403)
+            if path == "/api/media-keys":
+                got = media_keys()
+                return self._json({k: bool(got.get(k)) for k in MEDIA_ENV})
             if path == "/api/ping":
                 return self._json({"ok": True})
             if path == "/api/state":
@@ -2891,6 +2922,9 @@ class Handler(BaseHTTPRequestHandler):
                 with open(HOME / "ideas.jsonl", "a", encoding="utf-8") as f:
                     f.write(json.dumps({"t": time.time(), "text": str(self._body().get("text", ""))[:4000]}, ensure_ascii=False) + "\n")
                 return self._json({"ok": True})
+            if path == "/api/media-keys":
+                got = media_keys(b)
+                return self._json({k: bool(got.get(k)) for k in MEDIA_ENV})
             if path in ("/api/eleven/key", "/api/eleven/unlink"):
                 from . import dubbing
                 return self._json(dubbing.set_key(HOME, str(self._body().get("key", ""))) if path.endswith("key") else dubbing.unlink(HOME))

@@ -158,3 +158,15 @@ def test_planner_reads_only_steps_five_to_eight_of_the_editor_skill():
     lines = (Path(srv.CODE) / ".claude/skills/editor/SKILL.md").read_text(encoding="utf-8").splitlines()
     assert lines[59].startswith("5. **اقرا**") and lines[165].startswith("8. **افحص")
     assert "الأسطر 60 لحد 166" in srv.PLAN_PROMPT and (Path(srv.CODE) / "editor/PLAN_RULES.md").exists()
+
+
+def test_free_media_keys_stay_private_and_reach_the_pipeline(tmp_path, monkeypatch):
+    import os
+    monkeypatch.setattr(srv, "HOME", tmp_path)
+    assert srv.media_keys({"pexels": "abcdefghij1234567890", "pixabay": ""}) == {"pexels": "abcdefghij1234567890"}
+    f = tmp_path / "media_keys.json"
+    assert oct(os.stat(f).st_mode)[-3:] == "600"
+    assert srv._env()["PEXELS_API_KEY"] == "abcdefghij1234567890"
+    with pytest.raises(ValueError):
+        srv.media_keys({"pixabay": "bad key!"})
+    assert srv.media_keys({"pexels": "-"}) == {}

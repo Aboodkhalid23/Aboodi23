@@ -544,6 +544,14 @@ body.chatOn #inspector{visibility:hidden}
 @keyframes dlgIn{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 /* "مريح للعين" — the default from 2.1: soft dark green-grey, no pure white or black, gentle accent, little glare */
+:root[data-theme="slate"]{--bg:#0e1319;--panel:#141a21;--panel2:#18202a;--panel3:#1e2731;--line:#232c37;--line2:#2c3744;
+  --ink:#e6ebf1;--ink2:#c5cfda;--mute:#9aa7b5;--dim:#6c7a89;--y:#e9edf2;--y2:#cfd6de;--yhi:#ffffff;--ydim:#202a35;--yink:#0e1319;--yrgb:233,237,242;
+  --chipbg:#1e2731;--chipink:#d6dee7;--chipline:#2c3744;--base:#0b0f14;--amb1:#121922;--amb2:#0d1218;--dlg:rgba(20,26,33,.98);
+  --float:rgba(20,26,33,.94);--float2:rgba(20,26,33,.98);--glass:rgba(230,235,241,.03);--glass2:rgba(230,235,241,.06);--glassline:rgba(154,167,181,.14);--glasshi:rgba(230,235,241,.06);
+  --cap:#26364a;--capink:#e6ebf1;--vid:#1a2430;--img:#2a3442;--wave:#7fa6d6;--green:#8fd0a8;--red:#e07a7a;--redbg:#2e1c1f;--blur:none}
+:root[data-theme="slate"] header,:root[data-theme="slate"] #rail,:root[data-theme="slate"] #panel,:root[data-theme="slate"] #tl,:root[data-theme="slate"] .chat{background:var(--panel)!important;box-shadow:none!important}
+:root[data-theme="slate"] #viewer{background:#0b0f14!important}
+:root[data-theme="slate"] #ambientBase{background:var(--base)}
 :root[data-theme="calm"]{--bg:#1a2120;--panel:#1f2827;--panel2:#25302e;--panel3:#2b3735;--line:#33403d;--line2:#3e4d49;
   --ink:#dfe8e2;--ink2:#c3d1c9;--mute:#a3b5ab;--dim:#76887f;--y:#9cc7ab;--y2:#86b597;--yhi:#c4e2cd;--ydim:#26332f;--yink:#13201a;--yrgb:156,199,171;
   --chipbg:#26332f;--chipink:#d3e3d9;--chipline:#3a4a45;--base:#171d1c;--amb1:#22302c;--amb2:#1b2321;--dlg:rgba(31,40,39,.97);
@@ -683,6 +691,35 @@ main,body.chatOn main{grid-template-columns:var(--pw,minmax(360px,28%)) minmax(0
 
 /* the scene-settings box is gone for good (owner, 2026-10-26: "ما استخدمها… احذفها"); scene tools stay in the top tools */
 #inspector,#insToggle{display:none!important}
+
+/* ===== 2.6 «المخرج» (owner, 2026-10-28: "اريد نفس واجهة التطبيق مالهم"): the assistant is a director that is always
+   there, full height on its own side; a slim icon column for the tools, the panel beside it, the picture in the middle,
+   the timeline under them. Quiet slate colours. ===== */
+body.director #app{grid-template-columns:minmax(0,1fr) var(--cw,340px)!important;grid-template-rows:48px minmax(0,1fr) var(--th,250px)!important}
+body.director.chatMin #app{grid-template-columns:minmax(0,1fr) 0!important}
+body.director header{grid-column:1/-1}
+body.director main{grid-column:1;grid-row:2;grid-template-columns:58px var(--pw,minmax(360px,32%)) minmax(0,1fr)!important;padding:8px 8px 0!important}
+body.director #tl{grid-column:1;grid-row:3}
+body.director #app>.chat{grid-column:2;grid-row:2/4;position:relative!important;inset:auto!important;width:auto!important;top:auto!important;left:auto!important;bottom:auto!important;
+  margin:8px 0 8px 8px;border-radius:18px!important;border:1px solid var(--line)!important;box-shadow:none!important;display:flex;min-height:0}
+body.director.chatMin #app>.chat{display:none!important}
+body.director main>#rail{grid-column:auto;flex-direction:column!important;justify-content:flex-start!important;align-items:center;height:auto;gap:2px!important;
+  padding:10px 0!important;overflow-y:auto;overflow-x:hidden;border-radius:16px!important;border:1px solid var(--line)!important}
+body.director main>#rail .rb{width:48px!important;min-width:0!important;height:auto!important;min-height:46px!important;padding:5px 0!important;gap:3px!important;font-size:9.5px!important;color:var(--mute)!important}
+body.director main>#rail .rb span{display:block!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:48px}
+body.director main>#rail .rb svg{width:18px!important;height:18px!important;padding:6px!important;border-radius:10px!important;background:none!important;color:var(--ink2)!important;filter:none!important}
+body.director main>#rail .rb.on svg,body.director main>#rail .rb:hover svg{background:var(--glass2)!important;color:var(--ink)!important}
+body.director main>#rail .rb.on{color:var(--ink)!important}
+body.director main>#rail .rsep{width:30px!important;height:1px!important;margin:6px 0!important;background:var(--line)!important}
+@media (max-height:820px){body.director main>#rail .rb span{display:none!important}body.director main>#rail .rb{min-height:36px!important}}
+body.director .chat .hd{padding:14px 16px}
+body.director .chat .cbox{padding:10px 12px 12px}
+body.director .chat #chMsg{min-height:64px;border-radius:14px}
+body.director .chat .quick{padding:0 12px 8px;display:flex;flex-wrap:wrap;gap:6px}
+body.director .chat .quick .pill{width:auto!important;height:28px;font-size:11.5px;padding:0 10px}
+body.director .msg.ai{background:none;border-inline-start:2px solid var(--wave);border-radius:0;padding:2px 10px}
+body.director #tAssist.on{background:var(--y);color:var(--yink)}
+#chAttach{flex:none}
 </style>
 </head>
 <body>
@@ -983,7 +1020,7 @@ main,body.chatOn main{grid-template-columns:var(--pw,minmax(360px,28%)) minmax(0
   <div class="quick" id="quick"></div>
   <div class="cbox">
     <label class="ctxchip"><input type="checkbox" id="chCtx" checked><span id="chCtxTxt">عن هاللحظة</span></label>
-    <div class="row"><textarea id="chMsg" rows="2" placeholder="مثلاً: هالصورة ما عجبتني، حط بدالها صورة المصنع القديم"></textarea>
+    <div class="row"><button class="icobtn" id="chAttach" title="ارفع فيديو يعجبك: المساعد يتعلم ستايله (الإيقاع، الألوان، الكتابة) ويطبقه على حلقتك">📎</button><textarea id="chMsg" rows="2" placeholder="شنو القصة الي تريد تحچيها؟ أو گول شنو يتغيّر بالمونتاج…"></textarea>
     <button class="pill y" id="chSend" style="height:auto;align-self:stretch">ارسل</button></div>
   </div>
 </aside>
@@ -1069,16 +1106,13 @@ main,body.chatOn main{grid-template-columns:var(--pw,minmax(360px,28%)) minmax(0
 <!-- what's new in this version -->
 <div class="veil" id="dNews" hidden>
   <div class="dlg news">
-    <div class="row"><img src="/ui/logo.png" alt="" style="height:40px"><div class="grow"><h2 style="margin:0">يو آر يو ٢٫٥</h2><div class="dim tiny">شاشة مرتبة وبناء أسرع</div></div><button class="icobtn" id="newsX">✕</button></div>
+    <div class="row"><img src="/ui/logo.png" alt="" style="height:40px"><div class="grow"><h2 style="margin:0">يو آر يو ٢٫٦</h2><div class="dim tiny">المخرج: المساعد دائماً وياك</div></div><button class="icobtn" id="newsX">✕</button></div>
     <div class="newsgrid">
-      <div><b>🧭 شريط واحد فوگ</b><span>أدوات الألوان صارت بنفس الشريط الفوگاني، فالفيديو صار أكبر بسطر كامل.</span></div>
-      <div><b>📤 «تصدير» دائماً ظاهر</b><span>الاسم الطويل ينقص بنقاط بدل ما يدفع الأزرار برّه الشاشة.</span></div>
-      <div><b>✨ المساعد من فوگ بس</b><span>يفتح نافذة عايمة من زره بالشريط الفوگاني، وانشالت خانة الكتابة من نص الفيديو.</span></div>
-      <div><b>🖥️ الفيديو أكبر</b><span>خانة «الإعدادات» الي جنب الفيديو انشالت، والفيديو ياخذ مكانها.</span></div>
-      <div><b>⋯ أدوات العرض</b><span>الشبكة ومقاييس الألوان وحفظ لقطة ووضع التركيز صارت بزر واحد فوگ الفيديو.</span></div>
-      <div><b>📏 بلا فراغات</b><span>الشريط الفارغ تحت التايملاين انشال، وكل شي محسوب على قياس الشاشة.</span></div>
-      <div><b>⚡ المعاينة أسرع بكثير</b><span>تقرا من نسخة ٧٢٠ بدل الـ٤K، وعدة مشاهد تنسوّى بنفس الوقت ويه رسم الگرافيك.</span></div>
-      <div><b>🎬 النسخة الكاملة أسرع</b><span>على شريحة الماك بجودة عالية جداً. إذا تريد أبطأ وأعلى شي: «أعلى جودة» بالإعدادات.</span></div>
+      <div><b>🎬 ترتيب «المخرج»</b><span>المساعد مفتوح بطول الشاشة على جهة، والأدوات بعمود رفيع على الجهة الثانية، والفيديو بالوسط. تسكّره وتفتحه من زره فوگ.</span></div>
+      <div><b>🌙 ثيم «مخرج هادئ»</b><span>رمادي كحلي هادئ. تگدر تبدله من الإعدادات.</span></div>
+      <div><b>📎 فيديو يعجبك بالمحادثة</b><span>ارفعه من زر المشبك، والمساعد يتعلم ستايله ويطبقه على حلقتك.</span></div>
+      <div><b>🎞️ مقاطع حقيقية</b><span>اربط حسابين مجانيين (بيكسلز وبيكسباي) من الإعدادات، والمساعد يجيب مقاطع فيديو حقيقية لكل جملة.</span></div>
+      <div><b>🧩 خلطة قوية</b><span>المخطط صار يخلط صور ومقاطع حقيقية ورسوم وموسيقى بكل دقيقة، ويه عناوين ضخمة ولحظات أبيض وأسود.</span></div>
     </div>
     <div class="row" style="justify-content:flex-end;margin-top:14px"><button class="pill y" id="newsOk">يلا نبدي</button></div>
   </div>
@@ -1181,6 +1215,10 @@ main,body.chatOn main{grid-template-columns:var(--pw,minmax(360px,28%)) minmax(0
     <div data-sec="support" class="f card"><b>الدعم والاقتراحات</b><div class="muted tiny" style="margin:4px 0 8px;line-height:1.7">تذكرت ميزة؟ اكتبها هنا. تنفتح صفحة الطلب بحسابك، تدوس الزر الأخضر، وتوصلني. من تنزل الميزة، التطبيق يحدّث نفسه.</div>
       <textarea id="sIdea" rows="3" placeholder="اكتب الميزة الي تريدها…"></textarea><div class="row" style="margin-top:6px"><button class="pill sm y" id="sIdeaGo">ارسلها</button><button class="pill sm" id="sAppIdeas" title="شات جي بي تي وجيميناي يقترحون ميزات جديدة على حسب شغلك">اطلب أفكار من شات جي بي تي وجيميناي</button></div>
       <div id="sAppIdeasOut" class="tiny" style="margin-top:8px;white-space:pre-wrap;line-height:1.7"></div></div>
+    <div data-sec="accounts" class="f card"><b>🎞️ مقاطع وصور حقيقية مجانية</b><div class="muted tiny" style="margin:4px 0 8px;line-height:1.8">حتى المساعد يجيب مقاطع فيديو حقيقية (مو بس صور ورسوم) لكل جملة. حسابين مجانيين بلا فلوس: سجّل بكل موقع، وانسخ «المفتاح» من صفحة المطورين، والصقه هنا. يبقى على حاسبتك بس.</div>
+      <div class="row" style="flex-wrap:wrap;gap:6px"><span class="tiny" style="min-width:70px">بيكسلز</span><input id="mkPexels" type="password" class="ltr grow" placeholder="المفتاح"><button class="pill sm" id="mkPexelsGo">افتح الموقع</button><span class="tiny" id="mkPexelsOk"></span></div>
+      <div class="row" style="flex-wrap:wrap;gap:6px;margin-top:6px"><span class="tiny" style="min-width:70px">بيكسباي</span><input id="mkPixabay" type="password" class="ltr grow" placeholder="المفتاح"><button class="pill sm" id="mkPixabayGo">افتح الموقع</button><span class="tiny" id="mkPixabayOk"></span></div>
+      <div class="row" style="margin-top:8px"><button class="pill sm y" id="mkSave">احفظ</button></div></div>
     <div data-sec="accounts" class="f card"><div class="row"><b class="grow">دبلجة بصوتك (إلفن لابس)</b><button class="pill sm" id="sElOff" hidden>افصله</button></div>
       <div class="muted tiny" style="margin:4px 0 8px;line-height:1.7" id="sElTxt">حتى الحلقة تطلع بصوتك بلغات ثانية. تسوي حساب بموقع إلفن لابس (اشتراك مدفوع)، ومن صفحة المفاتيح بحسابك تنسخ المفتاح وتلصقه هنا. المفتاح يبقى على حاسبتك بس.</div>
       <div class="row" id="sElRow"><input id="sElKey" type="password" class="ltr" placeholder="المفتاح"><button class="pill sm y" id="sElSave">احفظ</button><button class="pill sm" id="sElOpen">افتح الموقع</button></div></div>
@@ -1231,7 +1269,7 @@ main,body.chatOn main{grid-template-columns:var(--pw,minmax(360px,28%)) minmax(0
 
 <script src="/ui/i18n-en.js"></script>
 <script>
-try { if (localStorage.getItem("uru-v") !== "2.1"){ localStorage.setItem("uru-theme", "calm"); localStorage.setItem("uru-v", "2.1"); }   // 2.1: the eye-friendly look once, then his choice
+try { if (localStorage.getItem("uru-v") !== "2.6"){ localStorage.setItem("uru-theme", "slate"); localStorage.setItem("uru-v", "2.6"); }   // 2.1: the eye-friendly look once, then his choice
       const t = localStorage.getItem("uru-theme") || "calm"; if (t !== "night") document.documentElement.dataset.theme = t;
       let uf = localStorage.getItem("uru-uifont"); if (uf === "readex" || uf === "tajawal" || uf === "alexandria"){ uf = null; localStorage.removeItem("uru-uifont"); }   // those two lacked گ چ پ: letters broke apart
       if (uf) document.documentElement.dataset.uifont = uf;
@@ -2699,7 +2737,7 @@ new MutationObserver(() => { document.body.classList.toggle("chatOn", !$("chat")
   .observe($("chat"), {attributes: true, attributeFilter: ["hidden"]});
 
 /* ---------- 2.0: find anything (⌘K), the home's quick actions, what's new ---------- */
-const URU_VERSION = "2.5.0";
+const URU_VERSION = "2.6.0";
 const normAr = (t) => String(t).toLowerCase().replace(/[\u064B-\u065F\u0670]/g, "").replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/[گ]/g, "ك").replace(/[چ]/g, "ج").replace(/[پ]/g, "ب");
 const step_ = (n) => () => { if (!needEp()) return; showPanel("steps"); step = n; renderSteps(); loadVideo(); };
 const panel_ = (k) => () => { if (!needEp()) return; showPanel(k); };
@@ -2894,7 +2932,7 @@ document.addEventListener("mouseover", (e) => {
 
 
 /* ---------- themes and language ---------- */
-const THEMES = [["calm", "مريح للعين", "linear-gradient(135deg,#1a2120,#33403d 60%,#9cc7ab)"], ["forest", "الغابة", "linear-gradient(135deg,#051F20,#235347 60%,#8EB69B)"], ["mint", "نعناعي فاتح", "linear-gradient(135deg,#DAF1DE,#8EB69B)"],
+const THEMES = [["slate", "مخرج هادئ", "linear-gradient(135deg,#0e1319,#232c37 60%,#9aa7b5)"], ["calm", "مريح للعين", "linear-gradient(135deg,#1a2120,#33403d 60%,#9cc7ab)"], ["forest", "الغابة", "linear-gradient(135deg,#051F20,#235347 60%,#8EB69B)"], ["mint", "نعناعي فاتح", "linear-gradient(135deg,#DAF1DE,#8EB69B)"],
   ["night", "ليل ذهبي", "linear-gradient(135deg,#07070a,#2a2350 60%,#F2C94C)"], ["ocean", "محيط", "linear-gradient(135deg,#06121f,#1f4a73 60%,#5ab0ff)"], ["rose", "وردي", "linear-gradient(135deg,#1a0b10,#5a2a38 60%,#ff7a9c)"],
   ["black", "أسود فخم", "linear-gradient(135deg,#000,#141414 60%,#d4af37)"], ["violet", "بنفسجي", "linear-gradient(135deg,#0f0a1f,#3a2a66 60%,#a78bfa)"],
   ["carbon", "كربون أحمر", "linear-gradient(135deg,#121214,#34343a 60%,#ff4d4d)"], ["sand", "رملي فاتح", "linear-gradient(135deg,#f4ede1,#dccdb2 60%,#b5651d)"],
@@ -3178,6 +3216,32 @@ async function suggestFor(i, kind){
 (() => { const rail = $("rail"), find = $("tFind"); if (rail && find && find.parentElement) find.parentElement.insertBefore(rail, find); })();
 $("vMore").onclick = (e) => { e.stopPropagation(); $("vMoreBox").hidden = !$("vMoreBox").hidden; };
 document.addEventListener("click", (e) => { if (!e.target.closest("#vMoreBox") && !e.target.closest("#vMore")) $("vMoreBox").hidden = true; });
+
+/* 2.6 «المخرج»: the tools back in their own slim column, and the assistant docked full height and open by default */
+(() => {
+  document.body.classList.add("director");
+  const rail = $("rail"), main = document.querySelector("main"), chat = $("chat"), app = $("app");
+  if (rail && main) main.insertBefore(rail, main.firstChild);
+  if (chat && app) app.appendChild(chat);
+  let min = false; try { min = localStorage.getItem("uru-chat-min") === "1"; } catch (_) {}
+  const setMin = (m) => { min = m; document.body.classList.toggle("chatMin", m); $("tAssist").classList.toggle("on", !m);
+    try { localStorage.setItem("uru-chat-min", m ? "1" : "0"); } catch (_) {} window.dispatchEvent(new Event("resize")); };
+  setMin(min);
+  $("tAssist").onclick = () => { if (!ep){ toast("افتح مشروع أول"); return; } if (min){ setMin(false); openChat(); } else setMin(true); };
+  $("chClose").onclick = () => setMin(true);
+  const showWhenOpen = () => { if (ep && $("lib").hidden && !min && chat.hidden) openChat(); };
+  setInterval(showWhenOpen, 800);
+  $("chAttach").onclick = () => { if (!ep){ toast("افتح مشروع أول"); return; } $("syRefIn").click(); };
+})();
+
+/* free stock libraries: his keys for real video b-roll */
+async function mediaKeysRefresh(){ const k = await api("/api/media-keys").catch(() => ({}));
+  $("mkPexelsOk").textContent = k.pexels ? "✅ مربوط" : ""; $("mkPixabayOk").textContent = k.pixabay ? "✅ مربوط" : ""; }
+$("mkPexelsGo").onclick = () => openUrl("https://www.pexels.com/api/new/");
+$("mkPixabayGo").onclick = () => openUrl("https://pixabay.com/api/docs/#api_key");
+$("mkSave").onclick = async () => { try { await post("/api/media-keys", {pexels: $("mkPexels").value, pixabay: $("mkPixabay").value});
+  $("mkPexels").value = $("mkPixabay").value = ""; toast("انحفظت ✅ الحلقة الجاية تجيب مقاطع حقيقية"); mediaKeysRefresh(); } catch (e){ toast(e.message); } };
+mediaKeysRefresh();
 </script>
 </body>
 </html>
