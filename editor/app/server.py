@@ -51,7 +51,9 @@ STEPS = {"all": ["prep", "plan", "render", "suite"], "from-plan": ["plan", "rend
          "prepare": ["fetch", "script-names", "transcribe", "cut"], "cut": ["cut"], "sentences": ["sentences"], "captions": ["captions"], "hook": ["hook"], "viewer": ["viewer"],
          "images": ["images"], "build": ["preview"],
          # one button: the plan, its pictures and a quick preview (owner, 2026-10-29: "اكتب الخطة والبناء")
-         "plan-build": ["plan", "council", "ai", "images", "preview"], "final": ["render", "learn"], "assist": ["assist"],
+         "plan-build": ["plan", "council", "ai", "images", "preview"],
+         # the look of the reels he sent (owner, 2026-10-29): archive photos every second, his face between, one go
+         "archive": ["archive"], "final": ["render", "learn"], "assist": ["assist"],
          "auto": ["fetch", "script-names", "transcribe", "cut", "plan", "council", "ai", "images", "render", "learn"], "chat": ["chat"],
          # the assistant learns his taste from what he changed (also after every final build), and the app checks itself
          "learn": ["learn"], "selfcheck": ["selfcheck"],
@@ -71,7 +73,7 @@ STEPS = {"all": ["prep", "plan", "render", "suite"], "from-plan": ["plan", "rend
 STEP_NAMES = {"prep": "التجهيز", "plan": "خطة المونتير", "render": "النسخة الكاملة", "preview": "المعاينة",
               "suite": "غرفة المونتاج", "requests": "ملاحظاتك", "fetch": "تجهيز الفيديو", "transcribe": "تفريغ الكلام",
               "cut": "قص المقطع", "sentences": "المساعد يراجع الجمل", "captions": "المساعد يراجع الكابشن", "hook": "المساعد يدوّر الهوك", "viewer": "عين المشاهد",
-              "images": "الصور", "assist": "المساعد", "chat": "المساعد", "shorts": "الريلز", "export": "التصدير", "reels-pick": "اختيار الريلز", "dub": "الدبلجة", "thumbs": "الصور المصغرة", "style-ref": "ستايل من فيديو", "style-ref-apply": "ستايل من فيديو", "script-names": "أسماء السكربت", "translate": "الترجمة", "ai": "مشاهد الذكاء الاصطناعي", "youtube": "الرفع على يوتيوب", "learn": "المساعد يتعلم ذوقك", "selfcheck": "فحص التطبيق والحلقة", "opinion": "رأي شات جي بي تي وجيميناي", "council": "لمسات شات جي بي تي وجيميناي", "youtube-langs": "اللغات على يوتيوب", "smart": "الأدوات الذكية", "app-ideas": "أفكار للتطبيق"}
+              "images": "الصور", "assist": "المساعد", "chat": "المساعد", "shorts": "الريلز", "export": "التصدير", "reels-pick": "اختيار الريلز", "dub": "الدبلجة", "thumbs": "الصور المصغرة", "style-ref": "ستايل من فيديو", "style-ref-apply": "ستايل من فيديو", "script-names": "أسماء السكربت", "translate": "الترجمة", "ai": "مشاهد الذكاء الاصطناعي", "youtube": "الرفع على يوتيوب", "learn": "المساعد يتعلم ذوقك", "selfcheck": "فحص التطبيق والحلقة", "opinion": "رأي شات جي بي تي وجيميناي", "council": "لمسات شات جي بي تي وجيميناي", "archive": "قالب الأرشيف", "youtube-langs": "اللغات على يوتيوب", "smart": "الأدوات الذكية", "app-ideas": "أفكار للتطبيق"}
 CLAUDE_TOOLS = ["Read", "Write", "Edit", "Glob", "Grep", "WebSearch", "WebFetch", "TodoWrite",
                 "Bash(python -m editor.pipeline:*)", "Bash(python3 -m editor.pipeline:*)",
                 "Bash(ffprobe:*)", "Bash(ffmpeg:*)", "Bash(ls:*)"]
@@ -2254,6 +2256,26 @@ def report() -> str:
     return _SECRET.sub("•••", "\n".join(out))
 
 
+def _archive_step(d: Path) -> int:
+    """The whole episode in the archive look: shot list (one quick answer), real pictures, drawing, sound.
+    The result is both the preview and the full file, so «عين المشاهد» and «التصدير» use it as it is."""
+    import shutil
+    from editor.pipeline import archive
+    from editor.pipeline.paths import Episode
+    ep = Episode(d)
+    if not ep.clean_video.exists() or not ep.clean_words.exists():
+        JOB.say("❌ قص المقطع أول")
+        return 1
+    try:
+        out = archive.build(ep, lambda p: _fast_json(p, tier="mid", timeout=300), say=JOB.say)
+    except Exception as exc:   # noqa: BLE001 — shown to him, with the reason in the report
+        JOB.say(f"❌ قالب الأرشيف ما كمل: {str(exc)[:200]}")
+        return 1
+    for name in ("preview.mp4", "final.mp4"):
+        shutil.copyfile(out, d / "edit" / name)
+    return 0
+
+
 def run_job(ep_id: str, what: str) -> None:
     d = episode_dir(ep_id)
     meta = _meta(d)
@@ -2329,6 +2351,8 @@ def run_job(ep_id: str, what: str) -> None:
             code = _pipe("deliver", d, "--max-mb", mb)
         elif step == "chat":
             code = _chat_step(d)
+        elif step == "archive":
+            code = _archive_step(d)
         elif step == "assist":
             code = _fast_edit(d, JOB.message or "راجع الخطة وحسّنها")
             if code == -1:   # not a plan change (cuts, sound, colours…): the full assistant

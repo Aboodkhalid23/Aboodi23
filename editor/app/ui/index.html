@@ -1109,14 +1109,13 @@ body.director #tAssist.on{background:var(--y);color:var(--yink)}
 <!-- what's new in this version -->
 <div class="veil" id="dNews" hidden>
   <div class="dlg news">
-    <div class="row"><img src="/ui/logo.png" alt="" style="height:40px"><div class="grow"><h2 style="margin:0">يو آر يو ٢٫٩</h2><div class="dim tiny">قص أنظف وشاشة ثابتة</div></div><button class="icobtn" id="newsX">✕</button></div>
+    <div class="row"><img src="/ui/logo.png" alt="" style="height:40px"><div class="grow"><h2 style="margin:0">يو آر يو ٣٫٠</h2><div class="dim tiny">ستايل الأرشيف بدوسة وحدة</div></div><button class="icobtn" id="newsX">✕</button></div>
     <div class="newsgrid">
-      <div><b>🤫 السكتات تنشال صدگ</b><span>البرنامج صار يسمع الصوت نفسه، ويشيل كل سكتة أطول من نص ثانية، حتى الي بأول الفيديو.</span></div>
-      <div><b>🖥️ شاشة ثابتة</b><span>ما تروح وترجع وقت الشغل. تنرسم بس لما يتغير شي.</span></div>
-      <div><b>✂️ بلا كابشن</b><span>خطوة الكابشن انشالت، والحلقة تطلع بلا كتابة كلمة كلمة.</span></div>
-      <div><b>🖼️ الصورة ويه كلامها</b><span>صورة الشخص أو الشركة تطلع بس لما تذكره.</span></div>
-      <div><b>⚡ ١٠٨٠ بالأساس</b><span>الشغل على نسخة ١٠٨٠ (أخف بأربع مرات من ٤K). «أعلى جودة» بالإعدادات يرجع ٤K.</span></div>
-      <div><b>🩺 تقرير أوضح</b><span>بيه آخر الأخطاء وسببها، حتى نصلحها بسرعة.</span></div>
+      <div><b>🎞️ ستايل الأرشيف</b><span>مثل الفيديوهات الي دزيتها: صورة أرشيف حقيقية كل ثانية تقريباً، أبيض وأسود ويه حبيبات فلم، صور مطبوعة تنرمي على مكتب، الكلمة المهمة بخط أنيق، وملصق أصفر على الأسماء. من «الخطة والبناء» ← «ابنِ بستايل الأرشيف».</span></div>
+      <div><b>🖼️ صور تطابق الكلام</b><span>صورة الشخص أو الشركة من ويكيبيديا نفسها، والمونتير يختار الأنسب لكل جملة، وبلا تكرار.</span></div>
+      <div><b>🙈 علامة الكاميرا تنمسح</b><span>كتابة «دي جي آي» الي بزاوية الفيديو تنمسح لحالها.</span></div>
+      <div><b>🎵 صوت موزون</b><span>صوتك بنفس المستوى من البداية للنهاية، وموسيقى تحته تنزل وقت تحچي.</span></div>
+      <div><b>✏️ التعديل بثواني</b><span>«صلّحها» من عين المشاهد والملاحظات صارت تعدّل الخطة بجواب واحد (١٥ ثانية بدل ٥ دقايق).</span></div>
     </div>
     <div class="row" style="justify-content:flex-end;margin-top:14px"><button class="pill y" id="newsOk">يلا نبدي</button></div>
   </div>
@@ -1329,7 +1328,7 @@ function pos(k){ return ORDER.indexOf(k); }
 // where a hidden step sits for the video it shows: the colours on the cut video, the pictures and hook with the plan
 function spos(k){ return (k === "colors" || k === "captions") ? pos("sound") : (k === "images" || k === "hook") ? pos("plan") : pos(k); }
 const RUNS = {prepare: "sentences", cut: "sentences", sentences: "sentences", captions: "captions", hook: "plan", plan: "plan", images: "plan",
-  "plan-build": "plan", build: "plan", final: "build", requests: "notes", assist: "plan", auto: "sentences", chat: "plan", learn: "notes", selfcheck: "build",
+  "plan-build": "plan", build: "plan", archive: "plan", final: "build", requests: "notes", assist: "plan", auto: "sentences", chat: "plan", learn: "notes", selfcheck: "build",
   opinion: "plan", "app-ideas": "notes", council: "plan", smart: "plan", viewer: "viewer", restyle: "plan", "style-ref-apply": "plan"};
 
 async function refresh(){
@@ -1668,12 +1667,12 @@ async function saveWords(){
 /* 4 · الخطة */
 function stepPlan(){
   // owner, 2026-10-29: "اكتب الخطة والبناء": one button writes the plan, brings its pictures and makes a preview
-  const p = data.plan, has = p && p.ready && p.cards.length, busy = running(["plan", "plan-build", "assist", "images", "build"]);
+  const p = data.plan, has = p && p.ready && p.cards.length, busy = running(["plan", "plan-build", "assist", "images", "build", "archive"]);
   if (!ep.done.cut){ setBody(`<div class="h2">الخطة والبناء</div><p class="muted">ينتظر القص يخلص.</p>`); return; }
   let h = `<div class="row"><div class="h2 grow">الخطة والبناء</div>${has ? `<button class="pill sm" id="pBig">افتحها كبيرة</button>` : ""}</div>`;
   let foot = "";
   if (busy){
-    const what = job.step === "images" ? "يجيب صور ومقاطع كل مشهد…" : job.step === "preview" ? "يبني المعاينة…"
+    const what = job.step === "archive" ? "يبني الحلقة بستايل الأرشيف (لقطات، صور، رسم، صوت)…" : job.step === "images" ? "يجيب صور ومقاطع كل مشهد…" : job.step === "preview" ? "يبني المعاينة…"
       : job.step === "ai" ? "يصنع المشاهد الناقصة…" : "يكتب الخطة…";
     h += jobStatus(what, {elapsed: true}) + lastLines(3);
   }
@@ -1681,12 +1680,15 @@ function stepPlan(){
     h += `<div class="muted" style="line-height:1.8">اكتب فكرتك بكلامك (شنو يطلع بكل جزء)، أو خليها فاضية والمونتير يقرر. دوسة وحدة: يكتب الخطة، يجيب الصور والمقاطع، ويبني معاينة.</div>
       <textarea id="pIdea" rows="6" class="f" style="margin-top:10px" placeholder="مثلاً: بالبداية خريطة، وبالنص صور أرشيف حقيقية، وبالآخر رسم بياني…"></textarea>
       <div class="dim tiny" style="margin-top:8px" id="pStyle"></div>`;
-    foot = `<button class="pill y big" id="pWrite" ${job.running ? "disabled" : ""}>اكتب الخطة وابنِ</button>`;
+    foot = `<button class="pill y big" id="pArchive" ${job.running ? "disabled" : ""}>🎞️ ابنِ بستايل الأرشيف</button>
+      <button class="pill big" id="pWrite" ${job.running ? "disabled" : ""}>اكتب الخطة وابنِ (الطريقة القديمة)</button>`;
+    h += `<div class="card" style="margin-top:10px;line-height:1.8"><b>🎞️ ستايل الأرشيف</b><div class="muted tiny">مثل الفيديوهات الي دزيتها: صورة أرشيف حقيقية كل ثانية تقريباً، أبيض وأسود ويه حبيبات فلم وتقريب بطيء، صور مطبوعة تنرمي على مكتب، الكلمة المهمة بخط أنيق، ملصق أصفر على الأسماء، وموسيقى تحت صوتك. دوسة وحدة وتطلع الحلقة كاملة.</div></div>`;
   } else if (has){
     h += `<div style="margin:6px 0 10px;line-height:1.7">${esc(p.summary || "")}</div>
       <textarea id="pRe" rows="2" placeholder="تريد تغيير؟ اكتبه هنا بكلامك…"></textarea>
       <div class="row" style="margin:8px 0 12px;flex-wrap:wrap;gap:6px"><button class="pill sm" id="pRedo" ${job.running ? "disabled" : ""}>أعد الخطة بكلامي</button>
-        <button class="pill sm" id="pPrev" ${job.running ? "disabled" : ""}>ابنِ المعاينة من جديد</button></div>
+        <button class="pill sm" id="pPrev" ${job.running ? "disabled" : ""}>ابنِ المعاينة من جديد</button>
+        <button class="pill sm y" id="pArchive" ${job.running ? "disabled" : ""}>🎞️ ابنِ بستايل الأرشيف</button></div>
       <div class="sb">${p.cards.map(cardHtml).join("")}</div>`;
     if (!busy) foot = `<button class="pill y big" id="pNext">${ep.done.preview ? "التالي: عين المشاهد ←" : "ابنِ المعاينة"}</button>`;
   }
@@ -1696,6 +1698,7 @@ function stepPlan(){
       if ($("pStyle")) $("pStyle").innerHTML = d.style_name ? `الستايل: <b>${esc(d.style_name)}</b> · غيّره من «الإلهام» فوگ` : "الستايل: المونتير يختار (أو اختار من «الإلهام» فوگ)"; });
     $("pIdea").onchange = () => post(E() + "/idea", {text: $("pIdea").value}); }
   if ($("pWrite")) $("pWrite").onclick = async () => { await post(E() + "/idea", {text: $("pIdea").value}); run("plan-build"); };
+  if ($("pArchive")) $("pArchive").onclick = () => run("archive");
   if ($("pRedo")) $("pRedo").onclick = () => run("plan-build", $("pRe").value);
   if ($("pPrev")) $("pPrev").onclick = () => run("build");
   if ($("pNext")) $("pNext").onclick = () => { if (ep.done.preview){ step = "viewer"; renderSteps(); loadVideo(); } else run("build"); };
@@ -2104,6 +2107,7 @@ async function pollLog(){
       else toast(d.ok ? "خلص ✅" : "ما كمل، شوف التفاصيل");
       if (d.ok && ["prepare", "cut"].includes(d.what) && d.ep === cur){ step = "sentences"; renderSteps(); loadVideo(true); }
       if (d.ok && ["plan", "plan-build", "build", "assist", "images"].includes(d.what) && d.ep === cur){ step = "plan"; renderSteps(); loadVideo(true); }
+      if (d.ok && d.what === "archive" && d.ep === cur){ step = "viewer"; renderSteps(); loadVideo(true); }
       if (d.ok && d.what === "final" && d.ep === cur){ step = "build"; renderSteps(); loadVideo(true); }
     }
     if (d.running && d.ep === cur && d.what === "prepare" && d.step === "transcribe" && !vSrc){ await refresh(); loadVideo(); }
@@ -2770,7 +2774,7 @@ new MutationObserver(() => { document.body.classList.toggle("chatOn", !$("chat")
   .observe($("chat"), {attributes: true, attributeFilter: ["hidden"]});
 
 /* ---------- 2.0: find anything (⌘K), the home's quick actions, what's new ---------- */
-const URU_VERSION = "2.9.0";
+const URU_VERSION = "3.0.0";
 const normAr = (t) => String(t).toLowerCase().replace(/[\u064B-\u065F\u0670]/g, "").replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/[گ]/g, "ك").replace(/[چ]/g, "ج").replace(/[پ]/g, "ب");
 const step_ = (n) => () => { if (!needEp()) return; showPanel("steps"); step = n; renderSteps(); loadVideo(); };
 const panel_ = (k) => () => { if (!needEp()) return; showPanel(k); };
