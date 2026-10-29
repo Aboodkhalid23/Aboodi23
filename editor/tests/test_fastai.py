@@ -209,3 +209,25 @@ def test_plan_falls_back_to_the_agent_when_the_answer_is_no_plan(ep, monkeypatch
     (e.work / "plan_input.txt").write_text("x", encoding="utf-8")
     monkeypatch.setattr(srv, "_fast_json", lambda prompt, tier="mid", timeout=0: {"oops": 1})
     assert srv._fast_plan(d) == -1 and not (e.edit / "edit_plan.json").exists()
+
+
+def test_a_change_he_asks_for_is_one_answer_and_a_broken_scene_becomes_his_face(ep, monkeypatch):
+    """Owner, 2026-10-29: "يقعد يقرأ الملفات… والخطة تطلع فاشلة": no agent reading files for a plan change."""
+    d, e = ep
+    (e.edit / "edit_plan.json").write_text(json.dumps({"beats": [{"start": 0, "end": 4, "zone": "hook", "kind": "face"}]}),
+                                           encoding="utf-8")
+    monkeypatch.setattr(srv, "_fast_json", lambda prompt, tier="mid", timeout=0: {
+        "plan": {"beats": [{"start": 0, "end": 4, "zone": "hook", "kind": "graphic", "graphic": {"type": "bad"}}]},
+        "reply": "حطيت رسم"})
+    checks = iter([["❌ beat 0: رسم مو معروف"]] * 4 + [[]])
+    monkeypatch.setattr(srv, "_plan_errors", lambda d: next(checks))
+    monkeypatch.setattr(srv, "_claude", lambda *a, **k: pytest.fail("the slow agent must not run"))
+    assert srv._fast_edit(d, "حط رسم هنا") == 0
+    assert json.loads((e.edit / "edit_plan.json").read_text(encoding="utf-8"))["beats"][0]["kind"] == "face"
+
+
+def test_a_change_outside_the_plan_goes_to_the_full_assistant(ep, monkeypatch):
+    d, e = ep
+    (e.edit / "edit_plan.json").write_text(json.dumps({"beats": [{"kind": "face"}]}), encoding="utf-8")
+    monkeypatch.setattr(srv, "_fast_json", lambda prompt, tier="mid", timeout=0: {"agent": True})
+    assert srv._fast_edit(d, "شيل الجملة الثانية من القص") == -1

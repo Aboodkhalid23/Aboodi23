@@ -1366,6 +1366,11 @@ def _requests_step(d: Path) -> int:
                         for r in todo], ensure_ascii=False, indent=1)
     done_file = d / "edit" / "work" / "requests_done.json"
     done_file.unlink(missing_ok=True)
+    asked = "\n".join(f"- بالثانية {r.get('t', '?')}: {r.get('text') or ''} {r.get('audio_text') or ''}".strip() for r in todo)
+    if _fast_edit(d, "نفّذ كل ملاحظات صاحب القناة هاي على الخطة:\n" + asked) == 0:   # one quick answer first
+        for r in todo:
+            db_op(d, "update", f"requests/{r['id']}", {"status": "done", "reply": "انسوّى"})
+        return 0
     code = _claude(REQ_PROMPT.format(ep=d, reqs=lines), tier="mid")
     try:
         replies = json.loads(done_file.read_text(encoding="utf-8"))
@@ -1812,17 +1817,28 @@ def _fast_plan(d: Path) -> int:
         f.write_text(json.dumps({**old, **names}, ensure_ascii=False, indent=1), encoding="utf-8")
         for stage in ("names", "entities", "brief"):
             _pipe(stage, d)
-    target = edit / "edit_plan.json"
-    for attempt in range(4):   # the agent fallback costs ~5 minutes: a few more quick fixes are cheaper
+    if _settle_plan(d, plan):
+        if ans.get("idea"):
+            JOB.say("🎬 " + str(ans["idea"])[:300])
+        return 0
+    (edit / "edit_plan.json").unlink(missing_ok=True)
+    JOB.say("⚠️ الخطة السريعة بيها أخطاء، أكتبها بالطريقة الكاملة")
+    return -1
+
+
+def _settle_plan(d: Path, plan: dict, rounds: int = 3) -> bool:
+    """Write the plan and make it pass the check: the engine's own fixes, a few quick fixes by Claude, and, for
+    what still fails, a plain shot of him in place of the broken scene (owner, 2026-10-29: "يقعد يقرأ الملفات…
+    والخطة تطلع فاشلة": no slow agent re-reading files to mend one scene)."""
+    target = d / "edit" / "edit_plan.json"
+    for attempt in range(rounds + 1):
         target.write_text(json.dumps(plan, ensure_ascii=False, indent=1), encoding="utf-8")
         errs = _plan_errors(d)
         if not errs:
-            if ans.get("idea"):
-                JOB.say("🎬 " + str(ans["idea"])[:300])
-            return 0
+            return True
         for e in errs[:4]:   # in the log (and the 🩺 report), so a stubborn mistake can be seen
             JOB.say("   · " + e[:160])
-        if attempt == 3:
+        if attempt == rounds:
             break
         JOB.say(f"🔧 أصلّح {len(errs)} ملاحظة بالخطة…")
         try:
@@ -1830,9 +1846,78 @@ def _fast_plan(d: Path) -> int:
                                               plan=target.read_text(encoding="utf-8")), tier="best", timeout=300).get("plan") or plan
         except (ValueError, RuntimeError, subprocess.SubprocessError):
             break
-    target.unlink(missing_ok=True)
-    JOB.say("⚠️ الخطة السريعة بيها أخطاء، أكتبها بالطريقة الكاملة")
-    return -1
+    try:
+        plan = json.loads(target.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return False
+    bad = {int(n) for e in errs for n in re.findall(r"\bbeat (\d+)", e)}
+    beats = plan.get("beats") or []
+    for i in bad:
+        if 0 <= i < len(beats):
+            b = beats[i]
+            beats[i] = {k: b[k] for k in ("start", "end", "zone") if k in b} | {"kind": "face"}
+    if any(e.startswith("teaser") for e in errs):
+        plan["teaser"] = []
+    if any(e.startswith("music") for e in errs):
+        plan["music"] = []
+    if any(e.startswith("short") for e in errs):
+        plan["shorts"] = []
+    target.write_text(json.dumps(plan, ensure_ascii=False, indent=1), encoding="utf-8")
+    left = _plan_errors(d)
+    if not left:
+        JOB.say(f"🩹 {len(bad)} مشهد ما ظبط، خليت بمكانه لقطة وجهك. تگدر تبدله من الخطة")
+    return not left
+
+
+EDIT_FAST = """انت مساعد المونتاج. صاحب القناة يريد تعديل على خطة المونتاج، ونفّذه بأحسن طريقة بلا ما تخرب الباقي.
+طلبه: «{message}»
+
+قواعد المونتاج:
+<<<
+{rules}
+>>>
+
+الكلام بالثواني (على الفيديو المقصوص):
+<<<
+{plan_input}
+>>>
+
+الخطة الحالية (edit_plan.json):
+{plan}
+
+- غيّر بس الي يخص طلبه، وخلي الباقي مثل ما هو. ممنوع صرف فلوس.
+- إذا الطلب ما يخص الخطة (مثل القص، أو الصوت، أو الألوان، أو ملفات)، جاوب {{"agent": true}} بس.
+جاوب بـ JSON بس: {{"plan": {{...الخطة كاملة بعد التعديل...}}, "reply": "سطر أو سطرين عراقي: شنو سويت"}}"""
+
+
+def _fast_edit(d: Path, message: str) -> int:
+    """A change he asked for (the assistant, the viewer's eye «صلّحها»), in one answer with the plan inside the
+    question, instead of an agent that reads every file first (it took ~5 minutes on his Mac). -1: needs the agent."""
+    edit = d / "edit"
+    target = edit / "edit_plan.json"
+    if not target.exists():
+        return -1
+    try:
+        old = target.read_text(encoding="utf-8")
+        pin = edit / "work" / "plan_input.txt"
+        JOB.say("✏️ المساعد يعدّل الخطة…")
+        ans = _fast_json(EDIT_FAST.format(message=message, rules=(CODE / "editor" / "PLAN_RULES.md").read_text(encoding="utf-8"),
+                                          plan_input=pin.read_text(encoding="utf-8")[:40000] if pin.exists() else "",
+                                          plan=old), tier="mid", timeout=300)
+    except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as exc:
+        JOB.say(f"⚠️ التعديل السريع ما ظبط ({str(exc)[:100]})")
+        return -1
+    if ans.get("agent") or not isinstance(ans.get("plan"), dict) or not ans["plan"].get("beats"):
+        return -1
+    from editor.pipeline.paths import Episode
+    from .studio import snapshot
+    snapshot(Episode(d))   # «تراجع» brings the old plan back
+    if not _settle_plan(d, ans["plan"]):
+        target.write_text(old, encoding="utf-8")
+        JOB.say("⚠️ ما گدرت أطبق التعديل بلا ما تخرب الخطة، رجعتها مثل ما جانت")
+        return 1
+    JOB.say("💬 " + str(ans.get("reply") or "انسوّى")[:300])
+    return 0
 
 
 def _fast_json(prompt: str, tier: str = "mid", timeout: int = fastai.TIMEOUT) -> dict:
@@ -2245,7 +2330,9 @@ def run_job(ep_id: str, what: str) -> None:
         elif step == "chat":
             code = _chat_step(d)
         elif step == "assist":
-            code = _claude(ASSIST_PROMPT.format(ep=d, message=JOB.message or "راجع الخطة وحسّنها") + learning.prompt_block(HOME), tier="mid")
+            code = _fast_edit(d, JOB.message or "راجع الخطة وحسّنها")
+            if code == -1:   # not a plan change (cuts, sound, colours…): the full assistant
+                code = _claude(ASSIST_PROMPT.format(ep=d, message=JOB.message or "راجع الخطة وحسّنها") + learning.prompt_block(HOME), tier="mid")
         elif step == "smart":
             code = _smart_step(d, (JOB.message or "").strip())
         elif step == "youtube-langs":
