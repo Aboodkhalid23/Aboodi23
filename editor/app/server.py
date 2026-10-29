@@ -802,9 +802,37 @@ def face_files(action: str, name: str = "", data: bytes = b"") -> dict:
     return prefs()
 
 
+def heal_tools() -> None:
+    """What a report from his Mac showed missing, put right by itself in the background (owner, 2026-10-29):
+    the Mac chip's speech model (without it the talk is heard on the processor: slow and hot) and the browser
+    the graphics are drawn in."""
+    import platform
+    log = []
+    from editor.pipeline import transcribe as tr
+    uv, py = HOME / "tools" / "uv", HOME / "tools" / "venv" / "bin" / "python"
+    if MAC and platform.machine() == "arm64" and not tr.mlx_ready() and uv.exists() and py.exists():
+        r = subprocess.run([str(uv), "pip", "install", "-q", "--python", str(py), "mlx-whisper>=0.4"],
+                           capture_output=True, text=True, timeout=1800)
+        log.append(f"mlx install rc={r.returncode} {(r.stderr or r.stdout)[-400:]}")
+    from editor.pipeline.graphics import BROWSER, REMOTION_DIR
+    if BROWSER is None and (REMOTION_DIR / "node_modules" / "@remotion" / "renderer").exists():
+        r = subprocess.run(["node", "-e", "require('@remotion/renderer').ensureBrowser().then(()=>console.log('ok'))"],
+                           cwd=REMOTION_DIR, capture_output=True, text=True, timeout=1800)
+        log.append(f"browser rc={r.returncode} {(r.stdout + r.stderr)[-300:]}")
+    if log:
+        try:
+            (HOME / "heal.log").write_text(f"{datetime.now():%Y-%m-%d %H:%M}\n" + "\n".join(log), encoding="utf-8")
+        except OSError:
+            pass
+
+
 def preload_libraries() -> None:
     """Owner, 2026-10-25: "ألقاها كلها محملة": every sound effect made and levelled, every free font downloaded,
     once, in the background (a missing one just tries again next start)."""
+    try:
+        heal_tools()
+    except Exception as exc:   # noqa: BLE001 — never stops the app
+        print("heal:", exc, flush=True)
     try:   # the fast speech model for Apple Silicon (1.6 GB once), so the first episode does not wait for it
         from editor.pipeline.transcribe import MLX_MODEL, mlx_ready
         if mlx_ready():
@@ -2097,8 +2125,11 @@ def report() -> str:
         except (OSError, subprocess.SubprocessError):
             pass
     try:
-        from editor.pipeline.transcribe import mlx_ready
-        out.append(f"mlx: {mlx_ready()}")
+        from editor.pipeline import transcribe as tr
+        out.append(f"mlx: {tr.mlx_ready()} {tr.MLX_PROBLEM}")
+        heal = HOME / "heal.log"
+        if heal.exists():
+            out.append("heal: " + heal.read_text(encoding="utf-8")[-600:])
     except Exception as exc:   # noqa: BLE001
         out.append(f"mlx: {exc}")
     out.append(f"claude: installed={bool(claude_bin())} logged_in={claude_logged_in()}")

@@ -27,11 +27,13 @@ def face_detector():
 
     import cv2
     src = Path(cv2.data.haarcascades) / "haarcascade_frontalface_default.xml"
-    det = cv2.CascadeClassifier(str(src))
-    if det.empty() and src.exists():
-        tmp = Path(tempfile.gettempdir()) / "aboodi_face.xml"
-        shutil.copyfile(src, tmp)
+    tmp = Path(tempfile.gettempdir()) / "aboodi_face.xml"
+    if src.exists():   # straight from the temp copy: the original path printed a scary error on his Mac every cut
+        if not tmp.exists() or tmp.stat().st_size != src.stat().st_size:
+            shutil.copyfile(src, tmp)
         det = cv2.CascadeClassifier(str(tmp))
+    else:
+        det = cv2.CascadeClassifier(str(src))
     if det.empty():
         raise RuntimeError("ما گدرت أحمّل كاشف الوجه (OpenCV)")
     return det

@@ -12,8 +12,10 @@ from .plan import Beat
 from .styles import Style
 
 REMOTION_DIR = Path(__file__).resolve().parent.parent / "remotion"
-BROWSER = os.environ.get(
-    "EDITOR_BROWSER", "/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell")
+# a browser to draw the graphics in: the one given, else Remotion's own (downloaded once into node_modules).
+# The old fixed Linux path broke every graphic on his Mac (report, 2026-10-29: "فشل رسم الگرافيكس").
+_GIVEN = os.environ.get("EDITOR_BROWSER") or "/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell"
+BROWSER = _GIVEN if Path(_GIVEN).exists() else None
 
 
 def _style_props(style: Style) -> dict:

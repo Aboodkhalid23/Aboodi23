@@ -55,8 +55,13 @@ def mlx_ready() -> bool:
     try:
         import mlx_whisper  # noqa: F401
         return True
-    except Exception:
+    except Exception as exc:
+        global MLX_PROBLEM
+        MLX_PROBLEM = f"{type(exc).__name__}: {exc}"[:300]
         return False
+
+
+MLX_PROBLEM = ""   # why the Mac chip's model would not load (shown in the app's report)
 
 
 SR = 16000
