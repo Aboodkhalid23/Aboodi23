@@ -808,6 +808,10 @@ def heal_tools() -> None:
     the graphics are drawn in."""
     import platform
     log = []
+    try:
+        (HOME / "heal.log").write_text(f"{datetime.now():%Y-%m-%d %H:%M} running…", encoding="utf-8")
+    except OSError:
+        pass
     from editor.pipeline import transcribe as tr
     uv, py = HOME / "tools" / "uv", HOME / "tools" / "venv" / "bin" / "python"
     if MAC and platform.machine() == "arm64" and not tr.mlx_ready() and uv.exists() and py.exists():
@@ -819,7 +823,8 @@ def heal_tools() -> None:
         r = subprocess.run(["node", "-e", "require('@remotion/renderer').ensureBrowser().then(()=>console.log('ok'))"],
                            cwd=REMOTION_DIR, capture_output=True, text=True, timeout=1800)
         log.append(f"browser rc={r.returncode} {(r.stdout + r.stderr)[-300:]}")
-    if log:
+    if True:
+        log.append(f"mlx now: {tr.mlx_ready()} {tr.MLX_PROBLEM}")
         try:
             (HOME / "heal.log").write_text(f"{datetime.now():%Y-%m-%d %H:%M}\n" + "\n".join(log), encoding="utf-8")
         except OSError:
@@ -1808,14 +1813,16 @@ def _fast_plan(d: Path) -> int:
         for stage in ("names", "entities", "brief"):
             _pipe(stage, d)
     target = edit / "edit_plan.json"
-    for attempt in range(3):
+    for attempt in range(4):   # the agent fallback costs ~5 minutes: a few more quick fixes are cheaper
         target.write_text(json.dumps(plan, ensure_ascii=False, indent=1), encoding="utf-8")
         errs = _plan_errors(d)
         if not errs:
             if ans.get("idea"):
                 JOB.say("🎬 " + str(ans["idea"])[:300])
             return 0
-        if attempt == 2:
+        for e in errs[:4]:   # in the log (and the 🩺 report), so a stubborn mistake can be seen
+            JOB.say("   · " + e[:160])
+        if attempt == 3:
             break
         JOB.say(f"🔧 أصلّح {len(errs)} ملاحظة بالخطة…")
         try:
@@ -2113,7 +2120,9 @@ def report() -> str:
     """One text he can copy and paste to the assistant: his machine, settings, step times, the last job's lines and
     any error. Keys and long tokens are blanked out, so it is safe to paste anywhere."""
     import platform
-    out = [f"URU {json.dumps(version(), ensure_ascii=False)[:200]} · {platform.platform()} · {platform.machine()} · {os.cpu_count()} cores"]
+    v = dict(version())
+    v["commit"] = str(v.get("commit", ""))[:7]   # short, so the secret filter below leaves it readable
+    out = [f"URU {json.dumps(v, ensure_ascii=False)[:200]} · {platform.platform()} · {platform.machine()} · {os.cpu_count()} cores"]
     if MAC:
         for k in ("hw.model", "machdep.cpu.brand_string", "hw.memsize"):
             try:
@@ -2128,8 +2137,7 @@ def report() -> str:
         from editor.pipeline import transcribe as tr
         out.append(f"mlx: {tr.mlx_ready()} {tr.MLX_PROBLEM}")
         heal = HOME / "heal.log"
-        if heal.exists():
-            out.append("heal: " + heal.read_text(encoding="utf-8")[-600:])
+        out.append("heal: " + (heal.read_text(encoding="utf-8")[-600:] if heal.exists() else "(not run yet)"))
     except Exception as exc:   # noqa: BLE001
         out.append(f"mlx: {exc}")
     out.append(f"claude: installed={bool(claude_bin())} logged_in={claude_logged_in()}")
@@ -2142,6 +2150,15 @@ def report() -> str:
         out.append("── step times ──\n" + "\n".join((HOME / "timings.log").read_text(encoding="utf-8").splitlines()[-60:]))
     except OSError:
         out.append("── step times ── (none yet)")
+    # the last failures of the newest episode, with what came just before each (the real reason)
+    logs = sorted(EPISODES.glob("*/edit/work/app_log.txt"), key=lambda f: f.stat().st_mtime) if EPISODES.exists() else []
+    if logs:
+        all_lines = logs[-1].read_text(encoding="utf-8").splitlines()[-3000:]
+        bad = [k for k, l in enumerate(all_lines) if l.startswith("❌")][-4:]
+        if bad:
+            out.append("── last errors ──")
+            for k in bad:
+                out += all_lines[max(0, k - 12):k + 1] + ["…"]
     lines = list(JOB.lines)[-200:]
     if not lines:   # the app was restarted: the newest episode's own log
         logs = sorted(EPISODES.glob("*/edit/work/app_log.txt"), key=lambda f: f.stat().st_mtime) if EPISODES.exists() else []
@@ -2169,7 +2186,9 @@ def run_job(ep_id: str, what: str) -> None:
         elif step == "fetch":
             os.environ["ABOODI_PROGRESS"] = "1"
             # «أسرع شي» at the speed setting works on a 1080p copy: a 4K hour of video is ~4x less to cut and build
-            fast = ["--max-height", "1080"] if prefs().get("speed") == "fastest" else []
+            # 1080 unless he asked for «أعلى جودة»: a 4K clip on an 8 GB MacBook Air is 4x the work and the heat
+            # (his report, 2026-10-29: M2, 8 GB), and YouTube viewers watch 1080 anyway
+            fast = [] if prefs().get("speed") == "quality" else ["--max-height", "1080"]
             code = _pipe("fetch", d, "--source", meta.get("source", ""), *fast)
         elif step == "transcribe":
             os.environ["ABOODI_PROGRESS"] = "1"

@@ -47,16 +47,17 @@ MLX_MODEL = "mlx-community/whisper-large-v3-turbo"
 
 
 def mlx_ready() -> bool:
+    global MLX_PROBLEM
     """Apple Silicon with mlx-whisper: the same turbo model on the Mac's GPU (owner, 2026-10-26: "أريد سرعة")."""
     import platform
     import sys
     if sys.platform != "darwin" or platform.machine() != "arm64" or os.environ.get("ABOODI_NO_MLX"):
+        MLX_PROBLEM = f"not an Apple chip here ({sys.platform} {platform.machine()} no_mlx={bool(os.environ.get('ABOODI_NO_MLX'))})"
         return False
     try:
         import mlx_whisper  # noqa: F401
         return True
     except Exception as exc:
-        global MLX_PROBLEM
         MLX_PROBLEM = f"{type(exc).__name__}: {exc}"[:300]
         return False
 

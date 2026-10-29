@@ -144,9 +144,35 @@ def st_brief(ep, a):
     print(f"🗒️  ملف التخطيط جاهز: {write_brief(ep, styles_summary())}")
 
 
+def _off_topic_people(ep, plan, ents: dict) -> list[str]:
+    """A person's or company's photo only while he is talking about them (owner, 2026-10-29: the founder's photo
+    came up on «يوم من الايام»). Their name, or a way he says it, must be heard within the scene or 3 s before."""
+    from .clean import normalize_ar
+    from .transcribe import load_words
+    if not ents or not ep.clean_words.exists():
+        return []
+    words = load_words(ep.clean_words)
+    out = []
+    for i, b in enumerate(plan.beats):
+        if b.kind != "entity" or b.entity not in ents or b.start < plan.teaser_total:   # the teaser plays other talk
+            continue
+        e = ents[b.entity]
+        names = [e.get("name", ""), *(e.get("heard") or [])]
+        keys = {t for n in names for t in normalize_ar(n).split() if len(t) >= 3}
+        t0, t1 = b.start - plan.teaser_total - 3.0, b.end - plan.teaser_total + 1.0
+        said = [normalize_ar(w.text) for w in words if t0 <= w.start <= t1]
+        if keys and not any(k in w or w in k for k in keys for w in said if len(w) >= 3):
+            heard = " ".join(w.text for w in words if b.start - plan.teaser_total <= w.start <= b.end - plan.teaser_total)
+            out.append(f"beat {i}: صورة «{e.get('name')}» بس الكلام بهاللحظة ما يذكره («{heard[:60]}»). "
+                       f"حطها وين ينذكر، أو بدّلها بشي يطابق هالكلام")
+    return out
+
+
 def st_validate(ep, a):
     ents = set(load_entities(ep)) if entities_file(ep).exists() else None
-    errs = validate_plan(load_plan(ep.plan), _clean_duration(ep), entities=ents, ai_spent=spent(ep))
+    plan = load_plan(ep.plan)
+    errs = validate_plan(plan, _clean_duration(ep), entities=ents, ai_spent=spent(ep))
+    errs += _off_topic_people(ep, plan, load_entities(ep) if ents is not None else {})
     for e in errs:
         print("❌", e)
     if errs:

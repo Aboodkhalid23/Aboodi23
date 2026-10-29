@@ -1109,14 +1109,14 @@ body.director #tAssist.on{background:var(--y);color:var(--yink)}
 <!-- what's new in this version -->
 <div class="veil" id="dNews" hidden>
   <div class="dlg news">
-    <div class="row"><img src="/ui/logo.png" alt="" style="height:40px"><div class="grow"><h2 style="margin:0">يو آر يو ٢٫٨</h2><div class="dim tiny">أبسط وأسرع: ٧ خطوات واضحة</div></div><button class="icobtn" id="newsX">✕</button></div>
+    <div class="row"><img src="/ui/logo.png" alt="" style="height:40px"><div class="grow"><h2 style="margin:0">يو آر يو ٢٫٩</h2><div class="dim tiny">قص أنظف وشاشة ثابتة</div></div><button class="icobtn" id="newsX">✕</button></div>
     <div class="newsgrid">
-      <div><b>✂️ القص بلا انتظار</b><span>تنزّل الفيديو، يكتب كلامك، ويقص السكتات والإعادات لحاله. ماكو «يرتّب الجمل» ينتظر المساعد بعد.</span></div>
-      <div><b>🧭 ٧ خطوات بس</b><span>الجمل، الكابشن، الصوت، الخطة والبناء، عين المشاهد، الملاحظات، التصدير.</span></div>
-      <div><b>🎬 الخطة والبناء بدوسة</b><span>يكتب الخطة، يجيب صور ومقاطع كل مشهد، ويبني المعاينة. الهوك يختاره هو.</span></div>
-      <div><b>🎨 ألوانك الأصلية</b><span>الفيديو يطلع بألوانه مثل ما صورته. تعديل الألوان اختياري بآخر خطوة (التصدير).</span></div>
-      <div><b>⚡ أسرع</b><span>الصور والمقاطع والخطة والبناء صاروا أسرع بكثير، وكل خطوة تگلك شنو دا تسوي وشگد مر.</span></div>
-      <div><b>💸 مجاني</b><span>كل شي يشتغل على جهازك بلا فلوس. المدفوع ما يشتغل إلا إذا شغلته انت.</span></div>
+      <div><b>🤫 السكتات تنشال صدگ</b><span>البرنامج صار يسمع الصوت نفسه، ويشيل كل سكتة أطول من نص ثانية، حتى الي بأول الفيديو.</span></div>
+      <div><b>🖥️ شاشة ثابتة</b><span>ما تروح وترجع وقت الشغل. تنرسم بس لما يتغير شي.</span></div>
+      <div><b>✂️ بلا كابشن</b><span>خطوة الكابشن انشالت، والحلقة تطلع بلا كتابة كلمة كلمة.</span></div>
+      <div><b>🖼️ الصورة ويه كلامها</b><span>صورة الشخص أو الشركة تطلع بس لما تذكره.</span></div>
+      <div><b>⚡ ١٠٨٠ بالأساس</b><span>الشغل على نسخة ١٠٨٠ (أخف بأربع مرات من ٤K). «أعلى جودة» بالإعدادات يرجع ٤K.</span></div>
+      <div><b>🩺 تقرير أوضح</b><span>بيه آخر الأخطاء وسببها، حتى نصلحها بسرعة.</span></div>
     </div>
     <div class="row" style="justify-content:flex-end;margin-top:14px"><button class="pill y" id="newsOk">يلا نبدي</button></div>
   </div>
@@ -1318,17 +1318,16 @@ let planSub = 1, pendingFix = {}, pendingDel = new Set(), keepMap = {}, notes = 
 // owner, 2026-10-29: "نرتبها ترتيب يكون واضح بدون دوخة راس": seven steps in the order he works; the hook is
 // chosen by the plan, the pictures come with the plan, and the colours are a last, optional touch before export
 const STEPS = [["الجمل", "sentences", "M6 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM20 4L8.1 15.9M14.5 14.5L20 20M8.1 8.1L12 12"],
-  ["الكابشن", "captions", "M4 7V5h16v2M9 19h6M12 5v14"],
   ["الصوت", "sound", "M11 5L6 9H2v6h4l5 4V5zM15.5 8.5a5 5 0 0 1 0 7"],
   ["الخطة والبناء", "plan", "M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 10h18M9 10v10"],
   ["عين المشاهد", "viewer", "M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"],
   ["الملاحظات", "notes", "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"],
   ["التصدير", "build", "M6 4l13 8-13 8V4z"]];
-const HIDDEN_STEPS = ["colors", "hook", "images"];   // still reachable from a button, not in the list
+const HIDDEN_STEPS = ["colors", "hook", "images", "captions"];   // captions: off (owner, 2026-10-29: "الكابشن اريد تلغيه")   // still reachable from a button, not in the list
 const ORDER = STEPS.map(x => x[1]);
 function pos(k){ return ORDER.indexOf(k); }
 // where a hidden step sits for the video it shows: the colours on the cut video, the pictures and hook with the plan
-function spos(k){ return k === "colors" ? pos("captions") : (k === "images" || k === "hook") ? pos("plan") : pos(k); }
+function spos(k){ return (k === "colors" || k === "captions") ? pos("sound") : (k === "images" || k === "hook") ? pos("plan") : pos(k); }
 const RUNS = {prepare: "sentences", cut: "sentences", sentences: "sentences", captions: "captions", hook: "plan", plan: "plan", images: "plan",
   "plan-build": "plan", build: "plan", final: "build", requests: "notes", assist: "plan", auto: "sentences", chat: "plan", learn: "notes", selfcheck: "build",
   opinion: "plan", "app-ideas": "notes", council: "plan", smart: "plan", viewer: "viewer", restyle: "plan", "style-ref-apply": "plan"};
@@ -1339,8 +1338,11 @@ async function refresh(){
   ep = state.episodes.find(e => e.id === cur) || null;
   if (cur && !ep){ cur = null; }
   renderHeader(); renderLibrary();
-  if (ep) renderSteps();
+  // the 5-second refresh redraws the steps only when this episode's state really changed (no flashing)
+  const sig = ep ? JSON.stringify([ep.done, ep.running, job.running, job.step, step]) : "";
+  if (ep && sig !== refreshSig){ refreshSig = sig; renderSteps(); }
 }
+let refreshSig = "";
 function renderHeader(){
   $("dApp").hidden = !(job.running && job.step === "app");
   if ($("sAppRow")){ $("sAppRow").dataset.off = state.app_update !== "available" ? "1" : ""; $("sAppRow").hidden = !!$("sAppRow").dataset.off || !document.querySelector('#setNav [data-go="safety"].on'); }
@@ -1354,7 +1356,11 @@ function renderHeader(){
   $("inspEmpty").hidden = !!ep; $("inspBody").hidden = !ep;
   if (!ep){ $("insBody").innerHTML = `<div class="dim">افتح مشروع.</div>`; }
 }
+let libSig = "";
 function renderLibrary(){
+  const sig = JSON.stringify(state.episodes.map(e => [e.id, e.name, e.done, e.running]));
+  if (sig === libSig && $("libgrid").children.length) return;   // unchanged: no redraw, no cover flicker
+  libSig = sig;
   const g = $("libgrid"); g.innerHTML = "";
   const last = state.episodes.find(e => !e.done.render) || state.episodes[0];
   $("qLast").hidden = !last; if (last){ $("qLastName").textContent = last.name; $("qLast").onclick = () => open(last.id); }
@@ -1388,7 +1394,7 @@ async function open(id){
   await refresh();
   if (!ep) return;
   const d = ep.done;
-  step = d.render ? "build" : d.plan ? "plan" : d.cut ? "captions" : "sentences";
+  step = d.render ? "build" : d.plan ? "plan" : d.cut ? "plan" : "sentences";
   await loadAll();
   loadVideo(true);
 }
@@ -1419,7 +1425,7 @@ function wantedVideo(){
   const d = ep.done;
   if (spos(step) > pos("plan") && d.render) return [`/files/${enc(cur)}/edit/final.mp4`, "النسخة الكاملة"];
   if (spos(step) >= pos("plan") && d.preview) return [`/files/${enc(cur)}/edit/preview.mp4`, "معاينة"];
-  if (spos(step) >= pos("captions") && d.cut) return [`/files/${enc(cur)}/edit/work/${d.proxy_clean ? "app/proxy_clean.mp4" : "clean.mp4"}`, "بعد القص"];
+  if (spos(step) >= pos("sound") && d.cut) return [`/files/${enc(cur)}/edit/work/${d.proxy_clean ? "app/proxy_clean.mp4" : "clean.mp4"}`, "بعد القص"];
   if (d.fetch) return [`/files/${enc(cur)}/edit/work/${d.proxy_source ? "app/proxy_source.mp4" : "source.mp4"}`, "الخام"];
   return ["", ""];
 }
@@ -1486,7 +1492,7 @@ function renderSteps(){
 function setBody(html, foot){ $("stepbody").innerHTML = html; $("stepfoot").hidden = !foot; $("stepfoot").innerHTML = foot || ""; }
 function jobStatus(text, opts = {}){
   const pct = job.progress != null && running() ? `<div class="prog"><i style="width:${job.progress}%"></i></div>` : "";
-  const el = opts.elapsed ? ` مرّ ${mmss(lastLog.elapsed || 0)}${opts.usual ? " ويأخذ عادة " + opts.usual : ""}.` : "";
+  const el = opts.elapsed ? ` مرّ <span class="elapsed">${mmss(lastLog.elapsed || 0)}</span>${opts.usual ? " ويأخذ عادة " + opts.usual : ""}.` : "";
   return `<div class="status"><div class="spinner"></div><div class="grow">${text}${el}${pct}</div><button class="pill sm" data-stop>أوقف</button></div>`;
 }
 // the engine's lines may carry technical English (scene fields, file names): shown in Arabic, or left out
@@ -1559,7 +1565,7 @@ function miniMap(s){
     return `<i style="left:${100 * x.s / dur}%;width:${Math.max(0.15, 100 * (x.e - x.s) / dur)}%;background:${k ? "var(--wave)" : "var(--red)"}"></i>`; }).join("") + `<b id="miniHead"></b></div>`;
 }
 function seekRaw(t){
-  if (ep.done.cut && spos(step) >= pos("captions")){ toast("هاي على الخام: ارجع لخطوة الجمل"); return; }
+  if (ep.done.cut && spos(step) >= pos("sound")){ toast("هاي على الخام: ارجع لخطوة الجمل"); return; }
   if (!/source\.mp4$/.test(vSrc)){ step = "sentences"; loadVideo(); }
   video.currentTime = t;
 }
@@ -2075,14 +2081,21 @@ window.addEventListener("resize", () => renderTimeline());
 
 /* ---------- log polling ---------- */
 let lastLog = {};
+let lastSig = "";
+setInterval(() => { document.querySelectorAll(".elapsed").forEach(e => { e.textContent = mmss((lastLog.elapsed || 0) + (Date.now() - (lastLog._at || Date.now())) / 1000); }); }, 1000);
 async function pollLog(){
   try {
     const d = await api(`/api/log?since=${logNext}`);
     const was = lastLog.running;
     if (d.ep !== lastLog.ep && logNext) { logNext = 0; logLines = []; }
-    lastLog = d; logLines.push(...d.lines); if (logLines.length > 400) logLines = logLines.slice(-300); logNext = d.next;
+    lastLog = d; lastLog._at = Date.now(); logLines.push(...d.lines); if (logLines.length > 400) logLines = logLines.slice(-300); logNext = d.next;
     job = {...job, running: d.running, ep: d.ep, what: d.what, step: d.step, progress: d.progress};
-    if (d.running && d.ep === cur){ if (!ep || ep.running !== true) await refresh(); renderSteps(); if (!$("chat").hidden) renderChat(); drawPreparing(); }
+    // owner, 2026-10-29: "تروح الواجهة وترجع": the screen is drawn again only when something on it changed
+    // (stage, progress, new log lines), not on every poll; the elapsed time ticks by itself (tickElapsed)
+    if (d.running && d.ep === cur){ if (!ep || ep.running !== true) await refresh();
+      const sig = JSON.stringify([step, d.what, d.step, d.progress, logLines.slice(-4)]);
+      if (sig !== lastSig){ lastSig = sig; renderSteps(); }
+      if (!$("chat").hidden && d.lines.length) renderChat(); drawPreparing(); }
     drawAsk();
     if (was && !d.running){
       await refresh(); if (d.ep === cur){ await loadAll(); loadVideo(true); }
@@ -2757,7 +2770,7 @@ new MutationObserver(() => { document.body.classList.toggle("chatOn", !$("chat")
   .observe($("chat"), {attributes: true, attributeFilter: ["hidden"]});
 
 /* ---------- 2.0: find anything (⌘K), the home's quick actions, what's new ---------- */
-const URU_VERSION = "2.8.0";
+const URU_VERSION = "2.9.0";
 const normAr = (t) => String(t).toLowerCase().replace(/[\u064B-\u065F\u0670]/g, "").replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/[گ]/g, "ك").replace(/[چ]/g, "ج").replace(/[پ]/g, "ب");
 const step_ = (n) => () => { if (!needEp()) return; showPanel("steps"); step = n; renderSteps(); loadVideo(); };
 const panel_ = (k) => () => { if (!needEp()) return; showPanel(k); };

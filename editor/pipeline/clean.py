@@ -287,13 +287,28 @@ def _neighbours(first: Word, last: Word) -> tuple[float, float]:
 
 
 def remap_words(words: list[Word], segments: list[tuple[float, float]]) -> list[Word]:
-    out, offset = [], 0.0
+    # each word goes to the kept range it overlaps most (a pause cut out of a stretched word keeps the word)
+    offsets, acc = [], 0.0
     for s, e in segments:
-        for w in words:
-            if s <= (w.start + w.end) / 2 < e:
-                out.append(Word(w.text, round(offset + max(w.start, s) - s, 3),
-                                round(offset + min(w.end, e) - s, 3), w.p))
-        offset += e - s
+        offsets.append(acc)
+        acc += e - s
+    if not segments:
+        return []
+    out, prev_k, prev_t = [], 0, 0.0
+    for w in sorted(words, key=lambda w: w.start):
+        best, k = 0.0, -1
+        for n, (s, e) in enumerate(segments):
+            ov = min(w.end, e) - max(w.start, s)
+            if ov > best:
+                best, k = ov, n
+        if k < 0:   # a word Whisper put over a pause that was cut: its text stays, at the nearest kept edge
+            k = min(range(len(segments)), key=lambda n: min(abs(w.start - segments[n][0]), abs(w.start - segments[n][1])))
+        k = max(k, prev_k)              # the spoken order never goes backwards
+        s, e = segments[k]
+        a = max(prev_t, round(offsets[k] + min(max(w.start, s), e) - s, 3))
+        b = max(a, round(offsets[k] + min(max(w.end, s), e) - s, 3))
+        out.append(Word(w.text, a, b, w.p))
+        prev_k, prev_t = k, a
     return out
 
 
@@ -356,6 +371,39 @@ def refine(segs: list[tuple[float, float]], env: np.ndarray, words: list[Word],
             out[-1] = (out[-1][0], max(out[-1][1], end))
         elif end > start:
             out.append((round(start, 3), round(end, 3)))
+    return out
+
+
+def drop_silences(segs: list[tuple[float, float]], env: np.ndarray, min_gap: float = MAX_GAP,
+                  pad: float = PAD) -> list[tuple[float, float]]:
+    """Cut every quiet stretch the sound itself shows, whatever the words say (owner, 2026-10-29: "اول 3 ثواني
+    اكو سكتات ما دي تنشال"). Whisper often stretches a word over a pause, or starts the first word at 0 s while
+    he only talks at 3 s; those pauses stayed. A pause longer than `min_gap` inside a kept range goes, keeping a
+    short breath (`pad`) on each side; a quiet head or tail of a range goes too."""
+    if len(env) < 10:
+        return segs
+    floor, peak = float(np.percentile(env, 10)), float(np.percentile(env, 95))
+    quiet = max(floor * 3, peak * 0.04, 1e-4)
+    out = []
+    for s, e in segs:
+        i0, i1 = int(s / HOP), min(int(e / HOP), len(env))
+        loud = env[i0:i1] > quiet
+        if not loud.any():
+            continue
+        # stretches of sound, joined across pauses shorter than min_gap
+        idx = np.flatnonzero(loud)
+        runs, a, b = [], idx[0], idx[0]
+        for k in idx[1:]:
+            if (k - b) * HOP > min_gap:
+                runs.append((a, b))
+                a = k
+            b = k
+        runs.append((a, b))
+        for a, b in runs:
+            rs = max(s, (i0 + a) * HOP - pad)
+            re_ = min(e, (i0 + b + 1) * HOP + pad)
+            if re_ - rs >= 0.12:
+                out.append((round(rs, 3), round(re_, 3)))
     return out
 
 
@@ -472,6 +520,7 @@ def clean(ep: Episode, script: Path | None = None) -> float:
     segs = keep_segments([kept_words], duration=duration, **({"max_gap": gaps[0], "pad": gaps[1]} if gaps else {}))
     env = loudness(ep.source)
     segs = refine(segs, env, words, **({"pad": gaps[1]} if gaps else {}))
+    segs = drop_silences(segs, env, **({"min_gap": gaps[0], "pad": gaps[1]} if gaps else {}))
     segs = snap_to_frames([(s, min(e, duration)) for s, e in segs], fps)
     ep.cuts.write_text(json.dumps(segs), encoding="utf-8")
     if script:  # Iraqi dialect: correct the words we keep from the script the owner read
