@@ -322,7 +322,7 @@ header{border-width:0 0 1px 0!important;border-radius:0}
 #viewer{background:rgba(0,0,0,.35)!important}
 .lib{background:rgba(10,10,14,.6)!important}
 .dlg{border-radius:24px;background:var(--dlg)!important}
-.veil{background:rgba(0,0,0,.45);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.veil{z-index:70;background:rgba(0,0,0,.45);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 .pill{background:var(--glass2);border-color:var(--glassline);box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
 .pill:hover{background:rgba(255,255,255,.14)}
 .pill.y{background:linear-gradient(180deg,var(--yhi),var(--y));box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 6px 18px rgba(var(--yrgb),.25)}
@@ -744,6 +744,7 @@ body.director #tAssist.on{background:var(--y);color:var(--yink)}
       <button class="icobtn" id="tUndo" title="تراجع خطوة (آخر تعديل ينلغي)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button>
       <button class="icobtn" id="tRedo" title="رجّع الخطوة الي لغيتها"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/></svg></button>
       </div>
+      <button class="icobtn" id="tReport" title="تقرير للمساعد: الأخطاء والأوقات بدوسة">🩺</button>
       <button class="icobtn" id="tSet" title="الإعدادات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
       <button class="pill" id="tNew" style="margin-inline-start:6px">＋ مقطع جديد</button>
       <button class="pill y" id="tExport"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12M7 8l5-5 5 5M5 21h14"/></svg>تصدير</button>
@@ -1118,6 +1119,15 @@ body.director #tAssist.on{background:var(--y);color:var(--yink)}
       <div><b>💸 مجاني</b><span>كل شي يشتغل على جهازك بلا فلوس. المدفوع ما يشتغل إلا إذا شغلته انت.</span></div>
     </div>
     <div class="row" style="justify-content:flex-end;margin-top:14px"><button class="pill y" id="newsOk">يلا نبدي</button></div>
+  </div>
+</div>
+
+<div class="veil" id="dReport" hidden>
+  <div class="dlg" style="max-width:720px">
+    <h2 style="margin:0 0 6px">تقرير للمساعد</h2>
+    <div class="muted tiny" style="line-height:1.8">بيه جهازك، وإعداداتك، وشگد أخذت كل خطوة، وآخر أسطر الشغل والأخطاء. المفاتيح والرموز السرية ممسوحة منه. انسخه ودزه للمساعد بالمحادثة الي تبني وياه البرنامج.</div>
+    <textarea id="repText" rows="14" readonly dir="ltr" style="width:100%;margin-top:10px;font-family:ui-monospace,monospace;font-size:11px"></textarea>
+    <div class="row" style="justify-content:flex-end;margin-top:10px;gap:8px"><button class="pill" id="repClose">سكّر</button><button class="pill y" id="repCopy">انسخ التقرير</button></div>
   </div>
 </div>
 
@@ -1706,6 +1716,15 @@ function bindCards(root){
 }
 function refreshPlanViews(){ stepPlan(); if (!$("bigsb").hidden){ $("bigCards").innerHTML = data.plan.cards.map(cardHtml).join(""); bindCards($("bigCards")); } reloadTimeline(); }
 $("bigClose").onclick = () => $("bigsb").hidden = true;
+$("tReport").onclick = async () => {
+  $("repText").value = "يجمع التقرير…"; $("dReport").hidden = false;
+  try { $("repText").value = (await api("/api/report")).text; } catch (e){ $("repText").value = "ما گدرت أجمع التقرير: " + e.message; }
+};
+$("repClose").onclick = () => $("dReport").hidden = true;
+$("repCopy").onclick = async () => {
+  try { await navigator.clipboard.writeText($("repText").value); toast("انسخ ✅ الصقه بالمحادثة"); }
+  catch (_){ $("repText").focus(); $("repText").select(); try { document.execCommand("copy"); toast("انسخ ✅ الصقه بالمحادثة"); } catch (__){ toast("حدد الكلام كله وانسخه بإيدك"); } }
+};
 
 /* الهوك */
 function stepHook(){

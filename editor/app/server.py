@@ -2068,6 +2068,59 @@ def _review_step(d: Path, kind: str) -> int:
     return 0
 
 
+def _time_log(ep_id: str, what: str, step: str, secs: float, code) -> None:
+    """How long every step took on his machine, kept for the report (owner, 2026-10-29: "ادخل وشوف اخطاء")."""
+    try:
+        HOME.mkdir(parents=True, exist_ok=True)
+        with open(HOME / "timings.log", "a", encoding="utf-8") as f:
+            f.write(f"{datetime.now():%Y-%m-%d %H:%M} {ep_id[:24]} {what} {step} {secs:.0f}s code={code}\n")
+    except OSError:
+        pass
+
+
+_SECRET = re.compile(r"(sk-[A-Za-z0-9_-]{10,}|xi-[A-Za-z0-9_-]{10,}|[A-Za-z0-9_\-]{32,})")
+
+
+def report() -> str:
+    """One text he can copy and paste to the assistant: his machine, settings, step times, the last job's lines and
+    any error. Keys and long tokens are blanked out, so it is safe to paste anywhere."""
+    import platform
+    out = [f"URU {json.dumps(version(), ensure_ascii=False)[:200]} · {platform.platform()} · {platform.machine()} · {os.cpu_count()} cores"]
+    if MAC:
+        for k in ("hw.model", "machdep.cpu.brand_string", "hw.memsize"):
+            try:
+                out.append(k + ": " + subprocess.run(["sysctl", "-n", k], capture_output=True, text=True, timeout=5).stdout.strip())
+            except (OSError, subprocess.SubprocessError):
+                pass
+        try:
+            out.append("thermal: " + subprocess.run(["pmset", "-g", "therm"], capture_output=True, text=True, timeout=5).stdout.strip()[-300:])
+        except (OSError, subprocess.SubprocessError):
+            pass
+    try:
+        from editor.pipeline.transcribe import mlx_ready
+        out.append(f"mlx: {mlx_ready()}")
+    except Exception as exc:   # noqa: BLE001
+        out.append(f"mlx: {exc}")
+    out.append(f"claude: installed={bool(claude_bin())} logged_in={claude_logged_in()}")
+    out.append("prefs: " + json.dumps(prefs(), ensure_ascii=False))
+    try:
+        out.append("selfcheck: " + "; ".join(("✓ " if c["ok"] else "✗ ") + c["text"] for c in selfcheck()))
+    except Exception as exc:   # noqa: BLE001
+        out.append(f"selfcheck: {exc}")
+    try:
+        out.append("── step times ──\n" + "\n".join((HOME / "timings.log").read_text(encoding="utf-8").splitlines()[-60:]))
+    except OSError:
+        out.append("── step times ── (none yet)")
+    lines = list(JOB.lines)[-200:]
+    if not lines:   # the app was restarted: the newest episode's own log
+        logs = sorted(EPISODES.glob("*/edit/work/app_log.txt"), key=lambda f: f.stat().st_mtime) if EPISODES.exists() else []
+        if logs:
+            lines = [f"(from {logs[-1].parent.parent.parent.name})"] + logs[-1].read_text(encoding="utf-8").splitlines()[-200:]
+    out.append(f"── last job: {JOB.ep} {JOB.steps} running={JOB.running} ok={JOB.ok} step={JOB.step} ──")
+    out += lines
+    return _SECRET.sub("•••", "\n".join(out))
+
+
 def run_job(ep_id: str, what: str) -> None:
     d = episode_dir(ep_id)
     meta = _meta(d)
@@ -2177,6 +2230,7 @@ def run_job(ep_id: str, what: str) -> None:
         else:
             code = 1
         mins = (time.monotonic() - t0) / 60
+        _time_log(ep_id, what, step, mins * 60, code)
         if JOB.stop_asked:
             JOB.say("⏹️ وگّفته")
             ok = False
@@ -2185,7 +2239,8 @@ def run_job(ep_id: str, what: str) -> None:
             JOB.say(f"❌ {STEP_NAMES[step]} ما كمل. شوف آخر الأسطر فوگ")
             ok = False
             break
-        JOB.say(f"✅ {STEP_NAMES[step]} خلص ({mins:.0f} دقيقة)" if mins >= 1 else f"✅ {STEP_NAMES[step]} خلص")
+        secs = round(mins * 60)
+        JOB.say(f"✅ {STEP_NAMES[step]} خلص ({secs // 60}:{secs % 60:02d} دقيقة)")
         if step in ("preview", "render"):   # every build is kept as a version he can go back to
             try:
                 v = studio.save_version(Episode(d), auto=True)
@@ -2574,6 +2629,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json({k: (od / f"{k}.md").read_text(encoding="utf-8") for k in (*brains.BRAINS, "applied") if (od / f"{k}.md").exists()})
             if path == "/api/selfcheck":
                 return self._json(selfcheck())
+            if path == "/api/report":
+                return self._json({"text": report()})
             if path == "/api/eleven":
                 from . import dubbing
                 return self._json(dubbing.status(HOME))
