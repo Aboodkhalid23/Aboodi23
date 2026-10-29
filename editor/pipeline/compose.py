@@ -575,7 +575,9 @@ def compose(ep: Episode, preview: bool = False) -> Path:
     for i, b in enumerate(plan.beats):
         # Frame-grid boundaries: the sum of clip lengths equals the timeline exactly (no drift).
         frames = round(b.end * cv.fps) - round(b.start * cv.fps)
-        look = b.grade or plan.grade or style.grade
+        # his colours stay as filmed until he picks a look himself in «الألوان» (owner, 2026-10-29: "ما أريد
+        # أغير ألوان الفيديو"); a scene the plan marks on purpose (black and white…) keeps its look
+        look = b.grade or "none"
         # his camera: measured correction + light polish, or the look he chose in the app
         footage_grade = app_grade if app_grade is not None and not b.grade else grade_filter(correct, look)
         footage_grade += effect_filter(b.effect, cv)    # an effect he put on this scene in the app

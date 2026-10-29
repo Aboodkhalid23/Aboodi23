@@ -46,9 +46,13 @@ STEPS = {"all": ["prep", "plan", "render", "suite"], "from-plan": ["plan", "rend
          "from-render": ["render", "suite"], "prep": ["prep"], "plan": ["plan", "council", "ai", "images"], "render": ["render"],
          "suite": ["suite"], "requests": ["requests", "render"], "preview": ["preview"],
          # the studio's steps (one screen each)
-         "prepare": ["fetch", "script-names", "transcribe", "sentences"], "cut": ["cut", "captions"], "sentences": ["sentences"], "captions": ["captions"], "hook": ["hook"], "viewer": ["viewer"],
-         "images": ["images"], "build": ["preview"], "final": ["render", "learn"], "assist": ["assist"],
-         "auto": ["fetch", "script-names", "transcribe", "sentences", "cut", "captions", "hook", "plan", "council", "ai", "images", "render", "learn"], "chat": ["chat"],
+         # owner, 2026-10-29: "ترتيب الجمل دي ياخذ أيام": no assistant review on the way any more (it could wait up to
+         # 10 minutes on his Mac); the engine cuts retakes and silences itself, right after the talk is heard
+         "prepare": ["fetch", "script-names", "transcribe", "cut"], "cut": ["cut"], "sentences": ["sentences"], "captions": ["captions"], "hook": ["hook"], "viewer": ["viewer"],
+         "images": ["images"], "build": ["preview"],
+         # one button: the plan, its pictures and a quick preview (owner, 2026-10-29: "اكتب الخطة والبناء")
+         "plan-build": ["plan", "council", "ai", "images", "preview"], "final": ["render", "learn"], "assist": ["assist"],
+         "auto": ["fetch", "script-names", "transcribe", "cut", "plan", "council", "ai", "images", "render", "learn"], "chat": ["chat"],
          # the assistant learns his taste from what he changed (also after every final build), and the app checks itself
          "learn": ["learn"], "selfcheck": ["selfcheck"],
          # ChatGPT and Gemini (his own subscriptions) read the plan and give a second opinion; ideas for the app
@@ -1758,7 +1762,7 @@ def _fast_plan(d: Path) -> int:
             names=("\nأسماء ما انعرفت (انسمعت هيچ):\n" + nc[:4000]) if nc else "",
             extra=_plan_extra(d) + _files_note(d), money=_money_rule())
         JOB.say("🧠 المونتير يكتب الخطة (جواب واحد)…")
-        ans = _fast_json(prompt, tier="best")
+        ans = _fast_json(prompt, tier="best", timeout=420)
         plan = ans.get("plan")
         if not isinstance(plan, dict) or not plan.get("beats"):
             raise ValueError("ما رجعت خطة")
@@ -1788,7 +1792,7 @@ def _fast_plan(d: Path) -> int:
         JOB.say(f"🔧 أصلّح {len(errs)} ملاحظة بالخطة…")
         try:
             plan = _fast_json(PLAN_FIX.format(errors="\n".join(errs[:40]),
-                                              plan=target.read_text(encoding="utf-8")), tier="best").get("plan") or plan
+                                              plan=target.read_text(encoding="utf-8")), tier="best", timeout=300).get("plan") or plan
         except (ValueError, RuntimeError, subprocess.SubprocessError):
             break
     target.unlink(missing_ok=True)
@@ -1796,12 +1800,12 @@ def _fast_plan(d: Path) -> int:
     return -1
 
 
-def _fast_json(prompt: str, tier: str = "mid") -> dict:
+def _fast_json(prompt: str, tier: str = "mid", timeout: int = fastai.TIMEOUT) -> dict:
     """One quick answer from Claude with the data inside the question (no agent, no tools): seconds, not minutes."""
     exe = claude_bin()
     if not exe:
         raise RuntimeError("كلود مو منصّب. دوس «حدّث المونتير» بالإعدادات حتى ينصبه")
-    return fastai.ask(exe, prompt, _model_for(tier), env=_env())
+    return fastai.ask(exe, prompt, _model_for(tier), timeout=timeout, env=_env())
 
 
 def _context_block(d: Path) -> str:

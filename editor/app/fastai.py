@@ -15,7 +15,7 @@ from concurrent.futures import ThreadPoolExecutor
 SYSTEM = ("You are a precise assistant inside a video-editing app. The user's material is Iraqi Arabic. "
           "Answer with one JSON object only: no prose, no code fences.")
 WORKERS = 6
-TIMEOUT = 300
+TIMEOUT = 120      # a quick check that takes longer is stuck: give up, the job goes on without it
 
 
 def parse_json(text: str) -> dict:

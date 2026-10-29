@@ -95,7 +95,8 @@ def test_review_failure_inside_prepare_does_not_stop_the_job(ep, monkeypatch):
     d, _ = ep
     monkeypatch.setattr(srv, "_fast_json", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("ماكو نت")))
     assert srv._review_step(d, "sentences") == 1
-    assert "sentences" in srv.STEPS["prepare"] and srv.STEPS["auto"].index("sentences") < srv.STEPS["auto"].index("cut")
+    # owner, 2026-10-29: the assistant's review is a button now, never a wait between hearing and cutting
+    assert srv.STEPS["prepare"][-2:] == ["transcribe", "cut"] and "sentences" not in srv.STEPS["auto"]
 
 
 def test_captions_review_reads_all_pieces(ep, monkeypatch):
@@ -195,7 +196,7 @@ def test_plan_is_one_answer_and_only_real_mistakes_go_back(ep, monkeypatch):
     asked, checks = [], iter([["❌ beat 1: صورة ما تطابق"], []])
     answers = iter([{"plan": {"beats": [{"kind": "face"}]}, "idea": "فكرة"},
                     {"plan": {"beats": [{"kind": "face"}, {"kind": "image"}]}}])
-    monkeypatch.setattr(srv, "_fast_json", lambda prompt, tier="mid": asked.append(prompt) or next(answers))
+    monkeypatch.setattr(srv, "_fast_json", lambda prompt, tier="mid", timeout=0: asked.append(prompt) or next(answers))
     monkeypatch.setattr(srv, "_plan_errors", lambda d: next(checks))
     assert srv._fast_plan(d) == 0
     assert "PLAN_RULES" not in asked[0] and "هلو شلونكم" in asked[0] and "صورة ما تطابق" in asked[1]
@@ -206,5 +207,5 @@ def test_plan_is_one_answer_and_only_real_mistakes_go_back(ep, monkeypatch):
 def test_plan_falls_back_to_the_agent_when_the_answer_is_no_plan(ep, monkeypatch):
     d, e = ep
     (e.work / "plan_input.txt").write_text("x", encoding="utf-8")
-    monkeypatch.setattr(srv, "_fast_json", lambda prompt, tier="mid": {"oops": 1})
+    monkeypatch.setattr(srv, "_fast_json", lambda prompt, tier="mid", timeout=0: {"oops": 1})
     assert srv._fast_plan(d) == -1 and not (e.edit / "edit_plan.json").exists()
