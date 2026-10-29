@@ -1109,8 +1109,9 @@ body.director #tAssist.on{background:var(--y);color:var(--yink)}
 <!-- what's new in this version -->
 <div class="veil" id="dNews" hidden>
   <div class="dlg news">
-    <div class="row"><img src="/ui/logo.png" alt="" style="height:40px"><div class="grow"><h2 style="margin:0">يو آر يو ٣٫٠</h2><div class="dim tiny">ستايل الأرشيف بدوسة وحدة</div></div><button class="icobtn" id="newsX">✕</button></div>
+    <div class="row"><img src="/ui/logo.png" alt="" style="height:40px"><div class="grow"><h2 style="margin:0">يو آر يو ٣٫١</h2><div class="dim tiny">ستايل الأرشيف صار بيه موشن جرافك</div></div><button class="icobtn" id="newsX">✕</button></div>
     <div class="newsgrid">
+      <div><b>✨ موشن جرافك</b><span>بطاقة الشخص بدائرة واسمه ينكتب، قصاصة جريدة يتظلل بيها السطر المهم بالأصفر، أرقام وسنين تعدّ، خريطة يقرب عليها وينرسم خط بين البلدين، وجملة تطلع كلمة كلمة. ويه كل وحدة صوت خفيف.</span></div>
       <div><b>🎞️ ستايل الأرشيف</b><span>مثل الفيديوهات الي دزيتها: صورة أرشيف حقيقية كل ثانية تقريباً، أبيض وأسود ويه حبيبات فلم، صور مطبوعة تنرمي على مكتب، الكلمة المهمة بخط أنيق، وملصق أصفر على الأسماء. من «الخطة والبناء» ← «ابنِ بستايل الأرشيف».</span></div>
       <div><b>🖼️ صور تطابق الكلام</b><span>صورة الشخص أو الشركة من ويكيبيديا نفسها، والمونتير يختار الأنسب لكل جملة، وبلا تكرار.</span></div>
       <div><b>🙈 علامة الكاميرا تنمسح</b><span>كتابة «دي جي آي» الي بزاوية الفيديو تنمسح لحالها.</span></div>
@@ -2774,7 +2775,7 @@ new MutationObserver(() => { document.body.classList.toggle("chatOn", !$("chat")
   .observe($("chat"), {attributes: true, attributeFilter: ["hidden"]});
 
 /* ---------- 2.0: find anything (⌘K), the home's quick actions, what's new ---------- */
-const URU_VERSION = "3.0.0";
+const URU_VERSION = "3.1.0";
 const normAr = (t) => String(t).toLowerCase().replace(/[\u064B-\u065F\u0670]/g, "").replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/[گ]/g, "ك").replace(/[چ]/g, "ج").replace(/[پ]/g, "ب");
 const step_ = (n) => () => { if (!needEp()) return; showPanel("steps"); step = n; renderSteps(); loadVideo(); };
 const panel_ = (k) => () => { if (!needEp()) return; showPanel(k); };

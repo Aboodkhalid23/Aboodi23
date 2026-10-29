@@ -27,25 +27,42 @@ W, H = 1920, 1080
 FONTS = Path(__file__).resolve().parent.parent / "fonts"
 YELLOW = (255, 221, 0)
 
-SHOTS_PROMPT = """انت مونتير وثائقيات محترف. هاي حلقة يوتيوب لصاحب قناة عراقي يحچي للكاميرا. اكتب قائمة لقطات بأسلوب ريلز الأرشيف
-(صفحة «هيكس كرييتيفز»): صور أرشيف حقيقية تتبدل كل ثانية تقريباً، وكل صورة تطابق الكلام الي ينگال وياها بالضبط.
+SHOTS_PROMPT = """انت مونتير وثائقيات محترف. هاي حلقة يوتيوب لصاحب قناة عراقي يحچي للكاميرا. اكتب قائمة لقطات تخلط أسلوبين
+يعجبوه: ريلز الأرشيف (صور حقيقية تتبدل كل ثانية تقريباً) وموشن جرافك قناة عمر أبو الروب (جريدة يتظلل بيها السطر المهم،
+بطاقة شخص، أرقام وسنين ضخمة، خرائط). كل لقطة تطابق الكلام الي ينگال وياها بالضبط.
 
 الكلام بالثواني (على الفيديو المقصوص، مدته {dur:.2f} ثانية):
 {words}
 
-القواعد:
-- اللقطات تغطي من 0 لـ {dur:.2f} بلا فراغ ولا تداخل، مرتبة.
-- نوعين: "face" (وجهه يحچي) و"photo" (صورة أرشيف تغطي الشاشة وصوته مستمر).
-- أول 3 ثواني صور (هوك). بعدها: سلسلة صور (2–5 صور ورا بعض) ثم وجهه 1.5–4 ثواني، وهيچ. الصور تقريباً 60٪ من الوقت.
-- كل صورة 0.9–2.2 ثانية، وتبدي وتخلص على حدود الكلمات.
-- لكل صورة "queries": 2–3 كلمات بحث إنگليزية. الأولى اسم الشي بس كما عنوانه بويكيبيديا ("Ren Zhengfei"، "Motorola"، "Ed Zander"، "Shenzhen")، والباقي أدق (اسم + حدث أو سنة) تلگاها بويكيميديا كومنز.
-  ⛔ لا كلمات عامة ("business meeting", "phone ringing") إلا إذا ماكو شي محدد، وبعدها خليها مشاهد أرشيفية حقيقية ("1990s Shenzhen street").
-- "word": 1–3 كلمات عربية من الي ينگال بهاللحظة نفسها (تطلع بخط أنيق بنص الصورة). مو لكل صورة: نص الصور تقريباً.
-- "label": بس إذا الصورة لشخص أو شركة وينذكر اسمه بهاللحظة: اسمه بالعربي (ملصق أصفر). وإلا "".
-- "print": true لصورة تنرمي كصورة مطبوعة على مكتب (وثيقة، عقد، صورة شخصية قديمة)، false لصورة تغطي الشاشة. تقريباً ثلث الصور print.
-- "mood": مزاج الموسيقى للحلقة كلها، واحد من: tension, dark, wonder, sad, drive.
+أنواع اللقطات:
+- "face": وجهه يحچي. 1.5–4 ثواني.
+- "photo": صورة أرشيف تغطي الشاشة وصوته مستمر. 0.9–2.2 ثانية. حقولها:
+  "queries" (2–3 كلمات بحث إنگليزية، الأولى اسم الشي بس كما عنوانه بويكيبيديا: "Ren Zhengfei"، "Motorola"، "Shenzhen"، والباقي أدق.
+  ⛔ لا كلمات عامة مثل "business meeting" إلا إذا ماكو شي محدد، وبعدها مشاهد أرشيفية حقيقية "1990s Shenzhen street")،
+  "word" (1–3 كلمات عربية من الي ينگال هسه، بخط أنيق بنص الصورة؛ لنص الصور تقريباً)، "label" (اسم الشخص أو الشركة بالعربي إذا ينذكر هسه، وإلا "")،
+  "print" (true = صورة مطبوعة تنرمي على مكتب، لثلث الصور تقريباً).
+- "person": أول مرة ينذكر شخص مهم: صورته بدائرة ملونة واسمه ضخم. 2–3 ثواني. حقولها: "queries" (اسمه بالإنگليزي أول)، "label" (اسمه بالعربي)، "role" (2–4 كلمات: منو هو).
+- "headline": حدث أو قرار أو خبر (عقد، رفض، حظر): قصاصة جريدة والسطر المهم يتظلل أصفر. 2.5–3.5 ثواني. حقولها: "headline" (عنوان خبر قصير 4–9 كلمات يعيد صياغة الي يگوله بالضبط، بلا معلومة مو بكلامه)، "highlight" (2–3 كلمات من العنوان نفسه)، "source" (السنة إذا معروفة من كلامه، وإلا "أرشيف". ⛔ لا تنسب العنوان لجريدة أو وكالة حقيقية).
+- "number": سنة أو رقم ينذكر (1987، 10 مليار، 50٪): الرقم ضخم يعدّ لحد قيمته. 1.8–2.5 ثانية. حقولها: "value" (مثل "1987" أو "10 مليار")، "caption" (2–5 كلمات تحته).
+- "map": بلدين أو أكثر بصراع أو صفقة أو رحلة: خريطة تقرب عليهم وخط ينرسم بينهم. 2.5–3.5 ثواني. حقولها: "countries" (أسماء إنگليزية مثل "China", "United States of America")، "label" (1–2 كلمة عربية).
+- "text": جملة قوية، سؤال، أو كلام منقول («قال جملة غيرت كل شي»): الجملة تطلع كلمة كلمة على أسود. 2–3.5 ثواني. حقولها: "text" (الجملة بالعربي، 3–9 كلمات)، "quote" (true إذا كلام شخص)، "by" (منو گالها، إذا quote).
 
-جاوب JSON بس: {{"mood": "...", "shots": [{{"start": 0.0, "end": 1.2, "kind": "photo", "queries": ["..."], "word": "...", "label": "", "print": false}}, {{"start": 1.2, "end": 3.0, "kind": "face"}}]}}"""
+القواعد:
+- اللقطات تغطي من 0 لـ {dur:.2f} بلا فراغ ولا تداخل، مرتبة، وتبدي وتخلص على حدود الكلمات.
+- أول 3 ثواني بلا وجهه (هوك قوي: صورة أو رقم أو جريدة).
+- بعدها: سلسلة (2–5 لقطات مو وجه) ثم وجهه، وهيچ. اللقطات الي مو وجه تقريباً 65٪ من الوقت.
+- الموشن جرافك (person, headline, number, map, text) تقريباً 40٪ من اللقطات الي مو وجه، والباقي صور. لا تحط نفس النوع مرتين ورا بعض إلا photo.
+- كل رقم أو سنة ينذكر = number. كل شخص مهم أول مرة = person. كل صراع بين بلدين = map.
+- نوّع: نفس نوع الموشن جرافك بالكثير مرة كل 20 ثانية (مو ثلاث جرايد بدقيقة)، ولا تعيد نفس الخريطة أو نفس الجملة.
+- آخر لقطة وجهه (الختام والسلام).
+- "mood": مزاج الموسيقى للحلقة كلها: tension, dark, wonder, sad, drive.
+
+جاوب JSON بس: {{"mood": "...", "shots": [{{"start": 0.0, "end": 2.2, "kind": "number", "value": "1987", "caption": "..."}}, {{"start": 2.2, "end": 3.4, "kind": "photo", "queries": ["..."], "word": "...", "label": "", "print": false}}, {{"start": 3.4, "end": 5.0, "kind": "face"}}]}}"""
+
+MOTION = ("headline", "person", "number", "map", "text")
+PICTURED = ("photo", "person")   # the shots that need a real picture
+SFX = {"headline": "paper_slide", "number": "impact", "person": "swoosh", "map": "whoosh_soft", "text": "tick_soft",
+       "photo": "whoosh_soft"}
 
 
 # ---------- the shot list ----------
@@ -86,11 +103,28 @@ def tidy(shots: list[dict], dur: float) -> list[dict]:
     return out
 
 
+def vary(shots: list[dict]) -> list[dict]:
+    """The same map twice reads as a mistake (seen 2026-10-29): a repeat becomes a photo of the two sides;
+    and the goodbye is on his face."""
+    seen = set()
+    for s in shots:
+        if s.get("kind") == "map":
+            key = tuple(sorted(s.get("countries") or []))
+            if key in seen:
+                names = list(key)
+                s.update(kind="photo", queries=[" ".join(names) + " relations", *names][:3], word=s.get("label", ""),
+                          label="", print=False)
+            seen.add(key)
+    if shots and shots[-1].get("kind") != "face" and shots[-1]["end"] - shots[-1]["start"] < 3:
+        shots[-1] = {"start": shots[-1]["start"], "end": shots[-1]["end"], "kind": "face"}
+    return shots
+
+
 def shot_list(ep: Episode, ask) -> dict:
     """`ask(prompt) -> dict` (one quick Claude answer)."""
     dur = clean_duration(ep)
     ans = ask(SHOTS_PROMPT.format(dur=dur, words=words_block(ep)))
-    ans["shots"] = tidy(ans.get("shots") or [], dur)
+    ans["shots"] = vary(tidy(ans.get("shots") or [], dur))
     (ep.work / "archive_shots.json").write_text(json.dumps(ans, ensure_ascii=False, indent=1), encoding="utf-8")
     return ans
 
@@ -203,7 +237,7 @@ def fetch_pictures(ep: Episode, shots: list[dict], ask=None) -> None:
                                                            ensure_ascii=False), encoding="utf-8")
         return True
 
-    todo = [(k, s) for k, s in enumerate(shots) if s.get("kind") == "photo"
+    todo = [(k, s) for k, s in enumerate(shots) if s.get("kind") in PICTURED
             and not ((folder / f"shot_{k}.jpg").exists()
                      and json.loads((folder / f"shot_{k}.json").read_text()).get("q") == s.get("queries"))]
     with ThreadPoolExecutor(max_workers=3) as pool:   # Wikimedia blocks a burst of requests for minutes
@@ -246,7 +280,10 @@ def fetch_pictures(ep: Episode, shots: list[dict], ask=None) -> None:
         list(pool.map(fetch, todo))
     for k, s in todo:
         if not (folder / f"shot_{k}.jpg").exists():
-            s["kind"] = "face"
+            if s["kind"] == "person" and s.get("label"):   # no photo of them: their name still comes up big
+                s.update(kind="text", text=s["label"] + (" · " + s["role"] if s.get("role") else ""))
+            else:
+                s["kind"] = "face"
 
 
 # ---------- drawing ----------
@@ -450,31 +487,39 @@ def find_logo(ep: Episode) -> str | None:
 
 def mix(ep: Episode, video: Path, shots: list[dict], mood: str, out: Path) -> Path:
     """His voice levelled (no loud or quiet stretches), a music bed under it that ducks while he talks,
-    and a soft whoosh on every picture run."""
+    and a sound under each graphic as it lands (paper for a cutting, a hit for a number, a whoosh for photos)."""
     from .composer import compose, write_wav
     from .sfx import sfx_path
     dur = clean_duration(ep)
     music = write_wav(compose(dur + 1.0, mood if mood in ("tension", "dark", "wonder", "sad", "drive") else "tension", 11),
                       ep.work / "archive_music.wav")
-    runs = [s["start"] for k, s in enumerate(shots) if s["kind"] == "photo" and (k == 0 or shots[k - 1]["kind"] != "photo")]
-    try:
-        whoosh = sfx_path("whoosh_soft")
-    except Exception:   # noqa: BLE001
-        whoosh = None
+    # a sound under every graphic as it lands, and a soft whoosh where a run of photos starts
+    events: dict[str, list[float]] = {}
+    for k, s in enumerate(shots):
+        kind = s["kind"]
+        if kind in MOTION or (kind == "photo" and (k == 0 or shots[k - 1]["kind"] != "photo")):
+            events.setdefault(SFX.get(kind, "whoosh_soft"), []).append(s["start"])
     inputs = ["-i", str(video), "-i", str(ep.clean_video), "-i", str(music)]
     graph = ["[1:a]highpass=f=70,acompressor=threshold=-20dB:ratio=3:attack=5:release=120,"
              "loudnorm=I=-15:TP=-1.5:LRA=7,aresample=48000,asplit=2[v][vk]",
              "[2:a]volume=0.32,aresample=48000[m]",
              "[m][vk]sidechaincompress=threshold=0.03:ratio=6:attack=20:release=400[md]"]
     mixes = ["[v]", "[md]"]
-    if whoosh and runs:
-        inputs += ["-i", str(whoosh)]
-        k = len(runs)
-        graph.append(f"[3:a]volume=0.5,asplit={k}" + "".join(f"[w{i}]" for i in range(k)))
-        for i, t in enumerate(runs):
-            ms = max(0, int((t - 0.15) * 1000))
-            graph.append(f"[w{i}]adelay={ms}|{ms}[d{i}]")
-            mixes.append(f"[d{i}]")
+    n_in = 3
+    for name, times in events.items():
+        try:
+            path = sfx_path(name)
+        except Exception:   # noqa: BLE001 — a sound that can't be made: the others still play
+            continue
+        inputs += ["-i", str(path)]
+        tags = [f"s{n_in}_{i}" for i in range(len(times))]
+        graph.append(f"[{n_in}:a]aresample=48000,volume={0.5 if name.startswith('whoosh') else 0.35},asplit={len(times)}"
+                     + "".join(f"[{t}]" for t in tags))
+        for tag, t in zip(tags, times):
+            ms = max(0, int((t - (0.15 if name.startswith(("whoosh", "swoosh")) else 0.0)) * 1000))
+            graph.append(f"[{tag}]adelay={ms}|{ms}[{tag}d]")
+            mixes.append(f"[{tag}d]")
+        n_in += 1
     graph.append("".join(mixes) + f"amix=inputs={len(mixes)}:normalize=0:duration=first,alimiter=limit=0.95[a]")
     subprocess.run(["ffmpeg", "-v", "error", "-y", *inputs, "-filter_complex", ";".join(graph), "-map", "0:v",
                     "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "256k", "-t", f"{dur:.3f}",
@@ -484,11 +529,16 @@ def mix(ep: Episode, video: Path, shots: list[dict], mood: str, out: Path) -> Pa
 
 # ---------- the whole thing ----------
 
-def build(ep: Episode, ask, say=print, out: Path | None = None) -> Path:
-    say("🎞️ قالب الأرشيف: أكتب قائمة اللقطات…")
-    plan = shot_list(ep, ask)
+def build(ep: Episode, ask, say=print, out: Path | None = None, reuse: bool = False) -> Path:
+    """`reuse`: the shot list of the last build (only the drawing changes): fast, and the same pictures."""
+    saved = ep.work / "archive_shots.json"
+    if reuse and saved.exists():
+        plan = json.loads(saved.read_text(encoding="utf-8"))
+    else:
+        say("🎞️ قالب الأرشيف: أكتب قائمة اللقطات…")
+        plan = shot_list(ep, ask)
     shots = plan["shots"]
-    say(f"🖼️ أجيب صور الأرشيف ({sum(s['kind'] == 'photo' for s in shots)} صورة)…")
+    say(f"🖼️ أجيب الصور ({sum(s['kind'] in PICTURED for s in shots)})، والموشن جرافك {sum(s['kind'] in MOTION for s in shots)}…")
     from .transcribe import load_words
     words = load_words(ep.clean_words)
     for s in shots:
@@ -512,6 +562,15 @@ def build(ep: Episode, ask, say=print, out: Path | None = None) -> Path:
         if s["kind"] == "photo":
             img = Image.open(ep.assets / "archive" / f"shot_{k}.jpg").convert("RGB")
             return encode(photo_frames(img, n, s, seed=k), o, rate, film)
+        if s["kind"] in MOTION:
+            from . import motion
+            if s["kind"] == "person":
+                img = Image.open(ep.assets / "archive" / f"shot_{k}.jpg").convert("RGB")
+                frames = motion.person(img, s, n, fps, archive_look)
+            else:
+                frames = {"headline": motion.headline, "number": motion.number, "map": motion.world_map,
+                          "text": motion.big_text}[s["kind"]](s, n, fps)
+            return encode(frames, o, rate, film)
         return face_clip(ep, round(s["start"] * fps) / fps, n / fps, s["_close"], o, rate, delogo)
     for k, s in enumerate(shots):   # his face alternates medium / close, so the cut between two takes never jumps
         if s["kind"] == "face":

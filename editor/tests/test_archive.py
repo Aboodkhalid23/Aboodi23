@@ -47,3 +47,12 @@ def test_plain_search_hits_must_share_a_word_of_the_query(monkeypatch):
     shots = [{"kind": "photo", "queries": ["1990s Shenzhen street"]}]
     archive.fetch_pictures(Ep, shots)
     assert got == ["u2"] and shots[0]["kind"] == "face"                   # nothing usable → his face
+
+
+def test_a_repeated_map_becomes_a_photo_and_the_goodbye_is_his_face():
+    shots = archive.vary([{"start": 0, "end": 3, "kind": "map", "countries": ["China", "United States of America"], "label": "الصفقة"},
+                          {"start": 3, "end": 6, "kind": "face"},
+                          {"start": 6, "end": 9, "kind": "map", "countries": ["United States of America", "China"], "label": "الصدام"},
+                          {"start": 9, "end": 10.5, "kind": "photo", "queries": ["Huawei"]}])
+    assert shots[0]["kind"] == "map" and shots[2]["kind"] == "photo" and shots[2]["queries"]
+    assert shots[-1]["kind"] == "face"
