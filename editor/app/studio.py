@@ -16,7 +16,7 @@ from pathlib import Path
 
 import numpy as np
 
-from editor.pipeline.clean import decide, keep_segments, loudness
+from editor.pipeline.clean import decide, keep_segments, load_heard, loudness
 from editor.pipeline.grade import LOOK_NAMES, LOOKS, POLISH, adjust_filter
 from editor.pipeline.paths import Episode
 from editor.pipeline.transcribe import Word, load_words, save_words
@@ -159,8 +159,8 @@ def units(words: list[Word], pause: float = 0.35, most: int = 14) -> list[list[W
     return out
 
 
-def _auto(words: list[Word], overrides: dict) -> tuple[set, dict]:
-    kept, removed = decide(words, overrides)
+def _auto(words: list[Word], overrides: dict, heard: list | None = None) -> tuple[set, dict]:
+    kept, removed = decide(words, overrides, heard)
     kept_ids = {id(w) for w in kept}
     why = {}
     for ws, reason in removed:
@@ -182,7 +182,7 @@ def sentences(ep: Episode) -> dict:
     if not ep.transcript.exists():
         return {"ready": False, "items": []}
     words = load_words(ep.transcript)
-    kept_ids, why = _auto(words, _overrides(ep))
+    kept_ids, why = _auto(words, _overrides(ep), load_heard(ep))
     items, groups = [], {}
     for i, p in enumerate(units(words)):
         gone = [w for w in p if id(w) not in kept_ids]
@@ -208,7 +208,7 @@ def set_sentences(ep: Episode, keep: dict) -> dict:
     decision is written, so the cutter's own improvements keep working."""
     words = load_words(ep.transcript)
     phrases = units(words)
-    kept_ids, _ = _auto(words, {})
+    kept_ids, _ = _auto(words, {}, load_heard(ep))
     drop, back = [], []
     for k, want in keep.items():
         i = int(k)

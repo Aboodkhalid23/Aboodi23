@@ -29,3 +29,4 @@ def _keep_real_history_clean(tmp_path, monkeypatch):
     import editor.pipeline.review as review
     monkeypatch.setattr(review, "HISTORY", tmp_path / "history.jsonl")
     monkeypatch.setenv("ABOODI_HISTORY", str(tmp_path / "history.jsonl"))   # pipeline runs in a subprocess too
+    monkeypatch.setenv("ABOODI_NO_WORDTIMES", "1")    # tests never download the 90 MB word-edge model

@@ -825,6 +825,11 @@ def heal_tools() -> None:
         r = subprocess.run(["node", "-e", "require('@remotion/renderer').ensureBrowser().then(()=>console.log('ok'))"],
                            cwd=REMOTION_DIR, capture_output=True, text=True, timeout=1800)
         log.append(f"browser rc={r.returncode} {(r.stdout + r.stderr)[-300:]}")
+    try:   # the word-edge model of the professional cut (90 MB once), so the first episode does not wait for it
+        from editor.pipeline.wordtimes import model_files
+        log.append(f"word edges: {'ready' if model_files() else 'missing'}")
+    except Exception as exc:   # noqa: BLE001
+        log.append(f"word edges: {exc}")
     if True:
         log.append(f"mlx now: {tr.mlx_ready()} {tr.MLX_PROBLEM}")
         try:

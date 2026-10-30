@@ -4,16 +4,20 @@ help from him (owner's rule: he never says which take was right).
 What goes, in this order:
   1. mistake cues   a short phrase like "لا لا، خلي أعيد" / "غلط" / "من جديد" — it and the attempt before it
   2. retakes        a phrase that a later phrase restarts (fuzzy: the transcript may spell the two takes a little
-                    differently, or he adds / drops a word); everything from the failed attempt up to the
-                    restart goes, so a wrong continuation never survives. The LAST take is kept.
+                    differently, or he adds / drops a word), or a short try whose SOUND the take after it says
+                    again (edit/heard.json: the letters the speech model hears, when Whisper spelled the try
+                    differently); everything from the failed attempt up to the restart goes, so a wrong
+                    continuation never survives. The LAST take is kept.
   3. restarts       inside one breath: "راح نحچي عن... راح نحچي عن قصة" → the first "راح نحچي عن"
   4. stutters       "ال ال الشركة", a cut-off word followed by the full word
   5. fillers        long "اممم / ااا" sounds
-  6. silences       every pause longer than MAX_GAP; a short natural breath is kept at each cut
+  6. silences       every pause longer than MAX_GAP where a speech model (vad.py) hears no talk — room noise and
+                    breaths no longer hide one; ~0.2 s of breath is kept at each cut, a little more after the
+                    talk than before the next word
 
-Every cut point is then moved to the quietest spot of the real sound next to it (Whisper's word times can be
-off by a tenth of a second: cutting on them clips word endings), each piece gets an 8 ms fade (no clicks),
-and the cuts land on frame boundaries. edit/work/cut_report.txt lists everything removed and why;
+The words arrive on the edges the sound shows (wordtimes.py: every take read on its own, then aligned letter by
+letter), every cut point is moved to the quietest spot of the real sound next to it, each piece gets a 12–20 ms
+fade (no clicks), and the cuts land on frame boundaries. edit/work/cut_report.txt lists everything removed and why;
 edit/cuts_override.json ({"keep": [[s, e]], "drop": [[s, e]]}, source seconds) overrides any decision."""
 import json
 import re
@@ -35,7 +39,8 @@ _TRANS = str.maketrans({"أ": "ا", "إ": "ا", "آ": "ا", "ى": "ي", "ة": "�
 
 PHRASE_PAUSE = 0.7     # s: a longer pause starts a new phrase (unit for retakes)
 MAX_GAP = 0.45         # s: a longer pause inside the talk is cut out
-PAD = 0.12             # s: breath kept on each side of a cut (when the sound allows)
+PAD = 0.12             # s: breath kept after the talk at a cut (when the sound allows)
+HEAD_SHARE = 0.7       # ... and this share of it before the next word: ~0.2 s of breath per removed pause in all
 RETAKE_WINDOW = 30.0   # s: how far ahead a restart can come
 PUNCH = 1.08          # after a removed retake the picture steps in (or back out) by this much: the jump reads as a
 JUMP = 0.9            # deliberate second camera, not a hole. JUMP: seconds removed that make a cut "visible"
@@ -125,9 +130,42 @@ def _is_cue(p: list[Word]) -> bool:
     return strong and sum(t in CUE_WORDS for t in toks) / len(toks) >= 0.6
 
 
+# what the speech model itself heard in each stretch of talk (edit/heard.json, written with the word edges)
+_FOLD = str.maketrans({"ذ": "ز", "ظ": "ز", "ض": "ز", "ث": "س", "ص": "س", "ط": "ت", "ق": "ك", "ح": "ه", "ع": "ا",
+                       "ء": "ا", "ئ": "ا", "ؤ": "ا"})
+SAY_AGAIN = 0.75   # how alike (0–1) a false start sounds to the piece of the take that follows it
+
+
+def load_heard(ep: Episode) -> list | None:
+    try:
+        return [tuple(x) for x in json.loads(ep.heard.read_text(encoding="utf-8"))]
+    except (OSError, ValueError, TypeError):
+        return None
+
+
+def _heard(heard: list, s: float, e: float) -> str:
+    return "".join(t for hs, he, t in heard if hs < e + 0.05 and he > s - 0.05).translate(_FOLD)
+
+
+def _sounds_like_start(a: list[Word], b: list[Word], heard: list | None) -> bool:
+    """A short try that the take after it says again: "متوو… ام… ام توها متوفي" (owner's test clip, 2026-10-30).
+    Whisper spelled the tries "وماته" and "او موان", so the words never matched; the letters the speech model hears
+    do. A try of 2–3 letters must open the take; a longer one may come back a word or two into it."""
+    if not heard or a[-1].end - a[0].start > 1.5 or b[0].start - a[-1].end > 6.0:
+        return False
+    la = _heard(heard, a[0].start, a[-1].end)
+    n = len(la)
+    if n < 2:
+        return False
+    lb = _heard(heard, b[0].start, b[-1].end)[: n + (1 if n <= 3 else 6)]
+    if len(lb) < n:
+        return False
+    return max(SequenceMatcher(None, la, lb[k:k + n]).ratio() for k in range(len(lb) - n + 1)) >= SAY_AGAIN
+
+
 def drop_retakes(phrases: list[list[Word]], window: float = RETAKE_WINDOW, match: int = 3,
                  max_retake: float = 6.0, overlap: float = 0.6,
-                 dropped: list | None = None, reasons: dict | None = None) -> list[list[Word]]:
+                 dropped: list | None = None, reasons: dict | None = None, heard: list | None = None) -> list[list[Word]]:
     """Phrases that survive. `dropped` collects the rest; `reasons[id(phrase)]` says why."""
     gone: dict[int, str] = {}
     for i, a in enumerate(phrases):
@@ -143,7 +181,7 @@ def drop_retakes(phrases: list[list[Word]], window: float = RETAKE_WINDOW, match
             b = phrases[j]
             if b[0].start - a[-1].end > window:
                 break
-            if _is_retake(a, b, match, max_retake, overlap):
+            if _is_retake(a, b, match, max_retake, overlap) or _sounds_like_start(a, b, heard):
                 gone.setdefault(i, "إعادة")
                 # the whole failed attempt goes: what he said between the try and the restart
                 if b[0].start - a[0].start <= SPAN_LIMIT:
@@ -171,7 +209,8 @@ def trim_phrase(p: list[Word], removed: list | None = None) -> list[Word]:
         t = [normalize_ar(w.text) for w in words]
         for i in range(len(words) - 1):
             cut = None
-            if t[i] in FILLERS and words[i].end - words[i].start >= 0.2:
+            if t[i] in FILLERS and words[i].end - words[i].start >= 0.2 and not words[i].text.startswith(("أ", "إ")):
+                # (Whisper writes the word "أم" / "أو" with its hamza and the hum "امم" without one)
                 cut = (i, i + 1, "حشو")
             elif t[i] and t[i + 1].startswith(t[i]) and t[i] != t[i + 1] and len(t[i]) >= 3 \
                     and words[i].end - words[i].start < 0.6:     # ("لا، لازم" is not a cut-off word: 3 letters at least)
@@ -336,6 +375,16 @@ def loudness(path: Path) -> np.ndarray:
     return np.sqrt((x[: n * 160].reshape(n, 160) ** 2).mean(axis=1)) if n else np.zeros(1, np.float32)
 
 
+def speech_mask(path: Path, env: np.ndarray) -> np.ndarray | None:
+    """Where a model hears him talk, on the loudness grid (vad.py); None when it can't tell (loudness decides)."""
+    try:
+        from .transcribe import load_audio
+        from .vad import mask
+        return mask(load_audio(path), env)
+    except Exception:   # noqa: BLE001
+        return None
+
+
 def refine(segs: list[tuple[float, float]], env: np.ndarray, words: list[Word],
            pad: float = PAD) -> list[tuple[float, float]]:
     """Move each cut to where the sound really is quiet: the end goes past the word's real tail (Whisper
@@ -375,19 +424,22 @@ def refine(segs: list[tuple[float, float]], env: np.ndarray, words: list[Word],
 
 
 def drop_silences(segs: list[tuple[float, float]], env: np.ndarray, min_gap: float = MAX_GAP,
-                  pad: float = PAD) -> list[tuple[float, float]]:
-    """Cut every quiet stretch the sound itself shows, whatever the words say (owner, 2026-10-29: "اول 3 ثواني
+                  pad: float = PAD, speech: np.ndarray | None = None) -> list[tuple[float, float]]:
+    """Cut every pause the sound itself shows, whatever the words say (owner, 2026-10-29: "اول 3 ثواني
     اكو سكتات ما دي تنشال"). Whisper often stretches a word over a pause, or starts the first word at 0 s while
     he only talks at 3 s; those pauses stayed. A pause longer than `min_gap` inside a kept range goes, keeping a
-    short breath (`pad`) on each side; a quiet head or tail of a range goes too."""
+    breath on each side (`pad` after the talk, a little less before it: the next word comes in on time); a quiet
+    head or tail of a range goes too. `speech` (vad.mask, same 10 ms grid): where a model hears talk — room noise,
+    a hum or a breath is not talk, so it no longer hides a pause; without it, loudness decides."""
     if len(env) < 10:
         return segs
     floor, peak = float(np.percentile(env, 10)), float(np.percentile(env, 95))
     quiet = max(floor * 3, peak * 0.04, 1e-4)
+    head = pad * HEAD_SHARE
     out = []
     for s, e in segs:
         i0, i1 = int(s / HOP), min(int(e / HOP), len(env))
-        loud = env[i0:i1] > quiet
+        loud = speech[i0:i1] if speech is not None and len(speech) >= i1 else env[i0:i1] > quiet
         if not loud.any():
             continue
         # stretches of sound, joined across pauses shorter than min_gap
@@ -400,7 +452,7 @@ def drop_silences(segs: list[tuple[float, float]], env: np.ndarray, min_gap: flo
             b = k
         runs.append((a, b))
         for a, b in runs:
-            rs = max(s, (i0 + a) * HOP - pad)
+            rs = max(s, (i0 + a) * HOP - head)
             re_ = min(e, (i0 + b + 1) * HOP + pad)
             if re_ - rs >= 0.12:
                 out.append((round(rs, 3), round(re_, 3)))
@@ -409,14 +461,15 @@ def drop_silences(segs: list[tuple[float, float]], env: np.ndarray, min_gap: flo
 
 # ---------- the whole stage ----------
 
-def decide(words: list[Word], overrides: dict | None = None) -> tuple[list[Word], list[tuple[list[Word], str]]]:
-    """(words kept, [(words removed, why)]) for the full transcript."""
+def decide(words: list[Word], overrides: dict | None = None,
+           heard: list | None = None) -> tuple[list[Word], list[tuple[list[Word], str]]]:
+    """(words kept, [(words removed, why)]) for the full transcript. `heard`: load_heard(ep), when there."""
     _ALL[:] = words
     _ORDER.clear()
     _ORDER.update({id(w): i for i, w in enumerate(words)})
     removed: list[tuple[list[Word], str]] = []
     dropped, reasons = [], {}
-    kept_phrases = drop_retakes(split_phrases(words), dropped=dropped, reasons=reasons)
+    kept_phrases = drop_retakes(split_phrases(words), dropped=dropped, reasons=reasons, heard=heard)
     removed += [(p, reasons.get(id(p), "إعادة")) for p in dropped]
     kept = [w for p in kept_phrases for w in trim_phrase(p, removed)]
     kept = drop_restarts(kept, removed)
@@ -432,12 +485,14 @@ def decide(words: list[Word], overrides: dict | None = None) -> tuple[list[Word]
     return kept, removed
 
 
-def unheard(env: np.ndarray, words: list[Word], min_len: float = 0.8) -> list[tuple[float, float]]:
-    """Stretches of clear sound that no transcribed word covers (speech Whisper may have missed: it is cut
-    with the silences, so the report lists it for a human look)."""
+def unheard(env: np.ndarray, words: list[Word], min_len: float = 0.8,
+            speech: np.ndarray | None = None) -> list[tuple[float, float]]:
+    """Stretches of talk (or, without the speech model, clear sound) that no transcribed word covers (speech
+    Whisper may have missed: it is cut with the silences, so the report lists it for a human look)."""
     if len(env) < 10:
         return []
-    loud = env > max(float(np.percentile(env, 10)) * 4, float(np.percentile(env, 95)) * 0.15)
+    loud = speech[:len(env)] if speech is not None else \
+        env > max(float(np.percentile(env, 10)) * 4, float(np.percentile(env, 95)) * 0.15)
     covered = np.zeros(len(env), bool)
     for w in words:
         covered[max(0, int((w.start - 0.25) / HOP)): int((w.end + 0.25) / HOP)] = True
@@ -509,7 +564,7 @@ def clean(ep: Episode, script: Path | None = None) -> float:
     duration = probe(ep.source).duration
     override_file = ep.edit / "cuts_override.json"
     overrides = json.loads(override_file.read_text(encoding="utf-8")) if override_file.exists() else {}
-    kept_words, removed = decide(words, overrides)
+    kept_words, removed = decide(words, overrides, load_heard(ep))
     (ep.work / "retakes.json").write_text(json.dumps(
         [{"start": ws[0].start, "end": ws[-1].end, "why": why, "text": " ".join(w.text for w in ws)}
          for ws, why in removed], ensure_ascii=False, indent=1), encoding="utf-8")
@@ -519,8 +574,9 @@ def clean(ep: Episode, script: Path | None = None) -> float:
     gaps = pace_gaps(ep)   # the assistant sets the rhythm (the app's option): how much of each pause stays
     segs = keep_segments([kept_words], duration=duration, **({"max_gap": gaps[0], "pad": gaps[1]} if gaps else {}))
     env = loudness(ep.source)
+    talk = speech_mask(ep.source, env)
     segs = refine(segs, env, words, **({"pad": gaps[1]} if gaps else {}))
-    segs = drop_silences(segs, env, **({"min_gap": gaps[0], "pad": gaps[1]} if gaps else {}))
+    segs = drop_silences(segs, env, speech=talk, **({"min_gap": gaps[0], "pad": gaps[1]} if gaps else {}))
     segs = snap_to_frames([(s, min(e, duration)) for s, e in segs], fps)
     ep.cuts.write_text(json.dumps(segs), encoding="utf-8")
     if script:  # Iraqi dialect: correct the words we keep from the script the owner read
@@ -528,7 +584,7 @@ def clean(ep: Episode, script: Path | None = None) -> float:
         kept_words = align_to_script(ep, kept_words, script)
     save_words(remap_words(kept_words, segs), ep.clean_words)
     kept_secs = sum(e - s for s, e in segs)
-    _report(ep, removed, duration, kept_secs, unheard(env, words))
+    _report(ep, removed, duration, kept_secs, unheard(env, words, speech=talk))
 
     zoomed, punch = False, _punch_filter(ep)
     try:
@@ -547,7 +603,7 @@ def clean(ep: Episode, script: Path | None = None) -> float:
             last_reframe = t_out
         t_out += d
         # the sound: a slightly longer fade on the big cuts, so no click and no sudden breath
-        fade = min(0.025 if jump or (i + 1 < len(segs) and segs[i + 1][0] - e >= JUMP) else 0.012, d / 4)
+        fade = min(0.02 if jump or (i + 1 < len(segs) and segs[i + 1][0] - e >= JUMP) else 0.012, d / 4)
         pieces.append((f0, f1, zoomed, fade))
     if len(pieces) > CHUNK:
         try:

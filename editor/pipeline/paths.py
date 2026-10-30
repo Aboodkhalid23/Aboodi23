@@ -21,6 +21,8 @@ class Episode:
     @property
     def transcript(self) -> Path: return self.edit / "transcript.json"
     @property
+    def heard(self) -> Path: return self.edit / "heard.json"     # letters the speech model hears per stretch of talk
+    @property
     def cuts(self) -> Path: return self.edit / "cuts.json"
     @property
     def clean_video(self) -> Path: return self.work / "clean.mp4"

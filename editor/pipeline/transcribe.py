@@ -87,10 +87,28 @@ def speech_chunks(audio: np.ndarray, most: float = CHUNK_MAX, gap: float = CHUNK
     n = len(audio) // hop
     if n == 0:
         return []
+    from .vad import islands
+    spans = islands(audio, min_silence=gap)      # speech by a model (room noise and breaths are not talk)
+    runs = [(int(s * 100), int(np.ceil(e * 100))) for s, e in spans] if spans is not None else _loud_runs(audio, gap)
+    runs = [(a, b) for a, b in runs if b - a >= 8]          # clicks and breaths shorter than 80 ms
+    out = []
+    for a, b in runs:
+        if out and (a - out[-1][1]) / 100 < split and (b - out[-1][0]) / 100 <= most:
+            out[-1] = (out[-1][0], b)
+        else:
+            out.append((a, b))
+    pad = 0.12
+    total = len(audio) / SR
+    return [(max(0.0, a / 100 - pad), min(total, b / 100 + pad)) for a, b in out]
+
+
+def _loud_runs(audio: np.ndarray, gap: float) -> list[tuple[int, int]]:
+    """Without the speech model: stretches of sound (10 ms steps), pauses shorter than `gap` filled in."""
+    hop = SR // 100
+    n = len(audio) // hop
     env = np.sqrt((audio[: n * hop].reshape(n, hop) ** 2).mean(axis=1))
     floor, peak = float(np.percentile(env, 10)), float(np.percentile(env, 98))
     loud = env > max(floor * 3, peak * 0.05, 3e-4)
-    # stretches of sound, with pauses shorter than `gap` filled in
     runs, start, quiet = [], None, 0
     for i, on in enumerate(loud):
         if on:
@@ -104,16 +122,7 @@ def speech_chunks(audio: np.ndarray, most: float = CHUNK_MAX, gap: float = CHUNK
                 start, quiet = None, 0
     if start is not None:
         runs.append((start, n - quiet))
-    runs = [(a, b) for a, b in runs if b - a >= 8]          # clicks and breaths shorter than 80 ms
-    out = []
-    for a, b in runs:
-        if out and (a - out[-1][1]) / 100 < split and (b - out[-1][0]) / 100 <= most:
-            out[-1] = (out[-1][0], b)
-        else:
-            out.append((a, b))
-    pad = 0.12
-    total = len(audio) / SR
-    return [(max(0.0, a / 100 - pad), min(total, b / 100 + pad)) for a, b in out]
+    return runs
 
 
 # what Whisper writes when it hears nothing useful (YouTube subtitle credits it learnt from)
@@ -125,7 +134,16 @@ def _clean_piece(words: list[Word]) -> list[Word]:
     text = " ".join(w.text for w in words)
     if any(h in text for h in HALLUCINATIONS) and (len(words) <= 6 or sum(w.p for w in words) / len(words) < 0.5):
         return []
-    return words
+    # Whisper stuck in a loop on a short try ("وماته وماته وماته" for a 0.6 s "متو…"): one word, over the same time
+    bare = lambda w: w.text.strip(".,،؟?!")
+    groups: list[list[Word]] = []
+    for w in words:
+        if groups and bare(w) == bare(groups[-1][0]):
+            groups[-1].append(w)
+        else:
+            groups.append([w])
+    return [w for g in groups for w in ([Word(g[0].text, g[0].start, g[-1].end, min(x.p for x in g))]
+                                        if len(g) >= 3 else g)]
 
 
 def _words_of(segments, offset: float, end: float) -> list[Word]:
@@ -174,19 +192,32 @@ def pick_dialect(ep: Episode, sample=None) -> str:
 
 
 WINDOW = 25.0     # seconds per reading window (Whisper always pays for a 30 s window, however short the piece)
+VERBATIM_SPLIT = 0.35   # verbatim reading: every pause this long starts a new piece (a retake comes after a stop)
 
 
-def _run_chunks(ep: Episode, read_piece) -> list[Word]:
+def verbatim_wanted() -> bool:
+    """Every stretch of talk read on its own, so each take is written down (owner, 2026-10-30: "شال الصحيح وخلّى
+    الغلط من كررت"). On the Mac's chip a piece costs a fraction of a second; on the CPU it is ~4x slower than
+    reading 25 s windows, so there it is only on when asked (ABOODI_VERBATIM=1)."""
+    flag = os.environ.get("ABOODI_VERBATIM")
+    return flag != "0" if flag is not None else mlx_ready()
+
+
+def _run_chunks(ep: Episode, read_piece, verbatim: bool = False) -> list[Word]:
     """`read_piece(audio, example sentence or None)` → segments.
-    Pass 1 reads the talk in windows of up to 25 s cut at pauses: as fast as Whisper gets (reading every short piece
-    on its own made a 10-minute talk ~15x slower: owner, 2026-10-28 "التفريغ… نص ساعة").
-    Pass 2 finds every stretch of voice that got no words — the retakes Whisper skipped as "said twice" — and reads
-    only those again, alone. The dialect is found on the first pieces first (owner, 2026-10-26)."""
+    Verbatim: every stretch of talk between two pauses is read alone (Whisper writes a sentence it hears twice in one
+    window only once, so the failed take never reached the cut). Otherwise pass 1 reads windows of up to 25 s cut at
+    pauses: as fast as Whisper gets on the CPU (owner, 2026-10-28 "التفريغ… نص ساعة").
+    Pass 2 finds every stretch of voice that still got no words and reads only those again, alone.
+    The dialect is found on the first pieces first (owner, 2026-10-26)."""
     from . import dialects
     audio = load_audio(ep.source)
     total = len(audio) / SR or 1.0
     pieces = speech_chunks(audio)                                   # every breath-to-pause stretch
-    windows = speech_chunks(audio, most=WINDOW, split=10 ** 9)      # the same, packed into reading windows
+    windows = speech_chunks(audio, split=VERBATIM_SPLIT) if verbatim else \
+        speech_chunks(audio, most=WINDOW, split=10 ** 9)            # the same, packed into reading windows
+    if verbatim:
+        print(f"🔎 أقرا كل مقطع كلام لحاله ({len(windows)} مقطع) حتى تنكتب كل إعادة", flush=True)
     cut = lambda s, e: audio[int(s * SR):int(e * SR)]
 
     def sample() -> str:   # one reading of the first window, with no example, tells the dialect
@@ -199,7 +230,10 @@ def _run_chunks(ep: Episode, read_piece) -> list[Word]:
     show = os.environ.get("ABOODI_PROGRESS")
     words, last = [], -1
     for s, e in windows:
-        words += _clean_piece(_words_of(read_piece(cut(s, e), example), s, e))
+        got = _clean_piece(_words_of(read_piece(cut(s, e), example), s, e))
+        if e - s < 0.6 and got and sum(w.p for w in got) / len(got) < 0.5:
+            got = []          # a cough or a breath read alone: Whisper guesses words that were never said
+        words += got
         pct = min(90, int(90 * e / total))
         if show and pct > last:
             print(f"@@ {pct}", flush=True)
@@ -223,7 +257,23 @@ def _transcribe_mlx(ep: Episode, repo: str) -> list[Word]:
     print("⚡ التفريغ على شريحة الماك، جملة جملة حتى ما تضيع أي إعادة", flush=True)
     return _run_chunks(ep, lambda piece, example: mlx_whisper.transcribe(
         piece, path_or_hf_repo=repo, language="ar", word_timestamps=True, initial_prompt=example,
-        condition_on_previous_text=False, temperature=0.0, verbose=None).get("segments", []))
+        condition_on_previous_text=False, temperature=0.0, verbose=None).get("segments", []),
+        verbatim=verbatim_wanted())
+
+
+def _exact_edges(ep: Episode, words: list[Word]) -> list[Word]:
+    """Every word on the moment the sound shows (wordtimes.py); the old times if anything goes wrong."""
+    try:
+        from .wordtimes import refine_times
+        heard: list = []
+        out = refine_times(load_audio(ep.source), words, heard=heard)
+        if heard:
+            ep.heard.write_text(json.dumps([[round(s, 3), round(e, 3), t] for s, e, t in heard], ensure_ascii=False),
+                                encoding="utf-8")
+        return out
+    except Exception as exc:   # noqa: BLE001 — a nicety: Whisper's times still cut
+        print(f"⚠️ ضبط حدود الكلمات ما زبط ({str(exc)[:120]})", flush=True)
+        return words
 
 
 SCRIBE_URL = "https://api.elevenlabs.io/v1/speech-to-text"
@@ -277,6 +327,7 @@ def transcribe(ep: Episode, model_name: str | None = None, model=None) -> list[W
             if words:
                 from . import dialects
                 dialects.save(ep.edit, dialects.detect(" ".join(w.text for w in words[:400])), "cloud")
+                words = _exact_edges(ep, words)
                 save_words(words, ep.transcript)
                 return words
         except Exception as exc:   # no internet, no balance: the Mac does it as before
@@ -285,11 +336,13 @@ def transcribe(ep: Episode, model_name: str | None = None, model=None) -> list[W
         try:
             words = _transcribe_mlx(ep, repo)
             if words:
+                words = _exact_edges(ep, words)
                 save_words(words, ep.transcript)
                 return words
         except Exception as exc:   # any trouble: the CPU model below does it
             print(f"⚠️ التفريغ السريع ما زبط ({exc}). أكمّل بالعادي", flush=True)
-    if model is None:
+    real = model is None
+    if real:
         from faster_whisper import WhisperModel
         print(f"🎧 التفريغ على المعالج ({model_name})", flush=True)
         model = WhisperModel(model_name, device="cpu", compute_type="int8")
@@ -300,8 +353,10 @@ def transcribe(ep: Episode, model_name: str | None = None, model=None) -> list[W
                                    initial_prompt=example, hotwords=hw if example else None, beam_size=5,
                                    condition_on_previous_text=False)
         return list(segs)
-    words = _run_chunks(ep, read)
+    words = _run_chunks(ep, read, verbatim=real and verbatim_wanted())
     if not words:
         raise MediaError("الصوت فارغ أو مو واضح")
+    if real:
+        words = _exact_edges(ep, words)
     save_words(words, ep.transcript)
     return words
