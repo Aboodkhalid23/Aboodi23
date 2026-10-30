@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>عبدالله خالد • Abdullah Khalid</title>
+<meta name="description" content="صانع محتوى | سالوفة • قصص شركات عالمية، وثائقيات، وأسئلة غريبة">
+<meta name="theme-color" content="#0a0506">
+<meta property="og:title" content="عبدالله خالد • Abdullah Khalid">
+<meta property="og:description" content="صانع محتوى | سالوفة • كل حساباتي بمكان واحد">
+<meta property="og:image" content="avatar.jpg">
+<link rel="icon" href="avatar.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Cuneiform&family=Reem+Kufi:wght@500;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0506; --ink:#f6efe6; --muted:#b9a9a3;
+    --wine:#8e1b2a; --wine-2:#c4283c; --gold:#d9a521; --gold-2:#f3d27a;
+    --card:rgba(255,255,255,.06); --card-b:rgba(255,255,255,.12);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg); color:var(--ink); font-family:"Tajawal",system-ui,sans-serif;
+    position:fixed; inset:0; height:100dvh; overflow:hidden; overscroll-behavior:none; touch-action:none; display:flex; align-items:center; justify-content:center; -webkit-font-smoothing:antialiased}
+  .aurora{position:fixed; inset:-20%; z-index:0; filter:blur(70px); opacity:.85; pointer-events:none}
+  .aurora span{position:absolute; border-radius:50%; mix-blend-mode:screen; animation:float 18s ease-in-out infinite}
+  .aurora span:nth-child(1){width:55vmax;height:55vmax;background:radial-gradient(circle,var(--wine) 0,transparent 65%);top:-10%;right:-10%}
+  .aurora span:nth-child(2){width:45vmax;height:45vmax;background:radial-gradient(circle,#4a0d18 0,transparent 65%);bottom:-5%;left:-15%;animation-delay:-6s}
+  .aurora span:nth-child(3){width:30vmax;height:30vmax;background:radial-gradient(circle,rgba(217,165,33,.3) 0,transparent 65%);top:35%;left:30%;animation-delay:-12s}
+  @keyframes float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(6%,8%) scale(1.1)}66%{transform:translate(-6%,-4%) scale(.95)}}
+  .grain{position:fixed; inset:0; z-index:1; pointer-events:none; opacity:.08;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+  main{position:relative; z-index:2; width:100%; max-width:440px; max-height:100dvh; padding:max(env(safe-area-inset-top),2dvh) 16px max(env(safe-area-inset-bottom),2dvh); text-align:center}
+
+  .avatar{position:relative; width:clamp(64px,12.5dvh,120px); height:clamp(64px,12.5dvh,120px); margin:0 auto clamp(8px,1.6dvh,16px); animation:rise .8s ease both}
+  .avatar::before{content:""; position:absolute; inset:-4px; border-radius:50%;
+    background:conic-gradient(from 0deg,var(--gold),var(--wine-2),#2a0a10,var(--gold)); animation:spin 6s linear infinite}
+  .avatar img{position:relative; width:100%; height:100%; border-radius:50%; object-fit:cover; border:4px solid var(--bg)}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  h1{font-family:"Reem Kufi",sans-serif; font-weight:700; font-size:clamp(26px,7vw,30px); line-height:1.2; animation:rise .8s .1s ease both}
+  h1 .en{display:block; font-family:"Tajawal"; font-weight:800; font-size:.55em; letter-spacing:.16em; text-transform:uppercase; margin-top:6px;
+    background:linear-gradient(90deg,var(--gold),var(--gold-2),var(--gold)); -webkit-background-clip:text; background-clip:text; color:transparent}
+  .badge{display:inline-flex; vertical-align:middle; width:21px; height:21px; margin-inline-start:6px}
+  .bio{color:var(--muted); font-size:clamp(13px,2.2dvh,15px); line-height:1.7; margin:clamp(6px,1.4dvh,12px) auto 0; max-width:330px; animation:rise .8s .2s ease both}
+  .bio b{color:var(--ink)}
+
+  /* شعار سالوفة: عربي + مسماري + إنگليزي */
+  .brand{position:relative; display:inline-flex; align-items:center; justify-content:center; gap:14px; margin:clamp(8px,2.2dvh,22px) auto clamp(10px,2.6dvh,28px);
+    text-decoration:none; color:var(--ink); animation:rise .8s .28s ease both}
+  .brand .ar{font-family:"Reem Kufi"; font-weight:700; font-size:22px; line-height:1}
+  .brand .cu{font-family:"Noto Sans Cuneiform",serif; font-size:19px; letter-spacing:3px; color:var(--gold-2); line-height:1}
+  .brand .en{font-weight:800; font-size:12px; letter-spacing:.35em; color:var(--muted); margin-left:-.35em}
+  .sep{width:8px; height:14px; flex:none; background:var(--gold); clip-path:polygon(0 0,100% 0,62% 38%,56% 100%,44% 100%,38% 38%)}
+
+  /* ب1: كبسولة بحافة ذهبية تلمع */
+  .b1 .brand{padding:12px 22px; border-radius:999px; background:rgba(20,10,12,.6); isolation:isolate; overflow:hidden}
+  .b1 .brand::before{content:""; position:absolute; inset:0; border-radius:inherit; padding:1px; z-index:-1;
+    background:linear-gradient(90deg,rgba(217,165,33,.2),var(--gold-2),rgba(217,165,33,.2)); background-size:200% 100%; animation:sheen 4s linear infinite;
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude}
+  @keyframes sheen{to{background-position:-200% 0}}
+
+  /* ب2: شعار طابقي بدون إطار */
+  .b2 .brand{flex-direction:column; gap:8px; padding:4px 40px}
+  .b2 .brand .cu{order:-1; font-size:24px; text-shadow:0 0 18px rgba(217,165,33,.55)}
+  .b2 .brand .ar{font-size:32px}
+  .b2 .brand .sep{display:none}
+  .b2 .brand::before,.b2 .brand::after{content:""; position:absolute; top:50%; width:34px; height:1px; background:linear-gradient(90deg,transparent,var(--gold))}
+  .b2 .brand::before{left:0}.b2 .brand::after{right:0; transform:scaleX(-1)}
+
+  /* ب3: لوح طين مسماري */
+  .b3 .brand{flex-direction:column; gap:6px; padding:14px 30px 12px; border-radius:14px 14px 18px 18px;
+    background:radial-gradient(120% 90% at 30% 20%,#c98a52,#9a5c2c 55%,#6e3c18);
+    box-shadow:inset 0 2px 0 rgba(255,255,255,.25), inset 0 -6px 14px rgba(0,0,0,.35), 0 14px 30px -14px #000}
+  .b3 .brand .cu{font-size:24px; color:#5a2f12; text-shadow:0 1px 0 rgba(255,220,180,.45),0 -1px 0 rgba(0,0,0,.35)}
+  .b3 .brand .ar{color:#fff4e2; font-size:24px}
+  .b3 .brand .en{color:#ffe2bd; font-size:11px}
+  .b3 .brand .sep{display:none}
+
+  /* ب4: ثلاث قطع متصلة */
+  .b4 .brand{gap:0; border-radius:16px; overflow:hidden; border:1px solid rgba(217,165,33,.35)}
+  .b4 .brand>span{padding:11px 14px; display:flex; align-items:center; height:48px}
+  .b4 .brand .ar{background:linear-gradient(135deg,var(--gold-2),var(--gold)); color:#1a0a0c}
+  .b4 .brand .cu{background:rgba(20,10,12,.7)}
+  .b4 .brand .en{background:rgba(196,40,60,.25); color:var(--ink); margin:0; letter-spacing:.25em}
+  .b4 .brand .sep{display:none}
+
+  /* ===== الأزرار: الأساس ===== */
+  .links{display:flex; flex-direction:column; gap:clamp(6px,1.3dvh,12px)}
+  .link{position:relative; display:flex; align-items:center; gap:12px; text-decoration:none; color:var(--ink); overflow:hidden;
+    transition:transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .3s, background .3s; animation:rise .7s ease both}
+  .link:nth-child(1){animation-delay:.36s}.link:nth-child(2){animation-delay:.44s}.link:nth-child(3){animation-delay:.52s}.link:nth-child(4){animation-delay:.6s}.link:nth-child(5){animation-delay:.68s}
+  .link:hover{transform:translateY(-3px)}
+  .ic{flex:none; display:grid; place-items:center; border-radius:50%; background:var(--glow); color:#fff}
+  .ic svg{width:52%; height:52%}
+  .tx{flex:1; text-align:right}
+  .tx strong{display:block; font-weight:800}
+  .tx small{display:block; color:var(--muted); direction:ltr; text-align:right}
+  [dir=ltr] .tx,[dir=ltr] .tx small{text-align:left}
+  [dir=ltr] h1{font-family:"Tajawal"; font-weight:800; letter-spacing:.01em}
+  [dir=ltr] h1 .en{font-family:"Reem Kufi"; font-weight:700; font-size:.62em; letter-spacing:0; text-transform:none}
+  .yt{--glow:linear-gradient(135deg,#ff3b3b,#c00000); --c:#ff3b3b}
+  .tt{--glow:linear-gradient(135deg,#25f4ee,#000 50%,#fe2c55); --c:#fe2c55}
+  .ig{--glow:radial-gradient(circle at 30% 107%,#fdf497 0,#fd5949 45%,#d6249f 60%,#285aeb 90%); --c:#d6249f}
+  .ml{--glow:linear-gradient(135deg,var(--gold-2),#a6720c); --c:var(--gold)}
+  .pp{--glow:linear-gradient(135deg,#1a8cff,#003087); --c:#1a8cff}
+
+  /* 1) كبسولات زجاجية */
+  .s1 .link{height:62px; padding:0 8px 0 18px; border-radius:999px; background:var(--card); border:1px solid var(--card-b); backdrop-filter:blur(14px)}
+  .s1 .ic{width:46px; height:46px}
+  .s1 .tx strong{font-size:16px}.s1 .tx small{font-size:12px}
+
+  /* 2) دوائر */
+  .s2 .links{flex-direction:row; justify-content:space-between; gap:8px}
+  .s2 .link{flex-direction:column; gap:10px; flex:1}
+  .s2 .ic{width:68px; height:68px; box-shadow:0 10px 28px -10px var(--c), 0 0 0 4px rgba(255,255,255,.06)}
+  .s2 .tx{text-align:center}.s2 .tx strong{font-size:13px; font-weight:700}.s2 .tx small{display:none}
+
+  /* 3) ذهبي فاخر */
+  .s3 .link{height:58px; padding:0 6px 0 20px; border-radius:999px; background:rgba(10,5,6,.55); border:1px solid rgba(217,165,33,.45)}
+  .s3 .link:hover{background:rgba(217,165,33,.12); box-shadow:0 0 24px -6px rgba(217,165,33,.6)}
+  .s3 .ic{width:46px; height:46px; background:transparent; border:1px solid rgba(217,165,33,.6); color:var(--gold-2)}
+  .s3 .tx strong{font-family:"Reem Kufi"; font-weight:500; font-size:17px; color:var(--gold-2)}.s3 .tx small{font-size:12px}
+
+  /* 4) مربعات */
+  .s4 .links{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+  .s4 .link{flex-direction:column; align-items:flex-end; justify-content:space-between; height:128px; padding:16px; border-radius:26px; background:var(--glow)}
+  .s4 .link::after{content:""; position:absolute; inset:0; background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.35))}
+  .s4 .ic{width:44px; height:44px; background:rgba(255,255,255,.18); backdrop-filter:blur(6px); position:relative; z-index:1}
+  .s4 .tx{position:relative; z-index:1; width:100%}.s4 .tx strong{font-size:17px}.s4 .tx small{font-size:11px; color:rgba(255,255,255,.8)}
+
+  /* 5) أبيض بسيط */
+  .s5 .link{height:clamp(44px,6.8dvh,58px); padding:0 6px 0 8px; border-radius:999px; background:#f6efe6; color:#170a0c; box-shadow:0 8px 24px -14px #000}
+  .s5 .ic{width:clamp(36px,5.6dvh,46px); height:clamp(36px,5.6dvh,46px)}
+  .s5 .tx strong{font-size:clamp(14px,2.3dvh,16px)}.s5 .tx small{font-size:12px; color:#7a6a66}
+
+  /* 6) نيون */
+  .s6 .link{height:62px; padding:0 8px 0 18px; border-radius:999px; background:#120a0c; isolation:isolate}
+  .s6 .link::before{content:""; position:absolute; inset:-2px; z-index:-2; border-radius:inherit;
+    background:conic-gradient(from var(--a,0deg),var(--c),transparent 30%,transparent 70%,var(--c)); animation:turn 4s linear infinite}
+  .s6 .link::after{content:""; position:absolute; inset:1.5px; z-index:-1; border-radius:inherit; background:#140b0d}
+  @property --a{syntax:"<angle>"; initial-value:0deg; inherits:false}
+  @keyframes turn{to{--a:360deg}}
+  .s6 .ic{width:46px; height:46px; box-shadow:0 0 18px -2px var(--c)}
+  .s6 .tx strong{font-size:16px}.s6 .tx small{font-size:12px}
+
+  .pill{flex:none; font-size:12px; font-weight:800; padding:6px 12px; border-radius:999px; background:var(--glow); color:#fff; box-shadow:0 4px 12px -4px var(--c)}
+  .yt .pill{animation:pulse 2s infinite}
+  .tt .pill{background:#111; box-shadow:-2px 0 0 #25f4ee, 2px 0 0 #fe2c55}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,59,59,.55)}50%{box-shadow:0 0 0 7px rgba(255,59,59,0)}}
+  .s2 .pill,.s4 .pill{display:none}
+
+  footer{margin-top:clamp(8px,2.4dvh,28px); color:var(--muted); font-size:12px}
+  @keyframes rise{from{opacity:0; transform:translateY(14px)}to{opacity:1; transform:none}}
+  @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important; transition:none!important}}
+</style>
+</head>
+<body class="s5 b1">
+<div class="aurora"><span></span><span></span><span></span></div>
+<div class="grain"></div>
+
+<main>
+  <div class="avatar"><img src="avatar.jpg" alt="عبدالله خالد" width="124" height="124"></div>
+  <h1><span data-en="Abdullah Khalid">عبدالله خالد</span><svg class="badge" viewBox="0 0 24 24"><path fill="#d9a521" d="M12 1l2.9 2.1 3.6-.1 1.1 3.4 2.9 2.1-1.1 3.5 1.1 3.4-2.9 2.1-1.1 3.4-3.6-.1L12 23l-2.9-2.1-3.6.1-1.1-3.4-2.9-2.1 1.1-3.4L1.5 8.6l2.9-2.1L5.5 3l3.6.1z"/><path d="M8 12.2l2.6 2.6L16.2 9" fill="none" stroke="#0a0506" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span class="en" data-en="عبدالله خالد">Abdullah Khalid</span>
+  </h1>
+  <p class="bio" data-en="<b>Content Creator</b> • Global company stories, documentaries, and the strange questions nobody asks."><b>صانع محتوى</b> • قصص شركات عالمية، وثائقيات، وأسئلة غريبة محد يسأل عنها.</p>
+
+  <a class="brand" href="https://www.youtube.com/@abood.khaliid23" target="_blank" rel="noopener" aria-label="سالوفة">
+    <span class="ar">سالوفة</span><i class="sep"></i><span class="cu">𒊓𒇻𒉺</span><i class="sep"></i><span class="en">SALOFA</span>
+  </a>
+
+  <section class="links">
+    <a class="link yt" href="https://www.youtube.com/@abood.khaliid23?sub_confirmation=1" target="_blank" rel="noopener">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.6 15.6V8.4l6.2 3.6z"/></svg></span>
+      <span class="tx"><strong data-en="YouTube">يوتيوب</strong><small>@abood.khaliid23</small></span>
+      <span class="pill" data-en="Subscribe">اشترك</span>
+    </a>
+    <a class="link tt" href="https://www.tiktok.com/@abood.khaliid23" target="_blank" rel="noopener">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.6 6.7a4.8 4.8 0 0 1-3.8-4.2V2h-3.4v13.4a2.9 2.9 0 1 1-2-2.7V9.2a6.3 6.3 0 1 0 5.4 6.2V8.6a8.2 8.2 0 0 0 4.8 1.5V6.7z"/></svg></span>
+      <span class="tx"><strong data-en="TikTok">تيك توك</strong><small>@abood.khaliid23</small></span>
+      <span class="pill" data-en="Follow">متابعة</span>
+    </a>
+    <a class="link ig" href="https://www.instagram.com/abood.khaliid23" target="_blank" rel="noopener">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg></span>
+      <span class="tx"><strong data-en="Instagram">إنستغرام</strong><small>@abood.khaliid23</small></span>
+      <span class="pill" data-en="Follow">متابعة</span>
+    </a>
+    <a class="link pp" href="https://www.paypal.me/Abdallahkhalidsalah" target="_blank" rel="noopener">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7.1 21.3H3.6a.6.6 0 0 1-.6-.7L5.7 3.5c.1-.5.5-.8 1-.8h6.6c3.2 0 5.3 1.6 4.8 4.9-.6 3.9-3.2 5.7-6.7 5.7H9.5c-.5 0-.9.3-1 .8z"/><path d="M19.4 8.2c.9.8 1.3 2.1 1 3.8-.6 3.6-3 5.3-6.3 5.3h-1.4c-.4 0-.8.3-.9.7l-.7 4.2a.5.5 0 0 1-.5.4H8.2l.3-1.9 1-6.2h1.4c4 0 6.9-2 7.6-6.2z" opacity=".7"/></svg></span>
+      <span class="tx"><strong data-en="Support my content">ادعم المحتوى</strong><small>PayPal</small></span>
+      <span class="pill" data-en="Support">ادعمني</span>
+    </a>
+    <a class="link ml" href="mailto:Aboodkhaliid23@gmail.com">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M2 7l10 6 10-6"/></svg></span>
+      <span class="tx"><strong data-en="Business &amp; Ads">للدعاية والإعلان</strong><small>Aboodkhaliid23@gmail.com</small></span>
+      <span class="pill" data-en="Contact">تواصل</span>
+    </a>
+  </section>
+
+  <footer>© <span id="y"></span> <span data-en="Abdullah Khalid">عبدالله خالد</span></footer>
+</main>
+
+<script>
+  // ?s=رقم للتجربة بين الستايلات
+  const q = new URLSearchParams(location.search), s = q.get('s'), b = q.get('b');
+  if (q.get('lang') === 'en') {
+    document.documentElement.lang = 'en'; document.documentElement.dir = 'ltr';
+    document.querySelectorAll('[data-en]').forEach(el => el.innerHTML = el.dataset.en);
+  }
+  if (/^[1-6]$/.test(s || '')) document.body.className = document.body.className.replace(/s\d/, 's' + s);
+  if (/^[1-4]$/.test(b || '')) document.body.className = document.body.className.replace(/b\d/, 'b' + b);
+  document.getElementById('y').textContent = new Date().getFullYear();
+</script>
+</body>
+</html>
