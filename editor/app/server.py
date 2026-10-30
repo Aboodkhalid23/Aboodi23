@@ -2606,7 +2606,11 @@ def styles_list() -> list[dict]:
     from editor.pipeline.styles import _style_files, load_style
     out = []
     for f in _style_files():
-        st = load_style(f.stem)
+        try:
+            st = load_style(f.stem)
+        except (ValueError, TypeError, KeyError) as exc:   # one broken style file never empties the panel
+            print("style skipped:", f.name, exc, flush=True)
+            continue
         name = st.title_ar or STYLE_NAMES.get(f.stem) or re.split(r"\s+—\s+|\.|،", st.summary, maxsplit=1)[0].strip()[:30]
         how = re.search(r"^- (.+)$", st.notes, re.M)
         out.append({"id": f.stem, "name": name, "summary": re.sub(r"^[^—]{0,40}—\s*", "", st.summary),

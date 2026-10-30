@@ -37,12 +37,22 @@ def user_styles_dir() -> Path | None:
     return Path(home) / "styles" if home else None
 
 
+def _is_style(p: Path) -> bool:
+    """A style file opens with its YAML block. Notes and analyses in the same folder are not styles (a notes file
+    there stopped every episode at the cut, 2026-10-30)."""
+    try:
+        with open(p, encoding="utf-8") as f:
+            return f.read(4).startswith("---")
+    except OSError:
+        return False
+
+
 def _style_files() -> list[Path]:
     skip = ("README.md", "performance.md", "channel-system.md", "COMPONENTS.md")
-    files = {p.stem: p for p in STYLES_DIR.glob("*.md") if p.name not in skip}
+    files = {p.stem: p for p in STYLES_DIR.glob("*.md") if p.name not in skip and _is_style(p)}
     mine = user_styles_dir()
     if mine and mine.exists():
-        files.update({p.stem: p for p in mine.glob("*.md")})
+        files.update({p.stem: p for p in mine.glob("*.md") if _is_style(p)})
     return sorted(files.values(), key=lambda p: p.stem)
 
 
@@ -51,8 +61,22 @@ def load_style(name: str) -> Style:
     if path not in _style_files():
         raise KeyError(f"ستايل '{name}' مو موجود بـ editor/styles")
     _, front, notes = path.read_text(encoding="utf-8").split("---", 2)
-    return Style(**yaml.safe_load(front), notes=notes.strip())
+    data = yaml.safe_load(front)
+    if not isinstance(data, dict):
+        raise ValueError(f"ملف الستايل '{name}' خربان (ماكو إعدادات بأوله)")
+    return Style(**data, notes=notes.strip())
+
+
+def _loadable() -> list[Style]:
+    """Every style that opens; a broken one (a hand-made or half-written file) is left out, never fatal."""
+    out = []
+    for p in _style_files():
+        try:
+            out.append(load_style(p.stem))
+        except (ValueError, TypeError, KeyError, yaml.YAMLError) as exc:
+            print(f"⚠️  تخطيت ستايل خربان ({p.name}): {str(exc)[:120]}")
+    return out
 
 
 def styles_summary() -> str:
-    return "\n".join(f"{s.name}: {s.summary}" for s in map(lambda p: load_style(p.stem), _style_files()))
+    return "\n".join(f"{s.name}: {s.summary}" for s in _loadable())
