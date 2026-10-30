@@ -3,6 +3,8 @@
 # (also published as Montier.dmg, the first link the owner got; app-version.txt tells installed apps to update)
 # The second job installs the editor on a real Mac and runs the first stage on a tiny video, so a broken
 # download link or a package without a Mac build shows up here, not on the owner's computer.
+# macos-15: GitHub retires macos-14 on 2026-11-02 and its brownouts already cancel jobs. build.sh pins the
+# binary to macOS 12, so the runner version does not raise what the owner's Mac needs.
 name: تطبيق الماك
 
 on:
@@ -20,7 +22,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
       - name: Build the app
@@ -50,7 +52,7 @@ jobs:
           path: app/mac/build/URU.dmg
 
   install-test:
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
