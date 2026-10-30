@@ -21,6 +21,10 @@ DEAD_ZONE = 350
 MAX_DATES = 3        # تواريخ كاملة: بس للأحداث الكبيرة
 MAX_TIME_REFS = 8    # كل ذكر لسنة
 MAX_TEASERS = 2      # وعود "بآخر الحلقة / راح تعرف"
+SOUL_YOU = ["تخيل", "تتخيل", "تتصور", "تدري", "تذكر", "تتذكر", "شوف", "انت ", "انتو", "براسك", "وياك", "صح؟"]
+SOUL_ME = ["آني", "بصراحة", "والله", "أعترف", "وللأمانة", "خلي أرجعك", "خلي نوگف"]
+MIN_SOUL_YOU = 8     # بكل 1000 كلمة
+MIN_SOUL_ME = 3
 TEASERS = ["بآخر الحلقة", "بنهاية الحلقة", "راح تعرف", "راح نعرف", "راح تكتشف", "راح أگولك", "بعدين راح", "خلّيها لبعدين", "بعد شوية راح"]
 REWIND = ["خلي أرجعك شوية لورا", "نرجع للمطار", "نرجع لأول القصة", "خلي نرجع للبداية", "نرجع للمشهد"]
 
@@ -158,6 +162,16 @@ def main():
             block_start = i + 1
     if dead:
         yellow.append(f"مناطق ميتة (أكثر من {DEAD_ZONE} كلمة بدون سؤال): {len(dead)}: " + "، ".join(dead[:6]))
+
+    # 8. مقياس الروح (studio/style/soul.md): نحچي ويا المشاهد، والمقدّم يبين
+    per = max(1, n / 1000)
+    soul_re = lambda w: re.compile(rf"(?<![{AR}])[وف]?{re.escape(w)}")  # يقبل "وانت" و"تخيلها"
+    you = sum(len(soul_re(x).findall(text)) for x in SOUL_YOU) / per
+    me = sum(len(soul_re(x).findall(text)) for x in SOUL_ME) / per
+    if you < MIN_SOUL_YOU:
+        yellow.append(f"روح: نحچي ويا المشاهد {you:.0f} مرة بكل 1000 كلمة (الأقل {MIN_SOUL_YOU}). استخدم \"تخيل\"، \"تدري شنو؟\"، \"شوف\".")
+    if me < MIN_SOUL_ME:
+        yellow.append(f"روح: المقدّم يبين {me:.0f} مرة بكل 1000 كلمة (الأقل {MIN_SOUL_ME}). خلي إله رأي وإحساس: \"آني هنا وگفت\"، \"بصراحة\".")
 
     # التقرير
     qs = text.count("؟") + text.count("?")

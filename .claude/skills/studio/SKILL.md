@@ -10,6 +10,7 @@ description: استوديو المحتوى — شركة كاملة (بحث، م�
 ## المراجع (بالأولوية)
 1. `studio/learnings.md`: دروس تتراكم. **اقراه أول شي بكل حلقة.**
 2. `studio/style/method.md`: المنهج الثالث، المرجع الأعلى.
+2ب. `studio/style/soul.md`: **الروح**. السكربت ينحچى مو ينقرا (12 قانون + 3 اختبارات). يغلب كل ملفات الأسلوب بالكتابة.
 3. `studio/style/channel-playbook.md`: شنو نسرق من كل قناة.
 4. `studio/names.md`: لفظ الأسماء بالعربي.
 5. `studio/style/magic-formula.md` و`nerve-engine.md`: البصمة والأدوات.
