@@ -1,0 +1,438 @@
+[
+ {
+  "id": "E01",
+  "angle": "metaphor",
+  "idea": "برج إيفل جوه ساعة رملية والرمل دا يخلص",
+  "text": null,
+  "subject": {
+   "outfit": "dark wool coat over a black turtleneck",
+   "expression": "calm and serious, one eyebrow slightly raised, mouth closed",
+   "action": "holds a large antique hourglass toward the camera"
+  },
+  "hero": "a large antique brass hourglass with a tiny detailed Eiffel Tower inside the top bulb, sand running out",
+  "setting": "dim 1900s Paris rooftop at dusk, warm street lights blurred",
+  "camera": "wide_close",
+  "layout": {
+   "face": "right",
+   "hero": "left",
+   "text_zone": null
+  },
+  "palette": [
+   "#14110C",
+   "#E8B04A",
+   "#5DA9FF"
+  ],
+  "scores": {
+   "clarity": 8,
+   "curiosity": 8,
+   "emotion": 7,
+   "novelty": 9,
+   "honesty": 9,
+   "producible": 7,
+   "face": 8
+  },
+  "why": "ساعة رملية + البرج = عمره محدد وقرّب يخلص",
+  "hero_ar": "البرج جوه ساعة رملية",
+  "expression_ar": "هادي وجدي، حاجب مرفوع"
+ },
+ {
+  "id": "E02",
+  "angle": "before_disaster",
+  "idea": "رافعة عملاقة شابكة سلسلتها برأس البرج حتى تشيله",
+  "text": null,
+  "subject": {
+   "outfit": "beige vintage engineer coat",
+   "expression": "worried, looking up, mouth closed",
+   "action": "stands at the base and looks up at the top of the tower"
+  },
+  "hero": "a giant old steam crane with a heavy chain hooked to the top of the Eiffel Tower, as if about to pull it down",
+  "setting": "foggy 1900s Paris, grey dramatic sky",
+  "camera": "standard",
+  "layout": {
+   "face": "left",
+   "hero": "right",
+   "text_zone": null
+  },
+  "palette": [
+   "#2A2F36",
+   "#D9432B",
+   "#F2E8D5"
+  ],
+  "scores": {
+   "clarity": 7,
+   "curiosity": 8,
+   "emotion": 8,
+   "novelty": 8,
+   "honesty": 6,
+   "producible": 6,
+   "face": 7
+  },
+  "why": "اللحظة قبل ما يشيلونه، بس تبالغ شوية",
+  "hero_ar": "رافعة شابكة برأس البرج",
+  "expression_ar": "قلقان ويباوع لفوگ"
+ },
+ {
+  "id": "E03",
+  "angle": "two_objects",
+  "idea": "بإيد برج صغير وبالثانية راديو قديم",
+  "text": null,
+  "subject": {
+   "outfit": "black track jacket with white stripes",
+   "expression": "confident, slight smile, mouth closed",
+   "action": "holds a small Eiffel Tower model in his left hand and a vintage 1910s radio receiver in his right hand, both toward the camera"
+  },
+  "hero": "a small bronze Eiffel Tower model and a vintage wooden radio receiver with dials",
+  "setting": "clean dark blue studio background with soft rim light",
+  "camera": "wide_close",
+  "layout": {
+   "face": "center",
+   "hero": "foreground",
+   "text_zone": null
+  },
+  "palette": [
+   "#0E1A2E",
+   "#C9A15A",
+   "#FF5A36"
+  ],
+  "scores": {
+   "clarity": 9,
+   "curiosity": 7,
+   "emotion": 6,
+   "novelty": 8,
+   "honesty": 10,
+   "producible": 8,
+   "face": 8
+  },
+  "why": "البرج + الراديو: الشيئين الي بالعنوان",
+  "hero_ar": "برج صغير وراديو قديم",
+  "expression_ar": "واثق وابتسامة خفيفة"
+ },
+ {
+  "id": "E04",
+  "angle": "icon_twist",
+  "idea": "برج إيفل يطلع منه موجات راديو مثل الأريال",
+  "text": null,
+  "subject": {
+   "outfit": "dark navy overcoat",
+   "expression": "amazed, eyes wide, mouth slightly open",
+   "action": "points up at the tower behind him"
+  },
+  "hero": "the Eiffel Tower at night acting as a giant radio antenna, glowing blue radio wave rings radiating from its top",
+  "setting": "night Paris skyline, deep blue sky",
+  "camera": "standard",
+  "layout": {
+   "face": "left",
+   "hero": "right",
+   "text_zone": null
+  },
+  "palette": [
+   "#071226",
+   "#3FB8FF",
+   "#FFD27A"
+  ],
+  "scores": {
+   "clarity": 9,
+   "curiosity": 8,
+   "emotion": 7,
+   "novelty": 8,
+   "honesty": 10,
+   "producible": 8,
+   "face": 7
+  },
+  "why": "الرمز المعروف صار جهاز: ينفهم بثانية",
+  "hero_ar": "البرج يطلع منه موجات راديو",
+  "expression_ar": "مندهش ويأشر لفوگ"
+ },
+ {
+  "id": "E05",
+  "angle": "offscreen",
+  "idea": "لابس سماعات قديمة ويسمع سر، والبرج وراه",
+  "text": null,
+  "subject": {
+   "outfit": "1910s wool military coat",
+   "expression": "focused and secretive, eyes narrowed, mouth closed",
+   "action": "presses vintage brass headphones to one ear, listening intently"
+  },
+  "hero": "vintage brass radio headphones with a coiled cord",
+  "setting": "dark wartime radio room, the Eiffel Tower visible through a window with faint radio waves",
+  "camera": "wide_close",
+  "layout": {
+   "face": "center",
+   "hero": "foreground",
+   "text_zone": null
+  },
+  "palette": [
+   "#1B1410",
+   "#E0A33A",
+   "#4FA3FF"
+  ],
+  "scores": {
+   "clarity": 7,
+   "curiosity": 9,
+   "emotion": 8,
+   "novelty": 9,
+   "honesty": 9,
+   "producible": 7,
+   "face": 8
+  },
+  "why": "يسمع شي سري: فضول الحرب والجاسوسة",
+  "hero_ar": "سماعات راديو قديمة",
+  "expression_ar": "مركّز وكأنه يسمع سر"
+ },
+ {
+  "id": "E06",
+  "angle": "mystery",
+  "idea": "ظرف مختوم بالشمع الأحمر، والبرج بالخلفية",
+  "text": null,
+  "subject": {
+   "outfit": "dark trench coat",
+   "expression": "suspicious, one eyebrow raised, mouth closed",
+   "action": "holds a sealed old envelope close to his chest"
+  },
+  "hero": "an old yellowed envelope sealed with red wax",
+  "setting": "foggy Paris street at night, Eiffel Tower silhouette in the distance",
+  "camera": "wide_close",
+  "layout": {
+   "face": "right",
+   "hero": "left",
+   "text_zone": null
+  },
+  "palette": [
+   "#151515",
+   "#B3202A",
+   "#E9DFC7"
+  ],
+  "scores": {
+   "clarity": 6,
+   "curiosity": 8,
+   "emotion": 7,
+   "novelty": 7,
+   "honesty": 7,
+   "producible": 8,
+   "face": 7
+  },
+  "why": "سر مخفي، بس ما يوضح قصة الراديو",
+  "hero_ar": "ظرف مختوم بشمع أحمر",
+  "expression_ar": "شكّاك، حاجب مرفوع"
+ },
+ {
+  "id": "E07",
+  "angle": "scale",
+  "idea": "هو صغير جداً تحت البرج العملاق ويباوع لفوگ",
+  "text": null,
+  "subject": {
+   "outfit": "black track jacket",
+   "expression": "awed, looking up",
+   "action": "stands tiny at the base looking up"
+  },
+  "hero": "the enormous Eiffel Tower filling the frame from below, extreme low angle",
+  "setting": "clear golden hour sky",
+  "camera": "standard",
+  "layout": {
+   "face": "center",
+   "hero": "center",
+   "text_zone": null
+  },
+  "palette": [
+   "#F2A541",
+   "#2B2118",
+   "#FFFFFF"
+  ],
+  "scores": {
+   "clarity": 7,
+   "curiosity": 4,
+   "emotion": 5,
+   "novelty": 3,
+   "honesty": 8,
+   "producible": 9,
+   "face": 4
+  },
+  "why": "الحجم بس، ماكو قصة ولا سؤال",
+  "hero_ar": "البرج من تحت",
+  "expression_ar": "منبهر"
+ },
+ {
+  "id": "E08",
+  "angle": "miniature",
+  "idea": "برج صغير على طاولة موصول براديو قديم",
+  "text": null,
+  "subject": {
+   "outfit": "dark cardigan over a white shirt",
+   "expression": "curious, slight smile, mouth closed",
+   "action": "leans over a table connecting a wire from a small Eiffel Tower model to an old radio"
+  },
+  "hero": "a small Eiffel Tower model on a wooden table wired to a vintage radio with glowing tubes",
+  "setting": "warm cozy workshop with old tools",
+  "camera": "top_down",
+  "layout": {
+   "face": "right",
+   "hero": "foreground",
+   "text_zone": null
+  },
+  "palette": [
+   "#2A1A10",
+   "#F0B35A",
+   "#7FD1FF"
+  ],
+  "scores": {
+   "clarity": 6,
+   "curiosity": 7,
+   "emotion": 5,
+   "novelty": 9,
+   "honesty": 9,
+   "producible": 6,
+   "face": 7
+  },
+  "why": "حلوة بس تحتاج ثانيتين حتى تنفهم",
+  "hero_ar": "برج صغير موصول براديو",
+  "expression_ar": "فضولي وابتسامة خفيفة"
+ },
+ {
+  "id": "E09",
+  "angle": "before_after",
+  "idea": "نص البرج حديد عادي، ونصه يضوي موجات راديو",
+  "text": null,
+  "subject": {
+   "outfit": "black turtleneck",
+   "expression": "calm, confident, mouth closed",
+   "action": "stands beside the tower, arms crossed"
+  },
+  "hero": "the Eiffel Tower split vertically: left half plain dull iron, right half glowing with blue radio circuitry and waves",
+  "setting": "split background: grey day on the left, blue night on the right",
+  "camera": "standard",
+  "layout": {
+   "face": "left",
+   "hero": "right",
+   "text_zone": null
+  },
+  "palette": [
+   "#3A3A3A",
+   "#29A8FF",
+   "#F5F5F5"
+  ],
+  "scores": {
+   "clarity": 6,
+   "curiosity": 7,
+   "emotion": 5,
+   "novelty": 8,
+   "honesty": 8,
+   "producible": 6,
+   "face": 7
+  },
+  "why": "الفرق واضح بس صعب يطلع نظيف",
+  "hero_ar": "البرج نص حديد ونص راديو",
+  "expression_ar": "هادي وواثق"
+ },
+ {
+  "id": "E10",
+  "angle": "pov",
+  "idea": "ماسك تذكرة قديمة للبرج",
+  "text": null,
+  "subject": {
+   "outfit": "black track jacket",
+   "expression": "raised eyebrow, half smile, mouth closed",
+   "action": "holds an old paper ticket toward the camera"
+  },
+  "hero": "an old 1889 paper admission ticket with an Eiffel Tower print",
+  "setting": "blurred Eiffel Tower behind",
+  "camera": "wide_close",
+  "layout": {
+   "face": "right",
+   "hero": "left",
+   "text_zone": null
+  },
+  "palette": [
+   "#1E1A16",
+   "#E6C27A",
+   "#C83A2E"
+  ],
+  "scores": {
+   "clarity": 5,
+   "curiosity": 6,
+   "emotion": 4,
+   "novelty": 8,
+   "honesty": 7,
+   "producible": 6,
+   "face": 7
+  },
+  "why": "تحتاج كتابة على التذكرة حتى تنفهم",
+  "hero_ar": "تذكرة قديمة للبرج",
+  "expression_ar": "حاجب مرفوع ونص ابتسامة"
+ },
+ {
+  "id": "T01",
+  "angle": "icon_twist",
+  "idea": "البرج يطلع منه موجات راديو، وكتابة: عمره 20 سنة بس",
+  "text": "عمره\n20 سنة بس!",
+  "subject": {
+   "outfit": "dark navy overcoat",
+   "expression": "serious, one eyebrow raised, mouth closed",
+   "action": "looks at the camera, the tower glowing behind his shoulder"
+  },
+  "hero": "the Eiffel Tower at night with glowing blue radio wave rings from its top",
+  "setting": "night Paris skyline",
+  "camera": "standard",
+  "layout": {
+   "face": "right",
+   "hero": "left",
+   "text_zone": "top_left"
+  },
+  "palette": [
+   "#0A1630",
+   "#FFC400",
+   "#3FB8FF"
+  ],
+  "scores": {
+   "clarity": 9,
+   "curiosity": 9,
+   "emotion": 7,
+   "novelty": 8,
+   "honesty": 9,
+   "producible": 8,
+   "face": 8
+  },
+  "why": "الكتابة تكمّل العنوان: ليش عمره 20 سنة؟ والموجات تلمّح للجواب",
+  "hero_ar": "البرج يطلع منه موجات راديو",
+  "expression_ar": "جدي وحاجب مرفوع",
+  "font": "Baloo",
+  "font_latin": "Anton"
+ },
+ {
+  "id": "T02",
+  "angle": "before_disaster",
+  "idea": "رافعة شابكة بالبرج، وكتابة: چانوا راح يشيلونه",
+  "text": "چانوا راح\nيشيلونه!",
+  "subject": {
+   "outfit": "beige vintage coat",
+   "expression": "worried, mouth closed",
+   "action": "looks up at the crane"
+  },
+  "hero": "a giant old crane chained to the top of the Eiffel Tower",
+  "setting": "foggy grey Paris",
+  "camera": "standard",
+  "layout": {
+   "face": "right",
+   "hero": "left",
+   "text_zone": "top_left"
+  },
+  "palette": [
+   "#2A2F36",
+   "#FF4D2E",
+   "#F2E8D5"
+  ],
+  "scores": {
+   "clarity": 8,
+   "curiosity": 8,
+   "emotion": 8,
+   "novelty": 7,
+   "honesty": 5,
+   "producible": 6,
+   "face": 7
+  },
+  "why": "قوية بس تبالغ: ما چان أكيد يشيلونه (المدقق)",
+  "hero_ar": "رافعة شابكة بالبرج",
+  "expression_ar": "قلقان",
+  "font": "Baloo",
+  "font_latin": "Anton"
+ }
+]
