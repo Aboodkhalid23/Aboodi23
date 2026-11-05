@@ -231,4 +231,18 @@ karpathy-guidelines، 12 سكيل من superpowers، caveman، caveman-compress�
 ### شنو ما ثبّتت وليش
 - **sergebulaev/youtube-skills:** مربوطة بخدمة نشر مدفوعة (Publora)، وملفاتها تعتمد على بعض فتنكسر إذا ثبّتتها وحدة وحدة.
 - **humanizer / avoid-ai-writing:** ممتازة بس للإنگليزي. سوّيت بديل عربي داخل دستور الكتابة (`studio/script-rules.md` القسم 5).
-- **AgriciDaniel/claude-youtube:** قوي، بس يكرر نفس شغل السكيلزات المثبتة.
+- ~~**AgriciDaniel/claude-youtube:** قوي، بس يكرر نفس شغل السكيلزات المثبتة.~~ انثبت بطلبك (5 تشرين الثاني 2026)، شوف القسم الجاي.
+
+### الدفعة الثمانية (طلبها صاحب القناة، 5 تشرين الثاني 2026)
+كلها انفحصت ملف ملف (تعليمات، وسكربتات بايثون آمنة ما تدز شي لأي مكان غير يوتيوب).
+
+| الريبو | الي انثبت | ملاحظة |
+|---|---|---|
+| Jakeschincariol/youtube-agent-skill (⭐4690) | الـ11 كلها: أضفنا `yt-package` `yt-seo` `yt-shorts` `yt-plan` `yt-audit` `yt-comment` | أداة فحص العنوان تفحص الطول بالعربي، والباقي إنگليزي بس |
+| AgriciDaniel/claude-youtube (⭐676) | `claude-youtube` (مدير بـ14 قسم) | سكربتاته تحتاج مفتاح يوتيوب اختياري |
+| mohitagw15856/pm-claude-skills (⭐1519) | `youtube-script-writer` | الريبو بيه 1300 سكيل، خذينا كاتب السكربت بس |
+| cdeistopened/content-os (⭐9) | `hook-and-headline-writing` `youtube-title-creator` `cold-open-creator` `short-form-video` `video-caption-creation` `ai-tells` | سكيل `youtube-scriptwriting` عدهم **ملفاته فاضية**، فما انضاف |
+| whaleyxbt/claude-motion (⭐848) | `motion-taste` `motion-review-loop` `motion-sound` `motion-web-sims` | مربوطة بمشروع: `scripts/motion-kit.sh new <اسم>` يجهزه (جرّبناه: رندر + لقطات + صوت) |
+| howseen-ai/claude-motion-design (⭐774) | `motion-html` | موشن بصفحة HTML وPlaywright وffmpeg |
+| haidrrrry/claude-remotion-skill (⭐844) | `remotion-motion-graphics` | قواعد ذوق لأي فيديو Remotion |
+| agamm/video-agent (⭐9) | `remotion-graphics` | طبقات شفافة فوق الفيديو: `scripts/motion-kit.sh overlay` (العربي يطلع صح) |

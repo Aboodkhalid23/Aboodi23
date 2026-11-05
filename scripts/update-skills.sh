@@ -37,12 +37,18 @@ while read -r repo path name; do
   src="$TMP/${repo//\//_}"
 
   if [[ -z "${HEAD[$repo]:-}" ]]; then
-    if ! git clone -q --depth 1 "https://github.com/$repo" "$src" 2>/dev/null; then
+    # تنزيل جزئي: بس مجلدات السكيلزات المطلوبة، مو الريبو كله (بعض الريبوهات 150 ميگا وأكثر)
+    if ! git clone -q --depth 1 --filter=blob:none --sparse "https://github.com/$repo" "$src" 2>/dev/null; then
       echo "✗ $repo: فشل التحميل"; failed=1; HEAD[$repo]="FAILED"; continue
     fi
     HEAD[$repo]="$(git -C "$src" rev-parse --short HEAD)"
   fi
   [[ "${HEAD[$repo]}" == "FAILED" ]] && continue
+  if [[ "$path" == "." ]]; then
+    git -C "$src" sparse-checkout disable 2>/dev/null || true
+  else
+    git -C "$src" sparse-checkout add "$path" 2>/dev/null || true
+  fi
 
   if [[ ! -f "$src/$path/SKILL.md" ]]; then
     echo "✗ $name: ما لگيت SKILL.md في $repo/$path"; failed=1; continue

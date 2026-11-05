@@ -110,3 +110,31 @@ coreyhaines31/marketingskills  skills/marketing-psychology
 coreyhaines31/marketingskills  skills/social   social-content
 coreyhaines31/marketingskills  skills/video    ai-video
 remotion-dev/skills            skills/remotion-best-practices   remotion
+
+# الأفكار والمحتوى والسكربت (طلبها 5 تشرين الثاني 2026، مفحوصة: تعليمات بس، وسكربتات بايثون آمنة)
+# بقية الـ11 سكيل من ريبو يوتيوب (الخمسة الأولى مثبتة فوق)
+Jakeschincariol/youtube-agent-skill  skills/yt-package
+Jakeschincariol/youtube-agent-skill  skills/yt-seo
+Jakeschincariol/youtube-agent-skill  skills/yt-shorts
+Jakeschincariol/youtube-agent-skill  skills/yt-plan
+Jakeschincariol/youtube-agent-skill  skills/yt-audit
+Jakeschincariol/youtube-agent-skill  skills/yt-comment
+# مدير يوتيوب كامل بـ14 قسم (سكربت، هوك، أفكار، منافسين، تدقيق قناة). سكربتاته تحتاج YOUTUBE_API_KEY اختياري
+AgriciDaniel/claude-youtube          skills/claude-youtube
+mohitagw15856/pm-claude-skills       skills/youtube-script-writer
+# من content-os (ملاحظة: سكيل youtube-scriptwriting عدهم ملفاته فاضية، فما انضاف)
+cdeistopened/content-os              skills/writing/hook-and-headline-writing
+cdeistopened/content-os              skills/video/youtube-title-creator
+cdeistopened/content-os              skills/writing/cold-open-creator
+cdeistopened/content-os              skills/video/short-form-video
+cdeistopened/content-os              skills/video/video-caption-creation
+cdeistopened/content-os              skills/writing/ai-tells
+
+# الموشن والإخراج (طلبها 5 تشرين الثاني 2026). الي مربوطة بمشروع تشتغل داخل نسخة يجهزها scripts/motion-kit.sh
+whaleyxbt/claude-motion              .claude/skills/motion-design     motion-taste
+whaleyxbt/claude-motion              .claude/skills/review-loop       motion-review-loop
+whaleyxbt/claude-motion              .claude/skills/sound-design      motion-sound
+whaleyxbt/claude-motion              .claude/skills/web-sims          motion-web-sims
+howseen-ai/claude-motion-design      skill/motion-design              motion-html
+haidrrrry/claude-remotion-skill      remotion-motion-graphics
+agamm/video-agent                    .claude/skills/remotion-graphics
