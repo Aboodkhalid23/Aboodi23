@@ -179,7 +179,7 @@ def main():
             yellow.append("الهوك: أول 60 كلمة ما بيها انقلاب (\"بس\"/\"بالعكس\"...). جرّب: سند ← جملة بس ← انقلاب حقيقي.")
 
     # 10. النهاية: سؤال محدد للتعليقات (studio/style/method.md القسم 5ج)
-    ending = " ".join(words[-200:])
+    ending = " ".join(text.split()[-200:])
     if not any(c in ending for c in COMMENT_CALL):
         yellow.append("النهاية: ماكو سؤال للتعليقات بآخر 200 كلمة. اختم بموقف واضح وسؤال محدد (\"... اكتبلي بالتعليقات\").")
 
