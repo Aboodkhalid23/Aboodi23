@@ -8,7 +8,8 @@
 يفحص (المنهج الثالث، studio/style/method.md): العنوان بأول الملف، الطول (15-32 دقيقة)،
 طول الجمل، صيغة التواريخ وعددها، السنين الي ترجع لورا، الحروف الأجنبية (الأسماء لازم بالعربي)،
 الفصحى، الكليشيهات، "بس" مقابل "وبعدين"، تكرار وعود "بآخر الحلقة"، والمناطق الميتة،
-وانقلاب الهوك بأول 60 كلمة، وسؤال التعليقات بالنهاية (studio/style/creators-secrets.md).
+وانقلاب الهوك بأول 60 كلمة، وسؤال التعليقات بالنهاية (studio/style/creators-secrets.md)،
+والكلمات الصعبة النطق من studio/hard-words.md.
 """
 import re
 import sys
@@ -30,7 +31,7 @@ CONTRAST = ["بس", "بالعكس", "مع إنو", "مع إن", "لكن"]
 COMMENT_CALL = ["بالتعليقات", "بالكومنتات", "اكتبلي", "اكتبولي", "گولولي", "گلّي", "گولي"]
 REWIND = ["خلي أرجعك شوية لورا", "نرجع للمطار", "نرجع لأول القصة", "خلي نرجع للبداية", "نرجع للمشهد"]
 
-AR = r"؀-ۿ"
+AR = r"\u0621-\u0652\u0671-\u06D3"  # حروف عربية بس (الفارزة وعلامة الاستفهام العربية مو حروف)
 
 # الأسماء تنكتب بالحروف العربية (صاحب القناة يقرا من الآيباد وما يقرا إنگليزي)
 LATIN = re.compile(r"[A-Za-z]{2,}")
@@ -46,6 +47,21 @@ CLICHES = ["في عالم مليء", "دعونا نغوص", "رحلة مثيرة
 MONTHS = "كانون الثاني|شباط|آذار|نيسان|أيار|حزيران|تموز|آب|أيلول|تشرين الأول|تشرين الثاني|كانون الأول|يناير|فبراير|مارس|أبريل|مايو|يونيو|يوليو|أغسطس|سبتمبر|أكتوبر|نوفمبر|ديسمبر"
 WORD_DATE = re.compile(rf"\d{{1,2}}\s+(?:{MONTHS})|(?:{MONTHS})\s+\d{{4}}")
 BAD_NUM_DATE = re.compile(r"\b\d{1,2}/\d{1,2}/\d{4}\b")  # يوم/شهر/سنة بدل سنة/شهر/يوم
+
+
+def load_hard_words():
+    """يقرا جدول studio/hard-words.md: (الكلمة الصعبة، البديل السهل)."""
+    import os
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "studio", "hard-words.md")
+    pairs = []
+    try:
+        for ln in open(path, encoding="utf-8"):
+            cells = [c.strip() for c in ln.strip().strip("|").split("|")]
+            if len(cells) == 2 and cells[0] and not cells[0].startswith(("الصعبة", "---")):
+                pairs.append((cells[0], cells[1]))
+    except OSError:
+        pass
+    return pairs
 
 
 def word_re(w):
@@ -182,6 +198,16 @@ def main():
     ending = " ".join(text.split()[-200:])
     if not any(c in ending for c in COMMENT_CALL):
         yellow.append("النهاية: ماكو سؤال للتعليقات بآخر 200 كلمة. اختم بموقف واضح وسؤال محدد (\"... اكتبلي بالتعليقات\").")
+
+    # 11. سهل اللسان (studio/hard-words.md): صاحب القناة يتعثر بهالكلمات
+    for hard, easy in load_hard_words():
+        rx = re.compile(rf"(?<![{AR}])[وفب]?{re.escape(hard)}(?![{AR}])")
+        hits = [i for i, ln in enumerate(lines, 1) if rx.search(ln)]
+        if hits:
+            red.append(f"كلمة صعبة النطق \"{hard}\" بالأسطر {hits[:6]}: بدّلها بـ\"{easy}\".")
+    merged = sorted(set(re.findall(rf"(?<![{AR}])هال[{AR}]{{2,}}", text)))
+    if merged:
+        yellow.append("كلمات ملصوقة بـ\"هال\" أصعب بالنطق، الأسهل \"هذا/هاي\": " + "، ".join(merged[:8]))
 
     # التقرير
     qs = text.count("؟") + text.count("?")
