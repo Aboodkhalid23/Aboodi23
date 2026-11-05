@@ -14,6 +14,7 @@ description: استوديو المحتوى — شركة كاملة (بحث، م�
 3. `studio/style/channel-playbook.md`: شنو نسرق من كل قناة.
 4. `studio/names.md`: لفظ الأسماء بالعربي.
 5. `studio/style/magic-formula.md` و`nerve-engine.md`: البصمة والأدوات.
+5ب. `studio/style/creators-secrets.md`: أسرار الهوك (سند ← بس ← انقلاب)، وتكبير اللحظة، والخوارزمية وتوحيد الجمهور، والنهاية بموقف وسؤال.
 
 ## الفريق (20 موظف، كل واحد إله اختصاص)
 | القسم | الموظف | يطلّع |
