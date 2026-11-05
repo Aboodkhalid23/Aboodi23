@@ -256,8 +256,21 @@ def main(argv=None) -> int:
         mobiles.append(folder / f"thumb-{label}-mobile.jpg")
         labels.append(label)
         lines.append(f"✓ {label}" + "".join(f" ⚠️ {w}" for w in warnings))
+    reels_ok = False
+    if reels and (folder / "scene-reels.png").exists():
+        try:
+            rw = build_reels(folder, reels)
+            reels_line = "✓ reels (thumb-reels.jpg)" + "".join(f" ⚠️ {w}" for w in rw)
+            reels_ok = True
+        except (render.SpecError, UnidentifiedImageError, OSError) as e:
+            reels_line = f"✗ reels: {e}"
+    else:
+        reels_line = None
     if not mobiles:
-        print("\n".join(lines))
+        # الريلز لوحده (طلب غلاف طولي بس) مو خطأ
+        print("\n".join(lines + ([reels_line] if reels_line else [])))
+        if reels_ok:
+            return 0
         print("✗ خطأ: ولا غلاف انسوى.")
         return 1
     checked, note = ({}, None) if args.no_check else _check(mobiles)
@@ -274,12 +287,8 @@ def main(argv=None) -> int:
         print("\n".join(lines))
         print("✗ خطأ: ما گدرت أحفظ compare.jpg.")
         return 1
-    if reels and (folder / "scene-reels.png").exists():
-        try:
-            rw = build_reels(folder, reels)
-            lines.append("✓ reels (thumb-reels.jpg)" + "".join(f" ⚠️ {w}" for w in rw))
-        except (render.SpecError, UnidentifiedImageError, OSError) as e:
-            lines.append(f"✗ reels: {e}")
+    if reels_line:
+        lines.append(reels_line)
     print("\n".join(lines))
     print(f"✓ compare.jpg ({len(mobiles)} أغلفة)")
     return 0

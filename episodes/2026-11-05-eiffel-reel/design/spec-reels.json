@@ -1,0 +1,36 @@
+{
+  "source": "T01",
+  "size": "reels",
+  "background": {
+    "image": "scene-reels.png",
+    "contrast": 1.12,
+    "saturation": 1.2,
+    "sharpen": 0.5,
+    "vignette": 0.35
+  },
+  "layers": [
+    {
+      "type": "text",
+      "text": "عمره\n20 سنة بس!",
+      "font": "Baloo",
+      "line_spacing": 0.62,
+      "size": 0.0777,
+      "line_colors": [
+        "#FFFFFF",
+        [
+          "#FFC400",
+          "#FF6A00"
+        ]
+      ],
+      "stroke": {
+        "color": "#0B0B0F",
+        "width": 0.1
+      },
+      "shadow": true,
+      "rotate": 5,
+      "font_latin": "Anton",
+      "x": 0.4375,
+      "y": 0.2246
+    }
+  ]
+}
