@@ -33,6 +33,7 @@
 | قص ريل من ملف فيديو | `scripts/make-reel.sh` |
 | فحص أي سكربت (الطول، الجمل، التواريخ، الأسماء، المناطق الميتة) | `python3 scripts/script-check.py <الملف>` |
 | صفحة تلقين للتصوير | `python3 scripts/teleprompter.py <الملف>` |
+| ملف وورد يتحمّل من الدرايف وينفتح بأي جهاز (ويا كل تسليم) | `python3 scripts/make-docx.py <الملف>`، وينرفع للدرايف كملف بدون تحويل |
 | يسمع الهوك بصوت عراقي قبل التصوير | `python3 scripts/voice-preview.py <الملف>` |
 | ترندات Google، فيديوهات منافسين ناجحة | `google-trends`، `yt-viral` |
 | بحث موثق، أرشيف، تحقق صور ومصادر | `verified-research`، `web-archiving`، `source-verification`، `content-access` |

@@ -234,6 +234,19 @@ def main():
     if merged:
         yellow.append("كلمات ملصوقة بـ\"هال\" أصعب بالنطق، الأسهل \"هذا/هاي\": " + "، ".join(merged[:8]))
 
+    # 12. وضوح المعنى (2026/11/9): جملة مقطّعة بفواصل، أو جملة مقحمة بالنص، أو كلمة معلّقة بآخرها
+    for i, ln in enumerate(lines, 1):
+        t = ln.strip()
+        parts = [p for p in re.split(r"[،,]", t.rstrip(".؟!?:")) if p.strip()]
+        if len(parts) >= 3 and len(parts[-1].split()) == 1 and not parts[-1].strip().startswith("و"):  # "، وابتسامة" قائمة عادية
+            red.append(f"سطر {i}: كلمة معلّقة بآخر الجملة بعد فواصل، المعنى يضيع: {t[:70]}")
+        elif len(parts) >= 4:
+            yellow.append(f"سطر {i}: {len(parts) - 1} فواصل بسطر واحد، صعب يتتبع: {t[:70]}")
+        if re.search(r"،\s*(?:ويا|مع|وبـ|بـ)\s[^،]+،", t):
+            red.append(f"سطر {i}: جملة مقحمة بنص الجملة تكسر المعنى، فككها لجملتين: {t[:70]}")
+        if len(re.findall(rf"(?<![{AR}])بس(?![{AR}])", t)) >= 2:
+            yellow.append(f"سطر {i}: \"بس\" مرتين بنفس السطر (لكن/فقط) تلخبط السامع: {t[:70]}")
+
     # التقرير
     qs = text.count("؟") + text.count("?")
     print(f"📄 {path}")
