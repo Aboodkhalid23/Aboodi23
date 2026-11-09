@@ -4,6 +4,7 @@
 الاستخدام:
     python3 scripts/script-check.py episodes/<الحلقة>/02-draft.md
     python3 scripts/script-check.py <الملف> --strict   # يرجع رمز خطأ إذا اكو مشاكل حمراء
+    python3 scripts/script-check.py <الملف> --reel     # ريلز: الطول 45-100 ثانية بدل 15-30 دقيقة
 
 يفحص (المنهج الثالث، studio/style/method.md): العنوان بأول الملف، الطول (15-32 دقيقة)،
 طول الجمل، صيغة التواريخ وعددها، السنين الي ترجع لورا، الحروف الأجنبية (الأسماء لازم بالعربي)،
@@ -16,6 +17,7 @@ import sys
 
 MIN_WORDS = 2100   # 15 دقيقة
 MAX_WORDS = 4500   # تقريباً 32 دقيقة
+REEL_MIN, REEL_MAX = 100, 230   # ريلز: تقريباً 45-100 ثانية
 MAX_LINE_WORDS = 20   # السطر = جملة كاملة تنقال بنفَس واحد
 WARN_LINE_WORDS = 16
 WORDS_PER_MIN = 140
@@ -74,6 +76,7 @@ def main():
         sys.exit(1)
     path = sys.argv[1]
     strict = "--strict" in sys.argv
+    reel = "--reel" in sys.argv
     text = open(path, encoding="utf-8").read()
     lines = text.splitlines()
     words = text.split()
@@ -86,7 +89,12 @@ def main():
 
     # 1. الطول
     n = len(words)
-    if n < MIN_WORDS:
+    if reel:
+        if n < REEL_MIN:
+            red.append(f"الطول {n} كلمة (~{round(n * 60 / WORDS_PER_MIN)} ثانية)، الريل أقل شي {REEL_MIN} كلمة (45 ثانية).")
+        elif n > REEL_MAX:
+            yellow.append(f"الطول {n} كلمة (~{round(n * 60 / WORDS_PER_MIN)} ثانية)، فوق 100 ثانية: الريل الأقصر يكمّلونه أكثر.")
+    elif n < MIN_WORDS:
         red.append(f"الطول {n} كلمة (~{round(n / WORDS_PER_MIN)} دقيقة)، الحد الأدنى {MIN_WORDS} (15 دقيقة).")
     elif n > MAX_WORDS:
         yellow.append(f"الطول {n} كلمة (~{round(n / WORDS_PER_MIN)} دقيقة)، فوق 30 دقيقة: تأكد إن كل فصل يستاهل.")
@@ -159,7 +167,7 @@ def main():
     # 6. بس / وبعدين
     bas = len(word_re("بس").findall(text))
     then = len(word_re("وبعدين").findall(text)) + len(word_re("وبعدها").findall(text))
-    need = max(6, n // 450)
+    need = 2 if reel else max(6, n // 450)
     if bas < need:
         yellow.append(f"\"بس\" {bas} مرة، المطلوب {need} أو أكثر (تقلب القصة).")
     if then > bas / 3:
@@ -212,7 +220,8 @@ def main():
     # التقرير
     qs = text.count("؟") + text.count("?")
     print(f"📄 {path}")
-    print(f"الكلمات: {n} | المدة: ~{round(n / WORDS_PER_MIN)} دقيقة | الأسئلة: {qs} | بس: {bas} | وبعدين: {then}")
+    dur = f"{round(n * 60 / WORDS_PER_MIN)} ثانية" if reel else f"{round(n / WORDS_PER_MIN)} دقيقة"
+    print(f"الكلمات: {n} | المدة: ~{dur} | الأسئلة: {qs} | بس: {bas} | وبعدين: {then}")
     print(f"\n🔴 مشاكل لازم تنصلح: {len(red)}")
     for r in red[:60]:
         print("  - " + r)
