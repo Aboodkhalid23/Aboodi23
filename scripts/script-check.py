@@ -209,6 +209,12 @@ def main():
             red.append(f"الريل: أول جملة تحية أو مقدمة. ابدي بالضربة (أغرب شي بالقصة): {first_hook[:50]}")
         elif len(first_hook.split()) > 12:
             yellow.append(f"الريل: أول جملة {len(first_hook.split())} كلمة. الضربة الأولى أقصر (12 أو أقل).")
+        sc = next((i for i, ln in enumerate(lines) if ln.strip().startswith("السكربت")), len(lines))
+        if "؟" not in " ".join(lines[hook_start + 1:sc]):
+            red.append("الريل: الهوك ما بيه سؤال. لازم يخلص بسؤال واحد يحمله المشاهد للآخر، وما يحرق النهاية.")
+        for i, ln in enumerate(lines, 1):
+            if any(x in ln for x in ("حتى أكون أمين", "وآني أشوف إن الفكرة")):
+                yellow.append(f"سطر {i}: سطر يطلّع المشاهد من القصة. الأمانة جوه الجملة نفسها (\"حسب كلامه\").")
         rest = " ".join(lines[hook_start + 4:])
         if "؟" not in rest and "?" not in rest:
             yellow.append("الريل: ماكو إعادة جذب بسؤال بعد الهوك (مثل \"طيب شلون عرفوا؟\").")
