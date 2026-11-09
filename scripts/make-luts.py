@@ -151,6 +151,88 @@ LOOKS = {
 }
 
 
+# ---------- 32 ستايل إضافي بأشهر أنماط صناع المحتوى ----------
+BASE = dict(contrast=1.32, gray=0.15, sat=1.0, wb=(1.0, 1.0), shadows=(0, 0, 0), highlights=(0, 0, 0),
+            split=1.0, teal=0.0, skin=0.5, fade=0.0, rgb_pop=0.1)
+
+
+def look(name, cat, **kw):
+    d = dict(BASE)
+    d.update(kw, name=name, cat=cat)
+    return d
+
+
+for _k in LOOKS:
+    LOOKS[_k]["cat"] = "الأساسية"
+
+LOOKS.update({
+    # استوديو وحچي للكاميرا
+    "STBRIGHT": look("استوديو مشرق", "استوديو", contrast=1.2, gray=0.17, sat=1.04, vib=0.15, wb=(1.01, 0.99)),
+    "STSOFT": look("بشرة ناعمة", "استوديو", contrast=1.12, gray=0.16, sat=0.98, wb=(1.02, 0.98), fade=0.015,
+                   highlights=(0.006, 0.003, -0.004), skin=0.8),
+    "STPOP": look("ألوان قوية", "استوديو", contrast=1.4, gray=0.15, sat=1.12, vib=0.3, rgb_pop=0.4, skin=0.8),
+    "STTECH": look("تقني بارد", "استوديو", contrast=1.38, gray=0.145, sat=0.98, wb=(0.975, 1.03),
+                   shadows=(-0.006, 0.0, 0.012), highlights=(-0.004, 0.002, 0.008), skin=0.6),
+    "STGOLD": look("ذهبي فخم", "استوديو", contrast=1.42, gray=0.14, sat=1.02, wb=(1.04, 0.95),
+                   shadows=(0.004, 0.0, -0.006), highlights=(0.016, 0.010, -0.014), warm_sat=0.12, fade=0.01),
+    "STPODCST": look("بودكاست داكن", "استوديو", contrast=1.55, gray=0.12, sat=0.95, wb=(1.015, 0.985),
+                     shadows=(-0.006, 0.002, 0.010), teal=0.35, fade=0.012, rgb_pop=0.3),
+    "STLUXE": look("فخامة سينمائية", "استوديو", contrast=1.48, gray=0.135, sat=0.96, wb=(1.02, 0.98),
+                   shadows=(-0.012, 0.004, 0.014), highlights=(0.012, 0.006, -0.008), teal=0.5, fade=0.018),
+    "STPURPLE": look("بنفسجي RGB", "استوديو", contrast=1.42, gray=0.135, sat=1.1, blue=18, rgb_pop=0.5,
+                     shadows=(0.004, -0.008, 0.016), skin=0.8),
+    # سينمائي
+    "CNNIGHT": look("ليل أزرق", "سينمائي", contrast=1.5, gray=0.11, sat=0.9, wb=(0.95, 1.07),
+                    shadows=(-0.012, 0.0, 0.022), highlights=(-0.004, 0.004, 0.010), fade=0.01),
+    "CNMATRIX": look("أخضر الأفلام", "سينمائي", contrast=1.5, gray=0.13, sat=0.85,
+                     shadows=(-0.006, 0.014, 0.002), highlights=(0.0, 0.010, -0.006), green=-10, fade=0.012),
+    "CNBLEACH": look("تبييض أكشن", "سينمائي", contrast=1.45, gray=0.14, sat=0.9, bleach=0.6,
+                     shadows=(-0.004, 0.002, 0.006)),
+    "CNFADE": look("باهت ناعم", "سينمائي", contrast=1.15, gray=0.15, sat=0.86, fade=0.06,
+                   shadows=(0.0, 0.006, 0.010), highlights=(0.010, 0.006, 0.0)),
+    "CNDUNE": look("صحراء برتقالية", "سينمائي", contrast=1.45, gray=0.14, sat=1.0, wb=(1.07, 0.9),
+                   shadows=(0.006, 0.0, -0.006), highlights=(0.020, 0.010, -0.020), warm_sat=0.15, green=-15,
+                   fade=0.012),
+    "CNNOIR": look("نوار أبيض وأسود", "سينمائي", contrast=1.7, gray=0.12, mono=(0.30, 0.59, 0.11), fade=0.0,
+                   split=0.0, skin=0.0, rgb_pop=0.0),
+    "CNPASTEL": look("باستيل", "سينمائي", contrast=1.1, gray=0.17, sat=0.82, fade=0.045, vib=0.1,
+                     shadows=(0.006, 0.0, 0.010), highlights=(0.010, 0.004, 0.004)),
+    "CNSEVNTY": look("سبعينات", "سينمائي", contrast=1.25, gray=0.15, sat=0.9, wb=(1.05, 0.92), fade=0.04,
+                     shadows=(0.010, 0.006, -0.004), highlights=(0.018, 0.012, -0.022), green=-12, film=True),
+    "CNBLKBUS": look("بلوكبستر", "سينمائي", contrast=1.6, gray=0.13, sat=1.05, teal=1.0,
+                     shadows=(-0.024, 0.010, 0.026), highlights=(0.018, 0.006, -0.014), skin=0.7),
+    "CNSEPIA": look("سيبيا قديم", "سينمائي", contrast=1.35, gray=0.14, mono=(0.35, 0.53, 0.12), fade=0.03,
+                    shadows=(0.010, 0.004, -0.006), highlights=(0.016, 0.008, -0.014), skin=0.0, rgb_pop=0.0),
+    # فلوگات وتصوير برا
+    "VLSUNSET": look("غروب ذهبي", "فلوگ وبرا", contrast=1.35, gray=0.15, sat=1.08, wb=(1.06, 0.92),
+                     highlights=(0.022, 0.010, -0.018), warm_sat=0.2, vib=0.15, white_in=20.0),
+    "VLAIRY": look("مشرق هوائي", "فلوگ وبرا", contrast=1.12, gray=0.18, sat=0.95, vib=0.2, fade=0.02,
+                   wb=(1.0, 1.01), white_in=24.0),
+    "VLSEA": look("بحر تركواز", "فلوگ وبرا", contrast=1.35, gray=0.15, sat=1.08, blue=-14, vib=0.25,
+                  teal=0.5, white_in=20.0),
+    "VLCITY": look("مدينة بالليل", "فلوگ وبرا", contrast=1.45, gray=0.125, sat=1.08, teal=0.8, rgb_pop=0.5,
+                   shadows=(-0.010, 0.006, 0.018), highlights=(0.016, 0.006, -0.010)),
+    "VLNATURE": look("طبيعة خضرة", "فلوگ وبرا", contrast=1.3, gray=0.15, sat=1.05, green=8, green_sat=0.15,
+                     vib=0.2, white_in=20.0),
+    "VLSNOW": look("ثلج بارد", "فلوگ وبرا", contrast=1.3, gray=0.16, sat=0.92, wb=(0.96, 1.05),
+                   shadows=(-0.006, 0.0, 0.012), white_in=24.0),
+    "VLTRAVEL": look("سفر سينمائي", "فلوگ وبرا", contrast=1.4, gray=0.145, sat=1.05, teal=0.6, vib=0.15,
+                     wb=(1.02, 0.98), fade=0.01, white_in=20.0),
+    "VLCAFE": look("كوفي دافئ", "فلوگ وبرا", contrast=1.3, gray=0.145, sat=0.95, wb=(1.05, 0.93),
+                   shadows=(0.008, 0.002, -0.008), highlights=(0.014, 0.008, -0.010), fade=0.025, green=-10),
+    "VLMOODY": look("سفر غامق", "فلوگ وبرا", contrast=1.5, gray=0.12, sat=0.8, teal=0.6, green=-18,
+                    green_sat=-0.3, fade=0.02, white_in=20.0),
+    "VLHDR": look("مشهد ساطع", "فلوگ وبرا", contrast=1.25, gray=0.16, sat=1.05, vib=0.3, white_in=32.0),
+    # ريلز وتيك توك
+    "RLVIRAL": look("ريلز فاقع", "ريلز", contrast=1.4, gray=0.16, sat=1.15, vib=0.35, rgb_pop=0.4, skin=0.9),
+    "RLWARM": look("ريلز دافي", "ريلز", contrast=1.3, gray=0.165, sat=1.06, wb=(1.04, 0.95), vib=0.2,
+                   highlights=(0.012, 0.006, -0.010)),
+    "RLCLEAN": look("ريلز نظيف", "ريلز", contrast=1.22, gray=0.17, sat=1.04, vib=0.15, skin=0.8),
+    "RLDRAMA": look("ريلز درامي", "ريلز", contrast=1.65, gray=0.12, sat=0.95, teal=0.7, fade=0.0,
+                    shadows=(-0.014, 0.006, 0.016)),
+})
+
+
 def apply_look(slog, p):
     """slog: مصفوفة (...,3) بقيم S-Log3. يرجع Rec.709 جاهز للعرض (0-1)."""
     lin = slog3_to_lin(slog) @ SG3C_TO_709.T
@@ -160,10 +242,19 @@ def apply_look(slog, p):
     # تشبع بالخطي (حول السطوع) ويا حماية البشرة
     Y = np.maximum(lin @ LUMA, 0)[..., None]
     lin = Y + (lin - Y) * p["sat"] if p.get("mono") is None else lin
+    lin = gamut_compress(lin, threshold=0.7, limit=1.15)  # بعد التشبع: لا قيم سالبة تكسر الألوان
 
     if p.get("mono") is not None:
         Yb = np.maximum(lin @ np.array(p["mono"]), 0)[..., None]
         lin = np.repeat(Yb, 3, -1)
+
+    # الأضواء القوية كلش تروح للأبيض بنعومة (مثل العين والفيلم) بدل ما تبقى لون فاقع ومكسور
+    wi0 = p.get("white_in", 14.0)
+    Yh = np.maximum(lin @ LUMA, 0)[..., None]
+    peak = np.max(lin, -1, keepdims=True)
+    w = smoothstep(wi0 * 0.15, wi0 * 0.9, np.maximum(Yh, peak * 0.5))
+    lin = lin * (1 - w) + np.maximum(Yh, peak * 0.6) * w
+    lin = np.maximum(lin, 0)
 
     # المنحنى: نخلط بين قناة-قناة (مظهر فيلم) وحفظ اللون (ألوان RGB ما تتكسر)
     wi = p.get("white_in", 14.0)
@@ -174,7 +265,7 @@ def apply_look(slog, p):
     mix = 0.55 - 0.35 * p["rgb_pop"]
     disp = per * mix + keep * (1 - mix)
     # الإضاءات القوية تبيّض بنعومة مثل الفيلم
-    hl = smoothstep(0.75, 1.15, np.max(disp, -1, keepdims=True))
+    hl = smoothstep(0.5, 2.2, np.max(disp, -1, keepdims=True))
     disp = disp * (1 - hl) + np.minimum(per, 1.0) * hl
     disp = np.clip(disp, 0, None)
 
@@ -192,7 +283,12 @@ def apply_look(slog, p):
         h = h - hue_diff(h, 30) / 360 * orange * 0.35 * t          # البرتقالي يتجمع
         h = h - hue_diff(h, 195) / 360 * cyan * 0.45 * t           # الأزرق يروح للتيل
         h = h + (-0.04) * green * 0.5 * t                             # الأخضر يميل للزيتي
+        h = h + p.get("green", 0) / 360 * green                       # تحريك الأخضر (موجب = نحو التركواز)
+        h = h + p.get("blue", 0) / 360 * hue_weight(h, 220, 50)       # تحريك الأزرق
         s = s * (1 + 0.12 * t * orange) * (1 - 0.15 * t * green)
+        s = s * (1 + p.get("green_sat", 0) * green) * (1 + p.get("warm_sat", 0) * orange)
+        # حيوية: تقوي الألوان الضعيفة أكثر من القوية
+        s = s + p.get("vib", 0) * s * (1 - s)
         # البشرة: لا تشبع زايد ولا تروح للأحمر
         s = s * (1 - skin * p["skin"] * 0.18 * max(0, p["sat"] - 0.9))
         # أضواء RGB: تشبع أكثر للألوان القوية بس
@@ -200,11 +296,19 @@ def apply_look(slog, p):
         s = np.clip(s * (1 + 0.25 * pop), 0, 1)
         v = hsv_to_rgb(h % 1.0, s, val)
 
-        # تلوين الظلال والإضاءات
-        luma = v @ LUMA
-        sh = smoothstep(0.55, 0.0, luma)[..., None]
-        hi = smoothstep(0.45, 1.0, luma)[..., None]
-        v = v + p["split"] * (sh * np.array(p["shadows"]) * 1.6 + hi * np.array(p["highlights"]) * 1.6)
+    if p.get("bleach"):
+        # تبييض: تباين قوي وألوان مطفية (مظهر أفلام الحرب والأكشن)
+        L = (v @ LUMA)[..., None]
+        Lc = smoothstep(0.0, 1.0, L)
+        b = p["bleach"]
+        v = v * (1 - b) + (L + (v - L) * 0.35 + (Lc - L)) * b
+
+    # تلوين الظلال والإضاءات
+    luma = v @ LUMA
+    sh = smoothstep(0.55, 0.0, luma)[..., None]
+    hi = smoothstep(0.45, 1.0, luma)[..., None]
+    v = v + p["split"] * (sh * np.array(p["shadows"]) * 1.6 + hi * np.array(p["highlights"]) * 1.6)
+    v = v + np.array(p.get("tint", (0, 0, 0)))
 
     if p.get("film"):
         # قص الإضاءات العالية شوية مثل طباعة الفيلم
@@ -215,12 +319,36 @@ def apply_look(slog, p):
     return np.clip(v, 0, 1)
 
 
+def smooth_jumps(lut, limit=0.15, passes=3):
+    """ينعّم بس الأماكن الي بيها قفزة لون كبيرة (أضواء نيون قوية كلش)، والباقي يبقى مثل ما هو."""
+    g = np.linspace(0, 1, SIZE)
+    b, gg, r = np.meshgrid(g, g, g, indexing="ij")
+    grid = np.stack([r, gg, b], -1)
+    # الألوان الرمادية والبيضة ما ننعمها حتى يبقى الأبيض أبيض
+    chroma = smoothstep(0.06, 0.16, grid.max(-1) - grid.min(-1))[..., None]
+    for _ in range(passes):
+        pad = np.pad(lut, ((1, 1), (1, 1), (1, 1), (0, 0)), mode="edge")
+        blur = sum(pad[i:i + SIZE, j:j + SIZE, k:k + SIZE]
+                   for i in range(3) for j in range(3) for k in range(3)) / 27.0
+        jump = np.zeros(lut.shape[:3])
+        for ax in range(3):
+            d = np.abs(np.diff(lut, axis=ax)).max(-1)
+            sl = [slice(None)] * 3
+            sl[ax] = slice(0, -1)
+            jump[tuple(sl)] = np.maximum(jump[tuple(sl)], d)
+            sl[ax] = slice(1, None)
+            jump[tuple(sl)] = np.maximum(jump[tuple(sl)], d)
+        w = smoothstep(limit * 0.6, limit * 1.5, jump)[..., None] * chroma
+        lut = lut * (1 - w) + blur * w
+    return np.clip(lut, 0, 1)
+
+
 def write_cube(path, title, p):
     g = np.linspace(0, 1, SIZE)
     # ترتيب cube: الأحمر يتغير أسرع
     b, gg, r = np.meshgrid(g, g, g, indexing="ij")
     inp = np.stack([r, gg, b], -1).reshape(-1, 3)
-    out = apply_look(inp, p)
+    out = smooth_jumps(apply_look(inp, p).reshape(SIZE, SIZE, SIZE, 3)).reshape(-1, 3)
     # بدون أسطر تعليق: بعض الكاميرات ترفض الملف إذا بيه "#"
     lines = [f'TITLE "{title}"', f"LUT_3D_SIZE {SIZE}", "DOMAIN_MIN 0.0 0.0 0.0", "DOMAIN_MAX 1.0 1.0 1.0"]
     lines += [f"{a:.5f} {c:.5f} {d:.5f}" for a, c, d in out]
@@ -283,18 +411,18 @@ def apply_cube(img, table):
 
 def preview(tables, path):
     from PIL import Image, ImageDraw, ImageFont
-    scene = test_scene()
+    scene = test_scene(384, 216)
     tiles = [("الخام من الكاميرا (S-Log3)", scene)]
     tiles += [(LOOKS[k]["name"] + "  " + k, apply_cube(scene, t)) for k, t in tables.items()]
     tw, th = scene.shape[1], scene.shape[0]
-    cols = 3
+    cols = 5
     rows = (len(tiles) + cols - 1) // cols
     sheet = Image.new("RGB", (cols * tw, rows * (th + 34)), (14, 14, 16))
     font = None
     for fp in [str(ROOT / "designer/fonts/Tajawal-Black.ttf"),
                "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"]:
         if Path(fp).exists():
-            font = ImageFont.truetype(fp, 20)
+            font = ImageFont.truetype(fp, 17)
             break
     from PIL import features
     if features.check("raqm"):  # المكتبة ترتب العربي بنفسها
