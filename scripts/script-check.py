@@ -202,6 +202,17 @@ def main():
         if not any(word_re(w).search(opening) for w in CONTRAST):
             yellow.append("الهوك: أول 60 كلمة ما بيها انقلاب (\"بس\"/\"بالعكس\"...). جرّب: سند ← جملة بس ← انقلاب حقيقي.")
 
+    # 9b. الريل: الضربة بأول جملة (studio/style/method.md القسم 9)
+    if reel and hook_start is not None:
+        first_hook = next((ln.strip() for ln in lines[hook_start + 1:] if ln.strip()), "")
+        if any(first_hook.startswith(w) for w in ("السلام", "اليوم راح", "هلا", "أهلاً", "اهلا", "مرحبا", "شباب")):
+            red.append(f"الريل: أول جملة تحية أو مقدمة. ابدي بالضربة (أغرب شي بالقصة): {first_hook[:50]}")
+        elif len(first_hook.split()) > 12:
+            yellow.append(f"الريل: أول جملة {len(first_hook.split())} كلمة. الضربة الأولى أقصر (12 أو أقل).")
+        rest = " ".join(lines[hook_start + 4:])
+        if "؟" not in rest and "?" not in rest:
+            yellow.append("الريل: ماكو إعادة جذب بسؤال بعد الهوك (مثل \"طيب شلون عرفوا؟\").")
+
     # 10. النهاية: سؤال محدد للتعليقات (studio/style/method.md القسم 5ج)
     ending = " ".join(text.split()[-200:])
     if not any(c in ending for c in COMMENT_CALL):
