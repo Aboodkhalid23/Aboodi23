@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>التلقين</title>
+<style>
+ *{box-sizing:border-box}
+ html,body{overflow-x:hidden;max-width:100%}
+ body{margin:0;background:#000;color:#fff;font-family:Tahoma,Arial,sans-serif}
+ #wrap{padding:45vh 6vw;font-size:var(--fs,clamp(26px,7vw,56px));line-height:1.6;word-wrap:break-word}
+ #wrap.mirror{transform:scaleX(-1)}
+ h2{color:#ffd400;font-size:.7em;margin:1.5em 0 .5em}
+ p{margin:0 0 1.2em}
+ #ruler{position:fixed;top:40vh;left:0;right:0;height:1.8em;border-top:2px solid #ffd40088;border-bottom:2px solid #ffd40088;pointer-events:none;font-size:var(--fs,clamp(26px,7vw,56px))}
+ #bar{position:fixed;bottom:0;left:0;right:0;background:#111c;display:flex;flex-wrap:wrap;gap:6px;padding:6px;justify-content:center;align-items:center;font-size:14px}
+ button{background:#333;color:#fff;border:0;padding:8px 10px;border-radius:8px;font-size:14px}
+</style></head><body>
+<div id="ruler"></div>
+<div id="wrap"><p>العنوان: ولد عمره 17 سنة كشف أكبر لعبة بالعالم... من غرفة فندق</p>
+<p>الهوك<br>لعبة جي تي أي 6 تنزل بعد أيام، وملايين ينطروها من سنين.<br>بس قبل أربع سنين، تسعين فيديو منها طلعت للناس قبل وقتها.<br>والي طلّعها، حسب المحكمة، ولد عمره 17 سنة.<br>گاعد بغرفة فندق، وممنوع من الإنترنت.</p>
+<p>السكربت<br>الولد من إنگلترا، والشرطة مسكته قبلها بتهمة إنه دخل على أجهزة شركات كبيرة.<br>لهذا أخذت منه الكمبيوتر.<br>وبنفس الفترة، منافسين إله نشروا معلوماته ومعلومات أهله بالإنترنت.<br>فالشرطة حطته بفندق رخيص حتى تحميه، ومنعته من الإنترنت.<br>بس هو ما وگف، لأن الغرفة بيها تلفزيون.<br>ربط بالتلفزيون جهاز صغير، من الي تشوف بيه الأفلام.<br>وويا موبايله، صار عنده كمبيوتر من جديد.<br>ومن هناك دخل على رسايل موظفين شركة روكستار، صاحبة اللعبة.<br>وطلّع فيديوهات اللعبة، ونشرها للعالم كله.<br>وبنفس الوقت، كتب لكل الموظفين: إذا ما تحچون وياي خلال يوم، راح أنشر أسرار اللعبة كلها.<br>بعدها بسنة، المحكمة گالت إن الولد هو الي سواها.<br>بس لأن صحته ما تسمح، ما حاكموه مثل باقي الناس، وحجزوه بمستشفى.<br>وهسه، حسب محاميه، بعد سنتين علاج صار يگدر يتحاكم مثل الكل.<br>وموعد محاكمته هذا الأسبوع، قبل نزول اللعبة بأيام.<br>وهاي المرة المحكمة تقرر: يتعاقب لو لا.<br>وآني أشوف، إذا ولد بتلفزيون فندق وموبايل وصل لأسرار أكبر لعبة،<br>فماكو شي بالإنترنت مقفول مية بالمية.<br>بس لو انت صاحب الشركة، تشتكي عليه، لو تشغّله عندك حتى يسد الأبواب الي دخل منها؟<br>اكتبلي بالتعليقات.</p></div>
+<div id="bar">
+ <button onclick="toggle()">▶︎ / ⏸</button>
+ <button onclick="sp(-0.2)">أبطأ</button><span id="s">1.0</span><button onclick="sp(0.2)">أسرع</button>
+ <button onclick="fs(-4)">A-</button><button onclick="fs(4)">A+</button>
+ <button onclick="document.getElementById('wrap').classList.toggle('mirror')">مراية</button>
+ <span>224 كلمة</span>
+</div>
+<script>
+let run=false,speed=1.0,size=Math.round(Math.min(56,Math.max(26,innerWidth*0.07))),acc=0;
+function toggle(){run=!run}
+function sp(d){speed=Math.max(0.2,+(speed+d).toFixed(1));document.getElementById('s').textContent=speed.toFixed(1)}
+function fs(d){size=Math.max(20,size+d);document.documentElement.style.setProperty('--fs',size+'px')}
+function tick(){if(run){acc+=speed*0.6;if(acc>=1){window.scrollBy(0,Math.floor(acc));acc%=1}}requestAnimationFrame(tick)}
+document.addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();toggle()}
+ if(e.key==='ArrowUp')sp(0.2);if(e.key==='ArrowDown')sp(-0.2);if(e.key==='+')fs(4);if(e.key==='-')fs(-4);
+ if(e.key==='m'||e.key==='M')document.getElementById('wrap').classList.toggle('mirror')});
+tick();
+</script></body></html>
