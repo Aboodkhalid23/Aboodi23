@@ -1,5 +1,5 @@
 ai-tells cdeistopened/content-os 16e080f
-ai-video coreyhaines31/marketingskills 96798cf
+ai-video coreyhaines31/marketingskills 9d6d7ce
 anti-ai-writing artemnovitckii/content-skills 1c6e909
 audience-research social-media-skills/skills f28cef2
 audio-tldr AugustusW/audio-tldr-skill 124d516
@@ -22,7 +22,7 @@ dumbify artemnovitckii/content-skills 1c6e909
 engagement-routine social-media-skills/skills f28cef2
 executing-plans obra/superpowers 22f0b46
 experimentation-and-ab-testing social-media-skills/skills f28cef2
-find-skills vercel-labs/skills d3701c1
+find-skills vercel-labs/skills 47d86b6
 finishing-a-development-branch obra/superpowers 22f0b46
 frontend-design anthropics/skills 2c5958e
 google-trends terryds/google-trends-skill e578606
@@ -35,7 +35,7 @@ instagram-growth social-media-skills/skills f28cef2
 instagram-seo social-media-skills/skills f28cef2
 karpathy-guidelines multica-ai/andrej-karpathy-skills 2c60614
 long-form-youtube yaxeen/storytelling-skills 24ef3c1
-marketing-psychology coreyhaines31/marketingskills 96798cf
+marketing-psychology coreyhaines31/marketingskills 9d6d7ce
 motion-html howseen-ai/claude-motion-design 3d90d34
 motion-review-loop whaleyxbt/claude-motion 6f80380
 motion-sound whaleyxbt/claude-motion 6f80380
@@ -50,7 +50,7 @@ remotion-motion-graphics haidrrrry/claude-remotion-skill 1dcbe5e
 requesting-code-review obra/superpowers 22f0b46
 retention-audit yaxeen/storytelling-skills 24ef3c1
 short-form-video cdeistopened/content-os 16e080f
-social-content coreyhaines31/marketingskills 96798cf
+social-content coreyhaines31/marketingskills 9d6d7ce
 source-verification jamditis/claude-skills-journalism e1f38cb
 storytelling artemnovitckii/content-skills 1c6e909
 storytelling-and-narrative social-media-skills/skills f28cef2
@@ -74,7 +74,7 @@ web-archiving jamditis/claude-skills-journalism e1f38cb
 webapp-testing anthropics/skills 2c5958e
 writing-plans obra/superpowers 22f0b46
 youtube-comments-to-ideas ravsau/youtuber-skills 603367b
-youtube-script-writer mohitagw15856/pm-claude-skills f207648
+youtube-script-writer mohitagw15856/pm-claude-skills c88d23a
 youtube-seo-competitor deeployCO/youtube-seo-skills 779b0f1
 youtube-shorts social-media-skills/skills f28cef2
 youtube-title-creator cdeistopened/content-os 16e080f
