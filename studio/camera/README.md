@@ -1,6 +1,6 @@
 # فلاتر الكاميرا (Sony ZV-E10 II)
 
-**40 فلتر** خاص إلك. تحطها بالكاميرا، تختار واحد، تصوّر، والفيديو يطلع **ملوّن وجاهز** بدون مونتاج ألوان.
+**42 فلتر** خاص إلك. تحطها بالكاميرا، تختار واحد، تصوّر، والفيديو يطلع **ملوّن وجاهز** بدون مونتاج ألوان.
 
 > **شنو يعني LUT؟** ملف صغير يگول للكاميرا: "هذا اللون حوله لهذا اللون". مثل فلتر انستا، بس احترافي وداخل الكاميرا.
 
@@ -14,6 +14,7 @@
 | حبوب صغيرة بالتصوير | الفلتر صار يطلب **ضوء أكثر** (القسم 3). ضوء أكثر = حبوب أقل |
 | حبوب ملوّنة بالظلال | الظلال الغامقة صارت أهدأ بالألوان وأنظف |
 | ما تعرف شكل الفلتر | **صورة لكل فلتر** بمجلد `previews` |
+| الضوء الأحمر مغرّگ الاستوديو والوجه | فلترين مخصوصين لاستوديوك: `ABRED` و`ABREDX` (انصنعوا على صورة حقيقية من كاميرتك) |
 
 > ⚠️ **امسح الفلاتر القديمة من الكاميرا** وحط الجديدة. القديمة والجديدة ما يمشون سوة، لأن الجديدة تحتاج إضاءة أفتح.
 
@@ -29,11 +30,11 @@
 | كم فلتر تحفظ الكاميرا بنفس الوقت؟ | **16** (أماكن User1 لحد User16) |
 | كم فلتر "ينطبع" بالفيديو جاهز للاختيار السريع؟ | **4** (أماكن PPLUT1 لحد PPLUT4) |
 
-يعني الـ40 فلتر تبقى **مكتبة بموبايلك**. تختار منها 16 تحطهم بالكاميرا، ومن الـ16 تختار 4 للتصوير السريع. تبدّلهم وقت ما تريد.
+يعني الـ42 فلتر تبقى **مكتبة بموبايلك**. تختار منها 16 تحطهم بالكاميرا، ومن الـ16 تختار 4 للتصوير السريع. تبدّلهم وقت ما تريد.
 
 ---
 
-## 2) الفلاتر الأربعين (كل واحد ويا صورته)
+## 2) كل الفلاتر (كل واحد ويا صورته)
 
 كل صورة بيها مشهدين: فوگ استوديو بضوء ملوّن (أو تصوير برا)، وجوه استوديو فاتح. دوس على الصورة حتى تكبر.
 ⭐ = من الـ16 الي أنصحك تحطهم بالكاميرا.
@@ -41,8 +42,10 @@
 ### الأساسية
 | الصورة | الملف | الاسم | وين |
 |---|---|---|---|
-| <a href="previews/ABCLEAN.jpg"><img src="previews/ABCLEAN.jpg" width="170"></a> | `ABCLEAN` ⭐ | استوديو نظيف | الحچي اليومي. ابدأ بيه |
-| <a href="previews/ABWARM.jpg"><img src="previews/ABWARM.jpg" width="170"></a> | `ABWARM` ⭐ | سينمائي دافئ | قصص الشركات |
+| <a href="previews/ABRED.jpg"><img src="previews/ABRED.jpg" width="170"></a> | `ABRED` ⭐ | استوديو أحمر | استوديوك بالضوء الأحمر. ابدأ بيه |
+| <a href="previews/ABREDX.jpg"><img src="previews/ABREDX.jpg" width="170"></a> | `ABREDX` ⭐ | أحمر سينمائي | استوديوك بالضوء الأحمر، بستايل أفلام |
+| <a href="previews/ABCLEAN.jpg"><img src="previews/ABCLEAN.jpg" width="170"></a> | `ABCLEAN` ⭐ | استوديو نظيف | الحچي اليومي بضوء أبيض أو ألوان ثانية |
+| <a href="previews/ABWARM.jpg"><img src="previews/ABWARM.jpg" width="170"></a> | `ABWARM` | سينمائي دافئ | قصص الشركات |
 | <a href="previews/ABTEAL.jpg"><img src="previews/ABTEAL.jpg" width="170"></a> | `ABTEAL` ⭐ | وثائقي تيل وأورنج | الوثائقيات |
 | <a href="previews/ABNEON.jpg"><img src="previews/ABNEON.jpg" width="170"></a> | `ABNEON` ⭐ | نيون RGB | أضواء RGB وراك |
 | <a href="previews/ABMOODY.jpg"><img src="previews/ABMOODY.jpg" width="170"></a> | `ABMOODY` ⭐ | غموض داكن | الأسرار والجرائم |
@@ -56,18 +59,18 @@
 | <a href="previews/STBRIGHT.jpg"><img src="previews/STBRIGHT.jpg" width="170"></a> | `STBRIGHT` | استوديو مشرق | حلقات خفيفة ومرحة |
 | <a href="previews/STSOFT.jpg"><img src="previews/STSOFT.jpg" width="170"></a> | `STSOFT` | بشرة ناعمة | لقطات قريبة للوجه |
 | <a href="previews/STPOP.jpg"><img src="previews/STPOP.jpg" width="170"></a> | `STPOP` | ألوان قوية | محتوى شبابي سريع |
-| <a href="previews/STTECH.jpg"><img src="previews/STTECH.jpg" width="170"></a> | `STTECH` | تقني بارد | مراجعات أجهزة وتقنية |
-| <a href="previews/STGOLD.jpg"><img src="previews/STGOLD.jpg" width="170"></a> | `STGOLD` ⭐ | ذهبي فخم | قصص الأغنياء والماركات |
+| <a href="previews/STTECH.jpg"><img src="previews/STTECH.jpg" width="170"></a> | `STTECH` ⭐ | تقني بارد | مراجعات أجهزة وتقنية |
+| <a href="previews/STGOLD.jpg"><img src="previews/STGOLD.jpg" width="170"></a> | `STGOLD` | ذهبي فخم | قصص الأغنياء والماركات |
 | <a href="previews/STPODCST.jpg"><img src="previews/STPODCST.jpg" width="170"></a> | `STPODCST` ⭐ | بودكاست داكن | جلسة حوار بإضاءة خفيفة |
 | <a href="previews/STLUXE.jpg"><img src="previews/STLUXE.jpg" width="170"></a> | `STLUXE` ⭐ | فخامة سينمائية | المقدمات المهمة |
-| <a href="previews/STPURPLE.jpg"><img src="previews/STPURPLE.jpg" width="170"></a> | `STPURPLE` ⭐ | بنفسجي RGB | خلفية بنفسجية وزرگة |
+| <a href="previews/STPURPLE.jpg"><img src="previews/STPURPLE.jpg" width="170"></a> | `STPURPLE` | بنفسجي RGB | خلفية بنفسجية وزرگة |
 
 ### سينمائي
 | الصورة | الملف | الاسم | وين |
 |---|---|---|---|
 | <a href="previews/CNNIGHT.jpg"><img src="previews/CNNIGHT.jpg" width="170"></a> | `CNNIGHT` ⭐ | ليل أزرق | مشاهد الليل والتوتر |
-| <a href="previews/CNMATRIX.jpg"><img src="previews/CNMATRIX.jpg" width="170"></a> | `CNMATRIX` | أخضر الأفلام | قصص الهكر والتكنولوجيا |
-| <a href="previews/CNBLEACH.jpg"><img src="previews/CNBLEACH.jpg" width="170"></a> | `CNBLEACH` | تبييض أكشن | الحروب والأكشن |
+| <a href="previews/CNMATRIX.jpg"><img src="previews/CNMATRIX.jpg" width="170"></a> | `CNMATRIX` ⭐ | أخضر الأفلام | قصص الهكر والتكنولوجيا |
+| <a href="previews/CNBLEACH.jpg"><img src="previews/CNBLEACH.jpg" width="170"></a> | `CNBLEACH` ⭐ | تبييض أكشن | الحروب والأكشن |
 | <a href="previews/CNFADE.jpg"><img src="previews/CNFADE.jpg" width="170"></a> | `CNFADE` | باهت ناعم | ذكريات وحنين |
 | <a href="previews/CNDUNE.jpg"><img src="previews/CNDUNE.jpg" width="170"></a> | `CNDUNE` | صحراء برتقالية | الصحراء والشرق |
 | <a href="previews/CNNOIR.jpg"><img src="previews/CNNOIR.jpg" width="170"></a> | `CNNOIR` ⭐ | نوار أبيض وأسود | الجرائم القديمة |
@@ -85,7 +88,7 @@
 | <a href="previews/VLCITY.jpg"><img src="previews/VLCITY.jpg" width="170"></a> | `VLCITY` | مدينة بالليل | شوارع وأضواء الليل |
 | <a href="previews/VLNATURE.jpg"><img src="previews/VLNATURE.jpg" width="170"></a> | `VLNATURE` | طبيعة خضرة | الحدائق والجبال |
 | <a href="previews/VLSNOW.jpg"><img src="previews/VLSNOW.jpg" width="170"></a> | `VLSNOW` | ثلج بارد | الثلج والشتاء |
-| <a href="previews/VLTRAVEL.jpg"><img src="previews/VLTRAVEL.jpg" width="170"></a> | `VLTRAVEL` ⭐ | سفر سينمائي | فلوگات السفر |
+| <a href="previews/VLTRAVEL.jpg"><img src="previews/VLTRAVEL.jpg" width="170"></a> | `VLTRAVEL` | سفر سينمائي | فلوگات السفر |
 | <a href="previews/VLCAFE.jpg"><img src="previews/VLCAFE.jpg" width="170"></a> | `VLCAFE` | كوفي دافئ | المقاهي والمطاعم |
 | <a href="previews/VLMOODY.jpg"><img src="previews/VLMOODY.jpg" width="170"></a> | `VLMOODY` | سفر غامق | سفر بستايل هادئ وغامق |
 | <a href="previews/VLHDR.jpg"><img src="previews/VLHDR.jpg" width="170"></a> | `VLHDR` | مشهد ساطع | شمس قوية وسما مشرقة |
@@ -93,13 +96,13 @@
 ### ريلز وتيك توك
 | الصورة | الملف | الاسم | وين |
 |---|---|---|---|
-| <a href="previews/RLVIRAL.jpg"><img src="previews/RLVIRAL.jpg" width="170"></a> | `RLVIRAL` ⭐ | ريلز فاقع | ريلز تلفت النظر |
+| <a href="previews/RLVIRAL.jpg"><img src="previews/RLVIRAL.jpg" width="170"></a> | `RLVIRAL` | ريلز فاقع | ريلز تلفت النظر |
 | <a href="previews/RLWARM.jpg"><img src="previews/RLWARM.jpg" width="170"></a> | `RLWARM` | ريلز دافي | ريلز يومية |
 | <a href="previews/RLCLEAN.jpg"><img src="previews/RLCLEAN.jpg" width="170"></a> | `RLCLEAN` | ريلز نظيف | ريلز حچي للكاميرا |
 | <a href="previews/RLDRAMA.jpg"><img src="previews/RLDRAMA.jpg" width="170"></a> | `RLDRAMA` ⭐ | ريلز درامي | ريلز قصص وغموض |
 
 ### الـ16 الي أنصحك تبدأ بيهم
-`ABCLEAN` `ABWARM` `ABTEAL` `ABNEON` `ABMOODY` `ABFILM` `STGOLD` `STPODCST` `STLUXE` `STPURPLE` `CNNIGHT` `CNNOIR` `CNBLKBUS` `VLTRAVEL` `RLVIRAL` `RLDRAMA`
+`ABRED` `ABREDX` `ABCLEAN` `ABTEAL` `ABNEON` `ABMOODY` `ABFILM` `STTECH` `STPODCST` `STLUXE` `CNNIGHT` `CNMATRIX` `CNBLEACH` `CNNOIR` `CNBLKBUS` `RLDRAMA`
 
 ---
 
@@ -146,7 +149,7 @@
 3. اختار **Basic Look** واختار الفلتر.
 4. نفس الشي لـ PPLUT2 و3 و4.
 
-**الأربعة الي أنصحك بيهم:** PPLUT1 = `ABCLEAN` (اليومي)، PPLUT2 = `ABTEAL` (الوثائقي)، PPLUT3 = `ABMOODY` (الغموض)، PPLUT4 = `ABNEON` (أضواء RGB).
+**الأربعة الي أنصحك بيهم (لاستوديوك الأحمر):** PPLUT1 = `ABRED` (اليومي)، PPLUT2 = `ABREDX` (السينمائي)، PPLUT3 = `ABMOODY` (الغموض)، PPLUT4 = `ABCLEAN` (إذا غيّرت لون الضوء).
 
 **وقت التصوير:** دوس زر **Fn** ← **Picture Profile** ← اختار PPLUT الي تريده. خلص.
 
@@ -188,9 +191,9 @@
 
 1. ظبط كل الإعدادات فوق.
 2. **MENU ← Shooting ← Shooting Mode ← Camera Set. Memory** واختار رقم:
-   - **1** = الاستوديو ويا ABCLEAN
-   - **2** = الاستوديو ويا ABMOODY
-   - **3** = الاستوديو ويا ABNEON
+   - **1** = الاستوديو ويا ABRED
+   - **2** = الاستوديو ويا ABREDX
+   - **3** = الاستوديو ويا ABMOODY
 3. كل ما تشغّل الكاميرا: اختار وضع **MR** واختار الرقم.
 
 وتگدر تحفظ الإعدادات بموبايلك بالتطبيق نفسه (**Saving and applying camera settings**)، حتى لو صار شي بالكاميرا ترجعها.
@@ -203,6 +206,12 @@
 - **أضواء RGB:** **على الخلفية بس**، وخليها أغمق من وجهك.
 - **ألوان تمشي ويا الفلاتر:** أزرق وبنفسجي، أو تيل وبرتقالي.
 - **اطفي ضوء الغرفة.** يخلط الألوان ويخرّب الفلتر.
+
+**من صورة استوديوك الحقيقية (10 تشرين الثاني 2026):**
+- الضوء الأحمر مغرّگ الحايط الأبيض الي وراك، وطالع على خدودك. خفّف قوته، أو بعّده عن الحايط.
+- الحايط وراك أفتح من وجهك. لازم العكس: قوّي ضوء الوجه أو قرّبه.
+- الصورة مموّهة شوية (تفاصيل اللحية والحواجب ممسوحة). هذا يصير من حساسية ISO عالية، أو من النسخة الصغيرة (القسم 7).
+- إذا تگدر، خلي لون ثاني بارد (أزرق أو تيل) على جوانب الاستوديو. الأحمر ويا الأزرق يطلع سينمائي.
 
 ---
 
@@ -265,6 +274,7 @@
 
 ```bash
 python3 scripts/make-luts.py --preview
+python3 scripts/make-luts.py --mine صورة.png   # يطبق كل الفلاتر على صورة من استوديوك
 ```
 
 **أحسن طريقة:** صوّر 10 ثواني بالاستوديو بأي فلتر ودزّهم. نشوف الحبوب والألوان على الملف نفسه ونضبط الفلاتر على وجهك.
@@ -274,3 +284,5 @@ python3 scripts/make-luts.py --preview
 - كل الفلاتر تنزّل الإضاءة `EXPO = 5/3` وقفة. إذا تغيّر الرقم، لازم يتغيّر AE Level Offset بهذا الدليل.
 - مستوى ناتج الفلتر (`BLACK_OUT`، `WHITE_OUT`) مختار "بالنص" لأن محد وثّق شلون هاي الكاميرا تقرا الناتج. إذا گال إن **الأسود طالع رمادي وباهت**: خليهم `0.0` و`1.0`. إذا وصل مقطع من الكاميرا: قيس الأسود بالملف، وإذا ثبت إنه مستوى فيديو خليهم `64/1023` و`940/1023`.
 - صور المعاينة تنصنع من `studio/camera/scenes/` (ثلاث صور من Pexels، ترخيص مجاني).
+- المعاينة على صور استوديوه (`--mine`) تنحفظ بـ `studio/camera/private/` **وما تنرفع** (بيها وجهه والريبو عام). دزها إله مباشرة.
+- استوديوه: ضوء أحمر قوي على حايط أبيض، وألواح خشب غامقة بالجوانب، وشرايط ضوء أبيض. الفلاتر الدافية تزيد الأحمر، فهي برا الـ16.

@@ -13,6 +13,7 @@
 التشغيل:
     python3 scripts/make-luts.py            # يصنع كل الفلاتر بـ studio/camera/luts
     python3 scripts/make-luts.py --preview  # وياها صورة لكل فلتر وصورة مقارنة
+    python3 scripts/make-luts.py --mine صورة.png  # معاينة الفلاتر على صورة من استوديو صاحب القناة
     python3 scripts/make-luts.py --list     # قائمة الفلاتر (JSON)
 """
 import argparse
@@ -141,7 +142,7 @@ def hw(h, center, width):
 # contrast/gray/toe: المنحنى (التباين، سطوع الرمادي، عمق الأسود) | wb: (أحمر، أزرق) دفء أو برودة
 # sat/vib: تشبع عام وحيوية | dens: كثافة فيلم (اللون القوي يغمگ بدل ما يفقع) | teal: قوة تيل-أورنج
 # sh/hi: لون الظلال والإضاءات (درجة اللون، القوة) | skin: حماية البشرة | fade: رفع الأسود
-# rgb_pop: إبراز أضواء RGB | green/blue: تحريك الأخضر والأزرق بالدرجات
+# rgb_pop: إبراز أضواء RGB | green/blue: تحريك الأخضر والأزرق بالدرجات | red_sat: تهدئة الأحمر القوي
 # درجات اللون: 25 أحمر، 60 برتقالي، 85 ذهبي، 145 أخضر، 200 تيل، 255 أزرق، 300 بنفسجي
 BASE = dict(contrast=1.6, gray=0.17, toe=0.004, wb=(1.0, 1.0), sat=1.0, vib=0.0, dens=0.3, teal=0.0,
             sh=(0, 0.0), hi=(0, 0.0), skin=0.6, fade=0.0, rgb_pop=0.15)
@@ -152,8 +153,16 @@ def look(key, name, cat, use, **kw):
     LOOKS[key] = dict(BASE, **kw, name=name, cat=cat, use=use)
 
 
+# مخصوصة لاستوديو صاحب القناة (من صورة حقيقية دزها 10 تشرين الثاني 2026: ضوء أحمر مغرّگ الحايط
+# الأبيض وطالع على وجهه). تهدّي الأحمر وتغمّگه، وتبرّد الصورة شوية حتى الوجه يرجع طبيعي.
+look("ABRED", "استوديو أحمر", "الأساسية", "استوديوك بالضوء الأحمر. ابدأ بيه",
+     contrast=1.6, gray=0.18, wb=(0.955, 1.045), red_sat=-0.3, dens=0.55, sh=(220, 0.025), skin=0.9,
+     rgb_pop=0.1)
+look("ABREDX", "أحمر سينمائي", "الأساسية", "استوديوك بالضوء الأحمر، بستايل أفلام",
+     contrast=1.75, gray=0.17, toe=0.005, wb=(0.945, 1.055), red_sat=-0.4, dens=0.7, teal=0.4,
+     sh=(212, 0.045), hi=(70, 0.012), skin=0.9, rgb_pop=0.1)
 # الأساسية
-look("ABCLEAN", "استوديو نظيف", "الأساسية", "الحچي اليومي. ابدأ بيه",
+look("ABCLEAN", "استوديو نظيف", "الأساسية", "الحچي اليومي بضوء أبيض أو ألوان ثانية",
      contrast=1.5, gray=0.175, sat=1.06, dens=0.25, rgb_pop=0.2)
 look("ABWARM", "سينمائي دافئ", "الأساسية", "قصص الشركات",
      contrast=1.62, gray=0.165, wb=(1.05, 0.94), sat=1.06, teal=0.3, sh=(215, 0.022), hi=(75, 0.02), dens=0.4)
@@ -247,9 +256,10 @@ look("RLCLEAN", "ريلز نظيف", "ريلز", "ريلز حچي للكامير
 look("RLDRAMA", "ريلز درامي", "ريلز", "ريلز قصص وغموض",
      contrast=1.9, gray=0.13, toe=0.007, sat=0.98, teal=0.7, sh=(208, 0.04), dens=0.55)
 
-# الـ16 الي تنحط بالكاميرا (استوديو قصص)، وأول أربعة منهم للاختيار السريع PPLUT1-4
-TOP16 = ["ABCLEAN", "ABTEAL", "ABMOODY", "ABNEON", "ABWARM", "ABFILM", "STGOLD", "STLUXE", "STPODCST",
-         "STPURPLE", "CNBLKBUS", "CNNIGHT", "CNNOIR", "RLVIRAL", "RLDRAMA", "VLTRAVEL"]
+# الـ16 الي تنحط بالكاميرا (استوديو قصص بضوء أحمر)، وأول أربعة منهم للاختيار السريع PPLUT1-4.
+# الفلاتر الدافية (ABWARM، STGOLD...) برا القائمة: تزيد الأحمر باستوديوه.
+TOP16 = ["ABRED", "ABREDX", "ABMOODY", "ABCLEAN", "ABTEAL", "ABNEON", "ABFILM", "STTECH", "STPODCST",
+         "STLUXE", "CNBLKBUS", "CNNIGHT", "CNBLEACH", "CNNOIR", "CNMATRIX", "RLDRAMA"]
 OUTDOOR = {"فلوگ وبرا"}  # هاي تنعرض على صورة خارجية (وياها ABDAY)
 
 
@@ -288,6 +298,7 @@ def apply_look(slog, p):
         sel = smoothstep(0.012, 0.05, C)   # تعديلات اللون المحدد ما تلمس الرمادي (حتى الأبيض يبقى أبيض)
         warm, cool = hw(h, 60, 60) * sel, hw(h, 225, 80) * sel
         green, mag, blue = hw(h, 140, 42) * sel * (1 - cool), hw(h, 335, 40) * sel, hw(h, 262, 50) * sel
+        red = hw(h, 22, 32) * smoothstep(0.08, 0.2, C)   # الأحمر القوي بس (ضوء RGB)، مو البشرة
         tl = p["teal"]
         # تيل وأورنج: الدافي يتجمع عند البرتقالي، والبارد عند التيل، والأخضر يميل للزيتي
         h = h - tl * (0.45 * warm * hdiff(h, 58) + 0.55 * cool * hdiff(h, 212) + 14 * green)
@@ -296,6 +307,7 @@ def apply_look(slog, p):
         gain = p["sat"] * (1 + 0.20 * tl * warm) * (1 + 0.15 * tl * cool) * (1 - 0.30 * tl * green)
         gain = gain * (1 - 0.25 * tl * mag) * (1 + p.get("green_sat", 0) * green)
         gain = gain * (1 + p.get("warm_sat", 0) * warm) * (1 + p.get("blue_sat", 0) * blue)
+        gain = gain * (1 + p.get("red_sat", 0) * red)
         # حيوية: تقوي الألوان الضعيفة أكثر من القوية | أضواء RGB: تقوي الألوان القوية بس
         gain = gain * (1 + p["vib"] * smoothstep(0.01, 0.05, C) * smoothstep(0.2, 0.08, C))
         gain = gain * (1 + 0.35 * p["rgb_pop"] * smoothstep(0.09, 0.2, C) * (1 - skin))
@@ -419,8 +431,13 @@ def on_screen(v):
     return np.clip((v - LEGAL_LO) / (LEGAL_HI - LEGAL_LO), 0, 1)
 
 
-def preview(tables):
-    """صورة لكل فلتر (previews/الاسم.jpg: مشهدين فوگ بعض) وصورة مقارنة وحدة (preview.jpg)."""
+def preview(tables, mine=None):
+    """صورة لكل فلتر (previews/الاسم.jpg) وصورة مقارنة وحدة (preview.jpg).
+
+    بدون mine: مشهدين فوگ بعض من صور scenes المجانية، بمجلد الكاميرا (ينرفع).
+    ويا mine (صورة من استوديو صاحب القناة): فوگ استوديوه وجوه مشهد مرجعي، بمجلد private
+    (ما ينرفع: بيه وجهه).
+    """
     from PIL import Image, ImageDraw, ImageFont
     fonts = ROOT / "designer" / "fonts"
 
@@ -432,8 +449,11 @@ def preview(tables):
         return im.resize(size, Image.LANCZOS)
 
     scenes = {k: photo_to_slog3(CAM / "scenes" / f"{k}.jpg") for k in ("studio", "studio2", "outdoor")}
-    out = CAM / "previews"
-    out.mkdir(exist_ok=True)
+    base = CAM
+    if mine:
+        scenes["mine"], base = photo_to_slog3(mine), CAM / "private"
+    out = base / "previews"
+    out.mkdir(parents=True, exist_ok=True)
     for old in out.glob("*.jpg"):
         old.unlink()
     tw, th, bar, cols = 384, 216, 34, 5
@@ -443,24 +463,28 @@ def preview(tables):
     for i, (key, table) in enumerate(tables.items()):
         p = LOOKS[key]
         first = "outdoor" if p["cat"] in OUTDOOR or key == "ABDAY" else "studio"
+        tops = ["mine", "outdoor" if first == "outdoor" else "studio2"] if mine else [first, "studio2"]
         x, y = (i % cols) * tw, (i // cols) * (th + bar)
-        sheet.paste(shot(scenes["studio2" if first == "studio" else "outdoor"], table, (tw, th)), (x, y + bar))
+        sheet.paste(shot(scenes[tops[0] if mine or first == "outdoor" else "studio2"], table, (tw, th)), (x, y + bar))
         ds.text((x + tw - 8, y + 5), f"{p['name']}  {key}", fill=(235, 235, 235), font=font(17), anchor="ra",
                 direction="rtl")
-        card = Image.new("RGB", (W, 2 * H + B), (11, 11, 15))
-        card.paste(shot(scenes[first], table, (W, H)), (0, 0))
-        card.paste(shot(scenes["studio2"], table, (W, H)), (0, H))
+        top = len(tops) * H
+        card = Image.new("RGB", (W, top + B), (11, 11, 15))
+        for j, name in enumerate(tops):
+            card.paste(shot(scenes[name], table, (W, H)), (0, j * H))
         d = ImageDraw.Draw(card)
-        d.text((W - 24, 2 * H + 10), p["name"], fill=(255, 255, 255), font=font(40), anchor="ra", direction="rtl")
-        d.text((W - 24, 2 * H + 62), p["use"], fill=(255, 196, 0), font=font(25), anchor="ra", direction="rtl")
-        d.text((24, 2 * H + 26), key, fill=(255, 255, 255), font=font(40, "Cairo-Black.ttf"))
+        d.text((W - 24, top + 10), p["name"], fill=(255, 255, 255), font=font(40), anchor="ra", direction="rtl")
+        d.text((W - 24, top + 62), p["use"], fill=(255, 196, 0), font=font(25), anchor="ra", direction="rtl")
+        d.text((24, top + 26), key, fill=(255, 255, 255), font=font(40, "Cairo-Black.ttf"))
         card.save(out / f"{key}.jpg", quality=85)
-    sheet.save(CAM / "preview.jpg", quality=90)
+    sheet.save(base / "preview.jpg", quality=90)
+    return base
 
 
 def main():
     ap = argparse.ArgumentParser(description="يصنع فلاتر ZV-E10 II")
     ap.add_argument("--preview", action="store_true", help="يطلع صورة لكل فلتر وصورة مقارنة")
+    ap.add_argument("--mine", metavar="صورة", help="معاينة كل الفلاتر على صورة من استوديوك (تنحفظ بمجلد private)")
     ap.add_argument("--list", action="store_true", help="يطبع قائمة الفلاتر JSON وما يصنع شي")
     ap.add_argument("--out", default=str(OUT))
     a = ap.parse_args()
@@ -480,6 +504,8 @@ def main():
     if a.preview:
         preview(tables)
         print("✓ صور المعاينة:", CAM / "previews", "و", CAM / "preview.jpg")
+    if a.mine:
+        print("✓ المعاينة على صورتك:", preview(tables, a.mine))
 
 
 if __name__ == "__main__":

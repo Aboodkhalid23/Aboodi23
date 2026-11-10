@@ -26,3 +26,6 @@ episodes/**/*-voice.mp3
 motion/**/node_modules/
 motion/**/out/
 motion/_overlay/
+
+# فلاتر الكاميرا: المعاينة على صور استوديو صاحب القناة بيها وجهه، فما تنرفع (الريبو عام)
+studio/camera/private/
