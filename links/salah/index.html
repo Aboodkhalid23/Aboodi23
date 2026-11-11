@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>مواقيت الصلاة · توركو</title>
-<meta name="theme-color" content="#111318">
+<meta name="theme-color" content="#131f36">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="الصلاة">
@@ -12,20 +12,32 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-180.png">
 <style>
-:root{--bg:#111318;--card:#1b1e26;--card2:#232732;--ink:#f1efe8;--mut:#8c909b;--line:#2a2e39;--gold:#f2c14e;--gold2:#d99a2b;--dark:#17140a}
+:root{--bg:#16233b;--card:rgba(13,21,38,.55);--card2:rgba(255,255,255,.09);--ink:#f4f3ee;--mut:#b3bfd0;--line:rgba(255,255,255,.13);--gold:#f2c14e;--gold2:#d99a2b;--dark:#17140a}
 *{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
 html{background:var(--bg)}
 body{min-height:100vh;color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI","Noto Sans Arabic",sans-serif;
- background:radial-gradient(120% 60% at 50% 0,#22252f 0,var(--bg) 70%) no-repeat var(--bg);
- padding:calc(env(safe-area-inset-top) + 18px) 18px calc(env(safe-area-inset-bottom) + 104px);max-width:520px;margin:auto}
+ padding:calc(env(safe-area-inset-top) + 14px) 18px calc(env(safe-area-inset-bottom) + 104px);max-width:520px;margin:auto}
+/* السما: تدرج أزرق ليلي ونجوم */
+body::before{content:"";position:fixed;inset:0;z-index:-2;background:
+ radial-gradient(1.6px 1.6px at 12% 9%,#fff 50%,transparent 51%),radial-gradient(1.2px 1.2px at 78% 6%,#fff 50%,transparent 51%),
+ radial-gradient(1.4px 1.4px at 58% 16%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 30% 24%,#fff 50%,transparent 51%),
+ radial-gradient(1.5px 1.5px at 90% 28%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 8% 38%,#fff 50%,transparent 51%),
+ radial-gradient(1.2px 1.2px at 68% 40%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 42% 7%,#fff 50%,transparent 51%),
+ linear-gradient(#131f36 0,#22344f 38%,#3c5372 68%,#6a829c 100%)}
+.mt{position:fixed;left:0;right:0;bottom:0;width:100%;height:34vh;z-index:-1}
+.tk{display:block;height:92px;margin:0 auto 2px;opacity:.93;filter:drop-shadow(0 4px 14px rgba(0,0,0,.35))}
+header{text-align:center}
+li,.box,.al{-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+section .box{background:rgba(13,21,38,.84)}
+section .src{color:#e9eef5;text-shadow:0 1px 6px rgba(0,0,0,.6)}
 .n{direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}
-header h1{font-size:27px;font-weight:700}
+header h1{font-size:22px;font-weight:700}
 header p{font-size:14px;color:var(--mut);margin-top:3px}
 section{display:none}section.on{display:block}
 .orb{position:relative;width:min(74vw,290px);aspect-ratio:1;margin:22px auto 0}
 .orb svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
 .orb .in{position:absolute;inset:7%;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;
- background:radial-gradient(circle at 50% 28%,#3a3d4a 0,#22252e 48%,#16181e 100%);
+ background:radial-gradient(circle at 50% 26%,#4a5f80 0,#24344f 50%,#131e33 100%);
  box-shadow:inset 0 2px 1px rgba(255,255,255,.14),inset 0 -22px 40px rgba(242,193,78,.10),0 22px 60px rgba(0,0,0,.55)}
 .orb .ic{width:30px;height:30px;color:var(--gold);margin-bottom:4px}
 .orb span{font-size:19px;color:var(--mut)}
@@ -62,19 +74,26 @@ tr.td td:first-child{border-radius:0 12px 12px 0;color:var(--dark)}tr.td td:last
 .q button{background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark);font-weight:700;padding:11px 26px}
 .q small{color:var(--mut);font-size:14px;display:block;margin-top:14px;line-height:1.8}
 nav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 16px);width:min(92vw,420px);display:flex;gap:6px;padding:7px;
- background:rgba(30,33,42,.82);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid var(--line);border-radius:99px;box-shadow:0 14px 40px rgba(0,0,0,.5)}
+ background:rgba(13,21,38,.72);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid var(--line);border-radius:99px;box-shadow:0 14px 40px rgba(0,0,0,.5)}
 nav a{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:11px 0;font-size:15px;color:var(--mut);text-decoration:none;border-radius:99px}
 nav a svg{width:20px;height:20px}
 nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
 </style>
 </head>
 <body>
-<header><h1>توركو</h1><p id="date"></p></header>
+<svg class="mt" viewBox="0 0 400 200" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+ <path d="M0 200V128l38-30 30 22 46-52 40 40 34-26 52-58 44 50 30-20 46 44 40-24v154z" fill="#8fa3ba"/>
+ <path d="M114 68l-18 21 14-5 8 12 10-9 12 6zM240 24l-22 25 16-7 9 14 12-11 15 7zM68 120l-12-9-10 7 12-3zM314 98l-14 9 13-2 9 9 8-7z" fill="#eef3f8"/>
+ <path d="M0 200v-40l44-26 36 26 50-40 44 34 40-22 52 30 46-34 48 32 40-20v60z" fill="#2c3d57"/>
+ <path d="M130 120l-16 13 13-4 9 9 8-6 12 4zM312 128l-14 10 12-3 8 8 8-5z" fill="#c9d5e3" opacity=".8"/>
+ <path d="M0 200v-18l60-20 54 18 70-22 66 20 60-16 90 22v16z" fill="#0f1a2c"/>
+</svg>
+<header><img class="tk" src="takbir.png" alt="الله أكبر"><h1>توركو</h1><p id="date"></p></header>
 
 <section id="today" class="on">
  <div class="orb">
   <svg viewBox="0 0 280 280" aria-hidden="true">
-   <circle cx="140" cy="140" r="130" fill="none" stroke="var(--card2)" stroke-width="5"/>
+   <circle cx="140" cy="140" r="130" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="5"/>
    <circle id="ring" cx="140" cy="140" r="130" fill="none" stroke="var(--gold)" stroke-width="5" stroke-linecap="round" stroke-dasharray="816.8" stroke-dashoffset="816.8"/>
   </svg>
   <div class="in">
@@ -104,7 +123,7 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
  <div class="box q">
   <svg viewBox="-130 -130 260 260">
    <g id="dial">
-    <circle r="122" fill="var(--card2)" stroke="var(--line)" stroke-width="2"/>
+    <circle r="122" fill="#1b2a44" stroke="var(--line)" stroke-width="2"/>
     <text y="-94" text-anchor="middle" font-size="16" fill="var(--mut)">شمال</text>
     <text y="106" text-anchor="middle" font-size="16" fill="var(--mut)">جنوب</text>
     <text x="96" y="6" text-anchor="middle" font-size="16" fill="var(--mut)">شرق</text>
