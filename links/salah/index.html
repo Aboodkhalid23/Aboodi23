@@ -92,9 +92,18 @@ nav{flex:none;display:flex;gap:6px;padding:6px;background:rgba(13,21,38,.72);-we
 nav a{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:clamp(8px,1.3vh,11px) 0;font-size:14px;color:var(--mut);text-decoration:none;border-radius:99px}
 nav a svg{width:19px;height:19px}
 nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
-.seg{flex:none;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:5px;border-radius:22px;background:var(--card);border:1px solid var(--line);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
-.seg button{padding:clamp(5px,.9vh,8px) 0;font-size:13px;background:none;color:var(--mut)}
-.seg button.on{background:var(--gold);color:var(--dark);font-weight:700}
+.vh{flex:none;display:none;align-items:center;gap:10px;width:100%;margin-bottom:6px}
+.vh.on{display:flex}.vh b{flex:1;font-size:17px;text-align:center;padding-left:70px}
+.vh button{padding:8px 16px;font-size:15px}
+#mv{flex:1;min-height:0;display:none;width:100%}#mv.on{display:block}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:clamp(10px,1.8vh,16px) 6px;border-radius:20px;background:var(--card2);border:1px solid var(--line);color:var(--ink)}
+.tile i{font-style:normal;font-size:clamp(24px,3.6vh,30px);line-height:1.2}
+.tile b{font-size:clamp(15px,2.1vh,17px)}
+.tile span{font-size:12.5px;font-weight:500;color:var(--mut)}
+.tile:last-child:nth-child(odd){grid-column:span 2;flex-direction:row;justify-content:center;gap:10px}
+.tile.now{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset}.tile.now span{color:var(--gold)}
+.tile.ok::after{content:"✓";position:absolute;top:8px;left:10px;width:22px;height:22px;border-radius:50%;background:#3fae6a;color:#fff;font-size:14px;line-height:22px;text-align:center}
 .dz{text-align:center}
 #tv,#rv,#av{flex:1;min-height:0;display:none;flex-direction:column;align-items:center;gap:1.4vh;width:100%}
 #tv.on,#rv.on,#av.on{display:flex}
@@ -194,8 +203,9 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
 </section>
 
 <section id="dhikr">
- <div class="seg" id="seg"><button data-k="t">السبحة</button><button data-k="p">بعد الصلاة</button><button data-k="s">الصباح</button><button data-k="m">المساء</button><button data-k="n">النوم</button><button data-k="w">الاستيقاظ</button><button data-k="a" style="grid-column:span 2">أسماء الله الحسنى</button></div>
  <div class="box dz">
+  <div class="vh" id="vh"><button id="dback">→ رجوع</button><b id="dtitle"></b></div>
+  <div id="mv" class="scroll"><div class="tiles" id="tiles"></div></div>
   <div id="tv">
    <p id="tph"></p>
    <div class="tw"><button id="tb"><b class="n" id="tcount">0</b><span id="ttarget"></span></button></div>
@@ -246,6 +256,7 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
 <script src="adhkar.js"></script>
 <script>
 (function(){
+var VERSION='14';
 var D=window.SALAH, $=function(i){return document.getElementById(i)};
 var NAMES=['الفجر','الشروق','الظهر','العصر','المغرب','العشاء'];
 var GM=['كانون الثاني','شباط','آذار','نيسان','أيار','حزيران','تموز','آب','أيلول','تشرين الأول','تشرين الثاني','كانون الأول'];
@@ -366,38 +377,55 @@ $('qbtn').onclick=function(){
  if(!E){$('qhelp').textContent='هذا الجهاز ما بيه بوصلة. القبلة بتوركو باتجاه الجنوب الشرقي.';return}
  if(E.requestPermission)E.requestPermission().then(function(r){if(r=='granted')go()}).catch(function(){});else go()};
 
+// ---------- قسم الذكر ----------
+// شنو خلّص المستخدم اليوم (تنمسح العلامات كل يوم جديد)
+function today(){var w=now();return w.year+'-'+w.month+'-'+w.day}
+var DONE={d:today()};try{var dn=JSON.parse(localStorage.getItem('done'));if(dn&&dn.d==today())DONE=dn}catch(e){}
+function mark(k){if(DONE.d!=today())DONE={d:today()};DONE[k]=1;try{localStorage.setItem('done',JSON.stringify(DONE))}catch(e){}}
+
 // السبحة: كل ضغطة تسبيحة، ومن يكمل العدد تنتقل للذكر الي بعده
-var TS=[['سُبْحَانَ اللَّهِ',33],['الْحَمْدُ لِلَّهِ',33],['اللَّهُ أَكْبَرُ',33],['لَا إِلَهَ إِلَّا اللَّهُ',100],['أَسْتَغْفِرُ اللَّهَ',100],['عدّاد حر',0]];
-var ts={i:0,c:0},busy=false;try{var o=JSON.parse(localStorage.getItem('tasbih'));if(o&&TS[o.i])ts=o}catch(e){}
+var TS=[['سُبْحَانَ اللَّهِ',33],['الْحَمْدُ لِلَّهِ',33],['اللَّهُ أَكْبَرُ',33],['لَا إِلَهَ إِلَّا اللَّهُ',100],['أَسْتَغْفِرُ اللَّهَ',100,'g'],['اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ',100,'y'],['عدّاد حر',0]];
+var ts={i:0,c:0},busy=false,solo=false;try{var o=JSON.parse(localStorage.getItem('tasbih'));if(o&&TS[o.i])ts=o}catch(e){}
 function tsave(){try{localStorage.setItem('tasbih',JSON.stringify(ts))}catch(e){}}
-function tdraw(){var p=TS[ts.i];$('tph').textContent=p[0];$('tcount').textContent=ts.c;$('ttarget').textContent=p[1]?'من '+p[1]:'اضغط وعدّ';tsave()}
-function tgo(){ts.i=(ts.i+1)%TS.length;ts.c=0;busy=false;$('tb').classList.remove('done');tdraw()}
+function tdraw(){var p=TS[ts.i];$('tph').textContent=p[0];$('tcount').textContent=ts.c;$('ttarget').textContent=p[1]?'من '+p[1]:'اضغط وعدّ';$('tnext').style.display=solo?'none':'';tsave()}
+function tgo(){busy=false;$('tb').classList.remove('done');if(solo){mode('menu');return}ts.i=(ts.i+1)%TS.length;ts.c=0;tdraw()}
 $('tb').onclick=function(){if(busy)return;ts.c++;var p=TS[ts.i];tdraw();
- if(p[1]&&ts.c>=p[1]){busy=true;$('tb').classList.add('done');if(navigator.vibrate)navigator.vibrate(200);setTimeout(tgo,900)}};
+ if(p[1]&&ts.c>=p[1]){busy=true;$('tb').classList.add('done');if(p[2])mark(p[2]);if(navigator.vibrate)navigator.vibrate(200);ts.c=solo?0:ts.c;tsave();setTimeout(tgo,900)}};
 $('treset').onclick=function(){if(!busy){ts.c=0;tdraw()}};
 $('tnext').onclick=function(){if(!busy)tgo()};
 
 // قارئ الأذكار: ذكر واحد بالشاشة، والزر الذهبي يعدّ التكرار وينتقل للي بعده
 var A=window.ADHKAR||{},rd={k:'p',i:0,c:0};
-function rdraw(){var L=A[rd.k],z=L[rd.i],end=rd.i==L.length-1&&rd.c>=z[1];
+function rdraw(){var L=A[rd.k],z=L[rd.i],end=rd.i==L.length-1&&rd.c>=z[1];if(end)mark(rd.k);
  $('zh').textContent=end?'خلصت الأذكار، تقبّل الله 🤲':'ذكر '+(rd.i+1)+' من '+L.length;
  $('ztext').textContent=z[0];$('zref').textContent=z[2];$('zc').textContent=rd.c+' / '+z[1]}
 function rmove(n){var L=A[rd.k],i=rd.i+n;if(i<0||i>=L.length)return;rd.i=i;rd.c=0;rdraw();$('ztext').parentNode.scrollTop=0}
 $('zc').onclick=function(){var L=A[rd.k],z=L[rd.i];if(rd.c>=z[1])return;rd.c++;
  if(rd.c>=z[1]&&rd.i<L.length-1){rdraw();setTimeout(function(){rmove(1)},350)}else rdraw()};
 $('zprev').onclick=function(){rmove(-1)};$('znext').onclick=function(){rmove(1)};
-function mode(k){document.querySelectorAll('#seg button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-k')==k)});
- $('tv').classList.toggle('on',k=='t');$('av').classList.toggle('on',k=='a');$('rv').classList.toggle('on',k!='t'&&k!='a');
- if(k=='t')tdraw();else if(k=='a'){if(!$('names').firstChild)$('names').innerHTML=(A.a||[]).map(function(x){return '<div><b>'+x[0]+'</b><span>'+x[1]+'</span></div>'}).join('')}else{rd={k:k,i:0,c:0};rdraw();$('ztext').parentNode.scrollTop=0}}
-document.querySelectorAll('#seg button').forEach(function(b){b.onclick=function(){mode(b.getAttribute('data-k'))}});
-// أول فتحة: الصباح بين الفجر والظهر، المساء بين العصر والعشاء، وغيرها السبحة
-(function(){var w=now(),m=w.hour*60+w.minute,T=times(w.year,w.month,w.day);mode(m>=T[0]&&m<T[2]?'s':m>=T[3]&&m<T[5]?'m':'t')})();
+
+// القائمة: بطاقة چبيرة لكل نوع ذكر، والبطاقة الي وقتها هسه تنحط عليها علامة ذهبية
+var MENU=[['s','🌅','أذكار الصباح','بعد الفجر'],['m','🌙','أذكار المساء','بعد العصر'],['p','🕌','بعد الصلاة','بعد كل صلاة'],['g','🤲','الاستغفار','100 مرة'],
+ ['t','📿','السبحة','سبحان الله والحمد لله'],['y','💚','الصلاة على النبي','100 مرة'],['n','😴','أذكار النوم','قبل النوم'],['w','☀️','الاستيقاظ','أول ما تگعد'],['a','✨','أسماء الله الحسنى','99 اسم ومعناها']];
+function menu(){var w=now(),m=w.hour*60+w.minute,T=times(w.year,w.month,w.day),nowk=m>=T[0]&&m<T[2]?'s':m>=T[3]&&m<T[5]?'m':m>=T[5]+60||m<T[0]-60?'n':'';
+ if(DONE.d!=today())DONE={d:today()};
+ $('tiles').innerHTML=MENU.map(function(x){return '<button class="tile'+(x[0]==nowk?' now':'')+(DONE[x[0]]?' ok':'')+'" data-k="'+x[0]+'"><i>'+x[1]+'</i><b>'+x[2]+'</b><span>'+(x[0]==nowk?'وقتها هسه':x[3])+'</span></button>'}).join('');
+ document.querySelectorAll('#tiles .tile').forEach(function(b){b.onclick=function(){mode(b.getAttribute('data-k'))}})}
+function mode(k){var isT=k=='t'||k=='g'||k=='y',isM=k=='menu',t='';MENU.forEach(function(x){if(x[0]==k)t=x[2]});
+ $('vh').classList.toggle('on',!isM);$('dtitle').textContent=t;
+ $('mv').classList.toggle('on',isM);$('tv').classList.toggle('on',isT);$('av').classList.toggle('on',k=='a');$('rv').classList.toggle('on',!isM&&!isT&&k!='a');
+ if(isM)menu();
+ else if(isT){solo=k!='t';if(k=='g'){if(ts.i!=4)ts={i:4,c:0}}else if(k=='y'){if(ts.i!=5)ts={i:5,c:0}}else if(ts.i==4||ts.i==5)ts={i:0,c:0};busy=false;$('tb').classList.remove('done');tdraw()}
+ else if(k=='a'){if(!$('names').firstChild)$('names').innerHTML=(A.a||[]).map(function(x){return '<div><b>'+x[0]+'</b><span>'+x[1]+'</span></div>'}).join('')}
+ else{rd={k:k,i:0,c:0};rdraw();$('ztext').parentNode.scrollTop=0}}
+$('dback').onclick=function(){mode('menu')};
+mode('menu');
 
 // التنقل بين الصفحات
 function show(){var id=(location.hash||'#today').slice(1);if(!$(id))id='today';
  document.querySelectorAll('.sheet.on').forEach(function(x){x.classList.remove('on')});
  document.querySelectorAll('section').forEach(function(s){s.classList.toggle('on',s.id==id)});
- document.querySelectorAll('nav a').forEach(function(a){a.classList.toggle('on',a.getAttribute('href')=='#'+id)});var r=id=='month'&&document.querySelector('tr.td');if(r)r.scrollIntoView({block:'center'})}
+ document.querySelectorAll('nav a').forEach(function(a){a.classList.toggle('on',a.getAttribute('href')=='#'+id)});var r=id=='month'&&document.querySelector('tr.td');if(r)r.scrollIntoView({block:'center'});if(id=='dhikr')mode('menu')}
 addEventListener('hashchange',show);show();
 // رابط الاشتراك بالتقويم (webcal يفتح تطبيق التقويم مباشرة)
 if(location.protocol=='https:')$('cal').href='webcal://'+location.host+location.pathname.replace(/[^/]*$/,'')+'salah.ics';
@@ -467,9 +495,19 @@ if(!app)$('inst').classList.add('on');
 // ما نخلي الصفحة تتحرك أو تتكبر باللمس، إلا داخل جدول الشهر
 document.addEventListener('touchmove',function(e){if(!e.target.closest('.scroll'))e.preventDefault()},{passive:false});
 document.addEventListener('gesturestart',function(e){e.preventDefault()});
-// أي تحديث جديد ينعرض فوراً: من يتبدل ملف التشغيل نعيد تحميل الصفحة مرة وحدة
-if('serviceWorker' in navigator){var had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js');
+// التحديث التلقائي: كل ما ينفتح التطبيق أو يرجع من الخلفية، نسأل الموقع عن رقم النسخة. إذا تغيّر نمسح المحفوظ ونحمّل الجديد
+var SWK='serviceWorker' in navigator;
+if(SWK){var had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js');
  navigator.serviceWorker.addEventListener('controllerchange',function(){if(had){had=false;location.reload()}})}
+function update(){fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=v.trim();
+  if(!/^\d+$/.test(v)||v==VERSION)return;
+  try{if(sessionStorage.getItem('upd')==v)return;sessionStorage.setItem('upd',v)}catch(e){}       // مرة وحدة لكل نسخة حتى ما يدور
+  var go=function(){location.replace(location.pathname+'?v='+v+location.hash)};
+  var wipe=window.caches?caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k)}))}):Promise.resolve();
+  wipe.then(function(){return SWK?navigator.serviceWorker.getRegistration().then(function(r){return r&&r.update()}):0}).then(go,go)}).catch(function(){})}
+if(!q){setTimeout(update,1500);setInterval(update,9e5);
+ document.addEventListener('visibilitychange',function(){if(!document.hidden){update();lastKey='';tick()}});
+ addEventListener('pageshow',function(e){if(e.persisted)update()})}
 })();
 </script>
 </body>
