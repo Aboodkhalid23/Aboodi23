@@ -141,11 +141,15 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
 #zc{flex:2;background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark);font-weight:700;font-size:18px}
 #ztext{font-family:Amiri,"Geeza Pro",serif}
 .sheet select{font:inherit;width:100%;margin:6px 0 2px;padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:#101b30;color:var(--ink);-webkit-user-select:auto;user-select:auto}
-.sheet input{font:inherit;font-size:16px;flex:1;min-width:0;padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:#101b30;color:var(--ink);-webkit-user-select:text;user-select:text}
-.srch{display:flex;gap:8px;margin-top:12px}.srch button{margin:0;width:auto;flex:none}
-#sres button{margin-top:8px;text-align:right;border-radius:14px;font-weight:500}
-.cr{display:flex;align-items:center;justify-content:space-between;padding:7px 4px;border-bottom:1px solid var(--line)}
-.cr b{font-size:18px}.cr input{flex:none;width:178px;text-align:center;font-size:19px;font-weight:700;direction:ltr}
+.sheet input{font:inherit;font-size:16px;font-weight:500;padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:#101b30;color:var(--ink);-webkit-user-select:text;user-select:text;-webkit-appearance:none;appearance:none}
+.sheet .srch{display:flex;gap:8px;margin-top:14px;align-items:stretch}
+.sheet .srch input{flex:1 1 auto;width:100%;min-width:0;height:50px;border:1.5px solid var(--gold);padding:0 14px;text-align:right}
+.sheet .srch input::placeholder{color:var(--mut)}
+.sheet .srch button{flex:0 0 auto;width:auto;margin:0;height:50px;padding:0 22px;border-radius:14px;background:var(--gold);color:var(--dark);font-weight:700}
+.sheet #sres button{margin-top:8px;text-align:right;border-radius:14px;font-weight:500;padding:12px 14px}
+.sheet #sres{font-size:14px;color:var(--mut)}
+.sheet .cr{display:flex;align-items:center;justify-content:space-between;padding:7px 4px;border-bottom:1px solid var(--line)}
+.sheet .cr b{font-size:18px}.sheet .cr input{flex:none;width:178px;height:46px;text-align:center;font-size:19px;font-weight:700;direction:ltr}
 body.wait #list,body.wait .ow,body.wait .row{opacity:.25}
 .sheet label{display:block;text-align:right;font-size:13.5px;color:var(--mut);margin-top:10px}
 .sheet .gold{background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark);font-weight:700}
@@ -153,11 +157,11 @@ body.wait #list,body.wait .ow,body.wait .row{opacity:.25}
 .sheet{display:none;position:fixed;inset:0;z-index:9;background:rgba(5,10,20,.6);align-items:flex-end;justify-content:center}
 .sheet.on{display:flex}
 .sheet>div{max-height:94%;overflow-y:auto;width:100%;max-width:520px;background:#16233b;border:1px solid var(--line);border-radius:28px 28px 0 0;padding:22px 20px calc(env(safe-area-inset-bottom) + 18px);text-align:center}
-.sheet h2{font-size:20px;margin-bottom:10px}
-.sheet p,.sheet ol{font-size:15px;color:var(--mut);line-height:1.85}
+.sheet h2{font-size:18px;margin-bottom:6px}
+.sheet p,.sheet ol{font-size:14px;font-weight:500;color:var(--mut);line-height:1.85}
 .sheet ol{text-align:right;padding:0 20px 0 0;margin:10px 0}
 .sheet a{display:block;border-radius:99px;text-decoration:none;margin:14px 0 4px}
-.sheet button{margin-top:14px;width:100%}
+.sheet button{margin-top:12px;width:100%;padding:13px 18px;font-size:16px}
 </style>
 </head>
 <body>
@@ -258,14 +262,14 @@ body.wait #list,body.wait .ow,body.wait .row{opacity:.25}
  <button data-close>رجوع</button>
 </div></div>
 <div class="sheet" id="s-loc"><div class="scroll">
- <h2>📍 الموقع وطريقة الحساب</h2>
+ <h2>📍 موقعك</h2>
  <p id="locinfo"></p>
- <p id="src" style="font-size:13px"></p>
- <button class="gold" id="locbtn">حدّد موقعي تلقائياً</button>
- <div class="srch"><input id="sq" type="search" placeholder="أو اكتب اسم مدينتك" enterkeyhint="search" autocomplete="off"><button id="sgo">بحث</button></div>
+ <p id="src" hidden></p>
+ <div class="srch"><input id="sq" type="text" inputmode="search" placeholder="اكتب اسم مدينتك أو بلدك" enterkeyhint="search" autocomplete="off" autocorrect="off"><button id="sgo">بحث</button></div>
  <div id="sres"></div>
+ <button class="gold" id="locbtn">📍 حدّد موقعي تلقائياً</button>
  <div id="locset">
-  <label>طريقة الحساب (اختار الي تطابق مسجدك)</label><select id="msel"></select>
+  <label>طريقة الحساب</label><select id="msel"></select>
   <label>وقت العصر</label><select id="asel"><option value="0">الجمهور (شافعي، مالكي، حنبلي)</option><option value="1">حنفي</option></select>
  </div>
  <button id="loct">استعمل جدول مسجد توركو</button>
@@ -277,7 +281,7 @@ body.wait #list,body.wait .ow,body.wait .row{opacity:.25}
 <script src="adhkar.js"></script>
 <script>
 (function(){
-var VERSION='19';
+var VERSION='20';
 var $=function(i){return document.getElementById(i)};
 // جداول المساجد الرسمية الي عدنا. الي قريب من وحدة منها (30 كم) ياخذ أوقاتها بالدقيقة، والباقي ينحسبله فلكياً
 if(window.HEL)window.HEL.y=window.SALAH.y;
@@ -465,7 +469,7 @@ function km(a,b,c,d){var x=(d-b)*R*Math.cos((a+c)/2*R),y=(c-a)*R;return Math.sqr
 var SRC='';try{SRC=(JSON.parse(localStorage.getItem('loc'))||{}).src||''}catch(e){}
 function locui(msg){
  $('city').textContent='📍 '+(LOC?LOC.name+(LOC.cal?' · مطابق لمسجدك':' · تقريبي'):TB.n);
- $('locinfo').textContent=msg||(LOC?'موقعك: '+LOC.name+(SRC=='ip'?' (تقريبي من الإنترنت)':'')+'. ما عدنا جدول مسجد رسمي لمدينتك بعد، فالأوقات محسوبة فلكياً وممكن تفرق دقايق عن مسجدك. جرّب طريقة حساب ثانية حتى تطابقه.':'الأوقات هسه من '+TB.src+' الرسمي، بالدقيقة.');
+ $('locinfo').textContent=msg||(LOC?'انت هسه على: '+LOC.name+'. الأوقات '+(LOC.cal?'مطابقة لمسجدك.':'محسوبة وممكن تفرق دقايق عن مسجدك.'):'انت هسه على: '+TB.n+'، من '+TB.src+'.');
  var tk=!LOC&&TB.id=='turku';$('locset').style.display=LOC?'':'none';$('loct').style.display=tk?'none':'';
  $('p2').textContent=LOC?(LOC.cal?'🕌 مطابق لمسجدك':'🕌 طابق ويا مسجدك'):'📤 شارك التطبيق';
  if(LOC){$('msel').value=LOC.m;$('asel').value=LOC.h?1:0}}
@@ -482,7 +486,7 @@ function jget(u){return fetch(u).then(function(r){if(!r.ok)throw 0;return r.json
 // اسم المدينة ورمز البلد من الإحداثيات: خدمة أساسية، وإذا رفضت فخدمة خرايط الشارع المفتوحة احتياط
 function rev(la,lo){
  return jget(GEO+'&latitude='+(+la).toFixed(3)+'&longitude='+(+lo).toFixed(3)).then(function(j){return {n:j.city||j.locality||j.principalSubdivision,cc:j.countryCode}})
-  .catch(function(){return jget('https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&accept-language=ar&lat='+(+la).toFixed(3)+'&lon='+(+lo).toFixed(3))
+  .catch(function(){return jget('https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&accept-language=ar,en&lat='+(+la).toFixed(3)+'&lon='+(+lo).toFixed(3))
    .then(function(j){var a=j.address||{};return {n:a.city||a.town||a.village||a.municipality||a.county||a.state,cc:(a.country_code||'').toUpperCase()}})})}
 // موقع تقريبي من عنوان الإنترنت، بدون ما نطلب إذن
 function iploc(quiet){return jget(GEO).then(function(j){if(j.latitude==null)throw 0;
@@ -506,7 +510,7 @@ function search(){var t=$('sq').value.trim();if(!t)return;$('sres').textContent=
  jget('https://geocoding-api.open-meteo.com/v1/search?count=5&language=ar&name='+encodeURIComponent(t)).then(function(j){
   var rs=j.results||[];$('sres').innerHTML='';if(!rs.length){$('sres').textContent='ما لگيت مدينة بهالاسم. جرّب تكتبه بالإنگليزي.';return}
   rs.forEach(function(x){var b=document.createElement('button');b.textContent=x.name+'، '+[x.admin1,x.country].filter(Boolean).join('، ');
-   b.onclick=function(){$('sres').innerHTML='';$('sq').value='';setloc(x.latitude,x.longitude,x.name,x.country_code,'manual')};$('sres').appendChild(b)})
+   b.onclick=function(){$('sres').innerHTML='';$('sq').value='';$('sq').blur();setloc(x.latitude,x.longitude,x.name,x.country_code,'manual');$('s-loc').classList.remove('on')};$('sres').appendChild(b)})
  }).catch(function(){$('sres').textContent='البحث ما اشتغل. تأكد من الإنترنت.'})}
 Object.keys(PT.M).forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=PT.M[k].n;$('msel').appendChild(o)});
 $('msel').onchange=function(){LOC.m=this.value;LOC.o=null;LOC.cal=0;locsave()};
