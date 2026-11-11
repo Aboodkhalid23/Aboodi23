@@ -39,19 +39,20 @@
  --box:rgba(255,255,255,.9);--nav:rgba(255,255,255,.86);--sheet:#faf5e8;--field:#fff;--th:#f1e9d5;--dial:#fff;
  --s1:#d3c08f;--s2:#7fa391;--s3:#1f5a47;--pat:rgba(15,107,79,.07)}
 *{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-html,body{height:100%;overflow:hidden;overscroll-behavior:none;touch-action:manipulation;background:var(--bg)}
+html{background:var(--bg);min-height:calc(100% + env(safe-area-inset-top))}
+html,body{overflow:hidden;overscroll-behavior:none;touch-action:manipulation;background:var(--bg)}
 /* الصفحة ثابتة على گد الشاشة: ما تصعد ولا تنزل */
-body{position:fixed;inset:0;height:100vh;height:100dvh;display:flex;flex-direction:column;gap:1.4vh;color:var(--ink);
+body{position:fixed;top:0;left:0;right:0;height:100vh;height:100dvh;height:var(--H,100dvh);display:flex;flex-direction:column;gap:1.4vh;color:var(--ink);
  font-family:UI,system-ui,-apple-system,"Segoe UI","Noto Sans Arabic",sans-serif;font-weight:700;
  padding:calc(env(safe-area-inset-top) + 1.2vh) 16px calc(env(safe-area-inset-bottom) + 1.4vh);max-width:520px;margin:auto}
-body::before{content:"";position:fixed;inset:0;z-index:-3;background:
+body::before{content:"";position:fixed;top:0;left:0;right:0;height:100vh;height:var(--H,100dvh);z-index:-3;background:
  radial-gradient(1.6px 1.6px at 12% 9%,var(--star) 50%,transparent 51%),radial-gradient(1.2px 1.2px at 78% 6%,var(--star) 50%,transparent 51%),
  radial-gradient(1.4px 1.4px at 58% 16%,var(--star) 50%,transparent 51%),radial-gradient(1px 1px at 30% 24%,var(--star) 50%,transparent 51%),
  radial-gradient(1.5px 1.5px at 90% 28%,var(--star) 50%,transparent 51%),radial-gradient(1px 1px at 8% 38%,var(--star) 50%,transparent 51%),
  radial-gradient(1.2px 1.2px at 68% 40%,var(--star) 50%,transparent 51%),radial-gradient(1px 1px at 42% 7%,var(--star) 50%,transparent 51%),var(--sky)}
 /* زخرفة النجمة الثمانية، خفيفة ورا كل شي */
-.pat{position:fixed;inset:0;width:100%;height:100%;z-index:-2;color:var(--pat)}
-.mt{position:fixed;left:0;right:0;bottom:0;width:100%;height:30vh;z-index:-1}
+.pat{position:fixed;top:0;left:0;width:100%;height:100vh;height:var(--H,100dvh);z-index:-2;color:var(--pat)}
+.mt{position:fixed;left:0;right:0;top:calc(var(--H,100dvh) - 30vh);width:100%;height:30vh;z-index:-1}
 .i{width:1.15em;height:1.15em;vertical-align:-.2em;flex:none}
 .n{direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}
 header{text-align:center;flex:none;position:relative}
@@ -182,7 +183,7 @@ body.wait #list,body.wait .ow,body.wait .row{opacity:.25}
 .sheet label{display:block;text-align:right;font-size:13.5px;color:var(--mut);margin-top:10px}
 .sheet .gold{background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark);font-weight:700}
 #city{color:var(--ink);font-size:1.15em;font-weight:700;background:none;padding:0;border-bottom:1px dashed var(--gold);border-radius:0}
-.sheet{display:none;position:fixed;inset:0;z-index:9;background:rgba(5,10,20,.6);align-items:flex-end;justify-content:center}
+.sheet{display:none;position:fixed;top:0;left:0;right:0;height:100vh;height:var(--H,100dvh);z-index:9;background:rgba(5,10,20,.6);align-items:flex-end;justify-content:center}
 .sheet.on{display:flex}
 .sheet>div{max-height:94%;overflow-y:auto;width:100%;max-width:520px;background:var(--sheet);border:1px solid var(--line);border-radius:28px 28px 0 0;padding:22px 20px calc(env(safe-area-inset-bottom) + 18px);text-align:center}
 .sheet h2{font-size:18px;margin-bottom:6px}
@@ -346,7 +347,12 @@ body.wait #list,body.wait .ow,body.wait .row{opacity:.25}
 <script src="adhkar.js"></script>
 <script>
 (function(){
-var VERSION='22';
+// طول الشاشة الحقيقي للتطبيق المثبّت على الآيفون (يسد الفراغ الي يطلع جوه)
+(function(){function fit(){var st=navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches),h=window.innerHeight;
+  if(st&&screen.height>screen.width&&window.innerWidth<600&&screen.height>h&&screen.height-h<140)h=screen.height;
+  document.documentElement.style.setProperty('--H',h+'px')}
+ fit();addEventListener('resize',fit);addEventListener('orientationchange',function(){setTimeout(fit,300)});addEventListener('pageshow',fit)})();
+var VERSION='23';
 var $=function(i){return document.getElementById(i)};
 function ic(n,c){return '<svg class="'+(c||'i')+'"><use href="#i-'+n+'"/></svg>'}
 // جداول المساجد الرسمية الي عدنا. الي قريب من وحدة منها (30 كم) ياخذ أوقاتها بالدقيقة، والباقي ينحسبله فلكياً
