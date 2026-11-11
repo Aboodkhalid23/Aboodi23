@@ -56,7 +56,11 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;bottom:0;z-index:-3;
 .i{width:1.15em;height:1.15em;vertical-align:-.2em;flex:none}
 .n{direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}
 header{text-align:center;flex:none;position:relative}
-.tk{display:block;height:clamp(34px,7.2vh,76px);aspect-ratio:435/238;margin:0 auto;background:var(--ink);-webkit-mask:url(takbir.png) center/contain no-repeat;mask:url(takbir.png) center/contain no-repeat}
+.brand{display:flex;align-items:center;justify-content:center;gap:10px;margin:0 46px}
+.brand img{width:clamp(40px,6.4vh,56px);height:clamp(40px,6.4vh,56px);border-radius:26%;box-shadow:0 6px 16px rgba(0,0,0,.3)}
+.brand div{text-align:start;line-height:1.25}
+.brand b{display:block;font-size:clamp(20px,3.2vh,27px);color:var(--acc)}
+.brand span{display:block;font-size:clamp(11.5px,1.65vh,13.5px);font-weight:500;color:var(--soft)}
 header p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:clamp(12px,1.9vh,15px);color:var(--soft);margin-top:.2vh}
 header p b{color:var(--ink);font-size:1.15em}
 .inst{display:none;position:absolute;top:0;right:0;width:38px;height:38px;padding:0;border-radius:50%;align-items:center;justify-content:center;background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark);box-shadow:0 6px 18px rgba(242,193,78,.35)}
@@ -246,7 +250,7 @@ body.wait #list,body.wait .ow,body.wait .row{opacity:.25}
  <g fill="var(--s2)"><path d="M92 190V78h4V62l4-12 4 12v16h4v112zM292 190V78h4V62l4-12 4 12v16h4v112z"/><path d="M88 104h24v6H88zM288 104h24v6h-24z"/><path d="M128 190v-58h18v-6a54 54 0 0 1 108 0v6h18v58z"/><path d="M198 72V54h4v18z"/><circle cx="200" cy="50" r="5"/><path d="M128 132a14 14 0 0 1 28 0zM244 132a14 14 0 0 1 28 0z"/></g>
  <g fill="var(--s3)"><path d="M0 190v-26h44v-8a13 13 0 0 1 26 0v8h260v-8a13 13 0 0 1 26 0v8h44v26z"/><path d="M182 190v-26a18 18 0 0 1 36 0v26z" opacity=".55"/></g>
 </svg>
-<header><button class="inst" id="inst" aria-label="ثبّت التطبيق على الشاشة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><path d="M12 8v8M8 12h8"/></svg></button><button id="gear" data-open="s-set" aria-label="الإعدادات"><svg><use href="#i-gear"/></svg></button><div class="tk" role="img" aria-label="الله أكبر"></div><p><button id="city" data-open="s-loc"></button></p><p id="date"></p></header>
+<header><button class="inst" id="inst" aria-label="ثبّت التطبيق على الشاشة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><path d="M12 8v8M8 12h8"/></svg></button><button id="gear" data-open="s-set" aria-label="الإعدادات"><svg><use href="#i-gear"/></svg></button><div class="brand"><img src="icon-192.png" alt=""><div><b data-en="AWB">أَوْب</b><span data-en="The way back to Allah">طريق العودة إلى الله</span></div></div><p><button id="city" data-open="s-loc"></button></p><p id="date"></p></header>
 
 <section id="today" class="on">
  <div class="ow"><div class="orb">
@@ -391,7 +395,7 @@ body.wait #list,body.wait .ow,body.wait .row{opacity:.25}
 <script src="learn.js"></script>
 <script>
 (function(){
-var VERSION='26';
+var VERSION='27';
 var $=function(i){return document.getElementById(i)};
 // اللغة: المحفوظة، وإذا ماكو فلغة الجهاز (عربي أو إنگليزي). تتبدل من الإعدادات والصفحة تنعاد
 var LANG=/^ar/i.test(navigator.language||'ar')?'ar':'en';try{var s0=JSON.parse(localStorage.getItem('set'));if(s0&&s0.lang)LANG=s0.lang}catch(e){}
