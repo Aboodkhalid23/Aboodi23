@@ -65,7 +65,8 @@ button{font:inherit;color:var(--ink);background:var(--card2);border:0;border-rad
 .box{flex:1;min-height:0;border-radius:26px;padding:12px;display:flex;flex-direction:column;background:rgba(13,21,38,.84)}
 .mh{flex:none;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
 .mh b{font-size:18px}
-.scroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y}
+.box .scroll,#rv .scroll,#av .scroll{flex:1;min-height:0}
+.scroll{overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y}
 table{width:100%;border-collapse:collapse;font-size:13.5px;text-align:center}
 th{position:sticky;top:0;background:#111b2f;color:var(--mut);font-weight:700;padding:6px 0;font-size:12.5px;z-index:1}
 td{padding:8px 0;border-top:1px solid var(--line)}
@@ -82,12 +83,21 @@ nav{flex:none;display:flex;gap:6px;padding:6px;background:rgba(13,21,38,.72);-we
 nav a{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:clamp(8px,1.3vh,11px) 0;font-size:14px;color:var(--mut);text-decoration:none;border-radius:99px}
 nav a svg{width:19px;height:19px}
 nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
-.seg{flex:none;display:flex;gap:4px;padding:5px;border-radius:99px;background:var(--card);border:1px solid var(--line);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
-.seg button{flex:1;padding:8px 0;font-size:13.5px;background:none;color:var(--mut)}
+.seg{flex:none;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:5px;border-radius:22px;background:var(--card);border:1px solid var(--line);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.seg button{padding:clamp(5px,.9vh,8px) 0;font-size:13px;background:none;color:var(--mut)}
 .seg button.on{background:var(--gold);color:var(--dark);font-weight:700}
 .dz{text-align:center}
-#tv,#rv{flex:1;min-height:0;display:none;flex-direction:column;align-items:center;gap:1.4vh;width:100%}
-#tv.on,#rv.on{display:flex}
+#tv,#rv,#av{flex:1;min-height:0;display:none;flex-direction:column;align-items:center;gap:1.4vh;width:100%}
+#tv.on,#rv.on,#av.on{display:flex}
+#av .scroll{width:100%}
+.nm{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.nm div{background:var(--card2);border-radius:16px;padding:10px 8px}
+.nm b{display:block;font-family:Amiri,"Geeza Pro",serif;font-weight:400;font-size:25px;color:var(--gold);line-height:1.5}
+.nm span{display:block;font-size:12px;font-weight:500;color:var(--mut);line-height:1.7}
+.oc{list-style:none;padding:0;margin:8px 0 4px;display:block}
+.oc li{all:unset;display:flex;justify-content:space-between;align-items:center;padding:9px 2px;border-bottom:1px solid var(--line);font-size:15px}
+.oc li i{font-style:normal;color:var(--mut);font-size:12.5px;font-weight:500;display:block}
+.oc li b{color:var(--gold);font-size:15px;white-space:nowrap}
 #tph{flex:none;font-size:clamp(22px,4.2vh,32px);font-weight:600;line-height:1.6}
 .tw{flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center;container-type:size}
 #tb{width:min(64vw,34vh);aspect-ratio:1;border-radius:50%;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink);
@@ -110,7 +120,7 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
 .inst svg{width:18px;height:18px;vertical-align:-4px}
 .sheet{display:none;position:fixed;inset:0;z-index:9;background:rgba(5,10,20,.6);align-items:flex-end;justify-content:center}
 .sheet.on{display:flex}
-.sheet>div{width:100%;max-width:520px;background:#16233b;border:1px solid var(--line);border-radius:28px 28px 0 0;padding:22px 20px calc(env(safe-area-inset-bottom) + 18px);text-align:center}
+.sheet>div{max-height:94%;overflow-y:auto;width:100%;max-width:520px;background:#16233b;border:1px solid var(--line);border-radius:28px 28px 0 0;padding:22px 20px calc(env(safe-area-inset-bottom) + 18px);text-align:center}
 .sheet h2{font-size:20px;margin-bottom:10px}
 .sheet p,.sheet ol{font-size:15px;color:var(--mut);line-height:1.85}
 .sheet ol{text-align:right;padding:0 20px 0 0;margin:10px 0}
@@ -172,7 +182,7 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
 </section>
 
 <section id="dhikr">
- <div class="seg" id="seg"><button data-k="t">السبحة</button><button data-k="p">بعد الصلاة</button><button data-k="s">الصباح</button><button data-k="m">المساء</button></div>
+ <div class="seg" id="seg"><button data-k="t">السبحة</button><button data-k="p">بعد الصلاة</button><button data-k="s">الصباح</button><button data-k="m">المساء</button><button data-k="n">النوم</button><button data-k="w">الاستيقاظ</button><button data-k="a" style="grid-column:span 2">أسماء الله الحسنى</button></div>
  <div class="box dz">
   <div id="tv">
    <p id="tph"></p>
@@ -184,6 +194,7 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
    <div class="scroll"><p id="ztext"></p><small id="zref"></small></div>
    <div class="tr"><button id="zprev">السابق</button><button id="zc" class="n"></button><button id="znext">التالي</button></div>
   </div>
+  <div id="av"><div class="scroll"><div class="nm" id="names"></div></div></div>
  </div>
 </section>
 
@@ -194,8 +205,8 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
  <a href="#dhikr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="2"/><circle cx="18" cy="9" r="2"/><circle cx="18" cy="16" r="2"/><circle cx="12" cy="20" r="2"/><circle cx="6" cy="16" r="2"/><circle cx="6" cy="9" r="2"/></svg>الذكر</a>
 </nav>
 
-<div class="sheet" id="s-rm"><div><div id="rmd"></div><button data-close>رجوع</button></div></div>
-<div class="sheet" id="s-al"><div>
+<div class="sheet" id="s-rm"><div class="scroll"><div id="rmd"></div><button data-close>رجوع</button></div></div>
+<div class="sheet" id="s-al"><div class="scroll">
  <h2>⏰ تنبيه قبل كل صلاة بنص ساعة</h2>
  <p>التنبيه يجيك من تقويم الجهاز نفسه، حتى لو التطبيق مسكّر وبدون إنترنت.</p>
  <p id="alno" style="display:none">تنبيهات التقويم متوفرة حالياً لمدينة توركو بس، لأنها مبنية على جدول مسجدها.</p>
@@ -204,7 +215,7 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
  <p id="src"></p>
  <button data-close>رجوع</button>
 </div></div>
-<div class="sheet" id="s-loc"><div>
+<div class="sheet" id="s-loc"><div class="scroll">
  <h2>📍 الموقع وطريقة الحساب</h2>
  <p id="locinfo"></p>
  <button class="gold" id="locbtn">حدّد موقعي تلقائياً</button>
@@ -267,12 +278,21 @@ function now(){if(!q){if(!LOC)return wall(Date.now());var n=new Date();return {y
  return {year:t.getUTCFullYear(),month:t.getUTCMonth()+1,day:t.getUTCDate(),hour:t.getUTCHours(),minute:t.getUTCMinutes(),second:t.getUTCSeconds()}}
 
 // شگد باقي على رمضان (بتقويم أم القرى، وبداية الشهر الفعلية تتأكد برؤية الهلال)
+var OCC=[[9,1,'أول رمضان'],[10,1,'عيد الفطر'],[12,9,'يوم عرفة'],[12,10,'عيد الأضحى'],[1,1,'رأس السنة الهجرية'],[1,10,'عاشوراء']];
+function dstr(u){var t=new Date(u);return WD[t.getUTCDay()]+' '+t.getUTCDate()+' '+GM[t.getUTCMonth()]}
+function left(n){return n==0?'اليوم':n==1?'باچر':'بعد '+n+' يوم'}
 function ramadan(w){
- if(!HF)return;var u=Date.UTC(w.year,w.month-1,w.day,12),h=hpart(u);
- if(h.month==9){$('rm').innerHTML='🌙 اليوم <b class="n">'+h.day+'</b> رمضان';$('rmd').innerHTML='<h2>🌙 رمضان مبارك</h2><p>اليوم '+h.day+' رمضان. تقبّل الله صيامكم وقيامكم.</p>';return}
- for(var n=1;n<400;n++){var x=u+n*864e5,g=hpart(x);if(g.month==9&&g.day==1){var t=new Date(x);
-  $('rm').innerHTML='🌙 رمضان بعد <b class="n">'+n+'</b> يوم';
-  $('rmd').innerHTML='<h2>🌙 باقي على رمضان '+n+' يوم</h2><p>المتوقع يوم '+WD[t.getUTCDay()]+' '+t.getUTCDate()+' '+GM[t.getUTCMonth()]+' '+t.getUTCFullYear()+'.</p><p>التاريخ محسوب بتقويم أم القرى، وبداية الشهر تتأكد برؤية الهلال، فممكن تفرق يوم.</p>';return}}
+ if(!HF)return;var u=Date.UTC(w.year,w.month-1,w.day,12),h=hpart(u),rows=[],found={},white=null,sun=null,rm=null;
+ for(var n=0;n<400;n++){var x=u+n*864e5,g=hpart(x),wd=new Date(x).getUTCDay();
+  if(white==null&&g.day==13)white=n;                              // الأيام البيض: 13 و14 و15 من كل شهر هجري
+  if(sun==null&&(wd==1||wd==4)&&g.month!=9)sun=n;                  // الاثنين والخميس
+  OCC.forEach(function(o,i){if(found[i]==null&&g.month==o[0]&&g.day==o[1]){found[i]=n;if(i==0)rm=n}})}
+ if(sun!=null)rows.push([sun,'صيام '+(new Date(u+sun*864e5).getUTCDay()==1?'الاثنين':'الخميس'),dstr(u+sun*864e5)]);
+ if(white!=null&&h.month!=9)rows.push([white,'الأيام البيض (3 أيام)',dstr(u+white*864e5)]);
+ OCC.forEach(function(o,i){if(found[i]!=null)rows.push([found[i],o[2],dstr(u+found[i]*864e5)])});
+ rows.sort(function(a,b){return a[0]-b[0]});
+ $('rm').innerHTML=h.month==9?'🌙 اليوم <b class="n">'+h.day+'</b> رمضان':'🌙 رمضان بعد <b class="n">'+rm+'</b> يوم';
+ $('rmd').innerHTML='<h2>🌙 المناسبات وأيام الصيام</h2><ul class="oc">'+rows.map(function(r){return '<li><span>'+r[1]+'<i>'+r[2]+'</i></span><b>'+left(r[0])+'</b></li>'}).join('')+'</ul><p style="font-size:12.5px">التواريخ بتقويم أم القرى، وبداية كل شهر تتأكد برؤية الهلال، فممكن تفرق يوم.</p>';
 }
 var lastKey='';
 function tick(){
@@ -353,14 +373,15 @@ $('zc').onclick=function(){var L=A[rd.k],z=L[rd.i];if(rd.c>=z[1])return;rd.c++;
  if(rd.c>=z[1]&&rd.i<L.length-1){rdraw();setTimeout(function(){rmove(1)},350)}else rdraw()};
 $('zprev').onclick=function(){rmove(-1)};$('znext').onclick=function(){rmove(1)};
 function mode(k){document.querySelectorAll('#seg button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-k')==k)});
- $('tv').classList.toggle('on',k=='t');$('rv').classList.toggle('on',k!='t');
- if(k=='t')tdraw();else{rd={k:k,i:0,c:0};rdraw();$('ztext').parentNode.scrollTop=0}}
+ $('tv').classList.toggle('on',k=='t');$('av').classList.toggle('on',k=='a');$('rv').classList.toggle('on',k!='t'&&k!='a');
+ if(k=='t')tdraw();else if(k=='a'){if(!$('names').firstChild)$('names').innerHTML=(A.a||[]).map(function(x){return '<div><b>'+x[0]+'</b><span>'+x[1]+'</span></div>'}).join('')}else{rd={k:k,i:0,c:0};rdraw();$('ztext').parentNode.scrollTop=0}}
 document.querySelectorAll('#seg button').forEach(function(b){b.onclick=function(){mode(b.getAttribute('data-k'))}});
 // أول فتحة: الصباح بين الفجر والظهر، المساء بين العصر والعشاء، وغيرها السبحة
 (function(){var w=now(),m=w.hour*60+w.minute,T=times(w.year,w.month,w.day);mode(m>=T[0]&&m<T[2]?'s':m>=T[3]&&m<T[5]?'m':'t')})();
 
 // التنقل بين الصفحات
 function show(){var id=(location.hash||'#today').slice(1);if(!$(id))id='today';
+ document.querySelectorAll('.sheet.on').forEach(function(x){x.classList.remove('on')});
  document.querySelectorAll('section').forEach(function(s){s.classList.toggle('on',s.id==id)});
  document.querySelectorAll('nav a').forEach(function(a){a.classList.toggle('on',a.getAttribute('href')=='#'+id)});var r=id=='month'&&document.querySelector('tr.td');if(r)r.scrollIntoView({block:'center'})}
 addEventListener('hashchange',show);show();
