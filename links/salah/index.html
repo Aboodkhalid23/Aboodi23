@@ -50,6 +50,8 @@ li b{display:block;font-size:24px;font-weight:500;margin-top:4px}
 li.s b{color:var(--mut);font-weight:400}
 li.hot{background:linear-gradient(160deg,var(--gold),var(--gold2));border-color:transparent;box-shadow:0 10px 28px rgba(242,193,78,.25)}
 li.hot span,li.hot b{color:var(--dark)}li.hot b{font-weight:700}
+.rm{background:var(--card);border:1px solid var(--line);border-radius:22px;margin-top:14px;padding:14px 16px;text-align:center;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.rm:empty{display:none}.rm b{display:block;font-size:19px;font-weight:600}.rm b i{font-style:normal;color:var(--gold);font-size:24px;font-weight:700}.rm span{display:block;font-size:13px;color:var(--mut);margin-top:4px}
 .al{background:var(--card);border:1px solid var(--line);border-radius:22px;margin-top:14px;padding:0 16px}
 .al summary{list-style:none;padding:15px 0;font-size:16px;text-align:center;color:var(--gold);cursor:pointer}
 .al summary::-webkit-details-marker{display:none}
@@ -103,6 +105,7 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
   </div>
  </div>
  <ul id="list"></ul>
+ <div class="rm" id="rm"></div>
  <details class="al">
   <summary>⏰ تنبيه قبل كل صلاة بنص ساعة</summary>
   <p>التنبيه يجيك من تقويم الجهاز نفسه، حتى لو الصفحة مسكّرة وبدون إنترنت.</p>
@@ -167,7 +170,7 @@ function shift(y,m,d,n){var t=new Date(Date.UTC(y,m-1,d+n));return [t.getUTCFull
 function p2(n){return (n<10?'0':'')+n}
 
 function hijri(y,m,d){
- if(y==D.y){var i=idx(m,d),mo=6,yr=1447;           // 1 كانون الثاني 2026 = 12 رجب 1447 بجدول المسجد
+ if(y==D.y&&D.hm!=null){var i=idx(m,d),mo=D.hm,yr=D.hy;   // الشهر الهجري مال أول يوم بالسنة حسب جدول المسجد
   for(var k=1;k<=i;k++)if(D.h[k]<D.h[k-1]){mo++;if(mo>11){mo=0;yr++}}
   return D.h[i]+' '+HM[mo]+' '+yr}
  try{var o={};new Intl.DateTimeFormat('en-u-ca-islamic-umalqura',{day:'numeric',month:'numeric',year:'numeric',timeZone:'UTC'})
@@ -180,6 +183,15 @@ var skew=q?Date.UTC.apply(null,q.split(/\D/).map(function(v,i){return i==1?v-1:+
 function now(){if(!q)return wall(Date.now());var t=new Date(Date.now()+skew);
  return {year:t.getUTCFullYear(),month:t.getUTCMonth()+1,day:t.getUTCDate(),hour:t.getUTCHours(),minute:t.getUTCMinutes(),second:t.getUTCSeconds()}}
 
+// شگد باقي على رمضان (بتقويم أم القرى، وبداية الشهر الفعلية تتأكد برؤية الهلال)
+var HF;try{HF=new Intl.DateTimeFormat('en-u-ca-islamic-umalqura',{day:'numeric',month:'numeric',timeZone:'UTC'})}catch(e){}
+function hpart(u){var o={};HF.formatToParts(new Date(u)).forEach(function(p){o[p.type]=parseInt(p.value)});return o}
+function ramadan(w){
+ if(!HF)return;var u=Date.UTC(w.year,w.month-1,w.day,12),h=hpart(u);
+ if(h.month==9){$('rm').innerHTML='<b>🌙 رمضان مبارك</b><span>اليوم '+h.day+' رمضان</span>';return}
+ for(var n=1;n<400;n++){var x=u+n*864e5,g=hpart(x);if(g.month==9&&g.day==1){var t=new Date(x);
+  $('rm').innerHTML='<b>🌙 باقي على رمضان <i class="n">'+n+'</i> يوم</b><span>المتوقع '+WD[t.getUTCDay()]+' '+t.getUTCDate()+' '+GM[t.getUTCMonth()]+' '+t.getUTCFullYear()+'، ويتأكد برؤية الهلال</span>';return}}
+}
 var lastKey='';
 function tick(){
  var w=now(), sec=w.hour*3600+w.minute*60+w.second, T=times(w.year,w.month,w.day);
@@ -201,6 +213,7 @@ function tick(){
  var wd=new Date(Date.UTC(w.year,w.month-1,w.day)).getUTCDay();
  $('date').textContent=WD[wd]+' '+w.day+' '+GM[w.month-1]+' · '+hijri(w.year,w.month,w.day);
  $('list').innerHTML=T.map(function(v,i){return '<li class="'+(i==1?'s':'')+(nx.today&&nx.i==i?' hot':'')+'"><span>'+NAMES[i]+'</span><b class="n">'+hm(v)+'</b></li>'}).join('');
+ ramadan(w);
  $('src').textContent='الأوقات من جدول مسجد توركو'+(w.year==D.y?'':'، محسوبة على جدول سنة '+D.y+' وممكن تفرق دقيقة');
 }
 tick();setInterval(tick,1000);
