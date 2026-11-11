@@ -1,11 +1,13 @@
-// يخلي الصفحة تشتغل بدون إنترنت: يرجّع النسخة المحفوظة فوراً ويحدّثها من الشبكة بالخلفية
-const C = 'salah-v9', FILES = ['./', 'data.js', 'adhkar.js', 'calc.js', 'fonts/amiri.woff2', 'fonts/ui-500.woff2', 'fonts/ui-700.woff2', 'manifest.webmanifest', 'icon-180.png', 'icon-512.png', 'takbir.png'];
+// يخلي التطبيق يشتغل بدون إنترنت. بوجود الإنترنت ياخذ أحدث نسخة دائماً، وبدونه يرجّع النسخة المحفوظة
+const C = 'salah-v10', FILES = ['./', 'data.js', 'adhkar.js', 'calc.js', 'fonts/amiri.woff2', 'fonts/ui-500.woff2', 'fonts/ui-700.woff2', 'fonts/ui-num.woff2', 'manifest.webmanifest', 'icon-180.png', 'icon-512.png', 'takbir.png'];
 self.addEventListener('install', e => e.waitUntil(caches.open(C).then(c => c.addAll(FILES)).then(() => self.skipWaiting())));
-self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+self.addEventListener('activate', e => e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== C).map(k => caches.delete(k)))).then(() => self.clients.claim())));
 self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET') return;
-  e.respondWith(caches.open(C).then(c => c.match(e.request, { ignoreSearch: true }).then(hit => {
-    const net = fetch(e.request).then(r => { if (r.ok) c.put(e.request, r.clone()); return r; }).catch(() => hit);
-    return hit || net;
-  })));
+  if (e.request.method !== 'GET' || new URL(e.request.url).origin !== location.origin) return;
+  e.respondWith(caches.open(C).then(c => {
+    const saved = () => c.match(e.request, { ignoreSearch: true });
+    const net = fetch(e.request, { cache: 'no-cache' }).then(r => { if (r.ok) c.put(e.request, r.clone()); return r; });
+    const slow = new Promise(ok => setTimeout(ok, 3000)).then(saved);          // شبكة بطيئة: لا ننتظر أكثر من 3 ثواني
+    return Promise.race([net, slow.then(r => r || net)]).catch(saved).then(r => r || net);
+  }));
 });

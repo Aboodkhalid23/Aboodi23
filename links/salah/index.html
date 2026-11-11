@@ -15,13 +15,14 @@
 <style>
 @font-face{font-family:UI;font-weight:500;font-display:swap;src:url(fonts/ui-500.woff2) format("woff2")}
 @font-face{font-family:UI;font-weight:700;font-display:swap;src:url(fonts/ui-700.woff2) format("woff2")}
+@font-face{font-family:UI;font-weight:500 700;font-display:swap;src:url(fonts/ui-num.woff2) format("woff2");unicode-range:U+0020-007E,U+00B0}
 @font-face{font-family:Amiri;font-weight:400;font-display:swap;src:url(fonts/amiri.woff2) format("woff2")}
 :root{--bg:#16233b;--card:rgba(13,21,38,.58);--card2:rgba(255,255,255,.09);--ink:#f4f3ee;--mut:#b3bfd0;--line:rgba(255,255,255,.13);--gold:#f2c14e;--gold2:#d99a2b;--dark:#17140a}
 *{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 html,body{height:100%;overflow:hidden;overscroll-behavior:none;touch-action:manipulation;background:var(--bg)}
 /* الصفحة ثابتة على گد الشاشة: ما تصعد ولا تنزل */
 body{position:fixed;inset:0;height:100vh;height:100dvh;display:flex;flex-direction:column;gap:1.4vh;color:var(--ink);
- font-family:UI,system-ui,-apple-system,"Segoe UI","Noto Sans Arabic",sans-serif;font-weight:500;
+ font-family:UI,system-ui,-apple-system,"Segoe UI","Noto Sans Arabic",sans-serif;font-weight:700;
  padding:calc(env(safe-area-inset-top) + 1.2vh) 16px calc(env(safe-area-inset-bottom) + 1.4vh);max-width:520px;margin:auto}
 body::before{content:"";position:fixed;inset:0;z-index:-2;background:
  radial-gradient(1.6px 1.6px at 12% 9%,#fff 50%,transparent 51%),radial-gradient(1.2px 1.2px at 78% 6%,#fff 50%,transparent 51%),
@@ -33,7 +34,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-2;background:
 .n{direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}
 header{text-align:center;flex:none}
 .tk{display:block;height:clamp(40px,8.5vh,84px);margin:0 auto;opacity:.93;filter:drop-shadow(0 4px 14px rgba(0,0,0,.35))}
-header p{font-size:clamp(12px,1.75vh,14.5px);color:var(--mut);margin-top:.3vh}
+header p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:clamp(11.5px,3.4vw,15px);color:#d5deea;margin-top:.3vh}
 header p b{color:var(--ink);font-size:1.15em}
 .inst{display:none;flex:none;align-items:center;gap:8px;background:var(--gold);color:var(--dark);border-radius:16px;padding:8px 12px;font-size:13px;line-height:1.5;font-weight:600}
 .inst.on{display:flex}.inst span{flex:1}.inst button{background:rgba(0,0,0,.15);color:var(--dark);padding:4px 10px;font-size:13px}
@@ -45,16 +46,16 @@ section{display:none;flex:1;min-height:0;flex-direction:column;gap:1.4vh}section
  background:radial-gradient(circle at 50% 26%,#4a5f80 0,#24344f 50%,#131e33 100%);
  box-shadow:inset 0 2px 1px rgba(255,255,255,.14),inset 0 -22px 40px rgba(242,193,78,.10),0 18px 50px rgba(0,0,0,.5)}
 .orb .ic{width:28px;height:28px;color:var(--gold);margin-bottom:2px}
-.orb span{font-size:18px;color:var(--mut)}
-.orb b{font-size:44px;font-weight:300;letter-spacing:1px;line-height:1.15}
+.orb span{font-size:18px;color:#d5deea}
+.orb b{font-size:44px;font-weight:700;letter-spacing:.5px;line-height:1.15}
 .orb i{font-style:normal;font-size:13px;margin-top:6px;padding:4px 13px;border-radius:99px;background:rgba(255,255,255,.08);color:var(--gold)}
-@supports (width:1cqw){.orb{width:min(100cqw,100cqh,330px)}.orb .ic{width:10cqw;height:10cqw}.orb span{font-size:6.6cqw}.orb b{font-size:16.5cqw}.orb i{font-size:5cqw;margin-top:2.2cqw;padding:1.4cqw 4.6cqw}}
+@supports (width:1cqw){.orb{width:min(100cqw,100cqh,330px)}.orb .ic{width:10cqw;height:10cqw}.orb span{font-size:7.4cqw}.orb b{font-size:17cqw}.orb i{font-size:5cqw;margin-top:2.2cqw;padding:1.4cqw 4.6cqw}}
 ul{list-style:none;padding:0;flex:none;display:grid;grid-template-columns:repeat(3,1fr);gap:1.1vh 9px}
 li,.pill,.box{background:var(--card);border:1px solid var(--line);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
 li{border-radius:20px;padding:1.25vh 6px 1.15vh;text-align:center}
-li span{display:block;font-size:clamp(12px,1.8vh,15px);color:var(--mut)}
-li b{display:block;font-size:clamp(18px,2.9vh,24px);font-weight:500;margin-top:.2vh}
-li.s b{color:var(--mut);font-weight:400}
+li span{display:block;font-size:clamp(13px,2vh,16.5px);color:#d5deea}
+li b{display:block;font-size:clamp(19px,3.1vh,26px);font-weight:700;margin-top:.1vh}
+li.s b,li.s span{color:var(--mut)}
 li.hot{background:linear-gradient(160deg,var(--gold),var(--gold2));border-color:transparent;box-shadow:0 10px 28px rgba(242,193,78,.25)}
 li.hot span,li.hot b{color:var(--dark)}li.hot b{font-weight:700}
 .row{flex:none;display:grid;grid-template-columns:1fr 1fr;gap:9px}
@@ -66,7 +67,7 @@ button{font:inherit;color:var(--ink);background:var(--card2);border:0;border-rad
 .mh b{font-size:18px}
 .scroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y}
 table{width:100%;border-collapse:collapse;font-size:13.5px;text-align:center}
-th{position:sticky;top:0;background:#111b2f;color:var(--mut);font-weight:500;padding:6px 0;font-size:12.5px;z-index:1}
+th{position:sticky;top:0;background:#111b2f;color:var(--mut);font-weight:700;padding:6px 0;font-size:12.5px;z-index:1}
 td{padding:8px 0;border-top:1px solid var(--line)}
 tr.fr td:first-child{color:var(--gold);font-weight:700}
 tr.td td{background:var(--gold);color:var(--dark);font-weight:700;border-color:transparent}
@@ -94,7 +95,7 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
 @supports (width:1cqw){#tb{width:min(100cqw,100cqh,300px)}}
 #tb:active{transform:scale(.96)}
 #tb.done{background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark)}
-#tb b{font-size:clamp(46px,9vh,76px);font-weight:300;line-height:1.1}#tb span{font-size:15px;opacity:.75}
+#tb b{font-size:clamp(46px,9vh,76px);font-weight:700;line-height:1.1}#tb span{font-size:15px;opacity:.75}
 .tr{flex:none;display:flex;gap:8px;width:100%}.tr button{flex:1;padding:10px 0}
 #zh{flex:none;font-size:13.5px;color:var(--gold)}
 #rv .scroll{width:100%;padding:0 4px}
@@ -125,7 +126,7 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
  <path d="M130 120l-16 13 13-4 9 9 8-6 12 4zM312 128l-14 10 12-3 8 8 8-5z" fill="#c9d5e3" opacity=".8"/>
  <path d="M0 200v-18l60-20 54 18 70-22 66 20 60-16 90 22v16z" fill="#0f1a2c"/>
 </svg>
-<div class="inst" id="inst"><span>📲 حتى يصير تطبيق على شاشتك: اضغط زر المشاركة <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M8 7l4-4 4 4M6 11H5v10h14V11h-1"/></svg> جوه، وبعدها «إضافة إلى الشاشة الرئيسية»، وافتحه من أيقونته</span><button onclick="this.parentNode.classList.remove('on')">تمام</button></div>
+<div class="inst" id="inst"><span>📲 للتثبيت كتطبيق: زر المشاركة <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M8 7l4-4 4 4M6 11H5v10h14V11h-1"/></svg> ثم «إضافة إلى الشاشة الرئيسية»</span><button onclick="this.parentNode.classList.remove('on')">تمام</button></div>
 <header><img class="tk" src="takbir.png" alt="الله أكبر"><p><button id="city" data-open="s-loc">📍 توركو</button> · <span id="date"></span></p></header>
 
 <section id="today" class="on">
@@ -292,7 +293,7 @@ function tick(){
  var key=[w.year,w.month,w.day,nx.i,nx.today].join();
  if(key==lastKey)return; lastKey=key;
  var wd=new Date(Date.UTC(w.year,w.month-1,w.day)).getUTCDay();
- $('date').textContent=WD[wd]+' '+w.day+' '+GM[w.month-1]+' · '+hijri(w.year,w.month,w.day);
+ $('date').textContent=WD[wd]+' '+w.day+' '+GM[w.month-1]+' · '+hijri(w.year,w.month,w.day).replace(/ \d{4}$/,'');
  $('list').innerHTML=T.map(function(v,i){return '<li class="'+(i==1?'s':'')+(nx.today&&nx.i==i?' hot':'')+'"><span>'+NAMES[i]+'</span><b class="n">'+hm(v)+'</b></li>'}).join('');
  ramadan(w);
  $('src').textContent=LOC?'الأوقات محسوبة فلكياً لموقعك بطريقة: '+PT.M[LOC.m].n+'. ممكن تفرق دقايق عن مسجدك، وتگدر تغيّر الطريقة من اسم المدينة فوگ.':'الأوقات من جدول مسجد توركو'+(w.year==D.y?'':'، محسوبة على جدول سنة '+D.y+' وممكن تفرق دقيقة');
@@ -403,7 +404,9 @@ if(!app)$('inst').classList.add('on');
 // ما نخلي الصفحة تتحرك أو تتكبر باللمس، إلا داخل جدول الشهر
 document.addEventListener('touchmove',function(e){if(!e.target.closest('.scroll'))e.preventDefault()},{passive:false});
 document.addEventListener('gesturestart',function(e){e.preventDefault()});
-if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+// أي تحديث جديد ينعرض فوراً: من يتبدل ملف التشغيل نعيد تحميل الصفحة مرة وحدة
+if('serviceWorker' in navigator){var had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js');
+ navigator.serviceWorker.addEventListener('controllerchange',function(){if(had){had=false;location.reload()}})}
 })();
 </script>
 </body>
