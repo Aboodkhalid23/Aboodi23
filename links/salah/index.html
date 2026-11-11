@@ -2,22 +2,24 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>مواقيت الصلاة · توركو</title>
 <meta name="theme-color" content="#131f36">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="الصلاة">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-180.png">
 <style>
-:root{--bg:#16233b;--card:rgba(13,21,38,.55);--card2:rgba(255,255,255,.09);--ink:#f4f3ee;--mut:#b3bfd0;--line:rgba(255,255,255,.13);--gold:#f2c14e;--gold2:#d99a2b;--dark:#17140a}
-*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
-html{background:var(--bg)}
-body{min-height:100vh;color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI","Noto Sans Arabic",sans-serif;
- padding:calc(env(safe-area-inset-top) + 14px) 18px calc(env(safe-area-inset-bottom) + 104px);max-width:520px;margin:auto}
-/* السما: تدرج أزرق ليلي ونجوم */
+:root{--bg:#16233b;--card:rgba(13,21,38,.58);--card2:rgba(255,255,255,.09);--ink:#f4f3ee;--mut:#b3bfd0;--line:rgba(255,255,255,.13);--gold:#f2c14e;--gold2:#d99a2b;--dark:#17140a}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none;touch-action:manipulation;background:var(--bg)}
+/* الصفحة ثابتة على گد الشاشة: ما تصعد ولا تنزل */
+body{position:fixed;inset:0;height:100vh;height:100dvh;display:flex;flex-direction:column;gap:1.4vh;color:var(--ink);
+ font-family:system-ui,-apple-system,"Segoe UI","Noto Sans Arabic",sans-serif;
+ padding:calc(env(safe-area-inset-top) + 1.2vh) 16px calc(env(safe-area-inset-bottom) + 1.4vh);max-width:520px;margin:auto}
 body::before{content:"";position:fixed;inset:0;z-index:-2;background:
  radial-gradient(1.6px 1.6px at 12% 9%,#fff 50%,transparent 51%),radial-gradient(1.2px 1.2px at 78% 6%,#fff 50%,transparent 51%),
  radial-gradient(1.4px 1.4px at 58% 16%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 30% 24%,#fff 50%,transparent 51%),
@@ -25,61 +27,65 @@ body::before{content:"";position:fixed;inset:0;z-index:-2;background:
  radial-gradient(1.2px 1.2px at 68% 40%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 42% 7%,#fff 50%,transparent 51%),
  linear-gradient(#131f36 0,#22344f 38%,#3c5372 68%,#6a829c 100%)}
 .mt{position:fixed;left:0;right:0;bottom:0;width:100%;height:34vh;z-index:-1}
-.tk{display:block;height:92px;margin:0 auto 2px;opacity:.93;filter:drop-shadow(0 4px 14px rgba(0,0,0,.35))}
-header{text-align:center}
-li,.box,.al{-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
-section .box{background:rgba(13,21,38,.84)}
-section .src{color:#e9eef5;text-shadow:0 1px 6px rgba(0,0,0,.6)}
 .n{direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}
-header h1{font-size:22px;font-weight:700}
-header p{font-size:14px;color:var(--mut);margin-top:3px}
-section{display:none}section.on{display:block}
-.orb{position:relative;width:min(74vw,290px);aspect-ratio:1;margin:22px auto 0}
-.orb svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+header{text-align:center;flex:none}
+.tk{display:block;height:clamp(40px,8.5vh,84px);margin:0 auto;opacity:.93;filter:drop-shadow(0 4px 14px rgba(0,0,0,.35))}
+header p{font-size:clamp(12px,1.75vh,14.5px);color:var(--mut);margin-top:.3vh}
+header p b{color:var(--ink);font-size:1.15em}
+.inst{display:none;flex:none;align-items:center;gap:8px;background:var(--gold);color:var(--dark);border-radius:16px;padding:8px 12px;font-size:13px;line-height:1.5;font-weight:600}
+.inst.on{display:flex}.inst span{flex:1}.inst button{background:rgba(0,0,0,.15);color:var(--dark);padding:4px 10px;font-size:13px}
+section{display:none;flex:1;min-height:0;flex-direction:column;gap:1.4vh}section.on{display:flex}
+.ow{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;container-type:size}
+.orb{position:relative;width:min(70vw,36vh);aspect-ratio:1;container-type:inline-size}
+.orb>svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
 .orb .in{position:absolute;inset:7%;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;
  background:radial-gradient(circle at 50% 26%,#4a5f80 0,#24344f 50%,#131e33 100%);
- box-shadow:inset 0 2px 1px rgba(255,255,255,.14),inset 0 -22px 40px rgba(242,193,78,.10),0 22px 60px rgba(0,0,0,.55)}
-.orb .ic{width:30px;height:30px;color:var(--gold);margin-bottom:4px}
-.orb span{font-size:19px;color:var(--mut)}
-.orb b{font-size:clamp(38px,12vw,50px);font-weight:300;letter-spacing:1px;line-height:1.15}
-.orb i{font-style:normal;font-size:14px;margin-top:8px;padding:5px 14px;border-radius:99px;background:rgba(255,255,255,.07);color:var(--gold)}
-ul{list-style:none;padding:0;margin-top:26px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-li{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:14px 8px 13px;text-align:center}
-li span{display:block;font-size:15px;color:var(--mut)}
-li b{display:block;font-size:24px;font-weight:500;margin-top:4px}
+ box-shadow:inset 0 2px 1px rgba(255,255,255,.14),inset 0 -22px 40px rgba(242,193,78,.10),0 18px 50px rgba(0,0,0,.5)}
+.orb .ic{width:28px;height:28px;color:var(--gold);margin-bottom:2px}
+.orb span{font-size:18px;color:var(--mut)}
+.orb b{font-size:44px;font-weight:300;letter-spacing:1px;line-height:1.15}
+.orb i{font-style:normal;font-size:13px;margin-top:6px;padding:4px 13px;border-radius:99px;background:rgba(255,255,255,.08);color:var(--gold)}
+@supports (width:1cqw){.orb{width:min(100cqw,100cqh,330px)}.orb .ic{width:10cqw;height:10cqw}.orb span{font-size:6.6cqw}.orb b{font-size:16.5cqw}.orb i{font-size:5cqw;margin-top:2.2cqw;padding:1.4cqw 4.6cqw}}
+ul{list-style:none;padding:0;flex:none;display:grid;grid-template-columns:repeat(3,1fr);gap:1.1vh 9px}
+li,.pill,.box{background:var(--card);border:1px solid var(--line);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+li{border-radius:20px;padding:1.25vh 6px 1.15vh;text-align:center}
+li span{display:block;font-size:clamp(12px,1.8vh,15px);color:var(--mut)}
+li b{display:block;font-size:clamp(18px,2.9vh,24px);font-weight:500;margin-top:.2vh}
 li.s b{color:var(--mut);font-weight:400}
 li.hot{background:linear-gradient(160deg,var(--gold),var(--gold2));border-color:transparent;box-shadow:0 10px 28px rgba(242,193,78,.25)}
 li.hot span,li.hot b{color:var(--dark)}li.hot b{font-weight:700}
-.rm{background:var(--card);border:1px solid var(--line);border-radius:22px;margin-top:14px;padding:14px 16px;text-align:center;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
-.rm:empty{display:none}.rm b{display:block;font-size:19px;font-weight:600}.rm b i{font-style:normal;color:var(--gold);font-size:24px;font-weight:700}.rm span{display:block;font-size:13px;color:var(--mut);margin-top:4px}
-.al{background:var(--card);border:1px solid var(--line);border-radius:22px;margin-top:14px;padding:0 16px}
-.al summary{list-style:none;padding:15px 0;font-size:16px;text-align:center;color:var(--gold);cursor:pointer}
-.al summary::-webkit-details-marker{display:none}
-.al p{font-size:14px;color:var(--mut);line-height:1.8;text-align:center}
-.al a{display:block;margin:12px 0;padding:13px;border-radius:99px;text-align:center;text-decoration:none;font-weight:700;color:var(--dark);background:linear-gradient(160deg,var(--gold),var(--gold2))}
-.al ol{margin:0;padding:0 18px 16px 0;font-size:14px;color:var(--mut);line-height:1.9}
-.al ol li{display:list-item;background:none;border:0;border-radius:0;padding:0;text-align:right}
-.src{font-size:12.5px;color:var(--mut);text-align:center;margin-top:16px;line-height:1.7}
-.box{background:var(--card);border:1px solid var(--line);border-radius:26px;padding:14px 12px;margin-top:18px}
-.mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-.mh b{font-size:19px}
+.row{flex:none;display:grid;grid-template-columns:1fr 1fr;gap:9px}
 button{font:inherit;color:var(--ink);background:var(--card2);border:0;border-radius:99px;padding:9px 18px}
+.pill{border-radius:99px;padding:1.25vh 6px;font-size:clamp(12.5px,1.8vh,15px);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill b{color:var(--gold);font-size:1.15em}
+.box{flex:1;min-height:0;border-radius:26px;padding:12px;display:flex;flex-direction:column;background:rgba(13,21,38,.84)}
+.mh{flex:none;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.mh b{font-size:18px}
+.scroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y}
 table{width:100%;border-collapse:collapse;font-size:13.5px;text-align:center}
-th{color:var(--mut);font-weight:500;padding:6px 0;font-size:12.5px}
+th{position:sticky;top:0;background:#111b2f;color:var(--mut);font-weight:500;padding:6px 0;font-size:12.5px;z-index:1}
 td{padding:8px 0;border-top:1px solid var(--line)}
 tr.fr td:first-child{color:var(--gold);font-weight:700}
 tr.td td{background:var(--gold);color:var(--dark);font-weight:700;border-color:transparent}
 tr.td td:first-child{border-radius:0 12px 12px 0;color:var(--dark)}tr.td td:last-child{border-radius:12px 0 0 12px}
-.q{text-align:center}
-.q svg{width:min(70vw,270px);aspect-ratio:1;display:block;margin:6px auto 16px;filter:drop-shadow(0 18px 40px rgba(0,0,0,.5))}
-.q p{font-size:18px;margin-bottom:14px}.q p b{color:var(--gold)}
-.q button{background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark);font-weight:700;padding:11px 26px}
-.q small{color:var(--mut);font-size:14px;display:block;margin-top:14px;line-height:1.8}
-nav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 16px);width:min(92vw,420px);display:flex;gap:6px;padding:7px;
- background:rgba(13,21,38,.72);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid var(--line);border-radius:99px;box-shadow:0 14px 40px rgba(0,0,0,.5)}
-nav a{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:11px 0;font-size:15px;color:var(--mut);text-decoration:none;border-radius:99px}
-nav a svg{width:20px;height:20px}
+.q{text-align:center;align-items:center;justify-content:center;gap:1.6vh}
+.qw{flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center}
+.qw svg{height:100%;max-height:300px;max-width:100%;aspect-ratio:1;filter:drop-shadow(0 18px 40px rgba(0,0,0,.5))}
+.q p{font-size:18px}.q p b{color:var(--gold)}
+.q button,.sheet a{background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark);font-weight:700;padding:11px 26px}
+.q small{color:var(--mut);font-size:13.5px;line-height:1.7}
+nav{flex:none;display:flex;gap:6px;padding:6px;background:rgba(13,21,38,.72);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid var(--line);border-radius:99px;box-shadow:0 14px 40px rgba(0,0,0,.4)}
+nav a{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:clamp(8px,1.3vh,11px) 0;font-size:15px;color:var(--mut);text-decoration:none;border-radius:99px}
+nav a svg{width:19px;height:19px}
 nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
+.sheet{display:none;position:fixed;inset:0;z-index:9;background:rgba(5,10,20,.6);align-items:flex-end;justify-content:center}
+.sheet.on{display:flex}
+.sheet>div{width:100%;max-width:520px;background:#16233b;border:1px solid var(--line);border-radius:28px 28px 0 0;padding:22px 20px calc(env(safe-area-inset-bottom) + 18px);text-align:center}
+.sheet h2{font-size:20px;margin-bottom:10px}
+.sheet p,.sheet ol{font-size:14.5px;color:var(--mut);line-height:1.85}
+.sheet ol{text-align:right;padding:0 20px 0 0;margin:10px 0}
+.sheet a{display:block;border-radius:99px;text-decoration:none;margin:14px 0 4px}
+.sheet button{margin-top:14px;width:100%}
 </style>
 </head>
 <body>
@@ -90,41 +96,35 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
  <path d="M130 120l-16 13 13-4 9 9 8-6 12 4zM312 128l-14 10 12-3 8 8 8-5z" fill="#c9d5e3" opacity=".8"/>
  <path d="M0 200v-18l60-20 54 18 70-22 66 20 60-16 90 22v16z" fill="#0f1a2c"/>
 </svg>
-<header><img class="tk" src="takbir.png" alt="الله أكبر"><h1>توركو</h1><p id="date"></p></header>
+<div class="inst" id="inst"><span>📲 حتى يصير تطبيق: اضغط زر المشاركة بسفاري، وبعدها «إضافة إلى الشاشة الرئيسية»</span><button onclick="this.parentNode.classList.remove('on')">تمام</button></div>
+<header><img class="tk" src="takbir.png" alt="الله أكبر"><p><b>توركو</b> · <span id="date"></span></p></header>
 
 <section id="today" class="on">
- <div class="orb">
+ <div class="ow"><div class="orb">
   <svg viewBox="0 0 280 280" aria-hidden="true">
    <circle cx="140" cy="140" r="130" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="5"/>
    <circle id="ring" cx="140" cy="140" r="130" fill="none" stroke="var(--gold)" stroke-width="5" stroke-linecap="round" stroke-dasharray="816.8" stroke-dashoffset="816.8"/>
   </svg>
   <div class="in">
-   <svg class="ic" id="isun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="position:static;transform:none"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
-   <svg class="ic" id="imoon" viewBox="0 0 24 24" fill="currentColor" style="position:static;transform:none"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>
+   <svg class="ic" id="isun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
+   <svg class="ic" id="imoon" viewBox="0 0 24 24" fill="currentColor"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>
    <span id="nname"></span><b class="n" id="cd"></b><i class="n" id="ntime"></i>
   </div>
- </div>
+ </div></div>
  <ul id="list"></ul>
- <div class="rm" id="rm"></div>
- <details class="al">
-  <summary>⏰ تنبيه قبل كل صلاة بنص ساعة</summary>
-  <p>التنبيه يجيك من تقويم الجهاز نفسه، حتى لو الصفحة مسكّرة وبدون إنترنت.</p>
-  <a id="cal" href="salah.ics">أضف التنبيهات للتقويم</a>
-  <ol><li>اضغط الزر الذهبي، وبعدها اضغط «اشتراك».</li><li>إذا ما إجاك تنبيه: افتح الإعدادات، التقويم، الحسابات، التقاويم المشترك بيها، مواقيت الصلاة، وطفّي خيار «إزالة التنبيهات».</li></ol>
- </details>
- <p class="src" id="src"></p>
+ <div class="row"><button class="pill" id="rm" data-open="s-rm"></button><button class="pill" data-open="s-al">⏰ تنبيه قبل الصلاة</button></div>
 </section>
 
 <section id="month">
  <div class="box">
   <div class="mh"><button id="prev">السابق</button><b id="mname"></b><button id="nxt">التالي</button></div>
-  <table><thead><tr><th>اليوم</th><th>الفجر</th><th>الشروق</th><th>الظهر</th><th>العصر</th><th>المغرب</th><th>العشاء</th></tr></thead><tbody id="mb"></tbody></table>
+  <div class="scroll"><table><thead><tr><th>اليوم</th><th>الفجر</th><th>الشروق</th><th>الظهر</th><th>العصر</th><th>المغرب</th><th>العشاء</th></tr></thead><tbody id="mb"></tbody></table></div>
  </div>
 </section>
 
 <section id="qibla">
  <div class="box q">
-  <svg viewBox="-130 -130 260 260">
+  <div class="qw"><svg viewBox="-130 -130 260 260">
    <g id="dial">
     <circle r="122" fill="#1b2a44" stroke="var(--line)" stroke-width="2"/>
     <text y="-94" text-anchor="middle" font-size="16" fill="var(--mut)">شمال</text>
@@ -134,7 +134,7 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
     <g id="needle"><path d="M0 -86L12 0H-12Z" fill="var(--gold)"/><rect x="-11" y="-114" width="22" height="22" rx="4" fill="#0c0d10" stroke="var(--gold)" stroke-width="1.5"/><rect x="-11" y="-108" width="22" height="3" fill="var(--gold)"/></g>
     <circle r="7" fill="var(--ink)"/>
    </g>
-  </svg>
+  </svg></div>
   <p id="qtext"></p>
   <button id="qbtn">شغّل البوصلة</button>
   <small id="qhelp">بدون بوصلة: القبلة بتوركو باتجاه الجنوب الشرقي، يعني بين الجنوب والشرق وأقرب للجنوب.</small>
@@ -146,6 +146,16 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
  <a href="#month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>الشهر</a>
  <a href="#qibla"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>القبلة</a>
 </nav>
+
+<div class="sheet" id="s-rm"><div><div id="rmd"></div><button data-close>رجوع</button></div></div>
+<div class="sheet" id="s-al"><div>
+ <h2>⏰ تنبيه قبل كل صلاة بنص ساعة</h2>
+ <p>التنبيه يجيك من تقويم الجهاز نفسه، حتى لو التطبيق مسكّر وبدون إنترنت.</p>
+ <a id="cal" href="salah.ics">أضف التنبيهات للتقويم</a>
+ <ol><li style="all:revert">اضغط الزر الذهبي، وبعدها اضغط «اشتراك».</li><li style="all:revert">إذا ما إجاك تنبيه: افتح الإعدادات، التقويم، الحسابات، التقاويم المشترك بيها، مواقيت الصلاة، وطفّي خيار «إزالة التنبيهات».</li></ol>
+ <p id="src"></p>
+ <button data-close>رجوع</button>
+</div></div>
 
 <script src="data.js"></script>
 <script>
@@ -188,9 +198,10 @@ var HF;try{HF=new Intl.DateTimeFormat('en-u-ca-islamic-umalqura',{day:'numeric',
 function hpart(u){var o={};HF.formatToParts(new Date(u)).forEach(function(p){o[p.type]=parseInt(p.value)});return o}
 function ramadan(w){
  if(!HF)return;var u=Date.UTC(w.year,w.month-1,w.day,12),h=hpart(u);
- if(h.month==9){$('rm').innerHTML='<b>🌙 رمضان مبارك</b><span>اليوم '+h.day+' رمضان</span>';return}
+ if(h.month==9){$('rm').innerHTML='🌙 اليوم <b class="n">'+h.day+'</b> رمضان';$('rmd').innerHTML='<h2>🌙 رمضان مبارك</h2><p>اليوم '+h.day+' رمضان. تقبّل الله صيامكم وقيامكم.</p>';return}
  for(var n=1;n<400;n++){var x=u+n*864e5,g=hpart(x);if(g.month==9&&g.day==1){var t=new Date(x);
-  $('rm').innerHTML='<b>🌙 باقي على رمضان <i class="n">'+n+'</i> يوم</b><span>المتوقع '+WD[t.getUTCDay()]+' '+t.getUTCDate()+' '+GM[t.getUTCMonth()]+' '+t.getUTCFullYear()+'، ويتأكد برؤية الهلال</span>';return}}
+  $('rm').innerHTML='🌙 رمضان بعد <b class="n">'+n+'</b> يوم';
+  $('rmd').innerHTML='<h2>🌙 باقي على رمضان '+n+' يوم</h2><p>المتوقع يوم '+WD[t.getUTCDay()]+' '+t.getUTCDate()+' '+GM[t.getUTCMonth()]+' '+t.getUTCFullYear()+'.</p><p>التاريخ محسوب بتقويم أم القرى، وبداية الشهر تتأكد برؤية الهلال، فممكن تفرق يوم.</p>';return}}
 }
 var lastKey='';
 function tick(){
@@ -250,10 +261,19 @@ $('qbtn').onclick=function(){
 // التنقل بين الصفحات الثلاث
 function show(){var id=(location.hash||'#today').slice(1);if(!$(id))id='today';
  document.querySelectorAll('section').forEach(function(s){s.classList.toggle('on',s.id==id)});
- document.querySelectorAll('nav a').forEach(function(a){a.classList.toggle('on',a.getAttribute('href')=='#'+id)});scrollTo(0,0)}
+ document.querySelectorAll('nav a').forEach(function(a){a.classList.toggle('on',a.getAttribute('href')=='#'+id)});var r=id=='month'&&document.querySelector('tr.td');if(r)r.scrollIntoView({block:'center'})}
 addEventListener('hashchange',show);show();
 // رابط الاشتراك بالتقويم (webcal يفتح تطبيق التقويم مباشرة)
 if(location.protocol=='https:')$('cal').href='webcal://'+location.host+location.pathname.replace(/[^/]*$/,'')+'salah.ics';
+// النوافذ الصغيرة (التنبيه، رمضان)
+document.querySelectorAll('[data-open]').forEach(function(b){b.onclick=function(){$(b.getAttribute('data-open')).classList.add('on')}});
+document.querySelectorAll('.sheet').forEach(function(x){x.onclick=function(e){if(e.target==x||e.target.hasAttribute('data-close'))x.classList.remove('on')}});
+// إذا الصفحة مفتوحة بالمتصفح مو من أيقونة الشاشة الرئيسية، نبيّن طريقة التثبيت
+var app=navigator.standalone||matchMedia('(display-mode: standalone)').matches;
+if(!app)$('inst').classList.add('on');
+// ما نخلي الصفحة تتحرك أو تتكبر باللمس، إلا داخل جدول الشهر
+document.addEventListener('touchmove',function(e){if(!e.target.closest('.scroll'))e.preventDefault()},{passive:false});
+document.addEventListener('gesturestart',function(e){e.preventDefault()});
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 })();
 </script>
