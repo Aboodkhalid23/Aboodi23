@@ -114,6 +114,9 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
 #zc{flex:2;background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark);font-weight:700;font-size:18px}
 #ztext{font-family:Amiri,"Geeza Pro",serif}
 .sheet select{font:inherit;width:100%;margin:6px 0 2px;padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:#101b30;color:var(--ink);-webkit-user-select:auto;user-select:auto}
+.sheet input{font:inherit;font-size:16px;flex:1;min-width:0;padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:#101b30;color:var(--ink);-webkit-user-select:text;user-select:text}
+.srch{display:flex;gap:8px;margin-top:12px}.srch button{margin:0;width:auto;flex:none}
+#sres button{margin-top:8px;text-align:right;border-radius:14px;font-weight:500}
 .sheet label{display:block;text-align:right;font-size:13.5px;color:var(--mut);margin-top:10px}
 .sheet .gold{background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark);font-weight:700}
 #city{color:var(--ink);font-size:1.15em;font-weight:700;background:none;padding:0;border-bottom:1px dashed var(--gold);border-radius:0}
@@ -219,6 +222,8 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
  <h2>📍 الموقع وطريقة الحساب</h2>
  <p id="locinfo"></p>
  <button class="gold" id="locbtn">حدّد موقعي تلقائياً</button>
+ <div class="srch"><input id="sq" type="search" placeholder="أو اكتب اسم مدينتك" enterkeyhint="search" autocomplete="off"><button id="sgo">بحث</button></div>
+ <div id="sres"></div>
  <div id="locset">
   <label>طريقة الحساب (اختار الي تطابق مسجدك)</label><select id="msel"></select>
   <label>وقت العصر</label><select id="asel"><option value="0">الجمهور (شافعي، مالكي، حنبلي)</option><option value="1">حنفي</option></select>
@@ -388,33 +393,56 @@ addEventListener('hashchange',show);show();
 // رابط الاشتراك بالتقويم (webcal يفتح تطبيق التقويم مباشرة)
 if(location.protocol=='https:')$('cal').href='webcal://'+location.host+location.pathname.replace(/[^/]*$/,'')+'salah.ics';
 // ---------- الموقع ----------
+// src: gps = من الجهاز، ip = تقريبي من الإنترنت، manual = المستخدم اختاره بنفسه
 function km(a,b,c,d){var x=(d-b)*R*Math.cos((a+c)/2*R),y=(c-a)*R;return Math.sqrt(x*x+y*y)*6371}
+var SRC='';try{SRC=(JSON.parse(localStorage.getItem('loc'))||{}).src||''}catch(e){}
 function locui(msg){
  $('city').textContent='📍 '+(LOC?LOC.name:'توركو');
- $('locinfo').textContent=msg||(LOC?'موقعك: '+LOC.name+'. الأوقات محسوبة فلكياً، وممكن تفرق دقايق عن مسجدك. إذا تفرق، جرّب طريقة حساب ثانية.':'الأوقات هسه من جدول مسجد توركو الرسمي. إذا انت بمدينة ثانية اضغط الزر الذهبي.');
+ $('locinfo').textContent=msg||(LOC?'موقعك: '+LOC.name+(SRC=='ip'?' (تقريبي من الإنترنت)':'')+'. الأوقات محسوبة فلكياً، وممكن تفرق دقايق عن مسجدك. إذا تفرق، جرّب طريقة حساب ثانية.':'الأوقات هسه من جدول مسجد توركو الرسمي.');
  $('locset').style.display=LOC?'':'none';$('loct').style.display=LOC?'':'none';
  $('alno').style.display=LOC?'':'none';$('alyes').style.display=LOC?'none':'';
  if(LOC){$('msel').value=LOC.m;$('asel').value=LOC.h?1:0}}
-function locsave(){try{localStorage.setItem('loc',JSON.stringify(LOC||{turku:1}))}catch(e){}
+function locsave(){try{var o=LOC?JSON.parse(JSON.stringify(LOC)):{turku:1};o.src=SRC;localStorage.setItem('loc',JSON.stringify(o))}catch(e){}
  lastKey='';var w=now();my=w.year;mm=w.month;tick();month();qset();locui()}
-function locate(){
- if(!navigator.geolocation){locui('هذا الجهاز ما يدعم تحديد الموقع.');return}
- locui('دا أحدد موقعك...');
+// نثبت الموقع الجديد. قريب من توركو = جدول المسجد. نفس البلد = نبقي طريقة الحساب الي اختارها المستخدم
+function setloc(la,lo,name,cc,src){SRC=src;
+ if(km(la,lo,TURKU[0],TURKU[1])<30){LOC=null;locsave();return}
+ var keep=LOC&&LOC.cc==(cc||'');
+ LOC={la:+(+la).toFixed(4),lo:+(+lo).toFixed(4),name:name||'موقعي',cc:cc||'',m:keep?LOC.m:PT.forCountry(cc),h:keep?LOC.h:PT.hanafi(cc)};locsave()}
+var GEO='https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=ar';
+function jget(u){return fetch(u).then(function(r){if(!r.ok)throw 0;return r.json()})}
+// موقع تقريبي من عنوان الإنترنت، بدون ما نطلب إذن
+function iploc(quiet){return jget(GEO).then(function(j){if(j.latitude==null)throw 0;
+  setloc(j.latitude,j.longitude,j.city||j.locality||j.principalSubdivision,j.countryCode,'ip')})
+ .catch(function(){if(!quiet)locui('ما گدرت أحدد موقعك تلقائياً. اكتب اسم مدينتك بالخانة جوه.')})}
+var GERR={1:'الجهاز مانع الموقع عن التطبيق، فأخذت موقعك التقريبي من الإنترنت. حتى يصير دقيق: افتح الإعدادات، الخصوصية والأمان، خدمات الموقع، مواقع سفاري، واختار «أثناء استخدام التطبيق».'};
+function locate(quiet){
+ if(!quiet)locui('دا أحدد موقعك...');
+ if(!navigator.geolocation){iploc(quiet);return}
  navigator.geolocation.getCurrentPosition(function(p){var la=p.coords.latitude,lo=p.coords.longitude;
-  if(km(la,lo,TURKU[0],TURKU[1])<30){LOC=null;locsave();return}                // قريب من توركو: جدول المسجد أدق
-  var done=function(name,cc){LOC={la:+la.toFixed(4),lo:+lo.toFixed(4),name:name||'موقعي',cc:cc||'',m:PT.forCountry(cc),h:PT.hanafi(cc)};locsave()};
-  fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?latitude='+la.toFixed(3)+'&longitude='+lo.toFixed(3)+'&localityLanguage=ar')
-   .then(function(r){return r.json()}).then(function(j){done(j.city||j.locality||j.principalSubdivision,j.countryCode)}).catch(function(){done()});
- },function(){locui('ما گدرت أحدد موقعك. اسمح للتطبيق باستعمال الموقع من إعدادات الجهاز، وجرّب مرة ثانية.')},{timeout:15000,maximumAge:6e5})}
+  jget(GEO+'&latitude='+la.toFixed(3)+'&longitude='+lo.toFixed(3)).then(function(j){setloc(la,lo,j.city||j.locality||j.principalSubdivision,j.countryCode,'gps')})
+   .catch(function(){setloc(la,lo,LOC&&km(la,lo,LOC.la,LOC.lo)<30?LOC.name:'',LOC?LOC.cc:'','gps')});
+ },function(e){iploc(quiet).then(function(){if(!quiet&&GERR[e.code])$('locinfo').textContent=GERR[e.code]})},{timeout:12000,maximumAge:6e5,enableHighAccuracy:false})}
+// بحث عن مدينة بالاسم
+function search(){var t=$('sq').value.trim();if(!t)return;$('sres').textContent='دا أبحث...';
+ jget('https://geocoding-api.open-meteo.com/v1/search?count=5&language=ar&name='+encodeURIComponent(t)).then(function(j){
+  var rs=j.results||[];$('sres').innerHTML='';if(!rs.length){$('sres').textContent='ما لگيت مدينة بهالاسم. جرّب تكتبه بالإنگليزي.';return}
+  rs.forEach(function(x){var b=document.createElement('button');b.textContent=x.name+'، '+[x.admin1,x.country].filter(Boolean).join('، ');
+   b.onclick=function(){$('sres').innerHTML='';$('sq').value='';setloc(x.latitude,x.longitude,x.name,x.country_code,'manual')};$('sres').appendChild(b)})
+ }).catch(function(){$('sres').textContent='البحث ما اشتغل. تأكد من الإنترنت.'})}
 Object.keys(PT.M).forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=PT.M[k].n;$('msel').appendChild(o)});
 $('msel').onchange=function(){LOC.m=this.value;locsave()};
 $('asel').onchange=function(){LOC.h=this.value=='1';locsave()};
-$('locbtn').onclick=locate;
-$('loct').onclick=function(){LOC=null;locsave()};
+$('locbtn').onclick=function(){locate(false)};
+$('sgo').onclick=search;$('sq').onkeydown=function(e){if(e.key=='Enter')search()};
+$('loct').onclick=function(){LOC=null;SRC='manual';locsave()};
 locui();
-// أول فتحة: نسأل عن الموقع تلقائياً
-var asked;try{asked=localStorage.getItem('loc')}catch(e){}
-if(!asked&&(!q||/[?&]geo/.test(location.search)))locate();
+// كل فتحة: نحدّث الموقع تلقائياً وبصمت، إلا إذا المستخدم اختار مدينته بإيده
+(function(){if(q&&!/[?&]geo/.test(location.search))return;if(SRC=='manual')return;
+ if(!SRC){locate(true);return}                                   // أول مرة: نجرب الجهاز، وإذا رفض ناخذ التقريبي
+ var P=navigator.permissions;
+ if(P&&P.query)P.query({name:'geolocation'}).then(function(r){if(r.state=='granted')locate(true);else if(SRC=='ip')iploc(true)}).catch(function(){if(SRC=='ip')iploc(true)});
+ else if(SRC=='ip')iploc(true)})();
 
 // النوافذ الصغيرة (التنبيه، رمضان)
 document.querySelectorAll('[data-open]').forEach(function(b){b.onclick=function(){$(b.getAttribute('data-open')).classList.add('on')}});
