@@ -3,7 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>مواقيت الصلاة · توركو</title>
+<title>مواقيت الصلاة</title>
+<meta name="description" content="أوقات الصلاة لمدينتك تلقائياً، اتجاه القبلة، الأذكار، السبحة، وأسماء الله الحسنى. بدون إعلانات.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="مواقيت الصلاة">
+<meta property="og:description" content="أوقات الصلاة لمدينتك تلقائياً، اتجاه القبلة، الأذكار، السبحة، وأسماء الله الحسنى. بدون إعلانات.">
+<meta property="og:image" content="https://aboodkhalid23.github.io/Aboodi23/salah/og.png">
+<meta property="og:url" content="https://aboodkhalid23.github.io/Aboodi23/salah/">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#131f36">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -32,7 +39,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-2;background:
  linear-gradient(#131f36 0,#22344f 38%,#3c5372 68%,#6a829c 100%)}
 .mt{position:fixed;left:0;right:0;bottom:0;width:100%;height:34vh;z-index:-1}
 .n{direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}
-header{text-align:center;flex:none}
+header{text-align:center;flex:none;position:relative}
+#share{position:absolute;top:0;left:0;width:38px;height:38px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid var(--line)}
+#share svg{width:18px;height:18px}
 .tk{display:block;height:clamp(40px,8.5vh,84px);margin:0 auto;opacity:.93;filter:drop-shadow(0 4px 14px rgba(0,0,0,.35))}
 header p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:clamp(11.5px,3.4vw,15px);color:#d5deea;margin-top:.3vh}
 header p b{color:var(--ink);font-size:1.15em}
@@ -140,7 +149,7 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
  <path d="M0 200v-18l60-20 54 18 70-22 66 20 60-16 90 22v16z" fill="#0f1a2c"/>
 </svg>
 <div class="inst" id="inst"><span>📲 للتثبيت كتطبيق: زر المشاركة <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M8 7l4-4 4 4M6 11H5v10h14V11h-1"/></svg> ثم «إضافة إلى الشاشة الرئيسية»</span><button onclick="this.parentNode.classList.remove('on')">تمام</button></div>
-<header><img class="tk" src="takbir.png" alt="الله أكبر"><p><button id="city" data-open="s-loc">📍 توركو</button> · <span id="date"></span></p></header>
+<header><button id="share" aria-label="شارك التطبيق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M8 7l4-4 4 4M6 11H5v10h14V11h-1"/></svg></button><img class="tk" src="takbir.png" alt="الله أكبر"><p><button id="city" data-open="s-loc">📍 توركو</button> · <span id="date"></span></p></header>
 
 <section id="today" class="on">
  <div class="ow"><div class="orb">
@@ -443,6 +452,11 @@ locui();
  var P=navigator.permissions;
  if(P&&P.query)P.query({name:'geolocation'}).then(function(r){if(r.state=='granted')locate(true);else if(SRC=='ip')iploc(true)}).catch(function(){if(SRC=='ip')iploc(true)});
  else if(SRC=='ip')iploc(true)})();
+
+// مشاركة رابط التطبيق ويا الأصدقاء
+$('share').onclick=function(){var u=location.origin+location.pathname,d={title:'مواقيت الصلاة',text:'تطبيق مواقيت الصلاة: أوقات مدينتك تلقائياً، القبلة، الأذكار والسبحة. بدون إعلانات.',url:u};
+ if(navigator.share)navigator.share(d).catch(function(){});
+ else if(navigator.clipboard)navigator.clipboard.writeText(u).then(function(){alert('انتسخ الرابط، الصقه وين ما تريد.')})};
 
 // النوافذ الصغيرة (التنبيه، رمضان)
 document.querySelectorAll('[data-open]').forEach(function(b){b.onclick=function(){$(b.getAttribute('data-open')).classList.add('on')}});
