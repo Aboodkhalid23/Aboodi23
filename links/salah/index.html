@@ -38,6 +38,13 @@ li b{display:block;font-size:24px;font-weight:500;margin-top:4px}
 li.s b{color:var(--mut);font-weight:400}
 li.hot{background:linear-gradient(160deg,var(--gold),var(--gold2));border-color:transparent;box-shadow:0 10px 28px rgba(242,193,78,.25)}
 li.hot span,li.hot b{color:var(--dark)}li.hot b{font-weight:700}
+.al{background:var(--card);border:1px solid var(--line);border-radius:22px;margin-top:14px;padding:0 16px}
+.al summary{list-style:none;padding:15px 0;font-size:16px;text-align:center;color:var(--gold);cursor:pointer}
+.al summary::-webkit-details-marker{display:none}
+.al p{font-size:14px;color:var(--mut);line-height:1.8;text-align:center}
+.al a{display:block;margin:12px 0;padding:13px;border-radius:99px;text-align:center;text-decoration:none;font-weight:700;color:var(--dark);background:linear-gradient(160deg,var(--gold),var(--gold2))}
+.al ol{margin:0;padding:0 18px 16px 0;font-size:14px;color:var(--mut);line-height:1.9}
+.al ol li{display:list-item;background:none;border:0;border-radius:0;padding:0;text-align:right}
 .src{font-size:12.5px;color:var(--mut);text-align:center;margin-top:16px;line-height:1.7}
 .box{background:var(--card);border:1px solid var(--line);border-radius:26px;padding:14px 12px;margin-top:18px}
 .mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
@@ -77,6 +84,12 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
   </div>
  </div>
  <ul id="list"></ul>
+ <details class="al">
+  <summary>⏰ تنبيه قبل كل صلاة بنص ساعة</summary>
+  <p>التنبيه يجيك من تقويم الجهاز نفسه، حتى لو الصفحة مسكّرة وبدون إنترنت.</p>
+  <a id="cal" href="salah.ics">أضف التنبيهات للتقويم</a>
+  <ol><li>اضغط الزر الذهبي، وبعدها اضغط «اشتراك».</li><li>إذا ما إجاك تنبيه: افتح الإعدادات، التقويم، الحسابات، التقاويم المشترك بيها، مواقيت الصلاة، وطفّي خيار «إزالة التنبيهات».</li></ol>
+ </details>
  <p class="src" id="src"></p>
 </section>
 
@@ -207,6 +220,8 @@ function show(){var id=(location.hash||'#today').slice(1);if(!$(id))id='today';
  document.querySelectorAll('section').forEach(function(s){s.classList.toggle('on',s.id==id)});
  document.querySelectorAll('nav a').forEach(function(a){a.classList.toggle('on',a.getAttribute('href')=='#'+id)});scrollTo(0,0)}
 addEventListener('hashchange',show);show();
+// رابط الاشتراك بالتقويم (webcal يفتح تطبيق التقويم مباشرة)
+if(location.protocol=='https:')$('cal').href='webcal://'+location.host+location.pathname.replace(/[^/]*$/,'')+'salah.ics';
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 })();
 </script>
