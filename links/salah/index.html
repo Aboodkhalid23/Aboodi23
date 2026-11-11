@@ -77,7 +77,7 @@ li.s b,li.s span{color:var(--mut)}
 li.hot{background:linear-gradient(160deg,var(--gold),var(--gold2));border-color:transparent;box-shadow:0 10px 28px rgba(242,193,78,.25)}
 li.hot span,li.hot b{color:var(--dark)}li.hot b{font-weight:700}
 .row{flex:none;display:grid;grid-template-columns:1fr 1fr;gap:9px}
-button{font:inherit;color:var(--ink);background:var(--card2);border:0;border-radius:99px;padding:9px 18px}
+button{font:inherit;color:var(--ink);background:var(--card2);border:0;border-radius:99px;padding:9px 18px;-webkit-appearance:none;appearance:none;cursor:pointer}
 .pill{border-radius:99px;padding:1.25vh 6px;font-size:clamp(12.5px,1.8vh,15px);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pill b{color:var(--gold);font-size:1.15em}
 .box{flex:1;min-height:0;border-radius:26px;padding:12px;display:flex;flex-direction:column;background:rgba(13,21,38,.84)}
@@ -93,7 +93,8 @@ tr.td td{background:var(--gold);color:var(--dark);font-weight:700;border-color:t
 tr.td td:first-child{border-radius:0 12px 12px 0;color:var(--dark)}tr.td td:last-child{border-radius:12px 0 0 12px}
 .q{text-align:center;align-items:center;justify-content:center;gap:1.6vh}
 .qw{flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center}
-.qw svg{height:100%;max-height:300px;max-width:100%;aspect-ratio:1;filter:drop-shadow(0 18px 40px rgba(0,0,0,.5))}
+.qw{container-type:size}
+.qw svg{width:min(68vw,32vh);height:auto;aspect-ratio:1;filter:drop-shadow(0 18px 40px rgba(0,0,0,.5))}
 .q p{font-size:18px}.q p b{color:var(--gold)}
 .q button,.sheet a{background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark);font-weight:700;padding:11px 26px}
 .q small{color:var(--mut);font-size:14px;line-height:1.7}
@@ -105,6 +106,8 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
 .vh.on{display:flex}.vh b{flex:1;font-size:17px;text-align:center;padding-left:70px}
 .vh button{padding:8px 16px;font-size:15px}
 #mv{flex:1;min-height:0;display:none;width:100%}#mv.on{display:block}
+.strk{background:var(--card2);border-radius:16px;padding:10px 12px;margin-bottom:10px;font-size:15px;text-align:center;line-height:1.6}
+.strk b{color:var(--gold)}
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .tile{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:clamp(10px,1.8vh,16px) 6px;border-radius:20px;background:var(--card2);border:1px solid var(--line);color:var(--ink)}
 .tile i{font-style:normal;font-size:clamp(24px,3.6vh,30px);line-height:1.2}
@@ -129,7 +132,7 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
 .tw{flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center;container-type:size}
 #tb{width:min(64vw,34vh);aspect-ratio:1;border-radius:50%;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink);
  background:radial-gradient(circle at 50% 26%,#4a5f80 0,#24344f 50%,#131e33 100%);border:4px solid var(--gold);box-shadow:0 18px 50px rgba(0,0,0,.5);transition:transform .08s}
-@supports (width:1cqw){#tb{width:min(100cqw,100cqh,300px)}}
+@supports (width:1cqw){#tb{width:min(100cqw,100cqh,300px)}.qw svg{width:min(100cqw,100cqh,300px)}}
 #tb:active{transform:scale(.96)}
 #tb.done{background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark)}
 #tb b{font-size:clamp(46px,9vh,76px);font-weight:700;line-height:1.1}#tb span{font-size:15px;opacity:.75}
@@ -219,7 +222,7 @@ body.wait #list,body.wait .ow,body.wait .row{opacity:.25}
 <section id="dhikr">
  <div class="box dz">
   <div class="vh" id="vh"><button id="dback">→ رجوع</button><b id="dtitle"></b></div>
-  <div id="mv" class="scroll"><div class="tiles" id="tiles"></div></div>
+  <div id="mv" class="scroll"><div class="strk" id="strk"></div><div class="tiles" id="tiles"></div></div>
   <div id="tv">
    <p id="tph"></p>
    <div class="tw"><button id="tb"><b class="n" id="tcount">0</b><span id="ttarget"></span></button></div>
@@ -272,6 +275,7 @@ body.wait #list,body.wait .ow,body.wait .row{opacity:.25}
   <label>طريقة الحساب</label><select id="msel"></select>
   <label>وقت العصر</label><select id="asel"><option value="0">الجمهور (شافعي، مالكي، حنبلي)</option><option value="1">حنفي</option></select>
  </div>
+ <button id="recal">🕌 عدّل مطابقة مسجدي</button>
  <button id="loct">استعمل جدول مسجد توركو</button>
  <button data-close>رجوع</button>
 </div></div>
@@ -281,7 +285,7 @@ body.wait #list,body.wait .ow,body.wait .row{opacity:.25}
 <script src="adhkar.js"></script>
 <script>
 (function(){
-var VERSION='20';
+var VERSION='21';
 var $=function(i){return document.getElementById(i)};
 // جداول المساجد الرسمية الي عدنا. الي قريب من وحدة منها (30 كم) ياخذ أوقاتها بالدقيقة، والباقي ينحسبله فلكياً
 if(window.HEL)window.HEL.y=window.SALAH.y;
@@ -375,7 +379,7 @@ function tick(){
  var wd=new Date(Date.UTC(w.year,w.month-1,w.day)).getUTCDay();
  $('date').textContent=WD[wd]+' '+w.day+' '+GM[w.month-1]+' · '+hijri(w.year,w.month,w.day).replace(/ \d{4}$/,'');
  $('list').innerHTML=T.map(function(v,i){return '<li class="'+(i==1?'s':'')+(nx.today&&nx.i==i?' hot':'')+'"><span>'+NAMES[i]+'</span><b class="n">'+hm(v)+'</b></li>'}).join('');
- ramadan(w);
+ ramadan(w);p2draw();
  $('src').textContent=LOC?'الأوقات محسوبة فلكياً لموقعك بطريقة: '+PT.M[LOC.m].n+'. ممكن تفرق دقايق عن مسجدك، وتگدر تغيّر الطريقة من اسم المدينة فوگ.':'الأوقات من '+TB.src+(w.year==D.y?'':'، محسوبة على جدول سنة '+D.y+' وممكن تفرق دقيقة');
 }
 tick();setInterval(tick,1000);
@@ -416,7 +420,20 @@ $('qbtn').onclick=function(){
 // شنو خلّص المستخدم اليوم (تنمسح العلامات كل يوم جديد)
 function today(){var w=now();return w.year+'-'+w.month+'-'+w.day}
 var DONE={d:today()};try{var dn=JSON.parse(localStorage.getItem('done'));if(dn&&dn.d==today())DONE=dn}catch(e){}
-function mark(k){if(DONE.d!=today())DONE={d:today()};DONE[k]=1;try{localStorage.setItem('done',JSON.stringify(DONE))}catch(e){}}
+// كم يوم ورا بعض سوّى المستخدم ذكر واحد على الأقل
+function dkey(n){var w=now(),t=new Date(Date.UTC(w.year,w.month-1,w.day+n));return t.getUTCFullYear()+'-'+(t.getUTCMonth()+1)+'-'+t.getUTCDate()}
+var STK={last:'',n:0};try{var sk=JSON.parse(localStorage.getItem('streak'));if(sk&&sk.last)STK=sk}catch(e){}
+function streak(){return STK.last==dkey(0)||STK.last==dkey(-1)?STK.n:0}
+function mark(k){if(DONE.d!=today())DONE={d:today()};DONE[k]=1;
+ if(STK.last!=dkey(0)){STK={last:dkey(0),n:STK.last==dkey(-1)?STK.n+1:1}}
+ try{localStorage.setItem('done',JSON.stringify(DONE));localStorage.setItem('streak',JSON.stringify(STK))}catch(e){}
+ p2draw()}
+// يا ذكر وقته هسه: الصباح بين الفجر والظهر، المساء بين العصر والعشاء، النوم بالليل
+function nowk(){var w=now(),m=w.hour*60+w.minute,T=times(w.year,w.month,w.day);return m>=T[0]&&m<T[2]?'s':m>=T[3]&&m<T[5]?'m':m>=T[5]+60||m<T[0]-60?'n':''}
+// الزر الثاني بالصفحة الرئيسية: المطابقة للي أوقاته محسوبة، وغيرها يذكّر بذكر الوقت
+var NUDGE={s:'🌅 أذكار الصباح',m:'🌙 أذكار المساء',n:'😴 أذكار النوم'};
+function p2draw(){if(!DONE)return;if(DONE.d!=today())DONE={d:today()};var k=nowk();
+ $('p2').textContent=LOC&&!LOC.cal?'🕌 طابق ويا مسجدك':k&&!DONE[k]?NUDGE[k]:DONE.g?'📿 السبحة':'🤲 استغفر الله'}
 
 // السبحة: كل ضغطة تسبيحة، ومن يكمل العدد تنتقل للذكر الي بعده
 var TS=[['سُبْحَانَ اللَّهِ',33],['الْحَمْدُ لِلَّهِ',33],['اللَّهُ أَكْبَرُ',33],['لَا إِلَهَ إِلَّا اللَّهُ',100],['أَسْتَغْفِرُ اللَّهَ',100,'g'],['اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ',100,'y'],['عدّاد حر',0]];
@@ -442,9 +459,11 @@ $('zprev').onclick=function(){rmove(-1)};$('znext').onclick=function(){rmove(1)}
 // القائمة: بطاقة چبيرة لكل نوع ذكر، والبطاقة الي وقتها هسه تنحط عليها علامة ذهبية
 var MENU=[['s','🌅','أذكار الصباح','بعد الفجر'],['m','🌙','أذكار المساء','بعد العصر'],['p','🕌','بعد الصلاة','بعد كل صلاة'],['g','🤲','الاستغفار','100 مرة'],
  ['t','📿','السبحة','سبحان الله والحمد لله'],['y','💚','الصلاة على النبي','100 مرة'],['n','😴','أذكار النوم','قبل النوم'],['w','☀️','الاستيقاظ','أول ما تگعد'],['a','✨','أسماء الله الحسنى','99 اسم ومعناها']];
-function menu(){var w=now(),m=w.hour*60+w.minute,T=times(w.year,w.month,w.day),nowk=m>=T[0]&&m<T[2]?'s':m>=T[3]&&m<T[5]?'m':m>=T[5]+60||m<T[0]-60?'n':'';
+function menu(){var nk=nowk(),sn=streak();
+ var td=STK.last==dkey(0);
+ $('strk').innerHTML=!sn?'🤍 ابدي يومك بذكر واحد، ولو استغفار.':!td?'🔥 <b>'+sn+'</b> يوم ورا بعض. اذكر الله اليوم حتى ما تنگطع السلسلة.':sn>1?'🔥 <b>'+sn+'</b> يوم ورا بعض وانت تذكر الله. كمّل!':'🤍 بديت اليوم بذكر الله. تعال باچر حتى تكمّل السلسلة.';
  if(DONE.d!=today())DONE={d:today()};
- $('tiles').innerHTML=MENU.map(function(x){return '<button class="tile'+(x[0]==nowk?' now':'')+(DONE[x[0]]?' ok':'')+'" data-k="'+x[0]+'"><i>'+x[1]+'</i><b>'+x[2]+'</b><span>'+(x[0]==nowk?'وقتها هسه':x[3])+'</span></button>'}).join('');
+ $('tiles').innerHTML=MENU.map(function(x){return '<button class="tile'+(x[0]==nk?' now':'')+(DONE[x[0]]?' ok':'')+'" data-k="'+x[0]+'"><i>'+x[1]+'</i><b>'+x[2]+'</b><span>'+(x[0]==nk?'وقتها هسه':x[3])+'</span></button>'}).join('');
  document.querySelectorAll('#tiles .tile').forEach(function(b){b.onclick=function(){mode(b.getAttribute('data-k'))}})}
 function mode(k){var isT=k=='t'||k=='g'||k=='y',isM=k=='menu',t='';MENU.forEach(function(x){if(x[0]==k)t=x[2]});
  $('vh').classList.toggle('on',!isM);$('dtitle').textContent=t;
@@ -454,7 +473,7 @@ function mode(k){var isT=k=='t'||k=='g'||k=='y',isM=k=='menu',t='';MENU.forEach(
  else if(k=='a'){if(!$('names').firstChild)$('names').innerHTML=(A.a||[]).map(function(x){return '<div><b>'+x[0]+'</b><span>'+x[1]+'</span></div>'}).join('')}
  else{rd={k:k,i:0,c:0};rdraw();$('ztext').parentNode.scrollTop=0}}
 $('dback').onclick=function(){mode('menu')};
-mode('menu');
+mode('menu');p2draw();
 
 // التنقل بين الصفحات
 function show(){var id=(location.hash||'#today').slice(1);if(!$(id))id='today';
@@ -470,8 +489,8 @@ var SRC='';try{SRC=(JSON.parse(localStorage.getItem('loc'))||{}).src||''}catch(e
 function locui(msg){
  $('city').textContent='📍 '+(LOC?LOC.name+(LOC.cal?' · مطابق لمسجدك':' · تقريبي'):TB.n);
  $('locinfo').textContent=msg||(LOC?'انت هسه على: '+LOC.name+'. الأوقات '+(LOC.cal?'مطابقة لمسجدك.':'محسوبة وممكن تفرق دقايق عن مسجدك.'):'انت هسه على: '+TB.n+'، من '+TB.src+'.');
- var tk=!LOC&&TB.id=='turku';$('locset').style.display=LOC?'':'none';$('loct').style.display=tk?'none':'';
- $('p2').textContent=LOC?(LOC.cal?'🕌 مطابق لمسجدك':'🕌 طابق ويا مسجدك'):'📤 شارك التطبيق';
+ var tk=!LOC&&TB.id=='turku';$('recal').style.display=LOC&&LOC.cal?'':'none';$('locset').style.display=LOC?'':'none';$('loct').style.display=tk?'none':'';
+ p2draw();
  if(LOC){$('msel').value=LOC.m;$('asel').value=LOC.h?1:0}}
 function locsave(){document.body.classList.remove('wait');try{var o=LOC?JSON.parse(JSON.stringify(LOC)):{tb:TB.id};o.src=SRC;localStorage.setItem('loc',JSON.stringify(o))}catch(e){}
  lastKey='';var w=now();my=w.year;mm=w.month;tick();month();qset();locui()}
@@ -516,6 +535,7 @@ Object.keys(PT.M).forEach(function(k){var o=document.createElement('option');o.v
 $('msel').onchange=function(){LOC.m=this.value;LOC.o=null;LOC.cal=0;locsave()};
 $('asel').onchange=function(){LOC.h=this.value=='1';locsave()};
 $('locbtn').onclick=function(){locate(false)};
+$('recal').onclick=function(){$('s-loc').classList.remove('on');calopen()};
 $('sgo').onclick=search;$('sq').onkeydown=function(e){if(e.key=='Enter')search()};
 $('loct').onclick=function(){settb('turku');LOC=null;SRC='manual';locsave()};
 locui();
@@ -533,7 +553,7 @@ $('calsave').onclick=function(){var w=now(),cur=times(w.year,w.month,w.day),G=cu
   LOC.m=best.k;LOC.h=best.h;LOC.o=G.map(function(v,i){return i==1?0:v-best.B[i]});LOC.cal=1;SRC=SRC||'gps';locsave()}
  $('s-cal').classList.remove('on')};
 $('calreset').onclick=function(){LOC.o=null;LOC.cal=0;LOC.m=PT.forCountry(LOC.cc);LOC.h=PT.hanafi(LOC.cc);locsave();$('s-cal').classList.remove('on')};
-$('p2').onclick=function(){if(LOC)calopen();else $('share').onclick()};
+$('p2').onclick=function(){if(LOC&&!LOC.cal){calopen();return}if(DONE.d!=today())DONE={d:today()};var k=nowk(),go=k&&!DONE[k]?k:DONE.g?'t':'g';location.hash='#dhikr';setTimeout(function(){mode(go)},60)};
 
 // كل فتحة: الموقع المحفوظ يطلع فوراً، وبالخلفية يتحدث بصمت. المدينة الي اختارها المستخدم بإيده ما تتبدل
 (function(){if(q&&!/[?&]geo/.test(location.search))return;if(SRC=='manual')return;
