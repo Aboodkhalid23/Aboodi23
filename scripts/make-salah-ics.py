@@ -11,7 +11,7 @@ NAMES = {0: "الفجر", 2: "الظهر", 3: "العصر", 4: "المغرب", 5
 TZ, UTC = ZoneInfo("Europe/Helsinki"), dt.timezone.utc
 CUM = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]
 
-table = json.loads(re.search(r"window\.SALAH=(\{.*\});", (ROOT / "data.js").read_text(encoding="utf-8")).group(1))["t"]
+table = json.loads(re.search(r"window\.SALAH=(\{.*?\});\n", (ROOT / "data.js").read_text(encoding="utf-8")).group(1))["t"]
 
 def row(d):
     day = 28 if (d.month, d.day) == (2, 29) else d.day

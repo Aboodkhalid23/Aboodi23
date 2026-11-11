@@ -55,7 +55,37 @@ def clean(year, rows):
     if days == 366: t.pop(59); h.pop(59)              # الصفحة تحسب 365 يوم؛ 29 شباط ياخذ أوقات 28
     return t, h, fixed
 
+HEL_URL = "https://rukousajat.fi/"
+
+def helsinki():
+    """جدول مساجد هلسنكي وإسبو وفانتا: مخزون داخل ملف موقع rukousajat.fi بمفاتيح يوم+شهر. يرجع None إذا ما انسحب."""
+    try:
+        get = lambda u: urllib.request.urlopen(urllib.request.Request(u, headers={"User-Agent": "Mozilla/5.0 (prayer-times-updater)"}), timeout=60).read().decode("utf-8", "ignore")
+        js = re.search(r'src="(/static/js/main\.[0-9a-f]+\.js)"', get(HEL_URL))
+        rows = re.findall(r'date:"(\d{4})",fajr:"([\d:]+)",sunrise:"([\d:]+)",zuhur:"([\d:]+)",asr:"([\d:]+)",maghrib:"([\d:]+)",isha:"([\d:]+)"', get(HEL_URL.rstrip("/") + js.group(1)))
+        by = {r[0]: [minutes(x) for x in r[1:]] for r in rows}
+        t, d = [], dt.date(2026, 1, 1)                      # سنة عادية (365 يوم) بس حتى نمشي على الأيام بالترتيب
+        while d.year == 2026:
+            v = list(by[f"{d.day:02d}{d.month:02d}"])
+            if v[5] < v[4]: v[5] += 1440
+            t.append(v); d += dt.timedelta(days=1)
+        # الجدول مكتوب بساعة الحايط: نلگى يوم تقديم الساعة ويوم تأخيرها من قفزة الظهر، ونرجّع الصيف للتوقيت الشتوي
+        jump = [k for k in range(1, 365) if abs(abs(t[k][2] - t[k - 1][2]) - 60) <= 3]
+        if len(jump) != 2: return None
+        for k in range(jump[0], jump[1]): t[k] = [x - 60 for x in t[k]]
+        for k in range(364):
+            # الفجر والعشاء بيهم قفزات حقيقية (لحد ساعتين) يوم يتبدل حساب الصيف، والباقي لازم يمشي ناعم
+            if any(abs(t[k + 1][c] - t[k][c]) > (130 if c in (0, 5) else 8) for c in range(6)) or any(t[k][c] >= t[k][c + 1] for c in range(5)): return None
+        return t
+    except Exception as e:
+        print("جدول هلسنكي ما انسحب:", e); return None
+
 def main():
+    old = OUT.read_text(encoding="utf-8") if OUT.exists() else ""
+    hel_line = next((l for l in old.splitlines() if l.startswith("window.HEL=")), "")
+    ht = helsinki()
+    if ht:
+        hel_line = "window.HEL=" + json.dumps({"t": ht}, separators=(",", ":")) + ";"
     try:
         req = urllib.request.Request(URL, headers={"User-Agent": "Mozilla/5.0 (prayer-times-updater)"})
         page = urllib.request.urlopen(req, timeout=40).read().decode("utf-8", "ignore")
@@ -64,11 +94,11 @@ def main():
     year, hm, hy, rows = parse(page)
     t, h, fixed = clean(year, rows)
     data = {"y": year, "hm": hm, "hy": hy, "t": t, "h": h}
-    new = ("// جدول مسجد توركو (tisy.fi) لسنة %d، بالدقايق من نص الليل بالتوقيت الشتوي\nwindow.SALAH=%s;\n"
-           % (year, json.dumps(data, separators=(",", ":"))))
+    new = ("// جدول مسجد توركو (tisy.fi) لسنة %d، وجدول مساجد هلسنكي (rukousajat.fi). بالدقايق من نص الليل بالتوقيت الشتوي\nwindow.SALAH=%s;\n%s\n"
+           % (year, json.dumps(data, separators=(",", ":")), hel_line))
     changed = not OUT.exists() or OUT.read_text(encoding="utf-8") != new
     OUT.write_text(new, encoding="utf-8")
     subprocess.run([sys.executable, str(ROOT / "scripts" / "make-salah-ics.py")], check=True)
-    print(f"جدول {year}: {'تحدّث' if changed else 'نفسه بدون تغيير'}، وتصلّحت {len(fixed)} خانة بيها غلطة ساعة")
+    print(f"جدول {year}: {'تحدّث' if changed else 'نفسه بدون تغيير'}، وتصلّحت {len(fixed)} خانة بيها غلطة ساعة. هلسنكي: {'انسحب' if ht else 'بقى القديم'}")
 
 main()

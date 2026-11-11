@@ -1,5 +1,5 @@
 // يخلي التطبيق يشتغل بدون إنترنت. بوجود الإنترنت ياخذ أحدث نسخة دائماً، وبدونه يرجّع النسخة المحفوظة
-const C = 'salah-v14', FILES = ['./', 'data.js', 'adhkar.js', 'calc.js', 'fonts/amiri.woff2', 'fonts/ui-500.woff2', 'fonts/ui-700.woff2', 'fonts/ui-num.woff2', 'manifest.webmanifest', 'icon-180.png', 'icon-512.png', 'takbir.png'];
+const C = 'salah-v15', FILES = ['./', 'data.js', 'adhkar.js', 'calc.js', 'fonts/amiri.woff2', 'fonts/ui-500.woff2', 'fonts/ui-700.woff2', 'fonts/ui-num.woff2', 'manifest.webmanifest', 'icon-180.png', 'icon-512.png', 'takbir.png'];
 self.addEventListener('install', e => e.waitUntil(caches.open(C).then(c => c.addAll(FILES)).then(() => self.skipWaiting())));
 self.addEventListener('activate', e => e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== C).map(k => caches.delete(k)))).then(() => self.clients.claim())));
 self.addEventListener('fetch', e => {
