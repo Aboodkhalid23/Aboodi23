@@ -4,82 +4,100 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>مواقيت الصلاة · توركو</title>
-<meta name="theme-color" content="#fbf7ee" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#101c22" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#111318">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="الصلاة">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-180.png">
 <style>
-:root{--bg:#fbf7ee;--card:#fff;--ink:#2a2f2b;--mut:#7b8079;--line:#e6dfd0;--hot:#c8553d;--sun:#e9a23b;--arc:#e0d6c2}
-@media(prefers-color-scheme:dark){:root{--bg:#101c22;--card:#172730;--ink:#eef1ea;--mut:#93a09c;--line:#243741;--hot:#f0a35e;--sun:#f2c14e;--arc:#2a3f4a}}
+:root{--bg:#111318;--card:#1b1e26;--card2:#232732;--ink:#f1efe8;--mut:#8c909b;--line:#2a2e39;--gold:#f2c14e;--gold2:#d99a2b;--dark:#17140a}
 *{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%}
-body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI","Noto Sans Arabic",sans-serif;
- padding:calc(env(safe-area-inset-top) + 14px) 18px calc(env(safe-area-inset-bottom) + 84px);max-width:520px;margin:auto}
+html{background:var(--bg)}
+body{min-height:100vh;color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI","Noto Sans Arabic",sans-serif;
+ background:radial-gradient(120% 60% at 50% 0,#22252f 0,var(--bg) 70%) no-repeat var(--bg);
+ padding:calc(env(safe-area-inset-top) + 18px) 18px calc(env(safe-area-inset-bottom) + 104px);max-width:520px;margin:auto}
 .n{direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}
-header{display:flex;justify-content:space-between;align-items:baseline;font-size:15px;color:var(--mut)}
-header b{color:var(--ink);font-size:17px}
+header h1{font-size:27px;font-weight:700}
+header p{font-size:14px;color:var(--mut);margin-top:3px}
 section{display:none}section.on{display:block}
-svg.arc{display:block;width:100%;max-width:360px;margin:14px auto 0}
-.next{text-align:center;margin-top:-34%;padding-bottom:6%}
-.next span{font-size:22px;font-weight:700;display:block}
-.next b{font-size:44px;color:var(--hot);font-weight:700;line-height:1.1}
-ul{list-style:none;padding:0;margin-top:10px}
-li{display:flex;justify-content:space-between;align-items:center;font-size:23px;padding:13px 6px;border-bottom:1px solid var(--line)}
-li.s{color:var(--mut);font-size:19px}
-li.hot{color:var(--hot);font-weight:700}
-.src{font-size:13px;color:var(--mut);text-align:center;margin-top:16px;line-height:1.7}
-.mh{display:flex;justify-content:space-between;align-items:center;margin:14px 0 10px}
-.mh b{font-size:20px}
-button{font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 16px}
-table{width:100%;border-collapse:collapse;font-size:14px;text-align:center}
-th{color:var(--mut);font-weight:500;padding:6px 0;font-size:13px}
-td{padding:7px 0;border-top:1px solid var(--line)}
-tr.td td{color:var(--hot);font-weight:700}
-tr.fr td:first-child{color:var(--sun);font-weight:700}
-.q{text-align:center;margin-top:22px}
-.q svg{width:260px;height:260px;display:block;margin:0 auto 14px}
-.q p{font-size:17px;line-height:1.9}
-.q small{color:var(--mut);font-size:14px;display:block;margin-top:10px;line-height:1.7}
-nav{position:fixed;inset:auto 0 0 0;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
-nav a{flex:1;text-align:center;padding:14px 0 12px;font-size:16px;color:var(--mut);text-decoration:none}
-nav a.on{color:var(--hot);font-weight:700}
+.orb{position:relative;width:min(74vw,290px);aspect-ratio:1;margin:22px auto 0}
+.orb svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.orb .in{position:absolute;inset:7%;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;
+ background:radial-gradient(circle at 50% 28%,#3a3d4a 0,#22252e 48%,#16181e 100%);
+ box-shadow:inset 0 2px 1px rgba(255,255,255,.14),inset 0 -22px 40px rgba(242,193,78,.10),0 22px 60px rgba(0,0,0,.55)}
+.orb .ic{width:30px;height:30px;color:var(--gold);margin-bottom:4px}
+.orb span{font-size:19px;color:var(--mut)}
+.orb b{font-size:clamp(38px,12vw,50px);font-weight:300;letter-spacing:1px;line-height:1.15}
+.orb i{font-style:normal;font-size:14px;margin-top:8px;padding:5px 14px;border-radius:99px;background:rgba(255,255,255,.07);color:var(--gold)}
+ul{list-style:none;padding:0;margin-top:26px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+li{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:14px 8px 13px;text-align:center}
+li span{display:block;font-size:15px;color:var(--mut)}
+li b{display:block;font-size:24px;font-weight:500;margin-top:4px}
+li.s b{color:var(--mut);font-weight:400}
+li.hot{background:linear-gradient(160deg,var(--gold),var(--gold2));border-color:transparent;box-shadow:0 10px 28px rgba(242,193,78,.25)}
+li.hot span,li.hot b{color:var(--dark)}li.hot b{font-weight:700}
+.src{font-size:12.5px;color:var(--mut);text-align:center;margin-top:16px;line-height:1.7}
+.box{background:var(--card);border:1px solid var(--line);border-radius:26px;padding:14px 12px;margin-top:18px}
+.mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.mh b{font-size:19px}
+button{font:inherit;color:var(--ink);background:var(--card2);border:0;border-radius:99px;padding:9px 18px}
+table{width:100%;border-collapse:collapse;font-size:13.5px;text-align:center}
+th{color:var(--mut);font-weight:500;padding:6px 0;font-size:12.5px}
+td{padding:8px 0;border-top:1px solid var(--line)}
+tr.fr td:first-child{color:var(--gold);font-weight:700}
+tr.td td{background:var(--gold);color:var(--dark);font-weight:700;border-color:transparent}
+tr.td td:first-child{border-radius:0 12px 12px 0;color:var(--dark)}tr.td td:last-child{border-radius:12px 0 0 12px}
+.q{text-align:center}
+.q svg{width:min(70vw,270px);aspect-ratio:1;display:block;margin:6px auto 16px;filter:drop-shadow(0 18px 40px rgba(0,0,0,.5))}
+.q p{font-size:18px;margin-bottom:14px}.q p b{color:var(--gold)}
+.q button{background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark);font-weight:700;padding:11px 26px}
+.q small{color:var(--mut);font-size:14px;display:block;margin-top:14px;line-height:1.8}
+nav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 16px);width:min(92vw,420px);display:flex;gap:6px;padding:7px;
+ background:rgba(30,33,42,.82);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid var(--line);border-radius:99px;box-shadow:0 14px 40px rgba(0,0,0,.5)}
+nav a{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:11px 0;font-size:15px;color:var(--mut);text-decoration:none;border-radius:99px}
+nav a svg{width:20px;height:20px}
+nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
 </style>
 </head>
 <body>
-<header><b>توركو</b><span id="date"></span></header>
+<header><h1>توركو</h1><p id="date"></p></header>
 
 <section id="today" class="on">
- <svg class="arc" viewBox="0 0 360 215" aria-hidden="true">
-  <path d="M20 190A160 160 0 0 1 340 190" fill="none" stroke="var(--arc)" stroke-width="6" stroke-linecap="round"/>
-  <path id="prog" fill="none" stroke="var(--sun)" stroke-width="6" stroke-linecap="round"/>
-  <line x1="0" y1="190" x2="360" y2="190" stroke="var(--line)" stroke-width="2"/>
-  <g id="dots"></g>
-  <circle id="sun" r="15" fill="var(--sun)"/>
- </svg>
- <div class="next"><span id="nname"></span><b class="n" id="cd"></b></div>
+ <div class="orb">
+  <svg viewBox="0 0 280 280" aria-hidden="true">
+   <circle cx="140" cy="140" r="130" fill="none" stroke="var(--card2)" stroke-width="5"/>
+   <circle id="ring" cx="140" cy="140" r="130" fill="none" stroke="var(--gold)" stroke-width="5" stroke-linecap="round" stroke-dasharray="816.8" stroke-dashoffset="816.8"/>
+  </svg>
+  <div class="in">
+   <svg class="ic" id="isun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="position:static;transform:none"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
+   <svg class="ic" id="imoon" viewBox="0 0 24 24" fill="currentColor" style="position:static;transform:none"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>
+   <span id="nname"></span><b class="n" id="cd"></b><i class="n" id="ntime"></i>
+  </div>
+ </div>
  <ul id="list"></ul>
  <p class="src" id="src"></p>
 </section>
 
 <section id="month">
- <div class="mh"><button id="prev">السابق</button><b id="mname"></b><button id="nxt">التالي</button></div>
- <table><thead><tr><th>اليوم</th><th>الفجر</th><th>الشروق</th><th>الظهر</th><th>العصر</th><th>المغرب</th><th>العشاء</th></tr></thead><tbody id="mb"></tbody></table>
+ <div class="box">
+  <div class="mh"><button id="prev">السابق</button><b id="mname"></b><button id="nxt">التالي</button></div>
+  <table><thead><tr><th>اليوم</th><th>الفجر</th><th>الشروق</th><th>الظهر</th><th>العصر</th><th>المغرب</th><th>العشاء</th></tr></thead><tbody id="mb"></tbody></table>
+ </div>
 </section>
 
 <section id="qibla">
- <div class="q">
+ <div class="box q">
   <svg viewBox="-130 -130 260 260">
    <g id="dial">
-    <circle r="120" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>
-    <text y="-96" text-anchor="middle" font-size="17" fill="var(--mut)">شمال</text>
-    <text y="108" text-anchor="middle" font-size="17" fill="var(--mut)">جنوب</text>
-    <text x="100" y="6" text-anchor="middle" font-size="17" fill="var(--mut)">شرق</text>
-    <text x="-100" y="6" text-anchor="middle" font-size="17" fill="var(--mut)">غرب</text>
-    <g id="needle"><path d="M0 -84L13 0H-13Z" fill="var(--hot)"/><rect x="-11" y="-112" width="22" height="22" rx="3" fill="var(--ink)"/><rect x="-11" y="-106" width="22" height="3" fill="var(--sun)"/></g>
-    <circle r="6" fill="var(--ink)"/>
+    <circle r="122" fill="var(--card2)" stroke="var(--line)" stroke-width="2"/>
+    <text y="-94" text-anchor="middle" font-size="16" fill="var(--mut)">شمال</text>
+    <text y="106" text-anchor="middle" font-size="16" fill="var(--mut)">جنوب</text>
+    <text x="96" y="6" text-anchor="middle" font-size="16" fill="var(--mut)">شرق</text>
+    <text x="-96" y="6" text-anchor="middle" font-size="16" fill="var(--mut)">غرب</text>
+    <g id="needle"><path d="M0 -86L12 0H-12Z" fill="var(--gold)"/><rect x="-11" y="-114" width="22" height="22" rx="4" fill="#0c0d10" stroke="var(--gold)" stroke-width="1.5"/><rect x="-11" y="-108" width="22" height="3" fill="var(--gold)"/></g>
+    <circle r="7" fill="var(--ink)"/>
    </g>
   </svg>
   <p id="qtext"></p>
@@ -88,7 +106,11 @@ nav a.on{color:var(--hot);font-weight:700}
  </div>
 </section>
 
-<nav><a href="#today" class="on">اليوم</a><a href="#month">الشهر</a><a href="#qibla">القبلة</a></nav>
+<nav>
+ <a href="#today" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>اليوم</a>
+ <a href="#month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>الشهر</a>
+ <a href="#qibla"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>القبلة</a>
+</nav>
 
 <script src="data.js"></script>
 <script>
@@ -136,22 +158,18 @@ function tick(){
  $('nname').textContent=NAMES[nx.i]+' بعد';
  $('cd').textContent=Math.floor(left/3600)+':'+p2(Math.floor(left/60)%60)+':'+p2(left%60);
 
- // الشمس على القوس
- var f=(sec/60-T[1])/(T[4]-T[1]), day=f>=0&&f<=1;
- function pt(x){var a=Math.PI*x;return [180-160*Math.cos(a),190-160*Math.sin(a)]}
- var s=day?pt(f):[f<0?20:340,203];
- $('sun').setAttribute('cx',s[0]);$('sun').setAttribute('cy',s[1]);
- $('sun').setAttribute('fill',day?'var(--sun)':'var(--mut)');$('sun').setAttribute('r',day?15:9);
- $('prog').setAttribute('d',day?'M20 190A160 160 0 0 1 '+s[0].toFixed(1)+' '+s[1].toFixed(1):'');
-
+ // الحلقة الذهبية: شگد مرّ من الوقت بين الصلاة الفاتت والجاية
+ var pv=ev.filter(function(e){return e.s<=sec}).pop(), fr=(sec-pv.s)/(nx.s-pv.s);
+ $('ring').setAttribute('stroke-dashoffset',(816.8*(1-fr)).toFixed(1));
+ var day=sec/60>=T[1]&&sec/60<T[4];
+ $('isun').style.display=day?'':'none';$('imoon').style.display=day?'none':'';
+ $('ntime').textContent=hm(nx.s/60);
  var key=[w.year,w.month,w.day,nx.i,nx.today].join();
  if(key==lastKey)return; lastKey=key;
  var wd=new Date(Date.UTC(w.year,w.month-1,w.day)).getUTCDay();
  $('date').textContent=WD[wd]+' '+w.day+' '+GM[w.month-1]+' · '+hijri(w.year,w.month,w.day);
- $('list').innerHTML=T.map(function(v,i){return '<li class="'+(i==1?'s':'')+(nx.today&&nx.i==i?' hot':'')+'"><span>'+NAMES[i]+'</span><span class="n">'+hm(v)+'</span></li>'}).join('');
- $('dots').innerHTML=[1,2,3,4].map(function(i){var p=pt((T[i]-T[1])/(T[4]-T[1]));
-  return '<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="7" fill="'+(nx.today&&nx.i==i?'var(--hot)':'var(--mut)')+'"/>'}).join('');
- $('src').textContent='الأوقات من جدول مسجد توركو (الجمعية الإسلامية بتوركو)'+(w.year==D.y?'':'، محسوبة على جدول سنة '+D.y+' وممكن تفرق دقيقة');
+ $('list').innerHTML=T.map(function(v,i){return '<li class="'+(i==1?'s':'')+(nx.today&&nx.i==i?' hot':'')+'"><span>'+NAMES[i]+'</span><b class="n">'+hm(v)+'</b></li>'}).join('');
+ $('src').textContent='الأوقات من جدول مسجد توركو'+(w.year==D.y?'':'، محسوبة على جدول سنة '+D.y+' وممكن تفرق دقيقة');
 }
 tick();setInterval(tick,1000);
 
@@ -187,7 +205,7 @@ $('qbtn').onclick=function(){
 // التنقل بين الصفحات الثلاث
 function show(){var id=(location.hash||'#today').slice(1);if(!$(id))id='today';
  document.querySelectorAll('section').forEach(function(s){s.classList.toggle('on',s.id==id)});
- document.querySelectorAll('nav a').forEach(function(a){a.classList.toggle('on',a.getAttribute('href')=='#'+id)})}
+ document.querySelectorAll('nav a').forEach(function(a){a.classList.toggle('on',a.getAttribute('href')=='#'+id)});scrollTo(0,0)}
 addEventListener('hashchange',show);show();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 })();
