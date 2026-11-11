@@ -45,7 +45,8 @@ header{text-align:center;flex:none;position:relative}
 .tk{display:block;height:clamp(34px,7.2vh,76px);margin:0 auto;opacity:.93;filter:drop-shadow(0 4px 14px rgba(0,0,0,.35))}
 header p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:clamp(12px,1.9vh,15px);color:#d5deea;margin-top:.2vh}
 header p b{color:var(--ink);font-size:1.15em}
-.inst{display:none;flex:none;align-items:center;justify-content:center;background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark);border-radius:99px;padding:clamp(8px,1.3vh,12px);font-size:clamp(15px,2.1vh,17px);font-weight:700;box-shadow:0 8px 24px rgba(242,193,78,.3)}
+.inst{display:none;position:absolute;top:0;right:0;width:38px;height:38px;padding:0;border-radius:50%;align-items:center;justify-content:center;background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark);box-shadow:0 6px 18px rgba(242,193,78,.35)}
+.inst svg{width:20px;height:20px}
 .inst.on{display:flex}
 .steps{list-style:none;padding:0;margin:14px 0 6px;display:block;counter-reset:st}
 .steps li{all:unset;display:flex;align-items:center;gap:12px;text-align:right;background:var(--card2);border-radius:18px;padding:12px;margin-bottom:8px;font-size:16px;line-height:1.6;counter-increment:st}
@@ -167,8 +168,7 @@ body.wait #list,body.wait .ow,body.wait .row{opacity:.25}
  <path d="M130 120l-16 13 13-4 9 9 8-6 12 4zM312 128l-14 10 12-3 8 8 8-5z" fill="#c9d5e3" opacity=".8"/>
  <path d="M0 200v-18l60-20 54 18 70-22 66 20 60-16 90 22v16z" fill="#0f1a2c"/>
 </svg>
-<button class="inst" id="inst">📲 ثبّت التطبيق على شاشتك</button>
-<header><button id="share" aria-label="شارك التطبيق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M8 7l4-4 4 4M6 11H5v10h14V11h-1"/></svg></button><img class="tk" src="takbir.png" alt="الله أكبر"><p><button id="city" data-open="s-loc">📍 توركو</button></p><p id="date"></p></header>
+<header><button class="inst" id="inst" aria-label="ثبّت التطبيق على الشاشة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><path d="M12 8v8M8 12h8"/></svg></button><button id="share" aria-label="شارك التطبيق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M8 7l4-4 4 4M6 11H5v10h14V11h-1"/></svg></button><img class="tk" src="takbir.png" alt="الله أكبر"><p><button id="city" data-open="s-loc">📍 توركو</button></p><p id="date"></p></header>
 
 <section id="today" class="on">
  <div class="ow"><div class="orb">
@@ -277,7 +277,7 @@ body.wait #list,body.wait .ow,body.wait .row{opacity:.25}
 <script src="adhkar.js"></script>
 <script>
 (function(){
-var VERSION='18';
+var VERSION='19';
 var $=function(i){return document.getElementById(i)};
 // جداول المساجد الرسمية الي عدنا. الي قريب من وحدة منها (30 كم) ياخذ أوقاتها بالدقيقة، والباقي ينحسبله فلكياً
 if(window.HEL)window.HEL.y=window.SALAH.y;
@@ -556,7 +556,7 @@ addEventListener('beforeinstallprompt',function(e){e.preventDefault();ask=e});
 addEventListener('appinstalled',function(){$('inst').classList.remove('on')});
 $('inst').onclick=function(){
  if(ask){ask.prompt();ask.userChoice.then(function(r){if(r.outcome=='accepted')$('inst').classList.remove('on');ask=null});return}
- $('insnote').textContent=ios?'الآيفون ما يسمح للتطبيق يضيف نفسه، فلازم تسويها بإيدك. ثلاث ضغطات بس:':'من قائمة المتصفح (الثلاث نقاط) اختار «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية». وبالآيفون:';
+ $('insnote').textContent=ios?'الآيفون ما يسمح لأي موقع يثبّت نفسه بضغطة، فالطريق الوحيد هو هالثلاث ضغطات:':'من قائمة المتصفح (الثلاث نقاط) اختار «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية». وبالآيفون:';
  $('insarrow').style.display=ios?'':'none';$('s-ins').classList.add('on')};
 // ما نخلي الصفحة تتحرك أو تتكبر باللمس، إلا داخل جدول الشهر
 document.addEventListener('touchmove',function(e){if(!e.target.closest('.scroll'))e.preventDefault()},{passive:false});
