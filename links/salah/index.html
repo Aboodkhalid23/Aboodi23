@@ -75,9 +75,29 @@ tr.td td:first-child{border-radius:0 12px 12px 0;color:var(--dark)}tr.td td:last
 .q button,.sheet a{background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark);font-weight:700;padding:11px 26px}
 .q small{color:var(--mut);font-size:13.5px;line-height:1.7}
 nav{flex:none;display:flex;gap:6px;padding:6px;background:rgba(13,21,38,.72);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid var(--line);border-radius:99px;box-shadow:0 14px 40px rgba(0,0,0,.4)}
-nav a{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:clamp(8px,1.3vh,11px) 0;font-size:15px;color:var(--mut);text-decoration:none;border-radius:99px}
+nav a{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:clamp(8px,1.3vh,11px) 0;font-size:14px;color:var(--mut);text-decoration:none;border-radius:99px}
 nav a svg{width:19px;height:19px}
 nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
+.seg{flex:none;display:flex;gap:4px;padding:5px;border-radius:99px;background:var(--card);border:1px solid var(--line);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.seg button{flex:1;padding:8px 0;font-size:13.5px;background:none;color:var(--mut)}
+.seg button.on{background:var(--gold);color:var(--dark);font-weight:700}
+.dz{text-align:center}
+#tv,#rv{flex:1;min-height:0;display:none;flex-direction:column;align-items:center;gap:1.4vh;width:100%}
+#tv.on,#rv.on{display:flex}
+#tph{flex:none;font-size:clamp(22px,4.2vh,32px);font-weight:600;line-height:1.6}
+.tw{flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center;container-type:size}
+#tb{width:min(64vw,34vh);aspect-ratio:1;border-radius:50%;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink);
+ background:radial-gradient(circle at 50% 26%,#4a5f80 0,#24344f 50%,#131e33 100%);border:4px solid var(--gold);box-shadow:0 18px 50px rgba(0,0,0,.5);transition:transform .08s}
+@supports (width:1cqw){#tb{width:min(100cqw,100cqh,300px)}}
+#tb:active{transform:scale(.96)}
+#tb.done{background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark)}
+#tb b{font-size:clamp(46px,9vh,76px);font-weight:300;line-height:1.1}#tb span{font-size:15px;opacity:.75}
+.tr{flex:none;display:flex;gap:8px;width:100%}.tr button{flex:1;padding:10px 0}
+#zh{flex:none;font-size:13.5px;color:var(--gold)}
+#rv .scroll{width:100%;padding:0 4px}
+#ztext{font-size:clamp(17px,2.5vh,20px);line-height:2.15;white-space:pre-line}
+#zref{display:block;color:var(--mut);font-size:12.5px;line-height:1.8;margin-top:10px}
+#zc{flex:2;background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark);font-weight:700;font-size:18px}
 .sheet{display:none;position:fixed;inset:0;z-index:9;background:rgba(5,10,20,.6);align-items:flex-end;justify-content:center}
 .sheet.on{display:flex}
 .sheet>div{width:100%;max-width:520px;background:#16233b;border:1px solid var(--line);border-radius:28px 28px 0 0;padding:22px 20px calc(env(safe-area-inset-bottom) + 18px);text-align:center}
@@ -141,10 +161,27 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
  </div>
 </section>
 
+<section id="dhikr">
+ <div class="seg" id="seg"><button data-k="t">السبحة</button><button data-k="p">بعد الصلاة</button><button data-k="s">الصباح</button><button data-k="m">المساء</button></div>
+ <div class="box dz">
+  <div id="tv">
+   <p id="tph"></p>
+   <div class="tw"><button id="tb"><b class="n" id="tcount">0</b><span id="ttarget"></span></button></div>
+   <div class="tr"><button id="treset">تصفير</button><button id="tnext">الذكر التالي</button></div>
+  </div>
+  <div id="rv">
+   <p id="zh"></p>
+   <div class="scroll"><p id="ztext"></p><small id="zref"></small></div>
+   <div class="tr"><button id="zprev">السابق</button><button id="zc" class="n"></button><button id="znext">التالي</button></div>
+  </div>
+ </div>
+</section>
+
 <nav>
  <a href="#today" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>اليوم</a>
  <a href="#month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>الشهر</a>
  <a href="#qibla"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>القبلة</a>
+ <a href="#dhikr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="2"/><circle cx="18" cy="9" r="2"/><circle cx="18" cy="16" r="2"/><circle cx="12" cy="20" r="2"/><circle cx="6" cy="16" r="2"/><circle cx="6" cy="9" r="2"/></svg>الذكر</a>
 </nav>
 
 <div class="sheet" id="s-rm"><div><div id="rmd"></div><button data-close>رجوع</button></div></div>
@@ -158,6 +195,7 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
 </div></div>
 
 <script src="data.js"></script>
+<script src="adhkar.js"></script>
 <script>
 (function(){
 var D=window.SALAH, $=function(i){return document.getElementById(i)};
@@ -258,7 +296,34 @@ $('qbtn').onclick=function(){
  if(!E){$('qhelp').textContent='هذا الجهاز ما بيه بوصلة. القبلة بتوركو باتجاه الجنوب الشرقي.';return}
  if(E.requestPermission)E.requestPermission().then(function(r){if(r=='granted')go()}).catch(function(){});else go()};
 
-// التنقل بين الصفحات الثلاث
+// السبحة: كل ضغطة تسبيحة، ومن يكمل العدد تنتقل للذكر الي بعده
+var TS=[['سُبْحَانَ اللَّهِ',33],['الْحَمْدُ لِلَّهِ',33],['اللَّهُ أَكْبَرُ',33],['لَا إِلَهَ إِلَّا اللَّهُ',100],['أَسْتَغْفِرُ اللَّهَ',100],['عدّاد حر',0]];
+var ts={i:0,c:0},busy=false;try{var o=JSON.parse(localStorage.getItem('tasbih'));if(o&&TS[o.i])ts=o}catch(e){}
+function tsave(){try{localStorage.setItem('tasbih',JSON.stringify(ts))}catch(e){}}
+function tdraw(){var p=TS[ts.i];$('tph').textContent=p[0];$('tcount').textContent=ts.c;$('ttarget').textContent=p[1]?'من '+p[1]:'اضغط وعدّ';tsave()}
+function tgo(){ts.i=(ts.i+1)%TS.length;ts.c=0;busy=false;$('tb').classList.remove('done');tdraw()}
+$('tb').onclick=function(){if(busy)return;ts.c++;var p=TS[ts.i];tdraw();
+ if(p[1]&&ts.c>=p[1]){busy=true;$('tb').classList.add('done');if(navigator.vibrate)navigator.vibrate(200);setTimeout(tgo,900)}};
+$('treset').onclick=function(){if(!busy){ts.c=0;tdraw()}};
+$('tnext').onclick=function(){if(!busy)tgo()};
+
+// قارئ الأذكار: ذكر واحد بالشاشة، والزر الذهبي يعدّ التكرار وينتقل للي بعده
+var A=window.ADHKAR||{},rd={k:'p',i:0,c:0};
+function rdraw(){var L=A[rd.k],z=L[rd.i],end=rd.i==L.length-1&&rd.c>=z[1];
+ $('zh').textContent=end?'خلصت الأذكار، تقبّل الله 🤲':'ذكر '+(rd.i+1)+' من '+L.length;
+ $('ztext').textContent=z[0];$('zref').textContent=z[2];$('zc').textContent=rd.c+' / '+z[1]}
+function rmove(n){var L=A[rd.k],i=rd.i+n;if(i<0||i>=L.length)return;rd.i=i;rd.c=0;rdraw();$('ztext').parentNode.scrollTop=0}
+$('zc').onclick=function(){var L=A[rd.k],z=L[rd.i];if(rd.c>=z[1])return;rd.c++;
+ if(rd.c>=z[1]&&rd.i<L.length-1){rdraw();setTimeout(function(){rmove(1)},350)}else rdraw()};
+$('zprev').onclick=function(){rmove(-1)};$('znext').onclick=function(){rmove(1)};
+function mode(k){document.querySelectorAll('#seg button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-k')==k)});
+ $('tv').classList.toggle('on',k=='t');$('rv').classList.toggle('on',k!='t');
+ if(k=='t')tdraw();else{rd={k:k,i:0,c:0};rdraw();$('ztext').parentNode.scrollTop=0}}
+document.querySelectorAll('#seg button').forEach(function(b){b.onclick=function(){mode(b.getAttribute('data-k'))}});
+// أول فتحة: الصباح بين الفجر والظهر، المساء بين العصر والعشاء، وغيرها السبحة
+(function(){var w=now(),m=w.hour*60+w.minute,T=times(w.year,w.month,w.day);mode(m>=T[0]&&m<T[2]?'s':m>=T[3]&&m<T[5]?'m':'t')})();
+
+// التنقل بين الصفحات
 function show(){var id=(location.hash||'#today').slice(1);if(!$(id))id='today';
  document.querySelectorAll('section').forEach(function(s){s.classList.toggle('on',s.id==id)});
  document.querySelectorAll('nav a').forEach(function(a){a.classList.toggle('on',a.getAttribute('href')=='#'+id)});var r=id=='month'&&document.querySelector('tr.td');if(r)r.scrollIntoView({block:'center'})}
