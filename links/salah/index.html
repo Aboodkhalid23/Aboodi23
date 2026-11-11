@@ -13,15 +13,15 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-180.png">
 <style>
-@font-face{font-family:Kufi;font-weight:500;font-display:swap;src:url(fonts/kufi-500.woff2) format("woff2")}
-@font-face{font-family:Kufi;font-weight:700;font-display:swap;src:url(fonts/kufi-700.woff2) format("woff2")}
+@font-face{font-family:UI;font-weight:500;font-display:swap;src:url(fonts/ui-500.woff2) format("woff2")}
+@font-face{font-family:UI;font-weight:700;font-display:swap;src:url(fonts/ui-700.woff2) format("woff2")}
 @font-face{font-family:Amiri;font-weight:400;font-display:swap;src:url(fonts/amiri.woff2) format("woff2")}
 :root{--bg:#16233b;--card:rgba(13,21,38,.58);--card2:rgba(255,255,255,.09);--ink:#f4f3ee;--mut:#b3bfd0;--line:rgba(255,255,255,.13);--gold:#f2c14e;--gold2:#d99a2b;--dark:#17140a}
 *{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 html,body{height:100%;overflow:hidden;overscroll-behavior:none;touch-action:manipulation;background:var(--bg)}
 /* الصفحة ثابتة على گد الشاشة: ما تصعد ولا تنزل */
 body{position:fixed;inset:0;height:100vh;height:100dvh;display:flex;flex-direction:column;gap:1.4vh;color:var(--ink);
- font-family:Kufi,system-ui,-apple-system,"Segoe UI","Noto Sans Arabic",sans-serif;font-weight:500;
+ font-family:UI,system-ui,-apple-system,"Segoe UI","Noto Sans Arabic",sans-serif;font-weight:500;
  padding:calc(env(safe-area-inset-top) + 1.2vh) 16px calc(env(safe-area-inset-bottom) + 1.4vh);max-width:520px;margin:auto}
 body::before{content:"";position:fixed;inset:0;z-index:-2;background:
  radial-gradient(1.6px 1.6px at 12% 9%,#fff 50%,transparent 51%),radial-gradient(1.2px 1.2px at 78% 6%,#fff 50%,transparent 51%),
@@ -76,7 +76,7 @@ tr.td td:first-child{border-radius:0 12px 12px 0;color:var(--dark)}tr.td td:last
 .qw svg{height:100%;max-height:300px;max-width:100%;aspect-ratio:1;filter:drop-shadow(0 18px 40px rgba(0,0,0,.5))}
 .q p{font-size:18px}.q p b{color:var(--gold)}
 .q button,.sheet a{background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark);font-weight:700;padding:11px 26px}
-.q small{color:var(--mut);font-size:15.5px;line-height:1.7}
+.q small{color:var(--mut);font-size:14px;line-height:1.7}
 nav{flex:none;display:flex;gap:6px;padding:6px;background:rgba(13,21,38,.72);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid var(--line);border-radius:99px;box-shadow:0 14px 40px rgba(0,0,0,.4)}
 nav a{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:clamp(8px,1.3vh,11px) 0;font-size:14px;color:var(--mut);text-decoration:none;border-radius:99px}
 nav a svg{width:19px;height:19px}
@@ -98,10 +98,10 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
 .tr{flex:none;display:flex;gap:8px;width:100%}.tr button{flex:1;padding:10px 0}
 #zh{flex:none;font-size:13.5px;color:var(--gold)}
 #rv .scroll{width:100%;padding:0 4px}
-#ztext{font-size:clamp(20px,3vh,24px);line-height:2.1;white-space:pre-line}
-#zref{display:block;color:var(--mut);font-size:14.5px;line-height:1.8;margin-top:10px}
+#ztext{font-size:clamp(21px,3.1vh,25px);line-height:2.05;white-space:pre-line}
+#zref{display:block;color:var(--mut);font-size:13.5px;line-height:1.8;margin-top:10px}
 #zc{flex:2;background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark);font-weight:700;font-size:18px}
-.sheet p,.sheet ol,.q small,#zref,#ztext{font-family:Amiri,"Geeza Pro",serif}
+#ztext{font-family:Amiri,"Geeza Pro",serif}
 .sheet select{font:inherit;width:100%;margin:6px 0 2px;padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:#101b30;color:var(--ink);-webkit-user-select:auto;user-select:auto}
 .sheet label{display:block;text-align:right;font-size:13.5px;color:var(--mut);margin-top:10px}
 .sheet .gold{background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark);font-weight:700}
@@ -111,7 +111,7 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
 .sheet.on{display:flex}
 .sheet>div{width:100%;max-width:520px;background:#16233b;border:1px solid var(--line);border-radius:28px 28px 0 0;padding:22px 20px calc(env(safe-area-inset-bottom) + 18px);text-align:center}
 .sheet h2{font-size:20px;margin-bottom:10px}
-.sheet p,.sheet ol{font-size:16.5px;color:var(--mut);line-height:1.85}
+.sheet p,.sheet ol{font-size:15px;color:var(--mut);line-height:1.85}
 .sheet ol{text-align:right;padding:0 20px 0 0;margin:10px 0}
 .sheet a{display:block;border-radius:99px;text-decoration:none;margin:14px 0 4px}
 .sheet button{margin-top:14px;width:100%}
@@ -246,7 +246,7 @@ function times(y,m,d){
  if(LOC.m=='MAKKAH'&&HF&&hpart(base+432e5).month==9)T[5]+=30;      // برمضان العشاء بمكة يتأخر نص ساعة
  for(var i=1;i<6;i++)while(T[i]<T[i-1])T[i]+=1440;
  return T}
-function hm(v){v=((v%1440)+1440)%1440;var h=Math.floor(v/60),mi=v%60;return h+':'+(mi<10?'0':'')+mi}
+function hm(v){v=((v%1440)+1440)%1440;var h=Math.floor(v/60)%12||12,mi=v%60;return h+':'+(mi<10?'0':'')+mi}
 function shift(y,m,d,n){var t=new Date(Date.UTC(y,m-1,d+n));return [t.getUTCFullYear(),t.getUTCMonth()+1,t.getUTCDate()]}
 function p2(n){return (n<10?'0':'')+n}
 

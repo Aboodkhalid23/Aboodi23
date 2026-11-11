@@ -1,5 +1,5 @@
 // يخلي الصفحة تشتغل بدون إنترنت: يرجّع النسخة المحفوظة فوراً ويحدّثها من الشبكة بالخلفية
-const C = 'salah-v8', FILES = ['./', 'data.js', 'adhkar.js', 'calc.js', 'fonts/amiri.woff2', 'fonts/kufi-500.woff2', 'fonts/kufi-700.woff2', 'manifest.webmanifest', 'icon-180.png', 'icon-512.png', 'takbir.png'];
+const C = 'salah-v9', FILES = ['./', 'data.js', 'adhkar.js', 'calc.js', 'fonts/amiri.woff2', 'fonts/ui-500.woff2', 'fonts/ui-700.woff2', 'manifest.webmanifest', 'icon-180.png', 'icon-512.png', 'takbir.png'];
 self.addEventListener('install', e => e.waitUntil(caches.open(C).then(c => c.addAll(FILES)).then(() => self.skipWaiting())));
 self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch', e => {
