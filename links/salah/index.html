@@ -13,12 +13,15 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-180.png">
 <style>
+@font-face{font-family:Kufi;font-weight:500;font-display:swap;src:url(fonts/kufi-500.woff2) format("woff2")}
+@font-face{font-family:Kufi;font-weight:700;font-display:swap;src:url(fonts/kufi-700.woff2) format("woff2")}
+@font-face{font-family:Amiri;font-weight:400;font-display:swap;src:url(fonts/amiri.woff2) format("woff2")}
 :root{--bg:#16233b;--card:rgba(13,21,38,.58);--card2:rgba(255,255,255,.09);--ink:#f4f3ee;--mut:#b3bfd0;--line:rgba(255,255,255,.13);--gold:#f2c14e;--gold2:#d99a2b;--dark:#17140a}
 *{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 html,body{height:100%;overflow:hidden;overscroll-behavior:none;touch-action:manipulation;background:var(--bg)}
 /* الصفحة ثابتة على گد الشاشة: ما تصعد ولا تنزل */
 body{position:fixed;inset:0;height:100vh;height:100dvh;display:flex;flex-direction:column;gap:1.4vh;color:var(--ink);
- font-family:system-ui,-apple-system,"Segoe UI","Noto Sans Arabic",sans-serif;
+ font-family:Kufi,system-ui,-apple-system,"Segoe UI","Noto Sans Arabic",sans-serif;font-weight:500;
  padding:calc(env(safe-area-inset-top) + 1.2vh) 16px calc(env(safe-area-inset-bottom) + 1.4vh);max-width:520px;margin:auto}
 body::before{content:"";position:fixed;inset:0;z-index:-2;background:
  radial-gradient(1.6px 1.6px at 12% 9%,#fff 50%,transparent 51%),radial-gradient(1.2px 1.2px at 78% 6%,#fff 50%,transparent 51%),
@@ -73,7 +76,7 @@ tr.td td:first-child{border-radius:0 12px 12px 0;color:var(--dark)}tr.td td:last
 .qw svg{height:100%;max-height:300px;max-width:100%;aspect-ratio:1;filter:drop-shadow(0 18px 40px rgba(0,0,0,.5))}
 .q p{font-size:18px}.q p b{color:var(--gold)}
 .q button,.sheet a{background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark);font-weight:700;padding:11px 26px}
-.q small{color:var(--mut);font-size:13.5px;line-height:1.7}
+.q small{color:var(--mut);font-size:15.5px;line-height:1.7}
 nav{flex:none;display:flex;gap:6px;padding:6px;background:rgba(13,21,38,.72);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid var(--line);border-radius:99px;box-shadow:0 14px 40px rgba(0,0,0,.4)}
 nav a{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:clamp(8px,1.3vh,11px) 0;font-size:14px;color:var(--mut);text-decoration:none;border-radius:99px}
 nav a svg{width:19px;height:19px}
@@ -95,14 +98,20 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
 .tr{flex:none;display:flex;gap:8px;width:100%}.tr button{flex:1;padding:10px 0}
 #zh{flex:none;font-size:13.5px;color:var(--gold)}
 #rv .scroll{width:100%;padding:0 4px}
-#ztext{font-size:clamp(17px,2.5vh,20px);line-height:2.15;white-space:pre-line}
-#zref{display:block;color:var(--mut);font-size:12.5px;line-height:1.8;margin-top:10px}
+#ztext{font-size:clamp(20px,3vh,24px);line-height:2.1;white-space:pre-line}
+#zref{display:block;color:var(--mut);font-size:14.5px;line-height:1.8;margin-top:10px}
 #zc{flex:2;background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark);font-weight:700;font-size:18px}
+.sheet p,.sheet ol,.q small,#zref,#ztext{font-family:Amiri,"Geeza Pro",serif}
+.sheet select{font:inherit;width:100%;margin:6px 0 2px;padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:#101b30;color:var(--ink);-webkit-user-select:auto;user-select:auto}
+.sheet label{display:block;text-align:right;font-size:13.5px;color:var(--mut);margin-top:10px}
+.sheet .gold{background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark);font-weight:700}
+#city{color:var(--ink);font-size:1.15em;font-weight:700;background:none;padding:0;border-bottom:1px dashed var(--gold);border-radius:0}
+.inst svg{width:18px;height:18px;vertical-align:-4px}
 .sheet{display:none;position:fixed;inset:0;z-index:9;background:rgba(5,10,20,.6);align-items:flex-end;justify-content:center}
 .sheet.on{display:flex}
 .sheet>div{width:100%;max-width:520px;background:#16233b;border:1px solid var(--line);border-radius:28px 28px 0 0;padding:22px 20px calc(env(safe-area-inset-bottom) + 18px);text-align:center}
 .sheet h2{font-size:20px;margin-bottom:10px}
-.sheet p,.sheet ol{font-size:14.5px;color:var(--mut);line-height:1.85}
+.sheet p,.sheet ol{font-size:16.5px;color:var(--mut);line-height:1.85}
 .sheet ol{text-align:right;padding:0 20px 0 0;margin:10px 0}
 .sheet a{display:block;border-radius:99px;text-decoration:none;margin:14px 0 4px}
 .sheet button{margin-top:14px;width:100%}
@@ -116,8 +125,8 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
  <path d="M130 120l-16 13 13-4 9 9 8-6 12 4zM312 128l-14 10 12-3 8 8 8-5z" fill="#c9d5e3" opacity=".8"/>
  <path d="M0 200v-18l60-20 54 18 70-22 66 20 60-16 90 22v16z" fill="#0f1a2c"/>
 </svg>
-<div class="inst" id="inst"><span>📲 حتى يصير تطبيق: اضغط زر المشاركة بسفاري، وبعدها «إضافة إلى الشاشة الرئيسية»</span><button onclick="this.parentNode.classList.remove('on')">تمام</button></div>
-<header><img class="tk" src="takbir.png" alt="الله أكبر"><p><b>توركو</b> · <span id="date"></span></p></header>
+<div class="inst" id="inst"><span>📲 حتى يصير تطبيق على شاشتك: اضغط زر المشاركة <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M8 7l4-4 4 4M6 11H5v10h14V11h-1"/></svg> جوه، وبعدها «إضافة إلى الشاشة الرئيسية»، وافتحه من أيقونته</span><button onclick="this.parentNode.classList.remove('on')">تمام</button></div>
+<header><img class="tk" src="takbir.png" alt="الله أكبر"><p><button id="city" data-open="s-loc">📍 توركو</button> · <span id="date"></span></p></header>
 
 <section id="today" class="on">
  <div class="ow"><div class="orb">
@@ -188,13 +197,26 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
 <div class="sheet" id="s-al"><div>
  <h2>⏰ تنبيه قبل كل صلاة بنص ساعة</h2>
  <p>التنبيه يجيك من تقويم الجهاز نفسه، حتى لو التطبيق مسكّر وبدون إنترنت.</p>
- <a id="cal" href="salah.ics">أضف التنبيهات للتقويم</a>
- <ol><li style="all:revert">اضغط الزر الذهبي، وبعدها اضغط «اشتراك».</li><li style="all:revert">إذا ما إجاك تنبيه: افتح الإعدادات، التقويم، الحسابات، التقاويم المشترك بيها، مواقيت الصلاة، وطفّي خيار «إزالة التنبيهات».</li></ol>
+ <p id="alno" style="display:none">تنبيهات التقويم متوفرة حالياً لمدينة توركو بس، لأنها مبنية على جدول مسجدها.</p>
+ <div id="alyes"><a id="cal" href="salah.ics">أضف التنبيهات للتقويم</a>
+ <ol><li style="all:revert">اضغط الزر الذهبي، وبعدها اضغط «اشتراك».</li><li style="all:revert">إذا ما إجاك تنبيه: افتح الإعدادات، التقويم، الحسابات، التقاويم المشترك بيها، مواقيت الصلاة، وطفّي خيار «إزالة التنبيهات».</li></ol></div>
  <p id="src"></p>
+ <button data-close>رجوع</button>
+</div></div>
+<div class="sheet" id="s-loc"><div>
+ <h2>📍 الموقع وطريقة الحساب</h2>
+ <p id="locinfo"></p>
+ <button class="gold" id="locbtn">حدّد موقعي تلقائياً</button>
+ <div id="locset">
+  <label>طريقة الحساب (اختار الي تطابق مسجدك)</label><select id="msel"></select>
+  <label>وقت العصر</label><select id="asel"><option value="0">الجمهور (شافعي، مالكي، حنبلي)</option><option value="1">حنفي</option></select>
+ </div>
+ <button id="loct">استعمل جدول مسجد توركو</button>
  <button data-close>رجوع</button>
 </div></div>
 
 <script src="data.js"></script>
+<script src="calc.js"></script>
 <script src="adhkar.js"></script>
 <script>
 (function(){
@@ -212,13 +234,24 @@ function wall(ms){var o={};fmt.formatToParts(new Date(ms)).forEach(function(p){o
 function dst(y,m,d){var u=Date.UTC(y,m-1,d,10),w=wall(u);return (w.hour-10)*60-120}
 function idx(m,d){if(m==2&&d==29)d=28;return CUM[m-1]+d-1}
 // أوقات يوم معين بالدقايق من نص الليل
-function times(y,m,d){var a=dst(y,m,d);return D.t[idx(m,d)].map(function(v){return v+a})}
+var HF;try{HF=new Intl.DateTimeFormat('en-u-ca-islamic-umalqura',{day:'numeric',month:'numeric',timeZone:'UTC'})}catch(e){}
+function hpart(u){var o={};HF.formatToParts(new Date(u)).forEach(function(p){o[p.type]=parseInt(p.value)});return o}
+// LOC فارغ = جدول مسجد توركو. غير هيج = موقع المستخدم والأوقات تنحسب فلكياً بتوقيت جهازه
+var TURKU=[60.4545,22.2725], LOC=null;
+try{var sl=JSON.parse(localStorage.getItem('loc'));if(sl&&sl.la!=null&&PT.M[sl.m])LOC=sl}catch(e){}
+function times(y,m,d){
+ if(!LOC){var a=dst(y,m,d);return D.t[idx(m,d)].map(function(v){return v+a})}
+ var mid=new Date(y,m-1,d).getTime(), base=Date.UTC(y,m-1,d);
+ var T=PT.times(y,m,d,LOC.la,LOC.lo,LOC.m,LOC.h).map(function(h){return Math.round((base+h*36e5-mid)/6e4)});
+ if(LOC.m=='MAKKAH'&&HF&&hpart(base+432e5).month==9)T[5]+=30;      // برمضان العشاء بمكة يتأخر نص ساعة
+ for(var i=1;i<6;i++)while(T[i]<T[i-1])T[i]+=1440;
+ return T}
 function hm(v){v=((v%1440)+1440)%1440;var h=Math.floor(v/60),mi=v%60;return h+':'+(mi<10?'0':'')+mi}
 function shift(y,m,d,n){var t=new Date(Date.UTC(y,m-1,d+n));return [t.getUTCFullYear(),t.getUTCMonth()+1,t.getUTCDate()]}
 function p2(n){return (n<10?'0':'')+n}
 
 function hijri(y,m,d){
- if(y==D.y&&D.hm!=null){var i=idx(m,d),mo=D.hm,yr=D.hy;   // الشهر الهجري مال أول يوم بالسنة حسب جدول المسجد
+ if(!LOC&&y==D.y&&D.hm!=null){var i=idx(m,d),mo=D.hm,yr=D.hy;   // الشهر الهجري مال أول يوم بالسنة حسب جدول المسجد
   for(var k=1;k<=i;k++)if(D.h[k]<D.h[k-1]){mo++;if(mo>11){mo=0;yr++}}
   return D.h[i]+' '+HM[mo]+' '+yr}
  try{var o={};new Intl.DateTimeFormat('en-u-ca-islamic-umalqura',{day:'numeric',month:'numeric',year:'numeric',timeZone:'UTC'})
@@ -228,12 +261,11 @@ function hijri(y,m,d){
 
 var q=new URLSearchParams(location.search).get('now');           // للتجربة: ?now=2026-06-21T23:30
 var skew=q?Date.UTC.apply(null,q.split(/\D/).map(function(v,i){return i==1?v-1:+v}))-Date.now():0;
-function now(){if(!q)return wall(Date.now());var t=new Date(Date.now()+skew);
+function now(){if(!q){if(!LOC)return wall(Date.now());var n=new Date();return {year:n.getFullYear(),month:n.getMonth()+1,day:n.getDate(),hour:n.getHours(),minute:n.getMinutes(),second:n.getSeconds()}}
+ var t=new Date(Date.now()+skew);
  return {year:t.getUTCFullYear(),month:t.getUTCMonth()+1,day:t.getUTCDate(),hour:t.getUTCHours(),minute:t.getUTCMinutes(),second:t.getUTCSeconds()}}
 
 // شگد باقي على رمضان (بتقويم أم القرى، وبداية الشهر الفعلية تتأكد برؤية الهلال)
-var HF;try{HF=new Intl.DateTimeFormat('en-u-ca-islamic-umalqura',{day:'numeric',month:'numeric',timeZone:'UTC'})}catch(e){}
-function hpart(u){var o={};HF.formatToParts(new Date(u)).forEach(function(p){o[p.type]=parseInt(p.value)});return o}
 function ramadan(w){
  if(!HF)return;var u=Date.UTC(w.year,w.month-1,w.day,12),h=hpart(u);
  if(h.month==9){$('rm').innerHTML='🌙 اليوم <b class="n">'+h.day+'</b> رمضان';$('rmd').innerHTML='<h2>🌙 رمضان مبارك</h2><p>اليوم '+h.day+' رمضان. تقبّل الله صيامكم وقيامكم.</p>';return}
@@ -263,7 +295,7 @@ function tick(){
  $('date').textContent=WD[wd]+' '+w.day+' '+GM[w.month-1]+' · '+hijri(w.year,w.month,w.day);
  $('list').innerHTML=T.map(function(v,i){return '<li class="'+(i==1?'s':'')+(nx.today&&nx.i==i?' hot':'')+'"><span>'+NAMES[i]+'</span><b class="n">'+hm(v)+'</b></li>'}).join('');
  ramadan(w);
- $('src').textContent='الأوقات من جدول مسجد توركو'+(w.year==D.y?'':'، محسوبة على جدول سنة '+D.y+' وممكن تفرق دقيقة');
+ $('src').textContent=LOC?'الأوقات محسوبة فلكياً لموقعك بطريقة: '+PT.M[LOC.m].n+'. ممكن تفرق دقايق عن مسجدك، وتگدر تغيّر الطريقة من اسم المدينة فوگ.':'الأوقات من جدول مسجد توركو'+(w.year==D.y?'':'، محسوبة على جدول سنة '+D.y+' وممكن تفرق دقيقة');
 }
 tick();setInterval(tick,1000);
 
@@ -280,11 +312,14 @@ $('prev').onclick=function(){if(--mm<1){mm=12;my--}month()};
 $('nxt').onclick=function(){if(++mm>12){mm=1;my++}month()};
 month();
 
-// القبلة: الزاوية من الشمال باتجاه عقارب الساعة، من مسجد توركو للكعبة
-var R=Math.PI/180, la=60.4545*R, lo=22.2725*R, kla=21.4225*R, klo=39.8262*R;
-var qb=(Math.atan2(Math.sin(klo-lo),Math.cos(la)*Math.tan(kla)-Math.sin(la)*Math.cos(klo-lo))/R+360)%360;
-$('needle').setAttribute('transform','rotate('+qb.toFixed(1)+')');
-$('qtext').innerHTML='القبلة على <b class="n">'+Math.round(qb)+'°</b> من الشمال';
+// القبلة: الزاوية من الشمال باتجاه عقارب الساعة، من موقع المستخدم للكعبة
+var R=Math.PI/180, qb=0, DIRS=['الشمال','الشمال الشرقي','الشرق','الجنوب الشرقي','الجنوب','الجنوب الغربي','الغرب','الشمال الغربي'];
+function qset(){var la=(LOC?LOC.la:TURKU[0])*R, lo=(LOC?LOC.lo:TURKU[1])*R, kla=21.4225*R, klo=39.8262*R;
+ qb=(Math.atan2(Math.sin(klo-lo),Math.cos(la)*Math.tan(kla)-Math.sin(la)*Math.cos(klo-lo))/R+360)%360;
+ $('needle').setAttribute('transform','rotate('+qb.toFixed(1)+')');
+ $('qtext').innerHTML='القبلة على <b class="n">'+Math.round(qb)+'°</b> من الشمال';
+ if($('qbtn').style.display!='none')$('qhelp').textContent='بدون بوصلة: القبلة من مكانك باتجاه '+DIRS[Math.round(qb/45)%8]+'.'}
+qset();
 function turn(e){var hd=e.webkitCompassHeading!=null?e.webkitCompassHeading:(e.absolute&&e.alpha!=null?360-e.alpha:null);
  if(hd==null)return;$('dial').setAttribute('transform','rotate('+(-hd).toFixed(1)+')');
  var off=Math.abs(((qb-hd+540)%360)-180);
@@ -330,6 +365,35 @@ function show(){var id=(location.hash||'#today').slice(1);if(!$(id))id='today';
 addEventListener('hashchange',show);show();
 // رابط الاشتراك بالتقويم (webcal يفتح تطبيق التقويم مباشرة)
 if(location.protocol=='https:')$('cal').href='webcal://'+location.host+location.pathname.replace(/[^/]*$/,'')+'salah.ics';
+// ---------- الموقع ----------
+function km(a,b,c,d){var x=(d-b)*R*Math.cos((a+c)/2*R),y=(c-a)*R;return Math.sqrt(x*x+y*y)*6371}
+function locui(msg){
+ $('city').textContent='📍 '+(LOC?LOC.name:'توركو');
+ $('locinfo').textContent=msg||(LOC?'موقعك: '+LOC.name+'. الأوقات محسوبة فلكياً، وممكن تفرق دقايق عن مسجدك. إذا تفرق، جرّب طريقة حساب ثانية.':'الأوقات هسه من جدول مسجد توركو الرسمي. إذا انت بمدينة ثانية اضغط الزر الذهبي.');
+ $('locset').style.display=LOC?'':'none';$('loct').style.display=LOC?'':'none';
+ $('alno').style.display=LOC?'':'none';$('alyes').style.display=LOC?'none':'';
+ if(LOC){$('msel').value=LOC.m;$('asel').value=LOC.h?1:0}}
+function locsave(){try{localStorage.setItem('loc',JSON.stringify(LOC||{turku:1}))}catch(e){}
+ lastKey='';var w=now();my=w.year;mm=w.month;tick();month();qset();locui()}
+function locate(){
+ if(!navigator.geolocation){locui('هذا الجهاز ما يدعم تحديد الموقع.');return}
+ locui('دا أحدد موقعك...');
+ navigator.geolocation.getCurrentPosition(function(p){var la=p.coords.latitude,lo=p.coords.longitude;
+  if(km(la,lo,TURKU[0],TURKU[1])<30){LOC=null;locsave();return}                // قريب من توركو: جدول المسجد أدق
+  var done=function(name,cc){LOC={la:+la.toFixed(4),lo:+lo.toFixed(4),name:name||'موقعي',cc:cc||'',m:PT.forCountry(cc),h:PT.hanafi(cc)};locsave()};
+  fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?latitude='+la.toFixed(3)+'&longitude='+lo.toFixed(3)+'&localityLanguage=ar')
+   .then(function(r){return r.json()}).then(function(j){done(j.city||j.locality||j.principalSubdivision,j.countryCode)}).catch(function(){done()});
+ },function(){locui('ما گدرت أحدد موقعك. اسمح للتطبيق باستعمال الموقع من إعدادات الجهاز، وجرّب مرة ثانية.')},{timeout:15000,maximumAge:6e5})}
+Object.keys(PT.M).forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=PT.M[k].n;$('msel').appendChild(o)});
+$('msel').onchange=function(){LOC.m=this.value;locsave()};
+$('asel').onchange=function(){LOC.h=this.value=='1';locsave()};
+$('locbtn').onclick=locate;
+$('loct').onclick=function(){LOC=null;locsave()};
+locui();
+// أول فتحة: نسأل عن الموقع تلقائياً
+var asked;try{asked=localStorage.getItem('loc')}catch(e){}
+if(!asked&&(!q||/[?&]geo/.test(location.search)))locate();
+
 // النوافذ الصغيرة (التنبيه، رمضان)
 document.querySelectorAll('[data-open]').forEach(function(b){b.onclick=function(){$(b.getAttribute('data-open')).classList.add('on')}});
 document.querySelectorAll('.sheet').forEach(function(x){x.onclick=function(e){if(e.target==x||e.target.hasAttribute('data-close'))x.classList.remove('on')}});
