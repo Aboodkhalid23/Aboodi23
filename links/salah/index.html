@@ -135,6 +135,9 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
 .sheet input{font:inherit;font-size:16px;flex:1;min-width:0;padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:#101b30;color:var(--ink);-webkit-user-select:text;user-select:text}
 .srch{display:flex;gap:8px;margin-top:12px}.srch button{margin:0;width:auto;flex:none}
 #sres button{margin-top:8px;text-align:right;border-radius:14px;font-weight:500}
+.cr{display:flex;align-items:center;justify-content:space-between;padding:7px 4px;border-bottom:1px solid var(--line)}
+.cr b{font-size:18px}.cr input{flex:none;width:178px;text-align:center;font-size:19px;font-weight:700;direction:ltr}
+body.wait #list,body.wait .ow,body.wait .row{opacity:.25}
 .sheet label{display:block;text-align:right;font-size:13.5px;color:var(--mut);margin-top:10px}
 .sheet .gold{background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark);font-weight:700}
 #city{color:var(--ink);font-size:1.15em;font-weight:700;background:none;padding:0;border-bottom:1px dashed var(--gold);border-radius:0}
@@ -173,7 +176,7 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
   </div>
  </div></div>
  <ul id="list"></ul>
- <div class="row"><button class="pill" id="rm" data-open="s-rm"></button><button class="pill" data-open="s-al">⏰ تنبيه قبل الصلاة</button></div>
+ <div class="row"><button class="pill" id="rm" data-open="s-rm"></button><button class="pill" id="p2"></button></div>
 </section>
 
 <section id="month">
@@ -228,18 +231,18 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
 </nav>
 
 <div class="sheet" id="s-rm"><div class="scroll"><div id="rmd"></div><button data-close>رجوع</button></div></div>
-<div class="sheet" id="s-al"><div class="scroll">
- <h2>⏰ تنبيه قبل كل صلاة بنص ساعة</h2>
- <p>التنبيه يجيك من تقويم الجهاز نفسه، حتى لو التطبيق مسكّر وبدون إنترنت.</p>
- <p id="alno" style="display:none">تنبيهات التقويم متوفرة حالياً لمدينة توركو بس، لأنها مبنية على جدول مسجدها.</p>
- <div id="alyes"><a id="cal" href="salah.ics">أضف التنبيهات للتقويم</a>
- <ol><li style="all:revert">اضغط الزر الذهبي، وبعدها اضغط «اشتراك».</li><li style="all:revert">إذا ما إجاك تنبيه: افتح الإعدادات، التقويم، الحسابات، التقاويم المشترك بيها، مواقيت الصلاة، وطفّي خيار «إزالة التنبيهات».</li></ol></div>
- <p id="src"></p>
+<div class="sheet" id="s-cal"><div class="scroll">
+ <h2>🕌 طابق الأوقات ويا مسجدك</h2>
+ <p>شوف أوقات اليوم بلوحة مسجدك، واكتبها هنا. تسويها مرة وحدة، وبعدها التطبيق يمشي على أوقات مسجدك كل السنة.</p>
+ <div id="calrows"></div>
+ <button class="gold" id="calsave">حفظ</button>
+ <button id="calreset">رجّع الحساب الأصلي</button>
  <button data-close>رجوع</button>
 </div></div>
 <div class="sheet" id="s-loc"><div class="scroll">
  <h2>📍 الموقع وطريقة الحساب</h2>
  <p id="locinfo"></p>
+ <p id="src" style="font-size:13px"></p>
  <button class="gold" id="locbtn">حدّد موقعي تلقائياً</button>
  <div class="srch"><input id="sq" type="search" placeholder="أو اكتب اسم مدينتك" enterkeyhint="search" autocomplete="off"><button id="sgo">بحث</button></div>
  <div id="sres"></div>
@@ -256,7 +259,7 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
 <script src="adhkar.js"></script>
 <script>
 (function(){
-var VERSION='15';
+var VERSION='16';
 var $=function(i){return document.getElementById(i)};
 // جداول المساجد الرسمية الي عدنا. الي قريب من وحدة منها (30 كم) ياخذ أوقاتها بالدقيقة، والباقي ينحسبله فلكياً
 if(window.HEL)window.HEL.y=window.SALAH.y;
@@ -282,12 +285,16 @@ function hpart(u){var o={};HF.formatToParts(new Date(u)).forEach(function(p){o[p
 // LOC فارغ = جدول مسجد توركو. غير هيج = موقع المستخدم والأوقات تنحسب فلكياً بتوقيت جهازه
 var LOC=null;
 try{var sl=JSON.parse(localStorage.getItem('loc'));if(sl&&sl.la!=null&&PT.M[sl.m])LOC=sl;else if(sl&&sl.tb)settb(sl.tb)}catch(e){}
+function calc(y,m,d,k,h){
+ var mid=new Date(y,m-1,d).getTime(), base=Date.UTC(y,m-1,d);
+ var T=PT.times(y,m,d,LOC.la,LOC.lo,k,h).map(function(v){return Math.round((base+v*36e5-mid)/6e4)});
+ if(k=='MAKKAH'&&HF&&hpart(base+432e5).month==9)T[5]+=30;      // برمضان العشاء بمكة يتأخر نص ساعة
+ for(var i=1;i<6;i++)while(T[i]<T[i-1])T[i]+=1440;
+ return T}
 function times(y,m,d){
  if(!LOC){var a=dst(y,m,d);return D.t[idx(m,d)].map(function(v){return v+a})}
- var mid=new Date(y,m-1,d).getTime(), base=Date.UTC(y,m-1,d);
- var T=PT.times(y,m,d,LOC.la,LOC.lo,LOC.m,LOC.h).map(function(h){return Math.round((base+h*36e5-mid)/6e4)});
- if(LOC.m=='MAKKAH'&&HF&&hpart(base+432e5).month==9)T[5]+=30;      // برمضان العشاء بمكة يتأخر نص ساعة
- for(var i=1;i<6;i++)while(T[i]<T[i-1])T[i]+=1440;
+ var T=calc(y,m,d,LOC.m,LOC.h);
+ if(LOC.o)T=T.map(function(v,i){return v+(LOC.o[i]||0)});      // دقايق المطابقة ويا مسجد المستخدم
  return T}
 function hm(v){v=((v%1440)+1440)%1440;var h=Math.floor(v/60)%12||12,mi=v%60;return h+':'+(mi<10?'0':'')+mi}
 function shift(y,m,d,n){var t=new Date(Date.UTC(y,m-1,d+n));return [t.getUTCFullYear(),t.getUTCMonth()+1,t.getUTCDate()]}
@@ -434,25 +441,24 @@ function show(){var id=(location.hash||'#today').slice(1);if(!$(id))id='today';
  document.querySelectorAll('nav a').forEach(function(a){a.classList.toggle('on',a.getAttribute('href')=='#'+id)});var r=id=='month'&&document.querySelector('tr.td');if(r)r.scrollIntoView({block:'center'});if(id=='dhikr')mode('menu')}
 addEventListener('hashchange',show);show();
 // رابط الاشتراك بالتقويم (webcal يفتح تطبيق التقويم مباشرة)
-if(location.protocol=='https:')$('cal').href='webcal://'+location.host+location.pathname.replace(/[^/]*$/,'')+'salah.ics';
 // ---------- الموقع ----------
 // src: gps = من الجهاز، ip = تقريبي من الإنترنت، manual = المستخدم اختاره بنفسه
 function km(a,b,c,d){var x=(d-b)*R*Math.cos((a+c)/2*R),y=(c-a)*R;return Math.sqrt(x*x+y*y)*6371}
 var SRC='';try{SRC=(JSON.parse(localStorage.getItem('loc'))||{}).src||''}catch(e){}
 function locui(msg){
- $('city').textContent='📍 '+(LOC?LOC.name+' · تقريبي':TB.n);
+ $('city').textContent='📍 '+(LOC?LOC.name+(LOC.cal?' · مطابق لمسجدك':' · تقريبي'):TB.n);
  $('locinfo').textContent=msg||(LOC?'موقعك: '+LOC.name+(SRC=='ip'?' (تقريبي من الإنترنت)':'')+'. ما عدنا جدول مسجد رسمي لمدينتك بعد، فالأوقات محسوبة فلكياً وممكن تفرق دقايق عن مسجدك. جرّب طريقة حساب ثانية حتى تطابقه.':'الأوقات هسه من '+TB.src+' الرسمي، بالدقيقة.');
  var tk=!LOC&&TB.id=='turku';$('locset').style.display=LOC?'':'none';$('loct').style.display=tk?'none':'';
- $('alno').style.display=tk?'none':'';$('alyes').style.display=tk?'':'none';
+ $('p2').textContent=LOC?(LOC.cal?'🕌 مطابق لمسجدك':'🕌 طابق ويا مسجدك'):'📤 شارك التطبيق';
  if(LOC){$('msel').value=LOC.m;$('asel').value=LOC.h?1:0}}
-function locsave(){try{var o=LOC?JSON.parse(JSON.stringify(LOC)):{tb:TB.id};o.src=SRC;localStorage.setItem('loc',JSON.stringify(o))}catch(e){}
+function locsave(){document.body.classList.remove('wait');try{var o=LOC?JSON.parse(JSON.stringify(LOC)):{tb:TB.id};o.src=SRC;localStorage.setItem('loc',JSON.stringify(o))}catch(e){}
  lastKey='';var w=now();my=w.year;mm=w.month;tick();month();qset();locui()}
 // نثبت الموقع الجديد. قريب من توركو = جدول المسجد. نفس البلد = نبقي طريقة الحساب الي اختارها المستخدم
 function setloc(la,lo,name,cc,src){SRC=src;
  var best=null,bd=30;TABLES.forEach(function(x){var d=km(la,lo,x.la,x.lo);if(d<bd){bd=d;best=x}});
  if(best){settb(best.id);LOC=null;locsave();return}
- var keep=LOC&&LOC.cc==(cc||'');
- LOC={la:+(+la).toFixed(4),lo:+(+lo).toFixed(4),name:name||'موقعي',cc:cc||'',m:keep?LOC.m:PT.forCountry(cc),h:keep?LOC.h:PT.hanafi(cc)};locsave()}
+ var keep=LOC&&LOC.cc==(cc||''), same=keep&&km(la,lo,LOC.la,LOC.lo)<40, o=same?LOC.o:null, cl=same?LOC.cal:0;
+ LOC={la:+(+la).toFixed(4),lo:+(+lo).toFixed(4),name:name||'موقعي',cc:cc||'',m:keep?LOC.m:PT.forCountry(cc),h:keep?LOC.h:PT.hanafi(cc)};if(o){LOC.o=o;LOC.cal=cl}locsave()}
 var GEO='https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=ar';
 function jget(u){return fetch(u).then(function(r){if(!r.ok)throw 0;return r.json()})}
 // اسم المدينة ورمز البلد من الإحداثيات: خدمة أساسية، وإذا رفضت فخدمة خرايط الشارع المفتوحة احتياط
@@ -476,7 +482,7 @@ function locate(quiet){
   if(LOC&&LOC.cc&&km(la,lo,LOC.la,LOC.lo)<5){if(SRC!='gps'){SRC='gps';locsave()}return}   // بنفس مكانه: ما نسأل مرة ثانية
   rev(la,lo).then(function(r){setloc(la,lo,r.n,r.cc,'gps')}).catch(function(){
    setloc(la,lo,LOC&&km(la,lo,LOC.la,LOC.lo)<30?LOC.name:'',LOC?LOC.cc:'','gps')});
- },function(e){iploc(quiet).then(function(){if(!quiet&&GERR[e.code])$('locinfo').textContent=GERR[e.code]})},{timeout:12000,maximumAge:6e5,enableHighAccuracy:false})}
+ },function(e){if(quiet&&SRC=='ip')return;iploc(quiet).then(function(){if(!quiet&&GERR[e.code])$('locinfo').textContent=GERR[e.code]})},{timeout:12000,maximumAge:6e5,enableHighAccuracy:false})}
 // بحث عن مدينة بالاسم
 function search(){var t=$('sq').value.trim();if(!t)return;$('sres').textContent='دا أبحث...';
  jget('https://geocoding-api.open-meteo.com/v1/search?count=5&language=ar&name='+encodeURIComponent(t)).then(function(j){
@@ -485,15 +491,32 @@ function search(){var t=$('sq').value.trim();if(!t)return;$('sres').textContent=
    b.onclick=function(){$('sres').innerHTML='';$('sq').value='';setloc(x.latitude,x.longitude,x.name,x.country_code,'manual')};$('sres').appendChild(b)})
  }).catch(function(){$('sres').textContent='البحث ما اشتغل. تأكد من الإنترنت.'})}
 Object.keys(PT.M).forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=PT.M[k].n;$('msel').appendChild(o)});
-$('msel').onchange=function(){LOC.m=this.value;locsave()};
+$('msel').onchange=function(){LOC.m=this.value;LOC.o=null;LOC.cal=0;locsave()};
 $('asel').onchange=function(){LOC.h=this.value=='1';locsave()};
 $('locbtn').onclick=function(){locate(false)};
 $('sgo').onclick=search;$('sq').onkeydown=function(e){if(e.key=='Enter')search()};
 $('loct').onclick=function(){settb('turku');LOC=null;SRC='manual';locsave()};
 locui();
-// كل فتحة: نحدّث الموقع تلقائياً وبصمت، إلا إذا المستخدم اختار مدينته بإيده
+// المطابقة ويا المسجد: المستخدم يكتب أوقات لوحة مسجده، والتطبيق يختار أقرب طريقة حساب ويثبت فرق الدقايق
+function p2hm(v){v=((v%1440)+1440)%1440;return p2(Math.floor(v/60))+':'+p2(v%60)}
+function calopen(){var w=now(),T=times(w.year,w.month,w.day);
+ $('calrows').innerHTML=T.map(function(v,i){return i==1?'':'<div class="cr"><b>'+NAMES[i]+'</b><input type="time" data-i="'+i+'" value="'+p2hm(v)+'"></div>'}).join('');
+ $('calreset').style.display=LOC.cal?'':'none';$('s-cal').classList.add('on')}
+$('calsave').onclick=function(){var w=now(),cur=times(w.year,w.month,w.day),G=cur.slice(),ch=false;
+ document.querySelectorAll('#calrows input').forEach(function(x){var i=+x.getAttribute('data-i'),a=x.value.split(':');if(a.length<2)return;
+  var v=a[0]*60+ +a[1],d=((v-cur[i])%1440+2160)%1440-720;if(d){G[i]=cur[i]+d;ch=true}});
+ // نجرب طرق الزوايا الصافية بس (هي الي تمشي صح على طول السنة)، ويا الطريقة الحالية
+ if(ch){var best=null;Object.keys(PT.M).filter(function(k){var m=PT.M[k];return k==LOC.m||(!m.im&&!m.o&&!m.pf&&!m.m)}).forEach(function(k){[false,true].forEach(function(h){var B=calc(w.year,w.month,w.day,k,h),e=0;
+   [0,3,4,5].forEach(function(i){e+=Math.abs(G[i]-B[i])});if(!best||e<best.e)best={e:e,k:k,h:h,B:B}})});
+  LOC.m=best.k;LOC.h=best.h;LOC.o=G.map(function(v,i){return i==1?0:v-best.B[i]});LOC.cal=1;SRC=SRC||'gps';locsave()}
+ $('s-cal').classList.remove('on')};
+$('calreset').onclick=function(){LOC.o=null;LOC.cal=0;LOC.m=PT.forCountry(LOC.cc);LOC.h=PT.hanafi(LOC.cc);locsave();$('s-cal').classList.remove('on')};
+$('p2').onclick=function(){if(LOC)calopen();else $('share').onclick()};
+
+// كل فتحة: الموقع المحفوظ يطلع فوراً، وبالخلفية يتحدث بصمت. المدينة الي اختارها المستخدم بإيده ما تتبدل
 (function(){if(q&&!/[?&]geo/.test(location.search))return;if(SRC=='manual')return;
- if(!SRC){locate(true);return}                                   // أول مرة: نجرب الجهاز، وإذا رفض ناخذ التقريبي
+ if(!SRC){document.body.classList.add('wait');setTimeout(function(){document.body.classList.remove('wait')},7000);
+  iploc(true).then(function(){document.body.classList.remove('wait');locate(true)});return}   // أول مرة: المدينة فوراً من الإنترنت، وبعدها الجهاز يدققها
  var P=navigator.permissions;
  if(P&&P.query)P.query({name:'geolocation'}).then(function(r){if(r.state=='granted')locate(true);else if(SRC=='ip')iploc(true)}).catch(function(){if(SRC=='ip')iploc(true)});
  else if(SRC=='ip')iploc(true)})();
