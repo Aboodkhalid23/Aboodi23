@@ -184,3 +184,32 @@ export const SUPPS = [
 export const SCHEDULE = [
   ['الصبح ويا الفطور', 'كرياتين 3 غم', 'sun'], ['الغدا', 'فيتامين د حبة', 'plate'], ['بعد التمرين بساعة أو ساعتين', 'سكوب بروتين (أيام التمرين)', 'bolt'], ['العشا', 'زيت السمك 5 مل (اختياري)', 'moon'], ['قبل النوم', 'مغنيسيوم (اختياري)', 'moon'],
 ];
+
+/* ================= بطاقة كل منتج =================
+   sug سكر، sat دهون مشبعة، salt ملح (لكل 100 غم). ing = المكونات، fiIng = المكتوبة على الغلاف إذا تأكدنا منها
+   halal: yes | lac: free/low/yes | ibs: ok/limit */
+export const INFO = {
+  milk: { sug: 3.1, sat: .9, salt: .1, ing: 'حليب بقري خفيف، اللاكتوز مشال منه', halal: 'yes', lac: 'free', ibs: 'ok' },
+  quark: { sug: 4, sat: .2, salt: .1, fiIng: 'Pastöroitu rasvaton maito ja hapate', ing: 'حليب خالي الدسم مبستر، وخميرة', halal: 'yes', lac: 'free', ibs: 'ok' },
+  cheese: { sug: 0, sat: 17, salt: 1.3, fiIng: 'pasteurized milk, salt, starter', ing: 'حليب مبستر، ملح، خميرة. ما بيه شي حيواني غير الحليب حسب الغلاف', halal: 'yes', lac: 'free', ibs: 'ok' },
+  oats: { sug: 1.2, sat: 1.6, salt: 0, fiIng: 'Wholegrain oats', ing: 'شوفان كامل 100٪', halal: 'yes', lac: 'free', ibs: 'limit', ibsNote: 'لحد 70 غم بالوجبة' },
+  bread: { sug: 5.5, sat: .6, salt: null, ing: 'خبز أسمر بدون غلوتين', halal: 'yes', lac: 'free', ibs: 'ok' },
+  egg: { sug: .4, sat: 1.6, salt: .3, ing: 'بيض دجاج فنلندي', halal: 'yes', lac: 'free', ibs: 'ok' },
+  rice: { sug: 0, sat: .4, salt: 0, ing: 'تمن ياسمين 100٪', halal: 'yes', lac: 'free', ibs: 'ok' },
+  pasta: { sug: 2.5, sat: .4, salt: 0, fiIng: 'Vehnäjauho, durumvehnäjauho, vesi', ing: 'طحين حنطة، وطحين حنطة دوروم، ومي', halal: 'yes', lac: 'free', ibs: 'limit', ibsNote: 'حنطة: لحد 70 غم ني' },
+  choc: { sug: 28, sat: 25, salt: 0, ing: 'كاكاو 70٪، سكر. نباتية بدون حليب', halal: 'yes', lac: 'free', ibs: 'limit', ibsNote: 'لحد 30 غم' },
+  pb: { sug: 5.4, sat: 6.6, salt: null, fiIng: 'roasted peanuts', ing: 'فول سوداني محمّص', halal: 'yes', lac: 'free', ibs: 'limit', ibsNote: 'لحد ملعقتين' },
+  maple: { sug: 66, sat: 0, salt: 0, ing: 'دبس قيقب 100٪', halal: 'yes', lac: 'free', ibs: 'ok' },
+  tuna: { sug: 0, sat: .2, salt: 1, fiIng: 'Tonnikala, vesi, suola', ing: 'تونة، مي، ملح', halal: 'yes', lac: 'free', ibs: 'ok' },
+  blueb: { sug: 6.4, sat: 0, salt: 0, ing: 'توت أزرق فنلندي 100٪', halal: 'yes', lac: 'free', ibs: 'ok' },
+  whey: { sug: 1, sat: .7, salt: .6, fiIng: 'Heraproteiini-isolaatti (maidosta)', ing: 'بروتين حليب مصفّى، بدون محليات', halal: 'yes', lac: 'low', ibs: 'ok' },
+};
+/* منتجات فنلندية حقيقية لازم تبتعد عنها (بيها خنزير) */
+export const AVOID = [
+  { img: 'avoid/pekoni1', n: 'Snellman Kunnon Pekoni', why: 'بيكون = لحم خنزير' },
+  { img: 'avoid/pekoni2', n: 'Atria Suomalainen pekoni', why: 'بيكون = لحم خنزير' },
+  { img: 'avoid/pekoni3', n: 'Rainbow Pekoni-suikaleet', why: 'شرايح بيكون خنزير' },
+  { img: 'avoid/kinkku1', n: 'Snellman Superior Kinkku', why: 'هام = لحم خنزير' },
+  { img: 'avoid/kinkku2', n: 'Makuliha Uuni-kinkku', why: 'هام مشوي = خنزير' },
+  { img: 'avoid/wrap', n: 'Pirkka Kinkku-cheddarwrap', why: 'سندويچ جاهز بيه هام. انتبه للأكل الجاهز' },
+];
