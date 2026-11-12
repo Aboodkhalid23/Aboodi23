@@ -13,7 +13,11 @@ ROOT = HERE.parent.parent / "links" / "salah"
 OUT = ROOT / "v"
 VOICE = {"ar": "ar-SA-HamedNeural", "en": "en-US-AndrewNeural"}
 FPS = 24
-INTRO, GAP, OUTRO = 2.6, 0.4, 3.2
+INTRO, GAP, OUTRO = 2.6, 0.7, 3.2
+# صوت الراوي المعتمد (اختاره صاحب القناة 12 تشرين الثاني 2026): حامد السعودي، أبطأ وأعمق، ويا تدفئة وصدى خفيف
+PROSODY = {"ar": ("-14%", "-4Hz"), "en": ("-10%", "-2Hz")}
+VOICE_FX = "equalizer=f=140:t=q:w=1:g=3,equalizer=f=6500:t=q:w=1.5:g=-3,acompressor=threshold=-18dB:ratio=3,aecho=0.8:0.6:45|90:0.12|0.07,loudnorm=I=-16:TP=-1.5"
+QURAN_FX = "loudnorm=I=-16:TP=-1.5"
 
 def strip(s):
     return re.sub(r"[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u0640\u200e\u200f]", "", s)
@@ -57,13 +61,18 @@ def speakable(s, lang):
     # القراءة بس (النص المعروض ما يتغير): الرموز الي الصوت يتعثر بيها
     s = s.replace("ﷺ", "peace be upon him" if lang == "en" else "صلى الله عليه وسلم")
     s = re.sub(r"\[(رقم|راجع رقم)[^\]]*\]", "", s)
-    return re.sub(r"[\[\]\"“”«»]", "", s)
+    s = re.sub(r"[\[\]\"“”«»\u200e\u200f]", "", s)
+    return re.sub(r"(^|\s)[-—–]+(\s|$)", " ", s).strip()
 
-async def tts(text, voice, path):
+async def tts(text, voice, path, lang="ar"):
     import edge_tts
+    rate, pitch = PROSODY[lang]
+    if not re.search(r"[\u0621-\u064Aa-zA-Z]", text):
+        # ما بيها كلام (علامة بس): سكتة قصيرة بدل الصوت
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "anullsrc=r=24000:cl=mono", "-t", "0.3", str(path)], check=True); return
     for i in range(6):
         try:
-            await edge_tts.Communicate(text, voice, rate="-6%").save(str(path)); return
+            await edge_tts.Communicate(text, voice, rate=rate, pitch=pitch).save(str(path)); return
         except Exception:
             if i == 5: raise
             await asyncio.sleep(2 + i * 3)
@@ -163,12 +172,12 @@ def build(I, lang, tmp, preview=False):
         if preview: d = 0.45 * sum(len(x.split()) for x in u["segs"]) + .4
         else:
             if lang == "ar" and "q" in u: fetch("https://everyayah.com/data/Alafasy_128kbps/%03d%03d.mp3" % u["q"], f)
-            else: asyncio.run(tts(u["say"], VOICE[lang], f))
+            else: asyncio.run(tts(u["say"], VOICE[lang], f, lang))
             d = dur(f)
         files.append((f, t)); wc = [max(1, len(x.split())) for x in u["segs"]]; st = t
         for sg, w in zip(u["segs"], wc):
             dd = d * w / sum(wc); segs.append(sg); times.append([round(st, 2), round(st + dd, 2)]); st += dd
-        t += d + GAP
+        t += d + (0.45 if "q" in u else GAP)
     total = t + OUTRO
     pre = [] if I["kind"] == "q" else [ISNAD]
     post = [] if I["kind"] != "h" or sc.get("noend") else [END]
@@ -194,7 +203,7 @@ def build(I, lang, tmp, preview=False):
     for i, (f, st) in enumerate(files):
         inp += ["-i", str(f)]; flt.append(f"[{i}]aresample=44100,adelay={int(st*1000)}|{int(st*1000)}[a{i}]")
     mix = "".join(f"[a{i}]" for i in range(len(files)))
-    subprocess.run(["ffmpeg", "-v", "error", "-y", *inp, "-filter_complex", ";".join(flt) + f";{mix}amix=inputs={len(files)}:normalize=0,apad=whole_dur={total}[o]", "-map", "[o]", "-t", str(total), "-ac", "1", "-c:a", "aac", "-b:a", "80k", str(audio)], check=True)
+    subprocess.run(["ffmpeg", "-v", "error", "-y", *inp, "-filter_complex", ";".join(flt) + f";{mix}amix=inputs={len(files)}:normalize=0,{QURAN_FX if (I["kind"] == "q" and lang == "ar") else VOICE_FX},apad=whole_dur={total}[o]", "-map", "[o]", "-t", str(total), "-ac", "1", "-c:a", "aac", "-b:a", "80k", str(audio)], check=True)
     out = OUT / f"{key}-{lang}.mp4"
     subprocess.run(["node", str(HERE / "shot.js"), str(html), "video", str(out), str(FPS), str(total), str(audio)], check=True)
     return out, total
