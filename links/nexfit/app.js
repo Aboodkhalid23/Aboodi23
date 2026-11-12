@@ -1,6 +1,7 @@
 // مدرّبي: منطق التطبيق
-import { EX, REST_DAY, DAY_NAMES, DAY_IMG, MONTHS, FD, MEALS, IBS, SUPPS, SCHEDULE, TIPS, INFO, SUPP_LIB, BAN, BAN_WORDS, IBS_BAN } from './data.js';
+import { EX, REST_DAY, DAY_NAMES, DAY_IMG, MONTHS, FD, IBS, SUPPS, SCHEDULE, TIPS, INFO, SUPP_LIB, BAN, BAN_WORDS, IBS_BAN } from './data.js';
 import { BODY } from './bodymap.js';
+import { FOODS, RECIPES, CATS, GEN, DRINKS } from './food2.js';
 
 /* ================= أيقونات ================= */
 const I = {
@@ -61,7 +62,10 @@ const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch
 /* ================= بناء برنامج الشهر ================= */
 const MDAYS = 28, CYC = ['A', 'B', 'C', 'R'];
 const dayType = i => CYC[i % 4];
-function tplFor(n) { return n <= MONTHS.length ? MONTHS[n - 1] : MONTHS[n % 2 ? 4 : 5]; }
+const MOS = ['تشرين الثاني', 'كانون الأول', 'كانون الثاني', 'شباط', 'آذار', 'نيسان', 'أيار', 'حزيران', 'تموز', 'آب', 'أيلول', 'تشرين الأول'];
+const NEXT = [[2, 'القوة'], [4, 'الحجم'], [3, 'الكتف والزند'], [5, 'التشكيل']];
+/* الكورس مفتوح: بعد الستة أشهر الأولى يدوّر على مراحل القوة والحجم والكتف والتشكيل، وكل دورة أثقل من الي قبلها لأن الأوزان تنبني على أرقامك */
+function tplFor(n) { if (n <= MONTHS.length) return MONTHS[n - 1]; const [i, nm] = NEXT[(n - 7) % 4], T = MONTHS[i]; return Object.assign({}, T, { n: nm + ' ' + AR(Math.floor((n - 7) / 4) + 2), mo: MOS[(n - 1) % 12], tw: +(T.tw + 1.5 * Math.ceil((n - 6) / 2)).toFixed(1), goal: T.goal + ' (دورة جديدة بأوزانك الحالية)' }); }
 function buildMonth(n, ev) {
   const T = tplFor(n), plan = {}, prevTop = id => (S.month && S.month.plan && Object.values(S.month.plan).flat().find(x => x.id === id) || {}).r?.[1];
   for (const d of ['A', 'B', 'C']) {
@@ -91,7 +95,6 @@ function dayItems(i) { const t = dayType(i); return t === 'R' ? REST_DAY.map(id 
 /* ================= الحسابات ================= */
 const curW = () => S.weights.length ? S.weights[S.weights.length - 1].w : +S.w || 52;
 function targets() { const w = curW(), h = +S.h || 168, a = +S.age || 20; let k = (10 * w + 6.25 * h - 5 * a + 5) * 1.55 + 400; const adj = S.evals.length ? S.evals[S.evals.length - 1].kcalAdj || 0 : 0; k = Math.round((k + adj) / 50) * 50; return { k, p: Math.round(w * 2), water: Math.round(w * .045 * 2) / 2 }; }
-function itemVal(k, a) { const f = FD[k], m = f.pc ? a : a / 100; return { k: f.k * m, p: f.p * m, c: f.c * m, f: f.f * m }; }
 function optVal(o) { return o.it.reduce((s, [k, a]) => { const v = itemVal(k, a); return { k: s.k + v.k, p: s.p + v.p, c: s.c + v.c, f: s.f + v.f }; }, { k: 0, p: 0, c: 0, f: 0 }); }
 function weekHist() { const now = new Date(); now.setHours(0, 0, 0, 0); const st = new Date(now); st.setDate(st.getDate() - 6); return S.hist.filter(h => new Date(h.d + 'T12:00') >= st); }
 function muscleCount() { const c = {}; weekHist().forEach(h => (h.mus || []).forEach(m => c[m] = (c[m] || 0) + 1)); return c; }
@@ -111,7 +114,6 @@ function xp() { const sets = S.hist.reduce((a, h) => a + (h.sets || 0), 0), wk =
 function level() { const x = xp(); let i = 0; LEVELS.forEach((l, k) => { if (x >= l[0]) i = k; }); const nx = LEVELS[i + 1]; return { name: LEVELS[i][1], n: i + 1, x, pct: nx ? (x - LEVELS[i][0]) / (nx[0] - LEVELS[i][0]) * 100 : 100, next: nx && nx[1] }; }
 const QUOTES = ['اليوم الي ما تحب تروح بيه، هو اليوم الي يصنع الفرق 💪', 'جسمك يتذكر كل سِت تسويه', 'خطوة صغيرة كل يوم = جسم جديد بعد 6 أشهر', 'مو لازم تكون مثالي، لازم تكون موجود', 'البطل مو الي ما يتعب، البطل الي يكمّل', 'كل كيلو تزيده هو عضل يبين بالتيشيرت', 'نام زين، كُل زين، تمرّن زين. والباقي يجي وحده'];
 const quote = () => QUOTES[new Date().getDate() % QUOTES.length];
-function todayMeals() { const sel = S.meals[today()] || {}; return MEALS.map(m => ({ m, o: m.o[sel[m.k] ?? 0], j: sel[m.k] ?? 0 })); }
 function eatenPro() { const e = (S.eaten || {})[today()] || {}; return todayMeals().reduce((a, x) => e[x.m.k] ? a + optVal(x.o).p : a, 0); }
 function ring3(v, col, r) { const C = 2 * Math.PI * r; return `<circle cx="70" cy="70" r="${r}" style="stroke:var(--ringbg)" stroke-width="11" fill="none"/><circle cx="70" cy="70" r="${r}" stroke="${col}" stroke-width="11" fill="none" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - Math.min(1, v))}"/>`; }
 function vHome() {
@@ -129,7 +131,7 @@ function vHome() {
   ${t === null ? `<div class="hero"><div class="wm">الشهر خلص</div><div class="txt"><span class="lab">كفو عليك</span><h1>قيّم شهرك</h1><p class="sm">وابدي الجزء الجاي</p></div><img src="img/ex3d/month.jpg" alt=""><button class="go" data-eval aria-label="قيّم الشهر">${I.arrow}</button></div>`
    : `<button class="hero" data-day="${c}"><div class="wm">${t === 'R' ? 'راحة' : 'تمرين'}</div><div class="txt"><span class="lab">تمرين اليوم • اليوم ${AR(c + 1)}</span><h1>${DAY_NAMES[t]}</h1><p class="sm">${t === 'R' ? 'مشي + تمارين الوگفة' : AR(dayItems(c).length) + ' تمارين • 50 دقيقة'}</p><span class="go">${I.play}</span></div><img src="img/ex3d/${DAY_IMG[t]}.jpg" alt=""></button>`}
   <div class="sec-h"><h2>أكلك اليوم</h2><a class="xs" href="#food" style="color:var(--g)">كل القائمة</a></div>
-  <div class="hscroll">${todayMeals().map(({ m, o }) => `<button class="mini ${eaten[m.k] ? 'on' : ''}" data-meal="${m.k}"><span class="mimg"><img src="img/dish/${o.img}.webp" alt="" loading="lazy">${eaten[m.k] ? `<i>${I.check}</i>` : ''}</span><span class="xs mut">${m.n}</span><b>${o.fn}</b><span class="xs num" style="color:var(--g)">${o.it.length ? AR(Math.round(optVal(o).p)) + ' غ بروتين' : 'مي بس'}</span></button>`).join('')}</div>
+  <div class="hscroll">${todayMeals().map(({ m, o }) => `<button class="mini ${eaten[m.k] ? 'on' : ''}" data-rec="${o.id}" data-slot="${m.k}"><span class="mimg"><img src="img/${o.img}.webp" alt="" loading="lazy">${eaten[m.k] ? `<i>${I.check}</i>` : ''}</span><span class="xs mut">${m.n}</span><b>${o.fn}</b><span class="xs num" style="color:var(--g)">${o.it.length ? AR(Math.round(optVal(o).p)) + ' غ بروتين' : 'مي بس'}</span></button>`).join('')}</div>
   <div class="card"><div class="sec-h"><h2>حبوبك اليوم</h2><span class="xs mut">اضغط لما تاخذها</span></div><div class="pills">${daily.map(([id, n, w]) => `<button class="${sp[id] ? 'on' : ''}" data-took="${id}"><img src="img/supp/${SUPPS.find(z => z.id === id).img}.webp" alt=""><b>${n}</b><span>${sp[id] ? 'أخذته ✓' : w}</span></button>`).join('')}</div></div>
   ${coachCard()}
   <div class="card lvl2"><div class="row between"><div><span class="xs mut">مستواك</span><h2>${L.name}</h2></div><span class="pill g num">${AR(L.x)} نقطة</span></div><div class="bar"><i style="width:${L.pct}%"></i></div><p class="xs mut">${L.next ? 'كمّل وتوصل لمستوى "' + L.next + '". كل سِت وكل وجبة وكل كوب مي يزيدلك نقاط.' : 'وصلت أعلى مستوى!'}</p></div>`;
@@ -152,8 +154,8 @@ function vCourse() {
   ${t !== 'R' ? `<div class="col">${dayItems(c).map((x, k) => `<button class="exrow" data-ex="${x.id}"><img src="img/ex3d/${x.id}.jpg" alt="" loading="lazy"><div class="grow"><h3>${EX[x.id].n}${EX[x.id].star ? ' ⭐' : ''}</h3><p class="sm num" style="color:var(--g)">${AR(setsAt(x, c))} × ${rng(x.r)} ${EX[x.id].sec ? 'ثانية' : ''}</p><p class="xs mut">${x.w ? AR(x.w) + ' كغم' : 'بدون وزن'}</p></div><span class="k">${I.play}</span></button>`).join('')}</div>
   <button class="btn wide big" data-start="${c}">${I.play} يلا نبدي</button>` : ''}`}
   <div class="card"><div class="sec-h"><h2>هالأسبوع</h2><span class="xs mut num">${AR(doneN)}/${AR(MDAYS)} يوم بالشهر</span></div><div class="strip">${strip}</div><p class="xs mut">ص = صدر وأمامية • ظ = ظهر وخلفية • ك = كتف ورجل • ر = راحة</p></div>
-  <button class="card plan-t" data-plan><div class="row between"><h2>خطة 6 أشهر لجسمك</h2><span class="mut">${showPlan ? '▲' : '▼'}</span></div><p class="xs mut">من تشرين الثاني لأيار، وكل شهر إله هدف.</p></button>
-  ${showPlan ? `<div class="card"><div class="road">${MONTHS.map((T, k) => { const n = k + 1, st = n < M.n ? 'done' : n === M.n ? 'now' : 'lock'; return `<div class="rstep ${st}"><span class="dot">${st === 'done' ? I.check : st === 'lock' ? '🔒' : AR(n)}</span><div><b>${T.mo}: ${T.n}</b><span class="xs mut">${T.goal}</span><span class="xs" style="color:var(--g)">هدف الوزن ${AR(T.tw)} كغم</span></div></div>`; }).join('')}</div><button class="btn ghost wide" data-eval>خلصت الشهر؟ قيّم نفسك</button></div>` : ''}`;
+  <button class="card plan-t" data-plan><div class="row between"><h2>رحلتك (مفتوحة، ما إلها نهاية)</h2><span class="mut">${showPlan ? '▲' : '▼'}</span></div><p class="xs mut">أول 6 أشهر تأسيس لجسمك، وبعدها نكمّل دورات جديدة أثقل. كل شهر يتبنى على تقييمك.</p></button>
+  ${showPlan ? `<div class="card"><div class="road">${Array.from({ length: Math.max(6, M.n + 2) }, (_, k) => tplFor(k + 1)).map((T, k) => { const n = k + 1, st = n < M.n ? 'done' : n === M.n ? 'now' : 'lock'; return `<div class="rstep ${st}"><span class="dot">${st === 'done' ? I.check : st === 'lock' ? '🔒' : AR(n)}</span><div><b>${T.mo}: ${T.n}</b><span class="xs mut">${T.goal}</span><span class="xs" style="color:var(--g)">هدف الوزن ${AR(T.tw)} كغم</span></div></div>`; }).join('')}</div><button class="btn ghost wide" data-eval>خلصت الشهر؟ قيّم نفسك</button></div>` : ''}`;
 }
 /* ================= شاشة اليوم ================= */
 let SES = null;
@@ -269,52 +271,79 @@ function submitEval() {
 }
 
 /* ================= الأكل ================= */
-let foodView = 'day';
-const selOf = k => { const sel = S.meals[today()] || {}; return sel[k]; };
-const optOf = m => m.o[selOf(m.k) ?? 0];
-function amt(k, a) {
-  const f = FD[k];
-  if (f.pc) return `${AR(a)} ${f.u || 'حبة'}`;
-  if (f.u === 'مل') return `${AR(a)} مل`;
-  let h = '';
-  if (k === 'bread') h = a >= 70 ? (a === 70 ? 'قطعة' : AR(Math.round(a / 70 * 10) / 10) + ' قطعة') : 'نص قطعة';
-  else if (k === 'pb' || k === 'maple') h = a <= 15 ? 'ملعقة كبيرة' : AR(Math.round(a / 15 * 2) / 2) + ' ملعقة';
-  else if (k === 'oil') h = a <= 5 ? 'نص ملعقة' : AR(a / 10) + ' ملعقة';
-  else if (k === 'cheese') h = AR(Math.round(a / 10)) + ' شرايح';
-  else if (k === 'tuna') h = a >= 150 ? 'علبة' : 'ثلثين علبة';
-  return `${AR(a)} غم${f.raw ? ' ني' : ''}${h ? ' • ' + h : ''}`;
+/* ================= الأكل: وجبات تتبدل كل يوم ================= */
+let foodView = 'day', fdCat = 'market', fdQ = '', recSlot = 'l';
+const SLOTS = [['b', 'الفطور', '7-9 الصبح'], ['s', 'سناك', 'الضحى'], ['l', 'الغدا', '1-3 الظهر'], ['a', 'بعد التمرين', 'العصر'], ['d', 'عشا خفيف', 'قبل النوم بـ3 ساعات']];
+const dayNo = (d = today()) => Math.floor(new Date(d + 'T12:00') / 864e5);
+const hsh = n => { n = (n ^ 61) ^ (n >>> 16); n = n + (n << 3); n ^= n >>> 4; n = Math.imul(n, 0x27d4eb2d); return (n ^ (n >>> 15)) >>> 0; };
+function perm(len, seed) { const a = [...Array(len).keys()]; for (let i = len - 1; i > 0; i--) { const j = hsh(seed * 131 + i) % (i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function genMeal(seed) {
+  const g = GEN, P = g.pro[hsh(seed) % g.pro.length], Cb = g.carb[hsh(seed + 7) % g.carb.length], Vg = g.veg[hsh(seed + 13) % g.veg.length], St = g.style[hsh(seed + 29) % g.style.length];
+  return { id: 'g' + seed, s: 'l', gen: 1, n: `${P[2]} ${St[0]} ويا ${Cb[2]}`, img: 'dish/' + P[3], tag: 'أكلة جديدة اخترعها NEXFIT إلك', it: [[P[0], P[1]], [Cb[0], Cb[1]], ...Vg, [St[1], 10]],
+    prep: [St[2], `اطبخ ${FOODS[Cb[0]].n} على جنب`, `الخضرة: ${Vg.map(x => FOODS[x[0]].n).join(' و')}، مشوية أو مسلوقة`, 'رتّب الصحن: ربعه بروتين، ربعه نشويات، ونصه خضرة'] };
 }
-const thumb = (k, sz = 46) => `<span class="pth" style="width:${sz}px;height:${sz}px"><img src="img/${FD[k].img}.webp" alt="" loading="lazy"></span>`;
+function recById(id) { return id[0] === 'g' ? genMeal(+id.slice(1)) : RECIPES.find(r => r.id === id); }
+function pickFor(slot, d = today()) {
+  const own = ((S.mp || {})[d] || {})[slot]; if (own) return recById(own);
+  const pool = RECIPES.filter(r => r.s === slot), n = dayNo(d), sw = ((S.msw || {})[d] || {})[slot] || 0;
+  if (slot === 'l' && (n + sw) % 2) return genMeal(n * 7 + sw);
+  const order = perm(pool.length, slot.charCodeAt(0) * 977 + Math.floor((n + sw) / pool.length));
+  return pool[order[(n + sw) % pool.length]];
+}
+function itemVal(k, a) { const f = FOODS[k]; if (!f) return { k: 0, p: 0, c: 0, f: 0 }; const m = a / 100; return { k: f.v[0] * m, p: f.v[1] * m, c: f.v[2] * m, f: f.v[3] * m }; }
+function todayMeals() { return SLOTS.map(([k, n, t]) => ({ m: { k, n, t }, o: Object.assign({ fn: '' }, pickFor(k)), j: 0 })).map(x => (x.o.fn = x.o.n, x)); }
+const fimg = k => FOODS[k] && FOODS[k].img ? `img/${FOODS[k].img}.webp` : '';
+const fthumb = (k, sz = 52) => `<span class="pth" style="width:${sz}px;height:${sz}px">${fimg(k) ? `<img src="${fimg(k)}" alt="" loading="lazy">` : '🍽'}</span>`;
+function amt(k, a) { const f = FOODS[k]; if (f && f.sn && f.srv && Math.abs(a - f.srv) / f.srv < .15) return `${AR(a)} غم • ${f.sn}`; return `${AR(a)} غم${k === 'basmati' ? ' ني' : ''}`; }
+const ibsB = i => i === 'ok' ? '<i class="ok">يناسب القولون</i>' : i === 'limit' ? '<i class="mid">كمية قليلة</i>' : '<i class="no">ينفخ</i>';
 function vFood() {
   const T = targets();
-  const tot = MEALS.reduce((a, m) => { if (selOf(m.k) == null) return a; const v = optVal(m.o[selOf(m.k)]); return { k: a.k + v.k, p: a.p + v.p }; }, { k: 0, p: 0 });
-  const ring = (v, max, col, lab, unit) => { const C = 2 * Math.PI * 30, f = Math.min(1, v / max); return `<div class="fring"><svg viewBox="0 0 72 72"><circle cx="36" cy="36" r="30" style="stroke:var(--s3)" stroke-width="7" fill="none"/><circle cx="36" cy="36" r="30" stroke="${col}" stroke-width="7" fill="none" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - f)}"/></svg><b class="num">${AR(Math.round(v))}</b><span>${lab}</span><small class="num">من ${AR(max)} ${unit}</small></div>`; };
-  const seg = `<div class="seg"><button class="${foodView === 'day' ? 'on' : ''}" data-fv="day">اليوم</button><button class="${foodView === 'prods' ? 'on' : ''}" data-fv="prods">المنتجات</button><button class="${foodView === 'shop' ? 'on' : ''}" data-fv="shop">المشتريات</button><button class="${foodView === 'ibs' ? 'on' : ''}" data-fv="ibs">القولون</button></div>`;
+  const tabs = [['day', 'اليوم'], ['recipes', 'الوصفات'], ['db', 'الأطعمة'], ['drinks', 'المشروبات'], ['shop', 'المشتريات']];
+  const seg = `<div class="cats">${tabs.map(([k, n]) => `<button class="${foodView === k ? 'on' : ''}" data-fv="${k}">${n}</button>`).join('')}</div>`;
   let body = '';
   if (foodView === 'day') {
     const eaten = (S.eaten || {})[today()] || {};
     const totE = todayMeals().reduce((a, x) => eaten[x.m.k] ? { k: a.k + optVal(x.o).k, p: a.p + optVal(x.o).p } : a, { k: 0, p: 0 });
-    body = `<div class="card"><div class="row between"><div><span class="xs mut">أكلت اليوم</span><h2 class="num">${AR(Math.round(totE.k))} <span class="sm mut">/ ${AR(T.k)} سعرة</span></h2></div><span class="pill num" style="color:var(--gold)">${AR(Math.round(totE.p))}/${AR(T.p)} غ بروتين</span></div><div class="bar"><i style="width:${Math.min(100, totE.k / T.k * 100)}%"></i></div><p class="xs mut">هاي قائمتك لليوم. إذا ما عجبتك وجبة اضغط "بدّل". ولما تاكلها اضغط "أكلتها".</p></div>
-    <div class="col">${todayMeals().map(({ m, o, j }) => { const v = optVal(o); return `<div class="meal2 ${eaten[m.k] ? 'on' : ''}"><button class="mpic" data-meal="${m.k}"><img src="img/dish/${o.img}.webp" alt="" loading="lazy"><span class="mt">${m.n} • ${m.t}</span></button><div class="mb"><div class="grow"><h3>${o.fn}</h3><p class="xs mut">${o.tag}</p>${o.it.length ? `<p class="xs num"><b style="color:var(--g)">${AR(Math.round(v.k))}</b> سعرة • <b style="color:var(--gold)">${AR(Math.round(v.p))}</b> غ بروتين</p>` : ''}</div><div class="mbtns"><button class="btn sm ${eaten[m.k] ? '' : 'ghost'}" data-eat="${m.k}">${eaten[m.k] ? '✓ أكلتها' : 'أكلتها'}</button><button class="btn sm ghost" data-next="${m.k}:${(j + 1) % m.o.length}">⇄ بدّل</button></div></div></div>`; }).join('')}</div>`;
-  } else if (foodView === 'shop') {
-    const need = {};
-    MEALS.forEach(m => optOf(m).it.forEach(([k, a]) => need[k] = (need[k] || 0) + a));
-    const rows = Object.entries(need).sort((x, y) => (FD[x[0]].fresh ? 1 : 0) - (FD[y[0]].fresh ? 1 : 0));
-    const wk = (k, a) => { const f = FD[k]; const w = a * 7; if (f.pc) return `${AR(w)} ${f.u || 'حبة'}`; if (f.u === 'مل') return `${AR(Math.round(w / 100) / 10)} لتر`; return w >= 1000 ? `${AR(Math.round(w / 100) / 10)} كيلو` : `${AR(Math.round(w))} غم`; };
-    body = `<div class="card"><h2>سلة الأسبوع</h2><p class="xs mut">محسوبة من الوجبات الي اخترتها (أو المقترحة) لـ7 أيام. خذها للسوبرماركت.</p></div>
-    <div class="col">${rows.map(([k, a]) => { const f = FD[k]; return `<div class="prow">${thumb(k, 64)}<div class="grow"><b>${f.n}</b>${f.b ? `<span class="fi">${f.b} • ${f.fi}</span>` : `<span class="fi">${f.fi}</span>`}<span class="xs mut">${f.shop ? '🛒 ' + f.shop : 'خضرة وفواكه، أي محل'}${f.note ? ' • ' + f.note : ''}</span></div><div class="qty"><b class="num">${wk(k, a)}</b><span>بالأسبوع</span><span class="num">${amt(k, Math.round(a))} باليوم</span></div></div>`; }).join('')}</div>`;
-  } else if (foodView === 'ibs') {
-    body = `<div class="card"><h2>شنو تقلل منه</h2><p class="xs mut">هاي الأشياء أكثر شي تنفخ القولون العصبي. الطريقة اسمها "قليل التخمّر" ويستعملها أطباء الهضم.</p><div class="bad sm col">${IBS.avoid.map(([a, b]) => `<p><span><b>${a}:</b> ${b}</span></p>`).join('')}</div></div>
-    <div class="card"><h2>عادات تريّح بطنك</h2><div class="good sm col">${IBS.tips.map(t => `<p>${t}</p>`).join('')}</div></div>
-    <div class="warn">كل جسم يختلف. إذا أكلة من الأكل المسموح نفختك، شيلها وگلي. والطبيب أو أخصائي التغذية هو الي يحدد خطتك الأخيرة.</div>`;
+    body = `<div class="card"><div class="row between"><div><span class="xs mut">أكلت اليوم</span><h2 class="num">${AR(Math.round(totE.k))} <span class="sm mut">/ ${AR(T.k)} سعرة</span></h2></div><span class="pill num" style="color:var(--gold)">${AR(Math.round(totE.p))}/${AR(T.p)} غ بروتين</span></div><div class="bar"><i style="width:${Math.min(100, totE.k / T.k * 100)}%"></i></div><p class="xs mut">كل يوم قائمة جديدة. ما عجبتك أكلة؟ اضغط "⇄ غيرها" ويطلعلك غيرها.</p></div>
+    <div class="col">${todayMeals().map(({ m, o }) => { const v = optVal(o); return `<div class="meal2 ${eaten[m.k] ? 'on' : ''}"><button class="mpic" data-rec="${o.id}" data-slot="${m.k}"><img src="img/${o.img}.webp" alt="" loading="lazy"><span class="mt">${m.n} • ${m.t}</span>${o.gen ? '<span class="newb">✨ جديدة</span>' : ''}</button><div class="mb"><div class="grow"><h3>${o.n}</h3><p class="xs mut">${o.tag || ''}</p><p class="xs num"><b style="color:var(--g)">${AR(Math.round(v.k))}</b> سعرة • <b style="color:var(--gold)">${AR(Math.round(v.p))}</b> غ بروتين</p></div><div class="mbtns"><button class="btn sm ${eaten[m.k] ? '' : 'ghost'}" data-eat="${m.k}">${eaten[m.k] ? '✓ أكلتها' : 'أكلتها'}</button><button class="btn sm ghost" data-swapm="${m.k}">⇄ غيرها</button></div></div></div>`; }).join('')}</div>
+    <button class="btn ghost wide" data-invent>✨ اخترعلي غدا جديد</button>`;
+  } else if (foodView === 'recipes') {
+    const L = RECIPES.filter(r => r.s === recSlot).concat(recSlot === 'l' ? [0, 1, 2, 3, 4, 5].map(i => genMeal(dayNo() * 7 + 100 + i)) : []);
+    body = `<div class="chips">${SLOTS.map(([k, n]) => `<button class="${recSlot === k ? 'on' : ''}" data-rslot="${k}">${n}</button>`).join('')}</div>
+    <p class="xs mut">${AR(L.length)} وصفة${recSlot === 'l' ? '، والجديدة تتبدل كل يوم' : ''}. مرتّبة من الأعلى بروتين.</p>
+    <div class="rgrid">${L.map(r => [r, optVal(r)]).sort((a, b) => b[1].p - a[1].p).map(([r, v]) => `<button class="rcard" data-rec="${r.id}" data-slot="${r.s}"><span class="rimg"><img src="img/${r.img}.webp" alt="" loading="lazy">${r.gen ? '<em>✨</em>' : ''}</span><b>${r.n}</b><span class="xs num"><b style="color:var(--gold)">${AR(Math.round(v.p))} غ</b> بروتين • ${AR(Math.round(v.k))} سعرة</span></button>`).join('')}</div>`;
+  } else if (foodView === 'db') {
+    const q = fdQ.trim(), keys = Object.keys(FOODS).filter(k => q ? (FOODS[k].n + ' ' + FOODS[k].fi).toLowerCase().includes(q.toLowerCase()) : FOODS[k].cat === fdCat).sort((a, b) => FOODS[b].v[1] - FOODS[a].v[1]);
+    body = `<input class="field" id="fdq" type="search" placeholder="🔎 دوّر: دجاج، برتقال، رهكا..." value="${esc(fdQ)}">
+    ${q ? '' : `<div class="cats">${CATS.map(([k, n, ic]) => `<button class="${fdCat === k ? 'on' : ''}" data-fcat="${k}"><span>${ic}</span>${n}</button>`).join('')}<button class="${fdCat === 'fin' ? 'on' : ''}" data-fcat="fin"><span>🇫🇮</span>منتجات بيتك</button></div>`}
+    ${!q && fdCat === 'fin' ? `<div class="pgrid">${Object.keys(INFO).map(k => { const f = FD[k], i = INFO[k]; return `<button class="pcard" data-prod="${k}"><span class="pimg"><img src="img/${f.img}.webp" alt="" loading="lazy"></span><b>${f.n}</b><span class="fi">${f.b || ''}</span><span class="badges"><i class="ok">حلال</i>${i.lac === 'yes' ? '<i class="no">لاكتوز</i>' : '<i class="ok">بدون لاكتوز</i>'}</span></button>`; }).join('')}</div>`
+    : `<p class="xs mut">${AR(keys.length)} • مرتّبة من الأعلى بروتين. الأرقام للحصة العادية.</p><div class="col">${keys.map(k => { const f = FOODS[k], s = itemVal(k, f.srv); return `<button class="frow" data-food="${k}">${fthumb(k, 58)}<div class="grow"><b>${f.n}</b><span class="fi">${f.fi}</span><span class="badges">${ibsB(f.ibs)}</span></div><div class="qty"><b class="num">${AR(Math.round(s.p * 10) / 10)} غ</b><span>بروتين</span><span class="num">${AR(Math.round(s.k))} سعرة • ${f.sn || AR(f.srv) + ' غم'}</span></div></button>`; }).join('') || '<p class="mut">ما لگيت شي. جرّب كلمة ثانية.</p>'}</div>`}`;
+  } else if (foodView === 'drinks') {
+    const row = ([k, n, w], c) => `<div class="irow ${c}"><span class="pimg">${k && fimg(k) ? `<img src="${fimg(k)}" alt="">` : c === 'no' ? '⛔' : '🥤'}</span><div class="grow col" style="gap:4px"><b>${n}</b><span class="xs mut">${w}</span></div></div>`;
+    body = `<div class="card"><h2>💧 مي اليوم</h2><p class="sm">هدفك <b class="num">${AR(Math.round(T.water * 4))}</b> گلاص. شربت <b class="num" style="color:var(--blue)">${AR((S.water || {})[today()] || 0)}</b>.</p><button class="btn wide" data-water>💧 شربت گلاص</button></div>
+    <h2>✓ اشربها</h2><div class="col">${DRINKS.good.map(x => row(x, 'ok')).join('')}</div>
+    <h2>⚠ بكمية قليلة</h2><div class="col">${DRINKS.limit.map(x => row(x, 'mid')).join('')}</div>
+    <h2 style="color:var(--red)">⛔ لا تشربها</h2><div class="col">${DRINKS.bad.map(x => row(x, 'no')).join('')}</div>`;
   } else {
-    const pk = Object.keys(INFO);
-    body = `<div class="card"><h2>منتجاتك من محلات فنلندا</h2><p class="xs mut">اضغط على أي منتج تشوف شكد بيه سعرات وبروتين ودهون وسكر، ومكوناته، وإذا حلال ويناسب القولون.</p></div>
-    <div class="pgrid">${pk.map(k => { const f = FD[k], i = INFO[k]; return `<button class="pcard" data-prod="${k}"><span class="pimg"><img src="img/${f.img}.webp" alt="" loading="lazy"></span><b>${f.n}</b><span class="fi">${f.b || ''}</span><span class="badges"><i class="ok">حلال</i>${i.lac === 'yes' ? '<i class="no">لاكتوز</i>' : '<i class="ok">بدون لاكتوز</i>'}${i.ibs === 'limit' ? '<i class="mid">كمية قليلة</i>' : ''}</span></button>`; }).join('')}</div>
-    <a class="banlink" href="#ban"><span>${I.warn}</span><div class="grow"><b>الممنوعات صارت بخانة وحدها</b><p class="xs">المنتجات الي بيها خنزير، والي تنفخ القولون، بالصور</p></div>${I.chev}</a>
-    <div class="card"><h2>اللحم والدجاج</h2><div class="good sm col"><p>الدجاج واللحم العادي بالسوبرماركت مو مذبوح حلال. اشتريهم من المحلات العربية والتركية (مكتوب Halal)</p><p>السمك والبيض والرَهكا والجبن الي بالتطبيق كلها حلال</p></div></div>`;
+    const need = {};
+    for (let i = 0; i < 7; i++) { const d = new Date(); d.setDate(d.getDate() + i); SLOTS.forEach(([s]) => pickFor(s, dk(d)).it.forEach(([k, a]) => need[k] = (need[k] || 0) + a)); }
+    const rows = Object.entries(need).sort((x, y) => CATS.findIndex(c => c[0] === FOODS[x[0]].cat) - CATS.findIndex(c => c[0] === FOODS[y[0]].cat));
+    const wk = a => a >= 1000 ? `${AR(Math.round(a / 100) / 10)} كيلو` : `${AR(Math.round(a / 10) * 10)} غم`;
+    body = `<div class="card"><h2>سلة الأسبوع</h2><p class="xs mut">محسوبة من أكلك للسبع أيام الجاية. اللحم والدجاج من محل حلال.</p></div>
+    <div class="col">${rows.map(([k, a]) => { const f = FOODS[k]; return `<button class="frow" data-food="${k}">${fthumb(k, 52)}<div class="grow"><b>${f.n}</b><span class="fi">${f.fi}</span></div><div class="qty"><b class="num">${k === 'egg' ? AR(Math.round(a / 60)) + ' بيضة' : wk(a)}</b><span>بالأسبوع</span></div></button>`; }).join('')}</div>`;
   }
   return `${head('الأكل')}${seg}${body}`;
+}
+function openFood(k) {
+  const f = FOODS[k], s = itemVal(k, f.srv), v = f.v, inR = RECIPES.filter(r => r.it.some(x => x[0] === k)).slice(0, 8);
+  const r1 = (n, a, b, u = 'غم') => `<p><span>${n}</span><span class="num">${AR(Math.round(a * 10) / 10)} ${u}</span><span class="num mut">${b == null ? '' : AR(Math.round(b * 10) / 10) + ' ' + u}</span></p>`;
+  show(`<div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><h2 class="grow">${f.n}</h2></div>
+  <div class="prod" style="height:230px">${fimg(k) ? `<img src="${fimg(k)}" alt="" style="max-height:210px">` : '<span style="font-size:80px">🍽</span>'}</div>
+  <span class="fi" style="font-size:14px">${f.fi}</span>
+  <div class="verd">${f.ibs === 'ok' ? '<div class="ok"><b>✓ يناسب القولون</b></div>' : f.ibs === 'limit' ? `<div class="mid"><b>⚠ للقولون: كمية قليلة</b><span>${f.note || ''}</span></div>` : `<div class="no"><b>✕ ينفخ القولون</b><span>${f.note || ''}</span></div>`}${f.cat === 'meat' ? '<div class="mid"><b>اشتريه من محل حلال</b><span>مكتوب Halal</span></div>' : ''}</div>
+  <div class="card"><h3>بحصة ${f.sn || ''} (${AR(f.srv)} غم)</h3>${nutTiles({ k: Math.round(s.k), p: Math.round(s.p * 10) / 10, c: Math.round(s.c), f: Math.round(s.f * 10) / 10 })}</div>
+  <div class="card"><h3>بكل 100 غم</h3><div class="items">${r1('سعرات', v[0], null, 'سعرة')}${r1('بروتين', v[1])}${r1('كاربوهيدرات', v[2])}${r1('منها سكر', v[5])}${r1('دهون', v[3])}${r1('ألياف', v[4])}</div><p class="xs mut">${f.cat === 'market' ? 'من غلاف المنتج.' : 'من قاعدة القيم الغذائية الرسمية (USDA).'}${f.note && f.ibs === 'ok' ? ' ' + f.note : ''}</p></div>
+  ${inR.length ? `<div class="card"><h3>وصفات بيها ${f.n}</h3><div class="hscroll">${inR.map(r => `<button class="mini" data-rec="${r.id}" data-slot="${r.s}"><span class="mimg"><img src="img/${r.img}.webp" alt="" loading="lazy"></span><b>${r.n}</b></button>`).join('')}</div></div>` : ''}`, true);
 }
 function openProd(k) {
   const f = FD[k], i = INFO[k], v = x => x == null ? '—' : AR(Math.round(x * 10) / 10);
@@ -327,18 +356,15 @@ function openProd(k) {
   <div class="card"><h3>المكونات</h3><p class="sm">${i.ing}</p>${i.fiIng ? `<span class="fi">${i.fiIng}</span>` : ''}</div>
   ${f.note ? `<div class="warn">${f.note}</div>` : ''}`, true);
 }
-function openMeal(k, j) {
-  const m = MEALS.find(x => x.k === k), cur = j ?? selOf(k) ?? 0, o = m.o[cur], v = optVal(o), chosen = selOf(k) === cur;
-  const html = `<div class="row"><button class="ib" data-close aria-label="رجوع">${I.back}</button><div class="grow"><p class="xs mut">${m.t}</p><h2>${m.n}</h2></div></div>
-  <div class="dishhero"><img src="img/dish/${o.img}.webp" alt=""><div><h1>${o.fn}</h1><p class="sm">${o.tag}</p></div></div>
-  <div class="ochips">${m.o.map((x, i) => `<button class="${i === cur ? 'on' : ''}" data-mopt="${k}:${i}"><span class="num">${AR(i + 1)}</span>${x.fn}${selOf(k) === i ? ' ✓' : ''}</button>`).join('')}</div>
-  <div class="card"><h3>${o.n}</h3>${o.it.length ? `<div class="macro"><span class="pill g num">${AR(Math.round(v.k))} سعرة</span><span class="pill num" style="color:var(--gold)">${AR(Math.round(v.p))} غ بروتين</span><span class="pill num">${AR(Math.round(v.c))} غ كارب</span><span class="pill num">${AR(Math.round(v.f))} غ دهون</span></div>` : ''}</div>
-  ${o.it.length ? `<div class="col">${o.it.map(([pk, a]) => { const f = FD[pk], iv = itemVal(pk, a); return `<${INFO[pk] ? 'button data-prod="' + pk + '"' : 'div'} class="prow">${thumb(pk, 64)}<div class="grow"><b>${f.n}</b>${f.b ? `<span class="fi">${f.b} • ${f.fi}</span>` : `<span class="fi">${f.fi}</span>`}${f.note ? `<span class="xs mut">${f.note}</span>` : ''}</div><div class="qty"><b>${amt(pk, a)}</b><span class="num">${AR(Math.round(iv.k))} سعرة • ${AR(Math.round(iv.p * 10) / 10)} غ</span></div></${INFO[pk] ? 'button' : 'div'}>`; }).join('')}</div>` : ''}
+function openRecipe(id, slot) {
+  const o = recById(id), v = optVal(o), sl = SLOTS.find(x => x[0] === slot) || SLOTS[2], cur = pickFor(sl[0]).id === id;
+  show(`<div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><div class="grow"><p class="xs mut">${sl[1]}</p></div></div>
+  <div class="dishhero"><img src="img/${o.img}.webp" alt=""><div><h1>${o.n}</h1><p class="sm">${o.tag || ''}</p></div></div>
+  <div class="card">${nutTiles({ k: Math.round(v.k), p: Math.round(v.p), c: Math.round(v.c), f: Math.round(v.f) })}</div>
+  <div class="card"><h3>المكونات</h3><div class="col">${o.it.map(([k, a]) => { const iv = itemVal(k, a); return `<button class="frow" data-food="${k}">${fthumb(k, 52)}<div class="grow"><b>${FOODS[k].n}</b><span class="xs mut">${amt(k, a)}</span></div><div class="qty"><b class="num">${AR(Math.round(iv.p * 10) / 10)} غ</b><span class="num">${AR(Math.round(iv.k))} سعرة</span></div></button>`; }).join('')}</div>${o.it.some(([k]) => FOODS[k].cat === 'meat') ? '<p class="xs" style="color:var(--gold)">اللحم والدجاج من محل حلال.</p>' : ''}</div>
   <div class="card"><h3>شلون تسويها</h3><div class="steps sm">${o.prep.map(p => `<p>${p}</p>`).join('')}</div></div>
-  ${chosen ? `<div class="card"><h3>شلون حسيت بطنك بعدها؟</h3><div class="row"><button class="btn ghost grow" data-fx="${k}:${cur}:1">😌 ريّحتني</button><button class="btn ghost grow" data-fx="${k}:${cur}:-1">😣 نفختني</button></div></div>` : ''}
-  ${(S.fx || {})[k + ':' + cur] < 0 ? '<div class="warn">⚠ هاي الوجبة نفختك قبل. جرّب خيار ثاني.</div>' : ''}
-  <button class="btn wide ${chosen ? 'ghost' : ''}" data-pick="${k}:${cur}">${chosen ? 'اخترتها لليوم ✓' : 'اختار هذي لليوم'}</button>`;
-  show(html);
+  <div class="card"><h3>شلون حسيت بطنك بعدها؟</h3><div class="row"><button class="btn ghost grow" data-fx="${id}:1">😌 ريّحتني</button><button class="btn ghost grow" data-fx="${id}:-1">😣 نفختني</button></div>${(S.fx || {})[id] < 0 ? '<p class="xs" style="color:var(--gold)">⚠ هاي نفختك قبل، فما راح تطلعلك بالقائمة.</p>' : ''}</div>
+  <button class="btn wide ${cur ? 'ghost' : ''}" data-userec="${id}:${sl[0]}">${cur ? 'هاي أكلتك اليوم ✓' : 'خليها أكلة ' + sl[1] + ' اليوم'}</button>`, true);
 }
 /* ================= رأس الصفحة وزر الإعدادات ================= */
 const gearBtn = () => `<button class="ib" data-settings aria-label="الإعدادات">${I.gear}</button>`;
@@ -356,7 +382,7 @@ function vSupps() {
    <details class="sched"><summary class="sm">جدول اليوم بالوكت</summary><div class="timeline">${SCHEDULE.map(([t, w, ic]) => `<div class="tl"><span class="ic">${I[ic]}</span><div><b class="d">${t}</b><p class="sm mut">${w}</p></div></div>`).join('')}</div></details></div>
   ${minor ? '<div class="warn"><b>عمرك أقل من 18:</b> لا تاخذ كرياتين ولا بروتين قبل ما تسأل طبيب.</div>' : ''}
   <div class="cats">${SUPP_LIB.map(c => `<button class="${c.id === C.id ? 'on' : ''}" data-scat="${c.id}"><span>${c.ic}</span>${c.n}</button>`).join('')}</div>
-  <div class="card"><h2>${C.ic} ${C.n}</h2><p class="sm">${C.intro}</p><div class="feel">💪 <b>شكد يساعدك:</b> ${C.help}</div></div>
+  <div class="card"><h2>${C.ic} ${C.n}</h2><p class="sm">${C.intro}</p>${C.helps ? `<div class="chips">${C.helps.map(h => `<span class="pill">${h}</span>`).join('')}</div>` : ''}<div class="feel">💪 <b>شكد يساعدك:</b> ${C.help}</div></div>
   <div class="col">${C.items.map(x => `<button class="scard ${x.bad ? 'bad' : ''}" data-supp="${C.id}:${x.id}"><span class="pimg"><img src="img/${x.img}.webp" alt="" loading="lazy">${x.best ? '<em>⭐ الأفضل إلك</em>' : ''}${x.bad ? '<i>✕</i>' : ''}</span>
     <div class="grow col" style="gap:6px"><div><h3>${x.n}</h3><span class="fi">${esc(x.b)}</span></div><span class="xs mut">${x.srv}${x.nut.k ? `: <b class="num" style="color:var(--gold)">${AR(x.nut.p)} غ بروتين</b> • ${AR(x.nut.k)} سعرة` : ' • ما بيه سعرات'}</span>${tags(x.ok)}</div></button>`).join('')}</div>
   ${C.skip.length ? `<div class="card" style="border-color:rgba(255,77,94,.4)"><h3>ليش ما اخترنا غيرها</h3><div class="bad sm col">${C.skip.map(t => `<p>${t}</p>`).join('')}</div></div>` : ''}
@@ -398,7 +424,55 @@ function vBan() {
     <div class="col">${BAN_WORDS.map(([w, m, c]) => `<div class="wrow ${c}"><span class="fi">${w}</span><b class="sm">${c === 'no' ? '⛔' : '⚠'} ${m}</b></div>`).join('')}</div>
     <div class="warn">⚠ يعني العلماء مختلفين عليه أو ممكن يكون نباتي. إذا تريد تحتاط، ابتعد عنه.</div>`;
   }
-  return `${head(`<span style="color:var(--g)">⚠</span> الممنوعات`)}${seg}${body}`;
+  return `${head(`<span style="color:var(--g)">⚠</span> الممنوعات`)}<button class="scanbtn" data-scan><span>📷</span><div class="grow"><b>افحص منتج بالكاميرا</b><small>وجّه على الباركود بالماركت ويگلك حلال لو لا، ويناسب القولون لو لا</small></div>${I.chev}</button>${(S.scans || []).length ? `<div class="hscroll">${S.scans.slice(0, 8).map(x => `<button class="chipscan ${x.r}" data-bc="${x.c}">${x.r === 'no' ? '⛔' : x.r === 'mid' ? '⚠' : '✓'} ${esc(x.n.slice(0, 18) || x.c)}</button>`).join('')}</div>` : ''}${seg}${body}`;
+}
+/* ================= فحص المنتج بالكاميرا (باركود) ================= */
+let zxP = null, zxR = null;
+const loadZX = () => zxP || (zxP = new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'vendor/zxing.min.js'; s.onload = () => res(window.ZXing); s.onerror = rej; document.head.append(s); }));
+function stopScan() { try { zxR && zxR.reset(); } catch (e) {} zxR = null; }
+const RX = {
+  haram: [/sian|sika|porsa|possu|porsas|pekoni|kinkku|silava|laardi|kamara|schwein|svin|gris\b|fläsk|pork|bacon|\bham\b|lard|speck/i, /liivate\s*\(siasta\)|sikagelatiini|pork gelatin|schweinegelatine/i, /alkoholi|viini|rommi|likööri|konjakki|olut|alcohol|\bwine\b|\brum\b/i],
+  doubt: [/liivate|gelatiini|gelatin|e\s?441|e\s?428/i, /karmiini|e\s?120|cochineal/i, /e\s?904|sellakka|shellac/i, /e\s?471|e\s?472|mono- ja diglyseridit|mono- and diglycerides/i, /juoksete|juoksute|rennet|lab\b/i],
+  ibs: [[/valkosipuli|garlic/i, 'ثوم'], [/(?<!ruoho)sipuli|onion/i, 'بصل'], [/hunaja|honey/i, 'عسل'], [/inuliini|juurisikuri|inulin|chicory/i, 'ألياف الهندباء'], [/sorbitoli|ksylitoli|maltitoli|mannitoli|e\s?42[01]|e\s?96[57]|sorbitol|xylitol|maltitol/i, 'محليات تنفخ'], [/kikherne|pavut|papu|linssi|chickpea|lentil|bean/i, 'بقوليات'], [/omena|päärynä|apple|pear|mango/i, 'فواكه تنفخ'], [/fruktoosi|fructose/i, 'سكر الفواكه']],
+};
+function analyze(p) {
+  const ing = [p.ingredients_text_fi, p.ingredients_text, p.ingredients_text_en, p.ingredients_text_sv].filter(Boolean).join(' • '), tags = (p.ingredients_analysis_tags || []).concat(p.labels_tags || []).join(' ');
+  const hit = (arr) => arr.map(r => (ing.match(r) || [])[0]).filter(Boolean);
+  const h = hit(RX.haram), dRaw = hit(RX.doubt).filter(x => !h.length || !/liivate|gelatin/i.test(x)), ibs = RX.ibs.filter(([r]) => r.test(ing)).map(x => x[1]);
+  const lac = /maito|milk|kerma|cream|juusto|cheese|laktoosi/i.test(ing) && !/laktoositon|lactose[- ]free|laktaasi/i.test(ing + ' ' + (p.product_name || '')), halalLbl = /halal/i.test(tags);
+  return { ing, h, d: dRaw, ibs: lac ? ibs.concat('لاكتوز') : ibs, halalLbl, vegan: /en:vegan/.test(tags) };
+}
+function openScan() {
+  show(`<div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><h2 class="grow">افحص منتج</h2></div>
+  <div class="scanbox"><video id="scv" playsinline muted></video><div class="scanline"></div><p id="scmsg">وجّه الكاميرا على الباركود (الخطوط السودة)</p></div>
+  <div class="card"><h3>أو اكتب رقم الباركود</h3><div class="row"><input class="field num" id="bcIn" inputmode="numeric" placeholder="6408430043019" dir="ltr"><button class="btn sm" data-bcgo>افحص</button></div></div>
+  <p class="xs mut">المعلومات من قاعدة المنتجات المفتوحة (Open Food Facts). إذا المنتج مو موجود، اقرا المكونات بنفسك من خانة "اقرا الغلاف".</p>`, true);
+  loadZX().then(ZX => {
+    const v = $('#scv'); if (!v) return;
+    zxR = new ZX.BrowserMultiFormatReader();
+    zxR.decodeFromConstraints({ video: { facingMode: 'environment' } }, v, (r) => { if (r) { stopScan(); lookupBC(r.getText()); } }).catch(() => { const m = $('#scmsg'); if (m) m.textContent = 'ما گدرت أفتح الكاميرا. اسمح للكاميرا من إعدادات سفاري، أو اكتب الرقم.'; });
+  }).catch(() => { const m = $('#scmsg'); if (m) m.textContent = 'الكاميرا ما اشتغلت. اكتب الرقم تحت.'; });
+}
+async function lookupBC(code) {
+  code = String(code).replace(/\D/g, ''); if (code.length < 8) { toast('الرقم قصير'); return; }
+  stopScan(); show(`<div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><h2>دا أفحص...</h2></div><div class="card"><p class="sm">رقم ${code}</p><div class="bar"><i style="width:60%" class="loading"></i></div></div>`, true);
+  let p = null;
+  try { const r = await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}?fields=product_name,brands,image_front_url,ingredients_text,ingredients_text_fi,ingredients_text_en,ingredients_text_sv,ingredients_analysis_tags,labels_tags,nutriments,quantity`); const j = await r.json(); if (j.status === 1 || j.product) p = j.product; } catch (e) {}
+  if (!p || !(p.product_name || p.ingredients_text)) { show(`<div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><h2>ما لگيته</h2></div><div class="warn">هذا المنتج مو موجود بالقاعدة، أو النت ضعيف. اقرا المكونات (Ainesosat) ودوّر على الكلمات الممنوعة.</div><a class="btn wide" href="#ban" data-close>شوف الكلمات الممنوعة</a>`, true); return; }
+  const A = analyze(p), n = p.nutriments || {}, v = x => x == null ? '—' : AR(Math.round(x * 10) / 10);
+  const S2 = (S.scans = S.scans || []); S2.unshift({ c: code, n: p.product_name || '', t: today(), r: A.h.length ? 'no' : A.d.length ? 'mid' : 'ok' }); S.scans = S2.slice(0, 20); save();
+  const verdict = A.h.length ? `<div class="danger"><span>${I.warn}</span><div><b>⛔ حرام، لا تشتريه</b><p class="sm">لگيت بالمكونات: <span class="fi" style="display:inline">${A.h.join('، ')}</span></p></div></div>`
+    : A.d.length ? `<div class="danger mid"><span>⚠</span><div><b>مشكوك، الأحسن تتركه</b><p class="sm">بيه: <span class="fi" style="display:inline">${A.d.join('، ')}</span>. ${/liivate|gelatin|441|428/i.test(A.d.join()) ? 'جيلاتين ومصدره مو مكتوب، وبأوروبا غالباً من الخنزير.' : 'مادة ممكن تكون حيوانية أو العلماء مختلفين عليها.'}</p></div></div>`
+    : A.ing ? `<div class="okbox"><b>✓ ما لگيت بيه خنزير ولا جيلاتين ولا كحول</b><p class="xs">حسب المكونات المكتوبة. ${A.halalLbl ? 'وعليه علامة حلال.' : 'اللحم والدجاج لازم يكون مذبوح حلال حتى لو المكونات نظيفة.'}</p></div>`
+    : '<div class="warn">المكونات مو مكتوبة بالقاعدة. اقراها من الغلاف.</div>';
+  show(`<div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><h2 class="grow">${esc(p.product_name || 'منتج')}</h2></div>
+  ${p.image_front_url ? `<div class="prod" style="height:230px"><img src="${p.image_front_url}" alt="" style="max-height:210px"></div>` : ''}
+  <span class="fi" style="font-size:14px">${esc(p.brands || '')} ${esc(p.quantity || '')}</span>
+  ${verdict}
+  ${A.ing ? (A.ibs.length ? `<div class="danger mid"><span>🫃</span><div><b>للقولون: انتبه</b><p class="sm">بيه ${[...new Set(A.ibs)].join('، ')}</p></div></div>` : '<div class="okbox"><b>✓ ما بيه أشياء معروفة تنفخ القولون</b></div>') : ''}
+  <div class="card"><h3>بكل 100 غم</h3>${nutTiles({ k: v(n['energy-kcal_100g']), p: v(n.proteins_100g), c: v(n.carbohydrates_100g), f: v(n.fat_100g) })}</div>
+  ${A.ing ? `<details class="card"><summary class="sm">المكونات كما مكتوبة</summary><p class="fi" style="font-size:13px;line-height:1.7;margin-top:8px">${esc(A.ing.slice(0, 1200))}</p></details>` : ''}
+  <button class="btn ghost wide" data-scan>📷 افحص منتج ثاني</button>`, true);
 }
 function openBan(i) {
   const b = BAN[i];
@@ -409,7 +483,7 @@ function openBan(i) {
 }
 
 /* ================= أنا ================= */
-const VERSION = '٩';
+const VERSION = '١٠';
 function weightInfo() {
   const start = S.startW || (S.weights[0]?.w) || +S.w || 52, goal = +S.goal || 62, cur = curW();
   const ms = [start + 1, start + 3, start + 5, start + 7].filter(x => x < goal).concat([goal]).map(x => +x.toFixed(1));
@@ -561,9 +635,9 @@ const TABS = Object.keys(V); let lastTab = null;
 function route() { let h = location.hash.slice(1); if (h.startsWith('hk')) { const r = parseHK(decodeURIComponent(h.slice(3))); if (r) { saveHK(r); toast('وصلت أرقام الساعة ✓'); } history.replaceState(null, '', '#home'); h = 'home'; } if (!V[h]) h = 'home'; $('#app').innerHTML = V[h](); if (h === 'me') loadPhotos(); const a = $('#app'); a.classList.remove('fade', 'sl', 'sr'); if (lastTab !== h) { void a.offsetWidth; a.classList.add(lastTab == null ? 'fade' : TABS.indexOf(h) > TABS.indexOf(lastTab) ? 'sl' : 'sr'); } lastTab = h; document.querySelectorAll('nav a').forEach(a => a.classList.toggle('on', a.dataset.t === h)); }
 let stack = [];
 function show(html, push) { const s = $('#screen'); if (push && !s.hidden && s.innerHTML) stack.push(s.innerHTML); else { killAnims(); stack = []; } s.hidden = false; s.innerHTML = `<div class="in">${html}</div>`; s.scrollTop = 0; document.body.style.overflow = 'hidden'; }
-function closeScreen(keep) { killAnims(); stack = []; const s = $('#screen'); s.hidden = true; s.innerHTML = ''; if (!keep) { document.body.style.overflow = ''; route(); } }
-function back() { killAnims(); const s = $('#screen'); if (stack.length) { s.innerHTML = stack.pop(); s.scrollTop = 0; if (!$('#player').hidden) { s.hidden = true; renderPlayer(); } } else { closeScreen(!$('#player').hidden); if (!$('#player').hidden) renderPlayer(); } }
-window.addEventListener('hashchange', route);
+function closeScreen(keep) { stopScan(); killAnims(); stack = []; const s = $('#screen'); s.hidden = true; s.innerHTML = ''; if (!keep) { document.body.style.overflow = ''; route(); } }
+function back() { stopScan(); killAnims(); const s = $('#screen'); if (stack.length) { s.innerHTML = stack.pop(); s.scrollTop = 0; if (!$('#player').hidden) { s.hidden = true; renderPlayer(); } } else { closeScreen(!$('#player').hidden); if (!$('#player').hidden) renderPlayer(); } }
+window.addEventListener('hashchange', () => { const s = $('#screen'); if (!s.hidden) { stopScan(); killAnims(); stack = []; s.hidden = true; s.innerHTML = ''; document.body.style.overflow = ''; } route(); });
 const reroute = () => { const y = scrollY; route(); scrollTo(0, y); };
 
 document.addEventListener('click', e => {
@@ -587,9 +661,14 @@ document.addEventListener('click', e => {
   if (d.feel) { document.querySelectorAll('[data-feel]').forEach(x => x.classList.toggle('on', x === b)); EV.feel = d.feel; return; }
   if ('evsubmit' in d) { submitEval(); return; }
   if (d.fv) { foodView = d.fv; reroute(); return; }
-  if (d.meal) { openMeal(d.meal); return; }
-  if (d.mopt) { const [k, j] = d.mopt.split(':'); openMeal(k, +j); return; }
-  if (d.pick) { const [k, j] = d.pick.split(':'); const t = today(); S.meals[t] = S.meals[t] || {}; S.meals[t][k] = S.meals[t][k] === +j ? null : +j; save(); openMeal(k, +j); toast(S.meals[t][k] === +j ? 'انضافت لأكل اليوم ✓' : 'انشالت'); return; }
+  if (d.rec) { openRecipe(d.rec, d.slot); return; }
+  if (d.food) { openFood(d.food); return; }
+  if (d.fcat) { fdCat = d.fcat; reroute(); return; }
+  if (d.rslot) { recSlot = d.rslot; reroute(); return; }
+  if (d.swapm) { const t = today(); S.msw = S.msw || {}; S.msw[t] = S.msw[t] || {}; if (S.mp && S.mp[t]) delete S.mp[t][d.swapm]; let n = 0; do { S.msw[t][d.swapm] = (S.msw[t][d.swapm] || 0) + 1; n++; } while (n < 6 && (S.fx || {})[pickFor(d.swapm).id] < 0); save(); reroute(); toast('تبدّلت 🔄'); return; }
+  if ('invent' in d) { const t = today(); S.mp = S.mp || {}; S.mp[t] = S.mp[t] || {}; S.mp[t].l = 'g' + (Date.now() % 100000); save(); reroute(); toast('✨ أكلة جديدة للغدا'); return; }
+  if (d.userec) { const [id, sl] = d.userec.split(':'); const t = today(); S.mp = S.mp || {}; S.mp[t] = S.mp[t] || {}; S.mp[t][sl] = id; save(); toast('صارت أكلتك اليوم ✓'); closeScreen(); return; }
+  if (d.fx) { const [id, v] = d.fx.split(':'); S.fx = S.fx || {}; S.fx[id] = +v; save(); toast(+v > 0 ? 'كفو، نخليها بأكلك' : 'انحفظت، ما راح تطلعلك'); openRecipe(id, (recById(id) || {}).s); return; }
   if (d.took) { const t = today(); S.supp[t] = S.supp[t] || {}; S.supp[t][d.took] = !S.supp[t][d.took]; save(); reroute(); return; }
   if ('hideinstall' in d) { S.hideInstall = 1; save(); route(); return; }
   if ('addw' in d) { const v = +String($('#wIn').value).replace(',', '.'); if (!(v > 25 && v < 200)) { toast('اكتب وزن صحيح'); return; } const before = weightInfo(); const t = today(), x = S.weights.find(z => z.d === t); if (!S.startW) S.startW = before.start; if (x) x.w = v; else S.weights.push({ d: t, w: v }); S.reached = S.reached || {}; const hit = before.ms.filter(m => v >= m && !S.reached[m]); hit.forEach(m => S.reached[m] = t); save(); route(); if (hit.length) { const m = hit[hit.length - 1], i = before.ms.indexOf(m) + 1; show(`<div class="col" style="min-height:75vh;justify-content:center;align-items:center;text-align:center;gap:16px"><div class="medal" style="width:auto;padding:20px 28px"><span class="c" style="width:90px;height:90px">${I.trophy}</span></div><h1>${i === before.ms.length ? 'وصلت هدفك النهائي!' : 'وصلت الهدف ' + AR(i) + '!'}</h1><p class="mut">صار وزنك ${AR(v)} كغم. زدت ${AR(+(v - before.start).toFixed(1))} كغم من البداية 💪</p><button class="btn wide" data-close>كمّل</button></div>`); } else toast('انحفظ وزنك'); return; }
@@ -608,14 +687,15 @@ document.addEventListener('click', e => {
   if (d.supp) { const [c, i] = d.supp.split(':'); openSupp(c, i); return; }
   if (d.bv) { banView = d.bv; reroute(); return; }
   if (d.ban != null) { openBan(+d.ban); return; }
+  if ('scan' in d) { openScan(); return; }
+  if ('bcgo' in d) { lookupBC($('#bcIn').value); return; }
+  if (d.bc) { lookupBC(d.bc); return; }
   if ('water' in d) { S.water = S.water || {}; S.water[today()] = (S.water[today()] || 0) + 1; save(); reroute(); toast('💧 كفو! كوب ' + AR(S.water[today()])); return; }
   if (d.eat) { const t = today(); S.eaten = S.eaten || {}; S.eaten[t] = S.eaten[t] || {}; S.eaten[t][d.eat] = !S.eaten[t][d.eat]; save(); reroute(); if (S.eaten[t][d.eat]) toast('صحة وعافية 😋 +8 نقاط'); return; }
-  if (d.next) { const [k, j] = d.next.split(':'); const t = today(); S.meals[t] = S.meals[t] || {}; S.meals[t][k] = +j; save(); reroute(); return; }
   if ('plan' in d) { showPlan = !showPlan; reroute(); return; }
   if ('checkin' in d) { openCheckin(); return; }
   if (d.ck) { const [k, v] = d.ck.split(':'); CK[k] = +v; b.parentNode.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); return; }
   if ('cksave' in d) { if (Object.keys(CK).length < 4) { toast('جاوب كل الأسئلة'); return; } S.check = S.check || {}; S.check[today()] = CK; save(); closeScreen(); return; }
-  if (d.fx) { const [k, j, v] = d.fx.split(':'); S.fx = S.fx || {}; S.fx[k + ':' + j] = +v; save(); toast(+v > 0 ? 'كفو، نخليها بأكلك' : 'انحفظت، راح أنبهك عليها'); openMeal(k, +j); return; }
   if (d.swap) { const alts = swapOpts(d.swap); if (!alts.length) { toast('ماكو بديل لهذا التمرين'); return; } killAnims(); show(`<div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><h2>الجهاز مشغول؟ بدّل بـ</h2></div><p class="sm mut">نفس العضلة، بتمرين ثاني.</p><div class="col">${alts.map(k => `<button class="exrow" data-swapto="${k}"><img src="img/ex3d/${k}.jpg" alt="" loading="lazy"><div class="grow"><h3>${EX[k].n}</h3><p class="xs mut">${EX[k].gym}</p></div></button>`).join('')}</div>`, true); $('#screen').hidden = false; return; }
   if (d.swapto && SES) { const x = SES.items[SES.k]; SES.items = SES.items.slice(); SES.items[SES.k] = Object.assign({}, x, { id: d.swapto, w: EX[d.swapto].w0 }); SES.sets[SES.k].forEach(z => z.w = EX[d.swapto].w0 || ''); stack = []; const sc = $('#screen'); sc.hidden = true; sc.innerHTML = ''; renderPlayer(); toast('تبدّل التمرين'); return; }
   if ('hardupdate' in d) { hardUpdate(); return; }
@@ -629,7 +709,7 @@ function renderPlayerSets() { // تحديث السطور بدون ما نعيد 
   const done = SES.sets.map(s => s.every(z => z.ok)); document.querySelectorAll('#player .dots button').forEach((x, j) => x.classList.toggle('ok', done[j]));
 }
 document.addEventListener('change', async e => { if (e.target.id === 'impIn' && e.target.files[0]) { try { const o = JSON.parse(await e.target.files[0].text()); if (!o || !o.month) throw 0; S = Object.assign(def(), o); save(); applyTheme(); closeScreen(); toast('رجعت معلوماتك ✓'); } catch (er) { toast('الملف مو صحيح'); } return; } if (e.target.id === 'photoIn' && e.target.files[0]) { await savePhoto(e.target.files[0]); toast('انحفظت الصورة'); loadPhotos(); } });
-document.addEventListener('input', e => { const t = e.target; if (!SES) return; if (t.dataset.w != null) SES.sets[SES.k][+t.dataset.w].w = t.value; if (t.dataset.r != null) SES.sets[SES.k][+t.dataset.r].r = t.value; });
+document.addEventListener('input', e => { const t = e.target; if (t.id === 'fdq') { fdQ = t.value; const pos = t.selectionStart; reroute(); const n = $('#fdq'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (er) {} } return; } if (!SES) return; if (t.dataset.w != null) SES.sets[SES.k][+t.dataset.w].w = t.value; if (t.dataset.r != null) SES.sets[SES.k][+t.dataset.r].r = t.value; });
 route();
 
 /* ================= التحديث التلقائي ================= */
