@@ -118,8 +118,8 @@ tr.td td:first-child{border-start-start-radius:12px;border-end-start-radius:12px
 .q p{font-size:18px}.q p b{color:var(--acc)}
 .q button,.sheet a{background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark);font-weight:700;padding:11px 26px}
 .q small{color:var(--mut);font-size:14px;line-height:1.7}
-nav{flex:none;display:flex;gap:6px;padding:6px;background:var(--nav);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid var(--line);border-radius:99px;box-shadow:0 14px 40px rgba(0,0,0,.4)}
-nav a{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:clamp(8px,1.3vh,11px) 0;font-size:14px;color:var(--mut);text-decoration:none;border-radius:99px}
+nav{flex:none;display:flex;gap:3px;padding:5px;border-radius:28px !important;background:var(--nav);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid var(--line);border-radius:99px;box-shadow:0 14px 40px rgba(0,0,0,.4)}
+nav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:clamp(5px,.9vh,8px) 0;font-size:11.5px;color:var(--mut);text-decoration:none;border-radius:22px;min-width:0}
 nav a svg{width:19px;height:19px}
 nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
 .vh{flex:none;display:none;align-items:center;gap:10px;width:100%;margin-bottom:6px}
@@ -159,6 +159,32 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
 :root[dir=ltr] #ltext{font-size:calc(var(--zf)*.8);line-height:1.6}
 #lsrc{flex:none;font-size:11.5px;font-weight:500;color:var(--mut);line-height:1.6}
 #lplay{flex:2;background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark);font-weight:700}
+.qn{gap:8px}
+.qt{flex:none;margin:0}.qt button{flex:1;padding:9px 0;font-size:14px;background:none}.qt button.on{background:var(--gold);color:var(--dark)}
+.qf{flex:none;display:flex}.qf input{flex:1;min-width:0;height:42px;border-radius:14px;border:1px solid var(--line);background:var(--field);color:var(--ink);padding:0 14px;font:inherit;font-size:15px;-webkit-user-select:text;user-select:text}
+#qlist{flex:1;min-height:0}
+.sr{display:flex;align-items:center;gap:10px;width:100%;padding:9px 6px;border-radius:14px;background:none;text-align:start;border-bottom:1px solid var(--line)}
+.sr i{flex:none;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:12.5px;color:var(--acc);border:1.5px solid var(--acc);border-radius:10px;transform:rotate(45deg)}
+.sr i span{transform:rotate(-45deg)}
+.sr div{flex:1;min-width:0}.sr b{display:block;font-family:Amiri,serif;font-weight:400;font-size:21px;line-height:1.3}
+.sr small{display:block;font-size:11.5px;font-weight:500;color:var(--mut)}
+.sr em{flex:none;font-style:normal;font-size:13px;color:var(--mut);padding:6px 10px;border-radius:99px;background:var(--card2)}
+.sr.on{background:var(--card2)}.sr.on em{background:var(--gold);color:var(--dark)}
+#qread{flex:1;min-height:0;display:none;flex-direction:column;gap:6px}#qread.on{display:flex}.qn.rd #qlist,.qn.rd .qf{display:none}
+.qrh{flex:none;display:flex;align-items:center;gap:8px}.qrh b{flex:1;text-align:center;font-family:Amiri,serif;font-weight:400;font-size:22px;color:var(--acc)}.qrh button{padding:7px 12px;font-size:13.5px}
+#qtext{flex:1;min-height:0;text-align:center;padding:0 4px}
+.bsm{font-family:Amiri,serif;font-size:calc(var(--zf)*1.1);color:var(--acc);margin:6px 0 10px}
+.ay{font-family:Amiri,serif;font-size:calc(var(--zf)*1.08);line-height:2.2;font-weight:400;text-align:justify;text-align-last:center;direction:rtl}
+.ay u{text-decoration:none;display:inline-block;min-width:1.6em;padding:0 .25em;margin:0 .15em;border:1px solid var(--acc);border-radius:50%;font-size:.6em;line-height:1.6;color:var(--acc);font-family:UI,sans-serif;text-align:center}
+.ten{font-size:calc(var(--zf)*.72);font-weight:500;line-height:1.6;text-align:left;direction:ltr;color:var(--soft);margin:2px 0 12px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.ten u{text-decoration:none;color:var(--acc);font-weight:700}
+.qmsg{color:var(--mut);font-size:14px;padding:20px 8px;line-height:1.8}
+.pl{flex:none;background:var(--card2);border:1px solid var(--line);border-radius:22px;padding:10px 12px 8px}
+.plt{display:flex;align-items:center;gap:8px}.plt b{flex:1;min-width:0;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:start}
+.plt select{flex:none;max-width:48%;font:inherit;font-size:12.5px;font-weight:500;padding:6px 8px;border-radius:12px;border:1px solid var(--line);background:var(--field);color:var(--ink)}
+.plb{display:flex;align-items:center;gap:8px;margin:6px 0 2px}.plb input{flex:1;accent-color:var(--gold);height:22px}.plb span{font-size:12px;color:var(--mut);min-width:5.2em;text-align:end}
+.plk{display:flex;justify-content:center;gap:14px}.plk button{width:46px;height:46px;padding:0;font-size:18px;display:flex;align-items:center;justify-content:center}
+.plk #plplay{width:58px;height:58px;font-size:22px;background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark)}
 .fz{display:none;gap:6px}.vh.rd .fz{display:flex}.fz button{padding:6px 12px;font-size:15px}
 .vh.rd b{padding-inline-end:0}
 .seg3{display:flex;gap:6px;background:var(--card2);border-radius:99px;padding:5px;margin:6px 0 4px}
@@ -317,10 +343,24 @@ body.wait #list,body.wait .ow,body.wait .row{opacity:.25}
  </div>
 </section>
 
+<section id="quran">
+ <div class="box qn">
+  <div class="seg3 qt"><button data-q="s" data-en="Surahs">السور</button><button data-q="a" data-en="Listen to adhkar">أذكار مسموعة</button></div>
+  <div class="srch qf"><input id="qq" type="text" placeholder="ابحث عن سورة" data-en-ph="Search a surah" autocomplete="off"></div>
+  <div id="qlist" class="scroll"></div>
+  <div id="qread"><div class="qrh"><button id="qrback" data-en="← Surahs">→ السور</button><b id="qrt"></b></div><div class="scroll" id="qtext"></div></div>
+  <div class="pl" id="pl">
+   <div class="plt"><b id="pln" data-en="Choose a surah">اختار سورة</b><select id="qrec"></select></div>
+   <div class="plb"><input type="range" id="plp" min="0" max="1000" value="0"><span class="n" id="plc">0:00</span></div>
+   <div class="plk"><button id="plprev" aria-label="prev">⏮</button><button id="plplay" aria-label="play">▶</button><button id="plnext" aria-label="next">⏭</button></div>
+  </div>
+ </div>
+</section>
+<audio id="aud" preload="none" playsinline></audio>
+
 <section id="learn">
  <div class="box">
   <div class="vh on"><button id="lback" data-en="← Back">→ رجوع</button><b id="ltitle"></b></div>
-  <div class="lrev" data-en="Draft for review. Not published to people yet.">نسخة للمراجعة. بعدها ما منشورة للناس.</div>
   <div class="lmenu" id="lmenu"></div>
   <div class="lview" id="lview">
    <div class="lscene" id="lscene"></div>
@@ -334,9 +374,10 @@ body.wait #list,body.wait .ow,body.wait .row{opacity:.25}
 
 <nav>
  <a href="#today" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span data-en="Today">اليوم</span></a>
- <a href="#month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span data-en="Month">الشهر</span></a>
- <a href="#qibla"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg><span data-en="Qibla">القبلة</span></a>
+ <a href="#quran"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5zM12 6.5v13"/></svg><span data-en="Quran">القرآن</span></a>
  <a href="#dhikr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="2"/><circle cx="18" cy="9" r="2"/><circle cx="18" cy="16" r="2"/><circle cx="12" cy="20" r="2"/><circle cx="6" cy="16" r="2"/><circle cx="6" cy="9" r="2"/></svg><span data-en="Dhikr">الذكر</span></a>
+ <a href="#qibla"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg><span data-en="Qibla">القبلة</span></a>
+ <a href="#month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span data-en="Month">الشهر</span></a>
 </nav>
 
 <div class="sheet" id="s-rm"><div class="scroll"><div id="rmd"></div><button data-close data-en="Back">رجوع</button></div></div>
@@ -393,13 +434,14 @@ body.wait #list,body.wait .ow,body.wait .row{opacity:.25}
 <script src="calc.js"></script>
 <script src="adhkar.js"></script>
 <script src="learn.js"></script>
+<script src="quran.js"></script>
 <script>
 (function(){
 // بالآيفون الجديد التطبيق المثبّت ينگص من جوه بگد شريط الساعة. بهالحالة منطقة الأمان الجوه صارت برا الشاشة، فما نحسبها مرتين
 (function(){function chk(){var st=navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches),d=screen.height-window.innerHeight;
   var bug=st&&window.innerWidth<600&&screen.height>screen.width&&d>30&&d<80;document.documentElement.style.setProperty('--sab',bug?'0px':'env(safe-area-inset-bottom)')}
  chk();addEventListener('orientationchange',function(){setTimeout(chk,400)})})();
-var VERSION='29';
+var VERSION='30';
 var $=function(i){return document.getElementById(i)};
 // اللغة: المحفوظة، وإذا ماكو فلغة الجهاز (عربي أو إنگليزي). تتبدل من الإعدادات والصفحة تنعاد
 var LANG=/^ar/i.test(navigator.language||'ar')?'ar':'en';try{var s0=JSON.parse(localStorage.getItem('set'));if(s0&&s0.lang)LANG=s0.lang}catch(e){}
@@ -582,14 +624,15 @@ $('zprev').onclick=function(){rmove(-1)};$('znext').onclick=function(){rmove(1)}
 // القائمة: بطاقة چبيرة لكل نوع ذكر، والبطاقة الي وقتها هسه تنحط عليها علامة ذهبية
 var MENU=[['s','sunrise',L('أذكار الصباح','Morning'),L('بعد الفجر','After Fajr')],['m','moon',L('أذكار المساء','Evening'),L('بعد العصر','After Asr')],['p','mosque',L('بعد الصلاة','After prayer'),L('كل صلاة','Every prayer')],
  ['g','hands',L('الاستغفار','Istighfar'),L('100 مرة','100 times')],['t','beads',L('السبحة','Tasbih'),L('تسبيح وتحميد','Glorify & praise')],['y','heart',L('الصلاة على النبي','Salawat'),L('100 مرة','100 times')],
- ['n','sleep',L('أذكار النوم','Bedtime'),L('قبل النوم','Before sleep')],['w','sun',L('الاستيقاظ','Waking up'),L('أول ما تگعد','When you wake')],['a','star8',L('أسماء الله','Names of Allah'),L('99 اسم','99 names')]];
+ ['n','sleep',L('أذكار النوم','Bedtime'),L('قبل النوم','Before sleep')],['w','sun',L('الاستيقاظ','Waking up'),L('أول ما تگعد','When you wake')],['a','star8',L('أسماء الله','Names of Allah'),L('99 اسم','99 names')],
+ ['l','mosque',L('التعليم','Learn'),L('الوضوء والصلاة','Wudu & prayer')],['q','beads',L('استمع للأذكار','Listen'),L('بصوت مسجّل','Recorded audio')]];
 function menu(){var nk=nowk(),sn=streak();
  var td=STK.last==dkey(0);
  $('strk').innerHTML=!sn?ic('heart')+L(' ابدي يومك بذكر واحد، ولو استغفار.',' Start your day with one dhikr, even istighfar.'):!td?ic('flame')+L(' <b>'+sn+'</b> يوم ورا بعض. اذكر الله اليوم حتى ما تنگطع السلسلة.',' <b>'+sn+'</b> days in a row. Remember Allah today to keep your streak.'):sn>1?ic('flame')+L(' <b>'+sn+'</b> يوم ورا بعض وانت تذكر الله. كمّل!',' <b>'+sn+'</b> days in a row remembering Allah. Keep going!'):ic('heart')+L(' بديت اليوم بذكر الله. تعال باچر حتى تكمّل السلسلة.',' You started today with dhikr. Come back tomorrow to build your streak.');
  if(DONE.d!=today())DONE={d:today()};
  $('tiles').innerHTML=MENU.map(function(x){return '<button class="tile'+(x[0]==nk?' now':'')+(DONE[x[0]]?' ok':'')+'" data-k="'+x[0]+'">'+ic(x[1],'ti')+'<b>'+x[2]+'</b><span>'+(x[0]==nk?L('وقتها هسه','Now'):x[3])+'</span></button>'}).join('');
  document.querySelectorAll('#tiles .tile').forEach(function(b){b.onclick=function(){mode(b.getAttribute('data-k'))}})}
-function mode(k){var isT=k=='t'||k=='g'||k=='y',isM=k=='menu',t='';MENU.forEach(function(x){if(x[0]==k)t=x[2]});
+function mode(k){if(k=='l'){location.hash='#learn';return}if(k=='q'){location.hash='#quran';setTimeout(function(){qtab('a')},60);return}var isT=k=='t'||k=='g'||k=='y',isM=k=='menu',t='';MENU.forEach(function(x){if(x[0]==k)t=x[2]});
  $('vh').classList.toggle('on',!isM);$('vh').classList.toggle('rd',!isM&&!isT&&k!='a');$('dtitle').textContent=t;
  $('mv').classList.toggle('on',isM);$('tv').classList.toggle('on',isT);$('av').classList.toggle('on',k=='a');$('rv').classList.toggle('on',!isM&&!isT&&k!='a');
  if(isM)menu();
@@ -624,11 +667,63 @@ function lmove(n){var c=LD[LS.k].steps.length,i=LS.i+n;if(i<0||i>=c)return;LS.i=
 $('lprev').onclick=function(){lmove(-1)};$('lnext').onclick=function(){lmove(1)};
 $('lback').onclick=function(){if(LS.k)lmenu();else location.hash='#dhikr'};
 
+// ---------- القرآن والأذكار المسموعة: مشغّل واحد يكمل بالخلفية ويمشي على القائمة وحده ----------
+var QD=window.QURAN||{s:[],r:[],au:{}}, AU=$('aud'), QS={rec:0,tab:'s',list:[],i:-1,kind:''};
+try{var qs0=JSON.parse(localStorage.getItem('qplay'));if(qs0&&QD.r[qs0.rec])QS.rec=qs0.rec}catch(e){}
+function p3(n){return ('00'+n).slice(-3)}
+function tfmt(x){x=Math.floor(x||0);var h=Math.floor(x/3600),m=Math.floor(x/60)%60,s=x%60;return (h?h+':'+p2(m):m)+':'+p2(s)}
+function qsave(){try{localStorage.setItem('qplay',JSON.stringify({rec:QS.rec}))}catch(e){}}
+QD.r.forEach(function(r,i){var o=document.createElement('option');o.value=i;o.textContent=EN?r[2]:r[1];$('qrec').appendChild(o)});$('qrec').value=QS.rec;
+function surahItems(){return QD.s.map(function(x,i){return {t:EN?x[1]+' · '+x[2]:x[0],a:EN?QD.r[QS.rec][2]:QD.r[QS.rec][1],src:'https://cdn.mp3quran.net/audio/'+QD.r[QS.rec][0]+'/'+p3(i+1)+'.mp3',n:i+1}})}
+var AGR=[['sm',L('أذكار الصباح والمساء','Morning & evening adhkar')],['p',L('بعد الصلاة','After prayer')],['n',L('أذكار النوم','Bedtime adhkar')],['w',L('الاستيقاظ','Waking up')]];
+function adhItems(k){var T='';AGR.forEach(function(g){if(g[0]==k)T=g[1]});return (QD.au[k]||[]).map(function(u,i){return {t:T+' · '+(i+1)+'/'+QD.au[k].length,a:L('تسجيل حصن المسلم','Hisn al-Muslim recording'),src:u,k:k,j:i}})}
+function qlist(){var f=$('qq').value.trim().toLowerCase(),h='';
+ if(QS.tab=='s'){QD.s.forEach(function(x,i){var hay=(x[0]+' '+x[1]+' '+x[2]+' '+(i+1)).toLowerCase();if(f&&hay.indexOf(f)<0&&hay.replace(/[\u064B-\u0670\u06E1]/g,'').indexOf(f)<0)return;
+   var on=QS.kind=='s'&&QS.i==i;h+='<button class="sr'+(on?' on':'')+'" data-i="'+i+'"><i><span class="n">'+(i+1)+'</span></i><div><b>'+x[0]+'</b><small>'+x[1]+' · '+x[2]+' · '+x[3]+L(' آية',' ayahs')+'</small></div><em>'+(on&&!AU.paused?'❚❚':'▶')+'</em></button>'})}
+ else AGR.forEach(function(g){var on=QS.kind==g[0];h+='<button class="sr'+(on?' on':'')+'" data-g="'+g[0]+'"><i><span class="n">'+(QD.au[g[0]]||[]).length+'</span></i><div><b style="font-family:UI,sans-serif;font-size:16px">'+g[1]+'</b><small>'+L('تسجيلات صوتية من موقع حصن المسلم الرسمي','Audio recordings from the official Hisn al-Muslim site')+'</small></div><em>'+(on&&!AU.paused?'❚❚':'▶')+'</em></button>'});
+ $('qlist').innerHTML=h||'<p class="qmsg">'+L('ما لگيت سورة بهالاسم.','No surah found.')+'</p>';
+ document.querySelectorAll('#qlist .sr').forEach(function(b){b.onclick=function(){
+  if(b.hasAttribute('data-i')){var i=+b.getAttribute('data-i');if(QS.kind=='s'&&QS.i==i){toggle();return}QS.kind='s';QS.list=surahItems();qplay(i);qread(i)}
+  else{var g=b.getAttribute('data-g');if(QS.kind==g){toggle();return}QS.kind=g;QS.list=adhItems(g);qplay(0)}}})}
+function qtab(t){QS.tab=t;document.querySelectorAll('.qt button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-q')==t)});$('qq').parentNode.style.display=t=='s'?'':'none';qback();qlist()}
+document.querySelectorAll('.qt button').forEach(function(b){b.onclick=function(){qtab(b.getAttribute('data-q'))}});
+$('qq').oninput=qlist;
+function qplay(i){if(i<0||i>=QS.list.length)return;QS.i=i;var it=QS.list[i];AU.src=it.src;AU.play().catch(function(){});qui();qlist();
+ if('mediaSession' in navigator){try{navigator.mediaSession.metadata=new MediaMetadata({title:it.t,artist:it.a,album:L('أوّاب','Awwab'),artwork:[{src:'icon-512.png',sizes:'512x512',type:'image/png'}]})}catch(e){}}}
+function toggle(){if(!AU.src)return;if(AU.paused)AU.play().catch(function(){});else AU.pause()}
+function qui(){var it=QS.list[QS.i];$('pln').textContent=it?it.t:L('اختار سورة','Choose a surah');$('plplay').textContent=AU.paused?'▶':'❚❚'}
+$('plplay').onclick=function(){if(!AU.src){QS.kind='s';QS.list=surahItems();qplay(0);return}toggle()};
+$('plnext').onclick=function(){qplay(QS.i+1)};$('plprev').onclick=function(){if(AU.currentTime>5){AU.currentTime=0;return}qplay(QS.i-1)};
+$('qrec').onchange=function(){QS.rec=+this.value;qsave();if(QS.kind=='s'){var t=AU.currentTime;QS.list=surahItems();qplay(QS.i)}};
+// الخلفية: لما تخلص السورة أو الذكر، الي بعده يبدي وحده بنفس المشغّل
+AU.addEventListener('ended',function(){if(QS.i<QS.list.length-1)qplay(QS.i+1);else{qui();qlist()}});
+['play','pause'].forEach(function(ev){AU.addEventListener(ev,function(){qui();qlist();if('mediaSession' in navigator)navigator.mediaSession.playbackState=AU.paused?'paused':'playing'})});
+AU.addEventListener('timeupdate',function(){if(AU.duration){$('plp').value=Math.round(AU.currentTime/AU.duration*1000);$('plc').textContent=tfmt(AU.currentTime)+' / '+tfmt(AU.duration)}});
+AU.addEventListener('error',function(){$('pln').textContent=L('ما گدرت أشغّل الصوت. تأكد من الإنترنت.','Could not play audio. Check your connection.')});
+$('plp').oninput=function(){if(AU.duration)AU.currentTime=this.value/1000*AU.duration};
+if('mediaSession' in navigator){var ms=navigator.mediaSession;try{ms.setActionHandler('play',function(){AU.play()});ms.setActionHandler('pause',function(){AU.pause()});
+ ms.setActionHandler('nexttrack',function(){qplay(QS.i+1)});ms.setActionHandler('previoustrack',function(){qplay(QS.i-1)});
+ ms.setActionHandler('seekto',function(d){if(d.seekTime!=null)AU.currentTime=d.seekTime})}catch(e){}}
+// نص السورة: الرسم العثماني وترجمة صحيح إنترناشونال من api.alquran.cloud
+var QTX={},BSM='\u0628\u0650\u0633\u0652\u0645\u0650\u0020\u0671\u0644\u0644\u0651\u064e\u0647\u0650\u0020\u0671\u0644\u0631\u0651\u064e\u062d\u0652\u0645\u064e\u0670\u0646\u0650\u0020\u0671\u0644\u0631\u0651\u064e\u062d\u0650\u064a\u0645\u0650\u0020';
+function qback(){$('qread').classList.remove('on');document.querySelector('.qn').classList.remove('rd')}
+$('qrback').onclick=qback;
+function qread(i){var n=i+1;$('qrt').textContent=QD.s[i][0];$('qread').classList.add('on');document.querySelector('.qn').classList.add('rd');$('qtext').scrollTop=0;
+ var show=function(d){var ar=d[0].ayahs,en=d[1].ayahs,h=n!=1&&n!=9?'<p class="bsm">'+BSM.trim()+'</p>':'';
+  h+=ar.map(function(a,k){var t=a.text.replace(/^\ufeff/,'');if(n!=1&&k==0&&t.indexOf(BSM)==0)t=t.slice(BSM.length);
+   return '<p class="ay">'+t+' <u>'+(k+1)+'</u></p>'+(EN?'<p class="ten"><u>'+(k+1)+'.</u> '+en[k].text+'</p>':'')}).join('');
+  if(EN)h+='<p class="qmsg">Translation: Saheeh International</p>';$('qtext').innerHTML=h};
+ if(QTX[n]){show(QTX[n]);return}
+ $('qtext').innerHTML='<p class="qmsg">'+L('دا أحمّل نص السورة...','Loading...')+'</p>';
+ jget('https://api.alquran.cloud/v1/surah/'+n+'/editions/quran-uthmani,en.sahih').then(function(j){QTX[n]=j.data;if($('qrt').textContent==QD.s[i][0])show(j.data)})
+  .catch(function(){$('qtext').innerHTML='<p class="qmsg">'+L('نص السورة يحتاج إنترنت. التلاوة تشتغل عادي.','The surah text needs an internet connection.')+'</p>'})}
+qtab('s');
+
 // التنقل بين الصفحات
 function show(){var id=(location.hash||'#today').slice(1);if(!$(id))id='today';
  document.querySelectorAll('.sheet.on').forEach(function(x){x.classList.remove('on')});
  document.querySelectorAll('section').forEach(function(s){s.classList.toggle('on',s.id==id)});
- document.querySelectorAll('nav a').forEach(function(a){a.classList.toggle('on',a.getAttribute('href')=='#'+id)});var r=id=='month'&&document.querySelector('tr.td');if(r)r.scrollIntoView({block:'center'});if(id=='dhikr')mode('menu');if(id=='learn')lmenu();else if(window.speechSynthesis)speechSynthesis.cancel()}
+ document.querySelectorAll('nav a').forEach(function(a){a.classList.toggle('on',a.getAttribute('href')=='#'+id)});var r=id=='month'&&document.querySelector('tr.td');if(r)r.scrollIntoView({block:'center'});if(id=='dhikr')mode('menu');if(id=='learn')lmenu();else if(window.speechSynthesis)speechSynthesis.cancel();if(id=='quran')qlist()}
 addEventListener('hashchange',show);show();
 // رابط الاشتراك بالتقويم (webcal يفتح تطبيق التقويم مباشرة)
 // ---------- الموقع ----------
