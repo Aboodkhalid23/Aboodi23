@@ -70,12 +70,12 @@ async def tts(text, voice, path, lang="ar"):
     if not re.search(r"[\u0621-\u064Aa-zA-Z]", text):
         # ما بيها كلام (علامة بس): سكتة قصيرة بدل الصوت
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "anullsrc=r=24000:cl=mono", "-t", "0.3", str(path)], check=True); return
-    for i in range(6):
+    for i in range(10):  # خدمة الصوت أحياناً ترفض من كثر الطلبات، نعيد بصبر
         try:
             await edge_tts.Communicate(text, voice, rate=rate, pitch=pitch).save(str(path)); return
         except Exception:
-            if i == 5: raise
-            await asyncio.sleep(2 + i * 3)
+            if i == 9: raise
+            await asyncio.sleep(3 + i * 4)
 
 def dur(p):
     return float(subprocess.check_output(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(p)]).decode())
