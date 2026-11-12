@@ -269,16 +269,20 @@ body.wait #list,body.wait .ow,body.wait .row{opacity:.25}
 .sheet label{display:block;text-align:start;font-size:13.5px;color:var(--mut);margin-top:10px}
 .sheet .gold{background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark);font-weight:700}
 #city{color:var(--ink);font-size:1.15em;font-weight:700;background:none;padding:0;border-bottom:1px dashed var(--gold);border-radius:0}
-.vl video{width:100%;max-height:56vh;border-radius:16px;background:#000;display:none;margin:8px 0}
-.vl .vsub{font-size:13px;color:var(--mut);margin:2px 0 6px}.vl .vnow{font-size:13px;color:var(--gold);margin:0 0 6px;min-height:1px}
-.vl .vr{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;margin:6px 0;border-radius:16px;background:var(--card);border:1px solid var(--line);text-align:start;color:var(--ink)}
-.vl .vr.on{border-color:var(--gold);background:var(--card2)}
-.vl .vr b{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--gold);color:var(--dark);font-size:14px}
+.vl{gap:8px}.vl .vhd{display:flex;align-items:baseline;justify-content:space-between;padding:2px 4px}.vl .vhd b{font-size:18px;color:var(--gold)}.vl .vhd span{font-size:12px;color:var(--mut)}
+.vl .scroll{display:flex;flex-direction:column;gap:8px}
+.vl .vr{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:18px;background:var(--card);border:1px solid var(--line);text-align:start;color:var(--ink);flex:none}
+.vl .vr.top{background:var(--card2);border-color:var(--gold);padding:14px 12px}
+.vl .vr b{flex:none;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--gold);color:var(--dark)}
+.vl .vr b svg{width:18px;height:18px}
 .vl .vr.seen b{background:none;border:1.5px solid var(--gold);color:var(--gold)}
-.vl .vr span{flex:1;min-width:0;font-family:Amiri,serif;font-size:16px;line-height:1.6;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.vl .vr.en span{font-family:UI,sans-serif;font-size:14px}
-.vl .vr i{flex:none;font-style:normal;font-size:12px;color:var(--mut)}
-.vl .vr .td{font-size:11px;color:var(--dark);background:var(--gold);border-radius:99px;padding:2px 8px;font-style:normal}
+.vl .vr div{flex:1;min-width:0}.vl .vr small{display:block;font-size:11.5px;color:var(--mut)}
+.vl .vr span{font-family:Amiri,serif;font-size:16px;line-height:1.6;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.vl .vr.en span{font-family:UI,sans-serif;font-size:14px;line-height:1.4}
+.vl .vr .td{font-size:11px;font-weight:700;color:var(--dark);background:var(--gold);border-radius:99px;padding:2px 9px;margin-inline-start:6px}
+#vfull{display:none;position:fixed;inset:0;z-index:20;background:#000;align-items:center;justify-content:center}#vfull.on{display:flex}
+#vfull video{width:100%;height:100%;object-fit:contain}
+#vx{position:absolute;top:calc(env(safe-area-inset-top) + 12px);inset-inline-end:14px;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.18);color:#fff;font-size:20px;border:0}
 .sheet{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9;background:rgba(5,10,20,.6);align-items:flex-end;justify-content:center}
 .sheet.on{display:flex}
 .sheet>div{max-height:94%;overflow-y:auto;width:100%;max-width:520px;background:var(--sheet);border:1px solid var(--line);border-radius:28px 28px 0 0;padding:22px 20px calc(env(safe-area-inset-bottom) + 18px);text-align:center}
@@ -339,6 +343,12 @@ body.wait #list,body.wait .ow,body.wait .row{opacity:.25}
  <div class="row"><button class="pill" id="rm" data-open="s-rm"></button><button class="pill" id="p2"></button></div>
 </section>
 
+<section id="vids">
+ <div class="box vl">
+  <div class="vhd"><b data-en="Videos">المقاطع</b><span id="vcount"></span></div>
+  <div class="scroll" id="vlist"></div>
+ </div>
+</section>
 <section id="month">
  <div class="box">
   <div class="mh"><button id="prev" data-en="Previous">السابق</button><b id="mname"></b><button id="nxt" data-en="Next">التالي</button></div>
@@ -420,6 +430,7 @@ body.wait #list,body.wait .ow,body.wait .row{opacity:.25}
  <a href="#today" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span data-en="Today">اليوم</span></a>
  <a href="#quran"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5zM12 6.5v13"/></svg><span data-en="Quran">القرآن</span></a>
  <a href="#dhikr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="2"/><circle cx="18" cy="9" r="2"/><circle cx="18" cy="16" r="2"/><circle cx="12" cy="20" r="2"/><circle cx="6" cy="16" r="2"/><circle cx="6" cy="9" r="2"/></svg><span data-en="Dhikr">الذكر</span></a>
+ <a href="#vids"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="3.5"/><path d="M10 9v6l5-3z" fill="currentColor"/></svg><span data-en="Videos">مقاطع</span></a>
  <a href="#qibla"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg><span data-en="Qibla">القبلة</span></a>
  <a href="#month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span data-en="Month">الشهر</span></a>
 </nav>
@@ -434,13 +445,7 @@ body.wait #list,body.wait .ow,body.wait .row{opacity:.25}
  <button class="gold" id="duash" data-en="Share">شارك</button>
  <button data-close data-en="Back">رجوع</button>
 </div></div>
-<div class="sheet" id="s-vid"><div class="scroll vl">
- <h2 data-en="Hadith videos">مقاطع الأحاديث</h2>
- <p class="vsub" data-en="An-Nawawi's Forty Hadith, verbatim, drawn and animated. They stay here, watch any time.">الأربعون النووية بالحرف، برسوم متحركة. كلها محفوظة هنا، تگدر تشوفها بأي وقت.</p>
- <video id="vplay" controls playsinline preload="none"></video>
- <p class="vnow" id="vnow"></p>
- <div id="vlist"></div>
-</div></div>
+<div id="vfull"><video id="vplay" controls playsinline preload="auto"></video><button id="vx" aria-label="سكّر">✕</button></div>
 <div class="sheet" id="s-zk"><div class="scroll zk">
  <h2 data-en="Zakat calculator">حاسبة الزكاة</h2>
  <p id="zkshia" style="display:none" data-en="This calculator follows the rulings of Islam Question &amp; Answer (Sunni). For the Jafari school, ask your marja's office.">الحاسبة حسب فتاوى موقع الإسلام سؤال وجواب (سني). للمذهب الجعفري راجع مكتب مرجعك.</p>
@@ -702,7 +707,7 @@ $('zprev').onclick=function(){rmove(-1)};$('znext').onclick=function(){rmove(1)}
 var MENU=[['s','sunrise',L('أذكار الصباح','Morning'),L('بعد الفجر','After Fajr')],['m','moon',L('أذكار المساء','Evening'),L('بعد العصر','After Asr')],['p','mosque',L('بعد الصلاة','After prayer'),L('كل صلاة','Every prayer')],
  ['g','hands',L('الاستغفار','Istighfar'),L('100 مرة','100 times')],['t','beads',L('السبحة','Tasbih'),L('تسبيح وتحميد','Glorify & praise')],['y','heart',L('الصلاة على النبي','Salawat'),L('100 مرة','100 times')],
  ['n','sleep',L('أذكار النوم','Bedtime'),L('قبل النوم','Before sleep')],['w','sun',L('الاستيقاظ','Waking up'),L('أول ما تگعد','When you wake')],['a','star8',L('أسماء الله','Names of Allah'),L('99 اسم','99 names')],
- ['l','mosque',L('التعليم','Learn'),L('الوضوء والصلاة','Wudu & prayer')],['z','hands',L('الزكاة','Zakat'),L('حاسبة','Calculator')],['q','beads',L('استمع للأذكار','Listen'),L('بصوت مسجّل','Recorded audio')],['v','sun',L('مقاطع الأحاديث','Hadith videos'),L('رسوم متحركة','Animated')]];
+ ['l','mosque',L('التعليم','Learn'),L('الوضوء والصلاة','Wudu & prayer')],['z','hands',L('الزكاة','Zakat'),L('حاسبة','Calculator')],['q','beads',L('استمع للأذكار','Listen'),L('بصوت مسجّل','Recorded audio')]];
 function menu(){var nk=nowk(),sn=streak();
  var fr=isFri(),has=MENU.some(function(x){return x[0]=='k'});if(fr&&!has)MENU.unshift(['k','star8',L('سورة الكهف','Surat Al-Kahf'),L('يوم الجمعة','Friday')]);if(!fr&&has)MENU.shift();
  var td=STK.last==dkey(0);
@@ -847,17 +852,19 @@ function vseen(){try{return JSON.parse(localStorage.getItem('vseen'))||{}}catch(
 function loadVid(cb){vget(function(){VID=null;if(HTODAY)VIDX.forEach(function(it){if(it.n==HTODAY[0])VID=it});showVid();cb&&cb()})}
 function showVid(){var v=$('hvid');if(!VID){v.style.display='none';return}var f='v/'+(EN?VID.en:VID.ar);if(v.getAttribute('src')!=f)v.setAttribute('src',f);v.style.display=''}
 function mmss(s){return Math.floor(s/60)+':'+('0'+s%60).slice(-2)}
-function vplay(it,go){var v=$('vplay'),f='v/'+(EN?it.en:it.ar);if(v.getAttribute('src')!=f)v.setAttribute('src',f);v.style.display='';$('vnow').textContent=L('الحديث '+it.n+' من الأربعين النووية','Hadith '+it.n+' of An-Nawawi\'s Forty');
+var PLAY='<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>';
+function vplay(it){var v=$('vplay'),f='v/'+(EN?it.en:it.ar);if(v.getAttribute('src')!=f)v.setAttribute('src',f);$('vfull').classList.add('on');
  var sn=vseen();sn[it.n]=1;try{localStorage.setItem('vseen',JSON.stringify(sn))}catch(e){}
- document.querySelectorAll('.vl .vr').forEach(function(r){var on=+r.getAttribute('data-n')==it.n;r.classList.toggle('on',on);if(on)r.classList.add('seen')});
- if(go){var p=v.play();p&&p.catch(function(){})}$('s-vid').querySelector('.scroll').scrollTop=0}
-function openVid(){$('s-vid').classList.add('on');vget(function(){
- if(!VIDX.length){$('vlist').innerHTML='<p class="vsub">'+L('المقاطع بعدها ما جاهزة، جرّب بعد شوية.','Videos are not ready yet, try again later.')+'</p>';return}
+ try{v.currentTime=0}catch(e){}var p=v.play();p&&p.catch(function(){});vlist()}
+function vclose(){var v=$('vplay');v.pause();$('vfull').classList.remove('on');if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(function(){})}
+$('vx').onclick=vclose;$('vplay').onended=vclose;
+function vlist(){vget(function(){
+ if(!VIDX.length){$('vlist').innerHTML='<p class="vsub" style="color:var(--mut)">'+L('المقاطع بعدها ما جاهزة، جرّب بعد شوية.','Videos are not ready yet, try again later.')+'</p>';return}
  var sn=vseen(),td=HTODAY?HTODAY[0]:0,list=VIDX.slice().sort(function(a,b){return (b.n==td)-(a.n==td)||a.n-b.n});
- $('vlist').innerHTML=list.map(function(it){return '<button class="vr'+(EN?' en':'')+(sn[it.n]?' seen':'')+'" data-n="'+it.n+'"><b class="n">'+it.n+'</b><span></span>'+(it.n==td?'<i class="td">'+L('حديث اليوم','Today')+'</i>':'<i class="n">'+mmss(EN?it.de:it.da)+'</i>')+'</button>'}).join('');
- document.querySelectorAll('.vl .vr').forEach(function(r){var it=VIDX.filter(function(x){return x.n==+r.getAttribute('data-n')})[0];r.querySelector('span').textContent=EN?it.te:it.ta;r.onclick=function(){vplay(it,true)}});
- vplay(list[0],false)})}
-new MutationObserver(function(){if(!$('s-vid').classList.contains('on'))$('vplay').pause()}).observe($('s-vid'),{attributes:true,attributeFilter:['class']});
+ $('vcount').textContent=L(VIDX.length+' مقطع',VIDX.length+' videos');
+ $('vlist').innerHTML=list.map(function(it){return '<button class="vr'+(EN?' en':'')+(it.n==td?' top':'')+(sn[it.n]?' seen':'')+'" data-n="'+it.n+'"><b>'+PLAY+'</b><div><small>'+L('الحديث ','Hadith ')+'<span class="n" style="font:inherit;display:inline">'+it.n+'</span> · <span class="n" style="font:inherit;display:inline">'+mmss(EN?it.de:it.da)+'</span>'+(it.n==td?'<i class="td">'+L('مقطع اليوم','Today')+'</i>':'')+'</small><span class="t"></span></div></button>'}).join('');
+ document.querySelectorAll('.vl .vr').forEach(function(r){var it=VIDX.filter(function(x){return x.n==+r.getAttribute('data-n')})[0];r.querySelector('.t').textContent=EN?it.te:it.ta;r.onclick=function(){vplay(it)}})})}
+function openVid(){location.hash='#vids'}
 new MutationObserver(function(){if(!$('s-dua').classList.contains('on'))$('hvid').pause()}).observe($('s-dua'),{attributes:true,attributeFilter:['class']});
 function dtab(t){DTAB=t;document.querySelectorAll('.dtab button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-d')==t)});$('dpane').style.display=t=='d'?'':'none';$('hpane').style.display=t=='h'?'':'none';if(t!='h')$('hvid').pause();else if(!VID)loadVid()}
 document.querySelectorAll('.dtab button').forEach(function(b){b.onclick=function(){dtab(b.getAttribute('data-d'))}});
@@ -899,7 +906,7 @@ $('zkgo').onclick=function(){zfetch().then(zcalc,zcalc)};
 function show(){var id=(location.hash||'#today').slice(1);if(!$(id))id='today';
  document.querySelectorAll('.sheet.on').forEach(function(x){x.classList.remove('on')});
  document.querySelectorAll('section').forEach(function(s){s.classList.toggle('on',s.id==id)});
- document.querySelectorAll('nav a').forEach(function(a){a.classList.toggle('on',a.getAttribute('href')=='#'+id)});var r=id=='month'&&document.querySelector('tr.td');if(r)r.scrollIntoView({block:'center'});if(id=='dhikr')mode('menu');if(id=='learn')lmenu();else{LA.pause();LS.play=false}if(id=='quran')qlist()}
+ document.querySelectorAll('nav a').forEach(function(a){a.classList.toggle('on',a.getAttribute('href')=='#'+id)});var r=id=='month'&&document.querySelector('tr.td');if(r)r.scrollIntoView({block:'center'});if(id=='dhikr')mode('menu');if(id=='vids')vlist();if(id=='learn')lmenu();else{LA.pause();LS.play=false}if(id=='quran')qlist()}
 addEventListener('hashchange',show);show();
 // رابط الاشتراك بالتقويم (webcal يفتح تطبيق التقويم مباشرة)
 // ---------- الموقع ----------

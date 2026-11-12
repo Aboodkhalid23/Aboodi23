@@ -50,7 +50,6 @@ def segments(text):
     for x in out:
         if m and (not re.search(r"[ء-يa-zA-Z]", x) or len(x.split()) < 2): m[-1] += " " + x
         else: m.append(x)
-    m = [x.replace("\u00a0", " ") for x in m]
     assert re.sub(r"\s+", "", "".join(m)) == re.sub(r"\s+", "", text), "التقسيم غيّر النص"
     return m
 
@@ -148,8 +147,8 @@ def index():
     def title(text, key):
         # عنوان المقطع: الجملة الي بيها أول كلمة من المشاهد، بالحرف من النص
         for sg in segments(text):
-            if norm(key.split("|")[0]).strip() in norm(sg): return sg.strip(' "“”«»')
-        return segments(text)[0]
+            if norm(key.split("|")[0]).strip() in norm(sg): return sg.replace("\u00a0", " ").strip(' "“”«»')
+        return segments(text)[0].replace("\u00a0", " ")
     for n in sorted(H):
         a, e = OUT / f"h{n}-ar.mp4", OUT / f"h{n}-en.mp4"
         if a.exists() and e.exists():

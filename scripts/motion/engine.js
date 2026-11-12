@@ -2,7 +2,7 @@
 // الصفحة تستدعي window.R(t) لكل إطار. البيانات بـ window.D: {lang,n,segs,times,total,beats,hl,label,src}
 // قاعدة شرعية: ما نرسم نبي ولا صحابي ولا ملَك. الشخصيات بس "مسلم عادي" يطبق معنى الحديث
 (function () {
-const W = 720, H = 1280, GY = 1085, SC_TOP = 470, SC_BOT = 1150;
+const W = 720, H = 1280, GY = 1120, SC_TOP = 470, SC_BOT = 1150;
 const cv = document.getElementById('c'), x = cv.getContext('2d');
 const D = window.D, AR = D.lang === 'ar';
 const ease = p => p < 0 ? 0 : p > 1 ? 1 : p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
@@ -73,21 +73,21 @@ function limb(ax, ay, a1, a2, L1, L2, w, col, tor) {
   return [hx, hy, t2];
 }
 function person(a, t) {
-  const P = PEOPLE[a.type] || PEOPLE.man, p = a.pose, s = (a.s || 1) * (P.s || 1) * 1.32;
+  const P = PEOPLE[a.type] || PEOPLE.man, p = a.pose, s = (a.s || 1) * (P.s || 1) * 1.22;
   x.save(); x.translate(a.x, a.y); x.scale(s * a.dir, s);
   const breathe = Math.sin(t * 2.2 + a.seed) * 1.6;
   // ظل
   x.save(); x.globalAlpha = .18 * a.al; x.beginPath(); x.ellipse(0, 2, p.legs ? 70 : 52, 9, 0, 0, 7); x.fillStyle = '#000'; x.fill(); x.restore();
   x.globalAlpha = a.al;
   const walk = p.walk ? Math.sin(a.wph) : 0;
-  let hipY = lerp(lerp(-135, -50, p.l1), -66, p.l2), hipX = lerp(0, -18, p.l2);
+  let hipY = lerp(lerp(-112, -50, p.l1), -66, p.l2), hipX = lerp(0, -18, p.l2);
   // الجزء الأسفل
   if (p.l1 < .5 && p.l2 < .5) {
     const k = 1 - Math.max(p.l1, p.l2) * 2;
     const f1 = walk * 16, f2 = -walk * 16;
     rr(-30 + f1 - 4, -9, 34, 11, 6, '#3a2e26'); rr(-6 + f2 + 6, -9, 34, 11, 6, '#4a3b30');
-    blob([[-33, hipY], [33, hipY], [44 + walk * 4, -7], [-44 + walk * 4, -7]], P.th);
-    blob([[-33, hipY], [-12, hipY], [-22, -7], [-44 + walk * 4, -7]], P.sh);
+    blob([[-44, hipY], [44, hipY], [56 + walk * 4, -7], [-56 + walk * 4, -7]], P.th);
+    blob([[-44, hipY], [-16, hipY], [-26, -7], [-56 + walk * 4, -7]], P.sh);
     if (P.patch) rr(10, -60, 18, 16, 3, P.patch);
     x.globalAlpha = a.al;
   } else if (p.l1 >= p.l2) {
@@ -101,18 +101,19 @@ function person(a, t) {
   const tor = R(p.tor) + R(breathe * .15);
   const hip = [hipX, hipY + breathe * .3];
   const sh = (dx, dy) => { const r = rot(dx, dy, tor); return [hip[0] + r[0], hip[1] + r[1]]; };
-  const S1 = sh(-6, -96), S2 = sh(8, -96);
+  const S1 = sh(-10, -74), S2 = sh(12, -74);
   // ذراع بعيدة
-  const armC = P.sh, L1 = 50, L2 = 46;
-  let h1 = limb(S1[0], S1[1], p.la[0], p.la[1], L1, L2, 21, armC, tor + (p.walk ? -R(walk * 20) : 0));
-  circ(h1[0], h1[1], 9.5, P.sk);
+  const armC = P.sh, L1 = 40, L2 = 37;
+  let h1 = limb(S1[0], S1[1], p.la[0], p.la[1], L1, L2, 27, armC, tor + (p.walk ? -R(walk * 20) : 0));
+  circ(h1[0], h1[1], 12, P.sk);
   // جسم
-  x.save(); x.translate(hip[0], hip[1]); x.rotate(tor);
+  x.save(); x.translate(hip[0], hip[1]); x.rotate(tor); x.save(); x.scale(1.3, .8);
   x.beginPath(); x.moveTo(-35, 4); x.lineTo(-34, -88); x.quadraticCurveTo(-32, -106, -10, -108); x.lineTo(14, -108); x.quadraticCurveTo(34, -106, 35, -88); x.lineTo(36, 4); x.closePath(); x.fillStyle = P.th; x.fill();
   blob([[-35, 4], [-34, -88], [-26, -104], [-14, -106], [-14, 4]], P.sh);
   if (!P.w) { x.strokeStyle = P.sh; x.lineWidth = 3; x.beginPath(); x.moveTo(10, -104); x.lineTo(10, -60); x.stroke(); }
+  x.restore();
   // الرأس
-  x.translate(4, -138); x.rotate(R(p.head || 0) + Math.sin(t * 1.3 + a.seed) * .02);
+  x.translate(5, -122); x.scale(1.28, 1.28); x.rotate(R(p.head || 0) + Math.sin(t * 1.3 + a.seed) * .02);
   if (P.w) {
     circ(0, 2, 38, P.hij); blob([[-36, 6], [36, 6], [44, 58], [-44, 58]], P.hij);
     x.beginPath(); x.ellipse(9, 2, 22, 26, 0, 0, 7); x.fillStyle = P.sk; x.fill();
@@ -131,8 +132,8 @@ function person(a, t) {
   if (p.book > .5) { const bx = lerp(h1[0], S2[0] + Math.sin(tor) * 60, .5) + 30, by = h1[1] - 8; book(bx, by, .8); }
   if (p.box > .5) { rr(-50, -330, 100, 64, 8, '#b98a52'); rr(-50, -305, 100, 8, 2, '#8e6638'); }
   // ذراع قريبة
-  const h2 = limb(S2[0], S2[1], p.ra[0], p.ra[1], L1, L2, 22, P.th, tor + (p.walk ? R(walk * 20) : 0));
-  circ(h2[0], h2[1], 10, P.sk);
+  const h2 = limb(S2[0], S2[1], p.ra[0], p.ra[1], L1, L2, 28, P.th, tor + (p.walk ? R(walk * 20) : 0));
+  circ(h2[0], h2[1], 12.5, P.sk);
   if (p.finger > .5) { x.strokeStyle = P.sk; x.lineWidth = 6; x.lineCap = 'round'; x.beginPath(); x.moveTo(h2[0], h2[1]); const fa = p.finger > 1.5 ? R(90) : h2[2]; x.lineTo(h2[0] + Math.sin(fa) * 16, h2[1] + Math.cos(fa) * 16); x.stroke(); }
   x.restore();
   return { hx: a.x + h2[0] * s * a.dir, hy: a.y + h2[1] * s, top: a.y - 175 * s, s };
@@ -253,11 +254,11 @@ function parseProp(s) { // "coin@360,700*1.2" ، و ^ بالبداية يعني 
   const front = s[0] === '^'; if (front) s = s.slice(1);
   const m = s.match(/^(\w+)@(-?\d+),(-?\d+)(?:\*([\d.]+))?(?:=([\w#.-]+))?$/);
   if (!m) throw new Error('prop ' + s);
-  const o = { type: m[1], x: +m[2], y: +m[3], s: m[4] ? +m[4] : 1, k: s, front }; if (m[5]) { if (m[5][0] === '#') o.c = m[5]; else o.tilt = +m[5]; } return o;
+  const o = { type: m[1], x: +m[2], y: +m[3] + (GY - 1085), s: m[4] ? +m[4] : 1, k: s, front }; if (m[5]) { if (m[5][0] === '#') o.c = m[5]; else o.tilt = +m[5]; } return o;
 }
 function parseFx(s) { // "coins:250>480" "hearts@360,700" "num:3@200,600"
   const m = s.match(/^(\w+)(?::([^@]+))?(?:@(-?\d+),(-?\d+))?$/); if (!m) throw new Error('fx ' + s);
-  return { type: m[1], arg: m[2], x: m[3] ? +m[3] : 360, y: m[4] ? +m[4] : 700 };
+  return { type: m[1], arg: m[2], x: m[3] ? +m[3] : 360, y: (m[4] ? +m[4] : 700) + (GY - 1085) };
 }
 const shots = D.beats.map(b => ({ t: b.t, bg: b.bg, actors: (b.a || []).map(parseActor), props: (b.p || []).map(parseProp), fx: (b.f || []).map(parseFx) }));
 const seedOf = id => [...id].reduce((s, c) => s + c.charCodeAt(0), 0);
@@ -314,7 +315,8 @@ function actorAt(a, pa, dt, t, al) {
 }
 
 // ===== النص =====
-const segW = D.segs.map(s => s.split(/\s+/));
+const LIGHT = { day: 1, home: 1, desert: 1, market: 1, sky: 1 }; let curBg = 'scroll';
+const segW = D.segs.map(s => s.split(/ +/));
 const HL = (D.hl || []).map(strip);
 function isHL(w) { const sw = strip(w).replace(/[^ء-يa-zA-Z]/g, '').toLowerCase(); return sw && HL.some(h => sw.includes(h.toLowerCase())); }
 function layout(words, font, maxW) {
@@ -326,14 +328,14 @@ function drawText(t) {
   let i = -1; D.times.forEach((tm, k) => { if (t >= tm[0] - .25) i = k; });
   if (i < 0) return;
   const tm = D.times[i], words = segW[i];
-  const font = AR ? '400 50px Amiri' : '700 40px Inter', lh = AR ? 86 : 56;
+  const font = AR ? '700 48px UI' : '700 42px Inter', lh = AR ? 84 : 58;
   const L = layout(words, font, 640);
-  const blockH = L.lines.length * lh, top = 300 - blockH / 2 + lh * .7;
+  const blockH = L.lines.length * lh, top = 285 - blockH / 2 + lh * .7;
   const segDur = tm[1] - tm[0], fadeOut = i < D.times.length - 1 ? D.times[i + 1][0] - .25 : D.total - 3.2;
   const outA = 1 - ease((t - (fadeOut - .25)) / .25);
   let n = 0;
   // خلفية خفيفة ورا النص حتى ينقرا فوق أي مشهد
-  x.save(); x.globalAlpha = .82 * outA * ease((t - tm[0] + .3) / .3); rr(24, top - lh * .95, W - 48, blockH + lh * .55, 28, 'rgba(11,16,38,.78)'); x.restore();
+  const light = LIGHT[curBg], ink = light ? '#1d2b33' : '#f6efdc', hc = light ? '#b5432f' : C.gold;
   L.lines.forEach((line, li) => {
     const lw = line.reduce((s, w) => s + w[1], 0) + L.sp * (line.length - 1);
     let cx = AR ? (W + lw) / 2 : (W - lw) / 2;
@@ -343,8 +345,8 @@ function drawText(t) {
       if (q > 0) {
         x.save(); x.globalAlpha = q * outA; x.font = font; x.textBaseline = 'alphabetic';
         const hl = isHL(w), px = AR ? cx - ww : cx, py = top + li * lh + (1 - q) * 14;
-        x.fillStyle = hl ? C.gold : C.ink; x.direction = AR ? 'rtl' : 'ltr'; x.textAlign = 'left';
-        if (hl) { x.shadowColor = 'rgba(233,189,95,.45)'; x.shadowBlur = 14; }
+        x.fillStyle = hl ? hc : ink; x.direction = AR ? 'rtl' : 'ltr'; x.textAlign = 'left';
+        if (!light) { x.shadowColor = 'rgba(0,0,0,.45)'; x.shadowBlur = 12; }
         x.fillText(w, px, py); x.restore();
       }
       cx += AR ? -(ww + L.sp) : (ww + L.sp);
@@ -352,17 +354,21 @@ function drawText(t) {
   });
 }
 function header(t) {
-  x.fillStyle = 'rgba(11,16,38,.86)'; x.fillRect(0, 0, W, 118);
-  if (icon.complete) x.drawImage(icon, AR ? W - 92 : 28, 30, 62, 62);
-  x.fillStyle = C.gold; x.font = AR ? '700 34px UI' : '700 32px Inter'; x.textAlign = AR ? 'right' : 'left'; x.direction = AR ? 'rtl' : 'ltr';
-  x.fillText(AR ? 'أوّاب' : 'Awwab', AR ? W - 104 : 102, 64);
-  x.fillStyle = '#cdd2e6'; x.font = AR ? '500 22px UI' : '500 21px Inter'; x.fillText(D.label, AR ? W - 104 : 102, 96);
-  x.direction = 'ltr';
+  const light = LIGHT[curBg], dir = AR ? 'rtl' : 'ltr';
+  // شارة أوّاب
+  const bx = AR ? W - 214 : 24; rr(bx, 28, 190, 58, 16, light ? 'rgba(31,77,68,.92)' : 'rgba(255,255,255,.12)');
+  if (icon.complete) x.drawImage(icon, AR ? bx + 136 : bx + 8, 34, 46, 46);
+  x.fillStyle = light ? '#f6efdc' : C.gold; x.font = AR ? '700 28px UI' : '700 26px Inter'; x.direction = dir; x.textAlign = AR ? 'right' : 'left';
+  x.fillText(AR ? 'أوّاب' : 'Awwab', AR ? bx + 126 : bx + 62, 67);
+  x.fillStyle = light ? '#5b5a52' : '#cdd2e6'; x.font = AR ? '500 21px UI' : '500 19px Inter'; x.textAlign = AR ? 'left' : 'right';
+  x.fillText(D.label, AR ? 30 : W - 30, 64); x.direction = 'ltr';
 }
 function footer(t) {
-  x.fillStyle = 'rgba(11,16,38,.9)'; x.fillRect(0, SC_BOT, W, H - SC_BOT);
-  x.fillStyle = '#a3aac8'; x.font = AR ? '500 22px UI' : '500 20px Inter'; x.textAlign = 'center'; x.direction = AR ? 'rtl' : 'ltr'; x.fillText(D.src, W / 2, SC_BOT + 52); x.direction = 'ltr';
-  rr(60, SC_BOT + 84, W - 120, 6, 3, 'rgba(255,255,255,.12)'); rr(AR ? W - 60 - (W - 120) * t / D.total : 60, SC_BOT + 84, (W - 120) * Math.min(1, t / D.total), 6, 3, C.gold);
+  const light = LIGHT[curBg], y = H - 64;
+  x.strokeStyle = light ? 'rgba(40,50,60,.25)' : 'rgba(255,255,255,.22)'; x.lineWidth = 1.5; x.beginPath(); x.moveTo(30, y - 30); x.lineTo(W - 30, y - 30); x.stroke();
+  x.fillStyle = light ? '#3d4a50' : '#cdd2e6'; x.font = AR ? '500 21px UI' : '500 19px Inter'; x.direction = AR ? 'rtl' : 'ltr'; x.textAlign = AR ? 'right' : 'left';
+  x.fillText(D.src, AR ? W - 30 : 30, y); x.textAlign = AR ? 'left' : 'right'; x.fillStyle = light ? '#b5432f' : C.gold; x.fillText(D.title, AR ? 30 : W - 30, y); x.direction = 'ltr';
+  rr(30, H - 26, W - 60, 4, 2, light ? 'rgba(40,50,60,.12)' : 'rgba(255,255,255,.12)'); rr(AR ? W - 30 - (W - 60) * t / D.total : 30, H - 26, (W - 60) * Math.min(1, t / D.total), 4, 2, light ? '#b5432f' : C.gold);
 }
 function intro(t) {
   const q = 1 - ease((t - 2.1) / .5); if (q <= 0) return;
@@ -382,7 +388,7 @@ function outro(t) {
 }
 window.R = function (t) {
   x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, W, H);
-  let i = 0; shots.forEach((s, k) => { if (t >= s.t) i = k; });
+  let i = 0; shots.forEach((s, k) => { if (t >= s.t) i = k; }); curBg = shots[i].bg;
   // كاميرا: تقريب بطيء بكل لقطة
   const z = 1 + Math.min(1, (t - shots[i].t) / 8) * .035;
   x.save(); x.translate(360, 900); x.scale(z, z); x.translate(-360, -900);
