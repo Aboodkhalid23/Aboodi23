@@ -3,7 +3,7 @@ name: صفحة الروابط
 
 on:
   push:
-    paths: ["links/**", "scripts/update-salah.py", "scripts/make-salah-ics.py", ".github/workflows/links-page.yml"]
+    paths: ["links/**", "scripts/update-salah.py", "scripts/make-salah-ics.py", "scripts/daily-video.*", ".github/workflows/links-page.yml"]
   schedule:
     - cron: "17 1 * * *"   # كل يوم بالليل: يحدّث جدول الصلاة من موقع مسجد توركو
   workflow_dispatch:
@@ -27,6 +27,17 @@ jobs:
       - uses: actions/checkout@v4
       - name: تحديث جدول الصلاة من موقع المسجد
         run: python3 scripts/update-salah.py || true
+      # مقطع اليوم لتطبيق أوّاب: فيديو حديث اليوم بصوت عربي وإنگليزي (مجاني بالكامل)
+      - name: تجهيز أدوات الفيديو
+        continue-on-error: true
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg fonts-noto-core >/dev/null
+          pip install -q edge-tts
+          npm i --no-save --silent playwright@1.48.2 && npx playwright install --with-deps chromium >/dev/null
+      - name: صنع مقطع اليوم
+        continue-on-error: true
+        timeout-minutes: 20
+        run: python3 scripts/daily-video.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
