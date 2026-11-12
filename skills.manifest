@@ -142,3 +142,7 @@ agamm/video-agent                    .claude/skills/remotion-graphics
 # تصميم واجهات التطبيقات (أكثر من 1000 تنزيل، فحصتها: ملفات شرح وسكربت بحث محلي بدون إنترنت)
 ceorkm/mobile-app-ui-design  .  mobile-app-ui-design
 nextlevelbuilder/ui-ux-pro-max-skill  .claude/skills/ui-ux-pro-max  ui-ux-pro-max
+
+# أنيميشن ثلاثي الأبعاد وتحفيز المستخدم (فحصتها: ملفات شرح بس)
+cloudai-x/threejs-skills  skills/threejs-animation
+wondelai/skills  drive-motivation

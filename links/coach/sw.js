@@ -1,5 +1,5 @@
 // التحديث التلقائي: يجيب أحدث نسخة من النت أول، وإذا ماكو نت يشتغل من الذاكرة
-const V = 'coach-v7';
+const V = 'coach-v8';
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== V).map(k => caches.delete(k)))).then(() => self.clients.claim()));

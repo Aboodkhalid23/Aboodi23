@@ -4,16 +4,16 @@ import { RoomEnvironment } from '../vendor/addons/RoomEnvironment.js';
 
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const D = Math.PI / 180;
-const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const ease = t => -(Math.cos(Math.PI * t) - 1) / 2; // حركة ناعمة مثل حركة الإنسان
 const lerp = (a, b, t) => a + (b - a) * t;
 const lv = (a, b, t) => a.clone().lerp(b, t);
 
 /* ================= المواد ================= */
 function materials() {
   return {
-    skin: new THREE.MeshPhysicalMaterial({ color: 0xf1f3f6, roughness: .28, clearcoat: 1, clearcoatRoughness: .14, sheen: .4, sheenColor: 0xcfe0ff }),
-    glow: new THREE.MeshPhysicalMaterial({ color: 0xff3b4d, emissive: 0xff1430, emissiveIntensity: .8, roughness: .3, clearcoat: 1 }),
-    glow2: new THREE.MeshPhysicalMaterial({ color: 0xe6f1ff, emissive: 0x3a8cff, emissiveIntensity: .14, roughness: .3, clearcoat: 1 }),
+    skin: new THREE.MeshStandardMaterial({ color: 0xeef0f3, roughness: .3, metalness: .05, envMapIntensity: 1.15 }),
+    glow: new THREE.MeshStandardMaterial({ color: 0xff3b4d, emissive: 0xff1430, emissiveIntensity: .8, roughness: .3 }),
+    glow2: new THREE.MeshStandardMaterial({ color: 0xffe3e6, emissive: 0xff5a6a, emissiveIntensity: .12, roughness: .3 }),
     metal: new THREE.MeshStandardMaterial({ color: 0xd0d5dc, metalness: .92, roughness: .22 }),
     black: new THREE.MeshStandardMaterial({ color: 0x16181d, metalness: .25, roughness: .5 }),
     pad: new THREE.MeshStandardMaterial({ color: 0x1b1e25, metalness: .05, roughness: .55 }),
@@ -388,9 +388,10 @@ export const EXERCISES = {
 export function createAnimator(canvas, exId, opts = {}) {
   const ex = EXERCISES[exId];
   if (opts.theme === 'green') Object.assign(opts, { bg2: '#2b4a36', bg1: '#13261b', bg0: '#040806', floor: 0x0f1c14, fog: 0x0a140e, rimC: 0x8dffb0 });
+  if (opts.theme === 'brand') Object.assign(opts, { bg2: '#3a3c44', bg1: '#18191d', bg0: '#060607', floor: 0x141518, fog: 0x0c0c0e, rimC: 0xff4d4d });
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: !!opts.capture });
-  renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
-  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.setPixelRatio(Math.min(1.6, window.devicePixelRatio || 1));
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05; renderer.outputColorSpace = THREE.SRGBColorSpace;
   const scene = new THREE.Scene();
   const bg = document.createElement('canvas'); bg.width = 512; bg.height = 512; const bx = bg.getContext('2d');
@@ -400,7 +401,7 @@ export function createAnimator(canvas, exId, opts = {}) {
   scene.fog = new THREE.Fog(opts.fog || 0x101d6a, 6, 12);
   const camera = new THREE.PerspectiveCamera(32, 1, .05, 50);
   scene.add(new THREE.HemisphereLight(0xc9dcff, 0x0a1033, .85));
-  const key = new THREE.DirectionalLight(0xffffff, 2.3); key.position.set(2.5, 4.5, 3); key.castShadow = true; key.shadow.mapSize.set(1024, 1024);
+  const key = new THREE.DirectionalLight(0xffffff, 2.3); key.position.set(2.5, 4.5, 3); key.castShadow = true; key.shadow.mapSize.set(768, 768);
   Object.assign(key.shadow.camera, { left: -2.2, right: 2.2, top: 2.6, bottom: -1.5, near: .5, far: 12 }); key.shadow.radius = 5; key.shadow.bias = -.0004; scene.add(key);
   const rim = new THREE.DirectionalLight(opts.rimC || 0x6fb0ff, 1.8); rim.position.set(-3, 2.5, -3); scene.add(rim);
   const fill = new THREE.PointLight(0x8fbcff, 5, 7); fill.position.set(-1.5, 1.6, 2.2); scene.add(fill);
@@ -485,8 +486,9 @@ export function createAnimator(canvas, exId, opts = {}) {
   function renderTime(time) {
     const k = time % T; let t, ph;
     if (k < tUp) { t = ease(k / tUp); ph = 0 } else if (k < tUp + tHold) { t = 1; ph = 2 } else if (k < tUp + tHold + tDown) { t = 1 - ease((k - tUp - tHold) / tDown); ph = 1 } else { t = 0; ph = 3 }
-    const breath = ex.hold && ph === 2 ? Math.sin(time * 2.4) * .04 : 0;
-    solve(Math.min(1, Math.max(0, t - Math.abs(breath))));
+    const micro = ph === 2 ? (ex.hold ? Math.abs(Math.sin(time * 2.4)) * .04 : Math.abs(Math.sin(time * 5)) * .015) : ph === 3 ? Math.abs(Math.sin(time * 3)) * .01 : 0;
+    solve(Math.min(1, Math.max(0, ph === 3 ? t + micro : t - micro)));
+    B.upper.scale.set(1 + Math.sin(time * 2.2) * .006, 1, 1 + Math.sin(time * 2.2) * .01);
     const c = ex.cam, yaw = (c.yaw[0] + (c.yaw[1] - c.yaw[0]) * (.5 - .5 * Math.cos(time * .22))) * D;
     camera.position.set(c.target.x + Math.sin(yaw) * c.r, c.h, c.target.z + Math.cos(yaw) * c.r); camera.lookAt(c.target);
     const act = ex.df ? t : (ex.hold ? 1 : t);
@@ -498,7 +500,7 @@ export function createAnimator(canvas, exId, opts = {}) {
     if (opts.onPhase) opts.onPhase(ph, Math.floor(time / T));
     renderer.render(scene, camera);
   }
-  function frame(ts) { if (!playing) return; if (last) time += Math.min(.05, (ts - last) / 1000) * (opts.speed || 1); last = ts; renderTime(time); raf = requestAnimationFrame(frame); }
+  function frame(ts) { if (!playing) return; if (document.hidden) { last = 0; raf = requestAnimationFrame(frame); return; } if (last) time += Math.min(.05, (ts - last) / 1000) * (opts.speed || 1); last = ts; renderTime(time); raf = requestAnimationFrame(frame); }
   function resize() { const w = canvas.clientWidth || 300, h = canvas.clientHeight || 300; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
   resize(); const ro = window.ResizeObserver ? new ResizeObserver(resize) : null; ro ? ro.observe(canvas) : window.addEventListener('resize', resize);
   if (opts.manual) playing = false; else raf = requestAnimationFrame(frame);
