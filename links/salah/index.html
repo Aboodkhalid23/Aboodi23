@@ -272,6 +272,7 @@ body.wait #list,body.wait .ow,body.wait .row{opacity:.25}
 .vl{gap:8px}.vl .vhd{display:flex;align-items:baseline;justify-content:space-between;padding:2px 4px}.vl .vhd b{font-size:18px;color:var(--gold)}.vl .vhd span{font-size:12px;color:var(--mut)}
 .vl .scroll{display:flex;flex-direction:column;gap:8px}
 .vl .vr{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:18px;background:var(--card);border:1px solid var(--line);text-align:start;color:var(--ink);flex:none}
+.vl .vsec{margin:10px 4px 0;font-size:13px;font-weight:700;color:var(--gold)}
 .vl .vr.top{background:var(--card2);border-color:var(--gold);padding:14px 12px}
 .vl .vr b{flex:none;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--gold);color:var(--dark)}
 .vl .vr b svg{width:18px;height:18px}
@@ -847,23 +848,28 @@ function duaCard(){var P=window.DUA||[],H=window.HADITH||[],n=dayNo();DTODAY=P.l
  if(DTODAY){$('duah').textContent=EN?DTODAY[5]:DTODAY[4];$('duaa').textContent=DTODAY[0];$('duar').textContent=EN?DTODAY[3]:'';$('duae').textContent=EN?DTODAY[1]:''}
  if(HTODAY){$('hdh').textContent=L('الحديث '+HTODAY[0]+' من الأربعين النووية','Hadith '+HTODAY[0]+' of An-Nawawi\'s Forty');$('hda').textContent=HTODAY[1];$('hde').textContent=EN?HTODAY[2]:''}}
 // مكتبة المقاطع: فيديو موشن گرافيك لكل حديث (مصنوع بالكود: scripts/motion)، محفوظة بمجلد v. حديث اليوم يطلع أول وحده
-var VIDX=null,VID=null;function vget(cb){if(VIDX){cb();return}fetch('v/index.json?'+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(j){VIDX=j&&j.items||[];cb()}).catch(function(){VIDX=[];cb()})}
+var VIDX=null,VID=null;var VSER=[];function vget(cb){if(VIDX){cb();return}fetch('v/index.json?'+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(j){VIDX=j&&j.items||[];VSER=j&&Array.isArray(j.series)?j.series:[];cb()}).catch(function(){VIDX=[];cb()})}
 function vseen(){try{return JSON.parse(localStorage.getItem('vseen'))||{}}catch(e){return{}}}
 function loadVid(cb){vget(function(){VID=null;if(HTODAY)VIDX.forEach(function(it){if(it.n==HTODAY[0])VID=it});showVid();cb&&cb()})}
 function showVid(){var v=$('hvid');if(!VID){v.style.display='none';return}var f='v/'+(EN?VID.en:VID.ar);if(v.getAttribute('src')!=f)v.setAttribute('src',f);v.style.display=''}
 function mmss(s){return Math.floor(s/60)+':'+('0'+s%60).slice(-2)}
 var PLAY='<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>';
 function vplay(it){var v=$('vplay'),f='v/'+(EN?it.en:it.ar);if(v.getAttribute('src')!=f)v.setAttribute('src',f);$('vfull').classList.add('on');
- var sn=vseen();sn[it.n]=1;try{localStorage.setItem('vseen',JSON.stringify(sn))}catch(e){}
+ var sn=vseen();sn[it.id]=1;try{localStorage.setItem('vseen',JSON.stringify(sn))}catch(e){}
  try{v.currentTime=0}catch(e){}var p=v.play();p&&p.catch(function(){});vlist()}
 function vclose(){var v=$('vplay');v.pause();$('vfull').classList.remove('on');if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(function(){})}
 $('vx').onclick=vclose;$('vplay').onended=vclose;
 function vlist(){vget(function(){
  if(!VIDX.length){$('vlist').innerHTML='<p class="vsub" style="color:var(--mut)">'+L('المقاطع بعدها ما جاهزة، جرّب بعد شوية.','Videos are not ready yet, try again later.')+'</p>';return}
- var sn=vseen(),td=HTODAY?HTODAY[0]:0,list=VIDX.slice().sort(function(a,b){return (b.n==td)-(a.n==td)||a.n-b.n});
+ var sn=vseen(),td=VIDX[dayNo()%VIDX.length];
  $('vcount').textContent=L(VIDX.length+' مقطع',VIDX.length+' videos');
- $('vlist').innerHTML=list.map(function(it){return '<button class="vr'+(EN?' en':'')+(it.n==td?' top':'')+(sn[it.n]?' seen':'')+'" data-n="'+it.n+'"><b>'+PLAY+'</b><div><small>'+L('الحديث ','Hadith ')+'<span class="n" style="font:inherit;display:inline">'+it.n+'</span> · <span class="n" style="font:inherit;display:inline">'+mmss(EN?it.de:it.da)+'</span>'+(it.n==td?'<i class="td">'+L('مقطع اليوم','Today')+'</i>':'')+'</small><span class="t"></span></div></button>'}).join('');
- document.querySelectorAll('.vl .vr').forEach(function(r){var it=VIDX.filter(function(x){return x.n==+r.getAttribute('data-n')})[0];r.querySelector('.t').textContent=EN?it.te:it.ta;r.onclick=function(){vplay(it)}})})}
+ function row(it,top){var sub=it.n?L('الحديث ','Hadith ')+'<span class="n" style="font:inherit;display:inline">'+it.n+'</span> · ':'';
+  return '<button class="vr'+(EN?' en':'')+(top?' top':'')+(sn[it.id]?' seen':'')+'" data-id="'+it.id+'"><b>'+PLAY+'</b><div><small>'+sub+'<span class="n" style="font:inherit;display:inline">'+mmss(EN?it.de:it.da)+'</span>'+(top?'<i class="td">'+L('مقطع اليوم','Today')+'</i>':'')+'</small><span class="t"></span></div></button>'}
+ var h=row(td,true);
+ (VSER.length?VSER:[{k:'nawawi',ar:'',en:''}]).forEach(function(se){var its=VIDX.filter(function(it){return (it.s||'nawawi')==se.k});if(!its.length)return;
+  h+='<p class="vsec">'+(EN?se.en:se.ar)+'</p>'+its.map(function(it){return row(it,false)}).join('')});
+ $('vlist').innerHTML=h;
+ document.querySelectorAll('.vl .vr').forEach(function(r){var it=VIDX.filter(function(x){return x.id==r.getAttribute('data-id')})[0];r.querySelector('.t').textContent=EN?it.te:it.ta;if(!it.n)r.querySelector('.t').style.fontFamily='UI,sans-serif';r.onclick=function(){vplay(it)}})})}
 function openVid(){location.hash='#vids'}
 new MutationObserver(function(){if(!$('s-dua').classList.contains('on'))$('hvid').pause()}).observe($('s-dua'),{attributes:true,attributeFilter:['class']});
 function dtab(t){DTAB=t;document.querySelectorAll('.dtab button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-d')==t)});$('dpane').style.display=t=='d'?'':'none';$('hpane').style.display=t=='h'?'':'none';if(t!='h')$('hvid').pause();else if(!VID)loadVid()}

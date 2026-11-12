@@ -3575,5 +3575,3285 @@
     ]
    ]
   ]
+ },
+ "q-yunus": {
+  "hl": {
+   "ar": [
+    "يونس",
+    "الحوت",
+    "المسبحين",
+    "يقطين"
+   ],
+   "en": [
+    "Jonah",
+    "fish",
+    "exalt",
+    "gourd"
+   ]
+  },
+  "b": [
+   [
+    "",
+    "",
+    "sea",
+    [],
+    [
+     "ship@360,1000*1.1"
+    ],
+    []
+   ],
+   [
+    "اذ ابق الى الفلك",
+    "ran away to the laden ship",
+    "sea",
+    [],
+    [
+     "ship@420,1000*1.2"
+    ],
+    []
+   ],
+   [
+    "فساهم",
+    "drew lots",
+    "storm",
+    [],
+    [
+     "ship@360,1000*1.1"
+    ],
+    [
+     "rain"
+    ]
+   ],
+   [
+    "فالتقمه الحوت",
+    "the fish swallowed",
+    "sea",
+    [],
+    [
+     "whale@360,1060*1.4"
+    ],
+    []
+   ],
+   [
+    "فلولا انه كان من المسبحين",
+    "exalt Allah",
+    "deep",
+    [],
+    [
+     "whale@360,900*1.6"
+    ],
+    [
+     "glow@360,820",
+     "sparkle@360,800"
+    ]
+   ],
+   [
+    "للبث فى بطنه",
+    "remained inside its belly",
+    "deep",
+    [],
+    [
+     "whale@360,900*1.6",
+     "hourglass@560,1080*.7"
+    ],
+    []
+   ],
+   [
+    "فنبذنه بالعراء",
+    "threw him onto the open shore",
+    "desert",
+    [],
+    [
+     "palm@600,1080"
+    ],
+    [
+     "rays@360,420"
+    ]
+   ],
+   [
+    "وانبتنا عليه شجرة",
+    "gourd vine",
+    "desert",
+    [],
+    [
+     "gourd@360,1080"
+    ],
+    [
+     "sparkle@360,850"
+    ]
+   ],
+   [
+    "وارسلنه الى مائة الف",
+    "a hundred thousand",
+    "day",
+    [],
+    [
+     "village@360,1080*1.3",
+     "people@360,1080*.9=7"
+    ],
+    []
+   ],
+   [
+    "فامنوا",
+    "they believed",
+    "day",
+    [],
+    [
+     "village@360,1080*1.3",
+     "people@360,1080*.9=7"
+    ],
+    [
+     "hearts@360,800",
+     "check@560,600"
+    ]
+   ]
+  ]
+ },
+ "q-musa": {
+  "hl": {
+   "ar": [
+    "موسى",
+    "البحر",
+    "ربى",
+    "فانفلق"
+   ],
+   "en": [
+    "Moses",
+    "sea",
+    "my Lord",
+    "parted"
+   ]
+  },
+  "b": [
+   [
+    "",
+    "",
+    "desert",
+    [],
+    [
+     "sun@560,880*.9"
+    ],
+    []
+   ],
+   [
+    "فلما ترءا الجمعان",
+    "two companies saw",
+    "desert",
+    [],
+    [
+     "people@200,1080*.8=4",
+     "people@560,1080*.6=5"
+    ],
+    []
+   ],
+   [
+    "كلا ان معى ربى",
+    "with me is my Lord",
+    "space",
+    [],
+    [
+     "staff@360,1080"
+    ],
+    [
+     "glow@360,820",
+     "rays@360,420"
+    ]
+   ],
+   [
+    "فاوحينا الى موسى",
+    "Strike with your staff",
+    "sea",
+    [],
+    [
+     "staff@360,1080"
+    ],
+    [
+     "sparkle@360,850"
+    ]
+   ],
+   [
+    "فانفلق",
+    "it parted",
+    "sea",
+    [],
+    [
+     "seawall@250,1100=-1",
+     "seawall@470,1100"
+    ],
+    [
+     "rays@360,420"
+    ]
+   ],
+   [
+    "وانجينا موسى",
+    "We saved Moses",
+    "sea",
+    [],
+    [
+     "seawall@250,1100=-1",
+     "seawall@470,1100"
+    ],
+    [
+     "check@360,600",
+     "sparkle@360,850"
+    ]
+   ],
+   [
+    "ثم اغرقنا الءاخرين",
+    "drowned the others",
+    "storm",
+    [],
+    [],
+    []
+   ],
+   [
+    "ان فى ذلك لءاية",
+    "Indeed in that is a sign",
+    "night",
+    [],
+    [
+     "book@360,980*1.5"
+    ],
+    [
+     "sparkle@360,800"
+    ]
+   ]
+  ]
+ },
+ "q-ibrahim": {
+  "hl": {
+   "ar": [
+    "بردا",
+    "وسلما",
+    "ابرهيم"
+   ],
+   "en": [
+    "coolness",
+    "safety",
+    "Abraham"
+   ]
+  },
+  "b": [
+   [
+    "",
+    "",
+    "day",
+    [],
+    [
+     "stone@200,1080*1.3",
+     "stone@520,1080*1.5"
+    ],
+    []
+   ],
+   [
+    "اف لكم",
+    "Uff to you",
+    "day",
+    [],
+    [
+     "stone@200,1080*1.3",
+     "stone@520,1080*1.5"
+    ],
+    [
+     "x@360,800"
+    ]
+   ],
+   [
+    "قالوا حرقوه",
+    "Burn him",
+    "dark",
+    [],
+    [
+     "fire@360,1080*2.2"
+    ],
+    []
+   ],
+   [
+    "قلنا ينار كونى بردا",
+    "O fire, be coolness",
+    "garden",
+    [],
+    [
+     "flowers@360,1060*1.2"
+    ],
+    [
+     "rays@360,420",
+     "sparkle@360,850"
+    ]
+   ],
+   [
+    "وارادوا به كيدا",
+    "intended for him harm",
+    "garden",
+    [],
+    [
+     "flowers@360,1060*1.2"
+    ],
+    [
+     "check@560,620"
+    ]
+   ]
+  ]
+ },
+ "q-nuh": {
+  "hl": {
+   "ar": [
+    "نوح",
+    "موج",
+    "الجودى"
+   ],
+   "en": [
+    "Noah",
+    "waves",
+    "Judiyy"
+   ]
+  },
+  "b": [
+   [
+    "",
+    "",
+    "storm",
+    [],
+    [
+     "ark@360,1000"
+    ],
+    [
+     "rain"
+    ]
+   ],
+   [
+    "احمل فيها من كل زوجين",
+    "Load upon the ship",
+    "day",
+    [],
+    [
+     "ark@360,1060",
+     "camel@110,1085*.5",
+     "camel@610,1085*.5=-1"
+    ],
+    []
+   ],
+   [
+    "بسم الله مجرىها",
+    "in the name of Allah is its course",
+    "sea",
+    [],
+    [
+     "ark@360,1000"
+    ],
+    [
+     "sparkle@360,700"
+    ]
+   ],
+   [
+    "فى موج كالجبال",
+    "waves like mountains",
+    "storm",
+    [],
+    [
+     "ark@360,950"
+    ],
+    [
+     "rain"
+    ]
+   ],
+   [
+    "ساوى الى جبل",
+    "refuge on a mountain",
+    "storm",
+    [],
+    [
+     "mountain@540,1080*.9",
+     "ark@200,980*.6"
+    ],
+    [
+     "rain"
+    ]
+   ],
+   [
+    "لا عاصم اليوم",
+    "no protector today",
+    "storm",
+    [],
+    [
+     "ark@360,980"
+    ],
+    []
+   ],
+   [
+    "وقيل يارض ابلعى",
+    "O earth, swallow",
+    "sky",
+    [],
+    [
+     "mountain@420,1080*1.2",
+     "ark@420,830*.6"
+    ],
+    [
+     "rays@360,420"
+    ]
+   ],
+   [
+    "واستوت على الجودى",
+    "came to rest",
+    "sky",
+    [],
+    [
+     "mountain@420,1080*1.2",
+     "ark@420,830*.6"
+    ],
+    [
+     "check@600,600",
+     "sparkle@420,800"
+    ]
+   ]
+  ]
+ },
+ "q-kahf": {
+  "hl": {
+   "ar": [
+    "الكهف",
+    "رحمة",
+    "رشدا",
+    "هدى"
+   ],
+   "en": [
+    "cave",
+    "mercy",
+    "guidance"
+   ]
+  },
+  "b": [
+   [
+    "",
+    "",
+    "night",
+    [],
+    [
+     "cave@360,1100*.9"
+    ],
+    [
+     "sparkle@360,800"
+    ]
+   ],
+   [
+    "اذ اوى الفتية الى الكهف",
+    "the youths retreated",
+    "night",
+    [],
+    [
+     "cave@360,1100*.9"
+    ],
+    [
+     "glow@360,900"
+    ]
+   ],
+   [
+    "ربنا ءاتنا من لدنك رحمة",
+    "grant us from Yourself mercy",
+    "cavein",
+    [],
+    [
+     "lamp@360,700"
+    ],
+    [
+     "rays@360,420"
+    ]
+   ],
+   [
+    "فضربنا على ءاذانهم",
+    "cast [a cover of sleep]",
+    "cavein",
+    [],
+    [],
+    [
+     "glow@360,850",
+     "sparkle@360,800"
+    ]
+   ],
+   [
+    "سنين عددا",
+    "number of years",
+    "space",
+    [],
+    [
+     "sunmoon@360,700",
+     "hourglass@360,1080*1.2"
+    ],
+    []
+   ],
+   [
+    "ثم بعثنهم",
+    "We awakened them",
+    "dawn",
+    [],
+    [
+     "cave@360,1100*.9",
+     "sun@360,900*.8"
+    ],
+    [
+     "rays@360,700"
+    ]
+   ],
+   [
+    "انهم فتية ءامنوا",
+    "youths who believed",
+    "night",
+    [],
+    [
+     "cave@360,1100*.9"
+    ],
+    [
+     "glow@360,900",
+     "sparkle@360,700"
+    ]
+   ]
+  ]
+ },
+ "q-naml": {
+  "hl": {
+   "ar": [
+    "النمل",
+    "نملة",
+    "اشكر",
+    "برحمتك"
+   ],
+   "en": [
+    "ants",
+    "ant",
+    "grateful",
+    "mercy"
+   ]
+  },
+  "b": [
+   [
+    "",
+    "",
+    "valley",
+    [],
+    [
+     "birds@100,520"
+    ],
+    []
+   ],
+   [
+    "حتى اذا اتوا على واد النمل",
+    "valley of the ants",
+    "valley",
+    [],
+    [
+     "ants@0,1100=8"
+    ],
+    []
+   ],
+   [
+    "قالت نملة",
+    "an ant said",
+    "valley",
+    [],
+    [
+     "ant@360,1080*2.5"
+    ],
+    [
+     "sparkle@360,980"
+    ]
+   ],
+   [
+    "ادخلوا مسكنكم",
+    "enter your dwellings",
+    "valley",
+    [],
+    [
+     "ants@0,1100=8"
+    ],
+    []
+   ],
+   [
+    "فتبسم ضاحكا",
+    "smiled",
+    "valley",
+    [],
+    [
+     "flowers@360,1080"
+    ],
+    [
+     "hearts@360,800"
+    ]
+   ],
+   [
+    "رب اوزعنى ان اشكر",
+    "enable me to be grateful",
+    "night",
+    [],
+    [],
+    [
+     "rays@360,420",
+     "glow@360,800"
+    ]
+   ],
+   [
+    "وادخلنى برحمتك",
+    "admit me by Your mercy",
+    "light",
+    [],
+    [],
+    [
+     "sparkle@360,800"
+    ]
+   ]
+  ]
+ },
+ "q-yusuf": {
+  "hl": {
+   "ar": [
+    "كوكبا",
+    "والشمس",
+    "والقمر",
+    "سجدين"
+   ],
+   "en": [
+    "eleven stars",
+    "sun",
+    "moon",
+    "prostrating"
+   ]
+  },
+  "b": [
+   [
+    "",
+    "",
+    "night",
+    [],
+    [],
+    [
+     "sparkle@360,700"
+    ]
+   ],
+   [
+    "انى رايت احد عشر كوكبا",
+    "eleven stars",
+    "space",
+    [],
+    [
+     "stars11@360,700"
+    ],
+    []
+   ],
+   [
+    "والشمس والقمر",
+    "the sun and the moon",
+    "space",
+    [],
+    [
+     "stars11@360,700",
+     "sunmoon@360,760"
+    ],
+    []
+   ],
+   [
+    "رايتهم لى سجدين",
+    "prostrating",
+    "space",
+    [],
+    [
+     "stars11@360,700=1",
+     "sunmoon@360,760"
+    ],
+    [
+     "bow@360,800"
+    ]
+   ],
+   [
+    "لا تقصص رءياك",
+    "do not relate your vision",
+    "night",
+    [],
+    [
+     "house@360,1080*.9"
+    ],
+    []
+   ],
+   [
+    "ان الشيطن للانسن عدو",
+    "Satan, to man",
+    "dark",
+    [],
+    [],
+    [
+     "x@360,780"
+    ]
+   ],
+   [
+    "وكذلك يجتبيك ربك",
+    "your Lord choose you",
+    "light",
+    [],
+    [],
+    [
+     "rays@360,420",
+     "sparkle@360,800"
+    ]
+   ],
+   [
+    "ان ربك عليم حكيم",
+    "Knowing and Wise",
+    "night",
+    [],
+    [
+     "book@360,980*1.5"
+    ],
+    [
+     "glow@360,900"
+    ]
+   ]
+  ]
+ },
+ "q-luqman": {
+  "hl": {
+   "ar": [
+    "تشرك",
+    "بولديه",
+    "الصلوة",
+    "واصبر"
+   ],
+   "en": [
+    "associate",
+    "parents",
+    "prayer",
+    "patient"
+   ]
+  },
+  "b": [
+   [
+    "",
+    "",
+    "home",
+    [
+     "child@360:sit"
+    ],
+    [],
+    []
+   ],
+   [
+    "لا تشرك بالله",
+    "do not associate",
+    "night",
+    [
+     "child@360:raise"
+    ],
+    [],
+    [
+     "glow@400,700"
+    ]
+   ],
+   [
+    "حملته امه وهنا",
+    "His mother carried him",
+    "home",
+    [
+     "woman@290:heart",
+     "child@470:hug<"
+    ],
+    [],
+    [
+     "hearts@380,820"
+    ]
+   ],
+   [
+    "ان اشكر لى ولولديك",
+    "Be grateful",
+    "home",
+    [
+     "child@360:dua"
+    ],
+    [],
+    [
+     "sparkle@360,700"
+    ]
+   ],
+   [
+    "مثقال حبة من خردل",
+    "mustard seed",
+    "night",
+    [],
+    [
+     "rock@360,1080"
+    ],
+    [
+     "glow@360,960",
+     "sparkle@360,960"
+    ]
+   ],
+   [
+    "اقم الصلوة",
+    "establish prayer",
+    "mosque",
+    [
+     "child@360:pray"
+    ],
+    [
+     "mat@360,1090"
+    ],
+    []
+   ],
+   [
+    "وامر بالمعروف",
+    "enjoin what is right",
+    "day",
+    [
+     "child@250:point",
+     "man2@490:receive<"
+    ],
+    [
+     "^bubble@360,700*.7=#3f7d4f"
+    ],
+    []
+   ],
+   [
+    "واصبر على ما اصابك",
+    "be patient",
+    "dawn",
+    [
+     "child@360:calm"
+    ],
+    [
+     "sun@560,940*.8"
+    ],
+    [
+     "rays@560,800"
+    ]
+   ],
+   [
+    "ولا تصعر خدك",
+    "do not turn your cheek",
+    "market",
+    [
+     "child@300:calm"
+    ],
+    [
+     "people@560,1080*.8=3"
+    ],
+    []
+   ],
+   [
+    "واقصد فى مشيك",
+    "moderate in your pace",
+    "day",
+    [
+     "child@100>420:calm"
+    ],
+    [],
+    []
+   ],
+   [
+    "واغضض من صوتك",
+    "lower your voice",
+    "day",
+    [
+     "child@420:silent"
+    ],
+    [],
+    []
+   ]
+  ]
+ },
+ "q-zalzala": {
+  "hl": {
+   "ar": [
+    "زلزالها",
+    "خيرا",
+    "شرا",
+    "ذرة"
+   ],
+   "en": [
+    "earthquake",
+    "good",
+    "evil",
+    "atom"
+   ]
+  },
+  "b": [
+   [
+    "",
+    "",
+    "desert",
+    [],
+    [
+     "mountain@360,1080*1.1"
+    ],
+    [
+     "shake"
+    ]
+   ],
+   [
+    "واخرجت الارض اثقالها",
+    "discharges its burdens",
+    "desert",
+    [],
+    [
+     "mountain@360,1080*1.1",
+     "stone@180,1080",
+     "stone@560,1080"
+    ],
+    [
+     "shake"
+    ]
+   ],
+   [
+    "وقال الانسن ما لها",
+    "What is [wrong]",
+    "dark",
+    [
+     "man@360:think"
+    ],
+    [],
+    []
+   ],
+   [
+    "يومئذ تحدث اخبارها",
+    "report its news",
+    "night",
+    [],
+    [
+     "scroll@360,1040*1.2"
+    ],
+    []
+   ],
+   [
+    "يصدر الناس اشتاتا",
+    "depart separated",
+    "dawn",
+    [],
+    [
+     "people@200,1080*.8=4",
+     "people@540,1080*.7=4"
+    ],
+    []
+   ],
+   [
+    "فمن يعمل مثقال ذرة خيرا",
+    "atom's weight of good",
+    "light",
+    [],
+    [
+     "scales@360,1080=-0.15"
+    ],
+    [
+     "sparkle@200,880",
+     "check@560,600"
+    ]
+   ],
+   [
+    "ومن يعمل مثقال ذرة شرا",
+    "atom's weight of evil",
+    "dark",
+    [],
+    [
+     "scales@360,1080=0.15"
+    ],
+    []
+   ]
+  ]
+ },
+ "q-qariah": {
+  "hl": {
+   "ar": [
+    "القارعة",
+    "ثقلت",
+    "خفت",
+    "حامية"
+   ],
+   "en": [
+    "Striking Calamity",
+    "heavy",
+    "light",
+    "Fire"
+   ]
+  },
+  "b": [
+   [
+    "",
+    "",
+    "dark",
+    [],
+    [],
+    [
+     "shake"
+    ]
+   ],
+   [
+    "يوم يكون الناس كالفراش",
+    "like moths",
+    "dawn",
+    [],
+    [],
+    [
+     "moths"
+    ]
+   ],
+   [
+    "وتكون الجبال كالعهن",
+    "like wool",
+    "sky",
+    [],
+    [
+     "wool@360,1000"
+    ],
+    []
+   ],
+   [
+    "فاما من ثقلت",
+    "scales are heavy",
+    "night",
+    [],
+    [
+     "scales@360,1080=-0.2"
+    ],
+    [
+     "sparkle@200,900"
+    ]
+   ],
+   [
+    "فهو فى عيشة راضية",
+    "pleasant life",
+    "garden",
+    [],
+    [],
+    [
+     "sparkle@360,800"
+    ]
+   ],
+   [
+    "واما من خفت",
+    "scales are light",
+    "dark",
+    [],
+    [
+     "scales@360,1080=0.2"
+    ],
+    []
+   ],
+   [
+    "نار حامية",
+    "intensely hot",
+    "hell",
+    [],
+    [],
+    []
+   ]
+  ]
+ },
+ "q-infitar": {
+  "hl": {
+   "ar": [
+    "انفطرت",
+    "انتثرت",
+    "الكريم"
+   ],
+   "en": [
+    "breaks apart",
+    "stars",
+    "Generous"
+   ]
+  },
+  "b": [
+   [
+    "",
+    "",
+    "space",
+    [],
+    [],
+    [
+     "crack"
+    ]
+   ],
+   [
+    "واذا الكواكب انتثرت",
+    "stars fall",
+    "space",
+    [],
+    [],
+    [
+     "fall"
+    ]
+   ],
+   [
+    "واذا البحار فجرت",
+    "seas are erupted",
+    "storm",
+    [],
+    [],
+    []
+   ],
+   [
+    "واذا القبور بعثرت",
+    "graves are scattered",
+    "dark",
+    [],
+    [
+     "stone@200,1080",
+     "stone@500,1080*1.2"
+    ],
+    [
+     "shake"
+    ]
+   ],
+   [
+    "علمت نفس",
+    "A soul will",
+    "night",
+    [],
+    [
+     "scroll@360,1040*1.2"
+    ],
+    []
+   ],
+   [
+    "يايها الانسن ما غرك",
+    "what has deceived you",
+    "night",
+    [
+     "man@360:think"
+    ],
+    [],
+    []
+   ],
+   [
+    "الذى خلقك فسوىك",
+    "created you",
+    "sky",
+    [
+     "man@360:open"
+    ],
+    [],
+    [
+     "sparkle@360,700"
+    ]
+   ],
+   [
+    "وان عليكم لحفظين",
+    "keepers",
+    "night",
+    [
+     "man@360:calm"
+    ],
+    [
+     "scroll@170,1040*.6",
+     "^pen@560,900"
+    ],
+    [
+     "glow@360,800"
+    ]
+   ]
+  ]
+ },
+ "q-kitab": {
+  "hl": {
+   "ar": [
+    "الكتب",
+    "صغيرة",
+    "كبيرة",
+    "يظلم"
+   ],
+   "en": [
+    "record",
+    "small",
+    "great",
+    "injustice"
+   ]
+  },
+  "b": [
+   [
+    "",
+    "",
+    "desert",
+    [],
+    [
+     "mountain@360,1080"
+    ],
+    [
+     "shake"
+    ]
+   ],
+   [
+    "وترى الارض بارزة",
+    "earth prominent",
+    "desert",
+    [],
+    [],
+    []
+   ],
+   [
+    "وعرضوا على ربك صفا",
+    "in rows",
+    "dawn",
+    [],
+    [
+     "people@360,1080*.9=8"
+    ],
+    []
+   ],
+   [
+    "ووضع الكتب",
+    "the record",
+    "night",
+    [],
+    [
+     "book@360,980*1.7"
+    ],
+    [
+     "glow@360,900"
+    ]
+   ],
+   [
+    "لا يغادر صغيرة ولا كبيرة",
+    "nothing small or great",
+    "night",
+    [],
+    [
+     "scroll@360,1040*1.3",
+     "^pen@540,900"
+    ],
+    []
+   ],
+   [
+    "ووجدوا ما عملوا حاضرا",
+    "find what they did",
+    "night",
+    [],
+    [
+     "scales@360,1080"
+    ],
+    []
+   ],
+   [
+    "ولا يظلم ربك احدا",
+    "injustice to no one",
+    "light",
+    [],
+    [
+     "scales@360,1080"
+    ],
+    [
+     "sparkle@360,800"
+    ]
+   ]
+  ]
+ },
+ "q-zumar": {
+  "hl": {
+   "ar": [
+    "جهنم",
+    "الجنة",
+    "سلم",
+    "الحمد"
+   ],
+   "en": [
+    "Hell",
+    "Paradise",
+    "Peace",
+    "Praise"
+   ]
+  },
+  "b": [
+   [
+    "",
+    "",
+    "hell",
+    [],
+    [
+     "people@360,1080*.8=6"
+    ],
+    []
+   ],
+   [
+    "قيل ادخلوا ابوب جهنم",
+    "Enter the gates of Hell",
+    "hell",
+    [],
+    [
+     "gate@360,1080*.9=#5a2a1a"
+    ],
+    []
+   ],
+   [
+    "وسيق الذين اتقوا ربهم",
+    "those who feared their Lord",
+    "light",
+    [],
+    [
+     "people@360,1080*.8=6"
+    ],
+    [
+     "sparkle@360,800"
+    ]
+   ],
+   [
+    "وفتحت ابوبها",
+    "its gates have been opened",
+    "light",
+    [],
+    [
+     "gate@360,1080*.9=1"
+    ],
+    [
+     "rays@360,420"
+    ]
+   ],
+   [
+    "سلم عليكم طبتم",
+    "Peace be upon you",
+    "garden",
+    [],
+    [],
+    [
+     "sparkle@360,800",
+     "hearts@360,850"
+    ]
+   ],
+   [
+    "الحمد لله الذى صدقنا",
+    "who has fulfilled",
+    "garden",
+    [],
+    [
+     "tree@360,1080"
+    ],
+    [
+     "sparkle@360,800"
+    ]
+   ],
+   [
+    "وترى الملئكة",
+    "angels surrounding the Throne",
+    "light",
+    [],
+    [],
+    [
+     "rays@360,420",
+     "glow@360,700"
+    ]
+   ],
+   [
+    "وقيل الحمد لله رب العلمين",
+    "Lord of the worlds",
+    "light",
+    [],
+    [],
+    [
+     "sparkle@360,700"
+    ]
+   ]
+  ]
+ },
+ "q-jannah": {
+  "hl": {
+   "ar": [
+    "النعيم",
+    "المقربون",
+    "سلما"
+   ],
+   "en": [
+    "Gardens of Pleasure",
+    "Peace"
+   ]
+  },
+  "b": [
+   [
+    "",
+    "",
+    "garden",
+    [],
+    [],
+    [
+     "sparkle@360,800"
+    ]
+   ],
+   [
+    "فى جنت النعيم",
+    "Gardens of Pleasure",
+    "garden",
+    [],
+    [
+     "tree@360,1080*1.2"
+    ],
+    [
+     "rays@360,420"
+    ]
+   ],
+   [
+    "على سرر موضونة",
+    "thrones woven",
+    "garden",
+    [],
+    [
+     "throne@220,1080*.8",
+     "throne@500,1080*.8"
+    ],
+    []
+   ],
+   [
+    "باكواب واباريق",
+    "vessels, pitchers",
+    "garden",
+    [],
+    [
+     "cup@260,1080*1.2",
+     "jug@460,1080*1.3"
+    ],
+    [
+     "sparkle@360,900"
+    ]
+   ],
+   [
+    "وفكهة مما يتخيرون",
+    "fruit",
+    "garden",
+    [],
+    [
+     "tree@200,1080",
+     "tree@520,1080"
+    ],
+    []
+   ],
+   [
+    "كامثل اللؤلؤ",
+    "pearls",
+    "garden",
+    [],
+    [
+     "pearls@360,800*1.4"
+    ],
+    [
+     "sparkle@360,800"
+    ]
+   ],
+   [
+    "جزاء بما كانوا يعملون",
+    "As reward",
+    "light",
+    [],
+    [],
+    [
+     "check@560,620",
+     "sparkle@360,800"
+    ]
+   ],
+   [
+    "الا قيلا سلما سلما",
+    "Peace, peace",
+    "garden",
+    [],
+    [
+     "flowers@360,1080"
+    ],
+    [
+     "hearts@360,850"
+    ]
+   ]
+  ]
+ },
+ "q-afw": {
+  "hl": {
+   "ar": [
+    "مغفرة",
+    "الغيظ",
+    "والعافين",
+    "المحسنين"
+   ],
+   "en": [
+    "forgiveness",
+    "anger",
+    "pardon",
+    "good"
+   ]
+  },
+  "b": [
+   [
+    "",
+    "",
+    "garden",
+    [],
+    [],
+    [
+     "rays@360,420"
+    ]
+   ],
+   [
+    "الذين ينفقون",
+    "Who spend",
+    "day",
+    [
+     "man@230:give",
+     "poor@500:sitbeg<"
+    ],
+    [],
+    [
+     "coins:300>470"
+    ]
+   ],
+   [
+    "والكظمين الغيظ",
+    "restrain anger",
+    "day",
+    [
+     "man@360:calm"
+    ],
+    [],
+    [
+     "glow@360,780"
+    ]
+   ],
+   [
+    "والعافين عن الناس",
+    "pardon the people",
+    "day",
+    [
+     "man@260:hug",
+     "man2@460:hug<"
+    ],
+    [],
+    [
+     "hearts@360,800"
+    ]
+   ],
+   [
+    "والذين اذا فعلوا فحشة",
+    "commit an immorality",
+    "night",
+    [
+     "man@360:sad"
+    ],
+    [],
+    []
+   ],
+   [
+    "ذكروا الله فاستغفروا",
+    "seek forgiveness",
+    "mosque",
+    [
+     "man@360:sujud"
+    ],
+    [
+     "mat@360,1090*1.3"
+    ],
+    [
+     "glow@330,980"
+    ]
+   ],
+   [
+    "اولئك جزاؤهم مغفرة",
+    "their reward is forgiveness",
+    "garden",
+    [
+     "man@360:dua"
+    ],
+    [],
+    [
+     "sparkle@360,800"
+    ]
+   ]
+  ]
+ },
+ "q-ahsan": {
+  "hl": {
+   "ar": [
+    "احسن",
+    "الحسنة",
+    "صبروا",
+    "فاستعذ"
+   ],
+   "en": [
+    "better",
+    "good deed",
+    "patient",
+    "refuge"
+   ]
+  },
+  "b": [
+   [
+    "",
+    "",
+    "day",
+    [
+     "man@360:point"
+    ],
+    [
+     "^bubble@360,640*.8=#3f7d4f"
+    ],
+    []
+   ],
+   [
+    "ولا تستوى الحسنة",
+    "not equal are the good deed",
+    "night",
+    [],
+    [
+     "scales@360,1080=-0.15"
+    ],
+    []
+   ],
+   [
+    "ادفع بالتى هى احسن",
+    "Repel [evil]",
+    "day",
+    [
+     "man@230:give",
+     "man2@490:angry<"
+    ],
+    [
+     "^gift@360,880*.8"
+    ],
+    []
+   ],
+   [
+    "كانه ولى حميم",
+    "devoted friend",
+    "day",
+    [
+     "man@260:hug",
+     "man2@460:hug<"
+    ],
+    [],
+    [
+     "hearts@360,800"
+    ]
+   ],
+   [
+    "الا الذين صبروا",
+    "those who are patient",
+    "dawn",
+    [
+     "man@360:calm"
+    ],
+    [
+     "sun@560,940*.8"
+    ],
+    [
+     "rays@560,800"
+    ]
+   ],
+   [
+    "فاستعذ بالله",
+    "seek refuge in Allah",
+    "night",
+    [
+     "man@360:dua"
+    ],
+    [
+     "shield@560,620*.6"
+    ],
+    [
+     "glow@360,800"
+    ]
+   ]
+  ]
+ },
+ "q-walidain": {
+  "hl": {
+   "ar": [
+    "احسنا",
+    "اف",
+    "كريما",
+    "ارحمهما"
+   ],
+   "en": [
+    "good treatment",
+    "uff",
+    "noble",
+    "mercy"
+   ]
+  },
+  "b": [
+   [
+    "",
+    "",
+    "night",
+    [
+     "man@360:raise"
+    ],
+    [],
+    [
+     "glow@400,700"
+    ]
+   ],
+   [
+    "وبالولدين احسنا",
+    "to parents, good treatment",
+    "home",
+    [
+     "man@250:give",
+     "elder@480:cane<"
+    ],
+    [
+     "^plate@360,880*.7"
+    ],
+    [
+     "hearts@360,800"
+    ]
+   ],
+   [
+    "اما يبلغن عندك الكبر",
+    "old age",
+    "home",
+    [
+     "elder@280:cane",
+     "woman2@480:calm<"
+    ],
+    [],
+    []
+   ],
+   [
+    "فلا تقل لهما اف",
+    "say not to them",
+    "home",
+    [
+     "man@360:silent"
+    ],
+    [],
+    [
+     "x@560,620"
+    ]
+   ],
+   [
+    "وقل لهما قولا كريما",
+    "noble word",
+    "home",
+    [
+     "man@250:open",
+     "elder@480:cane<"
+    ],
+    [
+     "^bubble@360,700*.7=#3f7d4f"
+    ],
+    [
+     "hearts@360,820"
+    ]
+   ],
+   [
+    "واخفض لهما جناح الذل",
+    "wing of humility",
+    "home",
+    [
+     "man@250:heart",
+     "elder@480:cane<"
+    ],
+    [],
+    [
+     "glow@360,800"
+    ]
+   ],
+   [
+    "وقل رب ارحمهما",
+    "have mercy upon them",
+    "night",
+    [
+     "man@360:dua"
+    ],
+    [],
+    [
+     "rays@360,420",
+     "sparkle@360,700"
+    ]
+   ]
+  ]
+ },
+ "q-rahman": {
+  "hl": {
+   "ar": [
+    "هونا",
+    "سلما",
+    "سجدا",
+    "قواما"
+   ],
+   "en": [
+    "easily",
+    "peace",
+    "prostrating",
+    "moderate"
+   ]
+  },
+  "b": [
+   [
+    "",
+    "",
+    "day",
+    [
+     "man@100>420:calm"
+    ],
+    [],
+    []
+   ],
+   [
+    "واذا خاطبهم الجهلون",
+    "ignorant address them",
+    "day",
+    [
+     "man@250:calm",
+     "man2@490:angry<"
+    ],
+    [],
+    []
+   ],
+   [
+    "قالوا سلما",
+    "peace",
+    "day",
+    [
+     "man@250:open",
+     "man2@490:calm<"
+    ],
+    [],
+    [
+     "hearts@360,820"
+    ]
+   ],
+   [
+    "والذين يبيتون لربهم",
+    "spend [part of] the night",
+    "night",
+    [
+     "man@360:sujud"
+    ],
+    [
+     "mat@360,1090*1.3"
+    ],
+    [
+     "sparkle@360,650"
+    ]
+   ],
+   [
+    "ربنا اصرف عنا عذاب جهنم",
+    "avert from us",
+    "night",
+    [
+     "man@360:dua"
+    ],
+    [],
+    [
+     "glow@360,800"
+    ]
+   ],
+   [
+    "والذين اذا انفقوا",
+    "when they spend",
+    "market",
+    [
+     "man@300:give"
+    ],
+    [
+     "scales@560,1080*.6"
+    ],
+    []
+   ]
+  ]
+ },
+ "q-dhikr": {
+  "hl": {
+   "ar": [
+    "اذكروا",
+    "ذكرا",
+    "النور",
+    "سلم"
+   ],
+   "en": [
+    "remember",
+    "remembrance",
+    "light",
+    "Peace"
+   ]
+  },
+  "b": [
+   [
+    "",
+    "",
+    "mosque",
+    [
+     "man@360:duasit"
+    ],
+    [],
+    [
+     "sparkle@360,780"
+    ]
+   ],
+   [
+    "وسبحوه بكرة واصيلا",
+    "morning and afternoon",
+    "dawn",
+    [
+     "man@360:duasit"
+    ],
+    [
+     "sun@560,940*.8"
+    ],
+    [
+     "rays@560,800"
+    ]
+   ],
+   [
+    "هو الذى يصلى عليكم",
+    "confers blessing",
+    "night",
+    [
+     "man@360:dua"
+    ],
+    [],
+    [
+     "rays@360,420"
+    ]
+   ],
+   [
+    "من الظلمت الى النور",
+    "darknesses into the light",
+    "dark",
+    [
+     "man@360:calm"
+    ],
+    [
+     "lamp@360,700"
+    ],
+    [
+     "glow@360,700"
+    ]
+   ],
+   [
+    "تحيتهم يوم يلقونه سلم",
+    "Peace",
+    "garden",
+    [
+     "man@360:open"
+    ],
+    [],
+    [
+     "sparkle@360,800",
+     "hearts@360,850"
+    ]
+   ]
+  ]
+ },
+ "q-qulub": {
+  "hl": {
+   "ar": [
+    "تطمئن",
+    "القلوب",
+    "بذكر",
+    "طوبى"
+   ],
+   "en": [
+    "assured",
+    "hearts",
+    "remembrance"
+   ]
+  },
+  "b": [
+   [
+    "",
+    "",
+    "night",
+    [
+     "man@360:duasit"
+    ],
+    [],
+    [
+     "glow@360,850"
+    ]
+   ],
+   [
+    "الا بذكر الله تطمئن القلوب",
+    "Unquestionably",
+    "night",
+    [
+     "man@360:heart"
+    ],
+    [
+     "^heart@360,560*.7"
+    ],
+    [
+     "glow@360,560",
+     "sparkle@360,600"
+    ]
+   ],
+   [
+    "الذين ءامنوا وعملوا الصلحت",
+    "done righteous deeds",
+    "garden",
+    [
+     "man@360:open"
+    ],
+    [],
+    [
+     "sparkle@360,800"
+    ]
+   ]
+  ]
+ },
+ "q-rahma": {
+  "hl": {
+   "ar": [
+    "تقنطوا",
+    "رحمة",
+    "يغفر",
+    "جميعا"
+   ],
+   "en": [
+    "despair",
+    "mercy",
+    "forgives",
+    "all sins"
+   ]
+  },
+  "b": [
+   [
+    "",
+    "",
+    "dark",
+    [
+     "man@360:sad"
+    ],
+    [],
+    []
+   ],
+   [
+    "لا تقنطوا من رحمة الله",
+    "do not despair",
+    "night",
+    [
+     "man@360:dua"
+    ],
+    [],
+    [
+     "rays@360,420"
+    ]
+   ],
+   [
+    "ان الله يغفر الذنوب جميعا",
+    "forgives all sins",
+    "light",
+    [
+     "man@360:dua"
+    ],
+    [],
+    [
+     "sparkle@360,800",
+     "glow@360,800"
+    ]
+   ],
+   [
+    "وانيبوا الى ربكم",
+    "return [in repentance]",
+    "mosque",
+    [
+     "man@360:sujud"
+    ],
+    [
+     "mat@360,1090*1.3"
+    ],
+    [
+     "glow@330,980"
+    ]
+   ]
+  ]
+ },
+ "q-albab": {
+  "hl": {
+   "ar": [
+    "الالبب",
+    "يذكرون",
+    "ويتفكرون",
+    "ربنا"
+   ],
+   "en": [
+    "understanding",
+    "remember",
+    "thought",
+    "Our Lord"
+   ]
+  },
+  "b": [
+   [
+    "",
+    "",
+    "space",
+    [],
+    [
+     "sunmoon@360,700"
+    ],
+    []
+   ],
+   [
+    "الذين يذكرون الله قيما",
+    "remember Allah while standing",
+    "night",
+    [
+     "man@360:duasit"
+    ],
+    [],
+    [
+     "sparkle@360,650"
+    ]
+   ],
+   [
+    "ويتفكرون فى خلق السموت",
+    "give thought",
+    "space",
+    [
+     "man@360:think"
+    ],
+    [],
+    []
+   ],
+   [
+    "ربنا ما خلقت هذا بطلا",
+    "You did not create this aimlessly",
+    "space",
+    [
+     "man@360:dua"
+    ],
+    [],
+    [
+     "sparkle@360,700"
+    ]
+   ],
+   [
+    "فقنا عذاب النار",
+    "protect us from the punishment",
+    "night",
+    [
+     "man@360:dua"
+    ],
+    [
+     "shield@560,620*.6"
+    ],
+    []
+   ],
+   [
+    "ربنا اننا سمعنا مناديا",
+    "heard a caller",
+    "mosque",
+    [
+     "man@360:heart"
+    ],
+    [],
+    [
+     "glow@360,800"
+    ]
+   ],
+   [
+    "فاغفر لنا ذنوبنا",
+    "forgive us our sins",
+    "mosque",
+    [
+     "man@360:sujud"
+    ],
+    [
+     "mat@360,1090*1.3"
+    ],
+    [
+     "glow@330,980"
+    ]
+   ],
+   [
+    "ولا تخزنا يوم القيمة",
+    "do not disgrace us",
+    "light",
+    [
+     "man@360:dua"
+    ],
+    [],
+    [
+     "rays@360,420"
+    ]
+   ]
+  ]
+ },
+ "b-kalb": {
+  "hl": {
+   "ar": [
+    "العطش",
+    "بكلب",
+    "فسقى",
+    "اجر",
+    "فغفر"
+   ],
+   "en": [
+    "thirsty",
+    "dog",
+    "watered",
+    "forgave",
+    "reward"
+   ]
+  },
+  "b": [
+   [
+    "بينا رجل يمشي",
+    "While a man was walking",
+    "desert",
+    [
+     "man@100>330:calm"
+    ],
+    [
+     "palm@620,1080"
+    ],
+    []
+   ],
+   [
+    "فنزل بئرا",
+    "went down a well",
+    "desert",
+    [
+     "man@200:lift"
+    ],
+    [
+     "well@450,1080"
+    ],
+    []
+   ],
+   [
+    "فاذا هو بكلب يلهث",
+    "dog panting",
+    "desert",
+    [
+     "man@180:sad"
+    ],
+    [
+     "well@580,1080*.8",
+     "dog@380,1080"
+    ],
+    []
+   ],
+   [
+    "فملا خفه",
+    "filled his shoe",
+    "desert",
+    [
+     "man@200:lift"
+    ],
+    [
+     "well@480,1080*.8",
+     "^shoe@330,980"
+    ],
+    [
+     "drops@330,920"
+    ]
+   ],
+   [
+    "فسقى الكلب",
+    "watered the dog",
+    "desert",
+    [
+     "man@200:give"
+    ],
+    [
+     "dog@420,1080=2",
+     "shoe@330,1080"
+    ],
+    [
+     "hearts@420,850"
+    ]
+   ],
+   [
+    "فشكر الله له",
+    "Allah thanked him",
+    "light",
+    [
+     "man@360:dua"
+    ],
+    [],
+    [
+     "rays@360,420",
+     "sparkle@360,800"
+    ]
+   ],
+   [
+    "في كل كبد رطبة اجر",
+    "reward for serving",
+    "day",
+    [],
+    [
+     "dog@200,1080*.8",
+     "cat@520,1080"
+    ],
+    [
+     "hearts@360,820"
+    ]
+   ]
+  ]
+ },
+ "b-ghar": {
+  "hl": {
+   "ar": [
+    "ابتغاء",
+    "وجهك",
+    "فانفرجت",
+    "الصخرة"
+   ],
+   "en": [
+    "Your Sake",
+    "rock",
+    "relieve"
+   ]
+  },
+  "b": [
+   [
+    "انطلق ثلاثة رهط",
+    "Three men",
+    "desert",
+    [
+     "man@140:calm",
+     "man2@320:calm",
+     "elder@500:cane"
+    ],
+    [
+     "mountain@620,1080*.7"
+    ],
+    []
+   ],
+   [
+    "فانحدرت صخرة",
+    "A big rock rolled",
+    "cavein",
+    [],
+    [
+     "boulder@360,1080*1.4"
+    ],
+    [
+     "shake"
+    ]
+   ],
+   [
+    "الا ان تدعوا الله بصالح اعمالكم",
+    "invoke Allah",
+    "cavein",
+    [
+     "man@180:dua",
+     "man2@360:dua",
+     "elder@540:dua"
+    ],
+    [],
+    [
+     "glow@360,800"
+    ]
+   ],
+   [
+    "كان لي ابوان شيخان",
+    "I had old parents",
+    "home",
+    [
+     "man@180:calm",
+     "elder@520:sit<"
+    ],
+    [],
+    []
+   ],
+   [
+    "فلبثت والقدح على يدى",
+    "bowl of milk was in my hand",
+    "night",
+    [
+     "man@200:give",
+     "elder@500:sit<"
+    ],
+    [
+     "^milk@330,880*.8"
+    ],
+    [
+     "sparkle@360,700"
+    ]
+   ],
+   [
+    "فانفرجت شيئا",
+    "the rock shifted a little",
+    "cavein",
+    [],
+    [
+     "boulder@330,1080*1.4"
+    ],
+    [
+     "glow@560,800"
+    ]
+   ],
+   [
+    "كانت لي بنت عم",
+    "I had a cousin",
+    "night",
+    [
+     "man@360:think"
+    ],
+    [],
+    []
+   ],
+   [
+    "فتحرجت من الوقوع",
+    "I thought it a sin",
+    "night",
+    [
+     "man@360>160:calm"
+    ],
+    [
+     "coins@540,1080"
+    ],
+    [
+     "check@200,600"
+    ]
+   ],
+   [
+    "فانفرجت الصخرة غير",
+    "shifted a little more",
+    "cavein",
+    [],
+    [
+     "boulder@290,1080*1.4"
+    ],
+    [
+     "glow@560,800"
+    ]
+   ],
+   [
+    "اني استاجرت اجراء",
+    "I employed few laborers",
+    "market",
+    [
+     "man@220:give",
+     "man2@490:receive<"
+    ],
+    [
+     "coins@360,1080"
+    ],
+    []
+   ],
+   [
+    "فثمرت اجره",
+    "I invested his wages",
+    "desert",
+    [
+     "man@150:calm"
+    ],
+    [
+     "herd@300,1080"
+    ],
+    []
+   ],
+   [
+    "فاخذه كله فاستاقه",
+    "took all the herd",
+    "desert",
+    [
+     "man2@560>650:calm"
+    ],
+    [
+     "herd@200,1080"
+    ],
+    []
+   ],
+   [
+    "فخرجوا يمشون",
+    "they got out walking",
+    "dawn",
+    [
+     "man@100>250:calm",
+     "man2@250>420:calm",
+     "elder@400>560:cane"
+    ],
+    [
+     "boulder@40,1080"
+    ],
+    [
+     "rays@360,700",
+     "sparkle@360,800"
+    ]
+   ]
+  ]
+ },
+ "b-hirra": {
+  "hl": {
+   "ar": [
+    "هرة",
+    "النار",
+    "اطعمتها",
+    "سقتها"
+   ],
+   "en": [
+    "cat",
+    "Fire",
+    "food",
+    "water"
+   ]
+  },
+  "b": [
+   [
+    "عذبت امراة في هرة",
+    "A lady was punished",
+    "home",
+    [],
+    [
+     "cage@360,1080",
+     "cat@360,1060*.8"
+    ],
+    []
+   ],
+   [
+    "فدخلت فيها النار",
+    "entered the (Hell) Fire",
+    "hell",
+    [],
+    [],
+    []
+   ],
+   [
+    "لا هي اطعمتها",
+    "neither gave it food",
+    "home",
+    [],
+    [
+     "cage@360,1080",
+     "cat@360,1060*.8",
+     "plate@580,1080*.7"
+    ],
+    [
+     "x@580,880"
+    ]
+   ],
+   [
+    "ولا هي تركتها",
+    "nor set it free",
+    "day",
+    [],
+    [
+     "cat@360,1080"
+    ],
+    [
+     "x@360,780"
+    ]
+   ]
+  ]
+ },
+ "b-baghi": {
+  "hl": {
+   "ar": [
+    "كلب",
+    "فسقته",
+    "فغفر"
+   ],
+   "en": [
+    "dog",
+    "watered",
+    "forgave"
+   ]
+  },
+  "b": [
+   [
+    "بينما كلب يطيف بركية",
+    "a dog was going round a well",
+    "desert",
+    [],
+    [
+     "well@470,1080",
+     "dog@230,1080"
+    ],
+    []
+   ],
+   [
+    "اذ راته بغي",
+    "saw it",
+    "desert",
+    [
+     "woman@160:calm"
+    ],
+    [
+     "well@580,1080*.8",
+     "dog@400,1080=-1"
+    ],
+    []
+   ],
+   [
+    "فنزعت موقها فسقته",
+    "took off her shoe",
+    "desert",
+    [
+     "woman@200:give"
+    ],
+    [
+     "dog@420,1080=2",
+     "^shoe@330,980"
+    ],
+    [
+     "drops@330,920",
+     "hearts@420,850"
+    ]
+   ],
+   [
+    "فغفر لها به",
+    "Allah forgave her",
+    "light",
+    [
+     "woman@360:calm"
+    ],
+    [],
+    [
+     "rays@360,420",
+     "sparkle@360,800"
+    ]
+   ]
+  ]
+ },
+ "b-qatil": {
+  "hl": {
+   "ar": [
+    "توبة",
+    "اقرب",
+    "بشبر",
+    "فغفر"
+   ],
+   "en": [
+    "repentance",
+    "closer",
+    "span",
+    "forgiven"
+   ]
+  },
+  "b": [
+   [
+    "كان في بني اسرائيل رجل",
+    "there was a man",
+    "dark",
+    [
+     "man2@360:sad"
+    ],
+    [],
+    []
+   ],
+   [
+    "فاتى راهبا فساله",
+    "came upon a monk",
+    "night",
+    [
+     "man2@240:open",
+     "elder@500:stand<"
+    ],
+    [],
+    []
+   ],
+   [
+    "فجعل يسال",
+    "kept on asking",
+    "day",
+    [
+     "man2@360:think"
+    ],
+    [
+     "sign@570,1080*.8"
+    ],
+    []
+   ],
+   [
+    "ائت قرية كذا وكذا",
+    "go to such and such village",
+    "day",
+    [
+     "man2@200:calm"
+    ],
+    [
+     "village@560,1080*.7"
+    ],
+    []
+   ],
+   [
+    "فادركه الموت",
+    "death overtook him",
+    "dawn",
+    [],
+    [
+     "village@120,1080*.6",
+     "village@600,1080*.6"
+    ],
+    []
+   ],
+   [
+    "فاختصمت فيه",
+    "quarrelled",
+    "night",
+    [],
+    [
+     "scales@360,1080"
+    ],
+    [
+     "rays@360,420"
+    ]
+   ],
+   [
+    "قيسوا ما بينهما",
+    "measure the distances",
+    "day",
+    [],
+    [
+     "village@100,1080*.6",
+     "village@620,1080*.6"
+    ],
+    [
+     "span@360,960"
+    ]
+   ],
+   [
+    "فوجد الى هذه اقرب بشبر",
+    "one span closer",
+    "day",
+    [],
+    [
+     "village@100,1080*.6",
+     "village@620,1080*.6"
+    ],
+    [
+     "span@360,960",
+     "check@620,640"
+    ]
+   ],
+   [
+    "فغفر له",
+    "So he was forgiven",
+    "light",
+    [],
+    [],
+    [
+     "rays@360,420",
+     "sparkle@360,800"
+    ]
+   ]
+  ]
+ },
+ "b-tawba": {
+  "hl": {
+   "ar": [
+    "افرح",
+    "بتوبة",
+    "بعيره"
+   ],
+   "en": [
+    "pleased",
+    "repentance",
+    "camel"
+   ]
+  },
+  "b": [
+   [
+    "الله افرح بتوبة عبده",
+    "more pleased with the repentance",
+    "light",
+    [
+     "man@360:dua"
+    ],
+    [],
+    [
+     "rays@360,420",
+     "sparkle@360,800"
+    ]
+   ],
+   [
+    "سقط على بعيره",
+    "finding his camel",
+    "desert",
+    [
+     "man@200:open"
+    ],
+    [
+     "camel@480,1085*.8=-1"
+    ],
+    [
+     "hearts@420,820"
+    ]
+   ],
+   [
+    "وقد اضله في ارض فلاة",
+    "lost in the desert",
+    "desert",
+    [
+     "man@360:sad"
+    ],
+    [
+     "palm@600,1080*.7"
+    ],
+    []
+   ]
+  ]
+ },
+ "b-dhann": {
+  "hl": {
+   "ar": [
+    "ظن",
+    "ذكرني",
+    "ذكرته",
+    "هرولة"
+   ],
+   "en": [
+    "thinks",
+    "remembers",
+    "running"
+   ]
+  },
+  "b": [
+   [
+    "انا عند ظن عبدي بي",
+    "I am just as My slave thinks",
+    "night",
+    [
+     "man@360:dua"
+    ],
+    [],
+    [
+     "rays@360,420"
+    ]
+   ],
+   [
+    "وانا معه اذا ذكرني",
+    "remembers Me",
+    "mosque",
+    [
+     "man@360:duasit"
+    ],
+    [],
+    [
+     "glow@360,820"
+    ]
+   ],
+   [
+    "وان ذكرني في ملا",
+    "in a group",
+    "mosque",
+    [],
+    [
+     "people@360,1080*.9=5"
+    ],
+    [
+     "sparkle@360,800"
+    ]
+   ],
+   [
+    "وان تقرب الى بشبر",
+    "one span nearer",
+    "day",
+    [
+     "man@150>260:calm"
+    ],
+    [],
+    [
+     "span@360,960"
+    ]
+   ],
+   [
+    "وان اتاني يمشي",
+    "comes to Me walking",
+    "light",
+    [
+     "man@100>360:calm"
+    ],
+    [],
+    [
+     "rays@360,420",
+     "sparkle@360,800"
+    ]
+   ]
+  ]
+ },
+ "b-hay": {
+  "hl": {
+   "ar": [
+    "يذكر",
+    "الحى",
+    "والميت"
+   ],
+   "en": [
+    "Praises",
+    "living",
+    "dead"
+   ]
+  },
+  "b": [
+   [
+    "مثل الذي يذكر ربه",
+    "The example of the one",
+    "garden",
+    [
+     "man@360:duasit"
+    ],
+    [
+     "tree@600,1080*.7"
+    ],
+    [
+     "sparkle@360,800"
+    ]
+   ],
+   [
+    "والذي لا يذكر",
+    "does not celebrate",
+    "dark",
+    [
+     "man2@360:sad"
+    ],
+    [
+     "stone@580,1080"
+    ],
+    []
+   ],
+   [
+    "مثل الحى والميت",
+    "living creature",
+    "garden",
+    [],
+    [
+     "tree@230,1080",
+     "flowers@520,1080"
+    ],
+    [
+     "sparkle@360,800"
+    ]
+   ]
+  ]
+ },
+ "b-samh": {
+  "hl": {
+   "ar": [
+    "سمحا",
+    "رحم"
+   ],
+   "en": [
+    "mercy",
+    "lenient"
+   ]
+  },
+  "b": [
+   [
+    "رحم الله رجلا سمحا",
+    "May Allah's mercy",
+    "market",
+    [
+     "man@230:give",
+     "man2@490:receive<"
+    ],
+    [
+     "bag@600,1080*.8"
+    ],
+    [
+     "hearts@360,820"
+    ]
+   ],
+   [
+    "واذا اشترى",
+    "selling",
+    "market",
+    [
+     "man@230:receive",
+     "man2@490:give<"
+    ],
+    [
+     "^bread@360,880*.8"
+    ],
+    [
+     "hearts@360,820"
+    ]
+   ],
+   [
+    "واذا اقتضى",
+    "demanding back",
+    "market",
+    [
+     "man@250:hug",
+     "man2@470:hug<"
+    ],
+    [],
+    [
+     "sparkle@360,800"
+    ]
+   ]
+  ]
+ },
+ "b-siyam": {
+  "hl": {
+   "ar": [
+    "الصيام",
+    "جنة",
+    "صائم",
+    "فرحتان"
+   ],
+   "en": [
+    "fasting",
+    "shield",
+    "pleasures"
+   ]
+  },
+  "b": [
+   [
+    "كل عمل ابن ادم له",
+    "All the deeds",
+    "night",
+    [
+     "man@360:dua"
+    ],
+    [],
+    [
+     "sparkle@360,700"
+    ]
+   ],
+   [
+    "الا الصيام فانه لي",
+    "except fasting",
+    "night",
+    [
+     "man@300:calm"
+    ],
+    [
+     "moon@560,640"
+    ],
+    [
+     "glow@360,800"
+    ]
+   ],
+   [
+    "والصيام جنة",
+    "Fasting is a shield",
+    "day",
+    [
+     "man@230:calm"
+    ],
+    [
+     "shield@480,900"
+    ],
+    []
+   ],
+   [
+    "فليقل اني امرؤ صائم",
+    "I am fasting",
+    "day",
+    [
+     "man@250:calm",
+     "man2@490:angry<"
+    ],
+    [],
+    [
+     "glow@250,800"
+    ]
+   ],
+   [
+    "لخلوف فم الصائم",
+    "smell of musk",
+    "night",
+    [
+     "man@360:heart"
+    ],
+    [],
+    [
+     "sparkle@360,700"
+    ]
+   ],
+   [
+    "للصائم فرحتان",
+    "two pleasures",
+    "home",
+    [
+     "man@250:sit"
+    ],
+    [
+     "plate@460,1080",
+     "^bread@460,1066",
+     "jug@570,1080"
+    ],
+    [
+     "num:2@560,640"
+    ]
+   ],
+   [
+    "واذا لقي ربه فرح",
+    "meet his Lord",
+    "light",
+    [
+     "man@360:dua"
+    ],
+    [],
+    [
+     "rays@360,420",
+     "sparkle@360,800"
+    ]
+   ]
+  ]
+ },
+ "b-jannah": {
+  "hl": {
+   "ar": [
+    "عين",
+    "اذن",
+    "قلب"
+   ],
+   "en": [
+    "eye",
+    "ear",
+    "human being"
+   ]
+  },
+  "b": [
+   [
+    "اعددت لعبادي الصالحين",
+    "I have prepared",
+    "garden",
+    [],
+    [
+     "tree@360,1080*1.2"
+    ],
+    [
+     "rays@360,420"
+    ]
+   ],
+   [
+    "ما لا عين رات",
+    "never been seen by an eye",
+    "garden",
+    [],
+    [
+     "pearls@360,800*1.3"
+    ],
+    [
+     "sparkle@360,800"
+    ]
+   ],
+   [
+    "ولا خطر على قلب بشر",
+    "imagined by a human",
+    "light",
+    [],
+    [
+     "^heart@360,560*.6"
+    ],
+    [
+     "glow@360,560",
+     "sparkle@360,700"
+    ]
+   ],
+   [
+    "فلا تعلم نفس",
+    "No soul knows",
+    "garden",
+    [],
+    [
+     "flowers@360,1080"
+    ],
+    [
+     "sparkle@360,800"
+    ]
+   ]
+  ]
+ },
+ "b-sabaa": {
+  "hl": {
+   "ar": [
+    "سبعة",
+    "ظله",
+    "العادل",
+    "خاليا"
+   ],
+   "en": [
+    "seven",
+    "shade",
+    "just",
+    "seclusion"
+   ]
+  },
+  "b": [
+   [
+    "سبعة يظلهم الله",
+    "Allah will give shade",
+    "light",
+    [],
+    [],
+    [
+     "num:7@360,640",
+     "rays@360,420"
+    ]
+   ],
+   [
+    "الامام العادل",
+    "a just ruler",
+    "day",
+    [],
+    [
+     "scales@360,1080"
+    ],
+    []
+   ],
+   [
+    "وشاب نشا في عبادة",
+    "a youth",
+    "mosque",
+    [
+     "child@360:pray"
+    ],
+    [
+     "mat@360,1090"
+    ],
+    []
+   ],
+   [
+    "ورجل قلبه معلق في المساجد",
+    "attached to the mosques",
+    "night",
+    [
+     "man@200:heart"
+    ],
+    [
+     "mosque@500,1080*.6"
+    ],
+    [
+     "glow@500,900"
+    ]
+   ],
+   [
+    "ورجلان تحابا في الله",
+    "two persons who love",
+    "day",
+    [
+     "man@260:hug",
+     "man2@460:hug<"
+    ],
+    [],
+    [
+     "hearts@360,800"
+    ]
+   ],
+   [
+    "اني اخاف الله",
+    "I am afraid of Allah",
+    "night",
+    [
+     "man@360>160:calm"
+    ],
+    [],
+    [
+     "check@200,600"
+    ]
+   ],
+   [
+    "ورجل تصدق",
+    "gives charitable gifts so secretly",
+    "night",
+    [
+     "man@230:give",
+     "poor@500:sitbeg<"
+    ],
+    [],
+    [
+     "coins:300>470"
+    ]
+   ],
+   [
+    "ورجل ذكر الله خاليا",
+    "remembers Allah in seclusion",
+    "night",
+    [
+     "man@360:duasit"
+    ],
+    [
+     "lamp@560,700"
+    ],
+    [
+     "sparkle@360,700"
+    ]
+   ]
+  ]
  }
 }
