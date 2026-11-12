@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>مدرّبي</title>
+<title>NEXFIT</title>
 <meta name="theme-color" content="#070b09">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="مدرّبي">
-<link rel="apple-touch-icon" href="icons/icon-180.png">
-<link rel="icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-title" content="NEXFIT">
+<link rel="apple-touch-icon" href="icons/icon-180.png?v=nexfit">
+<link rel="icon" href="icons/icon-192.png?v=nexfit">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -302,6 +302,10 @@ details summary{cursor:pointer;font-weight:600}
 .btn:active,.ib:active,.exrow:active,.dcard:active,.mcard:active,.pcard:active,.chips button:active{transform:scale(.97)}
 html,body{overscroll-behavior-y:none}
 .rstep>div span.xs{display:block}
+.brand{display:flex;align-items:center;gap:10px}
+.brand img{width:34px;height:34px;border-radius:10px}
+.brand b{font-family:var(--fd);font-weight:800;font-size:20px;letter-spacing:0;direction:ltr}
+.brand b span{color:#ff3b3b}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto;animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -316,6 +320,6 @@ html,body{overscroll-behavior-y:none}
 </div></nav>
 <div id="screen" class="screen" hidden></div>
 <div id="player" class="player" hidden></div>
-<script type="module" src="app.js?v=6"></script>
+<script type="module" src="app.js?v=7"></script>
 </body>
 </html>

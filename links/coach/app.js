@@ -113,7 +113,8 @@ function vHome() {
   const bars = wd.map(d => { const k = dk(d), s = S.hist.filter(h => h.d === k).reduce((a, h) => a + (h.sets || 0), 0); return { k, s, n: DN[d.getDay()] }; });
   const mx = Math.max(10, ...bars.map(b => b.s));
   const medals = [[S.hist.length >= 1, 'أول تمرين', 'star'], [streak() >= 3, '3 أيام ورا بعض', 'fire'], [wh.filter(h => h.t !== 'R').length >= 3, 'أسبوع كامل', 'trophy'], [S.hist.filter(h => h.t !== 'R').length >= 10, '10 تمارين', 'bolt'], [S.evals.length >= 1, 'شهر كامل', 'trophy'], [curW() - (S.weights[0]?.w || curW()) >= 1, '+1 كيلو', 'scale'], [curW() - (S.weights[0]?.w || curW()) >= 3, '+3 كيلو', 'scale']];
-  return `<div class="top"><div class="ava">${esc((S.name || 'ب')[0])}</div><div class="grow"><p class="sm mut">${greet} 👋</p><h2>${esc(S.name || 'يا بطل')}</h2></div><span class="streak">${I.fire}<span class="num">${AR(streak())}</span></span></div>
+  return `<div class="row between"><div class="brand"><img src="img/logo.webp" alt=""><b>NEX<span>FIT</span></b></div><span class="xs mut">مدرّبك الشخصي</span></div>
+  <div class="top"><div class="ava">${esc((S.name || 'ب')[0])}</div><div class="grow"><p class="sm mut">${greet} 👋</p><h2>${esc(S.name || 'يا بطل')}</h2></div><span class="streak">${I.fire}<span class="num">${AR(streak())}</span></span></div>
   ${installCard()}
   ${hero}
   ${coachCard()}
@@ -357,7 +358,7 @@ function vSupps() {
 }
 
 /* ================= أنا ================= */
-const VERSION = '٦';
+const VERSION = '٧';
 function weightInfo() {
   const start = S.startW || (S.weights[0]?.w) || +S.w || 52, goal = +S.goal || 62, cur = curW();
   const ms = [start + 1, start + 3, start + 5, start + 7].filter(x => x < goal).concat([goal]).map(x => +x.toFixed(1));
@@ -385,7 +386,7 @@ function vMe() {
    <div class="mgrid">${[['arm', 'الزند'], ['chest', 'الصدر'], ['sh', 'الكتف'], ['waist', 'الخصر']].map(([k, n]) => { const d = m1[k] && m0[k] ? +(m1[k] - m0[k]).toFixed(1) : null; return `<label class="f">${n}${d ? ` <span style="color:${(k === 'waist' ? d < 0 : d > 0) ? 'var(--g)' : 'var(--gold)'}" dir="ltr">${d > 0 ? '+' : ''}${AR(d)}</span>` : ''}<input class="field num" inputmode="decimal" data-meas="${k}" value="${m1[k] || ''}" placeholder="—"></label>`; }).join('')}</div>
    <button class="btn ghost wide" data-savemeas>احفظ القياسات</button></div>
   ${bests.length ? `<div class="card"><h2>أرقامك القياسية</h2>${bests.map(([id, b]) => `<div class="row"><img src="img/ex3d/${id}.jpg" alt="" style="width:44px;height:44px;border-radius:12px;object-fit:cover"><span class="grow sm">${EX[id].n}</span><b class="num" style="color:var(--g)">${AR(b.w)} كغم × ${AR(b.r)}</b></div>`).join('')}</div>` : ''}
-  <p class="xs mut" style="text-align:center">النسخة ${VERSION} • بدون إعلانات • يتحدث لحاله</p>`;
+  <p class="xs mut" style="text-align:center">NEXFIT • النسخة ${VERSION} • بدون إعلانات • يتحدث لحاله</p>`;
 }
 function openSettings() {
   show(`<div class="row"><button class="ib" data-close aria-label="رجوع">${I.back}</button><h2>الإعدادات</h2></div>
