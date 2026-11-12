@@ -269,6 +269,16 @@ body.wait #list,body.wait .ow,body.wait .row{opacity:.25}
 .sheet label{display:block;text-align:start;font-size:13.5px;color:var(--mut);margin-top:10px}
 .sheet .gold{background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark);font-weight:700}
 #city{color:var(--ink);font-size:1.15em;font-weight:700;background:none;padding:0;border-bottom:1px dashed var(--gold);border-radius:0}
+.vl video{width:100%;max-height:56vh;border-radius:16px;background:#000;display:none;margin:8px 0}
+.vl .vsub{font-size:13px;color:var(--mut);margin:2px 0 6px}.vl .vnow{font-size:13px;color:var(--gold);margin:0 0 6px;min-height:1px}
+.vl .vr{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;margin:6px 0;border-radius:16px;background:var(--card);border:1px solid var(--line);text-align:start;color:var(--ink)}
+.vl .vr.on{border-color:var(--gold);background:var(--card2)}
+.vl .vr b{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--gold);color:var(--dark);font-size:14px}
+.vl .vr.seen b{background:none;border:1.5px solid var(--gold);color:var(--gold)}
+.vl .vr span{flex:1;min-width:0;font-family:Amiri,serif;font-size:16px;line-height:1.6;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.vl .vr.en span{font-family:UI,sans-serif;font-size:14px}
+.vl .vr i{flex:none;font-style:normal;font-size:12px;color:var(--mut)}
+.vl .vr .td{font-size:11px;color:var(--dark);background:var(--gold);border-radius:99px;padding:2px 8px;font-style:normal}
 .sheet{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9;background:rgba(5,10,20,.6);align-items:flex-end;justify-content:center}
 .sheet.on{display:flex}
 .sheet>div{max-height:94%;overflow-y:auto;width:100%;max-width:520px;background:var(--sheet);border:1px solid var(--line);border-radius:28px 28px 0 0;padding:22px 20px calc(env(safe-area-inset-bottom) + 18px);text-align:center}
@@ -423,6 +433,13 @@ body.wait #list,body.wait .ow,body.wait .row{opacity:.25}
  <div id="hpane" style="display:none"><video id="hvid" controls playsinline preload="none" style="display:none;width:100%;max-height:52vh;border-radius:14px;background:#000;margin-bottom:10px"></video><p class="duah" id="hdh"></p><p class="duaa" id="hda"></p><p class="duae" id="hde"></p><p style="font-size:12px" data-en="Source: An-Nawawi's Forty Hadith. Arabic and English from the open hadith-api collection, unedited">المصدر: الأربعون النووية. النص والترجمة من مجموعة hadith-api المفتوحة، بدون تعديل</p></div>
  <button class="gold" id="duash" data-en="Share">شارك</button>
  <button data-close data-en="Back">رجوع</button>
+</div></div>
+<div class="sheet" id="s-vid"><div class="scroll vl">
+ <h2 data-en="Hadith videos">مقاطع الأحاديث</h2>
+ <p class="vsub" data-en="An-Nawawi's Forty Hadith, verbatim, drawn and animated. They stay here, watch any time.">الأربعون النووية بالحرف، برسوم متحركة. كلها محفوظة هنا، تگدر تشوفها بأي وقت.</p>
+ <video id="vplay" controls playsinline preload="none"></video>
+ <p class="vnow" id="vnow"></p>
+ <div id="vlist"></div>
 </div></div>
 <div class="sheet" id="s-zk"><div class="scroll zk">
  <h2 data-en="Zakat calculator">حاسبة الزكاة</h2>
@@ -685,7 +702,7 @@ $('zprev').onclick=function(){rmove(-1)};$('znext').onclick=function(){rmove(1)}
 var MENU=[['s','sunrise',L('أذكار الصباح','Morning'),L('بعد الفجر','After Fajr')],['m','moon',L('أذكار المساء','Evening'),L('بعد العصر','After Asr')],['p','mosque',L('بعد الصلاة','After prayer'),L('كل صلاة','Every prayer')],
  ['g','hands',L('الاستغفار','Istighfar'),L('100 مرة','100 times')],['t','beads',L('السبحة','Tasbih'),L('تسبيح وتحميد','Glorify & praise')],['y','heart',L('الصلاة على النبي','Salawat'),L('100 مرة','100 times')],
  ['n','sleep',L('أذكار النوم','Bedtime'),L('قبل النوم','Before sleep')],['w','sun',L('الاستيقاظ','Waking up'),L('أول ما تگعد','When you wake')],['a','star8',L('أسماء الله','Names of Allah'),L('99 اسم','99 names')],
- ['l','mosque',L('التعليم','Learn'),L('الوضوء والصلاة','Wudu & prayer')],['z','hands',L('الزكاة','Zakat'),L('حاسبة','Calculator')],['q','beads',L('استمع للأذكار','Listen'),L('بصوت مسجّل','Recorded audio')],['v','sun',L('مقطع اليوم','Video of the day'),L('حديث بالصوت','Hadith with voice')]];
+ ['l','mosque',L('التعليم','Learn'),L('الوضوء والصلاة','Wudu & prayer')],['z','hands',L('الزكاة','Zakat'),L('حاسبة','Calculator')],['q','beads',L('استمع للأذكار','Listen'),L('بصوت مسجّل','Recorded audio')],['v','sun',L('مقاطع الأحاديث','Hadith videos'),L('رسوم متحركة','Animated')]];
 function menu(){var nk=nowk(),sn=streak();
  var fr=isFri(),has=MENU.some(function(x){return x[0]=='k'});if(fr&&!has)MENU.unshift(['k','star8',L('سورة الكهف','Surat Al-Kahf'),L('يوم الجمعة','Friday')]);if(!fr&&has)MENU.shift();
  var td=STK.last==dkey(0);
@@ -824,10 +841,23 @@ function duaCard(){var P=window.DUA||[],H=window.HADITH||[],n=dayNo();DTODAY=P.l
  else{$('duac').classList.remove('rmd');$('duat').style.fontFamily='';$('duat').textContent=DTODAY?DTODAY[0].replace(/[()]/g,''):HTODAY[1]}
  if(DTODAY){$('duah').textContent=EN?DTODAY[5]:DTODAY[4];$('duaa').textContent=DTODAY[0];$('duar').textContent=EN?DTODAY[3]:'';$('duae').textContent=EN?DTODAY[1]:''}
  if(HTODAY){$('hdh').textContent=L('الحديث '+HTODAY[0]+' من الأربعين النووية','Hadith '+HTODAY[0]+' of An-Nawawi\'s Forty');$('hda').textContent=HTODAY[1];$('hde').textContent=EN?HTODAY[2]:''}}
-// مقطع اليوم: فيديو حديث اليوم ينصنع كل ليلة تلقائياً (scripts/daily-video.py) ونجيبه من مجلد daily
-var VID=null;function loadVid(cb){fetch('daily/daily.json?'+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(j){VID=j&&HTODAY&&j.n==HTODAY[0]?j:null;showVid();cb&&cb()}).catch(function(){VID=null;showVid();cb&&cb()})}
-function showVid(){var v=$('hvid');if(!VID){v.style.display='none';return}var f='daily/'+(EN?VID.en:VID.ar);if(v.getAttribute('src')!=f)v.setAttribute('src',f);v.style.display=''}
-function openVid(){$('s-dua').classList.add('on');dtab('h');loadVid(function(){if(VID){var p=$('hvid').play();p&&p.catch(function(){})}else alert(L('مقطع اليوم بعده ما جاهز، جرّب بعد شوية.','Today\'s video is not ready yet, try again later.'))})}
+// مكتبة المقاطع: فيديو موشن گرافيك لكل حديث (مصنوع بالكود: scripts/motion)، محفوظة بمجلد v. حديث اليوم يطلع أول وحده
+var VIDX=null,VID=null;function vget(cb){if(VIDX){cb();return}fetch('v/index.json?'+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(j){VIDX=j&&j.items||[];cb()}).catch(function(){VIDX=[];cb()})}
+function vseen(){try{return JSON.parse(localStorage.getItem('vseen'))||{}}catch(e){return{}}}
+function loadVid(cb){vget(function(){VID=null;if(HTODAY)VIDX.forEach(function(it){if(it.n==HTODAY[0])VID=it});showVid();cb&&cb()})}
+function showVid(){var v=$('hvid');if(!VID){v.style.display='none';return}var f='v/'+(EN?VID.en:VID.ar);if(v.getAttribute('src')!=f)v.setAttribute('src',f);v.style.display=''}
+function mmss(s){return Math.floor(s/60)+':'+('0'+s%60).slice(-2)}
+function vplay(it,go){var v=$('vplay'),f='v/'+(EN?it.en:it.ar);if(v.getAttribute('src')!=f)v.setAttribute('src',f);v.style.display='';$('vnow').textContent=L('الحديث '+it.n+' من الأربعين النووية','Hadith '+it.n+' of An-Nawawi\'s Forty');
+ var sn=vseen();sn[it.n]=1;try{localStorage.setItem('vseen',JSON.stringify(sn))}catch(e){}
+ document.querySelectorAll('.vl .vr').forEach(function(r){var on=+r.getAttribute('data-n')==it.n;r.classList.toggle('on',on);if(on)r.classList.add('seen')});
+ if(go){var p=v.play();p&&p.catch(function(){})}$('s-vid').querySelector('.scroll').scrollTop=0}
+function openVid(){$('s-vid').classList.add('on');vget(function(){
+ if(!VIDX.length){$('vlist').innerHTML='<p class="vsub">'+L('المقاطع بعدها ما جاهزة، جرّب بعد شوية.','Videos are not ready yet, try again later.')+'</p>';return}
+ var sn=vseen(),td=HTODAY?HTODAY[0]:0,list=VIDX.slice().sort(function(a,b){return (b.n==td)-(a.n==td)||a.n-b.n});
+ $('vlist').innerHTML=list.map(function(it){return '<button class="vr'+(EN?' en':'')+(sn[it.n]?' seen':'')+'" data-n="'+it.n+'"><b class="n">'+it.n+'</b><span></span>'+(it.n==td?'<i class="td">'+L('حديث اليوم','Today')+'</i>':'<i class="n">'+mmss(EN?it.de:it.da)+'</i>')+'</button>'}).join('');
+ document.querySelectorAll('.vl .vr').forEach(function(r){var it=VIDX.filter(function(x){return x.n==+r.getAttribute('data-n')})[0];r.querySelector('span').textContent=EN?it.te:it.ta;r.onclick=function(){vplay(it,true)}});
+ vplay(list[0],false)})}
+new MutationObserver(function(){if(!$('s-vid').classList.contains('on'))$('vplay').pause()}).observe($('s-vid'),{attributes:true,attributeFilter:['class']});
 new MutationObserver(function(){if(!$('s-dua').classList.contains('on'))$('hvid').pause()}).observe($('s-dua'),{attributes:true,attributeFilter:['class']});
 function dtab(t){DTAB=t;document.querySelectorAll('.dtab button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-d')==t)});$('dpane').style.display=t=='d'?'':'none';$('hpane').style.display=t=='h'?'':'none';if(t!='h')$('hvid').pause();else if(!VID)loadVid()}
 document.querySelectorAll('.dtab button').forEach(function(b){b.onclick=function(){dtab(b.getAttribute('data-d'))}});
