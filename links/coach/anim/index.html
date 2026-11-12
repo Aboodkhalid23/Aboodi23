@@ -13,10 +13,12 @@ canvas{display:block;width:100%;height:100%}
 .title p{margin:2px 0 0;font-size:17px;font-weight:700;color:#cfe3ff}
 .phase{position:absolute;bottom:calc(26px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:rgba(8,12,40,.75);border:1px solid rgba(160,200,255,.35);border-radius:999px;padding:8px 18px;font-size:17px;font-weight:700;display:flex;gap:10px;align-items:center;backdrop-filter:blur(6px)}
 .phase i{width:10px;height:10px;border-radius:50%;background:#ff3a4e;box-shadow:0 0 12px #ff3a4e}
+.clean .title,.clean .phase{display:none}
 </style>
 <script type="importmap">{"imports":{"three":"../vendor/three.module.js"}}</script>
 </head>
 <body>
+<script>if(location.search.includes('clean'))document.body.classList.add('clean')</script>
 <canvas id="c"></canvas>
 <div class="title"><h1 id="t"></h1><p id="s"></p></div>
 <div class="phase"><i></i><span id="ph">استعد</span></div>
@@ -25,9 +27,9 @@ import { createAnimator, EXERCISES } from './engine.js';
 const id = new URLSearchParams(location.search).get('ex') || 'incline';
 const labels = EXERCISES[id].phases;
 document.getElementById('t').textContent = EXERCISES[id].title;
-document.getElementById('s').textContent = EXERCISES[id].sets;
+document.getElementById('s').textContent = new URLSearchParams(location.search).get('s') || '';
 window.anim = createAnimator(document.getElementById('c'), id, {
-  capture: new URLSearchParams(location.search).has('cap'), manual: new URLSearchParams(location.search).has('manual'),
+  capture: new URLSearchParams(location.search).has('cap'), manual: new URLSearchParams(location.search).has('manual'), theme: new URLSearchParams(location.search).get('theme'), clean: new URLSearchParams(location.search).has('clean'),
   onPhase: p => { document.getElementById('ph').textContent = p === 0 ? labels[0] : p === 1 ? labels[1] : p === 2 ? 'اعصر' : 'استعد'; }
 });
 </script>

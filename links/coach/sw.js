@@ -1,20 +1,17 @@
-// يخلي التطبيق يشتغل حتى بدون إنترنت (عدا فيديوهات يوتيوب)
-const V = 'coach-v2';
-self.addEventListener('install', e => {
-  e.waitUntil(caches.open(V).then(c => c.addAll(['./', './index.html', './manifest.webmanifest', './icons/icon-192.png'])));
-  self.skipWaiting();
-});
+// التحديث التلقائي: يجيب أحدث نسخة من النت أول، وإذا ماكو نت يشتغل من الذاكرة
+const V = 'coach-v4';
+self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== V).map(k => caches.delete(k)))));
-  self.clients.claim();
+  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== V).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 self.addEventListener('fetch', e => {
   const u = new URL(e.request.url);
   if (e.request.method !== 'GET' || u.origin !== location.origin) return;
-  // الصفحة: من النت أول حتى توصلك التحديثات، وإذا ماكو نت من الذاكرة
-  if (e.request.mode === 'navigate') {
-    e.respondWith(fetch(e.request).then(r => { const c = r.clone(); caches.open(V).then(x => x.put(e.request, c)); return r; }).catch(() => caches.match(e.request).then(r => r || caches.match('./'))));
+  const isImg = /\.(jpg|jpeg|png|webp)$/i.test(u.pathname);
+  if (isImg) { // الصور: تطلع فوراً من الذاكرة، وتتحدث بالخلفية
+    e.respondWith(caches.open(V).then(c => c.match(e.request).then(r => { const net = fetch(e.request, { cache: 'no-cache' }).then(res => { if (res.ok) c.put(e.request, res.clone()); return res; }).catch(() => r); return r || net; })));
     return;
   }
-  e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(res => { const c = res.clone(); caches.open(V).then(x => x.put(e.request, c)); return res; })));
+  // الصفحة والكود: من النت دائماً (بدون ذاكرة المتصفح)، وإذا ماكو نت من الذاكرة
+  e.respondWith(fetch(e.request, { cache: 'no-cache' }).then(res => { const c = res.clone(); caches.open(V).then(x => x.put(e.request, c)); return res; }).catch(() => caches.match(e.request).then(r => r || caches.match('./'))));
 });
