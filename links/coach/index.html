@@ -215,6 +215,34 @@ label.f{display:flex;flex-direction:column;gap:6px;font-size:13.5px;color:var(--
 textarea{width:100%;background:var(--s2);border:1px solid var(--line);border-radius:14px;color:var(--fg);padding:10px;font-size:12px;min-height:80px;direction:ltr}
 .chart svg{width:100%;height:auto;display:block}
 .install{background:var(--s2);border:1px dashed var(--g);border-radius:22px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.pth{display:inline-grid;place-items:center;background:#fff;border-radius:14px;overflow:hidden;flex:none;padding:3px}
+.pth img{max-width:100%;max-height:100%;object-fit:contain}
+.pths{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 2px}
+.mtl{display:flex;flex-direction:column;gap:10px}
+.mcard{display:flex;gap:12px;align-items:flex-start;background:var(--s1);border:1px solid var(--line);border-radius:24px;padding:14px;width:100%;text-align:right}
+.mcard.on{border-color:var(--g)}
+.mcard .mic{width:44px;height:44px;border-radius:14px;background:var(--s2);display:grid;place-items:center;color:var(--g);flex:none}
+.mcard .mic svg{width:22px;height:22px}
+.prow{display:flex;gap:12px;align-items:center;background:var(--s1);border:1px solid var(--line);border-radius:20px;padding:10px}
+.prow .grow{display:flex;flex-direction:column;gap:2px}
+.prow b{font-family:var(--fd);font-size:16px}
+.qty{display:flex;flex-direction:column;align-items:flex-end;text-align:left;gap:2px;flex:none;max-width:42%}
+.qty b{font-family:var(--fd);font-size:15px;color:var(--g);text-align:right}
+.qty span{font-size:11.5px;color:var(--mut)}
+.ochips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px}
+.ochips button{flex:none;display:flex;gap:8px;align-items:center;border:1px solid var(--line);background:var(--s1);border-radius:999px;padding:8px 14px 8px 8px;font-size:14px}
+.ochips button span{width:24px;height:24px;border-radius:50%;background:var(--s3);display:grid;place-items:center;font-family:var(--fd);font-weight:700;font-size:13px}
+.ochips button.on{background:var(--g);color:var(--ink);border-color:var(--g);font-weight:600}
+.ochips button.on span{background:var(--ink);color:var(--g)}
+.frings{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.fring{position:relative;text-align:center;display:flex;flex-direction:column;align-items:center}
+.fring svg{width:80px;height:80px;transform:rotate(-90deg)}
+.fring b{position:absolute;top:22px;left:0;right:0;font-family:var(--fd);font-size:19px}
+.fring > span{font-size:13px;font-weight:600;margin-top:2px}
+.fring small{font-size:11px;color:var(--mut)}
+.fring:last-child b{position:static}
+.lvl{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lvl>div{background:var(--s1);border:1px solid var(--line);border-radius:20px;padding:12px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
 </style>
 </head>
