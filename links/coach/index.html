@@ -35,7 +35,7 @@ img{max-width:100%;display:block}
 [hidden]{display:none!important}
 :focus-visible{outline:2px solid var(--g);outline-offset:2px}
 h1,h2,h3,p{margin:0}
-.d{font-family:var(--fd);letter-spacing:.005em}
+.d{font-family:var(--fd)}
 h1{font-family:var(--fd);font-size:30px;font-weight:800;line-height:1.1}
 h2{font-family:var(--fd);font-size:22px;font-weight:700;line-height:1.15}
 h3{font-family:var(--fd);font-size:17.5px;font-weight:700;line-height:1.2}
@@ -285,7 +285,24 @@ button.prow{width:100%;text-align:right;color:var(--fg)}
 .mgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .mgrid input{text-align:center;font-family:var(--fd);font-size:18px}
 details summary{cursor:pointer;font-weight:600}
-@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+.coach{background:linear-gradient(160deg,#14261a,#0f1712);border:1px solid #29452f;border-radius:26px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.cav{width:42px;height:42px;border-radius:50%;background:var(--g);color:var(--ink);display:grid;place-items:center;flex:none}
+.cav svg{width:22px;height:22px}
+.lastt{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--s1);border:1px solid var(--line);border-radius:16px;padding:10px 14px;font-size:13px}
+.lastt span{color:var(--mut)}.lastt b{font-family:var(--fd);font-size:15px;direction:ltr}
+.ph2g{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ph2g figure{margin:0;border-radius:16px;overflow:hidden;background:var(--s2)}
+.ph2g img{width:100%;aspect-ratio:3/4;object-fit:cover}
+.ph2g figcaption{font-size:12px;color:var(--mut);text-align:center;padding:4px}
+.fade{animation:fade .28s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.screen:not([hidden]) .in{animation:slide .26s cubic-bezier(.2,.8,.2,1)}
+@keyframes slide{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:none}}
+.btn,.ib,.exrow,.dcard,.mcard,.pcard,.opt,.chips button,.seg button,nav a{transition:transform .12s ease,background .2s ease}
+.btn:active,.ib:active,.exrow:active,.dcard:active,.mcard:active,.pcard:active,.chips button:active{transform:scale(.97)}
+html,body{overscroll-behavior-y:none}
+.rstep>div span.xs{display:block}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto;animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
@@ -299,6 +316,6 @@ details summary{cursor:pointer;font-weight:600}
 </div></nav>
 <div id="screen" class="screen" hidden></div>
 <div id="player" class="player" hidden></div>
-<script type="module" src="app.js?v=5"></script>
+<script type="module" src="app.js?v=6"></script>
 </body>
 </html>

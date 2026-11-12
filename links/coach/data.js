@@ -47,6 +47,16 @@ export const EX = {
     st: ['امسك دمبل واحد لازق بصدرك', 'رجلك أعرض شوية من كتوفك', 'انزل كأنك تگعد على كرسي', 'ظهرك عدل وصدرك مرفوع', 'اصعد وادفع بكعبك'], bad: ['كعبك يترفع', 'ركبتك تدخل لجوة'] },
   rdl: { n: 'الرفعة الرومانية بالدمبل', gym: 'رومانيان ديدلِفت', m: ['hamstrings', 'glutes'], c: 1, w0: 8, inc: 2, yt: 'C_FYH6SBhxk',
     st: ['الدمبلات گدام فخذك', 'ركبتك مثنية شوية وثابتة', 'ادفع مؤخرتك لورا', 'الدمبل ينزل لازق برجلك لنص الساق', 'اصعد واعصر مؤخرتك'], bad: ['تقوّس ظهرك (أخطر غلط)', 'تثني ركبتك هواية'] },
+  wristcurl: { n: 'لف الرسغ بالدمبل', gym: 'ريست كيرل', m: ['forearms'], c: 0, w0: 4, inc: 1,
+    st: ['اگعد وحط ساعدك على فخذك، والكف لفوگ', 'الرسغ برة الركبة شوية', 'نزّل الدمبل ببطء لحد ما يوصل أطراف أصابعك', 'لف الرسغ لفوگ واعصر'], bad: ['ترفع ساعدك من الفخذ', 'وزن ثقيل وحركة صغيرة'] },
+  revcurl: { n: 'كيرل بالقبضة المقلوبة', gym: 'ريفيرس كيرل', m: ['forearms', 'biceps'], c: 0, w0: 10, inc: 2.5,
+    st: ['امسك البار والكف لتحت', 'الكوع لازق جنبك', 'ارفع لحد الكتف', 'نزّل ببطء ثانيتين'], bad: ['تتمرجح بجسمك', 'الرسغ ينثني لتحت'] },
+  farmer: { n: 'مشي المزارع', gym: 'فارمرز ووك', m: ['forearms', 'traps'], c: 1, sec: 1, w0: 12, inc: 2,
+    st: ['امسك دمبلين ثقال جنبك', 'اوگف عدل وكتوفك لورا', 'امشي خطوات قصيرة 30-40 ثانية', 'لا تخلي الدمبل يطيح من إيدك'], bad: ['تنحني لجنب', 'ترفع كتوفك صوب أذنك'] },
+  kneeraise: { n: 'رفع الركب بالعقلة', gym: 'هانگنگ ني ريز', m: ['abs'], c: 0, w0: 0, inc: 0,
+    st: ['تعلّگ بالعقلة', 'ارفع ركبك لصدرك ببطء', 'اعصر بطنك ثانية', 'نزّل ببطء بدون ما تتمرجح'], bad: ['تتمرجح', 'ترفع بسرعة'] },
+  crunch: { n: 'الكرنش', gym: 'كرنش', m: ['abs'], c: 0, w0: 0, inc: 0,
+    st: ['انام على ظهرك وركبك مثنية', 'ارفع كتوفك عن الأرض', 'اعصر بطنك ثانية', 'نزّل ببطء'], bad: ['تسحب راسك بإيدك', 'ترفع ظهرك كله'] },
   hipflex: { n: 'إطالة الورك', gym: 'هِپ فلِكسر', m: ['quads'], sec: 1, w0: 0, inc: 0, st: ['انزل على ركبة وحدة', 'ادفع وركك لگدام بهدوء', 'تحس شد گدام الفخذ الي ورا', '30 ثانية وبدّل'], bad: ['تقوّس ظهرك'] },
   cat: { n: 'القطة', gym: 'كات ستريتش', m: ['back'], w0: 0, inc: 0, yt: 'SsIJaV3g8zE', st: ['انزل على إيدك وركبتك', 'قوّس ظهرك لفوگ ببطء', 'بعدين نزّله لتحت وارفع راسك', '10 مرات'], bad: ['تتحرك بسرعة'] },
   chest: { n: 'فتح الصدر والكتف', gym: 'چِست ستريتش', m: ['chest'], sec: 1, w0: 0, inc: 0, yt: 'u4cErwcJF8M', st: ['شبّك إيدك ورا ظهرك', 'افتح صدرك لگدام', 'ارفع إيدك شوية', '30 ثانية'], bad: ['تحني راسك لگدام'] },
@@ -60,12 +70,18 @@ export const DAY_IMG = { A: 'dayA', B: 'dayB', C: 'dayC', R: 'rest' };
 /* ================= برامج الشهور =================
    كل شهر: اسم وهدف، وتمارين كل يوم. r = العدّات، s = السِتات */
 export const MONTHS = [
-  { n: 'التأسيس', goal: 'تتعلم الحركات الصحيحة وتبني أساس قوي', c: { r: [10, 12], s: 3 }, i: { r: [12, 15], s: 3 },
-    days: { A: ['chestpress', 'incline', 'pecdeck', 'curl', 'hammer', 'plank'], B: ['latpull', 'row', 'dbrow', 'backext', 'pushdown', 'ohtri'], C: ['legpress', 'legext', 'legcurl', 'shpress', 'lateral', 'reardelt', 'calf'] } },
-  { n: 'البناء', goal: 'نزيد الأوزان والحجم، وتمارين حرة أكثر', c: { r: [8, 12], s: 3 }, i: { r: [10, 15], s: 3 },
-    days: { A: ['dbbench', 'incline', 'pecdeck', 'curl', 'hammer', 'plank'], B: ['latpull', 'row', 'dbrow', 'rdl', 'pushdown', 'ohtri'], C: ['legpress', 'goblet', 'legcurl', 'shpress', 'lateral', 'reardelt', 'calf'] } },
-  { n: 'القوة والشكل', goal: 'أوزان أثقل بعدّات أقل للتمارين الكبيرة، وتشكيل الكتف والزند', c: { r: [6, 10], s: 4 }, i: { r: [10, 15], s: 3 },
-    days: { A: ['incline', 'dbbench', 'chestpress', 'pecdeck', 'curl', 'hammer'], B: ['latpull', 'dbrow', 'row', 'rdl', 'ohtri', 'pushdown'], C: ['goblet', 'legpress', 'legcurl', 'shpress', 'lateral', 'reardelt', 'calf'] } },
+  { n: 'التأسيس', mo: 'تشرين الثاني', goal: 'تتعلم الحركات الصحيحة وجسمك يتعوّد', tw: 53.5, c: { r: [10, 12], s: 3 }, i: { r: [12, 15], s: 3 },
+    days: { A: ['chestpress', 'incline', 'pecdeck', 'curl', 'hammer', 'plank'], B: ['latpull', 'row', 'dbrow', 'backext', 'pushdown', 'wristcurl'], C: ['legpress', 'legext', 'legcurl', 'shpress', 'lateral', 'reardelt', 'calf'] } },
+  { n: 'البناء', mo: 'كانون الأول', goal: 'أوزان أكثر وتمارين حرة، وبداية شغل الساعد', tw: 55, c: { r: [8, 12], s: 3 }, i: { r: [10, 15], s: 3 },
+    days: { A: ['dbbench', 'incline', 'pecdeck', 'curl', 'hammer', 'wristcurl', 'crunch'], B: ['latpull', 'row', 'dbrow', 'rdl', 'pushdown', 'ohtri', 'revcurl'], C: ['legpress', 'goblet', 'legcurl', 'shpress', 'lateral', 'reardelt', 'farmer'] } },
+  { n: 'القوة', mo: 'كانون الثاني', goal: 'التمارين الكبيرة أثقل بعدّات أقل، والقوة ترفع كل شي', tw: 56.5, c: { r: [6, 10], s: 4 }, i: { r: [10, 15], s: 3 },
+    days: { A: ['incline', 'dbbench', 'chestpress', 'curl', 'hammer', 'kneeraise'], B: ['latpull', 'dbrow', 'row', 'rdl', 'ohtri', 'pushdown', 'farmer'], C: ['goblet', 'legpress', 'legcurl', 'shpress', 'lateral', 'reardelt', 'wristcurl'] } },
+  { n: 'الكتف والزند', mo: 'شباط', goal: 'تركيز على الكتف العريض والزند والساعد، هذول الي يبينون بالتيشيرت', tw: 58, c: { r: [8, 12], s: 3 }, i: { r: [10, 15], s: 4 },
+    days: { A: ['incline', 'chestpress', 'lateral', 'curl', 'hammer', 'wristcurl'], B: ['latpull', 'row', 'reardelt', 'pushdown', 'ohtri', 'revcurl', 'kneeraise'], C: ['legpress', 'goblet', 'legcurl', 'shpress', 'lateral', 'farmer', 'calf'] } },
+  { n: 'الحجم', mo: 'آذار', goal: 'سِتات أكثر لكل عضلة حتى تكبر بكل مكان', tw: 59.5, c: { r: [8, 12], s: 4 }, i: { r: [12, 15], s: 3 },
+    days: { A: ['dbbench', 'incline', 'pecdeck', 'curl', 'hammer', 'crunch'], B: ['latpull', 'dbrow', 'row', 'rdl', 'pushdown', 'ohtri', 'wristcurl'], C: ['legpress', 'goblet', 'legext', 'legcurl', 'shpress', 'lateral', 'reardelt'] } },
+  { n: 'التشكيل', mo: 'نيسان وأيار', goal: 'نحافظ على العضل ونبيّن التقسيمات: بطن وساعد وكتف واضح', tw: 61, c: { r: [8, 12], s: 3 }, i: { r: [12, 20], s: 3 },
+    days: { A: ['incline', 'dbbench', 'pecdeck', 'curl', 'revcurl', 'kneeraise', 'crunch'], B: ['latpull', 'row', 'dbrow', 'pushdown', 'ohtri', 'wristcurl', 'plank'], C: ['goblet', 'legpress', 'legcurl', 'shpress', 'lateral', 'reardelt', 'farmer'] } },
 ];
 
 /* ================= الأكل =================
@@ -162,6 +178,11 @@ export const TIPS = {
   calf: ['حركة كاملة من تحت لفوگ', 'اثبت ثانيتين بالأعلى وثانيتين بالأسفل'],
   goblet: ['انزل لحد ما تگدر وظهرك عدل', 'وگّف ثانيتين بالأسفل، أو زيد دمبل أثقل'],
   rdl: ['ابدي بدون وزن قدام مراية', 'نزّل 3 ثواني، والدمبل لازق بالرجل'],
+  wristcurl: ['دمبل خفيف، والحركة كاملة من أطراف الأصابع', 'آخر سِت خليها لحد ما الساعد يحترگ'],
+  revcurl: ['بار خفيف، والرسغ عدل', 'نزّل 3 ثواني، هذا يكبّر الساعد من فوگ'],
+  farmer: ['ابدي 30 ثانية بدمبل متوسط', 'أثقل دمبل تگدر تمسكه 40 ثانية'],
+  kneeraise: ['ارفع لحد ما فخذك يصير أفقي بس', 'ارفع الركب لصدرك وميّل الحوض لفوگ'],
+  crunch: ['حركة صغيرة، بس الكتوف تترفع', 'اثبت ثانيتين بالأعلى، أو امسك وزن خفيف على صدرك'],
 };
 /* ================= المكملات ================= */
 export const SUPPS = [

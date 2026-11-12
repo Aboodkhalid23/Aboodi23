@@ -138,3 +138,7 @@ whaleyxbt/claude-motion              .claude/skills/web-sims          motion-web
 howseen-ai/claude-motion-design      skill/motion-design              motion-html
 haidrrrry/claude-remotion-skill      remotion-motion-graphics
 agamm/video-agent                    .claude/skills/remotion-graphics
+
+# تصميم واجهات التطبيقات (أكثر من 1000 تنزيل، فحصتها: ملفات شرح وسكربت بحث محلي بدون إنترنت)
+ceorkm/mobile-app-ui-design  .  mobile-app-ui-design
+nextlevelbuilder/ui-ux-pro-max-skill  .claude/skills/ui-ux-pro-max  ui-ux-pro-max
