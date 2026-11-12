@@ -3,21 +3,24 @@
 - النص: من hadith.js بالحرف (الأربعون النووية). ما نغيّر حرف.
 - المشاهد: scenes.json (لكل حديث لقطات تبدي عند كلمة معيّنة بالنص).
 - الرسم: engine.js على canvas، ونصوّر كل إطار بمتصفح Playwright.
-- الصوت: أصوات مايكروسوفت المجانية (edge-tts).
-التشغيل: python3 scripts/motion/make-videos.py [أرقام الأحاديث...] [--lang ar|en] [--preview]
+- الصوت: أصوات مايكروسوفت المجانية (edge-tts)، الجملة بنَفَس واحد، ومعالجة وتسوية بـ audio.py.
+التشغيل: python3 scripts/motion/make-videos.py [أرقام الأحاديث...] [--lang ar|en] [--preview] [--audio-only DIR] [--no-amb]
 المخرجات: links/salah/v/h<رقم>-<لغة>.mp4 و links/salah/v/index.json"""
-import argparse, asyncio, json, re, shutil, subprocess, sys, tempfile
+import argparse, json, re, shutil, subprocess, sys, tempfile
 from pathlib import Path
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+import audio as AU  # الصوت: الراوي ومعالجته، والجو، والتسوية النهائية (audio.py)
 ROOT = HERE.parent.parent / "links" / "salah"
 OUT = ROOT / "v"
 VOICE = {"ar": "ar-SA-HamedNeural", "en": "en-US-AndrewNeural"}
 FPS = 24
-INTRO, GAP, OUTRO = 2.6, 0.7, 3.2
-# صوت الراوي المعتمد (اختاره صاحب القناة 12 تشرين الثاني 2026): حامد السعودي، أبطأ وأعمق، ويا تدفئة وصدى خفيف
-PROSODY = {"ar": ("-14%", "-4Hz"), "en": ("-10%", "-2Hz")}
-VOICE_FX = "equalizer=f=140:t=q:w=1:g=3,equalizer=f=6500:t=q:w=1.5:g=-3,acompressor=threshold=-18dB:ratio=3,aecho=0.8:0.6:45|90:0.12|0.07,loudnorm=I=-16:TP=-1.5"
-QURAN_FX = "loudnorm=I=-16:TP=-1.5"
+INTRO, OUTRO = 2.6, 3.2
+# صوت الراوي المعتمد (اختاره صاحب القناة 12 تشرين الثاني 2026): حامد السعودي، أبطأ وأعمق
+PROSODY = {"ar": (-14, -4), "en": (-10, -2)}   # (السرعة %، طبقة الصوت Hz)
+# الراوي يقرا الجملة كاملة بنَفَس واحد، والسكتة بعدها حسب علامة الوقف
+GAP = {"end": 0.6, "colon": 0.34, "comma": 0.24, "quran": 0.45}
+AMBIENCE = True   # جو طبيعي خفيف (هوا، ماي، غرفة) بلا موسيقى، وبس بمقاطع الأحاديث
 
 def strip(s):
     return re.sub(r"[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u0640\u200e\u200f]", "", s)
@@ -64,18 +67,27 @@ def speakable(s, lang):
     s = re.sub(r"[\[\]\"“”«»\u200e\u200f]", "", s)
     return re.sub(r"(^|\s)[-—–]+(\s|$)", " ", s).strip()
 
-async def tts(text, voice, path, lang="ar"):
-    import edge_tts
-    rate, pitch = PROSODY[lang]
-    if not re.search(r"[\u0621-\u064Aa-zA-Z]", text):
-        # ما بيها كلام (علامة بس): سكتة قصيرة بدل الصوت
-        subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "anullsrc=r=24000:cl=mono", "-t", "0.3", str(path)], check=True); return
-    for i in range(10):  # خدمة الصوت أحياناً ترفض من كثر الطلبات، نعيد بصبر
-        try:
-            await edge_tts.Communicate(text, voice, rate=rate, pitch=pitch).save(str(path)); return
-        except Exception:
-            if i == 9: raise
-            await asyncio.sleep(3 + i * 4)
+def say_units(segs, lang, hl):
+    """نجمع مقاطع العرض بجمل: كل جملة تنقرا بنفس واحد (الصوت طبيعي وما ينقطع بنص العبارة)"""
+    out, cur = [], []
+    for sg in segs:
+        cur.append(sg); t = strip(sg).strip(); w = sum(len(x.split()) for x in cur)
+        kind = ("end" if re.search(r"[.؟?!][\"”’'\]\)\s]*$", t) else "colon" if re.search(r"[:：]\W*$", t)
+                else "comma" if (w >= 22 and re.search(r"[،,;؛]\W*$", t)) or w >= 40 else None)
+        if kind: out.append([cur, kind]); cur = []
+    if cur: out.append([cur, "end"])
+    body = [i for i, (c, _) in enumerate(out) if not re.match(r"\s*(رواه|تابعه|\[)", norm(" ".join(c)).strip() + " ")]
+    units = []
+    for i, (c, kind) in enumerate(out):
+        txt = " ".join(c); r, p = PROSODY[lang]
+        nw = len(txt.split())
+        if i not in body: r += 5                          # المصدر (رواه...): أسرع شوية
+        elif nw <= 4: r -= 6; p -= 1                     # عبارة قصيرة مهمة: أبطأ وأعمق
+        else:
+            if any(norm(h).strip() in norm(txt) for h in hl): r -= 3   # بيها الكلمة المفتاح
+            if i == body[-1]: r -= 3                      # آخر جملة: نختم بهدوء
+        units.append({"segs": c, "say": [speakable(x, lang) for x in c], "gap": GAP[kind], "rate": r, "pitch": p})
+    return units
 
 def dur(p):
     return float(subprocess.check_output(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(p)]).decode())
@@ -151,33 +163,45 @@ def item(key):
         d.update(ar=C["ar"], en=C["en"], src_ar=f"صحيح البخاري · رقم {C['b']}".translate(AR_DIG), src_en=f"Sahih al-Bukhari {C['b']}")
     return d
 
-def build(I, lang, tmp, preview=False):
+def build(I, lang, tmp, preview=False, audio_dir=None):
     key, sc = I["key"], I["sc"]
-    # الوحدات: كل وحدة ملف صوت واحد، وبيها مقطع نص أو أكثر
+    hl = sc.get("hl", {}).get(lang, [])
+    # الوحدات: كل وحدة مقطع صوت واحد (جملة كاملة أو آية)، وبيها مقطع عرض أو أكثر
     units = []
     if I["kind"] == "q":
         C = I["c"]; s_ = C["surah"]
-        if C["basmala"]: units.append({"segs": [C["basmala"]] if lang == "ar" else ["In the name of Allah, the Entirely Merciful, the Especially Merciful."], "q": (1, 1), "say": "In the name of Allah, the Entirely Merciful, the Especially Merciful."})
+        bas = "In the name of Allah, the Entirely Merciful, the Especially Merciful."
+        if C["basmala"]: units.append({"segs": [C["basmala"]], "q": (1, 1), "gap": GAP["quran"]} if lang == "ar" else
+                                      {"segs": [bas], "say": [bas], "gap": GAP["end"], "rate": PROSODY[lang][0] - 3, "pitch": PROSODY[lang][1]})
         for a in C["ayat"]:
             if lang == "ar":
                 cs = chunks(a["ar"]); cs[-1] += " ﴿" + str(a["k"]).translate(AR_DIG) + "﴾"
-                units.append({"segs": cs, "q": (s_, a["k"])})
+                units.append({"segs": cs, "q": (s_, a["k"]), "gap": GAP["quran"]})
             else:
-                for sg in segments(a["en"]): units.append({"segs": [sg], "say": speakable(sg, "en")})
+                us = say_units(segments(a["en"]), "en", hl)
+                for u in us[:-1]: units.append(u)
+                us[-1]["gap"] = GAP["end"] + 0.15; units.append(us[-1])   # سكتة أطول بين الآيات
     else:
-        for sg in segments(I["ar"] if lang == "ar" else I["en"]): units.append({"segs": [sg], "say": speakable(sg, lang)})
-    segs, times, files, t = [], [], [], INTRO
+        units = say_units(segments(I["ar"] if lang == "ar" else I["en"]), lang, hl)
+    segs, times, clips, t = [], [], [], INTRO
     for i, u in enumerate(units):
-        f = tmp / f"{lang}{key}_{i}.mp3"
-        if preview: d = 0.45 * sum(len(x.split()) for x in u["segs"]) + .4
+        if preview:
+            d = 0.42 * sum(len(x.split()) for x in u["segs"]) + .3; rel = None
+        elif "q" in u:
+            f = tmp / f"{lang}{key}_{i}.mp3"
+            fetch("https://everyayah.com/data/Alafasy_128kbps/%03d%03d.mp3" % u["q"], f)
+            x = AU.decode(f); d = len(x) / AU.SR; rel = None; clips.append((x, t))
+        elif not re.search(r"[\u0621-\u064Aa-zA-Z]", " ".join(u["say"])):
+            d = 0.3; rel = None   # ما بيها كلام (علامة بس): سكتة قصيرة
         else:
-            if lang == "ar" and "q" in u: fetch("https://everyayah.com/data/Alafasy_128kbps/%03d%03d.mp3" % u["q"], f)
-            else: asyncio.run(tts(u["say"], VOICE[lang], f, lang))
-            d = dur(f)
-        files.append((f, t)); wc = [max(1, len(x.split())) for x in u["segs"]]; st = t
-        for sg, w in zip(u["segs"], wc):
-            dd = d * w / sum(wc); segs.append(sg); times.append([round(st, 2), round(st + dd, 2)]); st += dd
-        t += d + (0.45 if "q" in u else GAP)
+            v, f_ = VOICE[lang], lambda n: f"{n:+d}"
+            x, rel = AU.speak(u["say"], v, f_(u["rate"]) + "%", f_(u["pitch"]) + "Hz")
+            d = len(x) / AU.SR; clips.append((x, t))
+        if rel is None:
+            rel = AU._even(u["segs"], 0.0, d)
+        for sg, (a_, b_) in zip(u["segs"], rel):
+            segs.append(sg); times.append([round(t + a_, 2), round(t + b_, 2)])
+        t += d + u["gap"]
     total = t + OUTRO
     pre = [] if I["kind"] == "q" else [ISNAD]
     post = [] if I["kind"] != "h" or sc.get("noend") else [END]
@@ -199,11 +223,15 @@ def build(I, lang, tmp, preview=False):
         subprocess.run(["node", str(HERE / "shot.js"), str(html), "preview", str(outp / f"{key}-{lang}.png"), json.dumps([b["t"] + 1.6 for b in beats][:9])], check=True)
         return outp / f"{key}-{lang}.png", total
     audio = tmp / f"{lang}{key}.m4a"
-    inp, flt = [], []
-    for i, (f, st) in enumerate(files):
-        inp += ["-i", str(f)]; flt.append(f"[{i}]aresample=44100,adelay={int(st*1000)}|{int(st*1000)}[a{i}]")
-    mix = "".join(f"[a{i}]" for i in range(len(files)))
-    subprocess.run(["ffmpeg", "-v", "error", "-y", *inp, "-filter_complex", ";".join(flt) + f";{mix}amix=inputs={len(files)}:normalize=0,{QURAN_FX if (I["kind"] == "q" and lang == "ar") else VOICE_FX},apad=whole_dur={total}[o]", "-map", "[o]", "-t", str(total), "-ac", "1", "-c:a", "aac", "-b:a", "80k", str(audio)], check=True)
+    voice = AU.np.zeros(int(total * AU.SR) + 1, AU.np.float32)
+    for x, st in clips:
+        a_ = int(st * AU.SR); voice[a_:a_ + len(x)] += x[:len(voice) - a_]
+    recite = I["kind"] == "q" and lang == "ar"
+    m = AU.master(voice, audio, beats, total, amb=AMBIENCE and I["kind"] != "q", seed=sum(map(ord, key + lang)), quran=recite)
+    print(f"  🔊 {key}-{lang}: {m['I']:.1f} LUFS · ذروة {m['TP']:.1f} dBTP · مدى {m['LRA']:.1f} LU", flush=True)
+    if audio_dir:
+        Path(audio_dir).mkdir(parents=True, exist_ok=True); shutil.copy(audio, Path(audio_dir) / f"{key}-{lang}.m4a")
+        return Path(audio_dir) / f"{key}-{lang}.m4a", total
     out = OUT / f"{key}-{lang}.mp4"
     subprocess.run(["node", str(HERE / "shot.js"), str(html), "video", str(out), str(FPS), str(total), str(audio)], check=True)
     return out, total
@@ -231,7 +259,11 @@ def index():
 
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument("n", nargs="*"); ap.add_argument("--lang"); ap.add_argument("--preview", action="store_true"); ap.add_argument("--index", action="store_true"); ap.add_argument("--new", action="store_true")
+    ap.add_argument("--audio-only", metavar="DIR", help="يصنع الصوت بس (m4a) بهذا المجلد، بلا فيديو")
+    ap.add_argument("--no-amb", action="store_true", help="بلا جو طبيعي")
     a = ap.parse_args()
+    global AMBIENCE
+    if a.no_amb: AMBIENCE = False
     if a.index: print("index", index()); return
     OUT.mkdir(parents=True, exist_ok=True)
     keys = a.n or ([x["id"] for x in CAT["items"]] if a.new else [str(k) for k in sorted(hadiths())])
@@ -239,9 +271,9 @@ def main():
         I = item(k)
         with tempfile.TemporaryDirectory() as td:
             for lang in ([a.lang] if a.lang else ["ar", "en"]):
-                f, t = build(I, lang, Path(td), a.preview)
+                f, t = build(I, lang, Path(td), a.preview, a.audio_only)
                 print(k, lang, f.name, round(t, 1), "s", (f.stat().st_size // 1024), "KB", flush=True)
-    if not a.preview and not a.n: print("index", index())
+    if not a.preview and not a.n and not a.audio_only: print("index", index())
 
 if __name__ == "__main__":
     main()
