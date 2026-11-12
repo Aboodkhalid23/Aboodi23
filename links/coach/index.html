@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>مدرّبي</title>
+<meta name="theme-color" content="#0c0e10">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="مدرّبي">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600;700&display=swap">
+<style>
+/* هوية مدرّبي: خلفية فحمية، لون ليموني واحد للفعل، بطاقات كبيرة وواضحة، شي واحد بكل شاشة */
+:root{
+  --bg:#0c0e10;--s1:#15181c;--s2:#1c2025;--s3:#262b31;--line:#2b3037;
+  --fg:#f1f3ee;--mut:#8f969e;--lime:#c8f43c;--ink:#10140a;
+  --blue:#6fc3ff;--orange:#ffb44d;--red:#ff6b5c;--violet:#b99bff;
+  --font:'Readex Pro',system-ui,-apple-system,'Segoe UI',Tahoma,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--fg)}
+body{font-family:var(--font);font-size:16px;line-height:1.6;padding-top:env(safe-area-inset-top,0px)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:60}
+button,input{font-family:var(--font);font-size:16px}
+button{cursor:pointer;color:inherit}
+img{max-width:100%;display:block}
+:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+[hidden]{display:none!important}
+h1,h2,h3,p{margin:0}
+h1{font-size:27px;font-weight:700;line-height:1.25;text-wrap:balance}
+h2{font-size:20px;font-weight:600;line-height:1.3}
+h3{font-size:16.5px;font-weight:600;line-height:1.35}
+.mut{color:var(--mut)} .sm{font-size:14px} .xs{font-size:12.5px}
+.num{font-variant-numeric:tabular-nums}
+main{max-width:520px;margin:0 auto;padding:16px max(16px,env(safe-area-inset-right,0px)) 130px max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:16px}
+.row{display:flex;align-items:center;gap:10px}.between{justify-content:space-between}.wrap{flex-wrap:wrap}.grow{flex:1;min-width:0}
+.col{display:flex;flex-direction:column;gap:10px}
+.card{background:var(--s1);border:1px solid var(--line);border-radius:24px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.btn{border:0;border-radius:999px;background:var(--lime);color:var(--ink);font-weight:600;padding:14px 22px;min-height:52px;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:17px}
+.btn.ghost{background:var(--s3);color:var(--fg)}
+.btn.sm{min-height:40px;padding:8px 16px;font-size:14.5px}
+.btn.wide{width:100%}
+.btn svg{width:20px;height:20px}
+.icon-btn{width:46px;height:46px;border-radius:50%;border:0;background:var(--s3);display:grid;place-items:center;flex:none}
+.icon-btn svg{width:22px;height:22px}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 12px;font-size:13px;background:var(--s3);white-space:nowrap}
+.pill.lime{background:rgba(200,244,60,.14);color:var(--lime)}
+.bar{height:10px;background:var(--s3);border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;background:var(--lime);border-radius:99px}
+/* الكورس */
+.hero{background:var(--lime);color:var(--ink);border-radius:28px;padding:20px;display:flex;flex-direction:column;gap:12px}
+.hero .mut{color:#45541a}
+.hero .btn{background:var(--ink);color:var(--lime)}
+.days{display:flex;flex-direction:column;gap:10px}
+.day{display:flex;gap:14px;align-items:center;background:var(--s1);border:1px solid var(--line);border-radius:22px;padding:12px 14px;width:100%;text-align:right}
+.day .n{width:52px;height:52px;border-radius:16px;background:var(--s3);display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none;line-height:1.1}
+.day .n b{font-size:19px}.day .n span{font-size:10.5px;color:var(--mut)}
+.day.rest .n{background:transparent;border:1.5px dashed var(--line)}
+.day.done .n{background:rgba(200,244,60,.16);color:var(--lime)}
+.day.done .n span{color:var(--lime)}
+.day.now{border-color:var(--lime);background:var(--s2)}
+.day.now .n{background:var(--lime);color:var(--ink)}.day.now .n span{color:var(--ink)}
+.day .thumbs{display:flex;gap:4px;margin-top:6px}
+.day .thumbs img{width:34px;height:34px;border-radius:9px;object-fit:cover}
+.week-h{display:flex;align-items:center;gap:10px;margin-top:8px}
+.week-h::after{content:"";flex:1;height:1px;background:var(--line)}
+/* شاشة كاملة */
+.screen{position:fixed;inset:0;background:var(--bg);z-index:50;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.screen .in{max-width:520px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(40px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:16px}
+.topbar{display:flex;align-items:center;gap:10px}
+.exrow{display:flex;gap:12px;align-items:center;background:var(--s1);border:1px solid var(--line);border-radius:22px;padding:10px;width:100%;text-align:right}
+.exrow img{width:76px;height:76px;border-radius:16px;object-fit:cover;flex:none;background:#fff}
+.exrow .k{width:28px;height:28px;border-radius:50%;background:var(--s3);display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+.exrow.ok .k{background:var(--lime);color:var(--ink)}
+/* عرض الحركة */
+.demo{position:relative;border-radius:26px;overflow:hidden;background:#fff;aspect-ratio:4/3}
+.demo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.demo img.b{animation:swap 2.6s ease-in-out infinite}
+.demo.slow img.b{animation-duration:5s}
+@keyframes swap{0%,30%{opacity:0}45%,80%{opacity:1}95%,100%{opacity:0}}
+.demo .lab{position:absolute;bottom:12px;right:12px;background:rgba(12,14,16,.85);color:#fff;border-radius:999px;padding:6px 14px;font-size:14px;font-weight:600}
+.demo .lab::before{content:"البداية";animation:lab 2.6s infinite}
+.demo.slow .lab::before{animation-duration:5s}
+@keyframes lab{0%,37%{content:"البداية"}38%,87%{content:"النهاية"}88%,100%{content:"البداية"}}
+.demo .tag{position:absolute;top:12px;right:12px;background:var(--lime);color:var(--ink);border-radius:999px;padding:4px 12px;font-size:12.5px;font-weight:600}
+.video{position:relative;border-radius:22px;overflow:hidden;aspect-ratio:16/9;background:#000;border:0;padding:0;width:100%}
+.video img{width:100%;height:100%;object-fit:cover;opacity:.75}
+.video .play{position:absolute;inset:0;display:grid;place-items:center}
+.video .play span{width:68px;height:68px;border-radius:50%;background:var(--lime);display:grid;place-items:center;color:var(--ink);box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.video .play svg{width:30px;height:30px;margin-right:-4px}
+.video .cap{position:absolute;bottom:0;left:0;right:0;padding:10px 14px;background:linear-gradient(transparent,rgba(0,0,0,.85));color:#fff;font-size:13.5px;text-align:right}
+.video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.facts div{background:var(--s2);border-radius:18px;padding:12px 4px;text-align:center;display:flex;flex-direction:column;gap:2px}
+.facts b{font-size:18px}.facts span{font-size:11.5px;color:var(--mut)}
+.steps{display:flex;flex-direction:column;gap:10px;counter-reset:s}
+.steps p{display:flex;gap:10px;align-items:flex-start}
+.steps p::before{counter-increment:s;content:counter(s);width:26px;height:26px;border-radius:50%;background:var(--lime);color:var(--ink);display:grid;place-items:center;font-weight:700;font-size:13px;flex:none;margin-top:1px}
+.bad p{display:flex;gap:10px}.bad p::before{content:"✕";width:26px;height:26px;border-radius:50%;background:rgba(255,107,92,.15);color:var(--red);display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+/* جلسة */
+.sets{display:flex;flex-direction:column;gap:8px}
+.set{display:grid;grid-template-columns:40px 1fr 1fr 56px;gap:8px;align-items:center}
+.set .i{width:36px;height:36px;border-radius:50%;background:var(--s3);display:grid;place-items:center;font-weight:700}
+.set input{width:100%;min-width:0;background:var(--s2);border:1px solid var(--line);border-radius:14px;color:var(--fg);padding:10px 4px;text-align:center}
+.set .ok{height:46px;border-radius:14px;border:1px solid var(--line);background:var(--s2);display:grid;place-items:center;color:var(--mut)}
+.set .ok svg{width:22px;height:22px}
+.set.done .i,.set.done .ok{background:var(--lime);color:var(--ink);border-color:var(--lime)}
+.rest-ov{position:fixed;inset:0;background:rgba(12,14,16,.97);z-index:80;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px}
+.ring{width:230px;height:230px;position:relative}.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:64px;font-weight:600}
+/* الأكل */
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.tile{border-radius:22px;padding:14px 10px;display:flex;flex-direction:column;gap:2px;align-items:center;text-align:center}
+.tile svg{width:26px;height:26px}
+.tile b{font-size:22px;line-height:1.2}
+.tile span{font-size:12px}
+.meal-tabs{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.meal-tabs::-webkit-scrollbar{display:none}
+.meal-tabs button{border:1px solid var(--line);background:var(--s1);border-radius:999px;padding:9px 16px;white-space:nowrap;font-size:15px}
+.meal-tabs button.on{background:var(--lime);color:var(--ink);border-color:var(--lime);font-weight:600}
+.opt{background:var(--s1);border:2px solid var(--line);border-radius:24px;padding:14px;display:flex;flex-direction:column;gap:10px;width:100%;text-align:right}
+.opt.on{border-color:var(--lime);background:rgba(200,244,60,.06)}
+.plate{display:flex;gap:6px;justify-content:center;background:radial-gradient(circle,#f4f1ea 0%,#e4ded2 68%,#cfc8ba 70%,transparent 71%);aspect-ratio:2.1/1;align-items:center;border-radius:20px;background:#f5f2ec;padding:8px}
+.plate img{width:30%;max-width:92px;aspect-ratio:1;object-fit:contain;filter:drop-shadow(0 4px 6px rgba(0,0,0,.18))}
+.items{display:flex;flex-direction:column;gap:4px}
+.items p{display:flex;justify-content:space-between;gap:10px;font-size:14.5px}
+.items p span:last-child{color:var(--mut);white-space:nowrap}
+.pick{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;color:var(--mut)}
+.opt.on .pick{color:var(--lime)}
+.pick i{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center}
+.opt.on .pick i{border-color:var(--lime);background:var(--lime)}
+.opt.on .pick i::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--ink)}
+.sweets{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sweet{background:var(--s1);border:1px solid var(--line);border-radius:22px;padding:10px;display:flex;flex-direction:column;gap:6px;text-align:center}
+.sweet .ph{background:#f5f2ec;border-radius:16px;display:flex;justify-content:center;gap:2px;padding:6px;height:86px;align-items:center}
+.sweet .ph img{height:70px;width:auto;object-fit:contain}
+/* المكملات */
+.supp{border-radius:24px;padding:16px;display:flex;flex-direction:column;gap:10px;border:1px solid var(--line);background:var(--s1)}
+.supp .head{display:flex;gap:12px;align-items:center}
+.supp .ic{width:54px;height:54px;border-radius:18px;display:grid;place-items:center;flex:none}
+.supp .ic svg{width:28px;height:28px}
+.supp .kv{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.supp .kv div{background:var(--s2);border-radius:14px;padding:8px 10px}
+.supp .kv span{display:block;font-size:11.5px;color:var(--mut)}
+.supp .kv b{font-size:14.5px;font-weight:600}
+.took{border:1px solid var(--line);background:var(--s2);border-radius:14px;padding:10px;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:600}
+.took.on{background:var(--lime);color:var(--ink);border-color:var(--lime)}
+.took svg{width:18px;height:18px}
+/* القائمة السفلية */
+nav{position:fixed;left:0;right:0;bottom:0;z-index:40;padding:16px max(12px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));background:linear-gradient(transparent,var(--bg) 35%)}
+nav .in{max-width:520px;margin:0 auto;background:var(--s1);border:1px solid var(--line);border-radius:30px;display:grid;grid-template-columns:repeat(4,1fr);padding:6px}
+nav a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 0;border-radius:24px;color:var(--mut);text-decoration:none;font-size:12px}
+nav a svg{width:24px;height:24px}
+nav a.on{background:var(--lime);color:var(--ink);font-weight:600}
+.install{background:var(--s2);border:1px dashed var(--lime);border-radius:22px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(100px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:600;z-index:90;max-width:90%;text-align:center}
+input.field{width:100%;background:var(--s2);border:1px solid var(--line);border-radius:14px;color:var(--fg);padding:12px}
+label.f{display:flex;flex-direction:column;gap:6px;font-size:13.5px;color:var(--mut)}
+.chart svg{width:100%;height:auto;display:block}
+textarea{width:100%;background:var(--s2);border:1px solid var(--line);border-radius:14px;color:var(--fg);padding:10px;font-size:12px;min-height:80px;direction:ltr}
+@media (prefers-reduced-motion:reduce){.demo img.b{animation-duration:6s}}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<nav aria-label="القائمة"><div class="in">
+  <a href="#course" data-t="course"><span data-i="dumb"></span>الكورس</a>
+  <a href="#food" data-t="food"><span data-i="food"></span>الأكل</a>
+  <a href="#supps" data-t="supps"><span data-i="pill"></span>المكملات</a>
+  <a href="#me" data-t="me"><span data-i="user"></span>أنا</a>
+</div></nav>
+<div id="screen" class="screen" hidden></div>
+<script>
+/* ===== أيقونات ===== */
+const I={
+dumb:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11"/></svg>',
+food:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 21V3c-2.5 1-4 3.5-4 7v3h4"/></svg>',
+pill:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2.5" y="8.5" width="19" height="7" rx="3.5" transform="rotate(-40 12 12)"/><path d="m9.5 9.3 5 5"/></svg>',
+user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4.5 4.5-6.5 8-6.5s7 2 8 6.5"/></svg>',
+back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg>',
+x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+play:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12-7.5z"/></svg>',
+check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17l9-10"/></svg>',
+fire:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2s5 4.5 5 10a5 5 0 0 1-10 0c0-2.5 1.5-4 1.5-4s.5 2 2 2.5C10 7 12 2 12 2z"/></svg>',
+drop:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5s6.5 7 6.5 11.5a6.5 6.5 0 0 1-13 0C5.5 9.5 12 2.5 12 2.5z"/></svg>',
+egg:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c3.5 0 7 6 7 11a7 7 0 0 1-14 0c0-5 3.5-11 7-11z"/></svg>',
+bolt:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>',
+sun:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>',
+fish:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 12c3-5 9-6 14-2l4-3v10l-4-3c-5 4-11 3-14-2z"/><circle cx="8" cy="11" r="1" fill="currentColor"/></svg>',
+moon:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>',
+shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3 4.5 6v6c0 4.5 3.2 7.8 7.5 9 4.3-1.2 7.5-4.5 7.5-9V6z"/><path d="m9 12 2 2 4-4"/></svg>',
+stop:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="m6 6 12 12"/></svg>',
+scoop:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 9h12l-1.5 11h-9z"/><path d="M8 9a4 4 0 0 1 8 0"/></svg>',
+share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v8h14v-8"/></svg>',
+};
+document.querySelectorAll('[data-i]').forEach(e=>e.innerHTML=I[e.dataset.i]);
+
+/* ===== أدوات ===== */
+const $=s=>document.querySelector(s);
+const AR=n=>String(n).replace(/\d/g,d=>'٠١٢٣٤٥٦٧٨٩'[d]);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
+let tT;function toast(m){let t=$('.toast');if(!t){t=document.createElement('div');t.className='toast';document.body.append(t)}t.textContent=m;t.hidden=false;clearTimeout(tT);tT=setTimeout(()=>t.hidden=true,2500)}
+
+/* ===== الحفظ ===== */
+const KEY='coach-v2';
+const def=()=>({age:'',h:168,w:52,done:{},log:{},meals:{},supp:{},weights:[],start:today()});
+let S;try{S=Object.assign(def(),JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){S=def()}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+
+/* ===== التمارين: صور حقيقية + فيديو عربي حقيقي ===== */
+const EX={
+legpress:{n:'ضغط الرجلين بالجهاز',gym:'لِگ پرس',img:'Leg_Press',yt:'HjPBHWS3Kpk',m:'الفخذ الأمامي والمؤخرة',r:[10,12],rest:90,w:'40 كغم',
+ st:['اگعد وظهرك لازق بالمسند','رجلك بنص الدوّاسة بعرض كتوفك','فك قفل الأمان الي بجنبك','ادفع بكعبك لحد ما رجلك تقريباً تنعدل','رجّع ببطء لحد ما ركبتك تقرب من صدرك'],
+ bad:['تقفل ركبتك بالآخر','مؤخرتك تترفع من الكرسي']},
+chestpress:{n:'جهاز ضغط الصدر',gym:'چِست پرس',img:'Machine_Bench_Press',yt:'_RHM6c8M_ws',m:'الصدر',r:[10,12],rest:90,w:'20 كغم',
+ st:['عدّل الكرسي حتى المسكات تجي بنص صدرك','ظهرك لازق وصدرك مرفوع','ادفع لگدام لحد ما إيدك تنعدل تقريباً','رجّع ببطء'],
+ bad:['ترفع كتوفك صوب أذنك','ترجّع بسرعة والحديد يضرب']},
+latpull:{n:'السحب الأمامي',gym:'لات پول داون',img:'Wide-Grip_Lat_Pulldown',yt:'jDwfoPmHd1k',m:'الظهر العريض',r:[10,12],rest:90,w:'25 كغم',
+ st:['امسك العمود أعرض من كتوفك بشبر','ثبّت فخذك تحت المسند','ميّل شوية لورا وطلّع صدرك','اسحب العمود لأعلى صدرك','رجّع لفوگ ببطء'],
+ bad:['تسحب ورا راسك','تتمرجح بجسمك']},
+shpress:{n:'ضغط الكتف بالدمبل',gym:'شولدر پرس',img:'Dumbbell_Shoulder_Press',yt:'wVFjy_HsW1w',m:'الأكتاف',r:[8,12],rest:90,w:'5 كغم بكل إيد',
+ st:['اگعد على مسند عمودي','الدمبل بمستوى أذنك','ادفع لفوگ لحد ما يقربون من بعض','نزّل ببطء لمستوى الأذن'],
+ bad:['تقوّس ظهرك','تضرب الدمبلات ببعض']},
+curl:{n:'البايسبس بالدمبل',gym:'دمبل كيرل',img:'Dumbbell_Bicep_Curl',yt:'iH8BtSj7GEs',m:'البايسبس (گدام الزند)',r:[10,12],rest:60,w:'5 كغم',
+ st:['اوگف عدل والدمبل جنبك','الكوع لازق بجنبك','ارفع لحد كتفك واعصر','نزّل ببطء ثانيتين'],
+ bad:['تتمرجح بظهرك','الكوع يطلع لگدام']},
+plank:{n:'البلانك',gym:'پلانك',img:'Plank',yt:'TldvfwHQ0lw',m:'البطن',r:[20,40],sec:1,rest:60,w:'وزن جسمك',
+ st:['انزل على ساعدك والكوع تحت كتفك','جسمك خط عدل من راسك لرجلك','شد بطنك ومؤخرتك','تنفس عادي'],
+ bad:['مؤخرتك نازلة','تحبس نفسك']},
+goblet:{n:'السكوات بالدمبل',gym:'گوبلِت سكوات',img:'Goblet_Squat',yt:'yMTPAqWyKXs',m:'الفخذ والمؤخرة',r:[10,12],rest:90,w:'8 كغم',
+ st:['امسك دمبل واحد لازق بصدرك','رجلك أعرض شوية من كتوفك','انزل كأنك تگعد على كرسي','ظهرك عدل وصدرك مرفوع','اصعد وادفع بكعبك'],
+ bad:['كعبك يترفع','ركبتك تدخل لجوة']},
+rdl:{n:'الرفعة الرومانية بالدمبل',gym:'رومانيان ديدلِفت',img:'Stiff-Legged_Dumbbell_Deadlift',yt:'C_FYH6SBhxk',m:'الفخذ الخلفي والمؤخرة',r:[10,12],rest:90,w:'8 كغم بكل إيد',
+ st:['الدمبلات گدام فخذك','ركبتك مثنية شوية وثابتة','ادفع مؤخرتك لورا','الدمبل ينزل لازق برجلك لنص الساق','اصعد واعصر مؤخرتك'],
+ bad:['تقوّس ظهرك (أخطر غلط)','تثني ركبتك هواية']},
+incline:{n:'ضغط الصدر المائل بالدمبل',gym:'إنكلاين دمبل پرس',img:'Incline_Dumbbell_Press',yt:'quQEanpSkEg',m:'أعلى الصدر',r:[8,12],rest:90,w:'7.5 كغم بكل إيد',
+ st:['المسند على درجة 30','الدمبلات بمستوى صدرك','ادفع لفوگ لحد ما يقربون','نزّل ببطء'],
+ bad:['المسند مرفوع كلش','الكوع مفتوح لبرة كلش']},
+row:{n:'السحب الأرضي بالكيبل',gym:'سيتِد كيبل رو',img:'Seated_Cable_Rows',yt:'d30OHGc2VcY',m:'وسط الظهر',r:[10,12],rest:90,w:'25 كغم',
+ st:['اگعد وظهرك عدل','امسك المسكة وإيدك مفرودة','اسحب لبطنك','اعصر لوحين كتفك ببعض','رجّع ببطء'],
+ bad:['تتمرجح لورا ولگدام','تسحب بالزند بس']},
+lateral:{n:'الرفرفة الجانبية',gym:'لاتِرال ريز',img:'Side_Lateral_Raise',yt:'BZmrtGWX8pw',m:'عرض الكتف',r:[12,15],rest:60,w:'3 كغم بكل إيد',star:1,
+ st:['اوگف والدمبل جنبك','ارفع لجنب لمستوى الكتف بس','الكوع مثني شوية','نزّل ببطء'],
+ bad:['ترفع فوگ الكتف','وزن ثقيل']},
+pushdown:{n:'الترايسبس بالكيبل',gym:'ترايسبس پوش داون',img:'Triceps_Pushdown',yt:'XTCOa8VTdK8',m:'الترايسبس (ورا الزند)',r:[10,12],rest:60,w:'10 كغم',
+ st:['اوگف گدام الجهاز','الكوع لازق بجنبك','ادفع لتحت لحد ما إيدك تنعدل','رجّع ببطء لصدرك'],
+ bad:['الكوع يتحرك','تدفع بوزن جسمك']},
+lunge:{n:'الطعن بالدمبل',gym:'لَنجز',img:'Dumbbell_Lunges',yt:'SVT1obfI3X4',m:'الفخذ والمؤخرة',r:[10,12],rest:90,w:'5 كغم بكل إيد',
+ st:['اوگف والدمبل جنبك','خطوة كبيرة لگدام','انزل لحد ما الركبة الي ورا تقرب للأرض','ادفع وارجع','بدّل الرجل'],
+ bad:['ركبتك تطلع گدام أصابعك هواية','جسمك يميل لگدام']},
+legcurl:{n:'الفخذ الخلفي بالجهاز',gym:'سيتِد لِگ كيرل',img:'Seated_Leg_Curl',yt:'vRVzX60Oi2E',m:'الفخذ الخلفي',r:[10,12],rest:60,w:'20 كغم',
+ st:['عدّل المسند فوگ ركبتك','المسند الثاني ورا كعبك','اسحب لتحت لحد ما رجلك تنثني','رجّع ببطء'],
+ bad:['ترفع مؤخرتك','ترجّع بسرعة']},
+dbbench:{n:'ضغط الصدر بالدمبل',gym:'دمبل بِنچ پرس',img:'Dumbbell_Bench_Press',yt:'UtwKh-2ot1M',m:'الصدر',r:[8,12],rest:90,w:'7.5 كغم بكل إيد',
+ st:['انام على مسند مستوي','الدمبلات بمستوى صدرك','ادفع لفوگ','نزّل ببطء لحد ما تحس صدرك انفتح'],
+ bad:['تضرب الدمبلات ببعض','ترفع مؤخرتك']},
+dbrow:{n:'السحب بالدمبل بإيد وحدة',gym:'ون آرم رو',img:'One-Arm_Dumbbell_Row',yt:'dFzUjzfih7k',m:'الظهر',r:[10,12],rest:60,w:'10 كغم',
+ st:['حط ركبتك وإيدك على المسند','ظهرك عدل مثل الطاولة','اسحب الدمبل لجنب بطنك','نزّل ببطء','بدّل الإيد'],
+ bad:['تلف جسمك','تسحب بالزند']},
+hammer:{n:'الهامر كيرل',gym:'هامر كيرل',img:'Hammer_Curls',yt:'IZMecCdzJKU',m:'الزند والساعد',r:[10,12],rest:60,w:'5 كغم',
+ st:['امسك الدمبل مثل المطرقة','الكوع ثابت جنبك','ارفع لحد الكتف','نزّل ببطء'],
+ bad:['تتمرجح','تنزّل بسرعة']},
+/* تمارين القوام بيوم الراحة */
+hipflex:{n:'إطالة الورك',gym:'هِپ فلِكسر',img:'Kneeling_Hip_Flexor',m:'الورك (يعدّل الوگفة)',r:[30,30],sec:1,rest:15,w:'بدون وزن',
+ st:['انزل على ركبة وحدة','ادفع وركك لگدام بهدوء','تحس شد گدام الفخذ الي ورا','30 ثانية وبدّل'],bad:['تقوّس ظهرك']},
+cat:{n:'القطة',gym:'كات ستريتش',img:'Cat_Stretch',yt:'SsIJaV3g8zE',m:'الظهر',r:[10,10],rest:15,w:'بدون وزن',
+ st:['انزل على إيدك وركبتك','قوّس ظهرك لفوگ ببطء','بعدين نزّله لتحت وارفع راسك','10 مرات'],bad:['تتحرك بسرعة']},
+chest:{n:'فتح الصدر والكتف',gym:'چِست ستريتش',img:'Chest_And_Front_Of_Shoulder_Stretch',yt:'u4cErwcJF8M',m:'الصدر والكتف (يعدّل الحدبة)',r:[30,30],sec:1,rest:15,w:'بدون وزن',
+ st:['شبّك إيدك ورا ظهرك','افتح صدرك لگدام','ارفع إيدك شوية','30 ثانية'],bad:['تحني راسك لگدام']},
+superman:{n:'السوبرمان',gym:'سوبرمان',img:'Superman',m:'أسفل الظهر',r:[10,12],rest:30,w:'بدون وزن',
+ st:['انبطح على بطنك','ارفع إيدك ورجلك سوية','اثبت ثانيتين','نزّل ببطء'],bad:['ترفع راسك هواية']},
+hang:{n:'التعلّگ بالعقلة',gym:'ديد هانگ',img:'Pullups',one:1,yt:'jMVuM6xOaRI',m:'الظهر (يفك ضغط العمود الفقري)',r:[20,40],sec:1,rest:30,w:'وزن جسمك',
+ st:['امسك العقلة بعرض كتوفك','تعلّگ وارتخي','تنفس بعمق','بس تعلّگ، لا تسحب'],bad:['تهز جسمك']},
+child:{n:'وضعية الطفل',gym:'چايلد پوز',img:'Childs_Pose',m:'الظهر (راحة)',r:[30,30],sec:1,rest:0,w:'بدون وزن',
+ st:['اگعد على ركبك','مد إيدك لگدام ونزّل صدرك','تنفس ببطء','30 ثانية'],bad:[]},
+};
+const WORK={
+A:{n:'تمرين أ',d:'رجل، صدر، ظهر، كتف، زند، بطن',ex:['legpress','chestpress','latpull','shpress','curl','plank']},
+B:{n:'تمرين ب',d:'رجل، صدر عالي، ظهر، كتف، ترايسبس',ex:['goblet','rdl','incline','row','lateral','pushdown']},
+C:{n:'تمرين ج',d:'رجل، صدر، ظهر، كتف، زند',ex:['lunge','legcurl','dbbench','dbrow','lateral','hammer']},
+R:{n:'استراحة',d:'مشي 30 دقيقة + تمارين القوام 10 دقايق',ex:['hipflex','cat','chest','superman','hang','child']},
+};
+const WEEKS=12,PATTERN=['A','R','B','R','C','R','R'];
+const dayType=i=>PATTERN[i%7];
+const weekOf=i=>Math.floor(i/7)+1;
+function setsFor(i,id){const e=EX[id],w=weekOf(i);if(dayType(i)==='R')return 1;if(w<=2)return 2;if(w>=9&&(id==='lateral'||id==='curl'||id==='hammer'||id==='incline'||id==='pushdown'))return 4;return 3}
+function curDay(){for(let i=0;i<WEEKS*7;i++)if(!S.done[i])return i;return WEEKS*7-1}
+const img=(id,k)=>`img/ex/${EX[id].img}_${k}.jpg`;
+
+/* ===== شاشة الكورس ===== */
+function vCourse(){
+  const c=curDay(),t=dayType(c),W=WORK[t],doneN=Object.keys(S.done).length,total=WEEKS*7;
+  let list='';
+  for(let i=0;i<total;i++){
+    if(i%7===0)list+=`<div class="week-h"><h3>الأسبوع ${AR(weekOf(i))}</h3><span class="xs mut">${weekOf(i)<=2?'تعلّم الحركات':weekOf(i)<=8?'البناء':'التشكيل'}</span></div>`;
+    const ty=dayType(i),w=WORK[ty],cls=['day',ty==='R'?'rest':'',S.done[i]?'done':'',i===c?'now':''].join(' ');
+    list+=`<button class="${cls}" data-day="${i}" ${i===c?'id="now"':''}><div class="n"><span>اليوم</span><b class="num">${AR(i+1)}</b></div><div class="grow"><div class="row between"><h3>${w.n}</h3>${S.done[i]?'<span class="pill lime">✓ خلص</span>':i===c?'<span class="pill lime">اليوم</span>':''}</div><p class="xs mut">${w.d}</p>${ty!=='R'&&(i===c||i===c+1||i===c+2)?`<div class="thumbs">${w.ex.map(id=>`<img src="${img(id,0)}" alt="" loading="lazy">`).join('')}</div>`:''}</div></button>`;
+  }
+  return`<div class="row between"><div><p class="sm mut">هلا بطل 👋</p><h1>الكورس</h1></div><span class="pill"><span style="color:var(--lime);width:16px;display:inline-flex">${I.fire}</span><span class="num">${AR(doneN)} / ${AR(total)}</span></span></div>
+  ${installCard()}
+  <div class="hero"><span class="xs" style="font-weight:600">اليوم ${AR(c+1)} • الأسبوع ${AR(weekOf(c))}</span><h2>${t==='R'?'اليوم استراحة 😴':W.n+': '+W.d}</h2><p class="sm mut">${t==='R'?'العضلة تكبر وانت مرتاح. امشي 30 دقيقة وسوّي تمارين القوام.':AR(W.ex.length)+' تمارين • تقريباً 45 دقيقة • '+AR(setsFor(c,W.ex[0]))+' سِتات لكل تمرين'}</p><button class="btn" data-day="${c}">${I.play} ${t==='R'?'شوف تمارين القوام':'ابدأ تمرين اليوم'}</button></div>
+  <div class="card"><div class="row between"><b>تقدمك بالكورس</b><span class="sm mut num">${AR(Math.round(doneN/total*100))}٪</span></div><div class="bar"><i style="width:${doneN/total*100}%"></i></div><p class="xs mut">12 أسبوع. كل أسبوع: تمرين، راحة، تمرين، راحة، تمرين، وبعدها يومين راحة.</p></div>
+  <div class="days">${list}</div>`;
+}
+function installCard(){
+  const standalone=window.navigator.standalone||matchMedia('(display-mode: standalone)').matches;
+  if(standalone||S.hideInstall)return'';
+  return`<div class="install"><b>خلّيه تطبيق على شاشة الآيفون</b><p class="sm">١. افتح هذا الرابط بـ<b>سفاري</b>.<br>٢. اضغط زر المشاركة <span style="display:inline-flex;width:18px;vertical-align:-3px;color:var(--lime)">${I.share}</span> بالأسفل.<br>٣. اختار <b>"إضافة إلى الشاشة الرئيسية"</b> وبعدها <b>"إضافة"</b>.</p><button class="btn ghost sm" data-hideinstall>سوّيتها، خفي هذا</button></div>`;
+}
+
+/* ===== شاشة اليوم ===== */
+let SES=null;
+function openDay(i){
+  const t=dayType(i),W=WORK[t];
+  SES={i,ex:W.ex,k:0,sets:{}};
+  W.ex.forEach(id=>{const n=setsFor(i,id),last=S.log[id];SES.sets[id]=Array.from({length:n},()=>({w:last?last.w:'',r:EX[id].r[1],ok:false}))});
+  show(`<div class="topbar"><button class="icon-btn" data-close aria-label="رجوع">${I.back}</button><div class="grow"><p class="xs mut">اليوم ${AR(i+1)} • الأسبوع ${AR(weekOf(i))}</p><h2>${W.n}</h2></div></div>
+  ${t==='R'?`<div class="card"><p class="sm"><b>شنو تسوي اليوم:</b> امشي 30 دقيقة، وسوّي هاي التمارين 10 دقايق (الأحسن قبل النوم). تعدّل وگفتك وتفك ضغط ظهرك.</p></div>`:`<div class="card"><p class="sm"><b>قبل ما تبدي:</b> امشي أو دراجة 5 دقايق حتى تتحمّى. بعدها التمارين بالترتيب.</p><p class="xs mut">${weekOf(i)<=2?'أول أسبوعين: سِتين بس ووزن خفيف. ركّز على الحركة الصحيحة.':'السِت = مجموعة عدّات ورا بعض. بعد كل سِت ترتاح.'}</p></div>`}
+  <div class="col">${W.ex.map((id,k)=>exRow(id,k,i)).join('')}</div>
+  <button class="btn wide" data-start>${I.play} ${t==='R'?'يلا نبدي':'ابدأ التمرين خطوة بخطوة'}</button>
+  ${S.done[i]?'':`<button class="btn ghost wide" data-finish>${t==='R'?'خلصت يوم الراحة ✓':'خلصته بدون تسجيل ✓'}</button>`}`);
+}
+function exRow(id,k,i){const e=EX[id],n=setsFor(i,id);return`<button class="exrow" data-ex="${id}"><img src="${img(id,0)}" alt="" loading="lazy"><div class="grow"><h3>${e.n}${e.star?' ⭐':''}</h3><p class="xs mut">${e.m}</p><p class="sm num" style="margin-top:2px"><b style="color:var(--lime)">${AR(n)}</b> سِت × <b style="color:var(--lime)">${AR(e.r[0])}${e.r[0]!==e.r[1]?'-'+AR(e.r[1]):''}</b> ${e.sec?'ثانية':'عدّة'}</p></div><span class="k num">${AR(k+1)}</span></button>`}
+
+/* ===== شاشة التمرين الواحد ===== */
+function exInfo(id,dayI){
+  const e=EX[id],n=dayI!=null?setsFor(dayI,id):3;
+  return`<div class="demo" id="demo"><img src="${img(id,0)}" alt="بداية الحركة">${e.one?'':`<img class="b" src="${img(id,1)}" alt="نهاية الحركة"><span class="lab"></span>`}<span class="tag">${e.star?'⭐ أهم تمرين لشكلك':'شخص حقيقي يسوي الحركة'}</span></div>
+  ${e.one?'':`<button class="btn ghost sm" data-slow style="align-self:center">🐢 خليها أبطأ</button>`}
+  <div><p class="xs mut">اسمه بالجيم: ${e.gym}</p><h1>${e.n}</h1><p class="sm" style="color:var(--lime)">العضلة: ${e.m}</p></div>
+  <div class="facts"><div><b class="num">${AR(n)}</b><span>سِتات</span></div><div><b class="num">${AR(e.r[0])}${e.r[0]!==e.r[1]?'-'+AR(e.r[1]):''}</b><span>${e.sec?'ثانية':'عدّة'}</span></div><div><b class="num">${AR(e.rest)}</b><span>ثانية راحة</span></div><div><b style="font-size:13px">${S.log[id]&&S.log[id].w?AR(S.log[id].w)+' كغم':e.w}</b><span>${S.log[id]&&S.log[id].w?'آخر مرة':'وزن البداية'}</span></div></div>
+  ${e.yt?`<button class="video" data-yt="${e.yt}"><img src="https://i.ytimg.com/vi/${e.yt}/hqdefault.jpg" alt=""><span class="play"><span>${I.play}</span></span><span class="cap">فيديو شرح بالعربي من مدرّب حقيقي</span></button>`:''}
+  <div class="card"><h3>شلون تسويه</h3><div class="steps sm">${e.st.map(s=>`<p>${s}</p>`).join('')}</div></div>
+  ${e.bad.length?`<div class="card"><h3>لا تسوي هيچ</h3><div class="bad sm col">${e.bad.map(s=>`<p>${s}</p>`).join('')}</div></div>`:''}
+  ${e.sec?'':`<div class="card" style="background:rgba(200,244,60,.07);border-color:rgba(200,244,60,.3)"><p class="sm"><b>الوزن الصح:</b> تخلّص ${AR(e.r[1])} عدّة وتحس تگدر تسوي 2 بعد. إذا كلش سهل، زيد الوزن المرة الجاية.</p></div>`}`;
+}
+function openEx(id){show(`<div class="topbar"><button class="icon-btn" data-back aria-label="رجوع">${I.back}</button></div>${exInfo(id,SES?SES.i:null)}`,true)}
+
+/* ===== وضع التمرين خطوة بخطوة ===== */
+function renderStep(){
+  const id=SES.ex[SES.k],e=EX[id],sets=SES.sets[id],tot=SES.ex.length;
+  show(`<div class="topbar"><button class="icon-btn" data-close aria-label="طلّع">${I.x}</button><div class="grow col" style="gap:6px"><p class="xs mut" style="text-align:center">تمرين ${AR(SES.k+1)} من ${AR(tot)}</p><div class="bar"><i style="width:${(SES.k+sets.filter(s=>s.ok).length/sets.length)/tot*100}%"></i></div></div></div>
+  ${exInfo(id,SES.i)}
+  <div class="card"><h3>سجّل الي سوّيته</h3>
+   <div class="set xs mut" style="text-align:center"><span>السِت</span><span>${e.sec?'':'الوزن كغم'}</span><span>${e.sec?'ثواني':'العدّات'}</span><span></span></div>
+   <div class="sets">${sets.map((s,j)=>`<div class="set ${s.ok?'done':''}"><span class="i num">${AR(j+1)}</span>${e.sec?'<span></span>':`<input inputmode="decimal" data-w="${j}" value="${s.w}" placeholder="كغم" aria-label="الوزن">`}<input inputmode="numeric" data-r="${j}" value="${s.r}" aria-label="العدّات"><button class="ok" data-ok="${j}" aria-label="خلصت السِت">${I.check}</button></div>`).join('')}</div>
+   <p class="xs mut">بعد كل سِت اضغط ✓ ويبدي وقت الراحة.</p></div>
+  <div class="row"><button class="btn ghost grow" data-prev ${SES.k?'':'disabled style="opacity:.4"'}>السابق</button>${SES.k<tot-1?'<button class="btn grow" data-next>التمرين الجاي</button>':'<button class="btn grow" data-finish>خلصت اليوم 🎉</button>'}</div>`);
+}
+let restT;
+function rest(sec){
+  clearInterval(restT);let left=sec,all=sec;const o=document.createElement('div');o.className='rest-ov';document.body.append(o);
+  const C=2*Math.PI*100;
+  const paint=()=>{o.innerHTML=`<h2>ارتاح وتنفّس</h2><div class="ring"><svg viewBox="0 0 230 230"><circle cx="115" cy="115" r="100" stroke="#262b31" stroke-width="14" fill="none"/><circle cx="115" cy="115" r="100" stroke="#c8f43c" stroke-width="14" fill="none" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-left/all)}"/></svg><b class="num">${AR(left)}</b></div><p class="mut sm">اشرب شوية مي</p><div class="row"><button class="btn ghost" data-plus>+15 ثانية</button><button class="btn" data-skip>كمّل</button></div>`};
+  paint();
+  o.onclick=ev=>{if(ev.target.closest('[data-plus]')){left+=15;all+=15;paint()}if(ev.target.closest('[data-skip]')){clearInterval(restT);o.remove()}};
+  restT=setInterval(()=>{left--;if(left<=0){clearInterval(restT);o.remove();beep();toast('يلا السِت الجاي 💪');return}paint()},1000);
+}
+let ac;function beep(){try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();const os=ac.createOscillator(),g=ac.createGain();os.frequency.value=880;g.gain.setValueAtTime(.3,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.6);os.connect(g);g.connect(ac.destination);os.start();os.stop(ac.currentTime+.6)}catch(e){}try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}}
+function finishDay(){
+  clearInterval(restT);const i=SES.i;
+  for(const id of SES.ex){const d=SES.sets[id].filter(s=>s.ok);if(d.length&&!EX[id].sec){const w=+d[0].w||0,all=d.every(s=>+s.r>=EX[id].r[1]);S.log[id]={w,up:all}}}
+  S.done[i]=today();save();
+  show(`<div class="col" style="min-height:70vh;justify-content:center;align-items:center;text-align:center;gap:18px"><div style="width:96px;height:96px;border-radius:50%;background:var(--lime);color:var(--ink);display:grid;place-items:center"><span style="width:46px;display:block">${I.check}</span></div><h1>عاشت إيدك يا بطل!</h1><p class="mut">خلصت اليوم ${AR(i+1)} من الكورس.</p><div class="card" style="text-align:right;width:100%"><p class="sm">${dayType(i)==='R'?'باچر عندك تمرين، نام زين الليلة.':'هسه اشرب مي، وكُل وجبة بيها بروتين خلال ساعتين، ونام 8 ساعات. باچر راحة.'}</p></div><button class="btn wide" data-close>رجوع للكورس</button></div>`);
+  SES=null;
+}
+
+/* ===== الأكل ===== */
+const F=n=>`img/food/${n}.webp`;
+const MEALS=[
+ {k:'b',n:'الفطور',t:'8 الصبح',o:[
+  {n:'بيض وجبن',p:30,c:560,im:['eggs','bread','cheese'],it:[['بيض','3 بيضات'],['خبز أو صمونة','رغيف وحدة'],['جبن أبيض','30 غم (شريحتين)'],['خيار وطماطة','براحتك']]},
+  {n:'شوفان بالحليب والموز',p:22,c:600,im:['oats','milk','banana'],it:[['شوفان','نص كوب'],['حليب كامل الدسم','كوب'],['موز','موزة وحدة'],['عسل + جوز','ملعقة + 5 حبات']]},
+  {n:'حمص وبيض',p:28,c:620,im:['hummus','eggs','olive_oil'],it:[['حمص بطحينة','صحن صغير'],['بيض مسلوگ','بيضتين'],['خبز','رغيف'],['زيت زيتون','ملعقة']]}]},
+ {k:'s',n:'سناك',t:'11 الضحى',o:[
+  {n:'موز وزبدة فول سوداني',p:9,c:350,im:['banana','peanut_butter'],it:[['موز','موزة كبيرة'],['زبدة فول سوداني','ملعقتين']]},
+  {n:'زبادي وعسل وفراولة',p:18,c:300,im:['greek_yogurt','honey','strawberries'],it:[['زبادي يوناني','كوب'],['عسل','ملعقة'],['فراولة أو أي فاكهة','حفنة']]},
+  {n:'لوز وزبيب',p:10,c:350,im:['almonds','raisins'],it:[['لوز','حفنة (30 غم)'],['زبيب أو تمر','حفنة صغيرة']]}]},
+ {k:'l',n:'الغدا',t:'2 الظهر',o:[
+  {n:'تمن ودجاج',p:50,c:750,im:['rice','chicken_breast','lettuce'],it:[['تمن','كوب ونص'],['صدر دجاج','150 غم (كف إيد)'],['سلطة','صحن'],['مرگة','براحتك']]},
+  {n:'تمن ولحم وفاصوليا',p:45,c:800,im:['rice','beef','kidney_beans'],it:[['تمن','كوب ونص'],['لحم','150 غم'],['مرگة فاصوليا','صحن صغير']]},
+  {n:'عدس وتمن ولبن',p:30,c:700,im:['lentils','rice','yogurt'],it:[['عدس مطبوخ','كوب'],['تمن','كوب'],['لبن','كوب'],['سلطة','صحن']]}]},
+ {k:'p',n:'بعد التمرين',t:'أو 6 العصر',o:[
+  {n:'شيك البيت',p:20,c:520,im:['milk','banana','oats'],it:[['حليب','كوب'],['موز','موزة'],['شوفان','3 ملاعق'],['زبدة فول سوداني','ملعقة'],['اخلطهم بالخلاط','']]},
+  {n:'تونة وخبز',p:32,c:450,im:['tuna','bread','cucumber'],it:[['تونة','علبة (صفّي الزيت)'],['خبز','رغيف'],['خيار','حبتين']]},
+  {n:'بيض وبطاطا',p:22,c:450,im:['eggs','potatoes'],it:[['بيض مسلوگ','3 بيضات'],['بطاطا مسلوگة','حبتين وسط']]}]},
+ {k:'d',n:'العشا',t:'9 بالليل',o:[
+  {n:'تونة وزبادي',p:35,c:450,im:['tuna','bread','yogurt'],it:[['تونة','علبة'],['خبز','نص رغيف'],['زبادي','كوب']]},
+  {n:'سمك وبطاطا',p:35,c:550,im:['salmon','potatoes','spinach'],it:[['سمك','قطعة 150 غم'],['بطاطا','حبتين'],['خضرة','صحن']]},
+  {n:'جبن وبيض وأفوكادو',p:26,c:520,im:['feta','eggs','avocado'],it:[['جبن','50 غم'],['بيض','بيضتين'],['أفوكادو','نص حبة'],['خبز','نص رغيف']]}]},
+];
+const SWEETS=[
+ {n:'زبادي بالعسل',d:'كوب زبادي + ملعقة عسل',c:200,im:['yogurt','honey']},
+ {n:'شوكولاتة داكنة',d:'مربعين بس (70٪ أو أكثر)',c:110,im:['dark_chocolate']},
+ {n:'فراولة وتوت',d:'كوب، حلو وخفيف',c:70,im:['strawberries','blueberries']},
+ {n:'موز بزبدة الفول',d:'موزة + ملعقة',c:200,im:['banana','peanut_butter']},
+ {n:'تفاح ولوز',d:'تفاحة + 10 لوزات',c:170,im:['apple','almonds']},
+ {n:'زبيب وجوز',d:'حفنة صغيرة',c:180,im:['raisins','walnuts']},
+];
+function targets(){const w=S.weights.length?S.weights[S.weights.length-1].w:+S.w||52,h=+S.h||168,a=+S.age||20;const k=Math.round((((10*w+6.25*h-5*a+5)*1.5)+300)/50)*50;return{k,p:Math.round(w*2),water:(Math.round(w*.045*2)/2)}}
+let mealTab='b';
+function vFood(){
+  const T=targets(),sel=S.meals[today()]||{};
+  const tot=MEALS.reduce((a,m)=>{const o=sel[m.k]!=null?m.o[sel[m.k]]:null;return o?{c:a.c+o.c,p:a.p+o.p}:a},{c:0,p:0});
+  const M=MEALS.find(m=>m.k===mealTab);
+  return`<h1>أكلك اليوم</h1>
+  <div class="tiles"><div class="tile" style="background:rgba(200,244,60,.12);color:var(--lime)">${I.fire}<b class="num">${AR(T.k)}</b><span>سعرة باليوم</span></div><div class="tile" style="background:rgba(255,180,77,.12);color:var(--orange)">${I.egg}<b class="num">${AR(T.p)}</b><span>غرام بروتين</span></div><div class="tile" style="background:rgba(111,195,255,.12);color:var(--blue)">${I.drop}<b class="num">${AR(T.water)}</b><span>لتر مي</span></div></div>
+  <div class="card"><div class="row between sm"><span>اخترت اليوم</span><span class="num mut">${AR(tot.c)} / ${AR(T.k)} سعرة</span></div><div class="bar"><i style="width:${Math.min(100,tot.c/T.k*100)}%"></i></div><div class="row between sm"><span>بروتين</span><span class="num mut">${AR(tot.p)} / ${AR(T.p)} غم</span></div><div class="bar"><i style="width:${Math.min(100,tot.p/T.p*100)}%;background:var(--orange)"></i></div><p class="xs mut">اختار وجبة وحدة من كل قسم، وهو يحسبلك.</p></div>
+  <div class="meal-tabs">${MEALS.map(m=>`<button class="${m.k===mealTab?'on':''}" data-mt="${m.k}">${m.n}${sel[m.k]!=null?' ✓':''}</button>`).join('')}</div>
+  <p class="sm mut">${M.n} • ${M.t} • اختار وحدة:</p>
+  <div class="col">${M.o.map((o,j)=>`<button class="opt ${sel[M.k]===j?'on':''}" data-opt="${M.k}:${j}"><div class="plate">${o.im.map(x=>`<img src="${F(x)}" alt="" loading="lazy">`).join('')}</div><div class="row between"><h3>${o.n}</h3><span class="pick"><i></i>${sel[M.k]===j?'اخترتها':'اختار'}</span></div><div class="items">${o.it.map(([a,b])=>`<p><span>${a}</span><span>${b}</span></p>`).join('')}</div><div class="row"><span class="pill num">${AR(o.c)} سعرة</span><span class="pill num" style="color:var(--orange)">${AR(o.p)} غم بروتين</span></div></button>`).join('')}</div>
+  <h2 style="margin-top:6px">تشتهي حلو؟ 🍫</h2><p class="sm mut">هاي حلويات صحية. وحدة باليوم ما تضر.</p>
+  <div class="sweets">${SWEETS.map(s=>`<div class="sweet"><div class="ph">${s.im.map(x=>`<img src="${F(x)}" alt="" loading="lazy">`).join('')}</div><b class="sm">${s.n}</b><span class="xs mut">${s.d}</span><span class="xs num" style="color:var(--lime)">${AR(s.c)} سعرة</span></div>`).join('')}</div>
+  <div class="card"><h3>قلّل منها</h3><div class="bad sm col"><p>المشروبات الغازية والعصير المعلّب</p><p>المقليات كل يوم</p><p>مشروبات الطاقة</p><p>السهر، يخرب هرمون النمو</p></div></div>`;
+}
+
+/* ===== المكملات: كل وحدة بخانة ===== */
+const SUPPS=[
+ {id:'creatine',n:'الكرياتين مونوهيدرات',tag:'مفيد ومدروس',col:'var(--lime)',bg:'rgba(200,244,60,.13)',ic:'bolt',dose:'5 غم (ملعقة صغيرة)',when:'كل يوم، أي وقت، ويا مي',why:'يزيد قوتك ويخلي عضلتك أكبر شوية. أكثر مكمّل مدروس بالعالم.',warn:'للي عمرهم 18 أو أكثر. اشرب مي زيادة.',adult:1},
+ {id:'whey',n:'بروتين واي',tag:'إذا ما وصلت البروتين',col:'var(--orange)',bg:'rgba(255,180,77,.13)',ic:'scoop',dose:'سكوب وحدة (25 غم بروتين)',when:'بعد التمرين أو ويا الفطور',why:'مو سحري، هو أكل بشكل بودرة. يساعدك توصل بروتين اليوم.',warn:'إذا أكلك يوصّلك البروتين، ما تحتاجه.'},
+ {id:'vitd',n:'فيتامين د3',tag:'سوّي فحص أول',col:'#ffd84d',bg:'rgba(255,216,77,.12)',ic:'sun',dose:'1000-2000 وحدة',when:'ويا الغدا (وجبة بيها دهون)',why:'نقصه منتشر حتى ويا الشمس. مهم للعظم والطاقة والمزاج.',warn:'الكمية الأكيدة حسب فحص الدم.'},
+ {id:'omega',n:'أوميغا 3',tag:'إذا ما تاكل سمك',col:'var(--blue)',bg:'rgba(111,195,255,.12)',ic:'fish',dose:'1-2 غم',when:'ويا الأكل',why:'مفيد للمفاصل والقلب.',warn:'إذا تاكل سمك مرتين بالأسبوع ما تحتاجه.'},
+ {id:'mag',n:'المغنيسيوم',tag:'اختياري',col:'var(--violet)',bg:'rgba(185,155,255,.12)',ic:'moon',dose:'200-300 ملغ',when:'قبل النوم',why:'يساعد على النوم العميق وراحة العضل.',warn:'اختياري، مو ضروري.'},
+ {id:'multi',n:'ملتي فيتامين',tag:'اختياري',col:'#8be0c0',bg:'rgba(139,224,192,.12)',ic:'shield',dose:'حبة وحدة',when:'ويا الفطور',why:'تأمين إذا أكلك مو متنوع.',warn:'مو بديل عن الأكل الصحي.'},
+];
+function vSupps(){
+  const d=S.supp[today()]||{},minor=+S.age&&+S.age<18;
+  return`<h1>المكملات والفيتامينات</h1>
+  <div class="card"><p class="sm"><b>الحقيقة:</b> 90٪ من نتيجتك من الأكل والتمرين والنوم. المكملات تساعد بس.</p></div>
+  ${minor?'<div class="card" style="border-color:var(--orange)"><p class="sm"><b>عمرك أقل من 18:</b> لا تاخذ كرياتين ولا مكملات رياضية قبل ما تسأل طبيب.</p></div>':''}
+  ${SUPPS.map(s=>`<div class="supp"><div class="head"><span class="ic" style="background:${s.bg};color:${s.col}">${I[s.ic]}</span><div class="grow"><h3>${s.n}</h3><span class="pill" style="color:${s.col}">${s.tag}</span></div></div>
+   <div class="kv"><div><span>الكمية</span><b>${s.dose}</b></div><div><span>وكت</span><b>${s.when}</b></div></div>
+   <p class="sm">${s.why}</p><p class="xs mut">⚠️ ${s.warn}</p>
+   ${minor&&s.adult?'':`<button class="took ${d[s.id]?'on':''}" data-took="${s.id}">${d[s.id]?I.check+' أخذته اليوم':'اضغط لما تاخذه اليوم'}</button>`}</div>`).join('')}
+  <div class="supp" style="border-color:rgba(255,107,92,.45)"><div class="head"><span class="ic" style="background:rgba(255,107,92,.13);color:var(--red)">${I.stop}</span><div class="grow"><h3>ابتعد عنها نهائياً</h3></div></div><div class="bad sm col"><p>الإبر والهرمونات والمنشطات</p><p>حبوب فتح الشهية والتسمين</p><p>حوارق الدهون (انت تريد تزيد وزن)</p><p>حبوب "زيادة الطول" (ما تشتغل)</p><p>أي شي يبيعه واحد بالجيم بدون علبة واضحة</p></div></div>
+  <p class="xs mut">هذا تثقيف عام مو وصفة طبية. قبل أي مكمّل، خصوصاً إذا عندك مرض أو تاخذ دوا، اسأل طبيب أو صيدلي. الأحسن تسوي فحص دم: فيتامين د، B12، الحديد.</p>`;
+}
+
+/* ===== أنا ===== */
+function vMe(){
+  const W=S.weights.length?S.weights:[{d:S.start,w:+S.w||52}],last=W[W.length-1].w,diff=+(last-W[0].w).toFixed(1);
+  return`<h1>أنا</h1>
+  <div class="card"><div class="row between"><h3>وزني</h3><span class="pill lime">الهدف 62 كغم</span></div>
+   <div class="tiles"><div class="tile" style="background:var(--s2)"><span>هسه</span><b class="num">${AR(last)}</b><span>كغم</span></div><div class="tile" style="background:var(--s2)"><span>زاد</span><b class="num" dir="ltr">${diff>0?'+':''}${AR(diff)}</b><span>كغم</span></div><div class="tile" style="background:var(--s2)"><span>باقي</span><b class="num">${AR(Math.max(0,+(62-last).toFixed(1)))}</b><span>كغم</span></div></div>
+   <div class="chart">${chart(W)}</div>
+   <div class="row"><input class="field" id="wIn" inputmode="decimal" placeholder="وزنك اليوم بالكيلو" aria-label="وزنك اليوم"><button class="btn sm" data-addw>سجّل</button></div>
+   <p class="xs mut">وزّن نفسك مرة بالأسبوع، الصبح قبل الأكل. الأحسن تزيد ربع لنص كيلو بالأسبوع.</p></div>
+  <div class="card"><h3>معلوماتي</h3><div class="row"><label class="f grow">عمري<input class="field" id="pA" inputmode="numeric" value="${S.age}" placeholder="مثلاً 22"></label><label class="f grow">طولي<input class="field" id="pH" inputmode="numeric" value="${S.h}"></label></div><button class="btn ghost" data-saveme>احفظ</button></div>
+  <div class="card"><h3>الطول والوگفة</h3><p class="sm">بعد عمر 18-21 العظم ما يطول، بس الوگفة العدلة ترجّعلك 2-3 سانتي، وتمارين القوام موجودة بكل يوم راحة بالكورس.</p><div class="steps sm"><p>الكتف العريض والخصر النحيف يخلونك تبين أطول (الرفرفة الجانبية أهم تمرين).</p><p>تيشيرت ضيّق على الكتف والزند، وبنطرون ضيّق شوية ومقصّر.</p><p>بنطرون وتيشيرت بنفس اللون يطوّلك.</p><p>نام 8 ساعات، هرمون النمو يطلع بالنوم.</p></div></div>
+  <div class="card"><h3>نسخة احتياطية</h3><p class="xs mut">معلوماتك محفوظة بموبايلك بس. انسخ الكود واحفظه بالملاحظات.</p><textarea id="bk" readonly>${esc(JSON.stringify(S))}</textarea><button class="btn ghost sm" data-copy>انسخ الكود</button><textarea id="rs" placeholder="الصق الكود هنا حتى ترجّع معلوماتك"></textarea><button class="btn ghost sm" data-restore>رجّع معلوماتي</button></div>`;
+}
+function chart(W){
+  const p=W.slice(-10),v=p.map(x=>x.w).concat([62]),lo=Math.floor(Math.min(...v)-1),hi=Math.ceil(Math.max(...v)+1),w=320,h=140,X=i=>34+(p.length<2?(w-44)/2:i*(w-44)/(p.length-1)),Y=x=>12+(hi-x)/(hi-lo)*(h-24);
+  let g='';for(let x=lo;x<=hi;x+=Math.max(1,Math.round((hi-lo)/4)))g+=`<line x1="34" x2="${w-6}" y1="${Y(x)}" y2="${Y(x)}" stroke="#2b3037"/><text x="28" y="${Y(x)+4}" fill="#8f969e" font-size="10" text-anchor="end">${x}</text>`;
+  const ln=p.map((x,i)=>`${X(i)},${Y(x.w)}`).join(' ');
+  return`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="رسم وزنك">${g}<line x1="34" x2="${w-6}" y1="${Y(62)}" y2="${Y(62)}" stroke="#c8f43c" stroke-dasharray="4 4" opacity=".6"/><polyline points="${ln}" fill="none" stroke="#c8f43c" stroke-width="3" stroke-linejoin="round"/>${p.map((x,i)=>`<circle cx="${X(i)}" cy="${Y(x.w)}" r="4" fill="#c8f43c"/>`).join('')}</svg>`;
+}
+
+/* ===== التنقل ===== */
+const V={course:vCourse,food:vFood,supps:vSupps,me:vMe};
+function route(){let h=location.hash.slice(1);if(!V[h])h='course';$('#app').innerHTML=V[h]();document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.dataset.t===h))}
+let stack=[];
+function show(html,push){const s=$('#screen');if(push)stack.push(s.innerHTML);else stack=[];s.hidden=false;s.innerHTML=`<div class="in">${html}</div>`;s.scrollTop=0;document.body.style.overflow='hidden'}
+function closeScreen(){clearInterval(restT);SES=null;stack=[];const s=$('#screen');s.hidden=true;s.innerHTML='';document.body.style.overflow='';route();const n=$('#now');}
+function back(){const s=$('#screen');if(stack.length){s.innerHTML=stack.pop();s.scrollTop=0}else closeScreen()}
+window.addEventListener('hashchange',route);
+
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button,a');if(!b)return;const d=b.dataset;
+  if(d.day!=null){openDay(+d.day);return}
+  if(d.ex){openEx(d.ex);return}
+  if('close' in d){closeScreen();return}
+  if('back' in d){back();return}
+  if('slow' in d){const m=$('#demo');m.classList.toggle('slow');b.textContent=m.classList.contains('slow')?'🐇 السرعة العادية':'🐢 خليها أبطأ';return}
+  if(d.yt){b.outerHTML=`<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/${d.yt}?autoplay=1&playsinline=1&rel=0" title="فيديو شرح" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div><a class="xs mut" style="text-align:center" href="https://www.youtube.com/watch?v=${d.yt}" target="_blank" rel="noopener">ما اشتغل؟ افتحه بيوتيوب</a>`;return}
+  if('start' in d){SES.k=0;renderStep();return}
+  if('next' in d){SES.k++;renderStep();return}
+  if('prev' in d){SES.k--;renderStep();return}
+  if('finish' in d){if(!SES)return;finishDay();return}
+  if(d.ok!=null){const id=SES.ex[SES.k],s=SES.sets[id][+d.ok];s.ok=!s.ok;b.closest('.set').classList.toggle('done',s.ok);if(s.ok){const left=SES.sets[id].filter(x=>!x.ok).length;if(left&&EX[id].rest)rest(EX[id].rest);else if(!left)toast('خلصت هذا التمرين! روح للجاي')}return}
+  if(d.mt){mealTab=d.mt;route();return}
+  if(d.opt){const[k,j]=d.opt.split(':');const t=today();S.meals[t]=S.meals[t]||{};S.meals[t][k]=S.meals[t][k]===+j?null:+j;save();const y=scrollY;route();scrollTo(0,y);return}
+  if(d.took){const t=today();S.supp[t]=S.supp[t]||{};S.supp[t][d.took]=!S.supp[t][d.took];save();const y=scrollY;route();scrollTo(0,y);return}
+  if('hideinstall' in d){S.hideInstall=1;save();route();return}
+  if('addw' in d){const v=+$('#wIn').value;if(!(v>25&&v<200)){toast('اكتب وزن صحيح');return}const t=today(),x=S.weights.find(z=>z.d===t);if(x)x.w=v;else S.weights.push({d:t,w:v});save();route();toast('انحفظ وزنك');return}
+  if('saveme' in d){S.age=$('#pA').value;S.h=+$('#pH').value||168;save();toast('انحفظ');route();return}
+  if('copy' in d){const t=$('#bk');try{navigator.clipboard.writeText(t.value).then(()=>toast('انسخ'),()=>{t.select();toast('محدد، انسخه')})}catch(er){t.select()}return}
+  if('restore' in d){try{const o=JSON.parse($('#rs').value);if(!o||!o.done)throw 0;S=Object.assign(def(),o);save();route();toast('رجعت معلوماتك')}catch(er){toast('الكود مو صحيح')}return}
+});
+document.addEventListener('input',e=>{const t=e.target;if(!SES)return;const id=SES.ex[SES.k];if(t.dataset.w!=null)SES.sets[id][+t.dataset.w].w=t.value;if(t.dataset.r!=null)SES.sets[id][+t.dataset.r].r=t.value});
+route();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
