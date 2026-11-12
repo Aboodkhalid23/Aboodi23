@@ -1,5 +1,5 @@
 // يخلي التطبيق يشتغل حتى بدون إنترنت (عدا فيديوهات يوتيوب)
-const V = 'coach-v1';
+const V = 'coach-v2';
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(V).then(c => c.addAll(['./', './index.html', './manifest.webmanifest', './icons/icon-192.png'])));
   self.skipWaiting();

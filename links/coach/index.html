@@ -164,6 +164,20 @@ input.field{width:100%;background:var(--s2);border:1px solid var(--line);border-
 label.f{display:flex;flex-direction:column;gap:6px;font-size:13.5px;color:var(--mut)}
 .chart svg{width:100%;height:auto;display:block}
 textarea{width:100%;background:var(--s2);border:1px solid var(--line);border-radius:14px;color:var(--fg);padding:10px;font-size:12px;min-height:80px;direction:ltr}
+.clip{position:relative;border-radius:26px;overflow:hidden;background:#000;aspect-ratio:9/12;max-height:62vh;width:100%}
+.clip iframe{position:absolute;inset:-12% 0;width:100%;height:124%;border:0;pointer-events:none}
+.clip .tag{position:absolute;top:12px;right:12px;background:var(--lime);color:var(--ink);border-radius:999px;padding:4px 12px;font-size:12.5px;font-weight:600;z-index:2}
+.clip .sound{position:absolute;bottom:12px;left:12px;z-index:2;background:rgba(12,14,16,.85);color:#fff;border:0;border-radius:999px;padding:8px 14px;font-size:13px}
+.seg{display:flex;gap:6px;background:var(--s1);border:1px solid var(--line);border-radius:999px;padding:4px}
+.seg button{flex:1;border:0;background:transparent;color:var(--mut);border-radius:999px;padding:9px 6px;font-size:14px}
+.seg button.on{background:var(--lime);color:var(--ink);font-weight:600}
+.prod{background:#fff;border-radius:18px;display:grid;place-items:center;padding:10px;height:170px}
+.prod img{max-height:150px;width:auto;object-fit:contain}
+.buy{display:flex;flex-wrap:wrap;gap:6px}
+.fi{font-size:12px;color:var(--blue);direction:ltr;unicode-bidi:isolate}
+.warn{background:rgba(255,180,77,.08);border:1px solid rgba(255,180,77,.35);border-radius:18px;padding:12px;font-size:14px}
+.src a{color:var(--blue)}
+.macro{display:flex;gap:6px;flex-wrap:wrap}
 @media (prefers-reduced-motion:reduce){.demo img.b{animation-duration:6s}}
 </style>
 </head>
@@ -190,13 +204,7 @@ check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="
 fire:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2s5 4.5 5 10a5 5 0 0 1-10 0c0-2.5 1.5-4 1.5-4s.5 2 2 2.5C10 7 12 2 12 2z"/></svg>',
 drop:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5s6.5 7 6.5 11.5a6.5 6.5 0 0 1-13 0C5.5 9.5 12 2.5 12 2.5z"/></svg>',
 egg:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c3.5 0 7 6 7 11a7 7 0 0 1-14 0c0-5 3.5-11 7-11z"/></svg>',
-bolt:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>',
-sun:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>',
-fish:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 12c3-5 9-6 14-2l4-3v10l-4-3c-5 4-11 3-14-2z"/><circle cx="8" cy="11" r="1" fill="currentColor"/></svg>',
-moon:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>',
-shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3 4.5 6v6c0 4.5 3.2 7.8 7.5 9 4.3-1.2 7.5-4.5 7.5-9V6z"/><path d="m9 12 2 2 4-4"/></svg>',
 stop:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="m6 6 12 12"/></svg>',
-scoop:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 9h12l-1.5 11h-9z"/><path d="M8 9a4 4 0 0 1 8 0"/></svg>',
 share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v8h14v-8"/></svg>',
 };
 document.querySelectorAll('[data-i]').forEach(e=>e.innerHTML=I[e.dataset.i]);
@@ -210,110 +218,104 @@ const today=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+
 let tT;function toast(m){let t=$('.toast');if(!t){t=document.createElement('div');t.className='toast';document.body.append(t)}t.textContent=m;t.hidden=false;clearTimeout(tT);tT=setTimeout(()=>t.hidden=true,2500)}
 
 /* ===== الحفظ ===== */
-const KEY='coach-v2';
+const KEY='coach-v3';
 const def=()=>({age:'',h:168,w:52,done:{},log:{},meals:{},supp:{},weights:[],start:today()});
 let S;try{S=Object.assign(def(),JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){S=def()}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 
-/* ===== التمارين: صور حقيقية + فيديو عربي حقيقي ===== */
+/* ===== التمارين =====
+   demo = مقطع قصير لمدرّب يسوي الحركة (يشتغل لحاله ويعيد)
+   yt   = شرح كامل بالعربي
+   img  = صور ثابتة للحركة (البداية والنهاية) */
 const EX={
-legpress:{n:'ضغط الرجلين بالجهاز',gym:'لِگ پرس',img:'Leg_Press',yt:'HjPBHWS3Kpk',m:'الفخذ الأمامي والمؤخرة',r:[10,12],rest:90,w:'40 كغم',
- st:['اگعد وظهرك لازق بالمسند','رجلك بنص الدوّاسة بعرض كتوفك','فك قفل الأمان الي بجنبك','ادفع بكعبك لحد ما رجلك تقريباً تنعدل','رجّع ببطء لحد ما ركبتك تقرب من صدرك'],
- bad:['تقفل ركبتك بالآخر','مؤخرتك تترفع من الكرسي']},
-chestpress:{n:'جهاز ضغط الصدر',gym:'چِست پرس',img:'Machine_Bench_Press',yt:'_RHM6c8M_ws',m:'الصدر',r:[10,12],rest:90,w:'20 كغم',
- st:['عدّل الكرسي حتى المسكات تجي بنص صدرك','ظهرك لازق وصدرك مرفوع','ادفع لگدام لحد ما إيدك تنعدل تقريباً','رجّع ببطء'],
- bad:['ترفع كتوفك صوب أذنك','ترجّع بسرعة والحديد يضرب']},
-latpull:{n:'السحب الأمامي',gym:'لات پول داون',img:'Wide-Grip_Lat_Pulldown',yt:'jDwfoPmHd1k',m:'الظهر العريض',r:[10,12],rest:90,w:'25 كغم',
- st:['امسك العمود أعرض من كتوفك بشبر','ثبّت فخذك تحت المسند','ميّل شوية لورا وطلّع صدرك','اسحب العمود لأعلى صدرك','رجّع لفوگ ببطء'],
- bad:['تسحب ورا راسك','تتمرجح بجسمك']},
-shpress:{n:'ضغط الكتف بالدمبل',gym:'شولدر پرس',img:'Dumbbell_Shoulder_Press',yt:'wVFjy_HsW1w',m:'الأكتاف',r:[8,12],rest:90,w:'5 كغم بكل إيد',
- st:['اگعد على مسند عمودي','الدمبل بمستوى أذنك','ادفع لفوگ لحد ما يقربون من بعض','نزّل ببطء لمستوى الأذن'],
- bad:['تقوّس ظهرك','تضرب الدمبلات ببعض']},
-curl:{n:'البايسبس بالدمبل',gym:'دمبل كيرل',img:'Dumbbell_Bicep_Curl',yt:'iH8BtSj7GEs',m:'البايسبس (گدام الزند)',r:[10,12],rest:60,w:'5 كغم',
- st:['اوگف عدل والدمبل جنبك','الكوع لازق بجنبك','ارفع لحد كتفك واعصر','نزّل ببطء ثانيتين'],
- bad:['تتمرجح بظهرك','الكوع يطلع لگدام']},
-plank:{n:'البلانك',gym:'پلانك',img:'Plank',yt:'TldvfwHQ0lw',m:'البطن',r:[20,40],sec:1,rest:60,w:'وزن جسمك',
- st:['انزل على ساعدك والكوع تحت كتفك','جسمك خط عدل من راسك لرجلك','شد بطنك ومؤخرتك','تنفس عادي'],
- bad:['مؤخرتك نازلة','تحبس نفسك']},
-goblet:{n:'السكوات بالدمبل',gym:'گوبلِت سكوات',img:'Goblet_Squat',yt:'yMTPAqWyKXs',m:'الفخذ والمؤخرة',r:[10,12],rest:90,w:'8 كغم',
- st:['امسك دمبل واحد لازق بصدرك','رجلك أعرض شوية من كتوفك','انزل كأنك تگعد على كرسي','ظهرك عدل وصدرك مرفوع','اصعد وادفع بكعبك'],
- bad:['كعبك يترفع','ركبتك تدخل لجوة']},
-rdl:{n:'الرفعة الرومانية بالدمبل',gym:'رومانيان ديدلِفت',img:'Stiff-Legged_Dumbbell_Deadlift',yt:'C_FYH6SBhxk',m:'الفخذ الخلفي والمؤخرة',r:[10,12],rest:90,w:'8 كغم بكل إيد',
- st:['الدمبلات گدام فخذك','ركبتك مثنية شوية وثابتة','ادفع مؤخرتك لورا','الدمبل ينزل لازق برجلك لنص الساق','اصعد واعصر مؤخرتك'],
- bad:['تقوّس ظهرك (أخطر غلط)','تثني ركبتك هواية']},
-incline:{n:'ضغط الصدر المائل بالدمبل',gym:'إنكلاين دمبل پرس',img:'Incline_Dumbbell_Press',yt:'quQEanpSkEg',m:'أعلى الصدر',r:[8,12],rest:90,w:'7.5 كغم بكل إيد',
- st:['المسند على درجة 30','الدمبلات بمستوى صدرك','ادفع لفوگ لحد ما يقربون','نزّل ببطء'],
- bad:['المسند مرفوع كلش','الكوع مفتوح لبرة كلش']},
-row:{n:'السحب الأرضي بالكيبل',gym:'سيتِد كيبل رو',img:'Seated_Cable_Rows',yt:'d30OHGc2VcY',m:'وسط الظهر',r:[10,12],rest:90,w:'25 كغم',
- st:['اگعد وظهرك عدل','امسك المسكة وإيدك مفرودة','اسحب لبطنك','اعصر لوحين كتفك ببعض','رجّع ببطء'],
- bad:['تتمرجح لورا ولگدام','تسحب بالزند بس']},
-lateral:{n:'الرفرفة الجانبية',gym:'لاتِرال ريز',img:'Side_Lateral_Raise',yt:'BZmrtGWX8pw',m:'عرض الكتف',r:[12,15],rest:60,w:'3 كغم بكل إيد',star:1,
- st:['اوگف والدمبل جنبك','ارفع لجنب لمستوى الكتف بس','الكوع مثني شوية','نزّل ببطء'],
- bad:['ترفع فوگ الكتف','وزن ثقيل']},
-pushdown:{n:'الترايسبس بالكيبل',gym:'ترايسبس پوش داون',img:'Triceps_Pushdown',yt:'XTCOa8VTdK8',m:'الترايسبس (ورا الزند)',r:[10,12],rest:60,w:'10 كغم',
- st:['اوگف گدام الجهاز','الكوع لازق بجنبك','ادفع لتحت لحد ما إيدك تنعدل','رجّع ببطء لصدرك'],
- bad:['الكوع يتحرك','تدفع بوزن جسمك']},
-lunge:{n:'الطعن بالدمبل',gym:'لَنجز',img:'Dumbbell_Lunges',yt:'SVT1obfI3X4',m:'الفخذ والمؤخرة',r:[10,12],rest:90,w:'5 كغم بكل إيد',
- st:['اوگف والدمبل جنبك','خطوة كبيرة لگدام','انزل لحد ما الركبة الي ورا تقرب للأرض','ادفع وارجع','بدّل الرجل'],
- bad:['ركبتك تطلع گدام أصابعك هواية','جسمك يميل لگدام']},
-legcurl:{n:'الفخذ الخلفي بالجهاز',gym:'سيتِد لِگ كيرل',img:'Seated_Leg_Curl',yt:'vRVzX60Oi2E',m:'الفخذ الخلفي',r:[10,12],rest:60,w:'20 كغم',
- st:['عدّل المسند فوگ ركبتك','المسند الثاني ورا كعبك','اسحب لتحت لحد ما رجلك تنثني','رجّع ببطء'],
- bad:['ترفع مؤخرتك','ترجّع بسرعة']},
-dbbench:{n:'ضغط الصدر بالدمبل',gym:'دمبل بِنچ پرس',img:'Dumbbell_Bench_Press',yt:'UtwKh-2ot1M',m:'الصدر',r:[8,12],rest:90,w:'7.5 كغم بكل إيد',
- st:['انام على مسند مستوي','الدمبلات بمستوى صدرك','ادفع لفوگ','نزّل ببطء لحد ما تحس صدرك انفتح'],
- bad:['تضرب الدمبلات ببعض','ترفع مؤخرتك']},
-dbrow:{n:'السحب بالدمبل بإيد وحدة',gym:'ون آرم رو',img:'One-Arm_Dumbbell_Row',yt:'dFzUjzfih7k',m:'الظهر',r:[10,12],rest:60,w:'10 كغم',
- st:['حط ركبتك وإيدك على المسند','ظهرك عدل مثل الطاولة','اسحب الدمبل لجنب بطنك','نزّل ببطء','بدّل الإيد'],
- bad:['تلف جسمك','تسحب بالزند']},
-hammer:{n:'الهامر كيرل',gym:'هامر كيرل',img:'Hammer_Curls',yt:'IZMecCdzJKU',m:'الزند والساعد',r:[10,12],rest:60,w:'5 كغم',
- st:['امسك الدمبل مثل المطرقة','الكوع ثابت جنبك','ارفع لحد الكتف','نزّل ببطء'],
- bad:['تتمرجح','تنزّل بسرعة']},
-/* تمارين القوام بيوم الراحة */
-hipflex:{n:'إطالة الورك',gym:'هِپ فلِكسر',img:'Kneeling_Hip_Flexor',m:'الورك (يعدّل الوگفة)',r:[30,30],sec:1,rest:15,w:'بدون وزن',
+/* اليوم ١: صدر + أمامية */
+chestpress:{n:'جهاز ضغط الصدر',gym:'چِست پرس',img:'Machine_Bench_Press',demo:'FXZcFBBJgWg',yt:'_RHM6c8M_ws',by:'رشيد النجم + عبدالعزيز دالحي',m:'الصدر',r:[10,12],rest:90,w:'20 كغم',
+ st:['عدّل الكرسي حتى المسكات تجي بنص صدرك','ظهرك لازق بالمسند وصدرك مرفوع','ادفع لگدام لحد ما إيدك تنعدل تقريباً','رجّع ببطء ثانيتين'],bad:['ترفع كتوفك صوب أذنك','ترجّع بسرعة والحديد يضرب']},
+incline:{n:'ضغط الصدر العالي بالدمبل',gym:'إنكلاين دمبل پرس',img:'Incline_Dumbbell_Press',demo:'w69podp4Ttc',yt:'quQEanpSkEg',by:'رشيد النجم + إسلام محمد',m:'أعلى الصدر (يبين من التيشيرت)',r:[8,12],rest:90,w:'7.5 كغم بكل إيد',
+ st:['المسند على درجة 30 (فتحة ثانية أو ثالثة)','الدمبلات بمستوى صدرك والكوع تحت الإيد','ادفع لفوگ لحد ما يقربون','نزّل ببطء لحد ما تحس صدرك انفتح'],bad:['المسند مرفوع كلش فيصير كتف','الكوع مفتوح لبرة كلش']},
+pecdeck:{n:'جهاز تجميع الصدر',gym:'پِك دِك / بترفلاي',img:'Butterfly',demo:'KJvDBXrOjH0',yt:'nqsRRBI-1s8',by:'رشيد النجم + د. ميثم الأستاذ',m:'وسط الصدر',r:[12,15],rest:60,w:'15 كغم',
+ st:['عدّل الكرسي حتى المسكات بمستوى صدرك','إيدك مثنية شوية وثابتة','جمّع إيدك گدام صدرك واعصر ثانية','رجّع ببطء لحد ما تحس شد خفيف'],bad:['ترجّع لورا هواية (يأذي الكتف)','تدفع بالإيد بدل الصدر']},
+curl:{n:'البايسبس بالدمبل',gym:'دمبل كيرل',img:'Dumbbell_Bicep_Curl',demo:'rWsdzm4oLag',yt:'iH8BtSj7GEs',by:'رشيد النجم + رعد دوجو',m:'الأمامية (البايسبس)',r:[10,12],rest:60,w:'5 كغم',
+ st:['اوگف عدل والدمبل جنبك','الكوع لازق بجنبك','ارفع لحد كتفك واعصر','نزّل ببطء ثانيتين'],bad:['تتمرجح بظهرك','الكوع يطلع لگدام']},
+hammer:{n:'الهامر كيرل',gym:'هامر كيرل',img:'Hammer_Curls',demo:'E0_PK-ta0jQ',yt:'IZMecCdzJKU',by:'رشيد النجم + بيتر خاتشريان',m:'الأمامية والساعد (يعرّض الزند)',r:[10,12],rest:60,w:'5 كغم',
+ st:['امسك الدمبل مثل المطرقة','الكوع ثابت جنبك','ارفع لحد الكتف','نزّل ببطء'],bad:['تتمرجح','تنزّل بسرعة']},
+plank:{n:'البلانك',gym:'پلانك',img:'Plank',yt:'TldvfwHQ0lw',by:'ماسل كلينك',m:'البطن',r:[20,40],sec:1,rest:60,w:'وزن جسمك',
+ st:['انزل على ساعدك والكوع تحت كتفك','جسمك خط عدل من راسك لرجلك','شد بطنك ومؤخرتك','تنفس عادي ولا تحبس نفسك'],bad:['مؤخرتك نازلة (يوجع الظهر)','تحبس نفسك']},
+/* اليوم ٢: ظهر + خلفية */
+latpull:{n:'السحب الأمامي',gym:'لات پول داون',img:'Wide-Grip_Lat_Pulldown',demo:'amgXq2ThD0c',yt:'upctwFxgtRk',by:'رشيد النجم + د. ميثم الأستاذ',m:'الظهر العريض (يخلي جسمك شكل V)',r:[10,12],rest:90,w:'25 كغم',
+ st:['امسك العمود أعرض من كتوفك بشبر','ثبّت فخذك تحت المسند','ميّل شوية لورا وطلّع صدرك','اسحب لأعلى صدرك ونزّل الكوع لجيبك','رجّع لفوگ ببطء'],bad:['تسحب ورا راسك','تتمرجح بجسمك']},
+row:{n:'السحب الأرضي بالكيبل',gym:'سيتِد كيبل رو',img:'Seated_Cable_Rows',demo:'Grno81zDacU',yt:'d30OHGc2VcY',by:'رشيد النجم + رعد دوجو',m:'وسط الظهر',r:[10,12],rest:90,w:'25 كغم',
+ st:['اگعد وظهرك عدل','امسك المسكة وإيدك مفرودة','اسحب لبطنك','اعصر لوحين كتفك ببعض','رجّع ببطء'],bad:['تتمرجح لورا ولگدام','تسحب بالزند بس']},
+dbrow:{n:'السحب بالدمبل بإيد وحدة',gym:'ون آرم رو / منشار',img:'One-Arm_Dumbbell_Row',demo:'zcVCUBA6U5o',yt:'dFzUjzfih7k',by:'رشيد النجم',m:'الظهر',r:[10,12],rest:60,w:'10 كغم',
+ st:['ركبتك وإيدك على المسند','ظهرك عدل مثل الطاولة','اسحب الدمبل لجنب بطنك','نزّل ببطء، وبعدها بدّل الإيد'],bad:['تلف جسمك','تسحب بالزند']},
+backext:{n:'تمدد الظهر',gym:'باك إكستنشن',img:'Hyperextensions_Back_Extensions',demo:'S1z-BXUMAVI',yt:'rOnKGNNyS9w',by:'علي غازي + د. ميثم الأستاذ',m:'أسفل الظهر (يعدّل الوگفة)',r:[12,15],rest:60,w:'وزن جسمك',
+ st:['عدّل المسند تحت وركك','شبّك إيدك على صدرك','انزل ببطء لگدام','اصعد لحد ما جسمك يصير خط عدل بس'],bad:['تصعد لورا هواية','تتحرك بسرعة']},
+pushdown:{n:'الخلفية بالكيبل',gym:'ترايسبس پوش داون',img:'Triceps_Pushdown',demo:'_zgFWq1wvO4',yt:'XTCOa8VTdK8',by:'رشيد النجم',m:'الخلفية (الترايسبس، ثلثين حجم الزند)',r:[10,12],rest:60,w:'10 كغم',
+ st:['اوگف گدام الجهاز','الكوع لازق بجنبك','ادفع لتحت لحد ما إيدك تنعدل','رجّع ببطء لصدرك'],bad:['الكوع يتحرك','تدفع بوزن جسمك']},
+ohtri:{n:'الخلفية فوگ الراس',gym:'أوفرهيد إكستنشن',img:'Standing_Dumbbell_Triceps_Extension',demo:'YgfDhyTUzG0',yt:'kp9kzhYFh4g',by:'رشيد النجم + د. ميثم الأستاذ',m:'الخلفية (الرأس الطويل)',r:[10,12],rest:60,w:'6 كغم',
+ st:['امسك دمبل واحد بإيدينك فوگ راسك','الكوع يأشّر لفوگ وثابت','نزّل الدمبل ورا راسك ببطء','ادفعه لفوگ'],bad:['الكوع ينفتح لبرة','تقوّس ظهرك']},
+/* اليوم ٣: أكتاف + رجل */
+legpress:{n:'دفع الرجل بالجهاز',gym:'لِگ پرس / دفع ماكنة',img:'Leg_Press',demo:'OnI93Z0hHW4',yt:'HjPBHWS3Kpk',by:'علي غازي + كاسر السعيد',m:'الفخذ الأمامي والمؤخرة',r:[10,12],rest:90,w:'40 كغم',
+ st:['اگعد وظهرك لازق بالمسند','رجلك بنص الدوّاسة بعرض كتوفك','فك قفل الأمان','ادفع بكعبك لحد ما رجلك تقريباً تنعدل','رجّع ببطء لحد ما ركبتك تقرب من صدرك'],bad:['تقفل ركبتك بالآخر','مؤخرتك تترفع من الكرسي']},
+legext:{n:'الفخذ الأمامي بالجهاز',gym:'لِگ إكستنشن / كيل أمامي',img:'Leg_Extensions',demo:'OHrKyCvxtu8',yt:'e5XxotBfvbs',by:'علي غازي + د. ميثم الأستاذ',m:'الفخذ الأمامي',r:[12,15],rest:60,w:'20 كغم',
+ st:['ركبتك بنفس مستوى محور الجهاز','المسند فوگ الكاحل','ارفع رجلك لحد ما تنعدل واعصر','نزّل ببطء'],bad:['ترفع مؤخرتك','ترمي الوزن لتحت']},
+legcurl:{n:'الفخذ الخلفي بالجهاز',gym:'لايِنگ لِگ كيرل / كيل خلفي',img:'Lying_Leg_Curls',demo:'IJcpGcPqSoo',yt:'vRVzX60Oi2E',by:'علي غازي',m:'الفخذ الخلفي',r:[10,12],rest:60,w:'15 كغم',
+ st:['انام على بطنك والمسند ورا كعبك','اسحب كعبك صوب مؤخرتك','اعصر ثانية','نزّل ببطء'],bad:['ترفع وركك من المسند','ترجّع بسرعة']},
+shpress:{n:'ضغط الكتف بالدمبل',gym:'شولدر پرس',img:'Dumbbell_Shoulder_Press',yt:'wVFjy_HsW1w',by:'د. ميثم الأستاذ',m:'الأكتاف',r:[8,12],rest:90,w:'5 كغم بكل إيد',
+ st:['اگعد على مسند عمودي','الدمبل بمستوى أذنك والكوع تحته','ادفع لفوگ لحد ما يقربون','نزّل ببطء لمستوى الأذن'],bad:['تقوّس ظهرك','تضرب الدمبلات ببعض']},
+lateral:{n:'الرفرفة الجانبية',gym:'لاتِرال ريز / نشر جانبي',img:'Side_Lateral_Raise',demo:'x2fGq9vkXlc',yt:'76YYtZ9KALg',by:'رشيد النجم + د. ميثم الأستاذ',m:'عرض الكتف',r:[12,15],rest:60,w:'3 كغم بكل إيد',star:1,
+ st:['اوگف والدمبل جنبك','ارفع لجنب لمستوى الكتف بس','الكوع مثني شوية','نزّل ببطء ثلاث ثواني'],bad:['ترفع فوگ الكتف','وزن ثقيل وتتمرجح']},
+reardelt:{n:'الكتف الخلفي بالجهاز',gym:'ريَر دِلت فلاي',img:'Reverse_Machine_Flyes',demo:'evfADz6GUCc',by:'رشيد النجم',m:'الكتف الخلفي (يرجّع كتوفك لورا)',r:[12,15],rest:60,w:'10 كغم',
+ st:['اگعد ووجهك صوب الجهاز','امسك المسكات وإيدك مفرودة','افتح إيدك لورا واعصر','رجّع ببطء'],bad:['تسحب بظهرك','وزن ثقيل']},
+calf:{n:'السمانة بجهاز الدفع',gym:'كالف پرس',img:'Calf_Press_On_The_Leg_Press_Machine',demo:'dQmB_KKIiW8',by:'علي غازي',m:'السمانة',r:[12,15],rest:45,w:'40 كغم',
+ st:['حط أصابع رجلك على حافة الدوّاسة','رجلك عدل','ادفع بأصابعك لأبعد شي','رجّع ببطء لحد ما تحس شد'],bad:['تثني ركبتك','تتحرك بسرعة']},
+/* يوم الراحة: القوام */
+hipflex:{n:'إطالة الورك',gym:'هِپ فلِكسر',img:'Kneeling_Hip_Flexor',m:'الورك (الگعدة الطويلة تقصّر وگفتك)',r:[30,30],sec:1,rest:15,w:'بدون وزن',
  st:['انزل على ركبة وحدة','ادفع وركك لگدام بهدوء','تحس شد گدام الفخذ الي ورا','30 ثانية وبدّل'],bad:['تقوّس ظهرك']},
-cat:{n:'القطة',gym:'كات ستريتش',img:'Cat_Stretch',yt:'SsIJaV3g8zE',m:'الظهر',r:[10,10],rest:15,w:'بدون وزن',
+cat:{n:'القطة',gym:'كات ستريتش',img:'Cat_Stretch',yt:'SsIJaV3g8zE',by:'المعالج عمر قضيمات',m:'الظهر',r:[10,10],rest:15,w:'بدون وزن',
  st:['انزل على إيدك وركبتك','قوّس ظهرك لفوگ ببطء','بعدين نزّله لتحت وارفع راسك','10 مرات'],bad:['تتحرك بسرعة']},
-chest:{n:'فتح الصدر والكتف',gym:'چِست ستريتش',img:'Chest_And_Front_Of_Shoulder_Stretch',yt:'u4cErwcJF8M',m:'الصدر والكتف (يعدّل الحدبة)',r:[30,30],sec:1,rest:15,w:'بدون وزن',
+chest:{n:'فتح الصدر والكتف',gym:'چِست ستريتش',img:'Chest_And_Front_Of_Shoulder_Stretch',yt:'u4cErwcJF8M',by:'ماسل كلينك',m:'الصدر والكتف (يعدّل الحدبة)',r:[30,30],sec:1,rest:15,w:'بدون وزن',
  st:['شبّك إيدك ورا ظهرك','افتح صدرك لگدام','ارفع إيدك شوية','30 ثانية'],bad:['تحني راسك لگدام']},
-superman:{n:'السوبرمان',gym:'سوبرمان',img:'Superman',m:'أسفل الظهر',r:[10,12],rest:30,w:'بدون وزن',
- st:['انبطح على بطنك','ارفع إيدك ورجلك سوية','اثبت ثانيتين','نزّل ببطء'],bad:['ترفع راسك هواية']},
-hang:{n:'التعلّگ بالعقلة',gym:'ديد هانگ',img:'Pullups',one:1,yt:'jMVuM6xOaRI',m:'الظهر (يفك ضغط العمود الفقري)',r:[20,40],sec:1,rest:30,w:'وزن جسمك',
+hang:{n:'التعلّگ بالعقلة',gym:'ديد هانگ',img:'Pullups',one:1,yt:'jMVuM6xOaRI',by:'بودي ساينس',m:'الظهر (يفك ضغط العمود الفقري)',r:[20,40],sec:1,rest:30,w:'وزن جسمك',
  st:['امسك العقلة بعرض كتوفك','تعلّگ وارتخي','تنفس بعمق','بس تعلّگ، لا تسحب'],bad:['تهز جسمك']},
 child:{n:'وضعية الطفل',gym:'چايلد پوز',img:'Childs_Pose',m:'الظهر (راحة)',r:[30,30],sec:1,rest:0,w:'بدون وزن',
  st:['اگعد على ركبك','مد إيدك لگدام ونزّل صدرك','تنفس ببطء','30 ثانية'],bad:[]},
 };
 const WORK={
-A:{n:'تمرين أ',d:'رجل، صدر، ظهر، كتف، زند، بطن',ex:['legpress','chestpress','latpull','shpress','curl','plank']},
-B:{n:'تمرين ب',d:'رجل، صدر عالي، ظهر، كتف، ترايسبس',ex:['goblet','rdl','incline','row','lateral','pushdown']},
-C:{n:'تمرين ج',d:'رجل، صدر، ظهر، كتف، زند',ex:['lunge','legcurl','dbbench','dbrow','lateral','hammer']},
-R:{n:'استراحة',d:'مشي 30 دقيقة + تمارين القوام 10 دقايق',ex:['hipflex','cat','chest','superman','hang','child']},
+A:{n:'صدر + أمامية',d:'الصدر والبايسبس والبطن',ex:['chestpress','incline','pecdeck','curl','hammer','plank']},
+B:{n:'ظهر + خلفية',d:'الظهر والترايسبس',ex:['latpull','row','dbrow','backext','pushdown','ohtri']},
+C:{n:'أكتاف + رجل',d:'الكتف والفخذ والسمانة',ex:['legpress','legext','legcurl','shpress','lateral','reardelt','calf']},
+R:{n:'استراحة',d:'مشي 30 دقيقة + تمارين الوگفة 10 دقايق',ex:['hipflex','cat','chest','hang','child']},
 };
-const WEEKS=12,PATTERN=['A','R','B','R','C','R','R'];
-const dayType=i=>PATTERN[i%7];
+const WEEKS=12,CYCLE=['A','B','C','R'],TOTAL=WEEKS*7;
+const dayType=i=>CYCLE[i%4];
 const weekOf=i=>Math.floor(i/7)+1;
-function setsFor(i,id){const e=EX[id],w=weekOf(i);if(dayType(i)==='R')return 1;if(w<=2)return 2;if(w>=9&&(id==='lateral'||id==='curl'||id==='hammer'||id==='incline'||id==='pushdown'))return 4;return 3}
-function curDay(){for(let i=0;i<WEEKS*7;i++)if(!S.done[i])return i;return WEEKS*7-1}
+const deload=i=>weekOf(i)===6||weekOf(i)===12;
+function setsFor(i,id){const w=weekOf(i);if(dayType(i)==='R')return 1;if(w<=2||deload(i))return 2;if(w>=9&&['lateral','curl','hammer','incline','pushdown','ohtri'].includes(id))return 4;return 3}
+function curDay(){for(let i=0;i<TOTAL;i++)if(!S.done[i])return i;return TOTAL-1}
 const img=(id,k)=>`img/ex/${EX[id].img}_${k}.jpg`;
 
-/* ===== شاشة الكورس ===== */
+/* ===== الكورس ===== */
 function vCourse(){
-  const c=curDay(),t=dayType(c),W=WORK[t],doneN=Object.keys(S.done).length,total=WEEKS*7;
+  const c=curDay(),t=dayType(c),W=WORK[t],doneN=Object.keys(S.done).length;
   let list='';
-  for(let i=0;i<total;i++){
-    if(i%7===0)list+=`<div class="week-h"><h3>الأسبوع ${AR(weekOf(i))}</h3><span class="xs mut">${weekOf(i)<=2?'تعلّم الحركات':weekOf(i)<=8?'البناء':'التشكيل'}</span></div>`;
+  for(let i=0;i<TOTAL;i++){
+    if(i%7===0){const wk=weekOf(i);list+=`<div class="week-h"><h3>الأسبوع ${AR(wk)}</h3><span class="xs mut">${wk===6||wk===12?'أسبوع خفيف (الجسم يرتاح ويكبر)':wk<=2?'تعلّم الحركات':wk<=8?'البناء':'التشكيل'}</span></div>`}
     const ty=dayType(i),w=WORK[ty],cls=['day',ty==='R'?'rest':'',S.done[i]?'done':'',i===c?'now':''].join(' ');
-    list+=`<button class="${cls}" data-day="${i}" ${i===c?'id="now"':''}><div class="n"><span>اليوم</span><b class="num">${AR(i+1)}</b></div><div class="grow"><div class="row between"><h3>${w.n}</h3>${S.done[i]?'<span class="pill lime">✓ خلص</span>':i===c?'<span class="pill lime">اليوم</span>':''}</div><p class="xs mut">${w.d}</p>${ty!=='R'&&(i===c||i===c+1||i===c+2)?`<div class="thumbs">${w.ex.map(id=>`<img src="${img(id,0)}" alt="" loading="lazy">`).join('')}</div>`:''}</div></button>`;
+    list+=`<button class="${cls}" data-day="${i}"><div class="n"><span>اليوم</span><b class="num">${AR(i+1)}</b></div><div class="grow"><div class="row between"><h3>${w.n}</h3>${S.done[i]?'<span class="pill lime">✓ خلص</span>':i===c?'<span class="pill lime">اليوم</span>':''}</div><p class="xs mut">${w.d}</p>${ty!=='R'&&i>=c&&i<c+4?`<div class="thumbs">${w.ex.map(id=>`<img src="${img(id,0)}" alt="" loading="lazy">`).join('')}</div>`:''}</div></button>`;
   }
-  return`<div class="row between"><div><p class="sm mut">هلا بطل 👋</p><h1>الكورس</h1></div><span class="pill"><span style="color:var(--lime);width:16px;display:inline-flex">${I.fire}</span><span class="num">${AR(doneN)} / ${AR(total)}</span></span></div>
+  return`<div class="row between"><div><p class="sm mut">هلا بطل 👋</p><h1>الكورس</h1></div><span class="pill"><span style="color:var(--lime);width:16px;display:inline-flex">${I.fire}</span><span class="num">${AR(doneN)} / ${AR(TOTAL)}</span></span></div>
   ${installCard()}
-  <div class="hero"><span class="xs" style="font-weight:600">اليوم ${AR(c+1)} • الأسبوع ${AR(weekOf(c))}</span><h2>${t==='R'?'اليوم استراحة 😴':W.n+': '+W.d}</h2><p class="sm mut">${t==='R'?'العضلة تكبر وانت مرتاح. امشي 30 دقيقة وسوّي تمارين القوام.':AR(W.ex.length)+' تمارين • تقريباً 45 دقيقة • '+AR(setsFor(c,W.ex[0]))+' سِتات لكل تمرين'}</p><button class="btn" data-day="${c}">${I.play} ${t==='R'?'شوف تمارين القوام':'ابدأ تمرين اليوم'}</button></div>
-  <div class="card"><div class="row between"><b>تقدمك بالكورس</b><span class="sm mut num">${AR(Math.round(doneN/total*100))}٪</span></div><div class="bar"><i style="width:${doneN/total*100}%"></i></div><p class="xs mut">12 أسبوع. كل أسبوع: تمرين، راحة، تمرين، راحة، تمرين، وبعدها يومين راحة.</p></div>
+  <div class="hero"><span class="xs" style="font-weight:600">اليوم ${AR(c+1)} • الأسبوع ${AR(weekOf(c))}${deload(c)?' • أسبوع خفيف':''}</span><h2>${t==='R'?'اليوم استراحة 😴':W.n}</h2><p class="sm mut">${t==='R'?'العضلة تكبر وانت مرتاح. امشي 30 دقيقة وسوّي تمارين الوگفة.':W.d+' • '+AR(W.ex.length)+' تمارين • تقريباً 50 دقيقة'}</p><button class="btn" data-day="${c}">${I.play} ${t==='R'?'شوف تمارين الوگفة':'ابدأ تمرين اليوم'}</button></div>
+  <div class="card"><div class="row between"><b>طريقة الكورس</b><span class="sm mut num">${AR(Math.round(doneN/TOTAL*100))}٪</span></div><div class="bar"><i style="width:${doneN/TOTAL*100}%"></i></div>
+  <div class="steps sm"><p><b>اليوم ١:</b> صدر + أمامية (بايسبس)</p><p><b>اليوم ٢:</b> ظهر + خلفية (ترايسبس)</p><p><b>اليوم ٣:</b> أكتاف + رجل</p><p><b>اليوم ٤:</b> استراحة، وبعدها ترجع لليوم ١</p></div>
+  <p class="xs mut">كل عضلة تتمرن مرة كل 4 أيام، وتاخذ 3 أيام حتى ترتاح وتكبر. إذا حسيت جسمك تعبان كلش، خذ يوم راحة زيادة، ما يضر.</p></div>
   <div class="days">${list}</div>`;
 }
 function installCard(){
-  const standalone=window.navigator.standalone||matchMedia('(display-mode: standalone)').matches;
-  if(standalone||S.hideInstall)return'';
-  return`<div class="install"><b>خلّيه تطبيق على شاشة الآيفون</b><p class="sm">١. افتح هذا الرابط بـ<b>سفاري</b>.<br>٢. اضغط زر المشاركة <span style="display:inline-flex;width:18px;vertical-align:-3px;color:var(--lime)">${I.share}</span> بالأسفل.<br>٣. اختار <b>"إضافة إلى الشاشة الرئيسية"</b> وبعدها <b>"إضافة"</b>.</p><button class="btn ghost sm" data-hideinstall>سوّيتها، خفي هذا</button></div>`;
+  const sa=window.navigator.standalone||matchMedia('(display-mode: standalone)').matches;
+  if(sa||S.hideInstall)return'';
+  return`<div class="install"><b>خلّيه تطبيق على شاشة الآيفون</b><p class="sm">١. افتح الرابط بـ<b>سفاري</b>.<br>٢. اضغط زر المشاركة <span style="display:inline-flex;width:18px;vertical-align:-3px;color:var(--lime)">${I.share}</span>.<br>٣. اختار <b>"إضافة إلى الشاشة الرئيسية"</b>.</p><button class="btn ghost sm" data-hideinstall>سوّيتها، خفي هذا</button></div>`;
 }
 
 /* ===== شاشة اليوم ===== */
@@ -321,30 +323,33 @@ let SES=null;
 function openDay(i){
   const t=dayType(i),W=WORK[t];
   SES={i,ex:W.ex,k:0,sets:{}};
-  W.ex.forEach(id=>{const n=setsFor(i,id),last=S.log[id];SES.sets[id]=Array.from({length:n},()=>({w:last?last.w:'',r:EX[id].r[1],ok:false}))});
+  W.ex.forEach(id=>{const last=S.log[id];SES.sets[id]=Array.from({length:setsFor(i,id)},()=>({w:last&&last.w?(last.up&&!deload(i)?last.w+(id==='lateral'||id==='curl'||id==='hammer'||id==='ohtri'?1:2.5):last.w):'',r:EX[id].r[1],ok:false}))});
   show(`<div class="topbar"><button class="icon-btn" data-close aria-label="رجوع">${I.back}</button><div class="grow"><p class="xs mut">اليوم ${AR(i+1)} • الأسبوع ${AR(weekOf(i))}</p><h2>${W.n}</h2></div></div>
-  ${t==='R'?`<div class="card"><p class="sm"><b>شنو تسوي اليوم:</b> امشي 30 دقيقة، وسوّي هاي التمارين 10 دقايق (الأحسن قبل النوم). تعدّل وگفتك وتفك ضغط ظهرك.</p></div>`:`<div class="card"><p class="sm"><b>قبل ما تبدي:</b> امشي أو دراجة 5 دقايق حتى تتحمّى. بعدها التمارين بالترتيب.</p><p class="xs mut">${weekOf(i)<=2?'أول أسبوعين: سِتين بس ووزن خفيف. ركّز على الحركة الصحيحة.':'السِت = مجموعة عدّات ورا بعض. بعد كل سِت ترتاح.'}</p></div>`}
+  ${t==='R'?`<div class="card"><p class="sm"><b>اليوم:</b> امشي 30 دقيقة، وسوّي هاي التمارين 10 دقايق قبل النوم. تعدّل وگفتك وتفك ضغط ظهرك.</p></div>`:`<div class="card"><p class="sm"><b>قبل ما تبدي (إحماء):</b> 5 دقايق مشي سريع أو دراجة، وبعدها أول تمرين سوّي سِت خفيف بنص الوزن.</p><p class="xs mut">${weekOf(i)<=2?'أول أسبوعين: سِتين بس ووزن خفيف. ركّز على الحركة الصحيحة.':deload(i)?'هذا أسبوع خفيف: سِتين بس ونفس الوزن. هذا جزء من الخطة حتى مفاصلك ترتاح.':'إذا التطبيق كاتبلك وزن أعلى من المرة الفاتتة، معناها خلّصت كل العدّات وتستاهل تزيد.'}</p></div>`}
   <div class="col">${W.ex.map((id,k)=>exRow(id,k,i)).join('')}</div>
   <button class="btn wide" data-start>${I.play} ${t==='R'?'يلا نبدي':'ابدأ التمرين خطوة بخطوة'}</button>
   ${S.done[i]?'':`<button class="btn ghost wide" data-finish>${t==='R'?'خلصت يوم الراحة ✓':'خلصته بدون تسجيل ✓'}</button>`}`);
 }
 function exRow(id,k,i){const e=EX[id],n=setsFor(i,id);return`<button class="exrow" data-ex="${id}"><img src="${img(id,0)}" alt="" loading="lazy"><div class="grow"><h3>${e.n}${e.star?' ⭐':''}</h3><p class="xs mut">${e.m}</p><p class="sm num" style="margin-top:2px"><b style="color:var(--lime)">${AR(n)}</b> سِت × <b style="color:var(--lime)">${AR(e.r[0])}${e.r[0]!==e.r[1]?'-'+AR(e.r[1]):''}</b> ${e.sec?'ثانية':'عدّة'}</p></div><span class="k num">${AR(k+1)}</span></button>`}
 
-/* ===== شاشة التمرين الواحد ===== */
+/* ===== التمرين الواحد ===== */
+const ytsrc=(v,loop)=>loop?`https://www.youtube-nocookie.com/embed/${v}?autoplay=1&mute=1&loop=1&playlist=${v}&playsinline=1&controls=0&rel=0&modestbranding=1&iv_load_policy=3`:`https://www.youtube-nocookie.com/embed/${v}?autoplay=1&playsinline=1&rel=0&modestbranding=1`;
 function exInfo(id,dayI){
-  const e=EX[id],n=dayI!=null?setsFor(dayI,id):3;
-  return`<div class="demo" id="demo"><img src="${img(id,0)}" alt="بداية الحركة">${e.one?'':`<img class="b" src="${img(id,1)}" alt="نهاية الحركة"><span class="lab"></span>`}<span class="tag">${e.star?'⭐ أهم تمرين لشكلك':'شخص حقيقي يسوي الحركة'}</span></div>
-  ${e.one?'':`<button class="btn ghost sm" data-slow style="align-self:center">🐢 خليها أبطأ</button>`}
+  const e=EX[id],n=dayI!=null?setsFor(dayI,id):3,lw=S.log[id]&&S.log[id].w;
+  const motion=e.demo?`<div class="clip" id="clip"><iframe src="${ytsrc(e.demo,1)}" title="الحركة" allow="autoplay; encrypted-media; picture-in-picture"></iframe><span class="tag">${e.star?'⭐ أهم تمرين لشكلك':'مدرّب يسوي الحركة'}</span><button class="sound" data-sound="${e.demo}">🔊 شغّل الصوت</button></div>`
+    :`<div class="demo" id="demo"><img src="${img(id,0)}" alt="بداية الحركة">${e.one?'':`<img class="b" src="${img(id,1)}" alt="نهاية الحركة"><span class="lab"></span>`}<span class="tag">صور الحركة</span></div>`;
+  return`${motion}
   <div><p class="xs mut">اسمه بالجيم: ${e.gym}</p><h1>${e.n}</h1><p class="sm" style="color:var(--lime)">العضلة: ${e.m}</p></div>
-  <div class="facts"><div><b class="num">${AR(n)}</b><span>سِتات</span></div><div><b class="num">${AR(e.r[0])}${e.r[0]!==e.r[1]?'-'+AR(e.r[1]):''}</b><span>${e.sec?'ثانية':'عدّة'}</span></div><div><b class="num">${AR(e.rest)}</b><span>ثانية راحة</span></div><div><b style="font-size:13px">${S.log[id]&&S.log[id].w?AR(S.log[id].w)+' كغم':e.w}</b><span>${S.log[id]&&S.log[id].w?'آخر مرة':'وزن البداية'}</span></div></div>
-  ${e.yt?`<button class="video" data-yt="${e.yt}"><img src="https://i.ytimg.com/vi/${e.yt}/hqdefault.jpg" alt=""><span class="play"><span>${I.play}</span></span><span class="cap">فيديو شرح بالعربي من مدرّب حقيقي</span></button>`:''}
+  <div class="facts"><div><b class="num">${AR(n)}</b><span>سِتات</span></div><div><b class="num">${AR(e.r[0])}${e.r[0]!==e.r[1]?'-'+AR(e.r[1]):''}</b><span>${e.sec?'ثانية':'عدّة'}</span></div><div><b class="num">${AR(e.rest)}</b><span>ثانية راحة</span></div><div><b style="font-size:13px">${lw?AR(lw)+' كغم':e.w}</b><span>${lw?'آخر مرة':'وزن البداية'}</span></div></div>
+  ${e.yt?`<button class="video" data-yt="${e.yt}"><img src="https://i.ytimg.com/vi/${e.yt}/hqdefault.jpg" alt=""><span class="play"><span>${I.play}</span></span><span class="cap">الشرح الكامل بالعربي${e.by?' • '+e.by:''}</span></button>`:''}
   <div class="card"><h3>شلون تسويه</h3><div class="steps sm">${e.st.map(s=>`<p>${s}</p>`).join('')}</div></div>
   ${e.bad.length?`<div class="card"><h3>لا تسوي هيچ</h3><div class="bad sm col">${e.bad.map(s=>`<p>${s}</p>`).join('')}</div></div>`:''}
-  ${e.sec?'':`<div class="card" style="background:rgba(200,244,60,.07);border-color:rgba(200,244,60,.3)"><p class="sm"><b>الوزن الصح:</b> تخلّص ${AR(e.r[1])} عدّة وتحس تگدر تسوي 2 بعد. إذا كلش سهل، زيد الوزن المرة الجاية.</p></div>`}`;
+  ${e.sec?'':`<div class="card" style="background:rgba(200,244,60,.07);border-color:rgba(200,244,60,.3)"><p class="sm"><b>الوزن الصح:</b> تخلّص ${AR(e.r[1])} عدّة وتحس تگدر تسوي 2 بعد بس. إذا كلش سهل زيد، وإذا الحركة خربت نقّص.</p></div>`}
+  ${e.demo&&!e.one?`<details class="card"><summary class="sm" style="cursor:pointer">صور الحركة (البداية والنهاية)</summary><div class="row"><img src="${img(id,0)}" alt="" style="width:50%;border-radius:14px"><img src="${img(id,1)}" alt="" style="width:50%;border-radius:14px"></div></details>`:''}`;
 }
 function openEx(id){show(`<div class="topbar"><button class="icon-btn" data-back aria-label="رجوع">${I.back}</button></div>${exInfo(id,SES?SES.i:null)}`,true)}
 
-/* ===== وضع التمرين خطوة بخطوة ===== */
+/* ===== وضع التمرين ===== */
 function renderStep(){
   const id=SES.ex[SES.k],e=EX[id],sets=SES.sets[id],tot=SES.ex.length;
   show(`<div class="topbar"><button class="icon-btn" data-close aria-label="طلّع">${I.x}</button><div class="grow col" style="gap:6px"><p class="xs mut" style="text-align:center">تمرين ${AR(SES.k+1)} من ${AR(tot)}</p><div class="bar"><i style="width:${(SES.k+sets.filter(s=>s.ok).length/sets.length)/tot*100}%"></i></div></div></div>
@@ -352,96 +357,141 @@ function renderStep(){
   <div class="card"><h3>سجّل الي سوّيته</h3>
    <div class="set xs mut" style="text-align:center"><span>السِت</span><span>${e.sec?'':'الوزن كغم'}</span><span>${e.sec?'ثواني':'العدّات'}</span><span></span></div>
    <div class="sets">${sets.map((s,j)=>`<div class="set ${s.ok?'done':''}"><span class="i num">${AR(j+1)}</span>${e.sec?'<span></span>':`<input inputmode="decimal" data-w="${j}" value="${s.w}" placeholder="كغم" aria-label="الوزن">`}<input inputmode="numeric" data-r="${j}" value="${s.r}" aria-label="العدّات"><button class="ok" data-ok="${j}" aria-label="خلصت السِت">${I.check}</button></div>`).join('')}</div>
-   <p class="xs mut">بعد كل سِت اضغط ✓ ويبدي وقت الراحة.</p></div>
+   <p class="xs mut">بعد كل سِت اضغط ✓ ويبدي وكت الراحة.</p></div>
   <div class="row"><button class="btn ghost grow" data-prev ${SES.k?'':'disabled style="opacity:.4"'}>السابق</button>${SES.k<tot-1?'<button class="btn grow" data-next>التمرين الجاي</button>':'<button class="btn grow" data-finish>خلصت اليوم 🎉</button>'}</div>`);
 }
 let restT;
 function rest(sec){
-  clearInterval(restT);let left=sec,all=sec;const o=document.createElement('div');o.className='rest-ov';document.body.append(o);
-  const C=2*Math.PI*100;
+  clearInterval(restT);let left=sec,all=sec;const o=document.createElement('div');o.className='rest-ov';document.body.append(o);const C=2*Math.PI*100;
   const paint=()=>{o.innerHTML=`<h2>ارتاح وتنفّس</h2><div class="ring"><svg viewBox="0 0 230 230"><circle cx="115" cy="115" r="100" stroke="#262b31" stroke-width="14" fill="none"/><circle cx="115" cy="115" r="100" stroke="#c8f43c" stroke-width="14" fill="none" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-left/all)}"/></svg><b class="num">${AR(left)}</b></div><p class="mut sm">اشرب شوية مي</p><div class="row"><button class="btn ghost" data-plus>+15 ثانية</button><button class="btn" data-skip>كمّل</button></div>`};
-  paint();
-  o.onclick=ev=>{if(ev.target.closest('[data-plus]')){left+=15;all+=15;paint()}if(ev.target.closest('[data-skip]')){clearInterval(restT);o.remove()}};
+  paint();o.onclick=ev=>{if(ev.target.closest('[data-plus]')){left+=15;all+=15;paint()}if(ev.target.closest('[data-skip]')){clearInterval(restT);o.remove()}};
   restT=setInterval(()=>{left--;if(left<=0){clearInterval(restT);o.remove();beep();toast('يلا السِت الجاي 💪');return}paint()},1000);
 }
 let ac;function beep(){try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();const os=ac.createOscillator(),g=ac.createGain();os.frequency.value=880;g.gain.setValueAtTime(.3,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.6);os.connect(g);g.connect(ac.destination);os.start();os.stop(ac.currentTime+.6)}catch(e){}try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}}
 function finishDay(){
   clearInterval(restT);const i=SES.i;
-  for(const id of SES.ex){const d=SES.sets[id].filter(s=>s.ok);if(d.length&&!EX[id].sec){const w=+d[0].w||0,all=d.every(s=>+s.r>=EX[id].r[1]);S.log[id]={w,up:all}}}
+  for(const id of SES.ex){const d=SES.sets[id].filter(s=>s.ok);if(d.length&&!EX[id].sec){const w=+d[0].w||0;S.log[id]={w,up:d.length===SES.sets[id].length&&d.every(s=>+s.r>=EX[id].r[1])}}}
   S.done[i]=today();save();
-  show(`<div class="col" style="min-height:70vh;justify-content:center;align-items:center;text-align:center;gap:18px"><div style="width:96px;height:96px;border-radius:50%;background:var(--lime);color:var(--ink);display:grid;place-items:center"><span style="width:46px;display:block">${I.check}</span></div><h1>عاشت إيدك يا بطل!</h1><p class="mut">خلصت اليوم ${AR(i+1)} من الكورس.</p><div class="card" style="text-align:right;width:100%"><p class="sm">${dayType(i)==='R'?'باچر عندك تمرين، نام زين الليلة.':'هسه اشرب مي، وكُل وجبة بيها بروتين خلال ساعتين، ونام 8 ساعات. باچر راحة.'}</p></div><button class="btn wide" data-close>رجوع للكورس</button></div>`);
+  show(`<div class="col" style="min-height:70vh;justify-content:center;align-items:center;text-align:center;gap:18px"><div style="width:96px;height:96px;border-radius:50%;background:var(--lime);color:var(--ink);display:grid;place-items:center"><span style="width:46px;display:block">${I.check}</span></div><h1>عاشت إيدك يا بطل!</h1><p class="mut">خلصت اليوم ${AR(i+1)} من الكورس.</p><div class="card" style="text-align:right;width:100%"><p class="sm">${dayType(i)==='R'?'باچر تمرين، نام زين الليلة.':'هسه اشرب مي، وكُل وجبة بيها بروتين خلال ساعتين، ونام 8 ساعات.'}</p></div><button class="btn wide" data-close>رجوع للكورس</button></div>`);
   SES=null;
 }
 
-/* ===== الأكل ===== */
-const F=n=>`img/food/${n}.webp`;
+/* ===== الأكل: فنلندا + حلال =====
+   القيم تقريبية لكل 100 غم (أو للحبة)، على نمط جداول التغذية الفنلندية (Fineli) وأغلفة المنتجات.
+   fi = الاسم المكتوب بالسوبرماركت الفنلندي */
+const FD={
+ oats:{n:'شوفان',fi:'Kaurahiutale',k:370,p:13,c:58,f:7,im:'oats'},
+ milk:{n:'حليب خفيف',fi:'Kevytmaito 1,5 %',k:46,p:3.4,c:4.8,f:1.5,im:'milk',u:'مل'},
+ egg:{n:'بيض',fi:'Kananmuna',pc:1,k:80,p:7,c:.4,f:5.5,im:'eggs',u:'حبة'},
+ rye:{n:'خبز جاودار',fi:'Ruisleipä (Reissumies)',pc:1,k:75,p:2.5,c:13,f:.7,im:'bread',u:'شريحة'},
+ cheese:{n:'جبن خفيف',fi:'Kevytjuusto 17 %',k:270,p:29,c:0,f:17,im:'cheese'},
+ rahka:{n:'رَهكا (لبنة بروتين)',fi:'Maitorahka (maustamaton)',k:63,p:12,c:3.5,f:.2,im:'yogurt'},
+ skyr:{n:'سكير (زبادي بروتين)',fi:'Skyr maustamaton',k:60,p:11,c:4,f:.2,im:'greek_yogurt'},
+ banana:{n:'موز',fi:'Banaani',pc:1,k:110,p:1.3,c:26,f:.3,im:'banana',u:'حبة'},
+ blueb:{n:'توت أزرق',fi:'Mustikka (pakaste)',k:50,p:.7,c:10,f:.6,im:'blueberries'},
+ pb:{n:'زبدة فول سوداني',fi:'Maapähkinävoi',k:600,p:25,c:14,f:50,im:'peanut_butter'},
+ almond:{n:'لوز',fi:'Manteli',k:600,p:21,c:10,f:52,im:'almonds'},
+ honey:{n:'عسل',fi:'Hunaja',k:320,p:.3,c:80,f:0,im:'honey'},
+ rice:{n:'تمن مطبوخ',fi:'Riisi (keitetty)',k:130,p:2.7,c:28,f:.3,im:'rice'},
+ potato:{n:'بطاطا مسلوگة',fi:'Peruna (keitetty)',k:77,p:2,c:17,f:.1,im:'potatoes'},
+ chicken:{n:'صدر دجاج حلال',fi:'Halal broilerin rintafilee',k:110,p:23,c:0,f:2,im:'chicken_breast'},
+ beef:{n:'لحم مفروم حلال',fi:'Halal naudan jauheliha 10 %',k:170,p:20,c:0,f:10,im:'beef'},
+ salmon:{n:'سلمون',fi:'Lohi',k:200,p:20,c:0,f:13,im:'salmon'},
+ tuna:{n:'تونة بالمي',fi:'Tonnikala vedessä',k:110,p:25,c:0,f:1,im:'tuna'},
+ lentil:{n:'عدس أحمر مطبوخ',fi:'Punaiset linssit',k:115,p:9,c:17,f:.5,im:'red_lentils'},
+ kidney:{n:'فاصوليا حمرة',fi:'Kidneypavut',k:110,p:8,c:16,f:.5,im:'kidney_beans'},
+ hummus:{n:'حمص بطحينة',fi:'Hummus',k:280,p:7,c:12,f:23,im:'hummus'},
+ oil:{n:'زيت زيتون',fi:'Oliiviöljy',k:900,p:0,c:0,f:100,im:'olive_oil'},
+ avocado:{n:'أفوكادو',fi:'Avokado',k:160,p:2,c:2,f:15,im:'avocado'},
+ cucumber:{n:'خيار',fi:'Kurkku',k:12,p:.6,c:2,f:.1,im:'cucumber'},
+ tomato:{n:'طماطة',fi:'Tomaatti',k:18,p:.9,c:3,f:.2,im:'tomatoes'},
+ salad:{n:'سلطة خضرة',fi:'Salaatti',k:15,p:1,c:2,f:.2,im:'lettuce'},
+ spinach:{n:'سبانخ',fi:'Pinaatti',k:23,p:2.9,c:1.4,f:.4,im:'spinach'},
+ apple:{n:'تفاح',fi:'Omena',pc:1,k:80,p:.4,c:19,f:.2,im:'apple',u:'حبة'},
+ raisins:{n:'زبيب',fi:'Rusinat',k:300,p:3,c:70,f:.5,im:'raisins'},
+};
 const MEALS=[
  {k:'b',n:'الفطور',t:'8 الصبح',o:[
-  {n:'بيض وجبن',p:30,c:560,im:['eggs','bread','cheese'],it:[['بيض','3 بيضات'],['خبز أو صمونة','رغيف وحدة'],['جبن أبيض','30 غم (شريحتين)'],['خيار وطماطة','براحتك']]},
-  {n:'شوفان بالحليب والموز',p:22,c:600,im:['oats','milk','banana'],it:[['شوفان','نص كوب'],['حليب كامل الدسم','كوب'],['موز','موزة وحدة'],['عسل + جوز','ملعقة + 5 حبات']]},
-  {n:'حمص وبيض',p:28,c:620,im:['hummus','eggs','olive_oil'],it:[['حمص بطحينة','صحن صغير'],['بيض مسلوگ','بيضتين'],['خبز','رغيف'],['زيت زيتون','ملعقة']]}]},
+  {n:'بيض وخبز جاودار',it:[['egg',3],['rye',2],['cheese',20],['cucumber',100],['tomato',100],['milk',250]]},
+  {n:'شوفان بالحليب (پوريدج)',it:[['oats',70],['milk',300],['banana',1],['pb',15],['honey',10]]},
+  {n:'رَهكا بالتوت والشوفان',it:[['rahka',250],['oats',50],['blueb',100],['honey',15],['almond',15]]}]},
  {k:'s',n:'سناك',t:'11 الضحى',o:[
-  {n:'موز وزبدة فول سوداني',p:9,c:350,im:['banana','peanut_butter'],it:[['موز','موزة كبيرة'],['زبدة فول سوداني','ملعقتين']]},
-  {n:'زبادي وعسل وفراولة',p:18,c:300,im:['greek_yogurt','honey','strawberries'],it:[['زبادي يوناني','كوب'],['عسل','ملعقة'],['فراولة أو أي فاكهة','حفنة']]},
-  {n:'لوز وزبيب',p:10,c:350,im:['almonds','raisins'],it:[['لوز','حفنة (30 غم)'],['زبيب أو تمر','حفنة صغيرة']]}]},
+  {n:'موز وزبدة فول سوداني وحليب',it:[['banana',1],['pb',25],['milk',200]]},
+  {n:'سكير بالتوت واللوز',it:[['skyr',200],['blueb',100],['honey',10],['almond',20]]},
+  {n:'تفاحة ولوز وزبيب',it:[['apple',1],['almond',30],['raisins',20]]}]},
  {k:'l',n:'الغدا',t:'2 الظهر',o:[
-  {n:'تمن ودجاج',p:50,c:750,im:['rice','chicken_breast','lettuce'],it:[['تمن','كوب ونص'],['صدر دجاج','150 غم (كف إيد)'],['سلطة','صحن'],['مرگة','براحتك']]},
-  {n:'تمن ولحم وفاصوليا',p:45,c:800,im:['rice','beef','kidney_beans'],it:[['تمن','كوب ونص'],['لحم','150 غم'],['مرگة فاصوليا','صحن صغير']]},
-  {n:'عدس وتمن ولبن',p:30,c:700,im:['lentils','rice','yogurt'],it:[['عدس مطبوخ','كوب'],['تمن','كوب'],['لبن','كوب'],['سلطة','صحن']]}]},
+  {n:'تمن ودجاج حلال',it:[['rice',280],['chicken',170],['oil',10],['salad',100],['tomato',100]]},
+  {n:'تمن ولحم وفاصوليا (مرگة)',it:[['rice',250],['beef',130],['kidney',120],['tomato',150],['oil',10]]},
+  {n:'عدس وتمن وسكير',it:[['lentil',250],['rice',200],['skyr',150],['oil',10],['salad',100]]}]},
  {k:'p',n:'بعد التمرين',t:'أو 6 العصر',o:[
-  {n:'شيك البيت',p:20,c:520,im:['milk','banana','oats'],it:[['حليب','كوب'],['موز','موزة'],['شوفان','3 ملاعق'],['زبدة فول سوداني','ملعقة'],['اخلطهم بالخلاط','']]},
-  {n:'تونة وخبز',p:32,c:450,im:['tuna','bread','cucumber'],it:[['تونة','علبة (صفّي الزيت)'],['خبز','رغيف'],['خيار','حبتين']]},
-  {n:'بيض وبطاطا',p:22,c:450,im:['eggs','potatoes'],it:[['بيض مسلوگ','3 بيضات'],['بطاطا مسلوگة','حبتين وسط']]}]},
+  {n:'شيك البيت (بدون بودرة)',it:[['milk',400],['banana',1],['oats',40],['pb',20],['rahka',100]]},
+  {n:'تونة وخبز جاودار',it:[['tuna',120],['rye',3],['cucumber',150],['apple',1]]},
+  {n:'بيض وبطاطا',it:[['egg',3],['potato',300],['tomato',100]]}]},
  {k:'d',n:'العشا',t:'9 بالليل',o:[
-  {n:'تونة وزبادي',p:35,c:450,im:['tuna','bread','yogurt'],it:[['تونة','علبة'],['خبز','نص رغيف'],['زبادي','كوب']]},
-  {n:'سمك وبطاطا',p:35,c:550,im:['salmon','potatoes','spinach'],it:[['سمك','قطعة 150 غم'],['بطاطا','حبتين'],['خضرة','صحن']]},
-  {n:'جبن وبيض وأفوكادو',p:26,c:520,im:['feta','eggs','avocado'],it:[['جبن','50 غم'],['بيض','بيضتين'],['أفوكادو','نص حبة'],['خبز','نص رغيف']]}]},
+  {n:'سلمون وبطاطا',it:[['salmon',150],['potato',250],['spinach',100]]},
+  {n:'تونة وسكير وأفوكادو',it:[['tuna',120],['rye',2],['skyr',150],['avocado',70]]},
+  {n:'حمص وبيض',it:[['hummus',80],['egg',2],['rye',2],['tomato',100]]}]},
 ];
+function itemVal(k,a){const f=FD[k],m=f.pc?a:a/100;return{k:f.k*m,p:f.p*m,c:f.c*m,f:f.f*m}}
+function optVal(o){return o.it.reduce((s,[k,a])=>{const v=itemVal(k,a);return{k:s.k+v.k,p:s.p+v.p,c:s.c+v.c,f:s.f+v.f}},{k:0,p:0,c:0,f:0})}
+const amt=(k,a)=>{const f=FD[k];return f.pc?`${AR(a)} ${f.u}`:`${AR(a)} ${f.u||'غم'}`};
 const SWEETS=[
- {n:'زبادي بالعسل',d:'كوب زبادي + ملعقة عسل',c:200,im:['yogurt','honey']},
+ {n:'سكير بالعسل',d:'150 غم سكير + ملعقة عسل',c:120,im:['greek_yogurt','honey']},
  {n:'شوكولاتة داكنة',d:'مربعين بس (70٪ أو أكثر)',c:110,im:['dark_chocolate']},
- {n:'فراولة وتوت',d:'كوب، حلو وخفيف',c:70,im:['strawberries','blueberries']},
+ {n:'توت وفراولة',d:'كوب، حلو وخفيف',c:60,im:['strawberries','blueberries']},
  {n:'موز بزبدة الفول',d:'موزة + ملعقة',c:200,im:['banana','peanut_butter']},
  {n:'تفاح ولوز',d:'تفاحة + 10 لوزات',c:170,im:['apple','almonds']},
  {n:'زبيب وجوز',d:'حفنة صغيرة',c:180,im:['raisins','walnuts']},
 ];
-function targets(){const w=S.weights.length?S.weights[S.weights.length-1].w:+S.w||52,h=+S.h||168,a=+S.age||20;const k=Math.round((((10*w+6.25*h-5*a+5)*1.5)+300)/50)*50;return{k,p:Math.round(w*2),water:(Math.round(w*.045*2)/2)}}
-let mealTab='b';
+function targets(){const w=S.weights.length?S.weights[S.weights.length-1].w:+S.w||52,h=+S.h||168,a=+S.age||20;const k=Math.round((((10*w+6.25*h-5*a+5)*1.55)+400)/50)*50;return{k,p:Math.round(w*2),water:(Math.round(w*.045*2)/2)}}
+let mealTab='b',foodView='meals';
 function vFood(){
   const T=targets(),sel=S.meals[today()]||{};
-  const tot=MEALS.reduce((a,m)=>{const o=sel[m.k]!=null?m.o[sel[m.k]]:null;return o?{c:a.c+o.c,p:a.p+o.p}:a},{c:0,p:0});
+  const tot=MEALS.reduce((a,m)=>{if(sel[m.k]==null)return a;const v=optVal(m.o[sel[m.k]]);return{c:a.c+v.k,p:a.p+v.p}},{c:0,p:0});
   const M=MEALS.find(m=>m.k===mealTab);
-  return`<h1>أكلك اليوم</h1>
-  <div class="tiles"><div class="tile" style="background:rgba(200,244,60,.12);color:var(--lime)">${I.fire}<b class="num">${AR(T.k)}</b><span>سعرة باليوم</span></div><div class="tile" style="background:rgba(255,180,77,.12);color:var(--orange)">${I.egg}<b class="num">${AR(T.p)}</b><span>غرام بروتين</span></div><div class="tile" style="background:rgba(111,195,255,.12);color:var(--blue)">${I.drop}<b class="num">${AR(T.water)}</b><span>لتر مي</span></div></div>
-  <div class="card"><div class="row between sm"><span>اخترت اليوم</span><span class="num mut">${AR(tot.c)} / ${AR(T.k)} سعرة</span></div><div class="bar"><i style="width:${Math.min(100,tot.c/T.k*100)}%"></i></div><div class="row between sm"><span>بروتين</span><span class="num mut">${AR(tot.p)} / ${AR(T.p)} غم</span></div><div class="bar"><i style="width:${Math.min(100,tot.p/T.p*100)}%;background:var(--orange)"></i></div><p class="xs mut">اختار وجبة وحدة من كل قسم، وهو يحسبلك.</p></div>
+  const seg=`<div class="seg"><button class="${foodView==='meals'?'on':''}" data-fv="meals">وجباتي</button><button class="${foodView==='sweet'?'on':''}" data-fv="sweet">حلويات</button><button class="${foodView==='halal'?'on':''}" data-fv="halal">حلال بفنلندا</button></div>`;
+  let body='';
+  if(foodView==='meals')body=`<div class="card"><div class="row between sm"><span>اخترت اليوم</span><span class="num mut">${AR(Math.round(tot.c))} / ${AR(T.k)} سعرة</span></div><div class="bar"><i style="width:${Math.min(100,tot.c/T.k*100)}%"></i></div><div class="row between sm"><span>بروتين</span><span class="num mut">${AR(Math.round(tot.p))} / ${AR(T.p)} غم</span></div><div class="bar"><i style="width:${Math.min(100,tot.p/T.p*100)}%;background:var(--orange)"></i></div><p class="xs mut">اختار وجبة وحدة من كل قسم. الأرقام تقريبية ومحسوبة من كل مكوّن بالغرام.</p></div>
   <div class="meal-tabs">${MEALS.map(m=>`<button class="${m.k===mealTab?'on':''}" data-mt="${m.k}">${m.n}${sel[m.k]!=null?' ✓':''}</button>`).join('')}</div>
   <p class="sm mut">${M.n} • ${M.t} • اختار وحدة:</p>
-  <div class="col">${M.o.map((o,j)=>`<button class="opt ${sel[M.k]===j?'on':''}" data-opt="${M.k}:${j}"><div class="plate">${o.im.map(x=>`<img src="${F(x)}" alt="" loading="lazy">`).join('')}</div><div class="row between"><h3>${o.n}</h3><span class="pick"><i></i>${sel[M.k]===j?'اخترتها':'اختار'}</span></div><div class="items">${o.it.map(([a,b])=>`<p><span>${a}</span><span>${b}</span></p>`).join('')}</div><div class="row"><span class="pill num">${AR(o.c)} سعرة</span><span class="pill num" style="color:var(--orange)">${AR(o.p)} غم بروتين</span></div></button>`).join('')}</div>
-  <h2 style="margin-top:6px">تشتهي حلو؟ 🍫</h2><p class="sm mut">هاي حلويات صحية. وحدة باليوم ما تضر.</p>
-  <div class="sweets">${SWEETS.map(s=>`<div class="sweet"><div class="ph">${s.im.map(x=>`<img src="${F(x)}" alt="" loading="lazy">`).join('')}</div><b class="sm">${s.n}</b><span class="xs mut">${s.d}</span><span class="xs num" style="color:var(--lime)">${AR(s.c)} سعرة</span></div>`).join('')}</div>
-  <div class="card"><h3>قلّل منها</h3><div class="bad sm col"><p>المشروبات الغازية والعصير المعلّب</p><p>المقليات كل يوم</p><p>مشروبات الطاقة</p><p>السهر، يخرب هرمون النمو</p></div></div>`;
+  <div class="col">${M.o.map((o,j)=>{const v=optVal(o);return`<button class="opt ${sel[M.k]===j?'on':''}" data-opt="${M.k}:${j}"><div class="plate">${[...new Set(o.it.map(([k])=>FD[k].im))].slice(0,3).map(x=>`<img src="img/food/${x}.webp" alt="" loading="lazy">`).join('')}</div><div class="row between"><h3>${o.n}</h3><span class="pick"><i></i>${sel[M.k]===j?'اخترتها':'اختار'}</span></div><div class="items">${o.it.map(([k,a])=>`<p><span>${FD[k].n} <span class="fi">${FD[k].fi}</span></span><span class="num">${amt(k,a)}</span></p>`).join('')}</div><div class="macro"><span class="pill num">${AR(Math.round(v.k))} سعرة</span><span class="pill num" style="color:var(--orange)">${AR(Math.round(v.p))} غ بروتين</span><span class="pill num">${AR(Math.round(v.c))} غ كارب</span><span class="pill num">${AR(Math.round(v.f))} غ دهون</span></div></button>`}).join('')}</div>
+  <div class="warn">نصيحة: اشتري ميزان مطبخ رخيص (keittiövaaka). وزن التمن والدجاج بعد الطبخ أول أسبوعين، بعدها تتعلم بالعين.</div>`;
+  else if(foodView==='sweet')body=`<p class="sm mut">حلويات صحية وحلال. وحدة باليوم ما تضر.</p><div class="sweets">${SWEETS.map(s=>`<div class="sweet"><div class="ph">${s.im.map(x=>`<img src="img/food/${x}.webp" alt="" loading="lazy">`).join('')}</div><b class="sm">${s.n}</b><span class="xs mut">${s.d}</span><span class="xs num" style="color:var(--lime)">${AR(s.c)} سعرة</span></div>`).join('')}</div>
+  <div class="warn">⚠️ أغلب الحلويات الجاهزة بفنلندا (karkki، جيلي، مارشملو) بيها <b class="fi">liivate</b> يعني جيلاتين، وغالباً من الخنزير. اقرا الغلاف دائماً.</div>`;
+  else body=`<div class="card"><h3>كلمات بالغلاف معناها خنزير أو حرام</h3><p class="xs mut">إذا شفت وحدة منها بالمكونات (Ainesosat)، لا تشتريه.</p><div class="bad sm col">
+   <p><span><b class="fi">sianliha / sika / possu</b> = لحم خنزير</span></p><p><span><b class="fi">pekoni</b> = بيكون (خنزير)</span></p><p><span><b class="fi">kinkku</b> = هام (خنزير)</span></p><p><span><b class="fi">nakki / makkara</b> = نقانق، أغلبها خنزير</span></p><p><span><b class="fi">liivate / gelatiini / E441</b> = جيلاتين، غالباً خنزير</span></p><p><span><b class="fi">silava / laardi</b> = شحم خنزير</span></p><p><span><b class="fi">alkoholi / viini / olut</b> = كحول</span></p></div></div>
+  <div class="card"><h3>حلال من غير ما تفكر</h3><div class="steps sm"><p>السمك كله: سلمون <span class="fi">lohi</span>، تونة <span class="fi">tonnikala</span></p><p>البيض والحليب والسكير والرَهكا</p><p>العدس والحمص والفاصوليا والتمن والشوفان</p><p>الخضرة والفواكه</p></div></div>
+  <div class="card"><h3>اللحم والدجاج</h3><p class="sm">الدجاج واللحم العادي بالسوبرماركت الفنلندي مو مذبوح حلال. اشتريهم من:</p><div class="steps sm"><p>المحلات العربية والتركية بمدينتك (مكتوب عليها Halal)</p><p>بعض فروع K-Citymarket وPrisma بيها رف حلال، دوّر على كلمة <span class="fi">HALAL</span> على الغلاف</p><p>إذا ما لگيت، خلّي بروتينك من السمك والبيض والسكير والعدس. كلها كافية.</p></div></div>
+  <div class="warn">الجبن: بعض الأجبان مصنوعة بإنفحة حيوانية (<span class="fi">eläinperäinen juoksete</span>). أغلب الجبن الفنلندي العادي يستعمل إنفحة نباتية أو ميكروبية، بس إذا تريد تتأكد، اقرا الغلاف.</div>`;
+  return`<h1>أكلك اليوم</h1>
+  <div class="tiles"><div class="tile" style="background:rgba(200,244,60,.12);color:var(--lime)">${I.fire}<b class="num">${AR(T.k)}</b><span>سعرة باليوم</span></div><div class="tile" style="background:rgba(255,180,77,.12);color:var(--orange)">${I.egg}<b class="num">${AR(T.p)}</b><span>غرام بروتين</span></div><div class="tile" style="background:rgba(111,195,255,.12);color:var(--blue)">${I.drop}<b class="num">${AR(T.water)}</b><span>لتر مي</span></div></div>
+  ${seg}${body}`;
 }
 
-/* ===== المكملات: كل وحدة بخانة ===== */
+/* ===== المكملات: منتجات حقيقية موجودة بفنلندا ===== */
 const SUPPS=[
- {id:'creatine',n:'الكرياتين مونوهيدرات',tag:'مفيد ومدروس',col:'var(--lime)',bg:'rgba(200,244,60,.13)',ic:'bolt',dose:'5 غم (ملعقة صغيرة)',when:'كل يوم، أي وقت، ويا مي',why:'يزيد قوتك ويخلي عضلتك أكبر شوية. أكثر مكمّل مدروس بالعالم.',warn:'للي عمرهم 18 أو أكثر. اشرب مي زيادة.',adult:1},
- {id:'whey',n:'بروتين واي',tag:'إذا ما وصلت البروتين',col:'var(--orange)',bg:'rgba(255,180,77,.13)',ic:'scoop',dose:'سكوب وحدة (25 غم بروتين)',when:'بعد التمرين أو ويا الفطور',why:'مو سحري، هو أكل بشكل بودرة. يساعدك توصل بروتين اليوم.',warn:'إذا أكلك يوصّلك البروتين، ما تحتاجه.'},
- {id:'vitd',n:'فيتامين د3',tag:'سوّي فحص أول',col:'#ffd84d',bg:'rgba(255,216,77,.12)',ic:'sun',dose:'1000-2000 وحدة',when:'ويا الغدا (وجبة بيها دهون)',why:'نقصه منتشر حتى ويا الشمس. مهم للعظم والطاقة والمزاج.',warn:'الكمية الأكيدة حسب فحص الدم.'},
- {id:'omega',n:'أوميغا 3',tag:'إذا ما تاكل سمك',col:'var(--blue)',bg:'rgba(111,195,255,.12)',ic:'fish',dose:'1-2 غم',when:'ويا الأكل',why:'مفيد للمفاصل والقلب.',warn:'إذا تاكل سمك مرتين بالأسبوع ما تحتاجه.'},
- {id:'mag',n:'المغنيسيوم',tag:'اختياري',col:'var(--violet)',bg:'rgba(185,155,255,.12)',ic:'moon',dose:'200-300 ملغ',when:'قبل النوم',why:'يساعد على النوم العميق وراحة العضل.',warn:'اختياري، مو ضروري.'},
- {id:'multi',n:'ملتي فيتامين',tag:'اختياري',col:'#8be0c0',bg:'rgba(139,224,192,.12)',ic:'shield',dose:'حبة وحدة',when:'ويا الفطور',why:'تأمين إذا أكلك مو متنوع.',warn:'مو بديل عن الأكل الصحي.'},
+ {id:'creatine',n:'الكرياتين مونوهيدرات',prod:'Star Nutrition Creatine Monohydrate 300 g',img:'creatine',tag:'الأقوى والأكثر دراسة',col:'var(--lime)',dose:'3-5 غم باليوم (ملعقة صغيرة)',when:'كل يوم، أي وكت، ويا مي أو الشيك',why:'يزيد قوتك وتكبر عضلتك أسرع شوية. أكثر مكمّل رياضي مدروس بالعالم، وآمن للبالغين الأصحاء.',warn:'للي عمرهم 18 أو أكثر. اشرب مي زيادة. إذا عندك مرض بالكلى لا تاخذه.',where:['Prisma','K-Citymarket','Kärkkäinen'],halal:'بودرة صناعية، ما بيها مكونات حيوانية.',adult:1},
+ {id:'whey',n:'بروتين واي',prod:'Star Nutrition Whey-80 (500 g)',img:'whey',tag:'إذا ما وصلت البروتين بالأكل',col:'var(--orange)',dose:'سكوب وحدة (تقريباً 27 غم بروتين)',when:'بعد التمرين، أو ويا الفطور',why:'مو سحري، هو حليب مركّز بشكل بودرة. يسهّل عليك توصل بروتين اليوم.',warn:'بيه محلي أسبارتام. إذا أكلك يوصّلك البروتين، ما تحتاجه.',where:['Prisma','K-Citymarket','Kärkkäinen'],halal:'مصنوع من الحليب، ما بيه جيلاتين.'},
+ {id:'vitd',n:'فيتامين د3',prod:'Tolonen Liposomal D3 20 µg',img:'vitd',tag:'مهم كلش بفنلندا',col:'#ffd84d',dose:'حبة وحدة (20 مكغ)',when:'ويا الغدا',why:'بفنلندا الشمس قليلة أغلب السنة، ونقص فيتامين د يأثر على العظم والطاقة والمزاج والعضل.',warn:'إذا تاخذ زيت مولر (تحت)، هو بيه 10 مكغ فيتامين د. الأحسن تسوي فحص دم وتسأل الطبيب عن الكمية.',where:['Kärkkäinen','الصيدلية (apteekki)'],halal:'حبوب مضغ. تأكد من الغلاف ما بيه liivate.'},
+ {id:'omega',n:'أوميغا 3 (زيت سمك سائل)',prod:'Möller\'s Kalanmaksaöljy',img:'omega',tag:'إذا ما تاكل سمك',col:'var(--blue)',dose:'5 مل (ملعقة صغيرة)',when:'ويا الأكل',why:'مفيد للمفاصل والقلب. سائل يعني بدون كبسولات جيلاتين.',warn:'5 مل بيها 10 مكغ فيتامين د و250 مكغ فيتامين أ. لا تزيد على 5 مل، ولا تاخذ وياه فيتامين أ ثاني. إذا تاكل سلمون مرتين بالأسبوع ما تحتاجه.',where:['Kärkkäinen','K-Citymarket','الصيدلية'],halal:'زيت سمك، حلال. ما بيه كبسولات.'},
+ {id:'mag',n:'المغنيسيوم',prod:'Sana-Sol Magnesiumsitraatti + B6',img:'mag',tag:'اختياري',col:'var(--violet)',dose:'حسب الغلاف',when:'قبل النوم بساعة',why:'يساعد على النوم العميق وراحة العضل.',warn:'اختياري، مو ضروري. الزيادة تسبب إسهال.',where:['Kärkkäinen','Prisma'],halal:'حبوب، عادة بدون جيلاتين.'},
+ {id:'multi',n:'ملتي فيتامين',prod:'Minisun Monivitamiini Vahva',img:'multi',tag:'اختياري',col:'#8be0c0',dose:'حبة وحدة',when:'ويا الفطور',why:'تأمين إذا أكلك مو متنوع.',warn:'مو بديل عن الأكل. إذا تاخذه، انتبه لمجموع فيتامين د من كل المكملات.',where:['Prisma','K-Citymarket','الصيدلية'],halal:'حبوب، عادة بدون جيلاتين.'},
 ];
 function vSupps(){
   const d=S.supp[today()]||{},minor=+S.age&&+S.age<18;
-  return`<h1>المكملات والفيتامينات</h1>
-  <div class="card"><p class="sm"><b>الحقيقة:</b> 90٪ من نتيجتك من الأكل والتمرين والنوم. المكملات تساعد بس.</p></div>
-  ${minor?'<div class="card" style="border-color:var(--orange)"><p class="sm"><b>عمرك أقل من 18:</b> لا تاخذ كرياتين ولا مكملات رياضية قبل ما تسأل طبيب.</p></div>':''}
-  ${SUPPS.map(s=>`<div class="supp"><div class="head"><span class="ic" style="background:${s.bg};color:${s.col}">${I[s.ic]}</span><div class="grow"><h3>${s.n}</h3><span class="pill" style="color:${s.col}">${s.tag}</span></div></div>
+  return`<h1>المكملات</h1>
+  <div class="card"><p class="sm"><b>رأي المدرّب:</b> 90٪ من نتيجتك من الأكل والتمرين والنوم. إذا تريد تشتري، ابدي بالكرياتين وفيتامين د بس. الباقي حسب حاجتك.</p></div>
+  ${minor?'<div class="warn"><b>عمرك أقل من 18:</b> لا تاخذ كرياتين ولا بروتين قبل ما تسأل طبيب.</div>':''}
+  ${SUPPS.map(s=>`<div class="supp"><div class="prod"><img src="img/supp/${s.img}.webp" alt="${esc(s.prod)}" loading="lazy"></div>
+   <div><span class="pill" style="color:${s.col}">${s.tag}</span><h2 style="margin-top:6px">${s.n}</h2><p class="fi">${esc(s.prod)}</p></div>
    <div class="kv"><div><span>الكمية</span><b>${s.dose}</b></div><div><span>وكت</span><b>${s.when}</b></div></div>
-   <p class="sm">${s.why}</p><p class="xs mut">⚠️ ${s.warn}</p>
+   <p class="sm">${s.why}</p>
+   <p class="xs" style="color:var(--ok,#5ad89b)">✓ حلال: ${s.halal}</p>
+   <p class="xs mut">⚠️ ${s.warn}</p>
+   <div class="buy">${s.where.map(w=>`<span class="pill">🛒 ${w}</span>`).join('')}</div>
    ${minor&&s.adult?'':`<button class="took ${d[s.id]?'on':''}" data-took="${s.id}">${d[s.id]?I.check+' أخذته اليوم':'اضغط لما تاخذه اليوم'}</button>`}</div>`).join('')}
-  <div class="supp" style="border-color:rgba(255,107,92,.45)"><div class="head"><span class="ic" style="background:rgba(255,107,92,.13);color:var(--red)">${I.stop}</span><div class="grow"><h3>ابتعد عنها نهائياً</h3></div></div><div class="bad sm col"><p>الإبر والهرمونات والمنشطات</p><p>حبوب فتح الشهية والتسمين</p><p>حوارق الدهون (انت تريد تزيد وزن)</p><p>حبوب "زيادة الطول" (ما تشتغل)</p><p>أي شي يبيعه واحد بالجيم بدون علبة واضحة</p></div></div>
-  <p class="xs mut">هذا تثقيف عام مو وصفة طبية. قبل أي مكمّل، خصوصاً إذا عندك مرض أو تاخذ دوا، اسأل طبيب أو صيدلي. الأحسن تسوي فحص دم: فيتامين د، B12، الحديد.</p>`;
+  <div class="supp" style="border-color:rgba(255,107,92,.45)"><div class="head"><span class="ic" style="background:rgba(255,107,92,.13);color:var(--red)">${I.stop}</span><h3>ابتعد عنها نهائياً</h3></div><div class="bad sm col"><p>الإبر والهرمونات والمنشطات</p><p>حبوب فتح الشهية والتسمين</p><p>حوارق الدهون (انت تريد تزيد وزن)</p><p>حبوب "زيادة الطول" (ما تشتغل)</p><p>كبسولات جيلاتين (liivate) إذا ما مكتوب عليها حلال أو سمك</p></div></div>
+  <p class="xs mut">الأسعار والتوفر يتغيرون. هذا تثقيف عام مو وصفة طبية. قبل أي مكمّل، خصوصاً إذا عندك مرض أو تاخذ دوا، اسأل الطبيب أو الصيدلي. الأحسن تسوي فحص دم: فيتامين د، B12، الحديد.</p>`;
 }
 
 /* ===== أنا ===== */
@@ -452,9 +502,11 @@ function vMe(){
    <div class="tiles"><div class="tile" style="background:var(--s2)"><span>هسه</span><b class="num">${AR(last)}</b><span>كغم</span></div><div class="tile" style="background:var(--s2)"><span>زاد</span><b class="num" dir="ltr">${diff>0?'+':''}${AR(diff)}</b><span>كغم</span></div><div class="tile" style="background:var(--s2)"><span>باقي</span><b class="num">${AR(Math.max(0,+(62-last).toFixed(1)))}</b><span>كغم</span></div></div>
    <div class="chart">${chart(W)}</div>
    <div class="row"><input class="field" id="wIn" inputmode="decimal" placeholder="وزنك اليوم بالكيلو" aria-label="وزنك اليوم"><button class="btn sm" data-addw>سجّل</button></div>
-   <p class="xs mut">وزّن نفسك مرة بالأسبوع، الصبح قبل الأكل. الأحسن تزيد ربع لنص كيلو بالأسبوع.</p></div>
+   <p class="xs mut">وزّن نفسك مرة بالأسبوع، الصبح قبل الأكل. الأحسن تزيد ربع لنص كيلو بالأسبوع. إذا ما زاد أسبوعين، زيد سناك ثاني.</p></div>
   <div class="card"><h3>معلوماتي</h3><div class="row"><label class="f grow">عمري<input class="field" id="pA" inputmode="numeric" value="${S.age}" placeholder="مثلاً 22"></label><label class="f grow">طولي<input class="field" id="pH" inputmode="numeric" value="${S.h}"></label></div><button class="btn ghost" data-saveme>احفظ</button></div>
-  <div class="card"><h3>الطول والوگفة</h3><p class="sm">بعد عمر 18-21 العظم ما يطول، بس الوگفة العدلة ترجّعلك 2-3 سانتي، وتمارين القوام موجودة بكل يوم راحة بالكورس.</p><div class="steps sm"><p>الكتف العريض والخصر النحيف يخلونك تبين أطول (الرفرفة الجانبية أهم تمرين).</p><p>تيشيرت ضيّق على الكتف والزند، وبنطرون ضيّق شوية ومقصّر.</p><p>بنطرون وتيشيرت بنفس اللون يطوّلك.</p><p>نام 8 ساعات، هرمون النمو يطلع بالنوم.</p></div></div>
+  <div class="card"><h3>قواعد صحتك (من المدرّب)</h3><div class="steps sm"><p>الوجع الخفيف بالعضلة بعد يوم أو يومين طبيعي. الوجع الحاد بالمفصل مو طبيعي: وگّف التمرين.</p><p>إذا حسيت دوخة أو وجع بالصدر أو ضيق نفس، وگّف فوراً وروح للطبيب.</p><p>نام 7-9 ساعات. العضلة تكبر وانت نايم، وهرمون النمو يطلع بالنوم.</p><p>الأسبوع 6 و12 خفاف بالقصد، حتى مفاصلك ترتاح.</p><p>إذا عندك أي مرض، اسأل طبيب قبل ما تبدي.</p></div></div>
+  <div class="card"><h3>الطول والوگفة</h3><p class="sm">بعد عمر 18-21 العظم ما يطول، بس الوگفة العدلة ترجّعلك 2-3 سانتي، وتمارينها بكل يوم راحة.</p><div class="steps sm"><p>الكتف العريض والخصر النحيف يخلونك تبين أطول (الرفرفة الجانبية أهم تمرين).</p><p>تيشيرت ضيّق على الكتف والزند، وبنطرون ضيّق شوية ومقصّر.</p><p>بنطرون وتيشيرت بنفس اللون يطوّلك.</p></div></div>
+  <div class="card src"><h3>منين أخذت المعلومات</h3><p class="xs mut">مراجع علمية معروفة بنيت عليها الخطة (مو كل رقم انفحص اليوم سطر بسطر):</p><div class="steps xs"><p>الجمعية الدولية للتغذية الرياضية (ISSN): البروتين 1.6-2.2 غم لكل كيلو، والكرياتين 3-5 غم باليوم.</p><p>أبحاث براد شونفيلد: 10 سِتات أو أكثر بالأسبوع لكل عضلة تكبّرها.</p><p>توصيات هيئة الغذاء الفنلندية (Ruokavirasto) ومعهد الصحة (THL) لفيتامين د، وجداول التغذية Fineli (القيم تقريبية).</p><p>معلومات زيت مولر مأخوذة من صفحة المنتج بمحل Kärkkäinen.</p><p>فيديوهات الحركة من مدربين عرب: د. ميثم الأستاذ، رشيد النجم، علي غازي، رعد دوجو.</p></div></div>
   <div class="card"><h3>نسخة احتياطية</h3><p class="xs mut">معلوماتك محفوظة بموبايلك بس. انسخ الكود واحفظه بالملاحظات.</p><textarea id="bk" readonly>${esc(JSON.stringify(S))}</textarea><button class="btn ghost sm" data-copy>انسخ الكود</button><textarea id="rs" placeholder="الصق الكود هنا حتى ترجّع معلوماتك"></textarea><button class="btn ghost sm" data-restore>رجّع معلوماتي</button></div>`;
 }
 function chart(W){
@@ -469,24 +521,24 @@ const V={course:vCourse,food:vFood,supps:vSupps,me:vMe};
 function route(){let h=location.hash.slice(1);if(!V[h])h='course';$('#app').innerHTML=V[h]();document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.dataset.t===h))}
 let stack=[];
 function show(html,push){const s=$('#screen');if(push)stack.push(s.innerHTML);else stack=[];s.hidden=false;s.innerHTML=`<div class="in">${html}</div>`;s.scrollTop=0;document.body.style.overflow='hidden'}
-function closeScreen(){clearInterval(restT);SES=null;stack=[];const s=$('#screen');s.hidden=true;s.innerHTML='';document.body.style.overflow='';route();const n=$('#now');}
+function closeScreen(){clearInterval(restT);SES=null;stack=[];const s=$('#screen');s.hidden=true;s.innerHTML='';document.body.style.overflow='';route()}
 function back(){const s=$('#screen');if(stack.length){s.innerHTML=stack.pop();s.scrollTop=0}else closeScreen()}
 window.addEventListener('hashchange',route);
-
 document.addEventListener('click',e=>{
   const b=e.target.closest('button,a');if(!b)return;const d=b.dataset;
   if(d.day!=null){openDay(+d.day);return}
   if(d.ex){openEx(d.ex);return}
   if('close' in d){closeScreen();return}
   if('back' in d){back();return}
-  if('slow' in d){const m=$('#demo');m.classList.toggle('slow');b.textContent=m.classList.contains('slow')?'🐇 السرعة العادية':'🐢 خليها أبطأ';return}
-  if(d.yt){b.outerHTML=`<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/${d.yt}?autoplay=1&playsinline=1&rel=0" title="فيديو شرح" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div><a class="xs mut" style="text-align:center" href="https://www.youtube.com/watch?v=${d.yt}" target="_blank" rel="noopener">ما اشتغل؟ افتحه بيوتيوب</a>`;return}
+  if(d.sound){const c=$('#clip iframe');if(c){c.src=`https://www.youtube-nocookie.com/embed/${d.sound}?autoplay=1&loop=1&playlist=${d.sound}&playsinline=1&rel=0&modestbranding=1`;c.style.pointerEvents='auto';b.remove()}return}
+  if(d.yt){b.outerHTML=`<div class="video"><iframe src="${ytsrc(d.yt)}" title="فيديو شرح" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div><a class="xs mut" style="text-align:center" href="https://www.youtube.com/watch?v=${d.yt}" target="_blank" rel="noopener">ما اشتغل؟ افتحه بيوتيوب</a>`;return}
   if('start' in d){SES.k=0;renderStep();return}
   if('next' in d){SES.k++;renderStep();return}
   if('prev' in d){SES.k--;renderStep();return}
-  if('finish' in d){if(!SES)return;finishDay();return}
+  if('finish' in d){if(SES)finishDay();return}
   if(d.ok!=null){const id=SES.ex[SES.k],s=SES.sets[id][+d.ok];s.ok=!s.ok;b.closest('.set').classList.toggle('done',s.ok);if(s.ok){const left=SES.sets[id].filter(x=>!x.ok).length;if(left&&EX[id].rest)rest(EX[id].rest);else if(!left)toast('خلصت هذا التمرين! روح للجاي')}return}
   if(d.mt){mealTab=d.mt;route();return}
+  if(d.fv){foodView=d.fv;route();return}
   if(d.opt){const[k,j]=d.opt.split(':');const t=today();S.meals[t]=S.meals[t]||{};S.meals[t][k]=S.meals[t][k]===+j?null:+j;save();const y=scrollY;route();scrollTo(0,y);return}
   if(d.took){const t=today();S.supp[t]=S.supp[t]||{};S.supp[t][d.took]=!S.supp[t][d.took];save();const y=scrollY;route();scrollTo(0,y);return}
   if('hideinstall' in d){S.hideInstall=1;save();route();return}
@@ -496,6 +548,8 @@ document.addEventListener('click',e=>{
   if('restore' in d){try{const o=JSON.parse($('#rs').value);if(!o||!o.done)throw 0;S=Object.assign(def(),o);save();route();toast('رجعت معلوماتك')}catch(er){toast('الكود مو صحيح')}return}
 });
 document.addEventListener('input',e=>{const t=e.target;if(!SES)return;const id=SES.ex[SES.k];if(t.dataset.w!=null)SES.sets[id][+t.dataset.w].w=t.value;if(t.dataset.r!=null)SES.sets[id][+t.dataset.r].r=t.value});
+/* نقل التقدم من النسخة القديمة */
+try{const old=JSON.parse(localStorage.getItem('coach-v2')||'null');if(old&&!localStorage.getItem(KEY)){S.age=old.age||'';S.h=old.h||168;S.weights=old.weights||[];S.hideInstall=old.hideInstall;save()}}catch(e){}
 route();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
