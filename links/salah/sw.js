@@ -8,7 +8,7 @@ self.addEventListener('activate', e => e.waitUntil(caches.keys().then(ks => {
     .then(() => { if (old.length) self.clients.matchAll({ type: 'window' }).then(cs => cs.forEach(c => c.navigate(c.url).catch(() => {}))); });   // بدون انتظار، حتى ما يعلگ التفعيل
 })));
 self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET' || new URL(e.request.url).origin !== location.origin || /version\.txt|\/v\//.test(e.request.url)) return;   // المقاطع تجي من الشبكة مباشرة
+  if (e.request.method !== 'GET' || new URL(e.request.url).origin !== location.origin || /version\.txt|\/v\/(?!p\/)/.test(e.request.url)) return;   // المقاطع تجي من الشبكة مباشرة (صور الغلاف v/p تنحفظ)
   e.respondWith(caches.open(C).then(c => {
     const saved = () => c.match(e.request, { ignoreSearch: true });
     const net = fetch(e.request, { cache: 'no-cache' }).then(r => { if (r.ok) c.put(e.request, r.clone()); return r; });
