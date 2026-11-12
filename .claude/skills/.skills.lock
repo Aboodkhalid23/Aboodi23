@@ -1,5 +1,5 @@
 ai-tells cdeistopened/content-os 16e080f
-ai-video coreyhaines31/marketingskills 3e72962
+ai-video coreyhaines31/marketingskills 1f83744
 anti-ai-writing artemnovitckii/content-skills 1c6e909
 audience-research social-media-skills/skills f28cef2
 audio-tldr AugustusW/audio-tldr-skill 124d516
@@ -13,7 +13,7 @@ cold-open-creator cdeistopened/content-os 16e080f
 cold-open-writer ur-grue/autopunk-media-skills 39e119b
 collabs-and-cross-promotion social-media-skills/skills f28cef2
 competitor-analysis social-media-skills/skills f28cef2
-content-access jamditis/claude-skills-journalism e1f38cb
+content-access jamditis/claude-skills-journalism a6383bd
 content-pillars social-media-skills/skills f28cef2
 cw-hitchcock EveryInc/compound-writing 8fd0ec8
 dispatching-parallel-agents obra/superpowers 22f0b46
@@ -35,7 +35,7 @@ instagram-growth social-media-skills/skills f28cef2
 instagram-seo social-media-skills/skills f28cef2
 karpathy-guidelines multica-ai/andrej-karpathy-skills 2c60614
 long-form-youtube yaxeen/storytelling-skills 24ef3c1
-marketing-psychology coreyhaines31/marketingskills 3e72962
+marketing-psychology coreyhaines31/marketingskills 1f83744
 motion-html howseen-ai/claude-motion-design 3d90d34
 motion-review-loop whaleyxbt/claude-motion 6f80380
 motion-sound whaleyxbt/claude-motion 6f80380
@@ -44,14 +44,14 @@ motion-web-sims whaleyxbt/claude-motion 6f80380
 profile-optimization social-media-skills/skills f28cef2
 receiving-code-review obra/superpowers 22f0b46
 reels-script social-media-skills/skills f28cef2
-remotion remotion-dev/skills 1fc074b
+remotion remotion-dev/skills 7e541aa
 remotion-graphics agamm/video-agent cc00d28
 remotion-motion-graphics haidrrrry/claude-remotion-skill 1dcbe5e
 requesting-code-review obra/superpowers 22f0b46
 retention-audit yaxeen/storytelling-skills 24ef3c1
 short-form-video cdeistopened/content-os 16e080f
-social-content coreyhaines31/marketingskills 3e72962
-source-verification jamditis/claude-skills-journalism e1f38cb
+social-content coreyhaines31/marketingskills 1f83744
+source-verification jamditis/claude-skills-journalism a6383bd
 storytelling artemnovitckii/content-skills 1c6e909
 storytelling-and-narrative social-media-skills/skills f28cef2
 storytelling-hooks yaxeen/storytelling-skills 24ef3c1
@@ -70,11 +70,11 @@ verified-research JalalD/verified-research f713e3f
 video-caption-creation cdeistopened/content-os 16e080f
 viral-hooks artemnovitckii/content-skills 1c6e909
 viral-reverse-engineering social-media-skills/skills f28cef2
-web-archiving jamditis/claude-skills-journalism e1f38cb
+web-archiving jamditis/claude-skills-journalism a6383bd
 webapp-testing anthropics/skills 2c5958e
 writing-plans obra/superpowers 22f0b46
 youtube-comments-to-ideas ravsau/youtuber-skills 603367b
-youtube-script-writer mohitagw15856/pm-claude-skills edb6995
+youtube-script-writer mohitagw15856/pm-claude-skills e0009a3
 youtube-seo-competitor deeployCO/youtube-seo-skills 779b0f1
 youtube-shorts social-media-skills/skills f28cef2
 youtube-title-creator cdeistopened/content-os 16e080f
