@@ -16,6 +16,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&display=swap">
 <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+<script>try{var _t=JSON.parse(localStorage.getItem("coach-v4")||"{}").theme||"dark";if(_t==="auto")_t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=_t;}catch(e){}</script>
 <style>
 /* هوية NEXFIT: أسود وأحمر وفضي مثل اللوغو، خط فازير يدعم كل الحروف العراقية */
 :root{
@@ -362,19 +363,97 @@ button.hero{width:100%;border:0;text-align:right;font-family:var(--fb)}
 @keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
 .brand b span{color:var(--g)}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto;animation:none!important;transition:none!important}}
+
+/* ===== الوضع الفاتح ===== */
+:root{--ringbg:rgba(255,255,255,.07)}
+:root[data-theme=light]{--bg:#f2f2f7;--s1:#ffffff;--s2:#f2f2f6;--s3:#e5e5ea;--line:#e3e3e8;--fg:#111114;--mut:#6c6c74;--silver:#4a4a52;--blue:#0a6fd6;--gold:#c98a00;--ringbg:rgba(0,0,0,.07);color-scheme:light}
+:root[data-theme=light] nav .in{background:rgba(255,255,255,.9);box-shadow:0 8px 30px rgba(0,0,0,.08)}
+:root[data-theme=light] .card,:root[data-theme=light] .exrow,:root[data-theme=light] .meal2,:root[data-theme=light] .mini{box-shadow:0 2px 12px rgba(0,0,0,.04)}
+:root[data-theme=light] .coach{background:linear-gradient(160deg,#ffe8ea,#fff);border-color:#f5c6cb}
+:root[data-theme=light] .medal{background:linear-gradient(160deg,#fff7e0,#fff);border-color:#f0dfa8}
+:root[data-theme=light] .rest-ov{background:rgba(242,242,247,.97)}
+:root[data-theme=light] .wtabs button.on{color:#fff}
+.stage,.anim{color:#f6f6f8}.dishhero h1,.dishhero p{color:#fff}
+/* ===== التنقل: 6 خانات وحركة بينها ===== */
+nav .in{grid-template-columns:repeat(6,1fr);padding:5px}
+nav a{font-size:10.5px;padding:7px 0 6px}nav a svg{width:22px;height:22px}
+nav a[data-t=ban] span{color:var(--g)}nav a[data-t=ban].on span{color:#fff}
+.sl{animation:sl .32s cubic-bezier(.2,.8,.2,1)}.sr{animation:sr .32s cubic-bezier(.2,.8,.2,1)}
+@keyframes sl{from{opacity:0;transform:translateX(-26px)}to{opacity:1;transform:none}}
+@keyframes sr{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+nav a.on{animation:pop .35s ease}
+.noanim *{animation:none!important;transition:none!important}
+/* ===== الإعدادات مثل الآيفون ===== */
+.sh{font-size:13px;color:var(--mut);margin:4px 14px -8px}
+.sgrp{background:var(--s1);border:1px solid var(--line);border-radius:20px;overflow:hidden;display:flex;flex-direction:column}
+.srow{display:flex;align-items:center;gap:12px;padding:11px 14px;background:none;border:0;border-bottom:1px solid var(--line);text-align:right;width:100%;color:var(--fg);cursor:pointer}
+.sgrp>.srow:last-child,.sgrp>label.srow:last-child{border-bottom:0}
+.srow .grow{display:flex;flex-direction:column}.srow b{font-weight:600;font-size:16px}.srow small{font-size:12.5px;color:var(--mut)}
+.sic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:#fff;flex:none;font-size:16px}.sic svg{width:20px;height:20px}
+.sr{color:var(--mut);display:grid;place-items:center}.sr svg{width:18px;height:18px}
+.sprof{display:flex;align-items:center;gap:14px;background:var(--s1);border:1px solid var(--line);border-radius:22px;padding:14px;text-align:right;color:var(--fg);width:100%}
+.sprof .grow{display:flex;flex-direction:column}.sprof b{font-size:19px;font-family:var(--fd)}.sprof small{color:var(--mut);font-size:13px}.sprof>svg{width:18px;height:18px;color:var(--mut)}
+.themes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px;border-bottom:1px solid var(--line)}
+.themes button{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:14px;color:var(--fg)}
+.tprev{width:64px;height:92px;border-radius:14px;border:2px solid var(--line);display:flex;flex-direction:column;gap:6px;padding:10px 8px;justify-content:flex-end}
+.tprev i{height:10px;border-radius:5px;background:#ff2d3d}.tprev i+i{opacity:.4}
+.tprev.dark{background:#111114}.tprev.light{background:#f4f4f7}.tprev.auto{background:linear-gradient(90deg,#f4f4f7 50%,#111114 50%)}
+.themes button.on .tprev{border-color:var(--g);box-shadow:0 0 0 3px rgba(255,45,61,.2)}
+.themes button.on{font-weight:700;color:var(--g)}
+.tg{width:51px;height:31px;border-radius:99px;background:var(--s3);position:relative;transition:background .2s}.tg i{position:absolute;top:2px;right:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.25);transition:transform .2s}
+.tg.on{background:#34c759}.tg.on i{transform:translateX(-20px)}
+/* ===== الساعة ===== */
+.hk{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:8px}
+.hk>div{background:var(--s2);border-radius:16px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center}
+.hk span{width:22px;height:22px;display:grid;place-items:center}.hk span svg{width:20px;height:20px}
+.hk b{font-family:var(--fd);font-size:18px}.hk small{font-size:11px;color:var(--mut)}
+.hcard{background:var(--s1);border:1px solid var(--line);border-radius:22px;padding:10px;display:flex;flex-direction:column;gap:6px;width:100%;color:var(--fg);text-align:right}
+/* ===== المكملات ===== */
+.cats{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px}
+.cats::-webkit-scrollbar{display:none}
+.cats button{flex:none;display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--s1);border-radius:999px;padding:9px 16px;font-family:var(--fd);font-weight:600;font-size:15px;color:var(--fg)}
+.cats button.on{background:var(--g);border-color:var(--g);color:#fff}
+.scard{display:flex;gap:12px;align-items:stretch;background:var(--s1);border:1px solid var(--line);border-radius:24px;padding:10px;text-align:right;width:100%;color:var(--fg)}
+.scard .pimg{width:112px;height:auto;min-height:128px;flex:none}
+.scard .pimg em{position:absolute;bottom:6px;right:6px;left:6px;background:var(--g);color:#fff;font-style:normal;font-size:11px;font-weight:700;border-radius:999px;text-align:center;padding:2px 0}
+.scard.bad{opacity:.75}
+.nut4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.nut4 div{background:var(--s2);border-radius:14px;padding:8px 4px;text-align:center;display:flex;flex-direction:column}
+.nut4 b{font-family:var(--fd);font-size:20px}.nut4 span{font-size:11px;color:var(--mut)}
+.sched summary{color:var(--mut);margin-top:4px}.sched .timeline{margin-top:12px}
+/* ===== الممنوعات ===== */
+.danger{display:flex;gap:12px;align-items:flex-start;background:rgba(255,45,61,.1);border:1px solid rgba(255,45,61,.4);border-radius:20px;padding:14px}
+.danger>span{width:40px;height:40px;border-radius:12px;background:var(--g);color:#fff;display:grid;place-items:center;flex:none;font-size:20px}.danger>span svg{width:22px;height:22px}
+.danger.mid{background:rgba(245,189,69,.1);border-color:rgba(245,189,69,.4)}.danger.mid>span{background:var(--gold)}
+.bgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bcard{background:var(--s1);border:1px solid var(--line);border-radius:22px;padding:8px;display:flex;flex-direction:column;gap:4px;text-align:right;color:var(--fg)}
+.bcard b{font-family:var(--fd);font-size:15px;line-height:1.25}
+.bcard .pimg{height:118px}.bcard .pimg img{filter:saturate(.75)}
+.bcard .fi{color:var(--red);font-weight:600}
+.irow{display:flex;gap:12px;align-items:center;background:var(--s1);border:1px solid var(--line);border-radius:20px;padding:8px}
+.irow .pimg{width:78px;height:78px;flex:none;padding:6px}.irow .pimg img{max-height:64px}
+.irow b{font-family:var(--fd);font-size:16px}.irow .alt{color:var(--g)}
+.wrow{display:flex;flex-direction:column;gap:4px;background:var(--s1);border:1px solid var(--line);border-right:4px solid var(--red);border-radius:16px;padding:10px 14px}
+.wrow.mid{border-right-color:var(--gold)}.wrow .fi{font-size:13px;color:var(--fg);font-weight:600}
+.stamp{position:absolute;top:16px;left:12px;transform:rotate(-14deg);border:3px solid var(--red);color:var(--red);font-family:var(--fd);font-weight:900;font-size:22px;padding:2px 12px;border-radius:10px;background:rgba(255,255,255,.85)}
+.banlink{display:flex;align-items:center;gap:12px;background:rgba(255,45,61,.1);border:1px solid rgba(255,45,61,.4);border-radius:20px;padding:12px 14px;color:var(--fg);text-decoration:none}
+.banlink>span{width:38px;height:38px;border-radius:12px;background:var(--g);color:#fff;display:grid;place-items:center;flex:none}.banlink svg{width:20px;height:20px}
+.banlink .grow{display:flex;flex-direction:column}
+.scard:active,.bcard:active,.srow:active,.banlink:active,.cats button:active{transform:scale(.97)}
+.scard,.bcard,.banlink,.cats button{transition:transform .12s ease}
 </style>
 </head>
 <body>
 <main id="app"></main>
 <nav aria-label="القائمة"><div class="in">
   <a href="#home" data-t="home"><span data-i="home"></span>الرئيسية</a>
-  <a href="#course" data-t="course"><span data-i="dumb"></span>الكورس</a>
+  <a href="#course" data-t="course"><span data-i="dumb"></span>تمريني</a>
   <a href="#food" data-t="food"><span data-i="food"></span>الأكل</a>
   <a href="#supps" data-t="supps"><span data-i="pill"></span>المكملات</a>
+  <a href="#ban" data-t="ban"><span data-i="warn"></span>ممنوع</a>
   <a href="#me" data-t="me"><span data-i="user"></span>أنا</a>
 </div></nav>
 <div id="screen" class="screen" hidden></div>
 <div id="player" class="player" hidden></div>
-<script type="module" src="app.js?v=8"></script>
+<script type="module" src="app.js?v=9"></script>
 </body>
 </html>
