@@ -280,6 +280,8 @@ def master(voice, out, beats=None, total=None, amb=True, seed=0, quran=False):
     if amb and beats:
         bd, wh = ambience(beats, len(v) / SR, v, seed)
         vr = np.sqrt(np.mean(v[envelope_db(v) > envelope_db(v).max() - 30] ** 2))
+        fit = lambda x: x[:len(mix)] if len(x) >= len(mix) else np.pad(x, (0, len(mix) - len(x)))   # فرق عيّنة بالتقريب
+        bd, wh = fit(bd), fit(wh)
         mix = mix + bd * vr * 10 ** (AMB_DB / 20) + wh * vr * 10 ** (WHOOSH_DB / 20)
     return _encode(mix, out)
 
