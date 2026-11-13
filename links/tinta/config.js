@@ -1,1 +1,1 @@
-window.TINTA_UPLOAD = 'https://script.google.com/macros/s/AKfycbz2rGfb1VtPkhSh1yl5n-tpHwQ0F-N-YujuyLd3bRWYlR2QIuwMe9isbMOTpQvM4Y4w/exec';
+window.TINTA_UPLOAD = 'https://script.google.com/macros/s/AKfycbyjGgn9FjYmeAUaXuLLiGRl4VS2UxtN1X2p4dSlIAOA-thnkxOrl3w7B3zj4_zzzIL3/exec';
