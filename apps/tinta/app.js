@@ -16,7 +16,7 @@
       timer:'Ajastin',stop:'Pysäytä',ready:'Valmis!',
       newbtn:'Lisää uusi resepti kuvasta',newTitle:'Uusi resepti',newHint:'Ota kuva reseptipaperista. Jos resepti on usealla sivulla, lisää kaikki sivut. Resepti ilmestyy sovellukseen noin tunnin sisällä, suomeksi ja englanniksi.',
       newName:'Reseptin nimi (vapaaehtoinen)',newPick:'Ota kuva tai valitse',newSend:'Lähetä',newSending:'Lähetetään…',newOk:'Lähetetty! Resepti lisätään noin tunnin sisällä.',
-      newErr:'Lähetys ei onnistunut. Tarkista netti ja yritä uudelleen.',newOff:'Kuvien lähetys ei ole vielä käytössä.',newPages:'sivua',newRemove:'Poista kuva',isNew:'uusi',cook:'Aloita kokkaus',updTitle:'Resepti on päivitetty',updUse:'Keittiö on muuttanut tätä reseptiä. Tee tämän uuden version mukaan.',updTag:'päivitetty',updHome:'{n} reseptiä päivitetty – katso muutokset',kitchen:'Keittiön muutokset',editsOn:'{n} määrää muutettu keittiössä. Muutetut näkyvät aineksissa.',someone:'Joku',del:'Poista',yourName:'Nimesi',noteAll:'Kirjoita muutos kaikille',noteEx:'Esim. Vähemmän suolaa: 1 rkl riittää.',saveAll:'Tallenna kaikille',saving:'Tallennetaan…',saveErr:'Tallennus ei onnistunut. Tarkista netti.',editBtn:'Muokkaa määriä',editTitle:'Muokkaa määriä',editHint:'Muuta määrät yhden reseptin mukaan (1×). Tallennus näkyy kaikille.',editWhy:'Mitä muutit ja miksi?',cancel:'Peruuta',changed:'muutettu',was:'oli',autoNote:'{n} määrää muutettu.',howMuch:'Paljonko teet?',byIng:'Laske tämän aineen mukaan:',amount:'Määrä',unit:'Yksikkö',factor:'Kaikki ainekset lasketaan:',saved:'muistetaan tässä puhelimessa',cookStep:'Vaihe',cookPrev:'Edellinen',cookNext:'Seuraava',cookDone:'Valmis',cookHere:'Tässä vaiheessa',cookClose:'Sulje kokkaustila',size:'Tekstin koko',share:'Jaa resepti',copied:'Resepti kopioitu',notes:'Omat muistiinpanot',notesHint:'Näkyy vain tässä puhelimessa.',more:'Lisää',cats:'Kategoriat',allAZ:'Kaikki reseptit A–Ö',allCats:'Kaikki kategoriat'},
+      newErr:'Lähetys ei onnistunut. Tarkista netti ja yritä uudelleen.',newOff:'Kuvien lähetys ei ole vielä käytössä.',newPages:'sivua',newRemove:'Poista kuva',isNew:'uusi',cook:'Aloita kokkaus',pinTitle:'Keittiön koodi',pinHint:'Kirjoita keittiön koodi. Saat sen esimieheltä. Koodi kysytään vain kerran tällä puhelimella.',pinOk:'Jatka',updTitle:'Resepti on päivitetty',updUse:'Keittiö on muuttanut tätä reseptiä. Tee tämän uuden version mukaan.',updTag:'päivitetty',updHome:'{n} reseptiä päivitetty – katso muutokset',kitchen:'Keittiön muutokset',editsOn:'{n} määrää muutettu keittiössä. Muutetut näkyvät aineksissa.',someone:'Joku',del:'Poista',yourName:'Nimesi',noteAll:'Kirjoita muutos kaikille',noteEx:'Esim. Vähemmän suolaa: 1 rkl riittää.',saveAll:'Tallenna kaikille',saving:'Tallennetaan…',saveErr:'Tallennus ei onnistunut. Tarkista netti.',editBtn:'Muokkaa määriä',editTitle:'Muokkaa määriä',editHint:'Muuta määrät yhden reseptin mukaan (1×). Tallennus näkyy kaikille.',editWhy:'Mitä muutit ja miksi?',cancel:'Peruuta',changed:'muutettu',was:'oli',autoNote:'{n} määrää muutettu.',howMuch:'Paljonko teet?',byIng:'Laske tämän aineen mukaan:',amount:'Määrä',unit:'Yksikkö',factor:'Kaikki ainekset lasketaan:',saved:'muistetaan tässä puhelimessa',cookStep:'Vaihe',cookPrev:'Edellinen',cookNext:'Seuraava',cookDone:'Valmis',cookHere:'Tässä vaiheessa',cookClose:'Sulje kokkaustila',size:'Tekstin koko',share:'Jaa resepti',copied:'Resepti kopioitu',notes:'Omat muistiinpanot',notesHint:'Näkyy vain tässä puhelimessa.',more:'Lisää',cats:'Kategoriat',allAZ:'Kaikki reseptit A–Ö',allCats:'Kaikki kategoriat'},
     en:{title:'Recipes',search:'Search: pesto, butter, chanterelle…',all:'All',recipes:'recipes',results:'Results',none:'No recipes for',
       batch:'Batch',auto:'Amounts update automatically',ingredients:'Ingredients',method:'Method',back:'Back',
       nomethod:'No method is written on the paper.',original:'Show original paper',minus:'Less',plus:'More',vegan:'vegan',parts:'parts',
@@ -33,7 +33,7 @@
       timer:'Timer',stop:'Stop',ready:'Ready!',
       newbtn:'Add a new recipe from a photo',newTitle:'New recipe',newHint:'Take a photo of the recipe paper. If it has several pages, add all of them. The recipe appears in the app within about an hour, in Finnish and English.',
       newName:'Recipe name (optional)',newPick:'Take or choose a photo',newSend:'Send',newSending:'Sending…',newOk:'Sent! The recipe will be added within about an hour.',
-      newErr:'Sending failed. Check the connection and try again.',newOff:'Photo upload is not switched on yet.',newPages:'pages',newRemove:'Remove photo',isNew:'new',cook:'Start cooking',updTitle:'This recipe was updated',updUse:'The kitchen changed this recipe. Work from this new version.',updTag:'updated',updHome:'{n} recipes updated – see the changes',kitchen:'Kitchen changes',editsOn:'{n} amounts changed by the kitchen. They are marked in the ingredients.',someone:'Someone',del:'Delete',yourName:'Your name',noteAll:'Write a change for everyone',noteEx:'E.g. Less salt: 1 tbsp is enough.',saveAll:'Save for everyone',saving:'Saving…',saveErr:'Saving failed. Check the connection.',editBtn:'Edit amounts',editTitle:'Edit amounts',editHint:'Change amounts for one batch (1×). Saving shows it to everyone.',editWhy:'What did you change and why?',cancel:'Cancel',changed:'changed',was:'was',autoNote:'{n} amounts changed.',howMuch:'How much are you making?',byIng:'Scale by this ingredient:',amount:'Amount',unit:'Unit',factor:'All ingredients scaled:',saved:'remembered on this phone',cookStep:'Step',cookPrev:'Back',cookNext:'Next',cookDone:'Done',cookHere:'In this step',cookClose:'Close cooking mode',size:'Text size',share:'Share recipe',copied:'Recipe copied',notes:'My notes',notesHint:'Only visible on this phone.',more:'More',cats:'Categories',allAZ:'All recipes A–Z',allCats:'All categories'}
+      newErr:'Sending failed. Check the connection and try again.',newOff:'Photo upload is not switched on yet.',newPages:'pages',newRemove:'Remove photo',isNew:'new',cook:'Start cooking',pinTitle:'Kitchen code',pinHint:'Enter the kitchen code. Ask your manager for it. It is asked only once on this phone.',pinOk:'Continue',updTitle:'This recipe was updated',updUse:'The kitchen changed this recipe. Work from this new version.',updTag:'updated',updHome:'{n} recipes updated – see the changes',kitchen:'Kitchen changes',editsOn:'{n} amounts changed by the kitchen. They are marked in the ingredients.',someone:'Someone',del:'Delete',yourName:'Your name',noteAll:'Write a change for everyone',noteEx:'E.g. Less salt: 1 tbsp is enough.',saveAll:'Save for everyone',saving:'Saving…',saveErr:'Saving failed. Check the connection.',editBtn:'Edit amounts',editTitle:'Edit amounts',editHint:'Change amounts for one batch (1×). Saving shows it to everyone.',editWhy:'What did you change and why?',cancel:'Cancel',changed:'changed',was:'was',autoNote:'{n} amounts changed.',howMuch:'How much are you making?',byIng:'Scale by this ingredient:',amount:'Amount',unit:'Unit',factor:'All ingredients scaled:',saved:'remembered on this phone',cookStep:'Step',cookPrev:'Back',cookNext:'Next',cookDone:'Done',cookHere:'In this step',cookClose:'Close cooking mode',size:'Text size',share:'Share recipe',copied:'Recipe copied',notes:'My notes',notesHint:'Only visible on this phone.',more:'More',cats:'Categories',allAZ:'All recipes A–Z',allCats:'All categories'}
   };
   var CATS = {
     kastike:['Kastikkeet ja dipit','Sauces & dips'], majo:['Majoneesit','Mayos'], oljy:['Öljyt ja vinegretit','Oils & dressings'],
@@ -282,7 +282,7 @@
       nameField()+
       '<button type="button" class="use solid" id="notesave">'+t.saveAll+'</button><p class="status" id="notestatus"></p>'+
       '<button type="button" class="sharebtn" id="sharebtn">'+ICON.share+' '+t.share+'</button></div>';
-    html += '<a class="orig" href="https://drive.google.com/file/d/'+r.f+'/view" target="_blank" rel="noopener">'+t.original+' ↗</a>';
+    if(r.f) html += '<a class="orig" href="paper/'+esc(r.f)+'.jpg" target="_blank" rel="noopener">'+t.original+' ↗</a>';
     $('recipe').innerHTML = html;
     document.querySelectorAll('#recipe [data-lang]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.lang===lang)); });
   }
@@ -387,6 +387,24 @@
     if(b.dataset.rmimg){ shots.splice(+b.dataset.rmimg,1); drawShots(); return; }
   });
 
+  /* ---------- Keittiön PIN (vain keittiön väelle) ---------- */
+  var kpin = load('pin', ''), pinNext = null;
+  function askPin(next){
+    var t = T[lang]; pinNext = next;
+    $('pintitle').textContent = t.pinTitle; $('pinhint').textContent = t.pinHint; $('pinok').textContent = t.pinOk; $('pinin').value = '';
+    $('pinsheet').hidden = false; $('veil').hidden = false;
+    setTimeout(function(){ $('pinin').focus(); }, 50);
+  }
+  function pinDone(){
+    var v = $('pinin').value.replace(/\D/g,'');
+    if(v.length < 4){ $('pinin').focus(); return; }
+    kpin = v; save('pin', v); $('pinsheet').hidden = true;
+    var keepVeil = !$('newsheet').hidden; if(!keepVeil) $('veil').hidden = true;
+    if(pinNext){ var f = pinNext; pinNext = null; f(); }
+  }
+  document.addEventListener('click', function(e){ var b = e.target.closest('button'); if(b && b.id==='pinok') pinDone(); });
+  document.addEventListener('keydown', function(e){ if(e.target.id==='pinin' && e.key==='Enter'){ e.preventDefault(); pinDone(); } });
+
   /* ---------- Uusi resepti kuvasta ---------- */
   var UPLOAD = (window.TINTA_UPLOAD || ''), shots = [];
   function openNew(){
@@ -427,8 +445,10 @@
     var t = T[lang];
     if(!UPLOAD || !shots.length) return;
     $('newsend').disabled = true; $('newstatus').textContent = t.newSending;
-    var body = JSON.stringify({name: $('newname').value.trim().slice(0,80), images: shots.map(function(s){ return s.split(',')[1]; })});
+    if(!kpin){ $('newsend').disabled = false; $('newstatus').textContent = ''; askPin(sendNew); return; }
+    var body = JSON.stringify({pin: kpin, name: $('newname').value.trim().slice(0,80), images: shots.map(function(s){ return s.split(',')[1]; })});
     fetch(UPLOAD, {method:'POST', body: body}).then(function(r){ return r.json(); }).then(function(j){
+      if(j && j.err==='pin'){ kpin=''; save('pin',''); $('newsend').disabled = false; $('newstatus').textContent = ''; askPin(sendNew); return; }
       if(!j || !j.ok) throw 0;
       shots = []; $('newname').value = ''; drawShots(); $('newstatus').textContent = t.newOk;
     }).catch(function(){ $('newstatus').textContent = t.newErr; $('newsend').disabled = false; });
@@ -484,7 +504,7 @@
     show();
     $('calcsheet').hidden = false; $('veil').hidden = false;
   }
-  function closeSheets(){ $('calcsheet').hidden = true; $('havesheet').hidden = true; $('newsheet').hidden = true; $('veil').hidden = true; }
+  function closeSheets(){ $('calcsheet').hidden = true; $('havesheet').hidden = true; $('newsheet').hidden = true; $('pinsheet').hidden = true; $('veil').hidden = true; }
   $('veil').addEventListener('click', closeSheets);
   document.addEventListener('keydown', function(e){
     if($('calcsheet').hidden){ if(e.key==='Escape') closeSheets(); return; }
@@ -597,13 +617,15 @@
     if(!ns.length && !ne) return '';
     return '<div class="knotes"><div class="k">'+t.kitchen+'</div>'+
       (ne ? '<p class="kedit">'+t.editsOn.replace('{n}', ne)+'</p>' : '')+
-      ns.map(function(n){ return '<div class="kn"><p>'+esc(n.t)+'</p><span>'+esc(n.by || t.someone)+' · '+when(n.at)+'</span>'+
-        '<button type="button" class="kdel" data-delnote="'+esc(n.at)+'" aria-label="'+t.del+'">×</button></div>'; }).join('')+'</div>';
+      ns.map(function(n){ return '<div class="kn"><p>'+esc(n.t)+'</p><span>'+esc(n.by || t.someone)+' · '+when(n.at)+'</span>'+'</div>'; }).join('')+'</div>';
   }
   function nameField(){ var t = T[lang]; return '<label class="field" for="myname"><span>'+t.yourName+'</span><input id="myname" type="text" autocomplete="name" value="'+esc(myName)+'"></label>'; }
   function post(body){
     if(!UPLOAD) return Promise.reject('off');
+    if(!kpin) return Promise.reject('pin');
+    body.pin = kpin;
     return fetch(UPLOAD, {method:'POST', body: JSON.stringify(body)}).then(function(r){ return r.json(); }).then(function(j){
+      if(j && j.err==='pin'){ kpin=''; save('pin',''); throw 'pin'; }
       if(!j || !j.ok) throw 0;
       if(j.notes){ changes = {notes:j.notes, edits:j.edits||{}}; save('changes', changes); applyEdits(); }
       return j;
@@ -623,7 +645,7 @@
     if(!txt){ $('noteta').focus(); return; }
     $('notesave').disabled = true; $('notestatus').textContent = t.saving;
     post({action:'note', id:cur.id, text:txt, by:myName}).then(function(){ renderRecipe(); setTabs(); }).catch(function(e){
-      $('notesave').disabled = false; $('notestatus').textContent = e==='off' ? t.newOff : t.saveErr; });
+      $('notesave').disabled = false; $('notestatus').textContent = e==='off' ? t.newOff : e==='pin' ? '' : t.saveErr; if(e==='pin') askPin(saveNote); });
   }
   function saveEdits(){
     var t = T[lang], q = {}, n = 0; keepName();
@@ -636,7 +658,7 @@
     $('editsave').disabled = true; $('editstatus').textContent = t.saving;
     var why = $('editwhy').value.trim();
     post({action:'edit', id:cur.id, q:q, by:myName, text: why || t.autoNote.replace('{n}', n)}).then(function(){ editMode = false; renderRecipe(); setTabs(); }).catch(function(e){
-      $('editsave').disabled = false; $('editstatus').textContent = e==='off' ? t.newOff : t.saveErr; });
+      $('editsave').disabled = false; $('editstatus').textContent = e==='off' ? t.newOff : e==='pin' ? '' : t.saveErr; if(e==='pin') askPin(saveEdits); });
   }
   document.addEventListener('click', function(e){
     var b = e.target.closest('button'); if(!b) return;
@@ -644,8 +666,6 @@
     if(b.id==='editcancel'){ editMode = false; renderRecipe(); return; }
     if(b.id==='editsave'){ saveEdits(); return; }
     if(b.id==='notesave'){ saveNote(); return; }
-    if(b.dataset.delnote){ if(b.dataset.confirm!=='1'){ b.dataset.confirm='1'; b.textContent=T[lang].del+'?'; b.classList.add('sure'); return; }
-      post({action:'delnote', id:cur.id, at:b.dataset.delnote}).then(function(){ renderRecipe(); }).catch(function(){}); return; }
   });
   applyEdits();
   setTimeout(fetchChanges, 300);

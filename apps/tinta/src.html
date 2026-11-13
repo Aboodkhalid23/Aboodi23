@@ -306,5 +306,12 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
   <p class="status" id="newstatus" aria-live="polite"></p>
 </section>
 
+<section class="sheet" id="pinsheet" hidden aria-labelledby="pintitle" style="z-index:33">
+  <div class="shead"><h2 id="pintitle"></h2><button type="button" class="x" data-close="1" aria-label="Sulje / Close">×</button></div>
+  <p class="hint" id="pinhint"></p>
+  <div class="hrow"><input id="pinin" type="password" inputmode="numeric" autocomplete="off" aria-label="PIN" maxlength="12"></div>
+  <button type="button" class="use solid" id="pinok"></button>
+</section>
+
 <script>
 </script>
