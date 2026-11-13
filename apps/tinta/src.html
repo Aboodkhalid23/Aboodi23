@@ -16,15 +16,19 @@
 }
 *{box-sizing:border-box}
 html,body{background:var(--bg);color:var(--fg)}
-body{font-family:var(--sans);font-size:16px;-webkit-font-smoothing:antialiased;
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{font-family:var(--sans);font-size:16px;-webkit-font-smoothing:antialiased;margin:0;position:fixed;inset:0;-webkit-text-size-adjust:100%;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,select,.txt,.ctext,.name{-webkit-user-select:text;user-select:text}
+*{touch-action:manipulation}
+#scroller{position:absolute;left:0;right:0;top:env(safe-area-inset-top, 0px);bottom:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;
   padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));
-  padding-block:0 calc(var(--tabh) + 120px + env(safe-area-inset-bottom, 0px))}
+  padding-bottom:calc(var(--tabh) + 120px + env(safe-area-inset-bottom, 0px))}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top, 0px);z-index:10;background:var(--bg)}
 .wrap{max-width:560px;margin:0 auto}
 button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
 button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 [hidden]{display:none!important}
-.top{position:sticky;top:env(safe-area-inset-top, 0px);z-index:9;background:var(--bg);display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:12px;margin-inline:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));padding-inline:max(16px, env(safe-area-inset-left, 0px));border-bottom:1px solid var(--line-soft)}
+.top{position:sticky;top:0;z-index:9;background:var(--bg);display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:12px;margin-inline:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));padding-inline:max(16px, env(safe-area-inset-left, 0px));border-bottom:1px solid var(--line-soft)}
 .logo{width:96px;height:auto;display:block}
 .lang{display:flex;border:1px solid var(--line);border-radius:999px;padding:3px;flex:none;background:var(--bg)}
 .lang button{min-width:44px;height:36px;border:0;border-radius:999px;background:transparent;color:var(--muted);font-weight:600;font-size:13px}
@@ -160,7 +164,7 @@ ol.steps .txt{line-height:1.55;color:#E4DDD3;min-width:0;font-size:17px;padding-
 .rhead{margin-top:6px}
 .eyebrow{margin-top:14px;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-soft)}
 .rhead .title{margin-top:6px}
-.seg{position:sticky;top:calc(env(safe-area-inset-top, 0px) + 69px);z-index:8;display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:22px 0 4px;padding:4px;border-radius:14px;background:#171513;border:1px solid var(--line)}
+.seg{position:sticky;top:69px;z-index:8;display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:22px 0 4px;padding:4px;border-radius:14px;background:#171513;border:1px solid var(--line)}
 .seg button{height:44px;border:0;border-radius:10px;background:transparent;color:var(--muted);font-weight:600;font-size:15px}
 .seg button span{font-weight:500;opacity:.7;font-size:13px}
 .seg button[aria-selected="true"]{background:var(--fg);color:var(--bg)}
@@ -173,7 +177,7 @@ ol.steps .txt{line-height:1.55;color:#E4DDD3;min-width:0;font-size:17px;padding-
 .cookbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:56px;margin-top:14px;border-radius:16px;border:0;background:var(--accent);color:var(--bg);font-weight:700;font-size:17px}
 .more{padding:14px 16px}
 .more .field{margin:0}
-.more textarea{display:block;width:100%;margin-top:6px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:15px/1.5 var(--sans);padding:10px 12px;resize:vertical}
+.more textarea{display:block;width:100%;margin-top:6px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:16px/1.5 var(--sans);padding:10px 12px;resize:vertical}
 .sharebtn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:48px;margin-top:12px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--fg);font-weight:600;font-size:15px}
 #cook{position:fixed;inset:0;z-index:25;background:var(--bg);display:flex;flex-direction:column;padding:env(safe-area-inset-top,0px) max(16px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom,0px) max(16px, env(safe-area-inset-left, 0px))}
 body.cooking .tabs{display:none}
@@ -209,7 +213,7 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 @media (prefers-reduced-motion:no-preference){.view{animation:in .18s ease-out}@keyframes in{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}}
 </style>
 
-<div class="wrap">
+<main id="scroller"><div class="wrap">
   <section id="home" class="view">
     <div class="top">
       <img class="logo" src="LOGO_DATA" alt="Tintå">
@@ -227,7 +231,7 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
   </section>
   <section id="recipe" class="view" hidden></section>
   <section id="prep" class="view" hidden></section>
-</div>
+</div></main>
 
 <section id="cook" hidden aria-live="polite"></section>
 <div class="timers" id="timers" aria-live="polite"></div>

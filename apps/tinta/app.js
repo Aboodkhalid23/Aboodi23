@@ -322,7 +322,7 @@
     } else {
       cur = null; view = h==='suosikit' ? 'favs' : h==='lista' ? 'prep' : 'home'; listView = view;
     }
-    render(); window.scrollTo(0,0); wake();
+    render(); $('scroller').scrollTop = 0; wake();
   }
   var HASH = {home:'', favs:'suosikit', prep:'lista'};
   function go(v){ if(location.hash.replace('#','')===HASH[v]) route(); else location.hash = HASH[v]; }
@@ -334,7 +334,7 @@
     var b = e.target.closest('button'); if(!b) return;
     if(b.dataset.lang){ setLang(b.dataset.lang); return; }
     if(b.dataset.tab){ if(b.dataset.tab==='calc') openCalc(); else { if(b.dataset.tab==='home' && view==='home'){ cat='all'; $('q').value=''; } go(b.dataset.tab); } return; }
-    if(b.dataset.cat){ cat = b.dataset.cat; $('q').value=''; renderHome(); window.scrollTo(0,0); return; }
+    if(b.dataset.cat){ cat = b.dataset.cat; $('q').value=''; renderHome(); $('scroller').scrollTop = 0; return; }
     if(b.dataset.rtab){ rtab = b.dataset.rtab; renderRecipe(); setTabs(); return; }
     if(b.dataset.sdone){ if(stepDone[b.dataset.sdone]) delete stepDone[b.dataset.sdone]; else stepDone[b.dataset.sdone]=1; renderRecipe(); setTabs(); return; }
     if(b.dataset.open){ location.hash = 'r-'+b.dataset.open; return; }
@@ -347,7 +347,7 @@
     if(b.id==='plus'){ mult = mult+0.5; syncPrep(); render(); return; }
     if(b.dataset.p){ mult = +b.dataset.p; delete bases[cur.id]; save('base', bases); syncPrep(); render(); return; }
     if(b.id==='basego'){ applyBase(); return; }
-    if(b.dataset.have){ $('basesel').value = b.dataset.have; onBaseSel(); var sc = $('scalecard'); window.scrollTo({top: sc.getBoundingClientRect().top + window.scrollY - 90, behavior:'smooth'}); setTimeout(function(){ $('baseamt').focus(); $('baseamt').select(); }, 350); return; }
+    if(b.dataset.have){ $('basesel').value = b.dataset.have; onBaseSel(); var sc = $('scalecard'), sv = $('scroller'); sv.scrollTo({top: sc.getBoundingClientRect().top - sv.getBoundingClientRect().top + sv.scrollTop - 80, behavior:'smooth'}); setTimeout(function(){ $('baseamt').focus(); $('baseamt').select(); }, 350); return; }
     if(b.dataset.timer){ startTimer(+b.dataset.timer, b.dataset.tname); return; }
     if(b.dataset.tstop){ stopTimer(+b.dataset.tstop); return; }
     if(b.dataset.close){ closeSheets(); return; }
@@ -587,6 +587,16 @@
   function closeCook(){ $('cook').hidden = true; document.body.classList.remove('cooking'); }
   document.addEventListener('keydown', function(e){ if($('cook').hidden) return; if(e.key==='ArrowRight') openCook(cookAt+1); if(e.key==='ArrowLeft') openCook(cookAt-1); if(e.key==='Escape') closeCook(); });
   window.addEventListener('hashchange', closeCook);
+
+  /* ---------- Uusi versio: lataa automaattisesti ---------- */
+  function checkVersion(){
+    if(!window.TINTA_VER || location.protocol.indexOf('http')!==0) return;
+    fetch('version.txt?'+Date.now(), {cache:'no-store'}).then(function(r){ return r.ok ? r.text() : ''; }).then(function(v){
+      v = (v||'').trim(); if(v && v!==window.TINTA_VER){ location.reload(); }
+    }).catch(function(){});
+  }
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible') checkVersion(); });
+  setTimeout(checkVersion, 1500);
 
   route(); renderTimers();
 })();
