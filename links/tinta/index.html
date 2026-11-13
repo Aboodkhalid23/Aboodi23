@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
 <script src="config.js"></script>
-<script>window.TINTA_VER='1794609529';</script>
+<script>window.TINTA_VER='1794609772';</script>
 <title>Tintå Reseptit</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap">
 <style>
@@ -224,6 +224,26 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 .brief b{color:var(--fg)}
 .camtab{color:var(--accent)!important}
 .camball{width:54px;height:54px;margin-top:-26px;border-radius:999px;background:var(--accent);color:var(--bg);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 5px #141210,0 6px 16px rgba(0,0,0,.5)}
+.knotes{margin-top:16px;padding:14px 16px;border-radius:16px;background:var(--warm);border:1px solid #4A3420}
+.knotes .k{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-soft)}
+.kedit{margin:8px 0 0;font-size:14px;color:var(--fg)}
+.kn{position:relative;padding:10px 40px 10px 0;border-top:1px solid #3A2A1C;margin-top:8px}
+.kn p{margin:0;font-size:16px;line-height:1.45;color:var(--fg);-webkit-user-select:text;user-select:text}
+.kn span{display:block;margin-top:4px;font-size:12px;color:var(--muted)}
+.kdel{position:absolute;right:0;top:8px;min-width:32px;height:32px;border-radius:999px;border:1px solid #4A3420;background:transparent;color:var(--muted);font-size:14px}
+.kdel.sure{color:var(--bg);background:var(--accent);border:0;padding:0 10px}
+.chg{display:block;font-size:12px;font-weight:600;color:var(--accent-soft);margin-top:2px}
+.ing.changed .qty{border-color:var(--accent)}
+.editbtn{margin-top:14px}
+.editbox{margin-top:10px;padding:12px 14px;border-radius:14px;background:var(--warm)}
+.editbox .k{font-size:13px;font-weight:700;color:var(--accent-soft);text-transform:uppercase;letter-spacing:.08em}
+.einp{width:84px;flex:none;height:44px;border-radius:10px;border:1px solid var(--accent);background:var(--bg);color:var(--fg);font:700 17px var(--sans);padding:0 10px;text-align:right}
+.eunit{width:44px;flex:none;color:var(--muted);font-size:14px}
+.field textarea{display:block;width:100%;margin-top:6px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:16px/1.5 var(--sans);padding:10px 12px;resize:vertical}
+.erow{display:grid;grid-template-columns:1fr 1.6fr;gap:8px;margin-top:12px}
+.erow .use{margin:0;height:48px}
+.erow .sharebtn{margin:0}
+.more .field + .field{margin-top:10px}
 @media (prefers-reduced-motion:no-preference){.view{animation:in .18s ease-out}@keyframes in{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}}
 </style>
 
@@ -384,7 +404,7 @@ var R = [
       timer:'Ajastin',stop:'Pysäytä',ready:'Valmis!',
       newbtn:'Lisää uusi resepti kuvasta',newTitle:'Uusi resepti',newHint:'Ota kuva reseptipaperista. Jos resepti on usealla sivulla, lisää kaikki sivut. Resepti ilmestyy sovellukseen noin tunnin sisällä, suomeksi ja englanniksi.',
       newName:'Reseptin nimi (vapaaehtoinen)',newPick:'Ota kuva tai valitse',newSend:'Lähetä',newSending:'Lähetetään…',newOk:'Lähetetty! Resepti lisätään noin tunnin sisällä.',
-      newErr:'Lähetys ei onnistunut. Tarkista netti ja yritä uudelleen.',newOff:'Kuvien lähetys ei ole vielä käytössä.',newPages:'sivua',newRemove:'Poista kuva',isNew:'uusi',cook:'Aloita kokkaus',howMuch:'Paljonko teet?',byIng:'Laske tämän aineen mukaan:',amount:'Määrä',unit:'Yksikkö',factor:'Kaikki ainekset lasketaan:',saved:'muistetaan tässä puhelimessa',cookStep:'Vaihe',cookPrev:'Edellinen',cookNext:'Seuraava',cookDone:'Valmis',cookHere:'Tässä vaiheessa',cookClose:'Sulje kokkaustila',size:'Tekstin koko',share:'Jaa resepti',copied:'Resepti kopioitu',notes:'Omat muistiinpanot',notesHint:'Näkyy vain tässä puhelimessa.',more:'Lisää',cats:'Kategoriat',allAZ:'Kaikki reseptit A–Ö',allCats:'Kaikki kategoriat'},
+      newErr:'Lähetys ei onnistunut. Tarkista netti ja yritä uudelleen.',newOff:'Kuvien lähetys ei ole vielä käytössä.',newPages:'sivua',newRemove:'Poista kuva',isNew:'uusi',cook:'Aloita kokkaus',kitchen:'Keittiön muutokset',editsOn:'{n} määrää muutettu keittiössä. Muutetut näkyvät aineksissa.',someone:'Joku',del:'Poista',yourName:'Nimesi',noteAll:'Kirjoita muutos kaikille',noteEx:'Esim. Vähemmän suolaa: 1 rkl riittää.',saveAll:'Tallenna kaikille',saving:'Tallennetaan…',saveErr:'Tallennus ei onnistunut. Tarkista netti.',editBtn:'Muokkaa määriä',editTitle:'Muokkaa määriä',editHint:'Muuta määrät yhden reseptin mukaan (1×). Tallennus näkyy kaikille.',editWhy:'Mitä muutit ja miksi?',cancel:'Peruuta',changed:'muutettu',was:'oli',autoNote:'{n} määrää muutettu.',howMuch:'Paljonko teet?',byIng:'Laske tämän aineen mukaan:',amount:'Määrä',unit:'Yksikkö',factor:'Kaikki ainekset lasketaan:',saved:'muistetaan tässä puhelimessa',cookStep:'Vaihe',cookPrev:'Edellinen',cookNext:'Seuraava',cookDone:'Valmis',cookHere:'Tässä vaiheessa',cookClose:'Sulje kokkaustila',size:'Tekstin koko',share:'Jaa resepti',copied:'Resepti kopioitu',notes:'Omat muistiinpanot',notesHint:'Näkyy vain tässä puhelimessa.',more:'Lisää',cats:'Kategoriat',allAZ:'Kaikki reseptit A–Ö',allCats:'Kaikki kategoriat'},
     en:{title:'Recipes',search:'Search: pesto, butter, chanterelle…',all:'All',recipes:'recipes',results:'Results',none:'No recipes for',
       batch:'Batch',auto:'Amounts update automatically',ingredients:'Ingredients',method:'Method',back:'Back',
       nomethod:'No method is written on the paper.',original:'Show original paper',minus:'Less',plus:'More',vegan:'vegan',parts:'parts',
@@ -401,7 +421,7 @@ var R = [
       timer:'Timer',stop:'Stop',ready:'Ready!',
       newbtn:'Add a new recipe from a photo',newTitle:'New recipe',newHint:'Take a photo of the recipe paper. If it has several pages, add all of them. The recipe appears in the app within about an hour, in Finnish and English.',
       newName:'Recipe name (optional)',newPick:'Take or choose a photo',newSend:'Send',newSending:'Sending…',newOk:'Sent! The recipe will be added within about an hour.',
-      newErr:'Sending failed. Check the connection and try again.',newOff:'Photo upload is not switched on yet.',newPages:'pages',newRemove:'Remove photo',isNew:'new',cook:'Start cooking',howMuch:'How much are you making?',byIng:'Scale by this ingredient:',amount:'Amount',unit:'Unit',factor:'All ingredients scaled:',saved:'remembered on this phone',cookStep:'Step',cookPrev:'Back',cookNext:'Next',cookDone:'Done',cookHere:'In this step',cookClose:'Close cooking mode',size:'Text size',share:'Share recipe',copied:'Recipe copied',notes:'My notes',notesHint:'Only visible on this phone.',more:'More',cats:'Categories',allAZ:'All recipes A–Z',allCats:'All categories'}
+      newErr:'Sending failed. Check the connection and try again.',newOff:'Photo upload is not switched on yet.',newPages:'pages',newRemove:'Remove photo',isNew:'new',cook:'Start cooking',kitchen:'Kitchen changes',editsOn:'{n} amounts changed by the kitchen. They are marked in the ingredients.',someone:'Someone',del:'Delete',yourName:'Your name',noteAll:'Write a change for everyone',noteEx:'E.g. Less salt: 1 tbsp is enough.',saveAll:'Save for everyone',saving:'Saving…',saveErr:'Saving failed. Check the connection.',editBtn:'Edit amounts',editTitle:'Edit amounts',editHint:'Change amounts for one batch (1×). Saving shows it to everyone.',editWhy:'What did you change and why?',cancel:'Cancel',changed:'changed',was:'was',autoNote:'{n} amounts changed.',howMuch:'How much are you making?',byIng:'Scale by this ingredient:',amount:'Amount',unit:'Unit',factor:'All ingredients scaled:',saved:'remembered on this phone',cookStep:'Step',cookPrev:'Back',cookNext:'Next',cookDone:'Done',cookHere:'In this step',cookClose:'Close cooking mode',size:'Text size',share:'Share recipe',copied:'Recipe copied',notes:'My notes',notesHint:'Only visible on this phone.',more:'More',cats:'Categories',allAZ:'All recipes A–Z',allCats:'All categories'}
   };
   var CATS = {
     kastike:['Kastikkeet ja dipit','Sauces & dips'], majo:['Majoneesit','Mayos'], oljy:['Öljyt ja vinegretit','Oils & dressings'],
@@ -601,17 +621,32 @@ var R = [
       '<header class="rhead"><div class="eyebrow">'+esc(CATS[r.c][i])+(r.v?' · '+t.vegan:'')+(r.p.length>1?' · '+r.p.length+' '+t.parts:'')+'</div>'+
       '<h1 class="title">'+esc(r.n[i])+'</h1><div class="other">'+esc(r.n[1-i])+'</div></header>'+
       (r.note ? '<p class="callout">'+esc(r.note[i])+'</p>' : '')+
+      kitchenNotes(r)+
       scaleCard(r)+
       '<div class="seg" role="tablist"><button type="button" role="tab" data-rtab="ing" aria-selected="'+(rtab==='ing')+'">'+t.ingredients+' <span>'+nIng+'</span></button>'+
       '<button type="button" role="tab" data-rtab="met" aria-selected="'+(rtab==='met')+'">'+t.method+' <span>'+nStep+'</span></button></div>';
     if(rtab==='ing'){
-      html += '<p class="tip">'+t.tiphave+'</p>';
-      r.p.forEach(function(p, pi){
-        html += (p.t ? '<h2 class="part">'+esc(p.t[i])+'</h2>' : '')+'<div class="card">'+
-          p.i.map(function(x,n){ var id='c'+pi+'-'+n, k=r.id+id;
-            return '<div class="ing"><input type="checkbox" id="'+id+'" data-ing="'+k+'"'+(ingDone[k]?' checked':'')+'><label class="name" for="'+id+'">'+esc(x[2+i])+'</label>'+
-            (x[0]===null ? '' : '<button type="button" class="qty" data-have="'+pi+'-'+n+'" aria-label="'+esc(t.have+': '+x[2+i])+'">'+esc(fmt(x[0],x[1]))+'</button>')+'</div>'; }).join('')+'</div>';
-      });
+      if(editMode){
+        html += '<div class="editbox"><div class="k">'+t.editTitle+'</div><p class="hint">'+t.editHint+'</p></div>';
+        r.p.forEach(function(p, pi){
+          html += (p.t ? '<h2 class="part">'+esc(p.t[i])+'</h2>' : '')+'<div class="card">'+
+            p.i.map(function(x,n){ if(x[0]===null) return '<div class="ing"><span class="name">'+esc(x[2+i])+'</span></div>';
+              return '<div class="ing"><label class="name" for="e'+pi+'-'+n+'">'+esc(x[2+i])+'</label><input class="einp" id="e'+pi+'-'+n+'" data-eref="'+pi+'-'+n+'" type="text" inputmode="decimal" value="'+String(x[0]).replace('.', lang==='fi'?',':'.')+'"><span class="eunit">'+esc(U[x[1]]?U[x[1]][i]:x[1])+'</span></div>'; }).join('')+'</div>';
+        });
+        html += '<label class="field" for="editwhy"><span>'+t.editWhy+'</span><textarea id="editwhy" rows="2"></textarea></label>'+
+          nameField()+
+          '<div class="erow"><button type="button" class="sharebtn" id="editcancel">'+t.cancel+'</button><button type="button" class="use solid" id="editsave">'+t.saveAll+'</button></div><p class="status" id="editstatus"></p>';
+      } else {
+        html += '<p class="tip">'+t.tiphave+'</p>';
+        r.p.forEach(function(p, pi){
+          html += (p.t ? '<h2 class="part">'+esc(p.t[i])+'</h2>' : '')+'<div class="card">'+
+            p.i.map(function(x,n){ var id='c'+pi+'-'+n, k=r.id+id;
+              var chg = x._e ? '<span class="chg">'+t.changed+' · '+t.was+' '+esc(fmt(x._o,x[1],1))+'</span>' : '';
+              return '<div class="ing'+(x._e?' changed':'')+'"><input type="checkbox" id="'+id+'" data-ing="'+k+'"'+(ingDone[k]?' checked':'')+'><label class="name" for="'+id+'">'+esc(x[2+i])+chg+'</label>'+
+              (x[0]===null ? '' : '<button type="button" class="qty" data-have="'+pi+'-'+n+'" aria-label="'+esc(t.have+': '+x[2+i])+'">'+esc(fmt(x[0],x[1]))+'</button>')+'</div>'; }).join('')+'</div>';
+        });
+        html += '<button type="button" class="sharebtn editbtn" id="editbtn">✎ '+t.editBtn+'</button>';
+      }
     } else {
       var any = r.p.some(function(p){ return p.s && p.s.length; });
       if(any) html += '<button type="button" class="cookbtn" id="cookbtn">'+ICON.play+' '+t.cook+'</button>';
@@ -625,12 +660,14 @@ var R = [
       });
       if(!any) html += '<p class="nomethod">'+t.nomethod+'</p>';
     }
-    var note = notesAll[r.id] || '';
     html += '<h2 class="label">'+t.more+'</h2><div class="card more">'+
-      '<label class="field" for="noteta"><span>'+t.notes+'</span><textarea id="noteta" rows="3" placeholder="'+t.notesHint+'">'+esc(note)+'</textarea></label>'+
+      '<label class="field" for="noteta"><span>'+t.noteAll+'</span><textarea id="noteta" rows="3" placeholder="'+t.noteEx+'"></textarea></label>'+
+      nameField()+
+      '<button type="button" class="use solid" id="notesave">'+t.saveAll+'</button><p class="status" id="notestatus"></p>'+
       '<button type="button" class="sharebtn" id="sharebtn">'+ICON.share+' '+t.share+'</button></div>';
     html += '<a class="orig" href="https://drive.google.com/file/d/'+r.f+'/view" target="_blank" rel="noopener">'+t.original+' ↗</a>';
     $('recipe').innerHTML = html;
+    document.querySelectorAll('#recipe [data-lang]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.lang===lang)); });
   }
 
   function renderPrep(){
@@ -683,7 +720,7 @@ var R = [
     var h = location.hash.replace('#','');
     if(h.indexOf('r-')===0 && byId(h.slice(2))){
       var r = byId(h.slice(2));
-      if(cur!==r){ var pe = prepEntry(r.id), mb = multFromBase(r); mult = pe ? pe.m : (mb || 1); rtab = 'ing'; $('recipe').innerHTML=''; }
+      if(cur!==r){ var pe = prepEntry(r.id), mb = multFromBase(r); mult = pe ? pe.m : (mb || 1); rtab = 'ing'; editMode = false; $('recipe').innerHTML=''; }
       cur = r; view = 'recipe';
       recent = [r.id].concat(recent.filter(function(x){ return x!==r.id; })).slice(0,12); save('recent', recent);
     } else {
@@ -902,11 +939,78 @@ var R = [
   function applyZoom(){ document.documentElement.style.setProperty('--z', ZOOMS[zoomIdx]); }
   applyZoom();
 
-  /* ---------- Omat muistiinpanot ---------- */
-  var notesAll = load('notes', {});
-  document.addEventListener('input', function(e){
-    if(e.target.id==='noteta' && cur){ var v = e.target.value; if(v) notesAll[cur.id] = v; else delete notesAll[cur.id]; save('notes', notesAll); }
+  /* ---------- Keittiön yhteiset muutokset (näkyvät kaikille) ---------- */
+  var changes = load('changes', {notes:{}, edits:{}}), editMode = false, myName = load('name', '');
+  function applyEdits(){
+    R.forEach(function(r){ r.p.forEach(function(p){ p.i.forEach(function(x){ if(x._o!==undefined){ x[0] = x._o; delete x._o; delete x._e; } }); }); });
+    Object.keys(changes.edits || {}).forEach(function(id){
+      var r = byId(id); if(!r) return;
+      Object.keys(changes.edits[id]).forEach(function(ref){
+        var x = ingAt(r, ref), e = changes.edits[id][ref]; if(!x || x[0]===null) return;
+        x._o = x[0]; x._e = e; x[0] = e.q;
+      });
+    });
+  }
+  function when(at){ try{ var d = new Date(at); return d.toLocaleDateString(lang==='fi'?'fi-FI':'en-GB', {day:'numeric', month:'numeric'})+' '+d.toLocaleTimeString(lang==='fi'?'fi-FI':'en-GB', {hour:'2-digit', minute:'2-digit'}); }catch(e){ return ''; } }
+  function kitchenNotes(r){
+    var t = T[lang], ns = ((changes.notes||{})[r.id] || []).slice().reverse();
+    var ne = Object.keys((changes.edits||{})[r.id] || {}).length;
+    if(!ns.length && !ne) return '';
+    return '<div class="knotes"><div class="k">'+t.kitchen+'</div>'+
+      (ne ? '<p class="kedit">'+t.editsOn.replace('{n}', ne)+'</p>' : '')+
+      ns.map(function(n){ return '<div class="kn"><p>'+esc(n.t)+'</p><span>'+esc(n.by || t.someone)+' · '+when(n.at)+'</span>'+
+        '<button type="button" class="kdel" data-delnote="'+esc(n.at)+'" aria-label="'+t.del+'">×</button></div>'; }).join('')+'</div>';
+  }
+  function nameField(){ var t = T[lang]; return '<label class="field" for="myname"><span>'+t.yourName+'</span><input id="myname" type="text" autocomplete="name" value="'+esc(myName)+'"></label>'; }
+  function post(body){
+    if(!UPLOAD) return Promise.reject('off');
+    return fetch(UPLOAD, {method:'POST', body: JSON.stringify(body)}).then(function(r){ return r.json(); }).then(function(j){
+      if(!j || !j.ok) throw 0;
+      if(j.notes){ changes = {notes:j.notes, edits:j.edits||{}}; save('changes', changes); applyEdits(); }
+      return j;
+    });
+  }
+  function fetchChanges(){
+    if(!UPLOAD) return;
+    fetch(UPLOAD+'?what=changes', {cache:'no-store'}).then(function(r){ return r.json(); }).then(function(j){
+      if(!j || !j.ok) return;
+      changes = {notes:j.notes||{}, edits:j.edits||{}}; save('changes', changes); applyEdits();
+      if(view==='recipe' && !editMode) renderRecipe(); else if(view!=='recipe') render();
+    }).catch(function(){});
+  }
+  function keepName(){ var el = $('myname'); if(el){ myName = el.value.trim().slice(0,40); save('name', myName); } }
+  function saveNote(){
+    var t = T[lang], txt = $('noteta').value.trim(); keepName();
+    if(!txt){ $('noteta').focus(); return; }
+    $('notesave').disabled = true; $('notestatus').textContent = t.saving;
+    post({action:'note', id:cur.id, text:txt, by:myName}).then(function(){ renderRecipe(); setTabs(); }).catch(function(e){
+      $('notesave').disabled = false; $('notestatus').textContent = e==='off' ? t.newOff : t.saveErr; });
+  }
+  function saveEdits(){
+    var t = T[lang], q = {}, n = 0; keepName();
+    document.querySelectorAll('[data-eref]').forEach(function(inp){
+      var x = ingAt(cur, inp.dataset.eref), v = parseFloat(String(inp.value).replace(',', '.'));
+      if(!x || !(v>=0)) return;
+      if(Math.abs(v - x[0]) > 1e-9){ var orig = x._o!==undefined ? x._o : x[0]; q[inp.dataset.eref] = Math.abs(v-orig)<1e-9 ? null : v; n++; }
+    });
+    if(!n){ editMode = false; renderRecipe(); return; }
+    $('editsave').disabled = true; $('editstatus').textContent = t.saving;
+    var why = $('editwhy').value.trim();
+    post({action:'edit', id:cur.id, q:q, by:myName, text: why || t.autoNote.replace('{n}', n)}).then(function(){ editMode = false; renderRecipe(); setTabs(); }).catch(function(e){
+      $('editsave').disabled = false; $('editstatus').textContent = e==='off' ? t.newOff : t.saveErr; });
+  }
+  document.addEventListener('click', function(e){
+    var b = e.target.closest('button'); if(!b) return;
+    if(b.id==='editbtn'){ editMode = true; renderRecipe(); return; }
+    if(b.id==='editcancel'){ editMode = false; renderRecipe(); return; }
+    if(b.id==='editsave'){ saveEdits(); return; }
+    if(b.id==='notesave'){ saveNote(); return; }
+    if(b.dataset.delnote){ if(b.dataset.confirm!=='1'){ b.dataset.confirm='1'; b.textContent=T[lang].del+'?'; b.classList.add('sure'); return; }
+      post({action:'delnote', id:cur.id, at:b.dataset.delnote}).then(function(){ renderRecipe(); }).catch(function(){}); return; }
   });
+  applyEdits();
+  setTimeout(fetchChanges, 300);
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible') fetchChanges(); });
 
   /* ---------- Jaa resepti tekstinä ---------- */
   function recipeText(){

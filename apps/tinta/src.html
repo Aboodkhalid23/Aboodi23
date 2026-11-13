@@ -212,6 +212,26 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 .brief b{color:var(--fg)}
 .camtab{color:var(--accent)!important}
 .camball{width:54px;height:54px;margin-top:-26px;border-radius:999px;background:var(--accent);color:var(--bg);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 5px #141210,0 6px 16px rgba(0,0,0,.5)}
+.knotes{margin-top:16px;padding:14px 16px;border-radius:16px;background:var(--warm);border:1px solid #4A3420}
+.knotes .k{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-soft)}
+.kedit{margin:8px 0 0;font-size:14px;color:var(--fg)}
+.kn{position:relative;padding:10px 40px 10px 0;border-top:1px solid #3A2A1C;margin-top:8px}
+.kn p{margin:0;font-size:16px;line-height:1.45;color:var(--fg);-webkit-user-select:text;user-select:text}
+.kn span{display:block;margin-top:4px;font-size:12px;color:var(--muted)}
+.kdel{position:absolute;right:0;top:8px;min-width:32px;height:32px;border-radius:999px;border:1px solid #4A3420;background:transparent;color:var(--muted);font-size:14px}
+.kdel.sure{color:var(--bg);background:var(--accent);border:0;padding:0 10px}
+.chg{display:block;font-size:12px;font-weight:600;color:var(--accent-soft);margin-top:2px}
+.ing.changed .qty{border-color:var(--accent)}
+.editbtn{margin-top:14px}
+.editbox{margin-top:10px;padding:12px 14px;border-radius:14px;background:var(--warm)}
+.editbox .k{font-size:13px;font-weight:700;color:var(--accent-soft);text-transform:uppercase;letter-spacing:.08em}
+.einp{width:84px;flex:none;height:44px;border-radius:10px;border:1px solid var(--accent);background:var(--bg);color:var(--fg);font:700 17px var(--sans);padding:0 10px;text-align:right}
+.eunit{width:44px;flex:none;color:var(--muted);font-size:14px}
+.field textarea{display:block;width:100%;margin-top:6px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:16px/1.5 var(--sans);padding:10px 12px;resize:vertical}
+.erow{display:grid;grid-template-columns:1fr 1.6fr;gap:8px;margin-top:12px}
+.erow .use{margin:0;height:48px}
+.erow .sharebtn{margin:0}
+.more .field + .field{margin-top:10px}
 @media (prefers-reduced-motion:no-preference){.view{animation:in .18s ease-out}@keyframes in{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}}
 </style>
 
