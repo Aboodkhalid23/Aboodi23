@@ -81,7 +81,7 @@ def tts(text, voice, rate, pitch):
         return mp3, [tuple(w) for w in json.loads(js.read_text(encoding="utf-8"))]
     for i in range(10):  # خدمة الصوت أحياناً ترفض من كثر الطلبات، نعيد بصبر
         try:
-            words = asyncio.run(_synth(text, voice, rate, pitch, mp3.with_suffix(".part")))
+            words = asyncio.run(asyncio.wait_for(_synth(text, voice, rate, pitch, mp3.with_suffix(".part")), 90))   # اتصال معلّگ ما يوقف الشغل
             mp3.with_suffix(".part").replace(mp3)
             js.write_text(json.dumps(words, ensure_ascii=False), encoding="utf-8")
             return mp3, words
