@@ -1,0 +1,3 @@
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800;900&family=Oswald:wght@500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:Vazirmatn,sans-serif;width:390px;height:844px;overflow:hidden;position:relative}
+.n{font-family:Oswald,Vazirmatn;font-weight:600}img{display:block}
