@@ -70,7 +70,8 @@ h1.big{margin:16px 0 0;font-family:var(--serif);font-weight:500;font-size:44px;l
 .pill{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:999px;background:var(--surface);font-size:13px}
 .pill.warn{background:transparent;border:1px solid var(--accent);color:var(--accent-soft)}
 .callout{margin:16px 0 0;padding:12px 14px;border:1px solid var(--accent);border-radius:12px;color:var(--accent-soft);font-size:14px;line-height:1.5}
-.scale{margin-top:20px;padding:14px 16px;border-radius:16px;background:var(--surface);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.scale{margin-top:18px;padding:14px 16px}
+.srow{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .scale .k{font-size:12px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
 .scale .h{font-size:13px;color:var(--muted);margin-top:2px}
 .step{display:flex;align-items:center;gap:6px}
@@ -83,7 +84,7 @@ h1.big{margin:16px 0 0;font-family:var(--serif);font-weight:500;font-size:44px;l
 .tip{margin:10px 0 0;color:var(--muted);font-size:13px;line-height:1.45}
 .addprep{width:100%;height:50px;margin-top:12px;border-radius:14px;border:1px solid var(--accent);background:transparent;color:var(--accent-soft);font-weight:600;font-size:15px}
 .addprep[aria-pressed="true"]{background:var(--accent);color:var(--bg)}
-.part{margin:34px 0 0;padding-top:20px;border-top:1px solid var(--line);font-family:var(--serif);font-weight:600;font-size:30px;color:var(--accent-soft)}
+.part{margin:26px 0 10px;font-family:var(--serif);font-weight:600;font-size:30px;color:var(--accent-soft)}
 h3.sec{margin:22px 0 6px;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .ing{display:flex;align-items:center;gap:14px;min-height:52px;border-bottom:1px solid var(--line-soft)}
 .ing input{width:22px;height:22px;accent-color:var(--accent);margin:0;flex:none}
@@ -91,10 +92,12 @@ h3.sec{margin:22px 0 6px;font-size:12px;font-weight:600;letter-spacing:.12em;tex
 .ing input:checked ~ .name,.ing input:checked ~ .qty{color:#6E675E;text-decoration:line-through}
 button.qty,span.qty{flex:none;white-space:nowrap;border:1px solid var(--line);background:transparent;border-radius:10px;min-height:40px;padding:0 10px;font:600 15px var(--sans);color:var(--accent-soft);font-variant-numeric:tabular-nums;display:inline-flex;align-items:center}
 span.qty{border-color:transparent}
-ol.steps{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:16px}
-ol.steps li{display:flex;gap:14px}
-ol.steps .num{flex:none;width:30px;height:30px;border-radius:999px;border:1px solid var(--accent);color:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600}
-ol.steps .txt{line-height:1.55;color:#E4DDD3;min-width:0}
+ol.steps{margin:12px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+ol.steps li{display:flex;gap:14px;padding:14px;border-radius:16px;background:var(--surface)}
+ol.steps .num{flex:none;width:40px;height:40px;border-radius:999px;border:1px solid var(--accent);background:transparent;color:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600}
+ol.steps li.ok .num{background:var(--accent);color:var(--bg)}
+ol.steps li.ok .txt{color:#7D766C}
+ol.steps .txt{line-height:1.55;color:#E4DDD3;min-width:0;font-size:17px;padding-top:8px}
 .tbtn{display:flex;align-items:center;gap:6px;margin-top:8px;height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--accent);background:transparent;color:var(--accent-soft);font-weight:600;font-size:14px}
 .gen{margin:0 0 12px;padding:8px 12px;border-radius:10px;background:var(--warm);color:var(--accent-soft);font-size:13px;line-height:1.45}
 .nomethod{margin:20px 0 0;color:var(--muted);font-size:14px;font-style:italic}
@@ -148,6 +151,30 @@ ol.steps .txt{line-height:1.55;color:#E4DDD3;min-width:0}
 .field input{display:block;width:100%;margin-top:6px;height:48px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:16px var(--sans);padding:0 12px}
 .use:disabled{opacity:.4}
 .status{min-height:20px;margin:10px 0 0;color:var(--accent-soft);font-size:14px;line-height:1.45}
+.card{background:var(--surface);border-radius:18px;padding:2px 16px}
+.card.list .row:last-child,.card .ing:last-child{border-bottom:0}
+.label{margin:28px 0 10px}
+.strip{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;margin-inline:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));padding-inline:max(16px, env(safe-area-inset-left, 0px))}
+.strip::-webkit-scrollbar{display:none}
+.mini{flex:none;width:150px;min-height:92px;padding:12px;border-radius:16px;border:0;background:var(--surface);text-align:left;display:flex;flex-direction:column;justify-content:space-between;gap:8px}
+.mini b{font-family:var(--serif);font-size:19px;font-weight:600;line-height:1.1}
+.mini span{font-size:12px;color:var(--muted)}
+.cats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.cat{min-height:84px;padding:14px;border-radius:16px;border:1px solid var(--line);background:var(--surface);text-align:left;display:flex;flex-direction:column;justify-content:space-between;gap:6px}
+.cat b{font-size:16px;font-weight:600;line-height:1.25}
+.cat span{font-size:13px;color:var(--muted)}
+.cat.az{grid-column:1 / -1;min-height:64px;flex-direction:row;align-items:center;border-color:var(--accent)}
+.cat.az b{color:var(--accent-soft)}
+.crumb{display:inline-flex;align-items:center;gap:6px;height:40px;margin-top:22px;padding:0 12px 0 8px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);font-weight:600;font-size:14px}
+.cathead{margin:14px 0 12px;font-family:var(--serif);font-size:32px;font-weight:600}
+.cathead span{font-family:var(--sans);font-size:15px;color:var(--muted);font-weight:500}
+.rhead{margin-top:6px}
+.eyebrow{margin-top:14px;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-soft)}
+.rhead .title{margin-top:6px}
+.seg{position:sticky;top:calc(env(safe-area-inset-top, 0px) + 69px);z-index:8;display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:22px 0 4px;padding:4px;border-radius:14px;background:#171513;border:1px solid var(--line)}
+.seg button{height:44px;border:0;border-radius:10px;background:transparent;color:var(--muted);font-weight:600;font-size:15px}
+.seg button span{font-weight:500;opacity:.7;font-size:13px}
+.seg button[aria-selected="true"]{background:var(--fg);color:var(--bg)}
 @media (prefers-reduced-motion:no-preference){.view{animation:in .18s ease-out}@keyframes in{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}}
 </style>
 
@@ -166,7 +193,6 @@ ol.steps .txt{line-height:1.55;color:#E4DDD3;min-width:0}
       <input id="q" type="search" autocomplete="off" enterkeyhint="search">
     </label>
     <button type="button" class="newbtn" id="newbtn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg><span id="newbtntext"></span></button>
-    <div class="chips" id="chips" role="group"></div>
     <div id="homelists"></div>
     <p class="note" id="foot"></p>
   </section>
@@ -308,7 +334,7 @@ var R = [
       timer:'Ajastin',stop:'Pysäytä',ready:'Valmis!',
       newbtn:'Lisää uusi resepti kuvasta',newTitle:'Uusi resepti',newHint:'Ota kuva reseptipaperista. Jos resepti on usealla sivulla, lisää kaikki sivut. Resepti ilmestyy sovellukseen noin tunnin sisällä, suomeksi ja englanniksi.',
       newName:'Reseptin nimi (vapaaehtoinen)',newPick:'Ota kuva tai valitse',newSend:'Lähetä',newSending:'Lähetetään…',newOk:'Lähetetty! Resepti lisätään noin tunnin sisällä.',
-      newErr:'Lähetys ei onnistunut. Tarkista netti ja yritä uudelleen.',newOff:'Kuvien lähetys ei ole vielä käytössä.',newPages:'sivua',newRemove:'Poista kuva',isNew:'uusi'},
+      newErr:'Lähetys ei onnistunut. Tarkista netti ja yritä uudelleen.',newOff:'Kuvien lähetys ei ole vielä käytössä.',newPages:'sivua',newRemove:'Poista kuva',isNew:'uusi',cats:'Kategoriat',allAZ:'Kaikki reseptit A–Ö',allCats:'Kaikki kategoriat'},
     en:{title:'Recipes',search:'Search: pesto, butter, chanterelle…',all:'All',recipes:'recipes',results:'Results',none:'No recipes for',
       batch:'Batch',auto:'Amounts update automatically',ingredients:'Ingredients',method:'Method',back:'Back',
       nomethod:'No method is written on the paper.',original:'Show original paper',minus:'Less',plus:'More',vegan:'vegan',parts:'parts',
@@ -325,7 +351,7 @@ var R = [
       timer:'Timer',stop:'Stop',ready:'Ready!',
       newbtn:'Add a new recipe from a photo',newTitle:'New recipe',newHint:'Take a photo of the recipe paper. If it has several pages, add all of them. The recipe appears in the app within about an hour, in Finnish and English.',
       newName:'Recipe name (optional)',newPick:'Take or choose a photo',newSend:'Send',newSending:'Sending…',newOk:'Sent! The recipe will be added within about an hour.',
-      newErr:'Sending failed. Check the connection and try again.',newOff:'Photo upload is not switched on yet.',newPages:'pages',newRemove:'Remove photo',isNew:'new'}
+      newErr:'Sending failed. Check the connection and try again.',newOff:'Photo upload is not switched on yet.',newPages:'pages',newRemove:'Remove photo',isNew:'new',cats:'Categories',allAZ:'All recipes A–Z',allCats:'All categories'}
   };
   var CATS = {
     kastike:['Kastikkeet ja dipit','Sauces & dips'], majo:['Majoneesit','Mayos'], oljy:['Öljyt ja vinegretit','Oils & dressings'],
@@ -404,30 +430,43 @@ var R = [
     $('foot').textContent = t.foot;
     $('q').placeholder = t.search; $('q').setAttribute('aria-label', t.search);
     $('count').textContent = fav ? '' : R.length+' '+t.recipes;
-    $('count').hidden = fav; document.querySelector('#home .search').hidden = fav; $('chips').hidden = fav;
+    $('count').hidden = fav; document.querySelector('#home .search').hidden = fav;
     $('newbtn').hidden = fav; $('newbtntext').textContent = t.newbtn;
+    var sortN = function(a,b){ return a.n[i].localeCompare(b.n[i], lang); };
+    var html = '';
     if(fav){
-      var f = favs.map(byId).filter(Boolean).sort(function(a,b){ return a.n[i].localeCompare(b.n[i], lang); });
+      var f = favs.map(byId).filter(Boolean).sort(sortN);
       var rc = recent.map(byId).filter(Boolean).slice(0,8);
-      $('homelists').innerHTML = (f.length ? '<div class="list">'+f.map(rowHtml).join('')+'</div>' : '<p class="empty">'+t.nofavs+'</p>')+
-        (rc.length ? '<div class="label">'+t.recent+'</div><div class="list">'+rc.map(rowHtml).join('')+'</div>' : '');
-      return;
+      html = (f.length ? '<div class="card list">'+f.map(rowHtml).join('')+'</div>' : '<p class="empty">'+t.nofavs+'</p>')+
+        (rc.length ? '<h2 class="label">'+t.recent+'</h2><div class="card list">'+rc.map(rowHtml).join('')+'</div>' : '');
+      $('homelists').innerHTML = html; return;
     }
-    var keys = ['all'].concat(Object.keys(CATS).filter(function(k){return R.some(function(r){return r.c===k})}));
-    $('chips').innerHTML = keys.map(function(k){
-      return '<button type="button" class="chip" data-cat="'+k+'" aria-pressed="'+(k===cat)+'">'+esc(k==='all'?t.all:CATS[k][i])+'</button>';
-    }).join('');
     var q = norm($('q').value.trim());
-    var hits = R.filter(function(r){
-      if(cat!=='all' && r.c!==cat) return false;
-      if(!q) return true;
-      var parts = [r.n[0], r.n[1]];
-      r.p.forEach(function(p){ if(p.t) parts.push(p.t[0], p.t[1]); p.i.forEach(function(x){parts.push(x[2], x[3])}); });
-      return norm(parts.join(' ')).indexOf(q)>-1;
-    }).sort(function(a,b){ return a.n[i].localeCompare(b.n[i], lang); });
-    var label = q ? t.results+' ('+hits.length+')' : (cat==='all' ? t.all : CATS[cat][i]);
-    $('homelists').innerHTML = '<div class="label">'+esc(label)+'</div>'+
-      (hits.length ? '<div class="list">'+hits.map(rowHtml).join('')+'</div>' : '<p class="empty">'+esc(t.none)+' “'+esc($('q').value)+'”</p>');
+    if(q){
+      var hits = R.filter(function(r){
+        var parts = [r.n[0], r.n[1]];
+        r.p.forEach(function(p){ if(p.t) parts.push(p.t[0], p.t[1]); p.i.forEach(function(x){parts.push(x[2], x[3])}); });
+        return norm(parts.join(' ')).indexOf(q)>-1;
+      }).sort(sortN);
+      html = '<h2 class="label">'+t.results+' · '+hits.length+'</h2>'+
+        (hits.length ? '<div class="card list">'+hits.map(rowHtml).join('')+'</div>' : '<p class="empty">'+esc(t.none)+' “'+esc($('q').value)+'”</p>');
+    } else if(cat==='all'){
+      var rc2 = recent.map(byId).filter(Boolean).slice(0,10);
+      if(rc2.length) html += '<h2 class="label">'+t.recent+'</h2><div class="strip">'+rc2.map(function(r){
+        return '<button type="button" class="mini" data-open="'+r.id+'"><b>'+esc(r.n[i])+'</b><span>'+esc(CATS[r.c][i])+'</span></button>'; }).join('')+'</div>';
+      html += '<h2 class="label">'+t.cats+'</h2><div class="cats">'+
+        '<button type="button" class="cat az" data-cat="az"><b>'+t.allAZ+'</b><span>'+R.length+' '+t.recipes+'</span></button>'+
+        Object.keys(CATS).map(function(k){
+          var n = R.filter(function(r){ return r.c===k; }).length; if(!n) return '';
+          return '<button type="button" class="cat" data-cat="'+k+'"><b>'+esc(CATS[k][i])+'</b><span>'+n+' '+t.recipes+'</span></button>';
+        }).join('')+'</div>';
+    } else {
+      var list = R.filter(function(r){ return cat==='az' || r.c===cat; }).sort(sortN);
+      html = '<button type="button" class="crumb" data-cat="all">'+ICON.back+' '+t.allCats+'</button>'+
+        '<h2 class="cathead">'+esc(cat==='az' ? t.allAZ : CATS[cat][i])+' <span>'+list.length+'</span></h2>'+
+        '<div class="card list">'+list.map(rowHtml).join('')+'</div>';
+    }
+    $('homelists').innerHTML = html;
   }
 
   /* ajastimen tunnistus valmistusvaiheesta: "15 min", "2 h 30 min", "5 minuuttia" */
@@ -442,36 +481,42 @@ var R = [
 
   function prepEntry(id){ return prep.filter(function(p){ return p.id===id; })[0]; }
 
+  var ingDone = {}, stepDone = {}, rtab = 'ing';
   function renderRecipe(){
     var r = cur, t = T[lang], i = L(), isFav = favs.indexOf(r.id)>-1, pe = prepEntry(r.id);
-    var checked = {};
-    document.querySelectorAll('#recipe .ing input').forEach(function(c){ checked[c.id]=c.checked; });
+    var nIng = 0, nStep = 0; r.p.forEach(function(p){ nIng += p.i.length; nStep += (p.s||[]).length; });
     var html =
       '<div class="top"><button type="button" class="back" id="back">'+ICON.back+'<span>'+t.back+'</span></button>'+
       '<div class="tools"><button type="button" class="icon" id="favbtn" aria-pressed="'+isFav+'" aria-label="'+(isFav?t.unfav:t.fav)+'">'+ICON.star+'</button>'+LANGS+'</div></div>'+
-      '<h1 class="title">'+esc(r.n[i])+'</h1><div class="other">'+esc(r.n[1-i])+'</div>'+
-      '<div class="pills"><span class="pill">'+esc(CATS[r.c][i])+'</span>'+(r.v?'<span class="pill warn">'+t.vegan+'</span>':'')+'</div>'+
+      '<header class="rhead"><div class="eyebrow">'+esc(CATS[r.c][i])+(r.v?' · '+t.vegan:'')+(r.p.length>1?' · '+r.p.length+' '+t.parts:'')+'</div>'+
+      '<h1 class="title">'+esc(r.n[i])+'</h1><div class="other">'+esc(r.n[1-i])+'</div></header>'+
       (r.note ? '<p class="callout">'+esc(r.note[i])+'</p>' : '')+
-      '<div class="scale"><div><div class="k">'+t.batch+'</div><div class="h">'+t.auto+'</div></div>'+
+      '<div class="card scale"><div class="srow"><div><div class="k">'+t.batch+'</div><div class="h">'+t.auto+'</div></div>'+
       '<div class="step"><button type="button" id="minus" aria-label="'+t.minus+'">−</button><output id="pn" aria-live="polite">'+num(mult)+'×</output><button type="button" class="plus" id="plus" aria-label="'+t.plus+'">+</button></div></div>'+
       '<div class="quick">'+[0.5,1,2,3].map(function(v){return '<button type="button" data-p="'+v+'" aria-pressed="'+(v===mult)+'">'+num(v)+'×</button>'}).join('')+'</div>'+
-      '<p class="tip">'+t.tiphave+'</p>'+
-      '<button type="button" class="addprep" id="prepbtn" aria-pressed="'+(!!pe)+'">'+(pe ? t.inprep : t.addprep)+'</button>';
-    r.p.forEach(function(p, pi){
-      html += p.t ? '<h2 class="part">'+esc(p.t[i])+'</h2>' : '';
-      html += '<h3 class="sec">'+t.ingredients+'</h3>';
-      html += p.i.map(function(x,n){ var id='c'+pi+'-'+n; return '<div class="ing"><input type="checkbox" id="'+id+'"'+(checked[id]?' checked':'')+'><label class="name" for="'+id+'">'+esc(x[2+i])+'</label>'+
-        (x[0]===null ? '' : '<button type="button" class="qty" data-have="'+pi+'-'+n+'" aria-label="'+esc(t.have+': '+x[2+i])+'">'+esc(fmt(x[0],x[1]))+'</button>')+'</div>'; }).join('');
-      if(p.s && p.s.length){
-        html += '<h3 class="sec">'+t.method+'</h3>'+(p.gen?'<p class="gen">'+t.gen+'</p>':'')+'<ol class="steps">'+p.s.map(function(s,n){
-          var sec = findTime(s[i]) || findTime(s[0]);
-          return '<li><span class="num">'+(n+1)+'</span><span class="txt">'+esc(s[i])+
-            (sec ? '<button type="button" class="tbtn" data-timer="'+sec+'" data-tname="'+esc(r.n[i]+' · '+(n+1))+'">'+ICON.clock+' '+t.timer+' '+clock(sec)+'</button>' : '')+'</span></li>';
+      '<button type="button" class="addprep" id="prepbtn" aria-pressed="'+(!!pe)+'">'+(pe ? t.inprep : t.addprep)+'</button></div>'+
+      '<div class="seg" role="tablist"><button type="button" role="tab" data-rtab="ing" aria-selected="'+(rtab==='ing')+'">'+t.ingredients+' <span>'+nIng+'</span></button>'+
+      '<button type="button" role="tab" data-rtab="met" aria-selected="'+(rtab==='met')+'">'+t.method+' <span>'+nStep+'</span></button></div>';
+    if(rtab==='ing'){
+      html += '<p class="tip">'+t.tiphave+'</p>';
+      r.p.forEach(function(p, pi){
+        html += (p.t ? '<h2 class="part">'+esc(p.t[i])+'</h2>' : '')+'<div class="card">'+
+          p.i.map(function(x,n){ var id='c'+pi+'-'+n, k=r.id+id;
+            return '<div class="ing"><input type="checkbox" id="'+id+'" data-ing="'+k+'"'+(ingDone[k]?' checked':'')+'><label class="name" for="'+id+'">'+esc(x[2+i])+'</label>'+
+            (x[0]===null ? '' : '<button type="button" class="qty" data-have="'+pi+'-'+n+'" aria-label="'+esc(t.have+': '+x[2+i])+'">'+esc(fmt(x[0],x[1]))+'</button>')+'</div>'; }).join('')+'</div>';
+      });
+    } else {
+      var any = false;
+      r.p.forEach(function(p, pi){
+        if(!(p.s && p.s.length)) return; any = true;
+        html += (p.t ? '<h2 class="part">'+esc(p.t[i])+'</h2>' : '')+(p.gen?'<p class="gen">'+t.gen+'</p>':'')+'<ol class="steps">'+p.s.map(function(s,n){
+          var sec = findTime(s[i]) || findTime(s[0]), k = r.id+'s'+pi+'-'+n;
+          return '<li class="'+(stepDone[k]?'ok':'')+'"><button type="button" class="num" data-sdone="'+k+'" aria-pressed="'+(!!stepDone[k])+'" aria-label="'+(n+1)+'">'+(stepDone[k]?'✓':(n+1))+'</button><div class="txt">'+esc(s[i])+
+            (sec ? '<button type="button" class="tbtn" data-timer="'+sec+'" data-tname="'+esc(r.n[i]+' · '+(n+1))+'">'+ICON.clock+' '+t.timer+' '+clock(sec)+'</button>' : '')+'</div></li>';
         }).join('')+'</ol>';
-      } else if(r.p.length===1){
-        html += '<p class="nomethod">'+t.nomethod+'</p>';
-      }
-    });
+      });
+      if(!any) html += '<p class="nomethod">'+t.nomethod+'</p>';
+    }
     html += '<a class="orig" href="https://drive.google.com/file/d/'+r.f+'/view" target="_blank" rel="noopener">'+t.original+' ↗</a>';
     $('recipe').innerHTML = html;
   }
@@ -526,7 +571,7 @@ var R = [
     var h = location.hash.replace('#','');
     if(h.indexOf('r-')===0 && byId(h.slice(2))){
       var r = byId(h.slice(2));
-      if(cur!==r){ var pe = prepEntry(r.id); mult = pe ? pe.m : 1; $('recipe').innerHTML=''; }
+      if(cur!==r){ var pe = prepEntry(r.id); mult = pe ? pe.m : 1; rtab = 'ing'; $('recipe').innerHTML=''; }
       cur = r; view = 'recipe';
       recent = [r.id].concat(recent.filter(function(x){ return x!==r.id; })).slice(0,12); save('recent', recent);
     } else {
@@ -543,8 +588,10 @@ var R = [
   document.addEventListener('click', function(e){
     var b = e.target.closest('button'); if(!b) return;
     if(b.dataset.lang){ setLang(b.dataset.lang); return; }
-    if(b.dataset.tab){ if(b.dataset.tab==='calc') openCalc(); else go(b.dataset.tab); return; }
-    if(b.dataset.cat){ cat = b.dataset.cat; renderHome(); return; }
+    if(b.dataset.tab){ if(b.dataset.tab==='calc') openCalc(); else { if(b.dataset.tab==='home' && view==='home'){ cat='all'; $('q').value=''; } go(b.dataset.tab); } return; }
+    if(b.dataset.cat){ cat = b.dataset.cat; $('q').value=''; renderHome(); window.scrollTo(0,0); return; }
+    if(b.dataset.rtab){ rtab = b.dataset.rtab; renderRecipe(); setTabs(); return; }
+    if(b.dataset.sdone){ if(stepDone[b.dataset.sdone]) delete stepDone[b.dataset.sdone]; else stepDone[b.dataset.sdone]=1; renderRecipe(); setTabs(); return; }
     if(b.dataset.open){ location.hash = 'r-'+b.dataset.open; return; }
     if(b.id==='back'){ go(listView); return; }
     if(b.id==='favbtn'){ var k = favs.indexOf(cur.id); if(k>-1) favs.splice(k,1); else favs.push(cur.id); save('favs',favs); render(); return; }
@@ -614,6 +661,7 @@ var R = [
   }
   document.addEventListener('change', function(e){
     var c = e.target;
+    if(c.dataset && c.dataset.ing){ if(c.checked) ingDone[c.dataset.ing]=1; else delete ingDone[c.dataset.ing]; return; }
     if(c.dataset && c.dataset.pdone){ if(c.checked) pdone[c.dataset.pdone]=1; else delete pdone[c.dataset.pdone]; save('pdone',pdone); renderPrep(); }
   });
   $('q').addEventListener('input', renderHome);

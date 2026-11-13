@@ -16,7 +16,7 @@
       timer:'Ajastin',stop:'Pysäytä',ready:'Valmis!',
       newbtn:'Lisää uusi resepti kuvasta',newTitle:'Uusi resepti',newHint:'Ota kuva reseptipaperista. Jos resepti on usealla sivulla, lisää kaikki sivut. Resepti ilmestyy sovellukseen noin tunnin sisällä, suomeksi ja englanniksi.',
       newName:'Reseptin nimi (vapaaehtoinen)',newPick:'Ota kuva tai valitse',newSend:'Lähetä',newSending:'Lähetetään…',newOk:'Lähetetty! Resepti lisätään noin tunnin sisällä.',
-      newErr:'Lähetys ei onnistunut. Tarkista netti ja yritä uudelleen.',newOff:'Kuvien lähetys ei ole vielä käytössä.',newPages:'sivua',newRemove:'Poista kuva',isNew:'uusi'},
+      newErr:'Lähetys ei onnistunut. Tarkista netti ja yritä uudelleen.',newOff:'Kuvien lähetys ei ole vielä käytössä.',newPages:'sivua',newRemove:'Poista kuva',isNew:'uusi',cats:'Kategoriat',allAZ:'Kaikki reseptit A–Ö',allCats:'Kaikki kategoriat'},
     en:{title:'Recipes',search:'Search: pesto, butter, chanterelle…',all:'All',recipes:'recipes',results:'Results',none:'No recipes for',
       batch:'Batch',auto:'Amounts update automatically',ingredients:'Ingredients',method:'Method',back:'Back',
       nomethod:'No method is written on the paper.',original:'Show original paper',minus:'Less',plus:'More',vegan:'vegan',parts:'parts',
@@ -33,7 +33,7 @@
       timer:'Timer',stop:'Stop',ready:'Ready!',
       newbtn:'Add a new recipe from a photo',newTitle:'New recipe',newHint:'Take a photo of the recipe paper. If it has several pages, add all of them. The recipe appears in the app within about an hour, in Finnish and English.',
       newName:'Recipe name (optional)',newPick:'Take or choose a photo',newSend:'Send',newSending:'Sending…',newOk:'Sent! The recipe will be added within about an hour.',
-      newErr:'Sending failed. Check the connection and try again.',newOff:'Photo upload is not switched on yet.',newPages:'pages',newRemove:'Remove photo',isNew:'new'}
+      newErr:'Sending failed. Check the connection and try again.',newOff:'Photo upload is not switched on yet.',newPages:'pages',newRemove:'Remove photo',isNew:'new',cats:'Categories',allAZ:'All recipes A–Z',allCats:'All categories'}
   };
   var CATS = {
     kastike:['Kastikkeet ja dipit','Sauces & dips'], majo:['Majoneesit','Mayos'], oljy:['Öljyt ja vinegretit','Oils & dressings'],
@@ -112,30 +112,43 @@
     $('foot').textContent = t.foot;
     $('q').placeholder = t.search; $('q').setAttribute('aria-label', t.search);
     $('count').textContent = fav ? '' : R.length+' '+t.recipes;
-    $('count').hidden = fav; document.querySelector('#home .search').hidden = fav; $('chips').hidden = fav;
+    $('count').hidden = fav; document.querySelector('#home .search').hidden = fav;
     $('newbtn').hidden = fav; $('newbtntext').textContent = t.newbtn;
+    var sortN = function(a,b){ return a.n[i].localeCompare(b.n[i], lang); };
+    var html = '';
     if(fav){
-      var f = favs.map(byId).filter(Boolean).sort(function(a,b){ return a.n[i].localeCompare(b.n[i], lang); });
+      var f = favs.map(byId).filter(Boolean).sort(sortN);
       var rc = recent.map(byId).filter(Boolean).slice(0,8);
-      $('homelists').innerHTML = (f.length ? '<div class="list">'+f.map(rowHtml).join('')+'</div>' : '<p class="empty">'+t.nofavs+'</p>')+
-        (rc.length ? '<div class="label">'+t.recent+'</div><div class="list">'+rc.map(rowHtml).join('')+'</div>' : '');
-      return;
+      html = (f.length ? '<div class="card list">'+f.map(rowHtml).join('')+'</div>' : '<p class="empty">'+t.nofavs+'</p>')+
+        (rc.length ? '<h2 class="label">'+t.recent+'</h2><div class="card list">'+rc.map(rowHtml).join('')+'</div>' : '');
+      $('homelists').innerHTML = html; return;
     }
-    var keys = ['all'].concat(Object.keys(CATS).filter(function(k){return R.some(function(r){return r.c===k})}));
-    $('chips').innerHTML = keys.map(function(k){
-      return '<button type="button" class="chip" data-cat="'+k+'" aria-pressed="'+(k===cat)+'">'+esc(k==='all'?t.all:CATS[k][i])+'</button>';
-    }).join('');
     var q = norm($('q').value.trim());
-    var hits = R.filter(function(r){
-      if(cat!=='all' && r.c!==cat) return false;
-      if(!q) return true;
-      var parts = [r.n[0], r.n[1]];
-      r.p.forEach(function(p){ if(p.t) parts.push(p.t[0], p.t[1]); p.i.forEach(function(x){parts.push(x[2], x[3])}); });
-      return norm(parts.join(' ')).indexOf(q)>-1;
-    }).sort(function(a,b){ return a.n[i].localeCompare(b.n[i], lang); });
-    var label = q ? t.results+' ('+hits.length+')' : (cat==='all' ? t.all : CATS[cat][i]);
-    $('homelists').innerHTML = '<div class="label">'+esc(label)+'</div>'+
-      (hits.length ? '<div class="list">'+hits.map(rowHtml).join('')+'</div>' : '<p class="empty">'+esc(t.none)+' “'+esc($('q').value)+'”</p>');
+    if(q){
+      var hits = R.filter(function(r){
+        var parts = [r.n[0], r.n[1]];
+        r.p.forEach(function(p){ if(p.t) parts.push(p.t[0], p.t[1]); p.i.forEach(function(x){parts.push(x[2], x[3])}); });
+        return norm(parts.join(' ')).indexOf(q)>-1;
+      }).sort(sortN);
+      html = '<h2 class="label">'+t.results+' · '+hits.length+'</h2>'+
+        (hits.length ? '<div class="card list">'+hits.map(rowHtml).join('')+'</div>' : '<p class="empty">'+esc(t.none)+' “'+esc($('q').value)+'”</p>');
+    } else if(cat==='all'){
+      var rc2 = recent.map(byId).filter(Boolean).slice(0,10);
+      if(rc2.length) html += '<h2 class="label">'+t.recent+'</h2><div class="strip">'+rc2.map(function(r){
+        return '<button type="button" class="mini" data-open="'+r.id+'"><b>'+esc(r.n[i])+'</b><span>'+esc(CATS[r.c][i])+'</span></button>'; }).join('')+'</div>';
+      html += '<h2 class="label">'+t.cats+'</h2><div class="cats">'+
+        '<button type="button" class="cat az" data-cat="az"><b>'+t.allAZ+'</b><span>'+R.length+' '+t.recipes+'</span></button>'+
+        Object.keys(CATS).map(function(k){
+          var n = R.filter(function(r){ return r.c===k; }).length; if(!n) return '';
+          return '<button type="button" class="cat" data-cat="'+k+'"><b>'+esc(CATS[k][i])+'</b><span>'+n+' '+t.recipes+'</span></button>';
+        }).join('')+'</div>';
+    } else {
+      var list = R.filter(function(r){ return cat==='az' || r.c===cat; }).sort(sortN);
+      html = '<button type="button" class="crumb" data-cat="all">'+ICON.back+' '+t.allCats+'</button>'+
+        '<h2 class="cathead">'+esc(cat==='az' ? t.allAZ : CATS[cat][i])+' <span>'+list.length+'</span></h2>'+
+        '<div class="card list">'+list.map(rowHtml).join('')+'</div>';
+    }
+    $('homelists').innerHTML = html;
   }
 
   /* ajastimen tunnistus valmistusvaiheesta: "15 min", "2 h 30 min", "5 minuuttia" */
@@ -150,36 +163,42 @@
 
   function prepEntry(id){ return prep.filter(function(p){ return p.id===id; })[0]; }
 
+  var ingDone = {}, stepDone = {}, rtab = 'ing';
   function renderRecipe(){
     var r = cur, t = T[lang], i = L(), isFav = favs.indexOf(r.id)>-1, pe = prepEntry(r.id);
-    var checked = {};
-    document.querySelectorAll('#recipe .ing input').forEach(function(c){ checked[c.id]=c.checked; });
+    var nIng = 0, nStep = 0; r.p.forEach(function(p){ nIng += p.i.length; nStep += (p.s||[]).length; });
     var html =
       '<div class="top"><button type="button" class="back" id="back">'+ICON.back+'<span>'+t.back+'</span></button>'+
       '<div class="tools"><button type="button" class="icon" id="favbtn" aria-pressed="'+isFav+'" aria-label="'+(isFav?t.unfav:t.fav)+'">'+ICON.star+'</button>'+LANGS+'</div></div>'+
-      '<h1 class="title">'+esc(r.n[i])+'</h1><div class="other">'+esc(r.n[1-i])+'</div>'+
-      '<div class="pills"><span class="pill">'+esc(CATS[r.c][i])+'</span>'+(r.v?'<span class="pill warn">'+t.vegan+'</span>':'')+'</div>'+
+      '<header class="rhead"><div class="eyebrow">'+esc(CATS[r.c][i])+(r.v?' · '+t.vegan:'')+(r.p.length>1?' · '+r.p.length+' '+t.parts:'')+'</div>'+
+      '<h1 class="title">'+esc(r.n[i])+'</h1><div class="other">'+esc(r.n[1-i])+'</div></header>'+
       (r.note ? '<p class="callout">'+esc(r.note[i])+'</p>' : '')+
-      '<div class="scale"><div><div class="k">'+t.batch+'</div><div class="h">'+t.auto+'</div></div>'+
+      '<div class="card scale"><div class="srow"><div><div class="k">'+t.batch+'</div><div class="h">'+t.auto+'</div></div>'+
       '<div class="step"><button type="button" id="minus" aria-label="'+t.minus+'">−</button><output id="pn" aria-live="polite">'+num(mult)+'×</output><button type="button" class="plus" id="plus" aria-label="'+t.plus+'">+</button></div></div>'+
       '<div class="quick">'+[0.5,1,2,3].map(function(v){return '<button type="button" data-p="'+v+'" aria-pressed="'+(v===mult)+'">'+num(v)+'×</button>'}).join('')+'</div>'+
-      '<p class="tip">'+t.tiphave+'</p>'+
-      '<button type="button" class="addprep" id="prepbtn" aria-pressed="'+(!!pe)+'">'+(pe ? t.inprep : t.addprep)+'</button>';
-    r.p.forEach(function(p, pi){
-      html += p.t ? '<h2 class="part">'+esc(p.t[i])+'</h2>' : '';
-      html += '<h3 class="sec">'+t.ingredients+'</h3>';
-      html += p.i.map(function(x,n){ var id='c'+pi+'-'+n; return '<div class="ing"><input type="checkbox" id="'+id+'"'+(checked[id]?' checked':'')+'><label class="name" for="'+id+'">'+esc(x[2+i])+'</label>'+
-        (x[0]===null ? '' : '<button type="button" class="qty" data-have="'+pi+'-'+n+'" aria-label="'+esc(t.have+': '+x[2+i])+'">'+esc(fmt(x[0],x[1]))+'</button>')+'</div>'; }).join('');
-      if(p.s && p.s.length){
-        html += '<h3 class="sec">'+t.method+'</h3>'+(p.gen?'<p class="gen">'+t.gen+'</p>':'')+'<ol class="steps">'+p.s.map(function(s,n){
-          var sec = findTime(s[i]) || findTime(s[0]);
-          return '<li><span class="num">'+(n+1)+'</span><span class="txt">'+esc(s[i])+
-            (sec ? '<button type="button" class="tbtn" data-timer="'+sec+'" data-tname="'+esc(r.n[i]+' · '+(n+1))+'">'+ICON.clock+' '+t.timer+' '+clock(sec)+'</button>' : '')+'</span></li>';
+      '<button type="button" class="addprep" id="prepbtn" aria-pressed="'+(!!pe)+'">'+(pe ? t.inprep : t.addprep)+'</button></div>'+
+      '<div class="seg" role="tablist"><button type="button" role="tab" data-rtab="ing" aria-selected="'+(rtab==='ing')+'">'+t.ingredients+' <span>'+nIng+'</span></button>'+
+      '<button type="button" role="tab" data-rtab="met" aria-selected="'+(rtab==='met')+'">'+t.method+' <span>'+nStep+'</span></button></div>';
+    if(rtab==='ing'){
+      html += '<p class="tip">'+t.tiphave+'</p>';
+      r.p.forEach(function(p, pi){
+        html += (p.t ? '<h2 class="part">'+esc(p.t[i])+'</h2>' : '')+'<div class="card">'+
+          p.i.map(function(x,n){ var id='c'+pi+'-'+n, k=r.id+id;
+            return '<div class="ing"><input type="checkbox" id="'+id+'" data-ing="'+k+'"'+(ingDone[k]?' checked':'')+'><label class="name" for="'+id+'">'+esc(x[2+i])+'</label>'+
+            (x[0]===null ? '' : '<button type="button" class="qty" data-have="'+pi+'-'+n+'" aria-label="'+esc(t.have+': '+x[2+i])+'">'+esc(fmt(x[0],x[1]))+'</button>')+'</div>'; }).join('')+'</div>';
+      });
+    } else {
+      var any = false;
+      r.p.forEach(function(p, pi){
+        if(!(p.s && p.s.length)) return; any = true;
+        html += (p.t ? '<h2 class="part">'+esc(p.t[i])+'</h2>' : '')+(p.gen?'<p class="gen">'+t.gen+'</p>':'')+'<ol class="steps">'+p.s.map(function(s,n){
+          var sec = findTime(s[i]) || findTime(s[0]), k = r.id+'s'+pi+'-'+n;
+          return '<li class="'+(stepDone[k]?'ok':'')+'"><button type="button" class="num" data-sdone="'+k+'" aria-pressed="'+(!!stepDone[k])+'" aria-label="'+(n+1)+'">'+(stepDone[k]?'✓':(n+1))+'</button><div class="txt">'+esc(s[i])+
+            (sec ? '<button type="button" class="tbtn" data-timer="'+sec+'" data-tname="'+esc(r.n[i]+' · '+(n+1))+'">'+ICON.clock+' '+t.timer+' '+clock(sec)+'</button>' : '')+'</div></li>';
         }).join('')+'</ol>';
-      } else if(r.p.length===1){
-        html += '<p class="nomethod">'+t.nomethod+'</p>';
-      }
-    });
+      });
+      if(!any) html += '<p class="nomethod">'+t.nomethod+'</p>';
+    }
     html += '<a class="orig" href="https://drive.google.com/file/d/'+r.f+'/view" target="_blank" rel="noopener">'+t.original+' ↗</a>';
     $('recipe').innerHTML = html;
   }
@@ -234,7 +253,7 @@
     var h = location.hash.replace('#','');
     if(h.indexOf('r-')===0 && byId(h.slice(2))){
       var r = byId(h.slice(2));
-      if(cur!==r){ var pe = prepEntry(r.id); mult = pe ? pe.m : 1; $('recipe').innerHTML=''; }
+      if(cur!==r){ var pe = prepEntry(r.id); mult = pe ? pe.m : 1; rtab = 'ing'; $('recipe').innerHTML=''; }
       cur = r; view = 'recipe';
       recent = [r.id].concat(recent.filter(function(x){ return x!==r.id; })).slice(0,12); save('recent', recent);
     } else {
@@ -251,8 +270,10 @@
   document.addEventListener('click', function(e){
     var b = e.target.closest('button'); if(!b) return;
     if(b.dataset.lang){ setLang(b.dataset.lang); return; }
-    if(b.dataset.tab){ if(b.dataset.tab==='calc') openCalc(); else go(b.dataset.tab); return; }
-    if(b.dataset.cat){ cat = b.dataset.cat; renderHome(); return; }
+    if(b.dataset.tab){ if(b.dataset.tab==='calc') openCalc(); else { if(b.dataset.tab==='home' && view==='home'){ cat='all'; $('q').value=''; } go(b.dataset.tab); } return; }
+    if(b.dataset.cat){ cat = b.dataset.cat; $('q').value=''; renderHome(); window.scrollTo(0,0); return; }
+    if(b.dataset.rtab){ rtab = b.dataset.rtab; renderRecipe(); setTabs(); return; }
+    if(b.dataset.sdone){ if(stepDone[b.dataset.sdone]) delete stepDone[b.dataset.sdone]; else stepDone[b.dataset.sdone]=1; renderRecipe(); setTabs(); return; }
     if(b.dataset.open){ location.hash = 'r-'+b.dataset.open; return; }
     if(b.id==='back'){ go(listView); return; }
     if(b.id==='favbtn'){ var k = favs.indexOf(cur.id); if(k>-1) favs.splice(k,1); else favs.push(cur.id); save('favs',favs); render(); return; }
@@ -322,6 +343,7 @@
   }
   document.addEventListener('change', function(e){
     var c = e.target;
+    if(c.dataset && c.dataset.ing){ if(c.checked) ingDone[c.dataset.ing]=1; else delete ingDone[c.dataset.ing]; return; }
     if(c.dataset && c.dataset.pdone){ if(c.checked) pdone[c.dataset.pdone]=1; else delete pdone[c.dataset.pdone]; save('pdone',pdone); renderPrep(); }
   });
   $('q').addEventListener('input', renderHome);

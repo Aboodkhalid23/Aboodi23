@@ -59,7 +59,8 @@ h1.big{margin:16px 0 0;font-family:var(--serif);font-weight:500;font-size:44px;l
 .pill{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:999px;background:var(--surface);font-size:13px}
 .pill.warn{background:transparent;border:1px solid var(--accent);color:var(--accent-soft)}
 .callout{margin:16px 0 0;padding:12px 14px;border:1px solid var(--accent);border-radius:12px;color:var(--accent-soft);font-size:14px;line-height:1.5}
-.scale{margin-top:20px;padding:14px 16px;border-radius:16px;background:var(--surface);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.scale{margin-top:18px;padding:14px 16px}
+.srow{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .scale .k{font-size:12px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
 .scale .h{font-size:13px;color:var(--muted);margin-top:2px}
 .step{display:flex;align-items:center;gap:6px}
@@ -72,7 +73,7 @@ h1.big{margin:16px 0 0;font-family:var(--serif);font-weight:500;font-size:44px;l
 .tip{margin:10px 0 0;color:var(--muted);font-size:13px;line-height:1.45}
 .addprep{width:100%;height:50px;margin-top:12px;border-radius:14px;border:1px solid var(--accent);background:transparent;color:var(--accent-soft);font-weight:600;font-size:15px}
 .addprep[aria-pressed="true"]{background:var(--accent);color:var(--bg)}
-.part{margin:34px 0 0;padding-top:20px;border-top:1px solid var(--line);font-family:var(--serif);font-weight:600;font-size:30px;color:var(--accent-soft)}
+.part{margin:26px 0 10px;font-family:var(--serif);font-weight:600;font-size:30px;color:var(--accent-soft)}
 h3.sec{margin:22px 0 6px;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .ing{display:flex;align-items:center;gap:14px;min-height:52px;border-bottom:1px solid var(--line-soft)}
 .ing input{width:22px;height:22px;accent-color:var(--accent);margin:0;flex:none}
@@ -80,10 +81,12 @@ h3.sec{margin:22px 0 6px;font-size:12px;font-weight:600;letter-spacing:.12em;tex
 .ing input:checked ~ .name,.ing input:checked ~ .qty{color:#6E675E;text-decoration:line-through}
 button.qty,span.qty{flex:none;white-space:nowrap;border:1px solid var(--line);background:transparent;border-radius:10px;min-height:40px;padding:0 10px;font:600 15px var(--sans);color:var(--accent-soft);font-variant-numeric:tabular-nums;display:inline-flex;align-items:center}
 span.qty{border-color:transparent}
-ol.steps{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:16px}
-ol.steps li{display:flex;gap:14px}
-ol.steps .num{flex:none;width:30px;height:30px;border-radius:999px;border:1px solid var(--accent);color:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600}
-ol.steps .txt{line-height:1.55;color:#E4DDD3;min-width:0}
+ol.steps{margin:12px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+ol.steps li{display:flex;gap:14px;padding:14px;border-radius:16px;background:var(--surface)}
+ol.steps .num{flex:none;width:40px;height:40px;border-radius:999px;border:1px solid var(--accent);background:transparent;color:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600}
+ol.steps li.ok .num{background:var(--accent);color:var(--bg)}
+ol.steps li.ok .txt{color:#7D766C}
+ol.steps .txt{line-height:1.55;color:#E4DDD3;min-width:0;font-size:17px;padding-top:8px}
 .tbtn{display:flex;align-items:center;gap:6px;margin-top:8px;height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--accent);background:transparent;color:var(--accent-soft);font-weight:600;font-size:14px}
 .gen{margin:0 0 12px;padding:8px 12px;border-radius:10px;background:var(--warm);color:var(--accent-soft);font-size:13px;line-height:1.45}
 .nomethod{margin:20px 0 0;color:var(--muted);font-size:14px;font-style:italic}
@@ -137,6 +140,30 @@ ol.steps .txt{line-height:1.55;color:#E4DDD3;min-width:0}
 .field input{display:block;width:100%;margin-top:6px;height:48px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:16px var(--sans);padding:0 12px}
 .use:disabled{opacity:.4}
 .status{min-height:20px;margin:10px 0 0;color:var(--accent-soft);font-size:14px;line-height:1.45}
+.card{background:var(--surface);border-radius:18px;padding:2px 16px}
+.card.list .row:last-child,.card .ing:last-child{border-bottom:0}
+.label{margin:28px 0 10px}
+.strip{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;margin-inline:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));padding-inline:max(16px, env(safe-area-inset-left, 0px))}
+.strip::-webkit-scrollbar{display:none}
+.mini{flex:none;width:150px;min-height:92px;padding:12px;border-radius:16px;border:0;background:var(--surface);text-align:left;display:flex;flex-direction:column;justify-content:space-between;gap:8px}
+.mini b{font-family:var(--serif);font-size:19px;font-weight:600;line-height:1.1}
+.mini span{font-size:12px;color:var(--muted)}
+.cats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.cat{min-height:84px;padding:14px;border-radius:16px;border:1px solid var(--line);background:var(--surface);text-align:left;display:flex;flex-direction:column;justify-content:space-between;gap:6px}
+.cat b{font-size:16px;font-weight:600;line-height:1.25}
+.cat span{font-size:13px;color:var(--muted)}
+.cat.az{grid-column:1 / -1;min-height:64px;flex-direction:row;align-items:center;border-color:var(--accent)}
+.cat.az b{color:var(--accent-soft)}
+.crumb{display:inline-flex;align-items:center;gap:6px;height:40px;margin-top:22px;padding:0 12px 0 8px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);font-weight:600;font-size:14px}
+.cathead{margin:14px 0 12px;font-family:var(--serif);font-size:32px;font-weight:600}
+.cathead span{font-family:var(--sans);font-size:15px;color:var(--muted);font-weight:500}
+.rhead{margin-top:6px}
+.eyebrow{margin-top:14px;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-soft)}
+.rhead .title{margin-top:6px}
+.seg{position:sticky;top:calc(env(safe-area-inset-top, 0px) + 69px);z-index:8;display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:22px 0 4px;padding:4px;border-radius:14px;background:#171513;border:1px solid var(--line)}
+.seg button{height:44px;border:0;border-radius:10px;background:transparent;color:var(--muted);font-weight:600;font-size:15px}
+.seg button span{font-weight:500;opacity:.7;font-size:13px}
+.seg button[aria-selected="true"]{background:var(--fg);color:var(--bg)}
 @media (prefers-reduced-motion:no-preference){.view{animation:in .18s ease-out}@keyframes in{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}}
 </style>
 
@@ -153,7 +180,6 @@ ol.steps .txt{line-height:1.55;color:#E4DDD3;min-width:0}
       <input id="q" type="search" autocomplete="off" enterkeyhint="search">
     </label>
     <button type="button" class="newbtn" id="newbtn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg><span id="newbtntext"></span></button>
-    <div class="chips" id="chips" role="group"></div>
     <div id="homelists"></div>
     <p class="note" id="foot"></p>
   </section>
