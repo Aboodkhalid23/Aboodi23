@@ -344,22 +344,26 @@ function vFood() {
   const tot = TM.reduce((a, x) => { if (!eaten[x.m.k]) return a; const v = optVal(x.o); return { k: a.k + v.k, p: a.p + v.p, c: a.c + v.c, f: a.f + v.f }; }, { k: 0, p: 0, c: 0, f: 0 });
   const plan = TM.reduce((a, x) => { const v = optVal(x.o); return { k: a.k + v.k, p: a.p + v.p }; }, { k: 0, p: 0 });
   const bar = (v, max, col, n, u) => `<div class="mbar"><div class="row between"><span class="xs">${n}</span><span class="xs num"><b>${Math.round(v)}</b> / ${max} ${u}</span></div><div class="bar"><i style="width:${Math.min(100, v / max * 100)}%;background:${col}"></i></div></div>`;
-  const tiles = SECTIONS.map(([k, n, sub, img]) => `<button class="stile" data-sec="${k}"><img src="img/${img}.webp" alt="" loading="lazy"><div><b>${n}</b><small>${sub}</small><em class="num">${RECIPES.filter(r => r.s === k).length + (k === 'l' ? '+' : '')} وصفة</em></div></button>`).join('');
+  const IC = { b: ['🍳', '#ff9f0a'], s: ['🥣', '#34c759'], l: ['🍛', '#ff2d3d'], a: ['🥤', '#5e5ce6'], d: ['🥗', '#30b0c7'] }, SEC = { b: 'b', s: 's', l: 'l', a: 'sh', d: 'd' };
+  const extra = [['sw', '🍫', 'حلا صحي', 'حلو بدون ما يخرّب جسمك'], ['k', '🥜', 'كرزات وموالح', 'مكسرات وبذور وفوايدها'], ['sh', '🥤', 'شيكات التضخيم', 'سعرات وبروتين بگلاص'], ['drinks', '💧', 'المشروبات', 'شنو تشرب وشنو لا'], ['fdb', '🔎', 'الأطعمة والبذور', Object.keys(FOODS).length + ' أكلة بقيمها'], ['shop', '🛒', 'سلة الأسبوع', 'شنو تشتري من الماركت'], ['ban', '⛔', 'الممنوعات', 'حرام وينفخ القولون']];
   return `${head('الأكل')}
-  <div class="card"><div class="sec-h"><h2>أكلت اليوم</h2><span class="xs mut num">القائمة كلها: ${Math.round(plan.k)} سعرة • ${Math.round(plan.p)} غ بروتين</span></div>
-   ${bar(tot.k, T.k, 'var(--g)', 'السعرات', 'سعرة')}${bar(tot.p, T.p, 'var(--gold)', 'البروتين', 'غ')}${bar(tot.c, Math.round(T.k * .5 / 4), 'var(--blue)', 'الكارب', 'غ')}${bar(tot.f, Math.round(T.k * .27 / 9), '#ff9f0a', 'الدهون', 'غ')}
-   <p class="xs mut">هدفك للتضخيم النظيف: ${T.k} سعرة و${T.p} غ بروتين. اضغط على أي وجبة تشوف شكد بيها.</p></div>
-  <div class="sec-h"><h2>قائمتك اليوم</h2><span class="xs mut">تتبدل كل يوم</span></div>
-  <div class="col">${TM.map(({ m, o }) => { const v = optVal(o); return `<div class="trow ${eaten[m.k] ? 'on' : ''}"><button class="tpic" data-rec="${o.id}" data-slot="${m.k}"><img src="${recImg(o)}" alt="" loading="lazy" class="${isCut(o) ? 'cut' : ''}"></button><button class="grow tinfo" data-rec="${o.id}" data-slot="${m.k}"><span class="xs mut">${m.n} • ${m.t}${o.gen ? ' • ✨ جديدة' : ''}</span><b>${o.n}</b><span class="xs num"><b style="color:var(--gold)">${Math.round(v.p)}g</b> بروتين • ${Math.round(v.k)} سعرة</span></button><div class="tbtn"><button class="ib sm ${eaten[m.k] ? 'on' : ''}" data-eat="${m.k}" aria-label="أكلتها">${I.check}</button><button class="ib sm" data-swapm="${m.k}" aria-label="غيرها">⇄</button></div></div>`; }).join('')}</div>
-  <div class="sec-h"><h2>كل الأكلات</h2></div>
-  <div class="sgrid">${tiles}</div>
-  <div class="sgrid two"><button class="stile mini2" data-drinks><span class="em">🥤</span><div><b>المشروبات</b><small>شنو تشرب وشنو لا</small></div></button><button class="stile mini2" data-fdb><span class="em">🔎</span><div><b>الأطعمة والبذور</b><small>${Object.keys(FOODS).length} أكلة بقيمها</small></div></button><button class="stile mini2" data-shop><span class="em">🛒</span><div><b>سلة الأسبوع</b><small>شنو تشتري</small></div></button><a class="stile mini2" href="#ban"><span class="em">⛔</span><div><b>الممنوعات</b><small>حرام وينفخ</small></div></a></div>`;
+  <div class="card"><div class="sec-h"><h2>أكلت اليوم</h2><span class="xs mut num">القائمة: ${Math.round(plan.k)} سعرة • ${Math.round(plan.p)}g بروتين</span></div>
+   ${bar(tot.k, T.k, 'var(--g)', 'السعرات', 'سعرة')}${bar(tot.p, T.p, 'var(--gold)', 'البروتين', 'g')}${bar(tot.c, Math.round(T.k * .5 / 4), 'var(--blue)', 'الكارب', 'g')}${bar(tot.f, Math.round(T.k * .27 / 9), '#ff9f0a', 'الدهون', 'g')}
+   <p class="xs mut">هدفك للتضخيم النظيف: ${T.k} سعرة و${T.p}g بروتين.</p></div>
+  <div class="sec-h"><h2>وجباتك اليوم</h2><span class="xs mut">اضغط على الوجبة تشوف كل خياراتها</span></div>
+  <div class="slist">${TM.map(({ m, o }) => { const v = optVal(o), c = IC[m.k]; return `<div class="slot ${eaten[m.k] ? 'on' : ''}"><button class="sbody" data-sec="${SEC[m.k]}" data-forslot="${m.k}"><span class="sico" style="background:${c[1]}22;color:${c[1]}">${c[0]}</span><span class="stxt"><span class="xs mut">${m.n} • ${m.t}</span><b>${o.n}</b><span class="xs num"><b style="color:var(--gold)">${Math.round(v.p)}g</b> بروتين • <b>${Math.round(v.k)}</b> سعرة • ${Math.round(v.c)}g كارب • ${Math.round(v.f)}g دهون</span></span>${I.chev}</button><button class="ib sm ${eaten[m.k] ? 'on' : ''}" data-eat="${m.k}" aria-label="أكلتها">${I.check}</button></div>`; }).join('')}</div>
+  <div class="sec-h"><h2>أقسام ثانية</h2></div>
+  <div class="slist">${extra.map(([k, ic, n, sub]) => { const at = k === 'ban' ? 'href="#ban"' : ['drinks', 'fdb', 'shop'].includes(k) ? `data-${k}` : `data-sec="${k}"`; const tag = k === 'ban' ? 'a' : 'button'; return `<${tag} class="slot ex" ${at}><span class="sico">${ic}</span><span class="stxt"><b>${n}</b><span class="xs mut">${sub}${['sw', 'k', 'sh'].includes(k) ? ' • ' + RECIPES.filter(r => r.s === k).length + ' وصفة' : ''}</span></span>${I.chev}</${tag}>`; }).join('')}</div>`;
 }
-function openSection(k) {
+function openSection(k, forSlot) {
   const sec = SECTIONS.find(x => x[0] === k), L = RECIPES.filter(r => r.s === k).concat(k === 'l' ? [0, 1, 2, 3, 4, 5].map(i => genMeal(dayNo() * 7 + 100 + i)) : []);
-  const slot = { b: 'b', l: 'l', d: 'd', s: 's', sh: 'a', sw: 's', k: 's' }[k], cur = pickFor(slot).id;
-  show(`<div class="row"><button class="ib" data-close aria-label="رجوع">${I.back}</button><div class="grow"><h1>${sec[1]}</h1><p class="xs mut">${sec[2]} • ${L.length} وصفة، مرتّبة من الأعلى بروتين</p></div></div>
-  <div class="col">${L.map(r => [r, optVal(r)]).sort((a, b) => (b[0].id === cur) - (a[0].id === cur) || b[1].p - a[1].p).map(([r, v]) => `<button class="rrow ${r.id === cur ? 'on' : ''}" data-rec="${r.id}" data-slot="${slot}"><span class="rimg2"><img src="${recImg(r)}" alt="" loading="lazy" class="${isCut(r) ? 'cut' : ''}">${r.gen ? '<em>✨</em>' : ''}${r.id === cur ? '<em class="today">اليوم</em>' : ''}</span><div class="grow col" style="gap:4px"><b>${r.n}</b><span class="xs mut">${r.tag || ''}</span><div class="pmac num"><span><b style="color:var(--gold)">${Math.round(v.p)}</b>g بروتين</span><span><b>${Math.round(v.k)}</b> سعرة</span><span>⏱ ${r.t || 15} د</span></div></div></button>`).join('')}</div>`);
+  const slot = forSlot || { b: 'b', l: 'l', d: 'd', s: 's', sh: 'a', sw: 's', k: 's' }[k], curR = pickFor(slot), cur = curR.id, slotN = (SLOTS.find(x => x[0] === slot) || [])[1];
+  const cv = optVal(curR), mine = curR.s === k || (k === 'sh' && slot === 'a');
+  const html = `<div class="row"><button class="ib" data-close aria-label="رجوع">${I.back}</button><div class="grow"><h1>${sec[1]}</h1><p class="xs mut">${sec[2]} • ${L.length} وصفة</p></div></div>
+  ${mine ? `<button class="curmeal" data-rec="${cur}" data-slot="${slot}"><img src="${recImg(curR)}" alt="" class="${isCut(curR) ? 'cut' : ''}"><div><span class="xs">✓ ${slotN} اليوم</span><b>${curR.n}</b>${macroRow(cv)}<span class="xs" style="opacity:.85">اضغط تشوف المكونات بالغرام وشلون تسويها</span></div></button>` : ''}
+  <div class="sec-h"><h2>${mine ? 'بدّل بوحدة من هاي' : 'كل الوصفات'}</h2><span class="xs mut">الأعلى بروتين أول</span></div>
+  <div class="col">${L.filter(r => r.id !== cur).map(r => [r, optVal(r)]).sort((a, b) => b[1].p - a[1].p).map(([r, v]) => `<div class="rrow"><button class="rmain" data-rec="${r.id}" data-slot="${slot}"><span class="rimg2"><img src="${recImg(r)}" alt="" loading="lazy" class="${isCut(r) ? 'cut' : ''}">${r.gen ? '<em>✨ جديدة</em>' : ''}</span><span class="grow col" style="gap:3px"><b>${r.n}</b><span class="xs mut clamp">${r.tag || ''}</span><span class="pmac num"><span><b style="color:var(--gold)">${Math.round(v.p)}g</b> بروتين</span><span><b>${Math.round(v.k)}</b> سعرة</span><span>⏱ ${r.t || 15}د</span></span></span></button><button class="pick" data-userec="${r.id}:${slot}:${k}">اختارها</button></div>`).join('')}</div>`;
+  const s = $('#screen'); if (!s.hidden && s.querySelector('.curmeal,.rrow')) { const y = s.scrollTop; s.innerHTML = `<div class="in">${html}</div>`; s.scrollTop = y; } else show(html);
 }
 function openRecipe(id, slot) {
   const o = recById(id), v = optVal(o), sl = SLOTS.find(x => x[0] === slot) || SLOTS.find(x => POOL[x[0]].includes(o.s)) || SLOTS[2], cur = pickFor(sl[0]).id === id, sc = score(o), my = (S.rate || {})[id] || 0;
@@ -551,7 +555,7 @@ function openBan(i) {
 }
 
 /* ================= أنا ================= */
-const VERSION = '12';
+const VERSION = '13';
 function weightInfo() {
   const start = S.startW || (S.weights[0]?.w) || +S.w || 52, goal = +S.goal || 62, cur = curW();
   const ms = [start + 1, start + 3, start + 5, start + 7].filter(x => x < goal).concat([goal]).map(x => +x.toFixed(1));
@@ -730,14 +734,14 @@ document.addEventListener('click', e => {
   if (d.rec) { openRecipe(d.rec, d.slot); return; }
   if (d.food) { openFood(d.food); return; }
   if (d.fcat) { fdCat = d.fcat; openDB(); return; }
-  if (d.sec) { openSection(d.sec); return; }
+  if (d.sec) { openSection(d.sec, d.forslot); return; }
   if ('drinks' in d) { openDrinks(); return; }
   if ('fdb' in d) { openDB(); return; }
   if ('shop' in d) { openShop(); return; }
   if (d.rate) { const [id, v] = d.rate.split(':'); S.rate = S.rate || {}; S.rate[id] = +v; save(); toast(+v >= 4 ? 'كفو، راح تطلعلك أكثر 😋' : 'انحفظ تقييمك'); openRecipe(id); stack.pop(); return; }
   if (d.swapm) { const t = today(); S.msw = S.msw || {}; S.msw[t] = S.msw[t] || {}; if (S.mp && S.mp[t]) delete S.mp[t][d.swapm]; let n = 0; do { S.msw[t][d.swapm] = (S.msw[t][d.swapm] || 0) + 1; n++; } while (n < 6 && (S.fx || {})[pickFor(d.swapm).id] < 0); save(); reroute(); toast('تبدّلت 🔄'); return; }
   if (false) { const t = today(); S.mp = S.mp || {}; S.mp[t] = S.mp[t] || {}; S.mp[t].l = 'g' + (Date.now() % 100000); save(); reroute(); toast('✨ أكلة جديدة للغدا'); return; }
-  if (d.userec) { const [id, sl] = d.userec.split(':'); const t = today(); S.mp = S.mp || {}; S.mp[t] = S.mp[t] || {}; S.mp[t][sl] = id; save(); toast('صارت أكلتك اليوم ✓'); closeScreen(); return; }
+  if (d.userec) { const [id, sl, sk] = d.userec.split(':'); const t = today(); S.mp = S.mp || {}; S.mp[t] = S.mp[t] || {}; S.mp[t][sl] = id; save(); toast('صارت أكلتك اليوم ✓'); if (sk) { openSection(sk, sl); $('#screen').scrollTop = 0; } else closeScreen(); return; }
   if (d.fx) { const [id, v] = d.fx.split(':'); S.fx = S.fx || {}; S.fx[id] = +v; save(); toast(+v > 0 ? 'كفو، نخليها بأكلك' : 'انحفظت، ما راح تطلعلك'); openRecipe(id, (recById(id) || {}).s); return; }
   if (d.took) { const t = today(); S.supp[t] = S.supp[t] || {}; S.supp[t][d.took] = !S.supp[t][d.took]; save(); reroute(); return; }
   if ('hideinstall' in d) { S.hideInstall = 1; save(); route(); return; }
