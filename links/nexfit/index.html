@@ -378,7 +378,7 @@ button.hero{width:100%;border:0;text-align:right;font-family:var(--fb)}
 :root[data-theme=light] .wtabs button.on{color:#fff}
 .stage,.anim{color:#f6f6f8}.dishhero h1,.dishhero p{color:#fff}
 /* ===== التنقل: 6 خانات وحركة بينها ===== */
-nav .in{grid-template-columns:repeat(6,1fr);padding:5px}
+nav .in{grid-template-columns:repeat(7,1fr);padding:5px;overflow:visible}
 nav a{font-size:10.5px;padding:7px 0 6px}nav a svg{width:22px;height:22px}
 nav a[data-t=ban] span{color:var(--g)}nav a[data-t=ban].on span{color:#fff}
 .sl{animation:sl .32s cubic-bezier(.2,.8,.2,1)}.sr{animation:sr .32s cubic-bezier(.2,.8,.2,1)}
@@ -528,6 +528,27 @@ main>*,.card>*,.screen .in>*,.col>*,details>*{min-width:0;max-width:100%}
 .curmeal b{font-family:var(--fd);font-size:24px}.curmeal .mac div{background:rgba(255,255,255,.12)}.curmeal .mac span{color:#ddd}
 .rrow{padding:6px;gap:6px}.rmain{flex:1;display:flex;gap:12px;align-items:center;background:none;border:0;padding:0;color:var(--fg);text-align:right;min-width:0}
 .pick{flex:none;border:1px solid var(--g);color:var(--g);background:none;border-radius:999px;padding:8px 12px;font-family:var(--fd);font-weight:700;font-size:14px}
+
+nav a{font-size:10px}nav a svg{width:21px;height:21px}
+nav a.fab{position:relative;margin-top:-26px;padding-top:0;color:var(--fg)}
+nav a.fab span{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#ff2d3d,#b5121f);color:#fff;display:grid;place-items:center;box-shadow:0 8px 22px rgba(255,45,61,.45);border:3px solid var(--bg);margin-bottom:2px}
+nav a.fab span svg{width:26px;height:26px}nav a.fab.on{background:none;color:var(--g)}
+.scanhero{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;border:0;border-radius:28px;padding:22px 16px;background:linear-gradient(135deg,#ff2d3d,#8e1d26);color:#fff;width:100%}
+.scanhero .ring{width:84px;height:84px;border-radius:50%;background:rgba(255,255,255,.18);display:grid;place-items:center;font-size:40px;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.35)}50%{box-shadow:0 0 0 14px rgba(255,255,255,0)}}
+.scanhero b{font-family:var(--fd);font-size:24px}.scanhero small{font-size:13px;opacity:.92;max-width:300px}
+.stores{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.store{display:flex;flex-direction:column;align-items:flex-start;gap:2px;background:var(--s1);border:1px solid var(--line);border-radius:20px;padding:12px;text-align:right;color:var(--fg)}
+.store>span{font-size:30px}.store b{font-family:var(--fd);font-size:16px}.store small{font-size:11.5px;color:var(--mut)}
+.mgrid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mcard{background:var(--s1);border:1px solid var(--line);border-radius:20px;padding:8px;display:flex;flex-direction:column;gap:3px;text-align:right;color:var(--fg)}
+.mcard b{font-size:14px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.mcard.no{border-color:rgba(255,77,94,.5)}.mcard.mid{border-color:rgba(245,189,69,.45)}
+.mcard .pimg{height:130px}.mcard .pimg img{max-height:116px}
+.vb{position:absolute;top:6px;left:6px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:14px;background:#34c759;color:#fff}
+.mcard .pimg i.vb{background:#34c759}.mcard.no .pimg i.vb{background:var(--red)}.mcard.mid .pimg i.vb{background:var(--gold)}.mcard.unk .pimg i.vb{background:var(--mut)}
+.vt{font-weight:700}.vt.ok{color:#34c759}.vt.no{color:var(--red)}.vt.mid{color:var(--gold)}
+.fitbig{display:flex;align-items:center;gap:10px;background:var(--s1);border:1px solid var(--line);border-radius:18px;padding:12px 14px}.fitbig span{font-size:26px}.fitbig b{font-family:var(--fd);font-size:17px}
 </style>
 </head>
 <body>
@@ -536,12 +557,13 @@ main>*,.card>*,.screen .in>*,.col>*,details>*{min-width:0;max-width:100%}
   <a href="#home" data-t="home"><span data-i="home"></span>الرئيسية</a>
   <a href="#course" data-t="course"><span data-i="dumb"></span>تمريني</a>
   <a href="#food" data-t="food"><span data-i="food"></span>الأكل</a>
+  <a href="#scan" data-t="scan" class="fab"><span data-i="scan"></span>الماركت</a>
   <a href="#supps" data-t="supps"><span data-i="pill"></span>المكملات</a>
   <a href="#ban" data-t="ban"><span data-i="warn"></span>ممنوع</a>
   <a href="#me" data-t="me"><span data-i="user"></span>أنا</a>
 </div></nav>
 <div id="screen" class="screen" hidden></div>
 <div id="player" class="player" hidden></div>
-<script type="module" src="app.js?v=13"></script>
+<script type="module" src="app.js?v=14"></script>
 </body>
 </html>

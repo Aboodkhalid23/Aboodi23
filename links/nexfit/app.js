@@ -35,6 +35,7 @@ const I = {
   watch: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="6" width="12" height="12" rx="3.5"/><path d="M9 6l.6-3h4.8l.6 3M9 18l.6 3h4.8l.6-3M12 9.5V12l1.5 1"/></svg>',
   heart: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.5-9.3C1 8 3.4 4.5 7 4.5c2 0 3.5 1 5 3 1.5-2 3-3 5-3 3.6 0 6 3.5 4.5 7.2C19.5 16.4 12 21 12 21z"/></svg>',
   steps: '<svg viewBox="0 0 24 24" fill="currentColor"><ellipse cx="8" cy="7" rx="3" ry="4.5"/><ellipse cx="16" cy="12" rx="3" ry="4.5"/><rect x="5.5" y="12.5" width="5" height="3" rx="1.5"/><rect x="13.5" y="17.5" width="5" height="3" rx="1.5"/></svg>',
+  scan: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M7 8v8M10 8v8M13 8v8M16.5 8v8"/></svg>',
   chev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg>',
   share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v8h14v-8"/></svg>',
 };
@@ -502,17 +503,76 @@ function vBan() {
 let zxP = null, zxR = null;
 const loadZX = () => zxP || (zxP = new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'vendor/zxing.min.js'; s.onload = () => res(window.ZXing); s.onerror = rej; document.head.append(s); }));
 function stopScan() { try { zxR && zxR.reset(); } catch (e) {} zxR = null; }
-const RX = {
-  haram: [/sian|sika|porsa|possu|porsas|pekoni|kinkku|silava|laardi|kamara|schwein|svin|gris\b|fläsk|pork|bacon|\bham\b|lard|speck/i, /liivate\s*\(siasta\)|sikagelatiini|pork gelatin|schweinegelatine/i, /alkoholi|viini|rommi|likööri|konjakki|olut|alcohol|\bwine\b|\brum\b/i],
-  doubt: [/liivate|gelatiini|gelatin|e\s?441|e\s?428/i, /karmiini|e\s?120|cochineal/i, /e\s?904|sellakka|shellac/i, /e\s?471|e\s?472|mono- ja diglyseridit|mono- and diglycerides/i, /juoksete|juoksute|rennet|lab\b/i],
-  ibs: [[/valkosipuli|garlic/i, 'ثوم'], [/(?<!ruoho)sipuli|onion/i, 'بصل'], [/hunaja|honey/i, 'عسل'], [/inuliini|juurisikuri|inulin|chicory/i, 'ألياف الهندباء'], [/sorbitoli|ksylitoli|maltitoli|mannitoli|e\s?42[01]|e\s?96[57]|sorbitol|xylitol|maltitol/i, 'محليات تنفخ'], [/kikherne|pavut|papu|linssi|chickpea|lentil|bean/i, 'بقوليات'], [/omena|päärynä|apple|pear|mango/i, 'فواكه تنفخ'], [/fruktoosi|fructose/i, 'سكر الفواكه']],
-};
-function analyze(p) {
-  const ing = [p.ingredients_text_fi, p.ingredients_text, p.ingredients_text_en, p.ingredients_text_sv].filter(Boolean).join(' • '), tags = (p.ingredients_analysis_tags || []).concat(p.labels_tags || []).join(' ');
-  const hit = (arr) => arr.map(r => (ing.match(r) || [])[0]).filter(Boolean);
-  const h = hit(RX.haram), dRaw = hit(RX.doubt).filter(x => !h.length || !/liivate|gelatin/i.test(x)), ibs = RX.ibs.filter(([r]) => r.test(ing)).map(x => x[1]);
-  const lac = /maito|milk|kerma|cream|juusto|cheese|laktoosi/i.test(ing) && !/laktoositon|lactose[- ]free|laktaasi/i.test(ing + ' ' + (p.product_name || '')), halalLbl = /halal/i.test(tags);
-  return { ing, h, d: dRaw, ibs: lac ? ibs.concat('لاكتوز') : ibs, halalLbl, vegan: /en:vegan/.test(tags) };
+/* ================= الماركت والفحص (باركود، صورة، بحث بالاسم، محلات العالم) ================= */
+let mkP = null, mkFilter = 'all';
+const mk = () => mkP || (mkP = import('./market.js'));
+const REG = R => Object.fromEntries(Object.entries(R).map(([k, v]) => [k, v.map(([p, m]) => [new RegExp(p, 'i'), m])]));
+async function analyzeP(p) {
+  const { RULES } = await mk(), C = REG(RULES);
+  const ing = [p.ingredients_text_en, p.ingredients_text, p.ingredients_text_fi, p.ingredients_text_sv, p.ingredients_text_de, p.ingredients_text_fr].filter(Boolean).filter((x, i, a) => a.indexOf(x) === i).join(' • ');
+  const blob = ing + ' ' + (p.ingredients_tags || []).map(t => t.split(':').pop().replace(/-/g, ' ')).join(' '), lbl = (p.labels_tags || []).join(' ');
+  const hl = /halal/.test(lbl), uniq = a => [...new Set(a)];
+  const h = uniq(C.haram.filter(([r]) => r.test(blob)).map(x => x[1]));
+  let d = uniq(C.doubt.filter(([r]) => r.test(blob)).map(x => x[1]));
+  if (h.some(x => /جيلاتين/.test(x))) d = d.filter(x => !/جيلاتين/.test(x));
+  if (hl) d = d.filter(x => !/مذبوح|حيواني/.test(x));
+  const i = uniq(C.ibs.filter(([r]) => r.test(blob)).map(x => x[1]));
+  if (/\bmilk|lactose|maito|laktoosi|\blait\b|milch|乳|ミルク|우유|นม/i.test(blob) && !/laktoositon|lactose[- ]free|laktaasi/i.test(blob)) i.push('لاكتوز');
+  return { ing, h, d, i, hl, v: h.length ? 'no' : d.length ? 'mid' : ing || blob.trim() ? 'ok' : 'unk' };
+}
+const VB = { no: ['⛔', 'حرام'], mid: ['⚠', 'مشكوك'], ok: ['✓', 'ما بيه حرام'], unk: ['?', 'مو معروف'] };
+function productView(x, code) {
+  const v = n => n == null || n === '' ? '—' : Math.round(n * 10) / 10;
+  const verdict = x.v === 'no' ? `<div class="danger"><span>${I.warn}</span><div><b>⛔ حرام، لا تشتريه</b><p class="sm">لگينا بالمكونات: ${x.h.join('، ')}</p></div></div>`
+    : x.v === 'mid' ? `<div class="danger mid"><span>⚠</span><div><b>مشكوك، الأحسن تتركه</b><p class="sm">${x.d.join('، ')}</p></div></div>`
+    : x.v === 'ok' ? `<div class="okbox"><b>✓ ما لگينا بيه خنزير ولا جيلاتين ولا خمر</b><p class="xs">حسب المكونات المكتوبة. ${x.hl ? 'وعليه علامة حلال ✓' : 'اللحم والدجاج لازم يكون مذبوح حلال حتى لو المكونات نظيفة.'}</p></div>`
+    : '<div class="warn">المكونات مو مكتوبة بالقاعدة. اقراها من الغلاف، أو صوّر الباركود من جديد.</div>';
+  const fit = x.v === 'ok' && !(x.i || []).length ? ['🟢', 'يناسبك: حلال حسب المكونات وما بيه شي ينفخ'] : x.v === 'ok' ? ['🟡', 'حلال حسب المكونات، بس انتبه للقولون'] : x.v === 'mid' ? ['🟠', 'الأحسن تتركه'] : x.v === 'no' ? ['🔴', 'ما يناسبك'] : ['⚪', 'ما نعرف'];
+  return `<div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><h2 class="grow">${esc(x.n || 'منتج')}</h2></div>
+  ${x.img ? `<div class="prod big"><img src="${x.img.replace('.400.jpg', '.full.jpg')}" onerror="this.src='${x.img}'" alt=""></div>` : ''}
+  <span class="fi" style="font-size:14px">${esc(x.b || '')} ${esc(x.q || '')} ${code ? '• ' + code : ''}</span>
+  <div class="fitbig"><span>${fit[0]}</span><b>${fit[1]}</b></div>
+  ${verdict}
+  ${x.v !== 'unk' ? ((x.i || []).length ? `<div class="danger mid"><span>🫃</span><div><b>للقولون: انتبه</b><p class="sm">بيه ${x.i.join('، ')}</p></div></div>` : '<div class="okbox"><b>✓ ما بيه أشياء معروفة تنفخ القولون</b></div>') : ''}
+  <div class="card"><h3>بكل 100 غم</h3>${nutTiles({ k: v(x.k), p: v(x.p), c: v(x.cb), f: v(x.f) })}${x.p >= 10 ? '<p class="xs" style="color:var(--gold)">💪 بروتين عالي</p>' : ''}</div>
+  ${x.ing ? `<details class="card"><summary class="sm">المكونات كما مكتوبة</summary><p class="fi" style="font-size:13px;line-height:1.7;margin-top:8px">${esc(x.ing.slice(0, 1400))}</p></details>` : ''}
+  <p class="xs mut">الفحص يقرا المكونات المكتوبة بالقاعدة. إذا الغلاف بإيدك يختلف، صدّق الغلاف.</p>
+  <button class="btn ghost wide" data-scan>📷 افحص منتج ثاني</button>`;
+}
+function vScan() {
+  const sc = (S.scans || []).slice(0, 10);
+  return `${head('الماركت')}
+  <button class="scanhero" data-scan><span class="ring">📷</span><b>افحص منتج</b><small>وجّه الكاميرا على الباركود، ويگلك حلال لو لا، ويناسب القولون لو لا، وشكد بيه بروتين</small></button>
+  <div class="row"><label class="btn ghost grow" style="font-size:15px">🖼 صورة الباركود<input type="file" accept="image/*" capture="environment" id="bcImg" hidden></label><button class="btn ghost grow" style="font-size:15px" data-bctype>⌨ اكتب الرقم</button></div>
+  <div class="card"><h3>🔎 دوّر على منتج بالاسم</h3><div class="row"><input class="field" id="mq" type="search" placeholder="مثلاً: Shin Ramyun، Pocky، Indomie"><button class="btn sm" data-msearch>دوّر</button></div><div id="mres"></div></div>
+  <div class="sec-h"><h2>محلات العالم</h2><span class="xs mut">منتجات مفحوصة</span></div>
+  <div class="stores">${(window.__STORES || []).map(([k, f, n, sub]) => `<button class="store" data-store="${k}"><span>${f}</span><b>${n}</b><small>${sub}</small></button>`).join('') || '<p class="xs mut">دا يحمّل...</p>'}</div>
+  ${sc.length ? `<div class="sec-h"><h2>آخر الي فحصته</h2></div><div class="slist">${sc.map(x => `<button class="slot ex" data-bc="${x.c}"><span class="sico">${x.r === 'no' ? '⛔' : x.r === 'mid' ? '⚠' : '✓'}</span><span class="stxt"><b>${esc(x.n || x.c)}</b><span class="xs mut">${x.t}</span></span>${I.chev}</button>`).join('')}</div>` : ''}
+  <a class="banlink" href="#ban"><span>${I.warn}</span><div class="grow"><b>الممنوعات المعروفة</b><p class="xs">96 منتج بفنلندا بيهم خنزير أو جيلاتين</p></div>${I.chev}</a>`;
+}
+mk().then(m => { window.__STORES = m.STORES; if (location.hash === '#scan') reroute(); });
+async function openStore(k) {
+  const { MARKET, STORES } = await mk(), st = STORES.find(s => s[0] === k), all = MARKET[k] || [];
+  const L = all.filter(x => mkFilter === 'all' || x.v === mkFilter || (mkFilter === 'pro' && x.p >= 8 && x.v === 'ok'));
+  const cnt = v => all.filter(x => x.v === v).length;
+  const html = `<div class="row"><button class="ib" data-close aria-label="رجوع">${I.back}</button><div class="grow"><h1>${st[1]} ${st[2]}</h1><p class="xs mut">${all.length} منتج مفحوص • ${st[3]}</p></div></div>
+  <div class="chips">${[['all', 'الكل'], ['ok', '✓ حلال ' + cnt('ok')], ['mid', '⚠ مشكوك ' + cnt('mid')], ['no', '⛔ حرام ' + cnt('no')], ['pro', '💪 بروتين عالي']].map(([f, n]) => `<button class="${mkFilter === f ? 'on' : ''}" data-mkf="${f}:${k}">${n}</button>`).join('')}</div>
+  <div class="mgrid2">${L.map(x => `<button class="mcard ${x.v}" data-mitem="${k}:${all.indexOf(x)}"><span class="pimg"><img src="${x.img}" alt="" loading="lazy"><i class="vb">${VB[x.v][0]}</i></span><b>${esc(x.n)}</b><span class="xs mut">${esc(x.b)}</span><span class="xs"><span class="vt ${x.v}">${VB[x.v][1]}</span>${x.p != null ? ` • <b class="num" style="color:var(--gold)">${x.p}g</b> بروتين` : ''}</span></button>`).join('') || '<p class="mut">ماكو منتجات بهالفلتر.</p>'}</div>`;
+  const s = $('#screen'); if (!s.hidden && s.querySelector('.mgrid2')) { const y = s.scrollTop; s.innerHTML = `<div class="in">${html}</div>`; s.scrollTop = y; } else show(html);
+}
+async function openMItem(k, i) { const { MARKET } = await mk(); const x = MARKET[k][i]; show(productView(x, x.c), true); }
+async function nameSearch() {
+  const q = ($('#mq') || {}).value?.trim(); if (!q) return; const box = $('#mres'); box.innerHTML = '<p class="xs mut">دا أدوّر...</p>';
+  const { MARKET } = await mk(), loc = Object.entries(MARKET).flatMap(([k, L]) => L.map((x, i) => [k, i, x])).filter(([, , x]) => (x.n + ' ' + x.b).toLowerCase().includes(q.toLowerCase())).slice(0, 12);
+  let on = [];
+  const qs = { search_terms: q, page_size: 15, fields: 'code,product_name,brands,image_front_url' };
+  const cg = 'https://world.openfoodfacts.org/cgi/search.pl?' + new URLSearchParams(Object.assign({ search_simple: 1, json: 1, action: 'process' }, qs)); for (const u of [cg, cg, cg]) {  try { const r = await fetch(u); if (!r.ok) { await new Promise(z => setTimeout(z, 1500)); continue; } on = ((await r.json()).products || []).filter(h => h.product_name && h.code); if (on.length) break; } catch (e) {} }
+  box.innerHTML = (loc.length || on.length) ? `<div class="slist" style="margin-top:10px">${loc.map(([k, i, x]) => `<button class="slot ex" data-mitem="${k}:${i}"><span class="sico">${VB[x.v][0]}</span><span class="stxt"><b>${esc(x.n)}</b><span class="xs mut">${esc(x.b)} • ${VB[x.v][1]}</span></span>${I.chev}</button>`).join('')}${on.map(h => `<button class="slot ex" data-bc="${h.code}">${h.image_front_url ? `<img src="${h.image_front_url}" alt="" style="width:46px;height:46px;object-fit:contain;background:#fff;border-radius:12px">` : '<span class="sico">🔎</span>'}<span class="stxt"><b>${esc(h.product_name)}</b><span class="xs mut">${esc([].concat(h.brands || []).join(', '))} • اضغط حتى أفحصه</span></span>${I.chev}</button>`).join('')}</div>` : '<p class="xs mut">ما لگيت شي. جرّب اسم ثاني أو صوّر الباركود.</p>';
+}
+async function decodeImage(file) {
+  toast('دا أقرا الصورة...');
+  try { const ZX = await loadZX(), r = new ZX.BrowserMultiFormatReader(), u = URL.createObjectURL(file); const res = await r.decodeFromImageUrl(u); URL.revokeObjectURL(u); lookupBC(res.getText()); }
+  catch (e) { toast('ما گدرت أقرا الباركود. صوّره قريب وواضح'); }
 }
 function openScan() {
   show(`<div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><h2 class="grow">افحص منتج</h2></div>
@@ -529,22 +589,13 @@ async function lookupBC(code) {
   code = String(code).replace(/\D/g, ''); if (code.length < 8) { toast('الرقم قصير'); return; }
   stopScan(); show(`<div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><h2>دا أفحص...</h2></div><div class="card"><p class="sm">رقم ${code}</p><div class="bar"><i style="width:60%" class="loading"></i></div></div>`, true);
   let p = null;
-  try { const r = await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}?fields=product_name,brands,image_front_url,ingredients_text,ingredients_text_fi,ingredients_text_en,ingredients_text_sv,ingredients_analysis_tags,labels_tags,nutriments,quantity`); const j = await r.json(); if (j.status === 1 || j.product) p = j.product; } catch (e) {}
-  if (!p || !(p.product_name || p.ingredients_text)) { show(`<div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><h2>ما لگيته</h2></div><div class="warn">هذا المنتج مو موجود بالقاعدة، أو النت ضعيف. اقرا المكونات (Ainesosat) ودوّر على الكلمات الممنوعة.</div><a class="btn wide" href="#ban" data-close>شوف الكلمات الممنوعة</a>`, true); return; }
-  const A = analyze(p), n = p.nutriments || {}, v = x => x == null ? '—' : AR(Math.round(x * 10) / 10);
-  const S2 = (S.scans = S.scans || []); S2.unshift({ c: code, n: p.product_name || '', t: today(), r: A.h.length ? 'no' : A.d.length ? 'mid' : 'ok' }); S.scans = S2.slice(0, 20); save();
-  const verdict = A.h.length ? `<div class="danger"><span>${I.warn}</span><div><b>⛔ حرام، لا تشتريه</b><p class="sm">لگيت بالمكونات: <span class="fi" style="display:inline">${A.h.join('، ')}</span></p></div></div>`
-    : A.d.length ? `<div class="danger mid"><span>⚠</span><div><b>مشكوك، الأحسن تتركه</b><p class="sm">بيه: <span class="fi" style="display:inline">${A.d.join('، ')}</span>. ${/liivate|gelatin|441|428/i.test(A.d.join()) ? 'جيلاتين ومصدره مو مكتوب، وبأوروبا غالباً من الخنزير.' : 'مادة ممكن تكون حيوانية أو العلماء مختلفين عليها.'}</p></div></div>`
-    : A.ing ? `<div class="okbox"><b>✓ ما لگيت بيه خنزير ولا جيلاتين ولا كحول</b><p class="xs">حسب المكونات المكتوبة. ${A.halalLbl ? 'وعليه علامة حلال.' : 'اللحم والدجاج لازم يكون مذبوح حلال حتى لو المكونات نظيفة.'}</p></div>`
-    : '<div class="warn">المكونات مو مكتوبة بالقاعدة. اقراها من الغلاف.</div>';
-  show(`<div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><h2 class="grow">${esc(p.product_name || 'منتج')}</h2></div>
-  ${p.image_front_url ? `<div class="prod" style="height:230px"><img src="${p.image_front_url}" alt="" style="max-height:210px"></div>` : ''}
-  <span class="fi" style="font-size:14px">${esc(p.brands || '')} ${esc(p.quantity || '')}</span>
-  ${verdict}
-  ${A.ing ? (A.ibs.length ? `<div class="danger mid"><span>🫃</span><div><b>للقولون: انتبه</b><p class="sm">بيه ${[...new Set(A.ibs)].join('، ')}</p></div></div>` : '<div class="okbox"><b>✓ ما بيه أشياء معروفة تنفخ القولون</b></div>') : ''}
-  <div class="card"><h3>بكل 100 غم</h3>${nutTiles({ k: v(n['energy-kcal_100g']), p: v(n.proteins_100g), c: v(n.carbohydrates_100g), f: v(n.fat_100g) })}</div>
-  ${A.ing ? `<details class="card"><summary class="sm">المكونات كما مكتوبة</summary><p class="fi" style="font-size:13px;line-height:1.7;margin-top:8px">${esc(A.ing.slice(0, 1200))}</p></details>` : ''}
-  <button class="btn ghost wide" data-scan>📷 افحص منتج ثاني</button>`, true);
+  try { const r = await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}?fields=product_name,product_name_en,brands,image_front_url,ingredients_text,ingredients_text_fi,ingredients_text_en,ingredients_text_sv,ingredients_text_de,ingredients_text_fr,ingredients_tags,labels_tags,nutriments,quantity`); const j = await r.json(); if (j.status === 1 || j.product) p = j.product; } catch (e) {}
+  if (!p || !(p.product_name || p.product_name_en || p.ingredients_text)) { const { MARKET } = await mk(); const hit = Object.entries(MARKET).flatMap(([k, L]) => L.map((x, i) => [k, i, x])).find(([, , x]) => x.c === code); if (hit) { openMItem(hit[0], hit[1]); return; }
+    show(`<div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><h2>ما لگيته</h2></div><div class="warn">هذا المنتج مو موجود بالقاعدة العالمية، أو النت ضعيف. اقرا المكونات (Ainesosat / Ingredients) ودوّر على الكلمات الممنوعة.</div><button class="btn wide" data-banwords>شوف الكلمات الممنوعة</button>`, true); return; }
+  const A = await analyzeP(p), n = p.nutriments || {};
+  const x = { n: p.product_name_en || p.product_name, b: [].concat(p.brands || []).join(', '), img: p.image_front_url, q: p.quantity, v: A.v, h: A.h, d: A.d, i: A.i, hl: A.hl, k: n['energy-kcal_100g'], p: n.proteins_100g, cb: n.carbohydrates_100g, f: n.fat_100g, ing: A.ing };
+  S.scans = [{ c: code, n: x.n || '', t: today(), r: x.v }].concat((S.scans || []).filter(z => z.c !== code)).slice(0, 30); save();
+  show(productView(x, code), true);
 }
 function openBan(i) {
   const b = BAN[i];
@@ -555,7 +606,7 @@ function openBan(i) {
 }
 
 /* ================= أنا ================= */
-const VERSION = '13';
+const VERSION = '14';
 function weightInfo() {
   const start = S.startW || (S.weights[0]?.w) || +S.w || 52, goal = +S.goal || 62, cur = curW();
   const ms = [start + 1, start + 3, start + 5, start + 7].filter(x => x < goal).concat([goal]).map(x => +x.toFixed(1));
@@ -701,7 +752,7 @@ function chart(W, goal = 62) {
 }
 
 /* ================= التنقل ================= */
-const V = { home: vHome, course: vCourse, food: vFood, supps: vSupps, ban: vBan, me: vMe };
+const V = { home: vHome, course: vCourse, food: vFood, scan: vScan, supps: vSupps, ban: vBan, me: vMe };
 const TABS = Object.keys(V); let lastTab = null;
 function route() { let h = location.hash.slice(1); if (h.startsWith('hk')) { const r = parseHK(decodeURIComponent(h.slice(3))); if (r) { saveHK(r); toast('وصلت أرقام الساعة ✓'); } history.replaceState(null, '', '#home'); h = 'home'; } if (!V[h]) h = 'home'; $('#app').innerHTML = V[h](); if (h === 'me') loadPhotos(); const a = $('#app'); a.classList.remove('fade', 'sl', 'sr'); if (lastTab !== h) { void a.offsetWidth; a.classList.add(lastTab == null ? 'fade' : TABS.indexOf(h) > TABS.indexOf(lastTab) ? 'sl' : 'sr'); } lastTab = h; document.querySelectorAll('nav a').forEach(a => a.classList.toggle('on', a.dataset.t === h)); }
 let stack = [];
@@ -763,6 +814,12 @@ document.addEventListener('click', e => {
   if (d.ban != null) { openBan(+d.ban); return; }
   if (d.bang) { banG = d.bang; reroute(); return; }
   if ('scan' in d) { openScan(); return; }
+  if (d.store) { mkFilter = 'all'; openStore(d.store); return; }
+  if (d.mkf) { const [f, k] = d.mkf.split(':'); mkFilter = f; openStore(k); return; }
+  if (d.mitem) { const [k, i] = d.mitem.split(':'); openMItem(k, +i); return; }
+  if ('msearch' in d) { nameSearch(); return; }
+  if ('bctype' in d) { openScan(); setTimeout(() => { const i = $('#bcIn'); if (i) i.focus(); }, 300); return; }
+  if ('banwords' in d) { banView = 'words'; closeScreen(true); location.hash = '#ban'; return; }
   if ('bcgo' in d) { lookupBC($('#bcIn').value); return; }
   if (d.bc) { lookupBC(d.bc); return; }
   if ('water' in d) { S.water = S.water || {}; S.water[today()] = (S.water[today()] || 0) + 1; save(); reroute(); toast('💧 كفو! كوب ' + AR(S.water[today()])); return; }
@@ -783,7 +840,8 @@ function renderPlayerSets() { // تحديث السطور بدون ما نعيد 
   document.querySelectorAll('#player .set').forEach((row, j) => { row.classList.toggle('done', sets[j].ok); const i = row.querySelector('.i'); i.classList.toggle('cur', j === cur); i.textContent = j === cur ? '●' : AR(j + 1); });
   const done = SES.sets.map(s => s.every(z => z.ok)); document.querySelectorAll('#player .dots button').forEach((x, j) => x.classList.toggle('ok', done[j]));
 }
-document.addEventListener('change', async e => { if (e.target.id === 'impIn' && e.target.files[0]) { try { const o = JSON.parse(await e.target.files[0].text()); if (!o || !o.month) throw 0; S = Object.assign(def(), o); save(); applyTheme(); closeScreen(); toast('رجعت معلوماتك ✓'); } catch (er) { toast('الملف مو صحيح'); } return; } if (e.target.id === 'photoIn' && e.target.files[0]) { await savePhoto(e.target.files[0]); toast('انحفظت الصورة'); loadPhotos(); } });
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'mq') { e.preventDefault(); nameSearch(); } if (e.key === 'Enter' && e.target.id === 'bcIn') { e.preventDefault(); lookupBC(e.target.value); } });
+document.addEventListener('change', async e => { if (e.target.id === 'bcImg' && e.target.files[0]) { decodeImage(e.target.files[0]); e.target.value = ''; return; } if (e.target.id === 'impIn' && e.target.files[0]) { try { const o = JSON.parse(await e.target.files[0].text()); if (!o || !o.month) throw 0; S = Object.assign(def(), o); save(); applyTheme(); closeScreen(); toast('رجعت معلوماتك ✓'); } catch (er) { toast('الملف مو صحيح'); } return; } if (e.target.id === 'photoIn' && e.target.files[0]) { await savePhoto(e.target.files[0]); toast('انحفظت الصورة'); loadPhotos(); } });
 document.addEventListener('input', e => { const t = e.target; if (t.id === 'fdq') { fdQ = t.value; const pos = t.selectionStart; openDB(); const n = $('#fdq'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (er) {} } return; } if (!SES) return; if (t.dataset.w != null) SES.sets[SES.k][+t.dataset.w].w = t.value; if (t.dataset.r != null) SES.sets[SES.k][+t.dataset.r].r = t.value; });
 route();
 
