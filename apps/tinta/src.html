@@ -232,6 +232,16 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 .erow .use{margin:0;height:48px}
 .erow .sharebtn{margin:0}
 .more .field + .field{margin-top:10px}
+.updbanner{margin-top:16px;padding:14px 16px;border-radius:16px;background:var(--accent);color:var(--bg)}
+.updbanner .k{font-size:15px;font-weight:800}
+.updbanner p{margin:6px 0 0;font-size:15px;line-height:1.45;font-weight:500}
+.updbanner span{display:block;margin-top:6px;font-size:13px;opacity:.75}
+.updlist{margin-top:18px;padding:12px 14px;border-radius:16px;background:var(--warm);border:1px solid var(--accent)}
+.updlist .k{font-size:14px;font-weight:700;color:var(--accent-soft);margin-bottom:4px}
+.urow{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;padding:10px 0;border:0;border-top:1px solid #3A2A1C;background:transparent;text-align:left}
+.urow b{font-family:var(--serif);font-size:20px;font-weight:600}
+.urow span{font-size:12px;color:var(--muted)}
+.tag.upd{background:var(--accent);color:var(--bg);border-color:var(--accent)}
 @media (prefers-reduced-motion:no-preference){.view{animation:in .18s ease-out}@keyframes in{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}}
 </style>
 
@@ -258,7 +268,7 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 <div class="timers" id="timers" aria-live="polite"></div>
 
 <div class="tabs"><nav aria-label="Valikko / Menu">
-  <button type="button" data-tab="home"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 5h16M4 12h16M4 19h10"></path></svg><span id="tab1"></span></button>
+  <button type="button" data-tab="home"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 5h16M4 12h16M4 19h10"></path></svg><span id="tab1"></span><span class="badge" id="homebadge" hidden></span></button>
   <button type="button" data-tab="favs"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"></path></svg><span id="tab2"></span></button>
   <button type="button" data-tab="new" class="camtab" aria-label="Uusi resepti kuvasta / New recipe from photo"><span class="camball"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg></span><span id="tab5"></span></button>
   <button type="button" data-tab="prep"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"></path></svg><span id="tab3"></span><span class="badge" id="prepbadge" hidden></span></button>
