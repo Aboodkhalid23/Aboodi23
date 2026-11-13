@@ -585,9 +585,6 @@ function vBan() {
   return `${head(`<span style="color:var(--g)">⚠</span> الممنوعات`)}<button class="scanbtn" data-scan><span>📷</span><div class="grow"><b>افحص منتج بالكاميرا</b><small>وجّه على الباركود بالماركت ويگلك حلال لو لا، ويناسب القولون لو لا</small></div>${I.chev}</button>${(S.scans || []).length ? `<div class="hscroll">${S.scans.slice(0, 8).map(x => `<button class="chipscan ${x.r}" data-bc="${x.c}">${x.r === 'no' ? '⛔' : x.r === 'mid' ? '⚠' : '✓'} ${esc(x.n.slice(0, 18) || x.c)}</button>`).join('')}</div>` : ''}${seg}${body}`;
 }
 /* ================= فحص المنتج بالكاميرا (باركود) ================= */
-let zxP = null, zxR = null;
-const loadZX = () => zxP || (zxP = new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'vendor/zxing.min.js'; s.onload = () => res(window.ZXing); s.onerror = rej; document.head.append(s); }));
-function stopScan() { try { zxR && zxR.reset(); } catch (e) {} zxR = null; }
 /* ================= الماركت والفحص (باركود، صورة، بحث بالاسم، محلات العالم) ================= */
 let mkP = null, mkFilter = 'all';
 const mk = () => mkP || (mkP = import('./market.js'));
@@ -628,7 +625,7 @@ function vScan() {
   const sc = (S.scans || []).slice(0, 10);
   return `${head('الماركت')}
   <button class="scanhero" data-scan><span class="ring">📷</span><b>افحص منتج</b><small>وجّه الكاميرا على الباركود، ويگلك حلال لو لا، ويناسب القولون لو لا، وشكد بيه بروتين</small></button>
-  <div class="row"><label class="btn ghost grow" style="font-size:15px">🖼 صورة الباركود<input type="file" accept="image/*" capture="environment" id="bcImg" hidden></label><button class="btn ghost grow" style="font-size:15px" data-bctype>⌨ اكتب الرقم</button></div>
+  <div class="row"><label class="btn ghost grow" style="font-size:14px">🖼 صورة الباركود<input type="file" accept="image/*" capture="environment" id="bcImg" hidden></label><label class="btn ghost grow" style="font-size:14px">📄 صوّر المكونات<input type="file" accept="image/*" capture="environment" id="ingImg" hidden></label></div><button class="btn ghost wide" style="font-size:14px" data-bctype>⌨ اكتب رقم الباركود</button>
   <div class="card"><h3>🔎 دوّر على منتج بالاسم</h3><div class="row"><input class="field" id="mq" type="search" placeholder="مثلاً: Shin Ramyun، Pocky، Indomie"><button class="btn sm" data-msearch>دوّر</button></div><div id="mres"></div></div>
   <div class="sec-h"><h2>محلات العالم</h2><span class="xs mut">منتجات مفحوصة</span></div>
   <div class="stores">${(window.__STORES || []).map(([k, f, n, sub]) => `<button class="store" data-store="${k}"><span>${f}</span><b>${n}</b><small>${sub}</small></button>`).join('') || '<p class="xs mut">دا يحمّل...</p>'}</div>
@@ -659,28 +656,73 @@ async function decodeImage(file) {
   try { const ZX = await loadZX(), r = new ZX.BrowserMultiFormatReader(), u = URL.createObjectURL(file); const res = await r.decodeFromImageUrl(u); URL.revokeObjectURL(u); lookupBC(res.getText()); }
   catch (e) { toast('ما گدرت أقرا الباركود. صوّره قريب وواضح'); }
 }
+let zxP = null, zxR = null, camS = null, ocrP = null;
+const loadZX = () => zxP || (zxP = new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'vendor/zxing.min.js'; s.onload = () => res(window.ZXing); s.onerror = rej; document.head.append(s); }));
+function stopScan() { try { zxR && zxR.reset(); } catch (e) {} zxR = null; try { camS && camS.getTracks().forEach(t => t.stop()); } catch (e) {} camS = null; }
+/* الكاميرا: نفتحها بنفسنا (أوضح دقة وأسرع)، وكل مرة ترجع للشاشة تنفتح من جديد */
+async function startCam() {
+  const v = $('#scv'), m = $('#scmsg'); if (!v) return; stopScan();
+  try {
+    const ZX = await loadZX();
+    camS = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } } });
+    if (!$('#scv')) { stopScan(); return; }
+    const hints = new Map(); hints.set(ZX.DecodeHintType.POSSIBLE_FORMATS, [ZX.BarcodeFormat.EAN_13, ZX.BarcodeFormat.EAN_8, ZX.BarcodeFormat.UPC_A, ZX.BarcodeFormat.UPC_E, ZX.BarcodeFormat.CODE_128]); hints.set(ZX.DecodeHintType.TRY_HARDER, true);
+    zxR = new ZX.BrowserMultiFormatReader(hints, 150);
+    let last = '', n = 0;
+    zxR.decodeFromStream(camS, v, r => { if (!r) return; const t = r.getText(); n = t === last ? n + 1 : 1; last = t; if (n >= 2 || t.length >= 12) { try { navigator.vibrate && navigator.vibrate(60); } catch (e) {} stopScan(); lookupBC(t); } });
+    if (m) m.textContent = 'قرّب الباركود لحد ما يملا الخط الأحمر';
+  } catch (e) { if (m) m.textContent = 'ما گدرت أفتح الكاميرا. من إعدادات الآيفون ← سفاري ← الكاميرا ← سماح. أو صوّر الباركود تحت.'; }
+}
 function openScan() {
   show(`<div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><h2 class="grow">افحص منتج</h2></div>
-  <div class="scanbox"><video id="scv" playsinline muted></video><div class="scanline"></div><p id="scmsg">وجّه الكاميرا على الباركود (الخطوط السودة)</p></div>
+  <div class="scanbox"><video id="scv" playsinline muted autoplay></video><div class="scanline"></div><p id="scmsg">دا أفتح الكاميرا...</p></div>
+  <div class="row"><label class="btn ghost grow" style="font-size:15px">🖼 صوّر الباركود<input type="file" accept="image/*" capture="environment" id="bcImg" hidden></label><label class="btn ghost grow" style="font-size:15px">📄 صوّر المكونات<input type="file" accept="image/*" capture="environment" id="ingImg" hidden></label></div>
   <div class="card"><h3>أو اكتب رقم الباركود</h3><div class="row"><input class="field num" id="bcIn" inputmode="numeric" placeholder="6408430043019" dir="ltr"><button class="btn sm" data-bcgo>افحص</button></div></div>
-  <p class="xs mut">المعلومات من قاعدة المنتجات المفتوحة (Open Food Facts). إذا المنتج مو موجود، اقرا المكونات بنفسك من خانة "اقرا الغلاف".</p>`, true);
-  loadZX().then(ZX => {
-    const v = $('#scv'); if (!v) return;
-    zxR = new ZX.BrowserMultiFormatReader();
-    zxR.decodeFromConstraints({ video: { facingMode: 'environment' } }, v, (r) => { if (r) { stopScan(); lookupBC(r.getText()); } }).catch(() => { const m = $('#scmsg'); if (m) m.textContent = 'ما گدرت أفتح الكاميرا. اسمح للكاميرا من إعدادات سفاري، أو اكتب الرقم.'; });
-  }).catch(() => { const m = $('#scmsg'); if (m) m.textContent = 'الكاميرا ما اشتغلت. اكتب الرقم تحت.'; });
+  <p class="xs mut">نفحص بقاعدة المنتجات العالمية (Open Food Facts). إذا المنتج مو بيها، صوّر المكونات وأنا أقراها وأگلك حلال لو لا.</p>`, true);
+  startCam();
+}
+async function fetchOFF(code) {
+  const C = [code]; if (code.length === 12) C.push('0' + code); if (code.length === 13 && code[0] === '0') C.push(code.slice(1)); if (code.length === 8) C.push(code.padStart(13, '0'));
+  const F = 'product_name,product_name_en,product_name_fi,brands,image_front_url,ingredients_text,ingredients_text_fi,ingredients_text_en,ingredients_text_sv,ingredients_text_de,ingredients_text_fr,ingredients_tags,labels_tags,nutriments,quantity';
+  for (const c of C) for (const host of ['world.openfoodfacts.org', 'fi.openfoodfacts.org']) {
+    try { const r = await fetch(`https://${host}/api/v2/product/${c}?fields=${F}`); if (!r.ok) continue; const j = await r.json(); if (j.product && (j.product.product_name || j.product.product_name_fi || j.product.ingredients_text || j.product.ingredients_tags)) return j.product; } catch (e) {}
+  }
+  return null;
 }
 async function lookupBC(code) {
   code = String(code).replace(/\D/g, ''); if (code.length < 8) { toast('الرقم قصير'); return; }
-  stopScan(); show(`<div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><h2>دا أفحص...</h2></div><div class="card"><p class="sm">رقم ${code}</p><div class="bar"><i style="width:60%" class="loading"></i></div></div>`, true);
-  let p = null;
-  try { const r = await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}?fields=product_name,product_name_en,brands,image_front_url,ingredients_text,ingredients_text_fi,ingredients_text_en,ingredients_text_sv,ingredients_text_de,ingredients_text_fr,ingredients_tags,labels_tags,nutriments,quantity`); const j = await r.json(); if (j.status === 1 || j.product) p = j.product; } catch (e) {}
-  if (!p || !(p.product_name || p.product_name_en || p.ingredients_text)) { const { MARKET } = await mk(); const hit = Object.entries(MARKET).flatMap(([k, L]) => L.map((x, i) => [k, i, x])).find(([, , x]) => x.c === code); if (hit) { openMItem(hit[0], hit[1]); return; }
-    show(`<div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><h2>ما لگيته</h2></div><div class="warn">هذا المنتج مو موجود بالقاعدة العالمية، أو النت ضعيف. اقرا المكونات (Ainesosat / Ingredients) ودوّر على الكلمات الممنوعة.</div><button class="btn wide" data-banwords>شوف الكلمات الممنوعة</button>`, true); return; }
+  stopScan(); show(`<div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><h2>دا أفحص...</h2></div><div class="card"><p class="sm num">${code}</p><div class="bar"><i style="width:60%" class="loading"></i></div></div>`, true);
+  const { MARKET } = await mk(), hit = Object.entries(MARKET).flatMap(([k, L]) => L.map((x, i) => [k, i, x])).find(([, , x]) => x.c === code);
+  const p = await fetchOFF(code);
+  if (!p) { if (hit) { openMItem(hit[0], hit[1]); return; } notFound(code); return; }
   const A = await analyzeP(p), n = p.nutriments || {};
-  const x = { n: p.product_name_en || p.product_name, b: [].concat(p.brands || []).join(', '), img: p.image_front_url, q: p.quantity, v: A.v, h: A.h, d: A.d, i: A.i, hl: A.hl, k: n['energy-kcal_100g'], p: n.proteins_100g, cb: n.carbohydrates_100g, f: n.fat_100g, ing: A.ing };
+  const x = { n: p.product_name_fi || p.product_name || p.product_name_en, b: [].concat(p.brands || []).join(', '), img: p.image_front_url || `https://public.keskofiles.com/f/k-ruoka/product/${code}?h=600`, q: p.quantity, v: A.v, h: A.h, d: A.d, i: A.i, hl: A.hl, k: n['energy-kcal_100g'], p: n.proteins_100g, cb: n.carbohydrates_100g, f: n.fat_100g, ing: A.ing };
   S.scans = [{ c: code, n: x.n || '', t: today(), r: x.v }].concat((S.scans || []).filter(z => z.c !== code)).slice(0, 30); save();
-  show(productView(x, code), true);
+  const s = $('#screen'); s.innerHTML = `<div class="in">${productView(x, code)}${x.v === 'unk' || !x.ing ? ingBox(code) : ''}</div>`;
+}
+const ingBox = code => `<div class="card"><h3>📄 خلّيني أقرا المكونات بنفسي</h3><p class="xs mut">صوّر قائمة المكونات (Ainesosat / Ingredients) قريب وواضح، وأنا أقراها وأگلك حلال لو لا، ويناسب القولون لو لا.</p><label class="btn wide">📷 صوّر المكونات<input type="file" accept="image/*" capture="environment" id="ingImg" data-code="${code || ''}" hidden></label><details style="margin-top:6px"><summary class="xs mut">أو الصق المكونات ككتابة</summary><textarea id="ingTxt" placeholder="sokeri, glukoosisiirappi, liivate..." style="margin-top:8px"></textarea><button class="btn ghost sm" data-ingtxt="${code || ''}">افحص الكتابة</button></details></div>`;
+function notFound(code) {
+  const s = $('#screen');
+  s.innerHTML = `<div class="in"><div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><h2 class="grow">هذا المنتج مو بالقاعدة</h2></div>
+  <div class="prod" style="height:200px"><img src="https://public.keskofiles.com/f/k-ruoka/product/${code}?h=600" alt="" style="max-height:180px" onerror="this.parentNode.style.display='none'"></div>
+  <p class="sm">رقم <b class="num">${code}</b> ما مسجّل بقاعدة المنتجات العالمية لحد هسه (أغلب منتجات العلامات الخاصة مثل Pirkka وK-Menu وليدل الجديدة ما مسجلة). بس أگدر أفحصه من المكونات:</p>
+  ${ingBox(code)}
+  <button class="btn ghost wide" data-scan>📷 افحص منتج ثاني</button></div>`;
+}
+async function ocrIngredients(file, code) {
+  const s = $('#screen'); s.hidden = false; const st = `<div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><h2>دا أقرا المكونات...</h2></div><div class="card"><p class="sm" id="ocrMsg">أول مرة تاخذ دقيقة لأن أنزّل قارئ الكتابة. بعدين تصير أسرع.</p><div class="bar"><i id="ocrBar" style="width:5%"></i></div></div>`;
+  show(st, true);
+  try {
+    const T = await (ocrP || (ocrP = new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js'; sc.onload = () => res(window.Tesseract); sc.onerror = rej; document.head.append(sc); })));
+    const r = await T.recognize(file, 'fin+eng+swe', { logger: m => { const b = $('#ocrBar'); if (b && m.progress) b.style.width = Math.round(m.progress * 100) + '%'; const t = $('#ocrMsg'); if (t && m.status) t.textContent = m.status.includes('recogniz') ? 'دا أقرا الكتابة...' : 'دا أجهّز القارئ...'; } });
+    checkText(r.data.text, code, true);
+  } catch (e) { const t = $('#ocrMsg'); if (t) t.textContent = 'ما گدرت أقرا الصورة. صوّرها أقرب وبضو أحسن، أو الصق الكتابة.'; }
+}
+async function checkText(text, code, fromPhoto) {
+  const A = await analyzeP({ ingredients_text: text });
+  const x = { n: fromPhoto ? 'فحص من صورة المكونات' : 'فحص من الكتابة', b: '', img: code ? `https://public.keskofiles.com/f/k-ruoka/product/${code}?h=600` : '', v: A.v === 'unk' ? 'ok' : A.v, h: A.h, d: A.d, i: A.i, ing: text };
+  if (code) { S.scans = [{ c: code, n: 'منتج ' + code.slice(-4), t: today(), r: x.v }].concat((S.scans || []).filter(z => z.c !== code)).slice(0, 30); save(); }
+  const s = $('#screen'); s.innerHTML = `<div class="in">${productView(x, code)}<p class="xs" style="color:var(--gold)">القراءة من الصورة ممكن تغلط بحرف. تأكد من المكونات تحت إذا الحكم مهم إلك.</p></div>`;
 }
 function openBan(i) {
   const b = BAN[i];
@@ -691,7 +733,7 @@ function openBan(i) {
 }
 
 /* ================= أنا ================= */
-const VERSION = '19';
+const VERSION = '20';
 function weightInfo() {
   const start = S.startW || (S.weights[0]?.w) || +S.w || 52, goal = +S.goal || 62, cur = curW();
   const ms = [start + 1, start + 3, start + 5, start + 7].filter(x => x < goal).concat([goal]).map(x => +x.toFixed(1));
@@ -843,7 +885,7 @@ function route() { if (SUS === null) refreshSus(); let h = location.hash.slice(1
 let stack = [];
 function show(html, push) { const sh = $('.sheet'); if (sh) sh.remove(); const s = $('#screen'); if (push && !s.hidden && s.innerHTML) stack.push(s.innerHTML); else { killAnims(); stack = []; } s.hidden = false; s.innerHTML = `<div class="in">${html}</div>`; s.scrollTop = 0; document.body.style.overflow = 'hidden'; }
 function closeScreen(keep) { stopScan(); killAnims(); stack = []; const s = $('#screen'); s.hidden = true; s.innerHTML = ''; if (!keep) { document.body.style.overflow = ''; route(); } }
-function back() { stopScan(); killAnims(); const s = $('#screen'); if (stack.length) { s.innerHTML = stack.pop(); s.scrollTop = 0; if (!$('#player').hidden) { s.hidden = true; renderPlayer(); } } else { closeScreen(!$('#player').hidden); if (!$('#player').hidden) renderPlayer(); } }
+function back() { stopScan(); killAnims(); const s = $('#screen'); if (stack.length) { s.innerHTML = stack.pop(); s.scrollTop = 0; if ($('#scv')) startCam(); if (!$('#player').hidden) { s.hidden = true; renderPlayer(); } } else { closeScreen(!$('#player').hidden); if (!$('#player').hidden) renderPlayer(); } }
 window.addEventListener('hashchange', () => { const s = $('#screen'); if (!s.hidden) { stopScan(); killAnims(); stack = []; s.hidden = true; s.innerHTML = ''; document.body.style.overflow = ''; } route(); });
 const reroute = () => { const y = scrollY; route(); scrollTo(0, y); };
 
@@ -905,6 +947,7 @@ document.addEventListener('click', e => {
   if ('msearch' in d) { nameSearch(); return; }
   if ('bctype' in d) { openScan(); setTimeout(() => { const i = $('#bcIn'); if (i) i.focus(); }, 300); return; }
   if ('banwords' in d) { banView = 'words'; closeScreen(true); location.hash = '#ban'; return; }
+  if (d.ingtxt != null) { const t = ($('#ingTxt') || {}).value || ''; if (t.trim().length < 5) { toast('الصق المكونات أول'); return; } checkText(t, d.ingtxt, false); return; }
   if ('bcgo' in d) { lookupBC($('#bcIn').value); return; }
   if (d.bc) { lookupBC(d.bc); return; }
   if ('water' in d) { S.water = S.water || {}; S.water[today()] = (S.water[today()] || 0) + 1; save(); reroute(); toast('💧 كفو! كوب ' + AR(S.water[today()])); return; }
@@ -933,7 +976,7 @@ function renderPlayerSets() { // تحديث السطور بدون ما نعيد 
   const done = SES.sets.map(s => s.every(z => z.ok)); document.querySelectorAll('#player .dots button').forEach((x, j) => x.classList.toggle('ok', done[j]));
 }
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'mq') { e.preventDefault(); nameSearch(); } if (e.key === 'Enter' && e.target.id === 'bcIn') { e.preventDefault(); lookupBC(e.target.value); } });
-document.addEventListener('change', async e => { if (e.target.id === 'bcImg' && e.target.files[0]) { decodeImage(e.target.files[0]); e.target.value = ''; return; } if (e.target.id === 'impIn' && e.target.files[0]) { try { const o = JSON.parse(await e.target.files[0].text()); if (!o || !o.month) throw 0; S = Object.assign(def(), o); save(); applyTheme(); closeScreen(); toast('رجعت معلوماتك ✓'); } catch (er) { toast('الملف مو صحيح'); } return; } if (e.target.id === 'photoIn' && e.target.files[0]) { await savePhoto(e.target.files[0]); toast('انحفظت الصورة'); loadPhotos(); } });
+document.addEventListener('change', async e => { if (e.target.id === 'ingImg' && e.target.files[0]) { ocrIngredients(e.target.files[0], e.target.dataset.code || ''); e.target.value = ''; return; } if (e.target.id === 'bcImg' && e.target.files[0]) { decodeImage(e.target.files[0]); e.target.value = ''; return; } if (e.target.id === 'impIn' && e.target.files[0]) { try { const o = JSON.parse(await e.target.files[0].text()); if (!o || !o.month) throw 0; S = Object.assign(def(), o); save(); applyTheme(); closeScreen(); toast('رجعت معلوماتك ✓'); } catch (er) { toast('الملف مو صحيح'); } return; } if (e.target.id === 'photoIn' && e.target.files[0]) { await savePhoto(e.target.files[0]); toast('انحفظت الصورة'); loadPhotos(); } });
 document.addEventListener('input', e => { const t = e.target; if (t.id === 'fdq') { fdQ = t.value; const pos = t.selectionStart; openDB(); const n = $('#fdq'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (er) {} } return; } if (!SES) return; if (t.dataset.w != null) SES.sets[SES.k][+t.dataset.w].w = t.value; if (t.dataset.r != null) SES.sets[SES.k][+t.dataset.r].r = t.value; });
 route();
 
