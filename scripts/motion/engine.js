@@ -803,12 +803,12 @@ const FONT = AR ? (D.quran ? ['400', 'Amiri', 60, 1.62] : ['700', 'UI', 54, 1.6]
 const LAYOUT = [];
 function layoutSeg(i) {
   if (LAYOUT[i]) return LAYOUT[i];
-  const words = segW[i]; let fs = FONT[2], res;
+  const words = segW[i], QF = AR && !D.quran && /[\u06D6-\u06ED\u0671﴿]/.test(D.segs[i]), FT = QF ? ['400', 'Amiri', 58, 1.62] : FONT; let fs = FT[2], res;
   for (; fs >= 30; fs -= 2) {
-    const font = `${FONT[0]} ${fs}px ${FONT[1]}`; x.font = font; x.direction = AR ? 'rtl' : 'ltr';
+    const font = `${FT[0]} ${fs}px ${FT[1]}`; x.font = font; x.direction = AR ? 'rtl' : 'ltr';
     const sp = x.measureText(' ').width * (AR ? 1.15 : 1), maxW = 620, lines = [[]]; let lw = 0;
     words.forEach(w => { const ww = AYA.test(w) ? fs * 1.05 : x.measureText(w).width; if (lw + ww > maxW && lines[lines.length - 1].length) { lines.push([]); lw = 0; } lines[lines.length - 1].push([w, ww]); lw += ww + sp; });
-    const lh = fs * FONT[3]; res = { lines, sp, fs, font, lh };
+    const lh = fs * FT[3]; res = { lines, sp, fs, font, lh };
     if (lines.length <= (AR ? 3 : 4) && lines.length * lh <= 330) break;
   }
   return LAYOUT[i] = res;
@@ -1106,7 +1106,30 @@ const ART = {
     if (ph > .2 && ph < .85) water(22, -330, 0, -260, t, 14); picto({ head: clamp(k / n), face: clamp(k / n) * .6 }, t); drops(0, -190, t, 8, 70, 60, 4); },
   sides: (k, t) => { const h = (LSC.t1 - LSC.t0) / 2, R2 = clamp(k / (h * .6)), L2 = clamp((k - h) / (h * .6)); showerHead(t, .6); picto({ R: R2, L: L2 }, t);
     label(AR ? 'الأيمن' : 'Right', -100, 250, R2); label(AR ? 'الأيسر' : 'Left', 100, 250, L2); },
+  pillars: (k, t) => pillarArt(k, t, -1), p1: (k, t) => pillarArt(k, t, 0), p2: (k, t) => pillarArt(k, t, 1), p3: (k, t) => pillarArt(k, t, 2), p4: (k, t) => pillarArt(k, t, 3), p5: (k, t) => pillarArt(k, t, 4),
 };
+function pillarArt(k, t, j) { // بناء على خمسة أعمدة، والركن الحالي يضوي ويطلع رمزه
+  const build = j < 0 ? clamp(k / 2.4) : 1, cx = i => AR ? 200 - i * 100 : -200 + i * 100;
+  rr(-262, 196, 524, 26, 8, '#b89a64'); rr(-240, 176, 480, 22, 6, '#d8bf8c');
+  for (let i = 0; i < 5; i++) { const h = 250 * eOut(clamp(build * 5 - i)), on = j === i ? 1 : 0, px = cx(i);
+    if (on) { x.save(); x.globalCompositeOperation = 'lighter'; glow(px, 50, 170, '#ffd27a', .45 + .1 * Math.sin(t * 4)); x.restore(); }
+    rr(px - 30, 176 - h, 60, h, 6, hgrad(on ? [[0, '#c9962e'], [.5, '#ffe7a6'], [1, '#c9962e']] : [[0, '#bfa77a'], [.5, '#f1e2c2'], [1, '#bfa77a']], px - 30, px + 30));
+    if (h > 20) { rr(px - 38, 176 - h - 14, 76, 16, 4, on ? '#e9bd5f' : '#d8c49a'); rr(px - 36, 160, 72, 16, 4, on ? '#e9bd5f' : '#d8c49a'); }
+    const n = AR ? String(i + 1).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]) : String(i + 1); if (h > 120) { x.save(); x.font = '700 30px ' + (AR ? 'UI' : 'Inter'); x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = on ? '#5a3c0c' : 'rgba(90,70,40,.55)'; x.fillText(n, px, 60); x.restore(); } }
+  const rq = eOut(clamp(build * 2.5 - 1.4)); if (rq > 0) { x.save(); x.globalAlpha *= rq; x.translate(0, (1 - rq) * -30);
+    blob([[-262, -92], [262, -92], [240, -112], [-240, -112]], '#d8bf8c'); rr(-262, -92, 524, 22, 4, '#c9a96e');
+    x.beginPath(); x.moveTo(-120, -112); x.bezierCurveTo(-118, -230, 118, -230, 120, -112); x.closePath(); x.fillStyle = hgrad([[0, '#1f5a50'], [.5, '#3f8f7c'], [1, '#1f5a50']], -120, 120); x.fill();
+    rr(-3, -250, 6, 40, 2, GOLD); crescent(0, -258, 12); x.restore(); }
+  if (j >= 0) { const q = eOut(clamp(k / .8)); x.save(); x.globalAlpha *= q; x.translate(cx(j), -150 - 20 * (1 - q)); x.scale(.9, .9);
+    x.save(); x.globalCompositeOperation = 'lighter'; glow(0, 0, 110, '#ffe2a0', .35); x.restore(); circ(0, 0, 62, 'rgba(8,30,28,.92)'); x.strokeStyle = GOLD; x.lineWidth = 3; x.beginPath(); x.arc(0, 0, 62, 0, TAU); x.stroke();
+    if (j === 0) { x.font = '400 30px Amiri'; x.direction = 'rtl'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = GOLD; x.fillText('لا إله إلا الله', 0, -10, 110); x.font = '400 22px Amiri'; x.fillText('محمد رسول الله', 0, 22, 110); }
+    if (j === 1) { x.save(); x.translate(0, 40); x.scale(.2, .2); PROPS.mosque({ x: 0, y: 0, s: 1, c: '#2f7a6a' }, t); x.restore(); }
+    if (j === 2) { coin(-16, 12, 18); coin(14, 4, 18); coin(-2, -16, 18); }
+    if (j === 3) { x.save(); x.translate(0, 34); x.scale(.42, .42); PROPS.kaaba({ x: 0, y: 0, s: 1 }); x.restore(); }
+    if (j === 4) { crescent(6, -6, 30); }
+    x.restore(); }
+}
+
 let LSC = null;
 function stepAt(t) { if (!LS_) return -1; let j = -1; LS_.steps.forEach((s, i) => { if (t >= s.t0 - .2) j = i; }); return j; }
 function lessonLayer(t) {

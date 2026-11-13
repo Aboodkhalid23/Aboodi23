@@ -186,7 +186,7 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
 .lmenu .lcard{display:flex;flex-direction:column;align-items:stretch;padding:0;border-radius:20px;border:1px solid var(--line);background:var(--card);overflow:hidden;text-align:start}
 .lcard img{width:100%;height:118px;object-position:50% 62%}.lcard div{padding:9px 11px 11px}.lcard b{font-size:16px}
 .lbig[disabled],.lcard[disabled]{opacity:.5}
-.lview.vm>.lscene,.lview.vm>#lnum,.lview.vm>.scroll,.lview.vm>#lsrc,.lview.vm>.tr{display:none}
+.lview.vm>.lscene,.lview.vm>#lnum,.lview.vm>.scroll:not(.lsteps),.lview.vm>#lsrc,.lview.vm>.tr{display:none}
 .lvid{display:none;flex:none;position:relative;height:min(44vh,108vw);aspect-ratio:9/16;border-radius:24px;overflow:hidden;border:1.5px solid var(--line);box-shadow:0 14px 40px rgba(0,0,0,.45);background:#041312}
 .lview.vm>.lvid{display:block}.lvid video{width:100%;height:100%;display:block;object-fit:cover}
 .lsteps{display:none;flex:1;min-height:0;width:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;text-align:start}
@@ -757,10 +757,10 @@ tr.td td{background:var(--gold);color:var(--leafink)}
 <section id="learn">
  <div class="box">
   <div class="vh on"><button id="lback" data-en="← Back">→ رجوع</button><b id="ltitle"></b></div>
-  <div class="lmenu" id="lmenu"></div>
+  <div class="lmenu scroll" id="lmenu"></div>
   <div class="lview" id="lview">
    <div class="lvid"><video id="lvplay" playsinline controls preload="metadata"></video></div>
-   <div class="lsteps" id="lsteps"></div>
+   <div class="lsteps scroll" id="lsteps"></div>
    <div class="lscene" id="lscene"></div>
    <p id="lnum"></p>
    <div class="scroll" style="flex:1;min-height:0;width:100%"><p id="ltext"></p></div>
@@ -1078,10 +1078,12 @@ mode('menu');p2draw();
 var LSC={heart:'heart',hands:'hands',dua:'hands',mouth:'sun',face:'sun',arms:'hands',head:'star8',feet:'beads'};
 var LS={k:'',i:0,play:false}, LD={}, LW=window.LEARN||{};
 // الدروس: الوضوء والغسل والصلاة حسب المذهب، وأدعية الأحوال اليومية للكل
-var LN=[['wudu',L('الوضوء','Wudu (ablution)'),'hands'],['ghusl',L('غسل الجنابة','Ghusl (full bath)'),'heart'],['salah',L('الصلاة','The prayer'),'mosque'],
- ['wd',L('أذكار الوضوء','Wudu remembrance'),'hands'],['ms',L('الأذان والمسجد','Adhan & the mosque'),'mosque'],['hm',L('البيت والخلاء','Home & restroom'),'star8'],
- ['fd',L('آداب الطعام','Eating'),'heart'],['tr',L('الركوب والسفر','Riding & travel'),'sun'],['is',L('صلاة الاستخارة','Istikharah prayer'),'hands']];
-var LV=null;
+var LN=[['wudu',L('الوضوء','Wudu (ablution)'),'hands'],['ghusl',L('غسل الجنابة','Ghusl (full bath)'),'heart'],['salah',L('الصلاة','The prayer'),'mosque'],['arkan',L('أركان الإسلام','The pillars of Islam'),'star8'],
+ ['slt',L('مكانة الصلاة','The place of prayer'),'mosque',1],['zakat',L('الزكاة','Zakah'),'hands',1],['siyam',L('الصيام','Fasting'),'sun',1],['hajj',L('الحج','Hajj'),'star8',1],
+ ['wd',L('أذكار الوضوء','Wudu remembrance'),'hands',2],['as',L('الأذكار بعد السلام','After the prayer'),'mosque',2],['ms',L('الأذان والمسجد','Adhan & the mosque'),'mosque',2],['sl',L('النوم والاستيقاظ','Sleep & waking'),'star8',2],
+ ['hm',L('البيت والخلاء','Home & restroom'),'star8',2],['cl',L('اللباس','Clothing'),'star8',2],['fd',L('آداب الطعام','Eating'),'heart',2],['sm',L('أذكار الصائم','The fasting person'),'sun',2],
+ ['tr',L('الركوب والسفر','Riding & travel'),'sun',2],['hz',L('الهم والكرب','Worry & distress'),'heart',2],['tb',L('التوبة والاستغفار','Repentance'),'hands',2],['mr',L('المرض والمصيبة','Illness & hardship'),'heart',2],
+ ['rn',L('المطر والريح','Rain & wind'),'sun',2],['ak',L('الغضب والمجلس والعطاس','Anger, gatherings & sneezing'),'star8',2],['is',L('صلاة الاستخارة','Istikharah prayer'),'hands',2]];
 function litem(k){var r=null;(VALL||[]).forEach(function(it){if(it.id=='l-'+k&&(!it.mz||it.mz=='all'||it.mz==MZ))r=it});return r}
 function lmenu(){LA.pause();LS.play=false;LS.k='';LV=null;$('lvplay').pause();$('lmenu').classList.remove('off');$('lview').classList.remove('on');
  LD={};var a=LW[MZ]||{},b=LW.all||{};Object.keys(a).forEach(function(k){LD[k]=a[k]});Object.keys(b).forEach(function(k){LD[k]=b[k]});
@@ -1091,7 +1093,8 @@ function lmenu(){LA.pause();LS.play=false;LS.k='';LV=null;$('lvplay').pause();$(
    return big?'<button class="lbig" style="animation-delay:'+(n++*.07)+'s" data-k="'+x[0]+'"'+(ok?'':' disabled')+'>'+(img||'<span style="width:60px;display:flex;justify-content:center">'+ic(x[2],'x')+'</span>')+'<div><b>'+x[1]+'</b><small>'+meta+'</small></div>'+(it?'<span class="pb"><svg viewBox="0 0 24 24"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg></span>':'')+'</button>'
     :'<button class="lcard" style="animation-delay:'+(n++*.06)+'s" data-k="'+x[0]+'"'+(ok?'':' disabled')+'>'+img+'<div><b>'+x[1]+'</b><small>'+meta+'</small></div></button>'};
   $('lmenu').innerHTML='<div class="lhero"><b>'+L('تعلّم دينك','Learn your religion')+'</b><small>'+L('دروس بالفيديو خطوة بخطوة، والنص بالحرف من مصدره','Step-by-step video lessons, text verbatim from its source')+'</small></div>'+
-   LN.slice(0,3).map(function(x){return card(x,1)}).join('')+'<p class="lsub">'+L('أذكار وآداب','Remembrance & manners')+'</p><div class="lgrid">'+LN.slice(3).map(function(x){return card(x,0)}).join('')+'</div>';
+   LN.filter(function(x){return !x[3]}).map(function(x){return card(x,1)}).join('')+
+   [[1,L('العبادات','Acts of worship')],[2,L('أذكار وآداب','Remembrance & manners')]].map(function(g){return '<p class="lsub">'+g[1]+'</p><div class="lgrid">'+LN.filter(function(x){return x[3]==g[0]}).map(function(x){return card(x,0)}).join('')+'</div>'}).join('');
   document.querySelectorAll('#lmenu [data-k]').forEach(function(b){b.onclick=function(){LS.k=b.getAttribute('data-k');LS.i=0;$('lmenu').classList.add('off');$('lview').classList.add('on');var it=litem(LS.k);if(it)lvopen(it);else{$('lview').classList.remove('vm');ldraw()}}})})}
 function lvopen(it){var d=LD[LS.k],v=$('lvplay'),T=(it.st&&it.st[EN?'en':'ar'])||[];LV={it:it,T:T,i:-1};$('lview').classList.add('vm');$('ltitle').textContent=d.t[EN?1:0];
  v.setAttribute('poster','v/p/'+it.id+'-'+(EN?'en':'ar')+'.jpg');v.src='v/'+(EN?it.en:it.ar);
@@ -1140,7 +1143,7 @@ function SCN(a){var W='#6fd0e6',K='<g transform="translate(90 82) scale(.75)"><r
  case 'dua':return v('<path d="M30 72c-8-10-8-30 2-40l8 6-2 26zM70 72c8-10 8-30-2-40l-8 6 2 26z" fill="currentColor"/><circle class="pulse" cx="50" cy="24" r="6" fill="currentColor" fill-opacity=".5"/>');
  case 'qibla':return v(FIG('stand')+K);
  case 'rise':case 'stand':return v(FIG('stand')+(a=='stand'?'<path class="up" d="M74 70V40m-6 6l6-6 6 6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>':'')+K);
- default:return v(FIG(a)+K)}}
+ default:return /^(stand|takbir|read|ruku|sujud|sit)$/.test(a)?v(FIG(a)+K):v('<path class="pulse" d="M50 82S20 63 20 42a15 15 0 0 1 30-6 15 15 0 0 1 30 6c0 21-30 40-30 40z" fill="currentColor" fill-opacity=".25" stroke="currentColor" stroke-width="3"/>')}}
 var LA=new Audio();LA.preload='none';window._la=LA;
 function hasRec(i){var st=LD[LS.k]&&LD[LS.k].steps[i];return !!(st&&st[6])}
 function lsay(){if(!hasRec(LS.i)){LS.play=false;ldraw();return}

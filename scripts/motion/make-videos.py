@@ -162,7 +162,21 @@ LES_SC = {
     "fd": [("home", ["man@250:sit"], ["plate@430,1100*1.1"])] * 2 + [("home", ["man@250:duasit"], ["plate@430,1100*1.1"])] * 2,
     "tr": [("desert", ["man@200:dua"], ["camel@470,1120"]), ("desert", ["man@120>380:walk"], ["camel@560,1120*.9", "palm@60,1110"])],
     "is": [("night", ["man@360:duasit"], ["rug@360,1124", "lantern@170,700", "lantern@550,700"])],
+    "zakat": [("market", ["man@250:give", "poor@480:receive<"], ["coins@370,1050"]), ("day", ["man@250:give", "poor@480:receive<"], ["bag@370,1110"]), ("market", ["man@220:give", "poor@420:receive<", "elder@580:cane<"], [])],
+    "siyam": [("dawn", ["man@300:duasit"], ["moon@540,620", "rug@300,1124"]), ("night", ["man@300:read"], ["lantern@170,700", "lantern@550,700"]), ("night", ["man@260:sit"], ["plate@440,1100*1.1", "moon@540,620"])],
+    "hajj": [("desert", ["man@150:dua"], ["kaaba@440,1110*1.5"]), ("desert", ["man@100>330:walk"], ["kaaba@520,1110*1.2", "camel@650,1120*.7"]), ("light", ["man@360:dua"], ["kaaba@360,1050*.8"])] + [("desert", ["man@200:dua"], ["kaaba@470,1110*1.3"])] * 3,
+    "slt": [("mosque", ["man@360:stand*1.2"], ["rug@360,1124*1.2"]), ("mosque", ["man@360:ruku*1.2"], ["rug@360,1124*1.2"]), ("dawn", ["man@360:pray*1.2"], ["rug@360,1124*1.2"]), ("mosque", ["man@360:sujud*1.2"], ["rug@360,1124*1.2"]), ("mosque", ["man@360:kneel*1.2"], ["rug@360,1124*1.2"])],
+    "as": [("mosque", ["man@360:kneel*1.15"], ["rug@360,1124*1.2"])],
+    "sl": [("home", ["man@360:duasit"], ["lantern@600,620"])] * 4 + [("dawn", ["man@360:stand"], [])] * 2,
+    "cl": [("home", ["man@360:stand"], [])],
+    "hz": [("dark", ["man@360:sad"], [])] * 2 + [("dawn", ["man@360:dua"], [])] * 3,
+    "tb": [("night", ["man@360:duasit"], ["rug@360,1124", "lantern@170,700", "lantern@550,700"])],
+    "mr": [("home", ["man@250:kneel", "elder@460:sit<"], [])] * 2 + [("home", ["man@360:dua"], [])] * 3,
+    "rn": [("storm", ["man@360:dua"], [])] * 2 + [("sky", ["man@360:dua"], ["cloud@200,600", "cloud@520,560"])] * 2,
+    "ak": [("day", ["man@360:calm"], []), ("home", ["man@250:sit", "man@470:sit<"], []), ("day", ["man@360:stand"], []), ("day", ["man@250:give", "man@470:receive<"], [])],
+    "sm": [("night", ["man@260:duasit"], ["plate@440,1100*1.1", "moon@560,600"]), ("night", ["man@260:duasit"], ["plate@440,1100*1.1"]), ("day", ["man@360:calm"], []), ("dawn", ["man@360:dua"], ["moon@540,620"])],
 }
+LES_DEF = [("mosque", ["man@360:dua"], ["rug@360,1124"])]
 
 def item(key):
     """يرجع كل شي عن المقطع: النص، المصدر، الصوت"""
@@ -243,12 +257,12 @@ def build(I, lang, tmp, preview=False, audio_dir=None):
             t0 = step0[j]; t1 = step0[j + 1] if j + 1 < n_ else t - 0.2; art = st_[j][2]
             hd = (st_[j][4] if lang == "ar" else st_[j][5]) if len(st_[j]) > 5 else ""
             if k_ == "salah": hd = "" if hd in ("صفة الصلاة", "Description of prayer") else hd
-            card = k_ in ("wudu", "ghusl")
+            card = k_ in ("wudu", "ghusl", "arkan")
             if k_ == "ghusl" and art == "head": art = "headg"
             lesson["steps"].append({"t0": round(t0, 2), "t1": round(t1, 2), "art": art, "x3": art in X3.get(k_, ()) or art == "headg", "head": hd, "card": card})
             if card: bg, a_, p_ = "lesson", [], []
             elif k_ == "salah": bg, a_, p_ = "mosque", [f"man@360:{SALAH_POSE.get(st_[j][2], 'stand')}*1.25"], ["rug@360,1124*1.3"]
-            else: bg, a_, p_ = LES_SC[k_][min(j, len(LES_SC[k_]) - 1)]
+            else: sc_ = LES_SC.get(k_, LES_DEF); bg, a_, p_ = sc_[min(j, len(sc_) - 1)]
             beats.append({"t": 0.0 if j == 0 else round(t0 - 0.35, 2), "bg": bg, "a": a_, "p": p_, "f": []})
         miss = []
     else:
