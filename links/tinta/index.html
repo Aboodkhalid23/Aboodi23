@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
 <script src="config.js"></script>
-<script>window.TINTA_VER='1794611957';</script>
+<script>window.TINTA_VER='1794612240';</script>
 <title>Tintå Reseptit</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap">
 <style>
@@ -802,7 +802,7 @@ var R = [
   }
   function pinDone(){
     var v = $('pinin').value.replace(/\D/g,'');
-    if(v.length < 4){ $('pinin').focus(); return; }
+    if(v.length < 3){ $('pinin').focus(); return; }
     kpin = v; save('pin', v); $('pinsheet').hidden = true;
     var keepVeil = !$('newsheet').hidden; if(!keepVeil) $('veil').hidden = true;
     if(pinNext){ var f = pinNext; pinNext = null; f(); }

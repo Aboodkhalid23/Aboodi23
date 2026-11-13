@@ -397,7 +397,7 @@
   }
   function pinDone(){
     var v = $('pinin').value.replace(/\D/g,'');
-    if(v.length < 4){ $('pinin').focus(); return; }
+    if(v.length < 3){ $('pinin').focus(); return; }
     kpin = v; save('pin', v); $('pinsheet').hidden = true;
     var keepVeil = !$('newsheet').hidden; if(!keepVeil) $('veil').hidden = true;
     if(pinNext){ var f = pinNext; pinNext = null; f(); }

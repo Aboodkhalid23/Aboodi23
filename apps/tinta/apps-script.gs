@@ -38,7 +38,12 @@ function doPost(e) {
   var d = {};
   try { d = JSON.parse(e.postData.contents); } catch (err) { return out_({ ok: false }); }
   var f = folder_(FOLDER);
-  var admin = same_(d.key, ADMIN), chef = admin || same_(d.pin, PIN);
+  // Liian monta väärää koodia -> tauko 15 min. / بعد 10 محاولات غلط يقفل 15 دقيقة.
+  var cache = CacheService.getScriptCache(), bad = Number(cache.get('bad') || 0);
+  var admin = same_(d.key, ADMIN);
+  if (!admin && bad >= 10) return out_({ ok: false, err: 'wait' });
+  var chef = admin || same_(d.pin, PIN);
+  if (!chef && d.action !== 'done') cache.put('bad', String(bad + 1), 900);
 
   // Vain omistaja. / بس صاحب المطعم.
   if (d.action === 'done') {
