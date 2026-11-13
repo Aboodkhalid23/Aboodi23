@@ -1,5 +1,5 @@
 // يحفظ التطبيق بالتلفون حتى يشتغل بدون إنترنت، ويجيب النسخة الجديدة إذا اكو نت
-var C='tinta-v2';
+var C='tinta-v3';
 self.addEventListener('install',function(e){e.waitUntil(caches.open(C).then(function(c){return c.addAll(['./','index.html','icon-180.png','icon-192.png','icon-512.png','manifest.webmanifest'])}));self.skipWaiting();});
 self.addEventListener('activate',function(e){e.waitUntil(self.clients.claim());});
 self.addEventListener('fetch',function(e){
