@@ -119,25 +119,25 @@ const quote = () => QUOTES[new Date().getDate() % QUOTES.length];
 function eatenPro() { const e = (S.eaten || {})[today()] || {}; return todayMeals().reduce((a, x) => e[x.m.k] ? a + optVal(x.o).p : a, 0); }
 function ring3(v, col, r) { const C = 2 * Math.PI * r; return `<circle cx="70" cy="70" r="${r}" style="stroke:var(--ringbg)" stroke-width="11" fill="none"/><circle cx="70" cy="70" r="${r}" stroke="${col}" stroke-width="11" fill="none" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - Math.min(1, v))}"/>`; }
 function vHome() {
-  const c = curDay(), t = c < MDAYS ? dayType(c) : null, T = targets(), L = level();
+  const c = curDay(), t = c < MDAYS ? dayType(c) : null, T = targets();
   const doneToday = S.hist.some(h => h.d === today()), water = (S.water || {})[today()] || 0, wT = Math.round(T.water * 4), pro = eatenPro();
   const hr = new Date().getHours(), greet = hr < 12 ? 'صباح الخير' : hr < 18 ? 'هلا بيك' : 'مساء الخير';
-  const sp = (S.supp || {})[today()] || {}, daily = [['creatine', 'كرياتين', 'الصبح'], ['vitd', 'فيتامين د', 'الغدا'], ['whey', 'بروتين', 'بعد التمرين'], ['omega', 'أوميغا', 'العشا']];
-  const eaten = (S.eaten || {})[today()] || {};
-  const wk = t === 'R' || t === null;
-  return `<div class="row between"><div class="brand"><img src="img/logo.webp" alt=""><b>NEX<span>FIT</span></b></div><div class="row" style="gap:8px"><span class="streak">${I.fire}<span class="num">${AR(streak())}</span></span>${gearBtn()}</div></div>${healthCard()}
-  <div class="hello"><p class="sm mut">${greet}${S.name ? '، ' + esc(S.name) : ''} 👋</p><h1>${doneToday ? 'كفو! خلصت تمرين اليوم' : wk ? 'اليوم راحة، جسمك يكبر' : 'يلا نبني جسمك اليوم'}</h1><p class="sm quote">${quote()}</p></div>
-  ${installCard()}
-  <div class="card rings"><svg viewBox="0 0 140 140" class="r3">${ring3(doneToday ? 1 : 0, 'var(--g)', 60)}${ring3(pro / T.p, 'var(--gold)', 46)}${ring3(water / wT, 'var(--blue)', 32)}</svg>
-   <div class="rl"><div><i style="background:var(--g)"></i><span>التمرين</span><b>${doneToday ? 'خلص ✓' : wk ? 'راحة' : 'بعده'}</b></div><div><i style="background:var(--gold)"></i><span>البروتين</span><b class="num">${AR(Math.round(pro))}/${AR(T.p)} غ</b></div><div><i style="background:var(--blue)"></i><span>المي</span><b class="num">${AR(water)}/${AR(wT)} كوب</b></div><button class="btn sm" data-water>💧 شربت كوب</button></div></div>
-  ${t === null ? `<div class="hero"><div class="wm">الشهر خلص</div><div class="txt"><span class="lab">كفو عليك</span><h1>قيّم شهرك</h1><p class="sm">وابدي الجزء الجاي</p></div><img src="img/ex3d/month.jpg" alt=""><button class="go" data-eval aria-label="قيّم الشهر">${I.arrow}</button></div>`
-   : `<button class="hero" data-day="${c}"><div class="wm">${t === 'R' ? 'راحة' : 'تمرين'}</div><div class="txt"><span class="lab">تمرين اليوم • اليوم ${AR(c + 1)}</span><h1>${DAY_NAMES[t]}</h1><p class="sm">${t === 'R' ? 'مشي + تمارين الوگفة' : AR(dayItems(c).length) + ' تمارين • 50 دقيقة'}</p><span class="go">${I.play}</span></div><img src="img/ex3d/${DAY_IMG[t]}.jpg" alt=""></button>`}
-  <div class="sec-h"><h2>أكلك اليوم</h2><a class="xs" href="#food" style="color:var(--g)">كل القائمة</a></div>
-  <div class="hscroll">${todayMeals().map(({ m, o }) => `<button class="mini ${eaten[m.k] ? 'on' : ''}" data-rec="${o.id}" data-slot="${m.k}"><span class="mimg"><img src="${recImg(o)}" alt="" loading="lazy" class="${isCut(o) ? 'cut' : ''}">${eaten[m.k] ? `<i>${I.check}</i>` : ''}</span><span class="xs mut">${m.n}</span><b>${o.fn}</b><span class="xs num" style="color:var(--g)">${o.it.length ? AR(Math.round(optVal(o).p)) + ' غ بروتين' : 'مي بس'}</span></button>`).join('')}</div>
-  <div class="card"><div class="sec-h"><h2>حبوبك اليوم</h2><span class="xs mut">اضغط لما تاخذها</span></div><div class="pills">${daily.map(([id, n, w]) => `<button class="${sp[id] ? 'on' : ''}" data-took="${id}"><img src="img/supp/${SUPPS.find(z => z.id === id).img}.webp" alt=""><b>${n}</b><span>${sp[id] ? 'أخذته ✓' : w}</span></button>`).join('')}</div></div>
+  const sp = (S.supp || {})[today()] || {}, eaten = (S.eaten || {})[today()] || {}, TM = todayMeals();
+  const kc = TM.reduce((a, x) => eaten[x.m.k] ? a + optVal(x.o).k : a, 0);
+  const wk = t === 'R' || t === null, IC = { b: '🍳', s: '🥣', l: '🍛', a: '🥤', d: '🥗' };
+  const ring = (v, r, col, bg) => { const C = 2 * Math.PI * r; return `<circle cx="70" cy="70" r="${r}" stroke="${bg}" stroke-width="12" fill="none"/><circle cx="70" cy="70" r="${r}" stroke="${col}" stroke-width="12" fill="none" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - Math.min(1, v))}"/>`; };
+  const supN = SUPPS.filter(s => s.id !== 'mag').length, supD = SUPPS.filter(s => s.id !== 'mag' && sp[s.id]).length;
+  return `<div class="hhead"><div><p class="mut">${greet}${S.name ? '، ' + esc(S.name) : ''} 👋</p><h1>${doneToday ? 'كفو! خلصت تمرين اليوم' : wk ? 'اليوم راحة' : 'يومك بنظرة وحدة'}</h1></div><div class="row" style="gap:8px"><span class="streak">${I.fire}<b class="num">${streak()}</b></span>${gearBtn()}</div></div>
+  ${installCard()}${healthCard()}
+  <div class="card rings2"><svg viewBox="0 0 140 140">${ring(kc / T.k, 60, 'var(--g)', 'var(--rg1)')}${ring(pro / T.p, 44, 'var(--gold)', 'var(--rg2)')}${ring(water / wT, 28, 'var(--blue)', 'var(--rg3)')}</svg>
+   <div class="lg"><div><i style="background:var(--g)"></i><span>السعرات</span><b class="num" dir="ltr">${Math.round(kc)} / ${T.k}</b></div><div><i style="background:var(--gold)"></i><span>البروتين</span><b class="num" dir="ltr">${Math.round(pro)} / ${T.p}g</b></div><div><i style="background:var(--blue)"></i><span>المي</span><b class="num" dir="ltr">${water} / ${wT}</b></div><button class="btn sm ghost" data-water>💧 شربت گلاص</button></div></div>
+  ${t === null ? `<div class="card"><h2>خلصت الشهر 🎉</h2><p class="sm mut">قيّم نفسك وأبنيلك الشهر الجاي.</p><button class="btn dark wide" data-eval>قيّم الشهر</button></div>`
+   : `<div class="card"><button class="wo" data-day="${c}"><img src="img/ex3d/${t === 'R' ? 'child' : (dayItems(c)[0] || {}).id || 'chestpress'}.jpg" alt=""><div><small>${t === 'R' ? 'يوم راحة' : 'تمرين اليوم'} • اليوم ${c + 1}</small><h2>${DAY_NAMES[t]}</h2><p class="num">${t === 'R' ? 'مشي 30 دقيقة + إطالات' : dayItems(c).length + ' تمارين • 50 دقيقة'}</p></div></button>${doneToday ? '<div class="donebox">✓ خلصته اليوم، كفو</div>' : `<button class="btn dark wide" data-${t === 'R' ? 'day' : 'start'}="${c}">${t === 'R' ? 'شوف تمارين الراحة' : 'ابدأ التمرين'}</button>`}</div>`}
+  <div class="card"><div class="sec-h"><h2>أكلك اليوم</h2><a class="xs" href="#food" style="color:var(--g)">كل الأكل</a></div>
+   <div class="mlist">${TM.map(({ m, o }) => { const v = optVal(o); return `<button class="${eaten[m.k] ? 'on' : ''}" data-rec="${o.id}" data-slot="${m.k}"><span class="e">${eaten[m.k] ? '✓' : IC[m.k]}</span><span class="grow"><b>${o.n}</b><small>${m.n}</small></span><b class="num p">${Math.round(v.p)}g</b></button>`; }).join('')}</div></div>
+  <a class="card linkc" href="#supps"><span class="e">💊</span><span class="grow"><b>حبوبك اليوم</b><small class="num">${supD} من ${supN} أخذتها</small></span>${I.chev}</a>
   ${smartCard()}
-  ${coachCard()}
-  <div class="card lvl2"><div class="row between"><div><span class="xs mut">مستواك</span><h2>${L.name}</h2></div><span class="pill g num">${AR(L.x)} نقطة</span></div><div class="bar"><i style="width:${L.pct}%"></i></div><p class="xs mut">${L.next ? 'كمّل وتوصل لمستوى "' + L.next + '". كل سِت وكل وجبة وكل كوب مي يزيدلك نقاط.' : 'وصلت أعلى مستوى!'}</p></div>`;
+  ${coachCard()}`;
 }
 function installCard() {
   const sa = window.navigator.standalone || matchMedia('(display-mode: standalone)').matches;
@@ -348,15 +348,15 @@ function vFood() {
   const plan = TM.reduce((a, x) => { const v = optVal(x.o); return { k: a.k + v.k, p: a.p + v.p }; }, { k: 0, p: 0 });
   const bar = (v, max, col, n, u) => `<div class="mbar"><div class="row between"><span class="xs">${n}</span><span class="xs num"><span dir="ltr"><b>${Math.round(v)}</b> / ${max}</span> ${u}</span></div><div class="bar"><i style="width:${Math.min(100, v / max * 100)}%;background:${col}"></i></div></div>`;
   const IC = { b: ['🍳', '#ff9f0a'], s: ['🥣', '#34c759'], l: ['🍛', '#ff2d3d'], a: ['🥤', '#5e5ce6'], d: ['🥗', '#30b0c7'] }, SEC = { b: 'b', s: 's', l: 'l', a: 'sh', d: 'd' };
-  const extra = [['fridge', '🧊', 'شنو عندي بالبيت؟', 'اختار الي بالثلاجة وأگلك شنو تطبخ'], ['sw', '🍫', 'حلا صحي', 'حلو بدون ما يخرّب جسمك'], ['k', '🥜', 'كرزات وموالح', 'مكسرات وبذور وفوايدها'], ['sh', '🥤', 'شيكات التضخيم', 'سعرات وبروتين بگلاص'], ['drinks', '💧', 'المشروبات', 'شنو تشرب وشنو لا'], ['fdb', '🔎', 'الأطعمة والبذور', Object.keys(FOODS).length + ' أكلة بقيمها'], ['shop', '🛒', 'سلة الأسبوع', 'شنو تشتري من الماركت'], ['ban', '⛔', 'الممنوعات', 'حرام وينفخ القولون']];
+  const extra = [['fridge', '🧊', 'شنو عندي بالبيت؟', 'اختار الي بالثلاجة وأگلك شنو تطبخ'], ['sw', '🍫', 'حلا صحي', 'حلو بدون ما يخرّب جسمك'], ['k', '🥜', 'كرزات وموالح', 'مكسرات وبذور وفوايدها'], ['sh', '🥤', 'شيكات التضخيم', 'سعرات وبروتين بگلاص'], ['drinks', '💧', 'المشروبات', 'شنو تشرب وشنو لا'], ['fdb', '🔎', 'الأطعمة والبذور', Object.keys(FOODS).length + ' أكلة بقيمها'], ['shop', '🛒', 'سلة الأسبوع', 'شنو تشتري من الماركت'], ['supps', '💊', 'المكملات', 'بروتين وكرياتين وفيتامينات وروابط الشراء'], ['ban', '⛔', 'الممنوعات', 'حرام وينفخ القولون']];
   return `${head('الأكل')}
   <div class="card"><div class="sec-h"><h2>أكلت اليوم</h2><span class="xs mut num">القائمة: ${Math.round(plan.k)} سعرة • ${Math.round(plan.p)}g بروتين</span></div>
-   ${bar(tot.k, T.k, 'var(--g)', 'السعرات', 'سعرة')}${bar(tot.p, T.p, 'var(--gold)', 'البروتين', 'g')}${bar(tot.c, Math.round(T.k * .5 / 4), 'var(--blue)', 'الكارب', 'g')}${bar(tot.f, Math.round(T.k * .27 / 9), '#ff9f0a', 'الدهون', 'g')}
+   ${bar(tot.k, T.k, 'var(--g)', 'السعرات', 'سعرة')}${bar(tot.p, T.p, 'var(--gold)', 'البروتين', 'غم')}${bar(tot.c, Math.round(T.k * .5 / 4), 'var(--blue)', 'الكارب', 'غم')}${bar(tot.f, Math.round(T.k * .27 / 9), '#ff9f0a', 'الدهون', 'غم')}
    <p class="xs mut">هدفك للتضخيم النظيف: ${T.k} سعرة و${T.p}g بروتين.</p></div>
   <div class="sec-h"><h2>وجباتك اليوم</h2><span class="xs mut">اضغط على الوجبة تشوف كل خياراتها</span></div>
   <div class="slist">${TM.map(({ m, o }) => { const v = optVal(o), c = IC[m.k]; return `<div class="slot ${eaten[m.k] ? 'on' : ''}"><button class="sbody" data-sec="${SEC[m.k]}" data-forslot="${m.k}"><span class="sico" style="background:${c[1]}22;color:${c[1]}">${c[0]}</span><span class="stxt"><span class="xs mut">${m.n} • ${m.t}</span><b>${o.n}</b><span class="xs num"><b style="color:var(--gold)">${Math.round(v.p)}g</b> بروتين • <b>${Math.round(v.k)}</b> سعرة • ${Math.round(v.c)}g كارب • ${Math.round(v.f)}g دهون</span></span>${I.chev}</button><button class="ib sm ${eaten[m.k] ? 'on' : ''}" data-eat="${m.k}" aria-label="أكلتها">${I.check}</button></div>`; }).join('')}</div>
   <div class="sec-h"><h2>أقسام ثانية</h2></div>
-  <div class="slist">${extra.map(([k, ic, n, sub]) => { const at = k === 'ban' ? 'href="#ban"' : ['drinks', 'fdb', 'shop', 'fridge'].includes(k) ? `data-${k}` : `data-sec="${k}"`; const tag = k === 'ban' ? 'a' : 'button'; return `<${tag} class="slot ex" ${at}><span class="sico">${ic}</span><span class="stxt"><b>${n}</b><span class="xs mut">${sub}${['sw', 'k', 'sh'].includes(k) ? ' • ' + RECIPES.filter(r => r.s === k).length + ' وصفة' : ''}</span></span>${I.chev}</${tag}>`; }).join('')}</div>`;
+  <div class="slist">${extra.map(([k, ic, n, sub]) => { const at = k === 'ban' || k === 'supps' ? `href="#${k}"` : ['drinks', 'fdb', 'shop', 'fridge'].includes(k) ? `data-${k}` : `data-sec="${k}"`; const tag = k === 'ban' || k === 'supps' ? 'a' : 'button'; return `<${tag} class="slot ex" ${at}><span class="sico">${ic}</span><span class="stxt"><b>${n}</b><span class="xs mut">${sub}${['sw', 'k', 'sh'].includes(k) ? ' • ' + RECIPES.filter(r => r.s === k).length + ' وصفة' : ''}</span></span>${I.chev}</${tag}>`; }).join('')}</div>`;
 }
 function openSection(k, forSlot) {
   const sec = SECTIONS.find(x => x[0] === k), L = RECIPES.filter(r => r.s === k).concat(k === 'l' ? [0, 1, 2, 3, 4, 5].map(i => genMeal(dayNo() * 7 + 100 + i)) : []);
@@ -683,7 +683,7 @@ function openBan(i) {
 }
 
 /* ================= أنا ================= */
-const VERSION = '17';
+const VERSION = '18';
 function weightInfo() {
   const start = S.startW || (S.weights[0]?.w) || +S.w || 52, goal = +S.goal || 62, cur = curW();
   const ms = [start + 1, start + 3, start + 5, start + 7].filter(x => x < goal).concat([goal]).map(x => +x.toFixed(1));
@@ -717,7 +717,7 @@ function vMe() {
 const row = (ic, col, t, sub, attr, right = I.chev) => `<button class="srow" ${attr}><span class="sic" style="background:${col}">${ic}</span><span class="grow"><b>${t}</b>${sub ? `<small>${sub}</small>` : ''}</span><span class="sr">${right}</span></button>`;
 const tgl = on => `<span class="tg ${on ? 'on' : ''}"><i></i></span>`;
 function openSettings() {
-  const th = S.theme || 'dark', hd = (S.health || {})[today()];
+  const th = S.theme || 'light', hd = (S.health || {})[today()];
   show(`<div class="row"><button class="ib" data-close aria-label="رجوع">${I.back}</button><h1>الإعدادات</h1></div>
   <button class="sprof" data-profile><div class="ava big">${esc((S.name || 'ب')[0])}</div><div class="grow"><b>${esc(S.name || 'اكتب اسمك')}</b><small>${S.age ? AR(S.age) + ' سنة • ' : ''}${AR(S.h)} سم • هدفك ${AR(weightInfo().goal)} كغم</small></div>${I.chev}</button>
   <p class="sh">المظهر</p>
@@ -777,7 +777,7 @@ function openHealth() {
 }
 /* ================= المظهر ================= */
 function applyTheme() {
-  const t = S.theme || 'dark', dark = t === 'auto' ? matchMedia('(prefers-color-scheme: dark)').matches : t === 'dark';
+  const t = S.theme || 'light', dark = t === 'auto' ? matchMedia('(prefers-color-scheme: dark)').matches : t === 'dark';
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
   document.documentElement.classList.toggle('noanim', !!S.noAnim);
   const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = dark ? '#09090b' : '#f2f2f7';

@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Oswald:wght@500;600;700&display=swap">
 <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
-<script>try{var _t=JSON.parse(localStorage.getItem("coach-v4")||"{}").theme||"dark";if(_t==="auto")_t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=_t;}catch(e){}</script>
+<script>try{var _t=JSON.parse(localStorage.getItem("coach-v4")||"{}").theme||"light";if(_t==="auto")_t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=_t;}catch(e){}</script>
 <style>
 /* هوية NEXFIT: أسود وأحمر وفضي مثل اللوغو، خط فازير يدعم كل الحروف العراقية */
 :root{
@@ -596,21 +596,71 @@ main.sl,main.sr,main.fade{animation:none}
 .dishhero{box-shadow:0 14px 34px rgba(0,0,0,.35)}
 .prow>svg,.frow>svg,.easy>svg,.banlink>svg,.forecard>svg,.scanbtn>svg,.sprof>svg,.slot>svg,.srow svg,.rrow>svg{width:18px!important;height:18px!important;flex:none}
 .prow .grow,.frow .grow,.easy .grow{min-width:0}
+
+/* ===== التصميم الهادئ v18: أنيق، مرتب، ما يدوّخ ===== */
+:root{--rg1:rgba(255,45,61,.13);--rg2:rgba(240,168,0,.15);--rg3:rgba(10,122,224,.14)}
+:root[data-theme=light]{--bg:#f4f4f7;--s1:#ffffff;--s2:#f4f4f7;--s3:#ebebef;--line:#ececf0;--fg:#111114;--mut:#8a8a93;--g:#ff2d3d;--gold:#e39b00;--blue:#0a7ae0;--glass:#fff;--edge:transparent}
+:root:not([data-theme=light]){--bg:#000;--s1:#1c1c1e;--s2:#2c2c2e;--s3:#3a3a3c;--line:#2c2c2e;--glass:var(--s1);--edge:transparent}
+body,:root:not([data-theme=light]) body{background:var(--bg)!important}
+.card,.slist,.exrow,.rrow,.frow,.mcard,.store,.bcard,.prow,.trow,.tile,.lastt,.hcard,.smart,.coach,.scard,.forecard,.irow,.wrow,.sgrp,.sprof{background:var(--s1)!important;border:0!important;box-shadow:0 2px 14px rgba(0,0,0,.05)!important;color:var(--fg)}
+:root:not([data-theme=light]) .card,:root:not([data-theme=light]) .slist,:root:not([data-theme=light]) .exrow,:root:not([data-theme=light]) .rrow,:root:not([data-theme=light]) .frow,:root:not([data-theme=light]) .mcard{box-shadow:none!important}
+.card{border-radius:24px;padding:18px}
+.sec-h h2::before{display:none}
+.btn{background:var(--g);box-shadow:none}
+.btn.dark{background:var(--fg);color:var(--bg)}
+.btn.ghost{background:var(--s2);color:var(--fg)}
+main.fade>*,main.sl>*,main.sr>*{animation:none}
+main.fade,main.sl,main.sr{animation:fade .25s ease}
+.scanhero .ring{animation:none}
+nav{background:none;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+nav .in{grid-template-columns:repeat(5,1fr)!important;background:var(--s1)!important;border:0!important;border-radius:26px;box-shadow:0 10px 30px rgba(0,0,0,.10)!important;padding:8px 4px!important}
+nav a{font-size:11px;color:var(--mut);background:none!important;padding:4px 0}
+nav a.on{color:var(--g)!important;font-weight:700}nav a.on::after{display:none!important}
+nav a svg{width:23px;height:23px}
+/* الرئيسية */
+.hhead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.hhead p{font-size:14px}.hhead h1{font-size:28px;margin-top:2px}
+.streak{background:var(--s1);border:0;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.rings2{flex-direction:row!important;align-items:center;gap:16px}.rings2 svg{width:124px;height:124px;flex:none;transform:rotate(-90deg)}
+.rings2 .lg{flex:1;display:flex;flex-direction:column;gap:8px;min-width:0}.rings2 .lg>div{display:flex;align-items:center;gap:8px;font-size:13.5px}.rings2 .lg i{width:10px;height:10px;border-radius:50%;flex:none}.rings2 .lg b{margin-right:auto;font-size:15px}
+.wo{display:flex;gap:14px;align-items:center;width:100%;background:none;border:0;padding:0;text-align:right;color:var(--fg)}
+.wo img{width:92px;height:92px;border-radius:20px;object-fit:cover;flex:none}.wo small{color:var(--g);font-weight:700;font-size:12.5px}.wo h2{font-size:22px;margin:2px 0}.wo p{font-size:13px;color:var(--mut)}
+.donebox{background:rgba(52,199,89,.12);color:#1f9d47;border-radius:14px;padding:12px;text-align:center;font-weight:700}
+.mlist{display:flex;flex-direction:column}.mlist button{display:flex;align-items:center;gap:12px;background:none;border:0;border-bottom:1px solid var(--line);padding:10px 0;text-align:right;color:var(--fg);width:100%}
+.mlist button:last-child{border:0}.mlist .e,.linkc .e{width:42px;height:42px;border-radius:13px;background:var(--s2);display:grid;place-items:center;font-size:20px;flex:none}
+.mlist .grow{display:flex;flex-direction:column;min-width:0}.mlist b{font-size:15.5px}.mlist small,.linkc small{font-size:12.5px;color:var(--mut)}.mlist .p{color:var(--g);font-size:16px;margin-right:auto}
+.mlist button.on .e{background:rgba(52,199,89,.15);color:#1f9d47}.mlist button.on .grow b{color:var(--mut);text-decoration:line-through}
+.linkc{flex-direction:row!important;align-items:center;gap:12px;text-decoration:none}.linkc .grow{display:flex;flex-direction:column}.linkc b{font-size:16px}.linkc svg{width:18px;height:18px;color:var(--mut)}
+/* بطاقات كانت قوية: صارت هادئة */
+.hero{background:var(--s1)!important;color:var(--fg)!important;box-shadow:0 2px 14px rgba(0,0,0,.05)!important;min-height:170px}
+.hero .wm{display:none}.hero .lab,.hero .mut,.hero p{color:var(--mut)!important}.hero .lab{color:var(--g)!important;opacity:1}
+.hero img{-webkit-mask-image:none!important;mask-image:none!important;height:100%!important;width:42%!important;object-fit:cover;border-radius:0 0 0 24px;left:0!important}
+.hero h1{font-size:28px;text-shadow:none!important}.hero .go{background:var(--fg)!important;color:var(--bg)!important}
+.scanhero{background:var(--s1)!important;color:var(--fg)!important;box-shadow:0 2px 14px rgba(0,0,0,.05)}.scanhero .ring{background:rgba(255,45,61,.1)!important;color:var(--g)}.scanhero small{color:var(--mut)}
+.forecard{color:var(--fg)!important}.forecard small{color:var(--mut)}
+.smart{background:var(--s1)!important}
+.coach{background:var(--s1)!important}
+.danger{background:rgba(255,45,61,.07)}.okbox{background:rgba(52,199,89,.08)}
+.stile:not(.mini2)>div{background:linear-gradient(transparent,rgba(0,0,0,.7))}
+.curmeal{box-shadow:0 6px 24px rgba(0,0,0,.12)}
+:root[data-theme=light] .mpic,.dishhero{background:#eee}
+.chips button,.cats button{background:var(--s1);border:0;box-shadow:0 1px 6px rgba(0,0,0,.05)}
+.chips button.on,.cats button.on{background:var(--fg)!important;color:var(--bg)!important}
+.seg{background:var(--s3);border:0}.seg button.on{background:var(--s1);color:var(--fg);box-shadow:0 1px 6px rgba(0,0,0,.08)}
+.ib{background:var(--s1);border:0;box-shadow:0 1px 6px rgba(0,0,0,.06)}
+.pill.g{background:rgba(255,45,61,.1)}
 </style>
 </head>
 <body>
 <main id="app"></main>
 <nav aria-label="القائمة"><div class="in">
-  <a href="#home" data-t="home"><span data-i="home"></span>الرئيسية</a>
+  <a href="#home" data-t="home"><span data-i="home"></span>اليوم</a>
   <a href="#course" data-t="course"><span data-i="dumb"></span>تمريني</a>
   <a href="#food" data-t="food"><span data-i="food"></span>الأكل</a>
-  <a href="#scan" data-t="scan" class="fab"><span data-i="scan"></span>الماركت</a>
-  <a href="#supps" data-t="supps"><span data-i="pill"></span>المكملات</a>
-  <a href="#ban" data-t="ban"><span data-i="warn"></span>ممنوع</a>
+  <a href="#scan" data-t="scan"><span data-i="scan"></span>الماركت</a>
   <a href="#me" data-t="me"><span data-i="user"></span>أنا</a>
 </div></nav>
 <div id="screen" class="screen" hidden></div>
 <div id="player" class="player" hidden></div>
-<script type="module" src="app.js?v=17"></script>
+<script type="module" src="app.js?v=18"></script>
 </body>
 </html>
