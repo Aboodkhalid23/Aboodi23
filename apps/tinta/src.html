@@ -197,6 +197,15 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 .cnav button{height:68px;border-radius:18px;border:1px solid var(--line);background:var(--surface);font-weight:700;font-size:18px}
 .cnav button.go{border:0;background:var(--accent);color:var(--bg)}
 .cnav button:disabled{opacity:.35}
+.scale .k{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-soft)}
+.scale .hint{margin-top:10px;font-size:14px}
+.sel{display:block;width:100%;height:50px;margin-top:6px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:600 16px var(--sans);padding:0 12px;-webkit-appearance:none;appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 18px) 22px,calc(100% - 13px) 22px;background-size:5px 5px;background-repeat:no-repeat}
+.brow{display:flex;gap:8px;margin-top:8px}
+.brow input{flex:1;min-width:0;height:56px;border-radius:12px;border:1px solid var(--accent);background:var(--bg);color:var(--fg);font:700 24px var(--sans);padding:0 14px}
+.sel.unit{width:92px;flex:none;height:56px;margin:0}
+.calcgo{flex:none;height:56px;padding:0 16px;border-radius:12px;border:0;background:var(--accent);color:var(--bg);font-weight:700;font-size:16px}
+.brief{margin-top:10px;font-size:14px;color:var(--muted)}
+.brief b{color:var(--fg)}
 @media (prefers-reduced-motion:no-preference){.view{animation:in .18s ease-out}@keyframes in{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}}
 </style>
 

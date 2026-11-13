@@ -5,7 +5,7 @@
       nomethod:'Paperissa ei ole kirjoitettua valmistusohjetta.',original:'Näytä alkuperäinen paperi',minus:'Vähemmän',plus:'Enemmän',vegan:'vegaani',parts:'osaa',
       foot:'Reseptit luettu keittiön paperikansiosta. Jos jokin näyttää väärältä, tarkista alkuperäinen paperi.',
       have:'Minulla on',havehint:'Reseptissä {q}. Kirjoita, paljonko sinulla on, niin kaikki muut määrät lasketaan sen mukaan.',haveok:'Laske',
-      calc:'Laskin',calcuse:'Käytä määränä',tiphave:'Napauta määrää: laske kaikki sen mukaan, mitä sinulla on.',
+      calc:'Laskin',calcuse:'Käytä määränä',tiphave:'Vinkki: napauta minkä tahansa aineen määrää, niin voit laskea kaiken sen mukaan.',
       gen:'Paperissa ei ollut ohjetta, joten tämä on lisätty. Tarkista keittiömestarilta.',
       tRecipes:'Reseptit',tFavs:'Suosikit',tPrep:'Prep-lista',tCalc:'Laskin',
       fav:'Lisää suosikkeihin',unfav:'Poista suosikeista',favs:'Suosikit',recent:'Viimeksi avatut',
@@ -16,13 +16,13 @@
       timer:'Ajastin',stop:'Pysäytä',ready:'Valmis!',
       newbtn:'Lisää uusi resepti kuvasta',newTitle:'Uusi resepti',newHint:'Ota kuva reseptipaperista. Jos resepti on usealla sivulla, lisää kaikki sivut. Resepti ilmestyy sovellukseen noin tunnin sisällä, suomeksi ja englanniksi.',
       newName:'Reseptin nimi (vapaaehtoinen)',newPick:'Ota kuva tai valitse',newSend:'Lähetä',newSending:'Lähetetään…',newOk:'Lähetetty! Resepti lisätään noin tunnin sisällä.',
-      newErr:'Lähetys ei onnistunut. Tarkista netti ja yritä uudelleen.',newOff:'Kuvien lähetys ei ole vielä käytössä.',newPages:'sivua',newRemove:'Poista kuva',isNew:'uusi',cook:'Aloita kokkaus',cookStep:'Vaihe',cookPrev:'Edellinen',cookNext:'Seuraava',cookDone:'Valmis',cookHere:'Tässä vaiheessa',cookClose:'Sulje kokkaustila',size:'Tekstin koko',share:'Jaa resepti',copied:'Resepti kopioitu',notes:'Omat muistiinpanot',notesHint:'Näkyy vain tässä puhelimessa.',more:'Lisää',cats:'Kategoriat',allAZ:'Kaikki reseptit A–Ö',allCats:'Kaikki kategoriat'},
+      newErr:'Lähetys ei onnistunut. Tarkista netti ja yritä uudelleen.',newOff:'Kuvien lähetys ei ole vielä käytössä.',newPages:'sivua',newRemove:'Poista kuva',isNew:'uusi',cook:'Aloita kokkaus',howMuch:'Paljonko teet?',byIng:'Laske tämän aineen mukaan:',amount:'Määrä',unit:'Yksikkö',factor:'Kaikki ainekset lasketaan:',saved:'muistetaan tässä puhelimessa',cookStep:'Vaihe',cookPrev:'Edellinen',cookNext:'Seuraava',cookDone:'Valmis',cookHere:'Tässä vaiheessa',cookClose:'Sulje kokkaustila',size:'Tekstin koko',share:'Jaa resepti',copied:'Resepti kopioitu',notes:'Omat muistiinpanot',notesHint:'Näkyy vain tässä puhelimessa.',more:'Lisää',cats:'Kategoriat',allAZ:'Kaikki reseptit A–Ö',allCats:'Kaikki kategoriat'},
     en:{title:'Recipes',search:'Search: pesto, butter, chanterelle…',all:'All',recipes:'recipes',results:'Results',none:'No recipes for',
       batch:'Batch',auto:'Amounts update automatically',ingredients:'Ingredients',method:'Method',back:'Back',
       nomethod:'No method is written on the paper.',original:'Show original paper',minus:'Less',plus:'More',vegan:'vegan',parts:'parts',
       foot:'Recipes read from the kitchen binder. If something looks wrong, check the original paper.',
       have:'I have',havehint:'The recipe uses {q}. Type how much you have and every other amount is worked out from it.',haveok:'Calculate',
-      calc:'Calculator',calcuse:'Use as batch',tiphave:'Tap an amount to scale everything to what you have.',
+      calc:'Calculator',calcuse:'Use as batch',tiphave:'Tip: tap any ingredient amount to scale everything by it.',
       gen:'The paper had no method, so this was added. Check with the head chef.',
       tRecipes:'Recipes',tFavs:'Favourites',tPrep:'Prep list',tCalc:'Calculator',
       fav:'Add to favourites',unfav:'Remove from favourites',favs:'Favourites',recent:'Recently opened',
@@ -33,7 +33,7 @@
       timer:'Timer',stop:'Stop',ready:'Ready!',
       newbtn:'Add a new recipe from a photo',newTitle:'New recipe',newHint:'Take a photo of the recipe paper. If it has several pages, add all of them. The recipe appears in the app within about an hour, in Finnish and English.',
       newName:'Recipe name (optional)',newPick:'Take or choose a photo',newSend:'Send',newSending:'Sending…',newOk:'Sent! The recipe will be added within about an hour.',
-      newErr:'Sending failed. Check the connection and try again.',newOff:'Photo upload is not switched on yet.',newPages:'pages',newRemove:'Remove photo',isNew:'new',cook:'Start cooking',cookStep:'Step',cookPrev:'Back',cookNext:'Next',cookDone:'Done',cookHere:'In this step',cookClose:'Close cooking mode',size:'Text size',share:'Share recipe',copied:'Recipe copied',notes:'My notes',notesHint:'Only visible on this phone.',more:'More',cats:'Categories',allAZ:'All recipes A–Z',allCats:'All categories'}
+      newErr:'Sending failed. Check the connection and try again.',newOff:'Photo upload is not switched on yet.',newPages:'pages',newRemove:'Remove photo',isNew:'new',cook:'Start cooking',howMuch:'How much are you making?',byIng:'Scale by this ingredient:',amount:'Amount',unit:'Unit',factor:'All ingredients scaled:',saved:'remembered on this phone',cookStep:'Step',cookPrev:'Back',cookNext:'Next',cookDone:'Done',cookHere:'In this step',cookClose:'Close cooking mode',size:'Text size',share:'Share recipe',copied:'Recipe copied',notes:'My notes',notesHint:'Only visible on this phone.',more:'More',cats:'Categories',allAZ:'All recipes A–Z',allCats:'All categories'}
   };
   var CATS = {
     kastike:['Kastikkeet ja dipit','Sauces & dips'], majo:['Majoneesit','Mayos'], oljy:['Öljyt ja vinegretit','Oils & dressings'],
@@ -75,7 +75,7 @@
   function norm(s){ return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''); }
 
   function num(r){
-    var v = r>=100 ? Math.round(r) : r>=10 ? Math.round(r*10)/10 : Math.round(r*100)/100;
+    var v = r>=100 ? Math.round(r) : r>=1 ? Math.round(r*10)/10 : Math.round(r*100)/100;
     return String(v).replace('.', lang==='fi' ? ',' : '.');
   }
   function fmt(q,u,m){
@@ -174,6 +174,57 @@
   function prepEntry(id){ return prep.filter(function(p){ return p.id===id; })[0]; }
 
   var ingDone = {}, stepDone = {}, rtab = 'ing';
+  /* ---------- Määrä: pääaineen mukaan tai kertoimella ---------- */
+  var MASS = {g:1,kg:1000}, VOL = {ml:1,cl:10,dl:100,l:1000};
+  var bases = load('base', {});
+  function unitsFor(u){ return MASS[u] ? ['kg','g'] : VOL[u] ? ['l','dl','ml'] : [u]; }
+  function fac(u){ return MASS[u] || VOL[u] || 1; }
+  function ingAt(r, ref){ var a = String(ref).split('-'); var p = r.p[+a[0]]; return p && p.i[+a[1]]; }
+  function candidates(r){
+    var out = [];
+    r.p.forEach(function(p, pi){ p.i.forEach(function(x, n){ if(x[0]!==null && x[0]>0) out.push({ref:pi+'-'+n, x:x, part:p.t}); }); });
+    return out;
+  }
+  function defaultBase(r){
+    var c = candidates(r); if(!c.length) return null;
+    var best = c[0];
+    c.forEach(function(o){ if((MASS[o.x[1]]||VOL[o.x[1]]) && o.x[0]*fac(o.x[1]) > (MASS[best.x[1]]||VOL[best.x[1]] ? best.x[0]*fac(best.x[1]) : 0)) best = o; });
+    return best.ref;
+  }
+  function niceAmount(q, u){
+    var v = q*fac(u), opts = unitsFor(u), pick = opts[opts.length-1];
+    for(var k=0;k<opts.length;k++){ if(v/fac(opts[k]) >= 1){ pick = opts[k]; break; } }
+    var w = v/fac(pick); return {v: w>=100 ? Math.round(w) : Math.round(w*10)/10, u: pick};
+  }
+  function scaleCard(r){
+    var t = T[lang], i = L(), c = candidates(r), b = bases[r.id];
+    var ref = (b && ingAt(r, b.ref)) ? b.ref : defaultBase(r);
+    if(!ref) return '';
+    var x = ingAt(r, ref), cur2 = niceAmount(x[0]*mult, x[1]);
+    var unitSel = unitsFor(x[1]).map(function(u){ return '<option value="'+u+'"'+(u===cur2.u?' selected':'')+'>'+esc(U[u]?U[u][i]:u)+'</option>'; }).join('');
+    return '<div class="card scale" id="scalecard"><div class="k">'+t.howMuch+'</div>'+
+      '<label class="hint" for="basesel">'+t.byIng+'</label>'+
+      '<select id="basesel" class="sel">'+c.map(function(o){ return '<option value="'+o.ref+'"'+(o.ref===ref?' selected':'')+'>'+esc(o.x[2+i]+(o.part?' ('+o.part[i]+')':''))+'</option>'; }).join('')+'</select>'+
+      '<div class="brow"><input id="baseamt" type="text" inputmode="decimal" autocomplete="off" aria-label="'+t.amount+'" value="'+String(cur2.v).replace('.', lang==='fi'?',':'.')+'">'+
+      '<select id="baseunit" class="sel unit" aria-label="'+t.unit+'">'+unitSel+'</select>'+
+      '<button type="button" class="calcgo" id="basego">'+t.haveok+'</button></div>'+
+      '<div class="brief">'+t.factor+' <b>'+num(mult)+'×</b>'+(b ? ' · '+t.saved : '')+'</div>'+
+      '<div class="quick">'+[0.5,1,2,3].map(function(v){return '<button type="button" data-p="'+v+'" aria-pressed="'+(v===mult && !b)+'">'+num(v)+'×</button>'}).join('')+'</div>'+
+      '<button type="button" class="addprep" id="prepbtn" aria-pressed="'+(!!prepEntry(r.id))+'">'+(prepEntry(r.id) ? t.inprep : t.addprep)+'</button></div>';
+  }
+  function applyBase(){
+    var r = cur, ref = $('basesel').value, x = ingAt(r, ref);
+    var v = parseFloat(String($('baseamt').value).replace(',', '.')), u = $('baseunit').value;
+    if(!x || !(v>0)){ $('baseamt').focus(); return; }
+    mult = (v*fac(u)) / (x[0]*fac(x[1]));
+    bases[r.id] = {ref: ref, v: v, u: u}; save('base', bases);
+    syncPrep(); render();
+  }
+  function multFromBase(r){
+    var b = bases[r.id], x = b && ingAt(r, b.ref);
+    return x ? (b.v*fac(b.u)) / (x[0]*fac(x[1])) : null;
+  }
+
   function renderRecipe(){
     var r = cur, t = T[lang], i = L(), isFav = favs.indexOf(r.id)>-1, pe = prepEntry(r.id);
     var nIng = 0, nStep = 0; r.p.forEach(function(p){ nIng += p.i.length; nStep += (p.s||[]).length; });
@@ -183,10 +234,7 @@
       '<header class="rhead"><div class="eyebrow">'+esc(CATS[r.c][i])+(r.v?' · '+t.vegan:'')+(r.p.length>1?' · '+r.p.length+' '+t.parts:'')+'</div>'+
       '<h1 class="title">'+esc(r.n[i])+'</h1><div class="other">'+esc(r.n[1-i])+'</div></header>'+
       (r.note ? '<p class="callout">'+esc(r.note[i])+'</p>' : '')+
-      '<div class="card scale"><div class="srow"><div><div class="k">'+t.batch+'</div><div class="h">'+t.auto+'</div></div>'+
-      '<div class="step"><button type="button" id="minus" aria-label="'+t.minus+'">−</button><output id="pn" aria-live="polite">'+num(mult)+'×</output><button type="button" class="plus" id="plus" aria-label="'+t.plus+'">+</button></div></div>'+
-      '<div class="quick">'+[0.5,1,2,3].map(function(v){return '<button type="button" data-p="'+v+'" aria-pressed="'+(v===mult)+'">'+num(v)+'×</button>'}).join('')+'</div>'+
-      '<button type="button" class="addprep" id="prepbtn" aria-pressed="'+(!!pe)+'">'+(pe ? t.inprep : t.addprep)+'</button></div>'+
+      scaleCard(r)+
       '<div class="seg" role="tablist"><button type="button" role="tab" data-rtab="ing" aria-selected="'+(rtab==='ing')+'">'+t.ingredients+' <span>'+nIng+'</span></button>'+
       '<button type="button" role="tab" data-rtab="met" aria-selected="'+(rtab==='met')+'">'+t.method+' <span>'+nStep+'</span></button></div>';
     if(rtab==='ing'){
@@ -268,7 +316,7 @@
     var h = location.hash.replace('#','');
     if(h.indexOf('r-')===0 && byId(h.slice(2))){
       var r = byId(h.slice(2));
-      if(cur!==r){ var pe = prepEntry(r.id); mult = pe ? pe.m : 1; rtab = 'ing'; $('recipe').innerHTML=''; }
+      if(cur!==r){ var pe = prepEntry(r.id), mb = multFromBase(r); mult = pe ? pe.m : (mb || 1); rtab = 'ing'; $('recipe').innerHTML=''; }
       cur = r; view = 'recipe';
       recent = [r.id].concat(recent.filter(function(x){ return x!==r.id; })).slice(0,12); save('recent', recent);
     } else {
@@ -297,8 +345,9 @@
     if(b.id==='prepclear'){ prep = []; pdone = {}; save('prep',prep); save('pdone',pdone); render(); return; }
     if(b.id==='minus'){ mult = Math.max(0.5, mult-0.5); syncPrep(); render(); return; }
     if(b.id==='plus'){ mult = mult+0.5; syncPrep(); render(); return; }
-    if(b.dataset.p){ mult = +b.dataset.p; syncPrep(); render(); return; }
-    if(b.dataset.have){ openHave(b.dataset.have); return; }
+    if(b.dataset.p){ mult = +b.dataset.p; delete bases[cur.id]; save('base', bases); syncPrep(); render(); return; }
+    if(b.id==='basego'){ applyBase(); return; }
+    if(b.dataset.have){ $('basesel').value = b.dataset.have; onBaseSel(); var sc = $('scalecard'); window.scrollTo({top: sc.getBoundingClientRect().top + window.scrollY - 90, behavior:'smooth'}); setTimeout(function(){ $('baseamt').focus(); $('baseamt').select(); }, 350); return; }
     if(b.dataset.timer){ startTimer(+b.dataset.timer, b.dataset.tname); return; }
     if(b.dataset.tstop){ stopTimer(+b.dataset.tstop); return; }
     if(b.dataset.close){ closeSheets(); return; }
@@ -472,6 +521,15 @@
   document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible') wake(); });
 
   document.documentElement.lang = lang;
+  function onBaseSel(){
+    var x = ingAt(cur, $('basesel').value); if(!x) return;
+    var a = niceAmount(x[0]*mult, x[1]);
+    $('baseunit').innerHTML = unitsFor(x[1]).map(function(u){ return '<option value="'+u+'"'+(u===a.u?' selected':'')+'>'+esc(U[u]?U[u][L()]:u)+'</option>'; }).join('');
+    $('baseamt').value = String(a.v).replace('.', lang==='fi'?',':'.');
+  }
+  document.addEventListener('change', function(e){ if(e.target.id==='basesel') onBaseSel(); });
+  document.addEventListener('keydown', function(e){ if(e.target.id==='baseamt' && e.key==='Enter'){ e.preventDefault(); applyBase(); } });
+
   /* ---------- Tekstin koko ---------- */
   var ZOOMS = [1, 1.15, 1.3], zoomIdx = load('zoom', 0); if(!(zoomIdx>=0 && zoomIdx<3)) zoomIdx = 0;
   function applyZoom(){ document.documentElement.style.setProperty('--z', ZOOMS[zoomIdx]); }
