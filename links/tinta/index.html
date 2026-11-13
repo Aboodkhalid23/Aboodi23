@@ -12,6 +12,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
+<script src="config.js"></script>
 <title>Tintå Reseptit</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap">
 <style>
@@ -136,6 +137,17 @@ ol.steps .txt{line-height:1.55;color:#E4DDD3;min-width:0}
 .hrow input{flex:1;min-width:0;height:56px;border-radius:14px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:600 26px var(--sans);padding:0 14px}
 .hrow span{font-size:18px;color:var(--muted)}
 .hint{display:block;margin:8px 0 0;color:var(--muted);font-size:14px;line-height:1.5}
+.newbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:54px;margin-top:12px;border-radius:14px;border:1px dashed var(--accent);background:transparent;color:var(--accent-soft);font-weight:600;font-size:15px}
+.pick{display:flex;align-items:center;justify-content:center;gap:10px;height:56px;margin-top:14px;border-radius:14px;background:var(--accent);color:var(--bg);font-weight:600;font-size:16px;cursor:pointer}
+.pick input{position:absolute;width:1px;height:1px;opacity:0}
+.shots{display:flex;gap:8px;margin-top:12px;overflow-x:auto}
+.shot{position:relative;flex:none}
+.shot img{width:84px;height:112px;object-fit:cover;border-radius:10px;display:block}
+.shot .x{position:absolute;top:4px;right:4px;width:32px;height:32px;background:rgba(0,0,0,.7);border:0;font-size:16px}
+.field{display:block;margin-top:12px;color:var(--muted);font-size:14px}
+.field input{display:block;width:100%;margin-top:6px;height:48px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:16px var(--sans);padding:0 12px}
+.use:disabled{opacity:.4}
+.status{min-height:20px;margin:10px 0 0;color:var(--accent-soft);font-size:14px;line-height:1.45}
 @media (prefers-reduced-motion:no-preference){.view{animation:in .18s ease-out}@keyframes in{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}}
 </style>
 
@@ -153,6 +165,7 @@ ol.steps .txt{line-height:1.55;color:#E4DDD3;min-width:0}
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A39B90" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
       <input id="q" type="search" autocomplete="off" enterkeyhint="search">
     </label>
+    <button type="button" class="newbtn" id="newbtn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg><span id="newbtntext"></span></button>
     <div class="chips" id="chips" role="group"></div>
     <div id="homelists"></div>
     <p class="note" id="foot"></p>
@@ -189,6 +202,16 @@ ol.steps .txt{line-height:1.55;color:#E4DDD3;min-width:0}
   <label class="hint" for="havein" id="havelabel"></label>
   <div class="hrow"><input id="havein" type="text" inputmode="decimal" autocomplete="off"><span id="haveunit"></span></div>
   <button type="button" class="use solid" id="haveok">Laske</button>
+</section>
+
+<section class="sheet" id="newsheet" hidden aria-labelledby="newtitle">
+  <div class="shead"><h2 id="newtitle"></h2><button type="button" class="x" data-close="1" aria-label="Sulje / Close">×</button></div>
+  <p class="hint" id="newhint"></p>
+  <label class="pick"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg><span id="newpicktext"></span><input id="newfile" type="file" accept="image/*" multiple></label>
+  <div class="shots" id="newshots"></div>
+  <label class="field" for="newname"><span id="newnamelabel"></span><input id="newname" type="text" autocomplete="off"></label>
+  <button type="button" class="use solid" id="newsend" disabled></button>
+  <p class="status" id="newstatus" aria-live="polite"></p>
 </section>
 
 <script>
@@ -282,7 +305,10 @@ var R = [
       addprep:'+ Lisää prep-listaan',inprep:'✓ Prep-listalla · poista',
       prepTitle:'Prep-lista',prepSub:'Tämän päivän valmistettavat',noprep:'Lista on tyhjä. Avaa resepti ja paina "Lisää prep-listaan".',
       totals:'Kaikki ainekset yhteensä',clear:'Tyhjennä lista',done:'valmis',of:'/',
-      timer:'Ajastin',stop:'Pysäytä',ready:'Valmis!'},
+      timer:'Ajastin',stop:'Pysäytä',ready:'Valmis!',
+      newbtn:'Lisää uusi resepti kuvasta',newTitle:'Uusi resepti',newHint:'Ota kuva reseptipaperista. Jos resepti on usealla sivulla, lisää kaikki sivut. Resepti ilmestyy sovellukseen noin tunnin sisällä, suomeksi ja englanniksi.',
+      newName:'Reseptin nimi (vapaaehtoinen)',newPick:'Ota kuva tai valitse',newSend:'Lähetä',newSending:'Lähetetään…',newOk:'Lähetetty! Resepti lisätään noin tunnin sisällä.',
+      newErr:'Lähetys ei onnistunut. Tarkista netti ja yritä uudelleen.',newOff:'Kuvien lähetys ei ole vielä käytössä.',newPages:'sivua',newRemove:'Poista kuva',isNew:'uusi'},
     en:{title:'Recipes',search:'Search: pesto, butter, chanterelle…',all:'All',recipes:'recipes',results:'Results',none:'No recipes for',
       batch:'Batch',auto:'Amounts update automatically',ingredients:'Ingredients',method:'Method',back:'Back',
       nomethod:'No method is written on the paper.',original:'Show original paper',minus:'Less',plus:'More',vegan:'vegan',parts:'parts',
@@ -296,7 +322,10 @@ var R = [
       addprep:'+ Add to prep list',inprep:'✓ On prep list · remove',
       prepTitle:'Prep list',prepSub:'What to make today',noprep:'The list is empty. Open a recipe and tap "Add to prep list".',
       totals:'All ingredients combined',clear:'Clear list',done:'done',of:'/',
-      timer:'Timer',stop:'Stop',ready:'Ready!'}
+      timer:'Timer',stop:'Stop',ready:'Ready!',
+      newbtn:'Add a new recipe from a photo',newTitle:'New recipe',newHint:'Take a photo of the recipe paper. If it has several pages, add all of them. The recipe appears in the app within about an hour, in Finnish and English.',
+      newName:'Recipe name (optional)',newPick:'Take or choose a photo',newSend:'Send',newSending:'Sending…',newOk:'Sent! The recipe will be added within about an hour.',
+      newErr:'Sending failed. Check the connection and try again.',newOff:'Photo upload is not switched on yet.',newPages:'pages',newRemove:'Remove photo',isNew:'new'}
   };
   var CATS = {
     kastike:['Kastikkeet ja dipit','Sauces & dips'], majo:['Majoneesit','Mayos'], oljy:['Öljyt ja vinegretit','Oils & dressings'],
@@ -363,8 +392,9 @@ var R = [
   function rowHtml(r){
     var t = T[lang], i = L();
     var meta = CATS[r.c][i] + (r.p.length>1 ? ' · '+r.p.length+' '+t.parts : '');
+    var fresh = r.added && (Date.now() - Date.parse(r.added)) < 14*864e5;
     return '<button type="button" class="row" data-open="'+r.id+'"><div class="t"><div class="n">'+esc(r.n[i])+
-      (r.v?'<span class="tag">'+t.vegan+'</span>':'')+'</div><div class="m">'+esc(r.n[1-i])+' · '+esc(meta)+'</div></div>'+
+      (fresh?'<span class="tag">'+t.isNew+'</span>':'')+(r.v?'<span class="tag">'+t.vegan+'</span>':'')+'</div><div class="m">'+esc(r.n[1-i])+' · '+esc(meta)+'</div></div>'+
       (favs.indexOf(r.id)>-1 ? '<span class="star">★</span>' : '')+ICON.chev+'</button>';
   }
 
@@ -375,6 +405,7 @@ var R = [
     $('q').placeholder = t.search; $('q').setAttribute('aria-label', t.search);
     $('count').textContent = fav ? '' : R.length+' '+t.recipes;
     $('count').hidden = fav; document.querySelector('#home .search').hidden = fav; $('chips').hidden = fav;
+    $('newbtn').hidden = fav; $('newbtntext').textContent = t.newbtn;
     if(fav){
       var f = favs.map(byId).filter(Boolean).sort(function(a,b){ return a.n[i].localeCompare(b.n[i], lang); });
       var rc = recent.map(byId).filter(Boolean).slice(0,8);
@@ -530,7 +561,57 @@ var R = [
     if(b.dataset.k){ key(b.dataset.k); return; }
     if(b.id==='calcuse'){ var v=calcVal(); if(v>0 && cur){ mult=v; syncPrep(); closeSheets(); render(); } return; }
     if(b.id==='haveok'){ applyHave(); return; }
+    if(b.id==='newbtn'){ openNew(); return; }
+    if(b.id==='newsend'){ sendNew(); return; }
+    if(b.dataset.rmimg){ shots.splice(+b.dataset.rmimg,1); drawShots(); return; }
   });
+
+  /* ---------- Uusi resepti kuvasta ---------- */
+  var UPLOAD = (window.TINTA_UPLOAD || ''), shots = [];
+  function openNew(){
+    var t = T[lang];
+    $('newtitle').textContent = t.newTitle; $('newhint').textContent = t.newHint;
+    $('newnamelabel').textContent = t.newName; $('newpicktext').textContent = t.newPick;
+    $('newsend').textContent = t.newSend; $('newstatus').textContent = UPLOAD ? '' : t.newOff;
+    $('newsend').disabled = !UPLOAD || !shots.length;
+    drawShots();
+    $('newsheet').hidden = false; $('veil').hidden = false;
+  }
+  function drawShots(){
+    var t = T[lang];
+    $('newshots').innerHTML = shots.map(function(s,k){
+      return '<div class="shot"><img src="'+s+'" alt="'+(k+1)+'"><button type="button" class="x" data-rmimg="'+k+'" aria-label="'+t.newRemove+'">×</button></div>';
+    }).join('');
+    $('newsend').disabled = !UPLOAD || !shots.length;
+  }
+  function shrink(file){
+    return new Promise(function(res, rej){
+      var url = URL.createObjectURL(file), img = new Image();
+      img.onload = function(){
+        var s = Math.min(1, 1800/Math.max(img.width, img.height)), c = document.createElement('canvas');
+        c.width = Math.round(img.width*s); c.height = Math.round(img.height*s);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', 0.82));
+      };
+      img.onerror = function(){ URL.revokeObjectURL(url); rej(); };
+      img.src = url;
+    });
+  }
+  $('newfile').addEventListener('change', function(e){
+    var fs = Array.prototype.slice.call(e.target.files || []).slice(0, 6 - shots.length);
+    Promise.all(fs.map(shrink)).then(function(list){ shots = shots.concat(list); drawShots(); }).catch(function(){});
+    e.target.value = '';
+  });
+  function sendNew(){
+    var t = T[lang];
+    if(!UPLOAD || !shots.length) return;
+    $('newsend').disabled = true; $('newstatus').textContent = t.newSending;
+    var body = JSON.stringify({name: $('newname').value.trim().slice(0,80), images: shots.map(function(s){ return s.split(',')[1]; })});
+    fetch(UPLOAD, {method:'POST', body: body}).then(function(r){ return r.json(); }).then(function(j){
+      if(!j || !j.ok) throw 0;
+      shots = []; $('newname').value = ''; drawShots(); $('newstatus').textContent = t.newOk;
+    }).catch(function(){ $('newstatus').textContent = t.newErr; $('newsend').disabled = false; });
+  }
   document.addEventListener('change', function(e){
     var c = e.target;
     if(c.dataset && c.dataset.pdone){ if(c.checked) pdone[c.dataset.pdone]=1; else delete pdone[c.dataset.pdone]; save('pdone',pdone); renderPrep(); }
@@ -581,7 +662,7 @@ var R = [
     show();
     $('calcsheet').hidden = false; $('veil').hidden = false;
   }
-  function closeSheets(){ $('calcsheet').hidden = true; $('havesheet').hidden = true; $('veil').hidden = true; }
+  function closeSheets(){ $('calcsheet').hidden = true; $('havesheet').hidden = true; $('newsheet').hidden = true; $('veil').hidden = true; }
   $('veil').addEventListener('click', closeSheets);
   document.addEventListener('keydown', function(e){
     if($('calcsheet').hidden){ if(e.key==='Escape') closeSheets(); return; }

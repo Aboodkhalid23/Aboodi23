@@ -1,0 +1,1 @@
+window.TINTA_UPLOAD = '';
