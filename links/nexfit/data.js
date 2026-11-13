@@ -72,24 +72,24 @@ export const EX = {
   child: { n: 'وضعية الطفل', gym: 'چايلد پوز', m: ['back'], sec: 1, w0: 0, inc: 0, st: ['اگعد على ركبك', 'مد إيدك لگدام ونزّل صدرك', 'تنفس ببطء', '30 ثانية'], bad: [] },
 };
 export const REST_DAY = ['hipflex', 'cat', 'chest', 'hang', 'child'];
-export const DAY_NAMES = { A: 'صدر + أمامية', B: 'ظهر + خلفية', C: 'أكتاف + رجل', R: 'راحة' };
-export const DAY_IMG = { A: 'dayA', B: 'dayB', C: 'dayC', R: 'rest' };
+export const DAY_NAMES = { A: 'علوي: صدر + ظهر + ذراع', B: 'سفلي: رجل + بطن', C: 'علوي: كتف + ذراع + ساعد', D: 'سفلي: مؤخرة + فخذ + بطن', R: 'راحة' };
+export const DAY_IMG = { A: 'dayA', B: 'dayL', C: 'dayC', D: 'dayL2', R: 'rest' };
 
 /* ================= برامج الشهور =================
    كل شهر: اسم وهدف، وتمارين كل يوم. r = العدّات، s = السِتات */
 export const MONTHS = [
   { n: 'التأسيس', mo: 'تشرين الثاني', goal: 'تتعلم الحركات الصحيحة وجسمك يتعوّد', tw: 53.5, c: { r: [10, 12], s: 3 }, i: { r: [12, 15], s: 3 },
-    days: { A: ['chestpress', 'incline', 'pecdeck', 'curl', 'hammer', 'plank'], B: ['latpull', 'row', 'dbrow', 'backext', 'pushdown', 'wristcurl'], C: ['legpress', 'legext', 'legcurl', 'shpress', 'lateral', 'reardelt', 'calf'] } },
+    days: { A: ['chestpress', 'latpull', 'pecdeck', 'row', 'lateral', 'curl', 'pushdown'], B: ['legpress', 'legcurl', 'legext', 'glutebridge', 'calf', 'crunch'], C: ['incline', 'dbrow', 'shpress', 'reardelt', 'hammer', 'ohtri', 'wristcurl'], D: ['goblet', 'rdl', 'legext', 'calf', 'plank'] } },
   { n: 'البناء', mo: 'كانون الأول', goal: 'أوزان أكثر وتمارين حرة، وبداية شغل الساعد', tw: 55, c: { r: [8, 12], s: 3 }, i: { r: [10, 15], s: 3 },
-    days: { A: ['dbbench', 'incline', 'pecdeck', 'curl', 'hammer', 'wristcurl', 'crunch'], B: ['latpull', 'row', 'dbrow', 'rdl', 'pushdown', 'ohtri', 'revcurl'], C: ['legpress', 'goblet', 'legcurl', 'shpress', 'lateral', 'reardelt', 'farmer'] } },
+    days: { A: ['dbbench', 'latpull', 'incline', 'row', 'lateral', 'curl', 'pushdown'], B: ['legpress', 'rdl', 'legcurl', 'legext', 'calf', 'crunch'], C: ['incline', 'dbrow', 'shpress', 'reardelt', 'hammer', 'ohtri', 'revcurl'], D: ['goblet', 'glutebridge', 'legcurl', 'legext', 'calf', 'plank'] } },
   { n: 'القوة', mo: 'كانون الثاني', goal: 'التمارين الكبيرة أثقل بعدّات أقل، والقوة ترفع كل شي', tw: 56.5, c: { r: [6, 10], s: 4 }, i: { r: [10, 15], s: 3 },
-    days: { A: ['incline', 'dbbench', 'chestpress', 'curl', 'hammer', 'kneeraise'], B: ['latpull', 'dbrow', 'row', 'rdl', 'ohtri', 'pushdown', 'farmer'], C: ['goblet', 'legpress', 'legcurl', 'shpress', 'lateral', 'reardelt', 'wristcurl'] } },
+    days: { A: ['dbbench', 'row', 'incline', 'latpull', 'lateral', 'curl', 'ohtri'], B: ['legpress', 'rdl', 'legext', 'legcurl', 'calf', 'kneeraise'], C: ['shpress', 'dbrow', 'chestpress', 'reardelt', 'lateral', 'hammer', 'pushdown', 'farmer'], D: ['goblet', 'glutebridge', 'legcurl', 'calf', 'plank', 'crunch'] } },
   { n: 'الكتف والزند', mo: 'شباط', goal: 'تركيز على الكتف العريض والزند والساعد، هذول الي يبينون بالتيشيرت', tw: 58, c: { r: [8, 12], s: 3 }, i: { r: [10, 15], s: 4 },
-    days: { A: ['incline', 'chestpress', 'lateral', 'curl', 'hammer', 'wristcurl'], B: ['latpull', 'row', 'reardelt', 'pushdown', 'ohtri', 'revcurl', 'kneeraise'], C: ['legpress', 'goblet', 'legcurl', 'shpress', 'lateral', 'farmer', 'calf'] } },
+    days: { A: ['incline', 'latpull', 'chestpress', 'row', 'lateral', 'curl', 'pushdown', 'wristcurl'], B: ['legpress', 'rdl', 'legcurl', 'legext', 'calf', 'kneeraise'], C: ['shpress', 'lateral', 'reardelt', 'dbrow', 'hammer', 'ohtri', 'revcurl', 'farmer'], D: ['goblet', 'glutebridge', 'legext', 'calf', 'crunch'] } },
   { n: 'الحجم', mo: 'آذار', goal: 'سِتات أكثر لكل عضلة حتى تكبر بكل مكان', tw: 59.5, c: { r: [8, 12], s: 4 }, i: { r: [12, 15], s: 3 },
-    days: { A: ['dbbench', 'incline', 'pecdeck', 'curl', 'hammer', 'crunch'], B: ['latpull', 'dbrow', 'row', 'rdl', 'pushdown', 'ohtri', 'wristcurl'], C: ['legpress', 'goblet', 'legext', 'legcurl', 'shpress', 'lateral', 'reardelt'] } },
+    days: { A: ['dbbench', 'latpull', 'incline', 'row', 'pecdeck', 'lateral', 'curl', 'pushdown'], B: ['legpress', 'rdl', 'legext', 'legcurl', 'calf', 'kneeraise'], C: ['incline', 'dbrow', 'shpress', 'reardelt', 'lateral', 'hammer', 'ohtri', 'wristcurl'], D: ['goblet', 'glutebridge', 'legcurl', 'legext', 'calf', 'plank'] } },
   { n: 'التشكيل', mo: 'نيسان وأيار', goal: 'نحافظ على العضل ونبيّن التقسيمات: بطن وساعد وكتف واضح', tw: 61, c: { r: [8, 12], s: 3 }, i: { r: [12, 20], s: 3 },
-    days: { A: ['incline', 'dbbench', 'pecdeck', 'curl', 'revcurl', 'kneeraise', 'crunch'], B: ['latpull', 'row', 'dbrow', 'pushdown', 'ohtri', 'wristcurl', 'plank'], C: ['goblet', 'legpress', 'legcurl', 'shpress', 'lateral', 'reardelt', 'farmer'] } },
+    days: { A: ['incline', 'latpull', 'dbbench', 'row', 'lateral', 'curl', 'pushdown', 'revcurl'], B: ['legpress', 'rdl', 'legcurl', 'calf', 'kneeraise', 'crunch'], C: ['shpress', 'dbrow', 'pecdeck', 'reardelt', 'lateral', 'hammer', 'ohtri', 'farmer'], D: ['goblet', 'glutebridge', 'legext', 'legcurl', 'calf', 'plank'] } },
 ];
 
 /* ================= الأكل =================

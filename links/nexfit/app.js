@@ -61,15 +61,16 @@ try { const o = JSON.parse(localStorage.getItem('coach-v3') || 'null'); if (o &&
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 
 /* ================= بناء برنامج الشهر ================= */
-const MDAYS = 28, CYC = ['A', 'B', 'C', 'R'];
-const dayType = i => CYC[i % 4];
+/* تقسيم علوي/سفلي 4 أيام بالأسبوع: كل عضلة تتمرن مرتين بالأسبوع (أقوى من مرة وحدة حسب الدراسات) */
+const MDAYS = 28, CYC = ['A', 'B', 'R', 'C', 'D', 'R', 'R'];
+const dayType = i => CYC[i % 7];
 const MOS = ['تشرين الثاني', 'كانون الأول', 'كانون الثاني', 'شباط', 'آذار', 'نيسان', 'أيار', 'حزيران', 'تموز', 'آب', 'أيلول', 'تشرين الأول'];
 const NEXT = [[2, 'القوة'], [4, 'الحجم'], [3, 'الكتف والزند'], [5, 'التشكيل']];
 /* الكورس مفتوح: بعد الستة أشهر الأولى يدوّر على مراحل القوة والحجم والكتف والتشكيل، وكل دورة أثقل من الي قبلها لأن الأوزان تنبني على أرقامك */
 function tplFor(n) { if (n <= MONTHS.length) return MONTHS[n - 1]; const [i, nm] = NEXT[(n - 7) % 4], T = MONTHS[i]; return Object.assign({}, T, { n: nm + ' ' + AR(Math.floor((n - 7) / 4) + 2), mo: MOS[(n - 1) % 12], tw: +(T.tw + 1.5 * Math.ceil((n - 6) / 2)).toFixed(1), goal: T.goal + ' (دورة جديدة بأوزانك الحالية)' }); }
 function buildMonth(n, ev) {
   const T = tplFor(n), plan = {}, prevTop = id => (S.month && S.month.plan && Object.values(S.month.plan).flat().find(x => x.id === id) || {}).r?.[1];
-  for (const d of ['A', 'B', 'C']) {
+  for (const d of ['A', 'B', 'C', 'D']) {
     plan[d] = T.days[d].map(id => {
       const e = EX[id], base = e.c ? T.c : T.i;
       let s = base.s, r = e.sec ? [20, 40] : base.r.slice();
@@ -89,6 +90,7 @@ function buildMonth(n, ev) {
   return { n, name: T.n, goal: T.goal, start: today(), plan, done: {} };
 }
 if (!S.month) { S.month = buildMonth(1); save(); }
+if (!S.month.plan || !S.month.plan.D) { const old = S.month; S.month = Object.assign(buildMonth(old.n || 1), { start: old.start || today(), done: {} }); save(); }
 function curDay() { for (let i = 0; i < MDAYS; i++) if (!S.month.done[i]) return i; return MDAYS; }
 const isDeload = i => S.month.n % 2 === 0 && i >= 21;
 function setsAt(item, i) { if (S.month.n === 1 && i < 14 && !EX[item.id].sec) return Math.min(2, item.s); if (isDeload(i) && !EX[item.id].sec) return Math.max(2, item.s - 1); return item.s; }
@@ -150,15 +152,21 @@ let showPlan = false;
 function vCourse() {
   const c = curDay(), M = S.month, doneN = Object.keys(M.done).length, t = c < MDAYS ? dayType(c) : null;
   const wk = Math.min(3, Math.floor(Math.min(c, MDAYS - 1) / 7));
-  const strip = Array.from({ length: 7 }, (_, k) => wk * 7 + k).map(i => { const ty = dayType(i); return `<button class="dd ${M.done[i] ? 'done' : ''} ${i === c ? 'now' : ''} ${ty === 'R' ? 'rest' : ''}" data-day="${i}"><span class="xs">${['ص', 'ظ', 'ك', 'ر'][CYC.indexOf(ty)]}</span><b class="num">${AR(i + 1)}</b></button>`; }).join('');
+  const strip = Array.from({ length: 7 }, (_, k) => wk * 7 + k).map(i => { const ty = dayType(i); return `<button class="dd ${M.done[i] ? 'done' : ''} ${i === c ? 'now' : ''} ${ty === 'R' ? 'rest' : ''}" data-day="${i}"><span class="xs">${({ A: 'ع', B: 'س', C: 'ع', D: 'س', R: 'ر' })[ty]}</span><b class="num">${AR(i + 1)}</b></button>`; }).join('');
   return `${head('تمريني')}<span class="pill g" style="align-self:flex-start">${M.mo || tplFor(M.n).mo} • ${tplFor(M.n).n}</span>
   ${t === null ? `<div class="card"><h2>خلصت الشهر 🎉</h2><p class="sm mut">قيّم نفسك وأبنيلك الشهر الجاي.</p><button class="btn wide" data-eval>قيّم الشهر</button></div>` : `
   <button class="hero" data-day="${c}"><div class="wm">اليوم ${AR(c + 1)}</div><div class="txt"><span class="lab">${t === 'R' ? 'يوم راحة' : 'تمرين اليوم'}</span><h1>${DAY_NAMES[t]}</h1><p class="sm">${t === 'R' ? 'مشي + وگفة' : AR(dayItems(c).length) + ' تمارين'}</p><span class="go">${I.play}</span></div><img src="img/ex3d/${DAY_IMG[t]}.jpg" alt=""></button>
   ${t !== 'R' ? `<div class="col">${dayItems(c).map((x, k) => `<button class="exrow" data-ex="${x.id}"><img src="img/ex3d/${x.id}.jpg" alt="" loading="lazy"><div class="grow"><h3>${EX[x.id].n}${EX[x.id].star ? ' ⭐' : ''}</h3><p class="sm num" style="color:var(--g)">${AR(setsAt(x, c))} × ${rng(x.r)} ${EX[x.id].sec ? 'ثانية' : ''}</p><p class="xs mut">${x.w ? AR(x.w) + ' كغم' : 'بدون وزن'}</p></div><span class="k">${I.play}</span></button>`).join('')}</div>
   <button class="btn wide big" data-start="${c}">${I.play} يلا نبدي</button>` : ''}`}
-  <div class="card"><div class="sec-h"><h2>هالأسبوع</h2><span class="xs mut num">${AR(doneN)}/${AR(MDAYS)} يوم بالشهر</span></div><div class="strip">${strip}</div><p class="xs mut">ص = صدر وأمامية • ظ = ظهر وخلفية • ك = كتف ورجل • ر = راحة</p></div>
+  <div class="card"><div class="sec-h"><h2>هالأسبوع</h2><span class="xs mut num">${AR(doneN)}/${AR(MDAYS)} يوم بالشهر</span></div><div class="strip">${strip}</div><p class="xs mut">ع = علوي (صدر، ظهر، كتف، ذراع) • س = سفلي (رجل وبطن) • ر = راحة. كل عضلة تتمرن مرتين بالأسبوع.</p></div>
   <button class="forecard" data-fore><span>💪</span><div class="grow"><b>برنامج الساعد</b><small>${Object.keys(S.fore || {}).filter(d => daysBetween(d, today()) < 7 && S.fore[d]).length}/3 هالأسبوع • 6 دقايق، يكبّر الساعد ويقوّي القبضة</small></div>${I.chev}</button>
   <div class="sec-h"><h2>دليل المدرّب</h2></div>
+  <details class="card guide"><summary><b>📊 ليش هالتقسيم؟ (علوي / سفلي)</b></summary><div class="good sm col">
+   <p><b>كل عضلة مرتين بالأسبوع:</b> الدراسات (مثل مراجعة شونفيلد 2016) لگت إن تمرين العضلة مرتين بالأسبوع يكبّرها أكثر من مرة وحدة، بنفس عدد السِتات</p>
+   <p><b>4 أيام بس:</b> علوي، سفلي، راحة، علوي، سفلي، راحتين. جسمك النحيف يحتاج راحة وأكل حتى يكبر، مو تمرين كل يوم</p>
+   <p><b>10-20 سِت لكل عضلة بالأسبوع:</b> هذا المدى الي يتفق عليه المدربين الكبار مثل جيف نيپارد ومايك إسرائيتل</p>
+   <p><b>الأجهزة أول شهرين:</b> تتعلم الحركة بأمان، وبعدها ننتقل للدمبل والحركات الحرة</p>
+   <p><b>الساعد والبطن والكتف الخلفي:</b> موجودين كل أسبوع، لأن هذولة الي يفرقون بالشكل</p></div></details>
   <details class="card guide"><summary><b>🏆 القواعد الذهبية للعضل</b></summary><div class="good sm col">
    <p><b>الزيادة التدريجية:</b> لما تكمّل كل السِتات بأعلى عدّات، زيد الوزن الجلسة الجاية. التطبيق يحسبها إلك لحاله</p>
    <p><b>جهد صح:</b> آخر سِت تخلّي 1-2 عدّة بالخزان. أبعد من هيچ ما يكبّر، وأقرب يتعبك ويعوّرك</p>
@@ -294,7 +302,7 @@ function submitEval() {
   S.evals.push(ev); const old = S.month; S.month = buildMonth(old.n + 1, ev); save();
   const ch = []; if (EV.weak.length) ch.push('سِت زيادة لـ ' + EV.weak.map(m => MN[m]).join(' و')); if (EV.feel === 'easy') ch.push('سِت زيادة للتمارين الكبيرة'); if (EV.feel === 'hard') ch.push('سِت أقل حتى ترتاح'); ch.push(gain < .8 ? 'وزنك زاد قليل، زدنا 200 سعرة على أكلك' : gain > 2.5 ? 'وزنك زاد بسرعة، نقّصنا 150 سعرة' : 'وزنك يزيد بالسرعة الصحيحة'); ch.push('الأوزان زادت للتمارين الي خلصت عدّاتها');
   show(`<div class="col" style="gap:16px"><h1>الشهر ${AR(S.month.n)}: ${S.month.name}</h1><p class="mut">${S.month.goal}</p><div class="card"><h3>شنو تغيّر</h3><div class="good sm col">${ch.map(c => `<p>${c}</p>`).join('')}</div></div>
-  ${['A', 'B', 'C'].map(d => `<div class="card"><h3>${DAY_NAMES[d]}</h3>${S.month.plan[d].map(x => `<div class="row between sm"><span>${EX[x.id].n}</span><span class="num mut">${AR(x.s)} × ${rng(x.r)}${x.w ? ' • ' + AR(x.w) + ' كغم' : ''}</span></div>`).join('')}</div>`).join('')}
+  ${['A', 'B', 'C', 'D'].map(d => `<div class="card"><h3>${DAY_NAMES[d]}</h3>${S.month.plan[d].map(x => `<div class="row between sm"><span>${EX[x.id].n}</span><span class="num mut">${AR(x.s)} × ${rng(x.r)}${x.w ? ' • ' + AR(x.w) + ' كغم' : ''}</span></div>`).join('')}</div>`).join('')}
   <button class="btn wide" data-close>يلا نبدي</button></div>`);
 }
 
@@ -683,7 +691,7 @@ function openBan(i) {
 }
 
 /* ================= أنا ================= */
-const VERSION = '18';
+const VERSION = '19';
 function weightInfo() {
   const start = S.startW || (S.weights[0]?.w) || +S.w || 52, goal = +S.goal || 62, cur = curW();
   const ms = [start + 1, start + 3, start + 5, start + 7].filter(x => x < goal).concat([goal]).map(x => +x.toFixed(1));
