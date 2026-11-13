@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
 <script src="config.js"></script>
-<script>window.TINTA_VER='1794609125';</script>
+<script>window.TINTA_VER='1794609529';</script>
 <title>Tintå Reseptit</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap">
 <style>
@@ -123,7 +123,7 @@ ol.steps .txt{line-height:1.55;color:#E4DDD3;min-width:0;font-size:17px;padding-
 .timer button{width:40px;height:40px;border-radius:999px;border:0;background:rgba(255,255,255,.1);font-size:18px}
 @keyframes pulse{50%{opacity:.75}}
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:#141210;border-top:1px solid var(--line-soft);padding:0 max(8px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(8px, env(safe-area-inset-left, 0px))}
-.tabs nav{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+.tabs nav{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}
 .tabs button{height:var(--tabh);border:0;background:transparent;color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:11px;font-weight:600;position:relative}
 .tabs button[aria-current="page"]{color:var(--accent)}
 .badge{position:absolute;top:8px;left:calc(50% + 6px);min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--accent);color:var(--bg);font-size:11px;line-height:18px}
@@ -222,6 +222,8 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 .calcgo{flex:none;height:56px;padding:0 16px;border-radius:12px;border:0;background:var(--accent);color:var(--bg);font-weight:700;font-size:16px}
 .brief{margin-top:10px;font-size:14px;color:var(--muted)}
 .brief b{color:var(--fg)}
+.camtab{color:var(--accent)!important}
+.camball{width:54px;height:54px;margin-top:-26px;border-radius:999px;background:var(--accent);color:var(--bg);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 5px #141210,0 6px 16px rgba(0,0,0,.5)}
 @media (prefers-reduced-motion:no-preference){.view{animation:in .18s ease-out}@keyframes in{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}}
 </style>
 
@@ -239,7 +241,6 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A39B90" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
       <input id="q" type="search" autocomplete="off" enterkeyhint="search">
     </label>
-    <button type="button" class="newbtn" id="newbtn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg><span id="newbtntext"></span></button>
     <div id="homelists"></div>
     <p class="note" id="foot"></p>
   </section>
@@ -253,6 +254,7 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 <div class="tabs"><nav aria-label="Valikko / Menu">
   <button type="button" data-tab="home"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 5h16M4 12h16M4 19h10"></path></svg><span id="tab1"></span></button>
   <button type="button" data-tab="favs"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"></path></svg><span id="tab2"></span></button>
+  <button type="button" data-tab="new" class="camtab" aria-label="Uusi resepti kuvasta / New recipe from photo"><span class="camball"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg></span><span id="tab5"></span></button>
   <button type="button" data-tab="prep"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"></path></svg><span id="tab3"></span><span class="badge" id="prepbadge" hidden></span></button>
   <button type="button" data-tab="calc"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M8 7h8M8.5 11h.01M12 11h.01M15.5 11h.01M8.5 14.5h.01M12 14.5h.01M15.5 14.5h.01M8.5 18h.01M12 18h.01M15.5 18h.01"></path></svg><span id="tab4"></span></button>
 </nav></div>
@@ -373,7 +375,7 @@ var R = [
       have:'Minulla on',havehint:'Reseptissä {q}. Kirjoita, paljonko sinulla on, niin kaikki muut määrät lasketaan sen mukaan.',haveok:'Laske',
       calc:'Laskin',calcuse:'Käytä määränä',tiphave:'Vinkki: napauta minkä tahansa aineen määrää, niin voit laskea kaiken sen mukaan.',
       gen:'Paperissa ei ollut ohjetta, joten tämä on lisätty. Tarkista keittiömestarilta.',
-      tRecipes:'Reseptit',tFavs:'Suosikit',tPrep:'Prep-lista',tCalc:'Laskin',
+      tRecipes:'Reseptit',tNew:'Uusi',tFavs:'Suosikit',tPrep:'Prep-lista',tCalc:'Laskin',
       fav:'Lisää suosikkeihin',unfav:'Poista suosikeista',favs:'Suosikit',recent:'Viimeksi avatut',
       nofavs:'Ei vielä suosikkeja. Avaa resepti ja paina tähteä ☆.',
       addprep:'+ Lisää prep-listaan',inprep:'✓ Prep-listalla · poista',
@@ -390,7 +392,7 @@ var R = [
       have:'I have',havehint:'The recipe uses {q}. Type how much you have and every other amount is worked out from it.',haveok:'Calculate',
       calc:'Calculator',calcuse:'Use as batch',tiphave:'Tip: tap any ingredient amount to scale everything by it.',
       gen:'The paper had no method, so this was added. Check with the head chef.',
-      tRecipes:'Recipes',tFavs:'Favourites',tPrep:'Prep list',tCalc:'Calculator',
+      tRecipes:'Recipes',tNew:'New',tFavs:'Favourites',tPrep:'Prep list',tCalc:'Calculator',
       fav:'Add to favourites',unfav:'Remove from favourites',favs:'Favourites',recent:'Recently opened',
       nofavs:'No favourites yet. Open a recipe and tap the star ☆.',
       addprep:'+ Add to prep list',inprep:'✓ On prep list · remove',
@@ -462,7 +464,7 @@ var R = [
   /* ---------- näkymät ---------- */
   function setTabs(){
     var t = T[lang];
-    $('tab1').textContent = t.tRecipes; $('tab2').textContent = t.tFavs; $('tab3').textContent = t.tPrep; $('tab4').textContent = t.tCalc;
+    $('tab1').textContent = t.tRecipes; $('tab2').textContent = t.tFavs; $('tab3').textContent = t.tPrep; $('tab4').textContent = t.tCalc; $('tab5').textContent = t.tNew;
     document.querySelectorAll('[data-tab]').forEach(function(b){
       var on = (b.dataset.tab==='home' && (view==='home' || (view==='recipe' && listView==='home'))) ||
                (b.dataset.tab==='favs' && (view==='favs' || (view==='recipe' && listView==='favs'))) ||
@@ -489,7 +491,6 @@ var R = [
     $('q').placeholder = t.search; $('q').setAttribute('aria-label', t.search);
     $('count').textContent = fav ? '' : R.length+' '+t.recipes;
     $('count').hidden = fav; document.querySelector('#home .search').hidden = fav;
-    $('newbtn').hidden = fav; $('newbtntext').textContent = t.newbtn;
     var sortN = function(a,b){ return a.n[i].localeCompare(b.n[i], lang); };
     var html = '';
     if(fav){
@@ -699,7 +700,7 @@ var R = [
   document.addEventListener('click', function(e){
     var b = e.target.closest('button'); if(!b) return;
     if(b.dataset.lang){ setLang(b.dataset.lang); return; }
-    if(b.dataset.tab){ if(b.dataset.tab==='calc') openCalc(); else { if(b.dataset.tab==='home' && view==='home'){ cat='all'; $('q').value=''; } go(b.dataset.tab); } return; }
+    if(b.dataset.tab){ if(b.dataset.tab==='calc') openCalc(); else if(b.dataset.tab==='new') openNew(); else { if(b.dataset.tab==='home' && view==='home'){ cat='all'; $('q').value=''; } go(b.dataset.tab); } return; }
     if(b.dataset.cat){ cat = b.dataset.cat; $('q').value=''; renderHome(); $('scroller').scrollTop = 0; return; }
     if(b.dataset.rtab){ rtab = b.dataset.rtab; renderRecipe(); setTabs(); return; }
     if(b.dataset.sdone){ if(stepDone[b.dataset.sdone]) delete stepDone[b.dataset.sdone]; else stepDone[b.dataset.sdone]=1; renderRecipe(); setTabs(); return; }

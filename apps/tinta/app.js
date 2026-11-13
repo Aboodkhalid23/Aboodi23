@@ -7,7 +7,7 @@
       have:'Minulla on',havehint:'Reseptissä {q}. Kirjoita, paljonko sinulla on, niin kaikki muut määrät lasketaan sen mukaan.',haveok:'Laske',
       calc:'Laskin',calcuse:'Käytä määränä',tiphave:'Vinkki: napauta minkä tahansa aineen määrää, niin voit laskea kaiken sen mukaan.',
       gen:'Paperissa ei ollut ohjetta, joten tämä on lisätty. Tarkista keittiömestarilta.',
-      tRecipes:'Reseptit',tFavs:'Suosikit',tPrep:'Prep-lista',tCalc:'Laskin',
+      tRecipes:'Reseptit',tNew:'Uusi',tFavs:'Suosikit',tPrep:'Prep-lista',tCalc:'Laskin',
       fav:'Lisää suosikkeihin',unfav:'Poista suosikeista',favs:'Suosikit',recent:'Viimeksi avatut',
       nofavs:'Ei vielä suosikkeja. Avaa resepti ja paina tähteä ☆.',
       addprep:'+ Lisää prep-listaan',inprep:'✓ Prep-listalla · poista',
@@ -24,7 +24,7 @@
       have:'I have',havehint:'The recipe uses {q}. Type how much you have and every other amount is worked out from it.',haveok:'Calculate',
       calc:'Calculator',calcuse:'Use as batch',tiphave:'Tip: tap any ingredient amount to scale everything by it.',
       gen:'The paper had no method, so this was added. Check with the head chef.',
-      tRecipes:'Recipes',tFavs:'Favourites',tPrep:'Prep list',tCalc:'Calculator',
+      tRecipes:'Recipes',tNew:'New',tFavs:'Favourites',tPrep:'Prep list',tCalc:'Calculator',
       fav:'Add to favourites',unfav:'Remove from favourites',favs:'Favourites',recent:'Recently opened',
       nofavs:'No favourites yet. Open a recipe and tap the star ☆.',
       addprep:'+ Add to prep list',inprep:'✓ On prep list · remove',
@@ -96,7 +96,7 @@
   /* ---------- näkymät ---------- */
   function setTabs(){
     var t = T[lang];
-    $('tab1').textContent = t.tRecipes; $('tab2').textContent = t.tFavs; $('tab3').textContent = t.tPrep; $('tab4').textContent = t.tCalc;
+    $('tab1').textContent = t.tRecipes; $('tab2').textContent = t.tFavs; $('tab3').textContent = t.tPrep; $('tab4').textContent = t.tCalc; $('tab5').textContent = t.tNew;
     document.querySelectorAll('[data-tab]').forEach(function(b){
       var on = (b.dataset.tab==='home' && (view==='home' || (view==='recipe' && listView==='home'))) ||
                (b.dataset.tab==='favs' && (view==='favs' || (view==='recipe' && listView==='favs'))) ||
@@ -123,7 +123,6 @@
     $('q').placeholder = t.search; $('q').setAttribute('aria-label', t.search);
     $('count').textContent = fav ? '' : R.length+' '+t.recipes;
     $('count').hidden = fav; document.querySelector('#home .search').hidden = fav;
-    $('newbtn').hidden = fav; $('newbtntext').textContent = t.newbtn;
     var sortN = function(a,b){ return a.n[i].localeCompare(b.n[i], lang); };
     var html = '';
     if(fav){
@@ -333,7 +332,7 @@
   document.addEventListener('click', function(e){
     var b = e.target.closest('button'); if(!b) return;
     if(b.dataset.lang){ setLang(b.dataset.lang); return; }
-    if(b.dataset.tab){ if(b.dataset.tab==='calc') openCalc(); else { if(b.dataset.tab==='home' && view==='home'){ cat='all'; $('q').value=''; } go(b.dataset.tab); } return; }
+    if(b.dataset.tab){ if(b.dataset.tab==='calc') openCalc(); else if(b.dataset.tab==='new') openNew(); else { if(b.dataset.tab==='home' && view==='home'){ cat='all'; $('q').value=''; } go(b.dataset.tab); } return; }
     if(b.dataset.cat){ cat = b.dataset.cat; $('q').value=''; renderHome(); $('scroller').scrollTop = 0; return; }
     if(b.dataset.rtab){ rtab = b.dataset.rtab; renderRecipe(); setTabs(); return; }
     if(b.dataset.sdone){ if(stepDone[b.dataset.sdone]) delete stepDone[b.dataset.sdone]; else stepDone[b.dataset.sdone]=1; renderRecipe(); setTabs(); return; }
