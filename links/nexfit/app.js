@@ -733,7 +733,7 @@ function openBan(i) {
 }
 
 /* ================= أنا ================= */
-const VERSION = '20';
+const VERSION = '21';
 function weightInfo() {
   const start = S.startW || (S.weights[0]?.w) || +S.w || 52, goal = +S.goal || 62, cur = curW();
   const ms = [start + 1, start + 3, start + 5, start + 7].filter(x => x < goal).concat([goal]).map(x => +x.toFixed(1));

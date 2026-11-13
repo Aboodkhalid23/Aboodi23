@@ -512,7 +512,9 @@ img.cut{object-fit:contain!important;background:#fff;padding:4px}
 details.guide summary,details.warmc summary{cursor:pointer;list-style:none;font-family:var(--fd);font-size:17px}details.guide summary::-webkit-details-marker{display:none}details.guide[open] summary{margin-bottom:10px}
 .code{background:var(--s2);border-radius:12px;padding:10px;font-family:ui-monospace,monospace;font-size:13px;overflow-wrap:anywhere;margin-top:8px;color:var(--blue)}
 .easy{display:flex;gap:12px;align-items:center;background:rgba(52,199,89,.08);border:1px solid rgba(52,199,89,.4);border-radius:20px;padding:8px;width:100%;text-align:right;color:var(--fg)}.easy img{width:64px;height:64px;border-radius:14px;object-fit:cover}.easy .grow{display:flex;flex-direction:column}.easy svg{width:18px;height:18px}
-main>*,.card>*,.screen .in>*,.col>*,details>*{min-width:0;max-width:100%}
+main>*,.screen .in>*{min-width:0}.card>*,.col>*,details>*{min-width:0;max-width:100%}
+/* سفاري: العناصر لازم تاخذ عرض الصفحة كله (بدون هذا الكروت تصغر وتتفاوت) */
+main>*:not(.pill):not(.streak),.screen .in>*:not(.pill){width:100%;box-sizing:border-box}
 .card .hscroll,details .hscroll{margin:0;padding:0 0 4px}
 
 .slist{display:flex;flex-direction:column;background:var(--s1);border:1px solid var(--line);border-radius:22px;overflow:hidden}
@@ -648,6 +650,18 @@ nav a svg{width:23px;height:23px}
 .seg{background:var(--s3);border:0}.seg button.on{background:var(--s1);color:var(--fg);box-shadow:0 1px 6px rgba(0,0,0,.08)}
 .ib{background:var(--s1);border:0;box-shadow:0 1px 6px rgba(0,0,0,.06)}
 .pill.g{background:rgba(255,45,61,.1)}
+
+/* v21: مقاسات مضبوطة */
+main{padding-top:20px}
+.hhead{width:100%}.hhead>div:first-child{flex:1;min-width:0}.hhead h1{font-size:26px;line-height:1.25;overflow-wrap:break-word}.hhead p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hhead>.row{flex:none;padding-top:2px}
+/* الشريط تحت: ثابت بالأسفل مثل الآيفون، ما يبين شي من تحته */
+nav{padding:0!important;background:var(--s1)!important;border-top:1px solid var(--line);box-shadow:0 -4px 20px rgba(0,0,0,.06)}
+nav .in{max-width:520px;border-radius:0!important;box-shadow:none!important;background:none!important;padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px))!important}
+nav a{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:3px;padding:4px 0;font-size:11px;line-height:1.2;min-height:48px}
+nav a>span{width:28px;height:26px;display:grid;place-items:center;flex:none}nav a svg{width:24px!important;height:24px!important}
+:root:not([data-theme=light]) nav{background:rgba(22,22,24,.96)!important}
+main{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 </style>
 </head>
 <body>
@@ -661,6 +675,6 @@ nav a svg{width:23px;height:23px}
 </div></nav>
 <div id="screen" class="screen" hidden></div>
 <div id="player" class="player" hidden></div>
-<script type="module" src="app.js?v=20"></script>
+<script type="module" src="app.js?v=21"></script>
 </body>
 </html>
