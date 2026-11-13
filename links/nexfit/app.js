@@ -346,7 +346,7 @@ function vFood() {
   const T = targets(), eaten = (S.eaten || {})[today()] || {}, TM = todayMeals();
   const tot = TM.reduce((a, x) => { if (!eaten[x.m.k]) return a; const v = optVal(x.o); return { k: a.k + v.k, p: a.p + v.p, c: a.c + v.c, f: a.f + v.f }; }, { k: 0, p: 0, c: 0, f: 0 });
   const plan = TM.reduce((a, x) => { const v = optVal(x.o); return { k: a.k + v.k, p: a.p + v.p }; }, { k: 0, p: 0 });
-  const bar = (v, max, col, n, u) => `<div class="mbar"><div class="row between"><span class="xs">${n}</span><span class="xs num"><b>${Math.round(v)}</b> / ${max} ${u}</span></div><div class="bar"><i style="width:${Math.min(100, v / max * 100)}%;background:${col}"></i></div></div>`;
+  const bar = (v, max, col, n, u) => `<div class="mbar"><div class="row between"><span class="xs">${n}</span><span class="xs num"><span dir="ltr"><b>${Math.round(v)}</b> / ${max}</span> ${u}</span></div><div class="bar"><i style="width:${Math.min(100, v / max * 100)}%;background:${col}"></i></div></div>`;
   const IC = { b: ['🍳', '#ff9f0a'], s: ['🥣', '#34c759'], l: ['🍛', '#ff2d3d'], a: ['🥤', '#5e5ce6'], d: ['🥗', '#30b0c7'] }, SEC = { b: 'b', s: 's', l: 'l', a: 'sh', d: 'd' };
   const extra = [['fridge', '🧊', 'شنو عندي بالبيت؟', 'اختار الي بالثلاجة وأگلك شنو تطبخ'], ['sw', '🍫', 'حلا صحي', 'حلو بدون ما يخرّب جسمك'], ['k', '🥜', 'كرزات وموالح', 'مكسرات وبذور وفوايدها'], ['sh', '🥤', 'شيكات التضخيم', 'سعرات وبروتين بگلاص'], ['drinks', '💧', 'المشروبات', 'شنو تشرب وشنو لا'], ['fdb', '🔎', 'الأطعمة والبذور', Object.keys(FOODS).length + ' أكلة بقيمها'], ['shop', '🛒', 'سلة الأسبوع', 'شنو تشتري من الماركت'], ['ban', '⛔', 'الممنوعات', 'حرام وينفخ القولون']];
   return `${head('الأكل')}
@@ -528,7 +528,7 @@ function vSupps() {
   <div class="cats">${SUPP_LIB.map(c => `<button class="${c.id === C.id ? 'on' : ''}" data-scat="${c.id}"><span>${c.ic}</span>${c.n}</button>`).join('')}</div>
   <div class="card"><h2>${C.ic} ${C.n}</h2><p class="sm">${C.intro}</p>${C.helps ? `<div class="chips">${C.helps.map(h => `<span class="pill">${h}</span>`).join('')}</div>` : ''}<div class="feel">💪 <b>شكد يساعدك:</b> ${C.help}</div></div>
   <div class="col">${C.items.map(x => `<button class="scard ${x.bad ? 'bad' : ''}" data-supp="${C.id}:${x.id}"><span class="pimg"><img src="img/${x.img}.webp" alt="" loading="lazy">${x.best ? '<em>⭐ الأفضل إلك</em>' : ''}${x.bad ? '<i>✕</i>' : ''}</span>
-    <div class="grow col" style="gap:6px"><div><h3>${x.n}</h3><span class="fi">${esc(x.b)}</span></div><span class="xs mut">${x.srv}${x.nut.k ? `: <b class="num" style="color:var(--gold)">${AR(x.nut.p)} غ بروتين</b> • ${AR(x.nut.k)} سعرة` : ' • ما بيه سعرات'}</span>${tags(x.ok)}</div></button>`).join('')}</div>
+    <div class="grow col" style="gap:6px"><div><h3>${x.n}</h3><span class="fi">${esc(x.b)}</span></div>${x.buy ? '<span class="xs" style="color:#34c759">🛒 يتشرى أونلاين</span>' : ''}<span class="xs mut">${x.srv}${x.nut.k ? `: <b class="num" style="color:var(--gold)">${AR(x.nut.p)} غ بروتين</b> • ${AR(x.nut.k)} سعرة` : ' • ما بيه سعرات'}</span>${tags(x.ok)}</div></button>`).join('')}</div>
   ${C.skip.length ? `<div class="card" style="border-color:rgba(255,77,94,.4)"><h3>ليش ما اخترنا غيرها</h3><div class="bad sm col">${C.skip.map(t => `<p>${t}</p>`).join('')}</div></div>` : ''}
   <p class="xs mut">تثقيف عام مو وصفة طبية. اسأل الطبيب أو الصيدلي قبل أي مكمّل، خصوصاً ويا القولون. الأحسن تسوي فحص دم: فيتامين د، B12، الحديد.</p>`;
 }
@@ -537,7 +537,8 @@ function openSupp(cid, id) {
   show(`<div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><div class="grow"><p class="xs mut">${C.n}</p><h2>${x.n}</h2></div></div>
   <div class="prod" style="height:250px"><img src="img/${x.img}.webp" alt="${esc(x.b)}" style="max-height:230px"></div>
   <div><span class="fi" style="font-size:14px">${esc(x.b)}</span>${x.where ? `<p class="sm mut">🛒 ${x.where}</p>` : ''}</div>
-  ${x.best ? '<div class="pill g" style="align-self:flex-start">⭐ هذا الأفضل إلك</div>' : ''}${x.bad ? '<div class="warn"><b>ما ننصحك بيه.</b> شوف السبب جوة.</div>' : ''}
+  ${x.best ? '<div class="pill g" style="align-self:flex-start">⭐ هذا الأفضل إلك</div>' : ''}
+  ${x.buy ? `<div class="buyrow">${x.buy.map(([n, u]) => `<a class="buy" href="${u}" target="_blank" rel="noopener"><span>🛒</span><b>اشتريه من ${n}</b><i>↗</i></a>`).join('')}</div><p class="xs mut">روابط محلات فنلندية رسمية (تأكدت منها). قبل ما تشتري شوف تاريخ الانتهاء (Parasta ennen) على الصفحة أو العلبة.</p>` : ''}${x.bad ? '<div class="warn"><b>ما ننصحك بيه.</b> شوف السبب جوة.</div>' : ''}
   ${x.nut.k ? `<div class="card"><h3>بكل ${x.srv}</h3>${nutTiles(x.nut)}</div>` : `<div class="card"><h3>بكل ${x.srv}</h3><p class="sm mut">ما بيه سعرات ولا بروتين ولا دهون تُذكر.</p></div>`}
   <div class="card"><h3>إلك وحدك</h3>${tags(x.ok)}</div>
   <div class="card"><h3>شنو يفيدك</h3><div class="good sm col">${x.good.map(t => `<p>${t}</p>`).join('')}</div></div>
@@ -682,7 +683,7 @@ function openBan(i) {
 }
 
 /* ================= أنا ================= */
-const VERSION = '15';
+const VERSION = '16';
 function weightInfo() {
   const start = S.startW || (S.weights[0]?.w) || +S.w || 52, goal = +S.goal || 62, cur = curW();
   const ms = [start + 1, start + 3, start + 5, start + 7].filter(x => x < goal).concat([goal]).map(x => +x.toFixed(1));

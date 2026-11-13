@@ -146,3 +146,7 @@ nextlevelbuilder/ui-ux-pro-max-skill  .claude/skills/ui-ux-pro-max  ui-ux-pro-ma
 # أنيميشن ثلاثي الأبعاد وتحفيز المستخدم (فحصتها: ملفات شرح بس)
 cloudai-x/threejs-skills  skills/threejs-animation
 wondelai/skills  drive-motivation
+
+# حركة الواجهات وتصميمها (mblode، 10.9 ألف تنزيل، ملفات شرح بس بدون مفاتيح)
+mblode/agent-skills  skills/ui-animation
+mblode/agent-skills  skills/ui-design

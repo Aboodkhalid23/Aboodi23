@@ -14,7 +14,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Oswald:wght@500;600;700&display=swap">
 <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
 <script>try{var _t=JSON.parse(localStorage.getItem("coach-v4")||"{}").theme||"dark";if(_t==="auto")_t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=_t;}catch(e){}</script>
 <style>
@@ -564,6 +564,36 @@ nav a.fab span svg{width:26px;height:26px}nav a.fab.on{background:none;color:var
 .card,.slist,.smart,.coach{box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
 .sec-h h2::before,h2.sec::before{content:"";display:inline-block;width:4px;height:18px;background:var(--g);border-radius:2px;margin-left:8px;vertical-align:-2px}
 nav .in{box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.buyrow{display:flex;flex-direction:column;gap:8px}.buy{display:flex;align-items:center;gap:10px;background:#34c759;color:#fff;border-radius:16px;padding:14px;text-decoration:none;font-family:var(--fd)}.buy b{flex:1;font-size:17px}.buy span{font-size:20px}.buy i{font-style:normal;font-size:18px}
+
+/* ===== تصميم NEXFIT v16: جيم فخم ===== */
+:root{--fn:'Oswald','Vazirmatn',system-ui,sans-serif;--glass:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.012));--edge:rgba(255,255,255,.07)}
+:root[data-theme=light]{--glass:linear-gradient(180deg,#fff,#fbfbfd);--edge:rgba(0,0,0,.07)}
+.num,b.num,.num b,.mac b,.nut4 b,.hk b,.tile b,.gring b,.ring b,.ringp b,.fring b,.wstep input,.qty b,.pmac b{font-family:var(--fn);font-weight:600;letter-spacing:.3px}
+h1{font-size:32px;font-weight:900;letter-spacing:0}
+.card,.slist,.exrow,.rrow,.frow,.mcard,.store,.bcard,.prow,.trow,.tile,.lastt,.hcard{background:var(--glass),var(--s1);border-color:var(--edge)}
+.card{border-radius:24px}
+.btn{background:linear-gradient(135deg,#ff3a49,#d01527);box-shadow:0 6px 18px rgba(255,45,61,.28),inset 0 1px 0 rgba(255,255,255,.25)}
+.btn.ghost{background:var(--s3);box-shadow:none}
+.hero{box-shadow:0 18px 40px rgba(255,45,61,.25)}
+.hero h1{font-size:36px;text-shadow:0 2px 12px rgba(0,0,0,.25)}
+.brand b{font-family:var(--fn);font-size:24px;letter-spacing:1.5px}
+nav .in{background:rgba(14,14,17,.82);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border-color:var(--edge)}
+:root[data-theme=light] nav .in{background:rgba(255,255,255,.85)}
+nav a.on:not(.fab){background:rgba(255,45,61,.14);color:var(--g)}
+nav a.on:not(.fab)::after{content:"";width:5px;height:5px;border-radius:50%;background:var(--g);margin-top:1px}
+.pill.g{background:rgba(255,45,61,.16)}
+.sico{box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+/* دخول الصفحة: الكروت تطلع وحدة ورا الثانية */
+main.fade>*,main.sl>*,main.sr>*{animation:rise .5s cubic-bezier(.2,.8,.2,1) both}
+main>*:nth-child(2){animation-delay:.04s}main>*:nth-child(3){animation-delay:.08s}main>*:nth-child(4){animation-delay:.12s}main>*:nth-child(5){animation-delay:.16s}main>*:nth-child(6){animation-delay:.2s}main>*:nth-child(n+7){animation-delay:.24s}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+main.sl,main.sr,main.fade{animation:none}
+.btn:active,.slot:active,.store:active,.mcard:active{transform:scale(.97)}
+.slot,.store,.mcard{transition:transform .12s ease}
+/* صور الأطباق: لمعة خفيفة */
+.mpic img,.rimg2 img,.dishhero img,.curmeal>img,.tpic img,.mimg img{filter:saturate(1.08) contrast(1.04)}
+.dishhero{box-shadow:0 14px 34px rgba(0,0,0,.35)}
 </style>
 </head>
 <body>
@@ -579,6 +609,6 @@ nav .in{box-shadow:0 10px 30px rgba(0,0,0,.35)}
 </div></nav>
 <div id="screen" class="screen" hidden></div>
 <div id="player" class="player" hidden></div>
-<script type="module" src="app.js?v=15"></script>
+<script type="module" src="app.js?v=16"></script>
 </body>
 </html>
