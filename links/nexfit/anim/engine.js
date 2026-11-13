@@ -351,6 +351,31 @@ export const EXERCISES = {
       P.hands = [1, -1].map(s => lv(V(s * .2, .14, -.12), V(s * .17, .42, .2), t)); P.armPole = s => V(s, .2, -.3); return P; },
     equip(M) { return EQ.mat(M); }, cam: { target: V(0, .25, -.05), r: 2.9, h: 1.05, yaw: [60, 100] },
   },
+  /* ---------- بدائل أسهل (نفس العضلة، حركة أبسط) ---------- */
+  pushup: {
+    title: 'الضغط', prim: ['chest'], sec: ['triceps', 'shoulders', 'abs'], tempo: [1, .3, 2, .4], phases: ['ادفع لفوگ', 'انزل ببطء'],
+    pose(t) { const P = { hip: V(0, lerp(.2, .43, t), lerp(-.43, -.45, t)), pitch: lerp(84, 70, t) * D, feet: [V(.1, .08, -1.25), V(-.1, .08, -1.25)], kneePole: () => V(0, -1, 0), footDir: [V(0, -1, .15), V(0, -1, .15)] };
+      P.hands = [V(.21, .04, .09), V(-.21, .04, .09)]; P.armPole = s => V(s * .7, .2, -1); return P; },
+    equip(M) { return EQ.mat(M); }, cam: { target: V(0, .3, -.4), r: 3.1, h: 1.15, yaw: [70, 100] },
+  },
+  kneepush: {
+    title: 'الضغط على الركبة', prim: ['chest'], sec: ['triceps', 'shoulders'], tempo: [1, .3, 2, .4], phases: ['ادفع لفوگ', 'انزل ببطء'],
+    pose(t) { const P = { hip: V(0, lerp(.2, .4, t), lerp(-.38, -.4, t)), pitch: lerp(80, 64, t) * D, feet: [V(.1, .28, -.95), V(-.1, .28, -.95)], knees: [V(.1, .05, -.62), V(-.1, .05, -.62)], kneePole: () => V(0, -1, 0), footDir: [V(0, .2, -1), V(0, .2, -1)] };
+      P.hands = [V(.21, .04, .1), V(-.21, .04, .1)]; P.armPole = s => V(s * .7, .2, -1); return P; },
+    equip(M) { return EQ.mat(M); }, cam: { target: V(0, .3, -.35), r: 3, h: 1.15, yaw: [70, 100] },
+  },
+  glutebridge: {
+    title: 'جسر المؤخرة', prim: ['glutes'], sec: ['hamstrings', 'lowerback'], tempo: [1, .8, 1.6, .4], phases: ['ارفع وركك واعصر', 'نزّل ببطء'],
+    pose(t) { const P = { hip: V(0, lerp(.13, .4, t), lerp(.05, .02, t)), pitch: lerp(-90, -116, t) * D, feet: [V(.15, .07, .45), V(-.15, .07, .45)], kneePole: () => V(0, 1, .3), footDir: [V(0, -.2, 1), V(0, -.2, 1)] };
+      P.hands = [V(.27, .04, -.2), V(-.27, .04, -.2)]; P.armPole = s => V(s, 0, 0); return P; },
+    equip(M) { return EQ.mat(M); }, cam: { target: V(0, .25, 0), r: 3, h: 1.05, yaw: [65, 100] },
+  },
+  wallsit: {
+    title: 'الجلوس على الحايط', prim: ['quads'], sec: ['glutes'], tempo: [1.2, 3, 1.2, .6], hold: true, phases: ['انزل على الحايط', 'اطلع', 'اثبت وتنفّس'],
+    pose(t) { const P = { hip: V(0, lerp(.75, .5, t), lerp(-.02, -.02, t)), pitch: 0, feet: [V(.13, .08, .46), V(-.13, .08, .46)], kneePole: () => V(0, 0, 1), footDir: [V(0, 0, 1), V(0, 0, 1)] };
+      P.hands = [V(.17, lerp(.85, .6, t), .25), V(-.17, lerp(.85, .6, t), .25)]; P.armPole = s => V(s, -.5, 0); return P; },
+    equip(M) { const g = EQ.mat(M).g; g.add(box(M.frame, 1.4, 2, .08, 0, 1, -.2)); return { g, update() {} }; }, cam: { target: V(0, .7, 0), r: 3.2, h: 1.3, yaw: [55, 90] },
+  },
   /* ---------- القوام بيوم الراحة ---------- */
   hipflex: {
     title: 'إطالة الورك', prim: ['hipflex'], sec: [], tempo: [1.5, 3, 1.5, .8], hold: true, phases: ['ادفع وركك لگدام', 'ارجع', 'اثبت وتنفّس'],

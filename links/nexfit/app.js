@@ -1,5 +1,5 @@
 // مدرّبي: منطق التطبيق
-import { EX, REST_DAY, DAY_NAMES, DAY_IMG, MONTHS, FD, IBS, SUPPS, SCHEDULE, TIPS, INFO, SUPP_LIB, BAN, BAN_WORDS, IBS_BAN, IBS_GOOD } from './data.js';
+import { EX, REST_DAY, DAY_NAMES, DAY_IMG, MONTHS, FD, IBS, SUPPS, SCHEDULE, TIPS, INFO, EASY, SUPP_LIB, BAN as BAN0, BAN2, BAN_WORDS, IBS_BAN, IBS_GOOD } from './data.js';
 import { BODY } from './bodymap.js';
 import { FOODS, RECIPES, CATS, GEN, DRINKS, MEAS, SECTIONS } from './food2.js';
 
@@ -164,6 +164,7 @@ function vCourse() {
    <p><b>عدد السِتات:</b> 10-20 سِت لكل عضلة بالأسبوع. الكورس محسوب على هالأساس</p>
    <p><b>النوم 8 ساعات</b> وبروتين 2 غم لكل كيلو. العضلة تنبني بالفراش والمطبخ، مو بس بالجيم</p></div></details>
   <details class="card guide"><summary><b>👕 العضلات الي تبين بالتيشيرت</b></summary><p class="xs mut">هاي العضلات صغيرة ومخفية، بس هي الي تسوي شكل الـV وتفرق بالمظهر. نشتغل عليها كل أسبوع:</p><div class="col">${[['lateral', 'الكتف الجانبي', 'يعرّض الكتف ويخلي الخصر يبين أنحف'], ['reardelt', 'الكتف الخلفي', 'يعدّل الوگفة ويحمي مفصل الكتف'], ['incline', 'أعلى الصدر', 'يملا فتحة التيشيرت'], ['wristcurl', 'الساعد (لگدام)', 'الساعد يبين أول شي بنص كم'], ['revcurl', 'الساعد (لورا)', 'يكمّل شكل الساعد ويقوّي القبضة'], ['farmer', 'القبضة', 'أقوى تمرين للساعد والقبضة'], ['calf', 'السمانة', 'ما تكبر إلا بعدّات كثيرة وتمطيط'], ['kneeraise', 'البطن السفلي', 'يبيّن البطن لما تقل الدهون']].filter(([id]) => EX[id]).map(([id, n, w]) => `<button class="exrow" data-ex="${id}"><img src="img/ex3d/${id}.jpg" alt="" loading="lazy"><div class="grow"><h3>${n}</h3><p class="xs mut">${w}</p></div></button>`).join('')}</div></details>
+  <details class="card guide"><summary><b>🎬 مكتبة الحركات (${Object.keys(EX).length} حركة بالأنيميشن)</b></summary><p class="xs mut">كل حركة إلها أنيميشن وشرح، والصعبة إلها بديل أسهل.</p>${Object.entries(Object.keys(EX).reduce((a, id) => { const m = EX[id].m[0]; (a[m] = a[m] || []).push(id); return a; }, {})).map(([m, ids]) => `<h3 style="margin-top:10px">${MN[m] || m}</h3><div class="hscroll">${ids.map(id => `<button class="mini" data-ex="${id}"><span class="mimg"><img src="img/ex3d/${id}.jpg" alt="" loading="lazy"></span><b class="xs">${EX[id].n}</b>${EASY[id] ? '<span class="xs" style="color:#34c759">إلها بديل أسهل</span>' : ''}</button>`).join('')}</div>`).join('')}</details>
   <details class="card guide"><summary><b>🦴 مفاصلك والوگفة</b></summary><div class="good sm col">
    <p>إحماء المفاصل 5 دقايق قبل كل تمرين (موجود بصفحة اليوم)</p>
    <p>الكتف: لا تنزل بالضغط لتحت كلش، والكوع بزاوية 45 درجة مو مفتوح</p>
@@ -210,6 +211,7 @@ function exInfo(id) {
   <div><p class="xs mut">اسمه بالجيم: ${e.gym}</p><h1>${e.n}${e.star ? ' ⭐' : ''}</h1></div>
   <div class="card"><h3>شلون تسويه</h3><div class="steps sm">${e.st.map(s => `<p>${s}</p>`).join('')}</div></div>
   ${e.bad.length ? `<div class="card"><h3>لا تسوي هيچ</h3><div class="bad sm col">${e.bad.map(s => `<p>${s}</p>`).join('')}</div></div>` : ''}
+  ${EASY[id] && EX[EASY[id][0]] ? `<button class="easy" data-ex="${EASY[id][0]}"><img src="img/ex3d/${EASY[id][0]}.jpg" alt=""><div class="grow"><span class="xs" style="color:#34c759">صعبة عليك؟ جرّب الأسهل</span><b>${EX[EASY[id][0]].n}</b><span class="xs mut">نفس العضلة • ${EASY[id][1]}</span></div>${I.chev}</button>` : ''}
   ${TIPS[id] ? `<div class="lvl"><div><span class="pill g">للمبتدئ</span><p class="sm">${TIPS[id][0]}</p></div><div><span class="pill" style="color:var(--gold)">للمحترف</span><p class="sm">${TIPS[id][1]}</p></div></div>` : ''}
   ${e.sec ? '' : `<div class="card"><p class="sm"><b>الوزن الصح:</b> تخلّص العدّات وتحس تگدر تسوي 2 بعد بس. إذا كلش سهل زيد، وإذا الحركة خربت نقّص.</p></div>`}
   ${e.yt ? `<button class="video" data-yt="${e.yt}"><img src="https://i.ytimg.com/vi/${e.yt}/hqdefault.jpg" alt=""><span class="play"><span>${I.play}</span></span><span class="cap">شرح بالعربي من مدرّب (بيه صوت)</span></button>` : ''}`;
@@ -321,6 +323,18 @@ const fimg = k => FOODS[k] && FOODS[k].img ? `img/${FOODS[k].img}.webp` : '';
 const fthumb = (k, sz = 52) => `<span class="pth" style="width:${sz}px;height:${sz}px">${fimg(k) ? `<img src="${fimg(k)}" alt="" loading="lazy">` : '🍽'}</span>`;
 const r1 = x => Math.round(x * 10) / 10;
 function amt(k, a) { const M = MEAS[k]; let h = ''; if (M) { const q = Math.round(a / M[1] * 2) / 2; if (q >= .5 && q <= 40) h = `${q === .5 ? 'نص' : q} ${M[0]}`; } return { g: `${Math.round(a)} غم`, h }; }
+/* شكد مرة تاكله: قواعد من إرشادات التغذية للرياضيين */
+function freqOf(k) {
+  const f = FOODS[k], F = { tuna: 'لحد 3 علب بالأسبوع (الزئبق)', salmon: 'مرتين بالأسبوع', herring: 'مرتين بالأسبوع', mackerel: 'مرتين بالأسبوع', sardine: 'مرتين بالأسبوع', beef: '2-3 مرات بالأسبوع', mince: '2-3 مرات بالأسبوع', lamb: 'مرة أو مرتين بالأسبوع', egg: 'كل يوم، 2-4 بيضات', chicken: 'كل يوم عادي', thigh: 'كل يوم عادي', turkey: 'كل يوم عادي', choc: 'مربعين باليوم بالكثير', chips: 'مرة بالأسبوع', popcorn: 'كم مرة بالأسبوع', cola: 'لا، أو نادراً', oj: 'گلاص صغير باليوم', coffee: 'گلاصين باليوم بالكثير', brazil: 'حبتين باليوم، مو أكثر', butter: 'ملعقة باليوم', maple: 'ملعقة أو ثنتين باليوم', bun: 'مرتين بالأسبوع', water: 'طول اليوم، 8-10 گلاصات', dates: 'تمرة وحدة باليوم' };
+  if (F[k]) return F[k];
+  if (f.ibs === 'bad') return 'قللها هسه، أو جرّب كمية صغيرة';
+  if (f.ibs === 'limit') return 'كمية صغيرة، عادي كل يوم';
+  if (f.cat === 'veg' || f.cat === 'fruit') return 'كل يوم، كلما أكثر أحسن';
+  if (f.cat === 'nuts') return 'كل يوم گبضة صغيرة';
+  if (f.cat === 'market' || f.cat === 'dairy') return 'كل يوم عادي';
+  if (f.cat === 'grain') return 'كل يوم، أساس التضخيم';
+  return 'عادي';
+}
 const ibsB = i => i === 'ok' ? '<i class="ok">يناسب القولون</i>' : i === 'limit' ? '<i class="mid">كمية قليلة</i>' : '<i class="no">ينفخ</i>';
 const recImg = r => `img/${r.img}.webp`, isCut = r => /^(fd|mkt|supp)\//.test(r.img);
 function score(r) { const v = optVal(r), ibs = r.it.every(([k]) => FOODS[k].ibs === 'ok') ? 5 : r.it.some(([k]) => FOODS[k].ibs === 'bad') ? 2 : 4; return { pro: Math.min(5, Math.max(1, Math.round(v.p / 9))), ease: (r.t || 15) <= 10 ? 5 : r.t <= 20 ? 4 : r.t <= 35 ? 3 : 2, ibs }; }
@@ -371,7 +385,7 @@ function openDB() {
   <input class="field" id="fdq" type="search" placeholder="🔎 دوّر: دجاج، برتقال، شيا..." value="${esc(fdQ)}">
   ${q ? '' : `<div class="cats">${CATS.map(([k, n, ic]) => `<button class="${fdCat === k ? 'on' : ''}" data-fcat="${k}"><span>${ic}</span>${n}</button>`).join('')}<button class="${fdCat === 'fin' ? 'on' : ''}" data-fcat="fin"><span>🇫🇮</span>منتجات بيتك</button></div>`}
   ${!q && fdCat === 'fin' ? `<div class="pgrid">${Object.keys(INFO).map(k => { const f = FD[k], i = INFO[k]; return `<button class="pcard" data-prod="${k}"><span class="pimg"><img src="img/${f.img}.webp" alt="" loading="lazy"></span><b>${f.n}</b><span class="fi">${f.b || ''}</span><span class="badges"><i class="ok">حلال</i>${i.lac === 'yes' ? '<i class="no">لاكتوز</i>' : '<i class="ok">بدون لاكتوز</i>'}</span></button>`; }).join('')}</div>`
-  : `<p class="xs mut">${keys.length} • مرتّبة من الأعلى بروتين. الأرقام للحصة العادية.</p><div class="col">${keys.map(k => { const f = FOODS[k], s = itemVal(k, f.srv); return `<button class="frow" data-food="${k}">${fthumb(k, 64)}<div class="grow"><b>${f.n}</b><span class="fi">${f.fi}</span>${f.ben ? `<span class="xs mut clamp">${f.ben}</span>` : ''}<span class="badges">${ibsB(f.ibs)}</span></div><div class="qty"><b class="num">${r1(s.p)}g</b><span>بروتين</span><span class="num">${Math.round(s.k)} سعرة</span><span>${f.sn || f.srv + ' غم'}</span></div></button>`; }).join('') || '<p class="mut">ما لگيت شي. جرّب كلمة ثانية.</p>'}</div>`}`;
+  : `<p class="xs mut">${keys.length} • مرتّبة من الأعلى بروتين. الأرقام للحصة العادية.</p><div class="col">${keys.map(k => { const f = FOODS[k], s = itemVal(k, f.srv); return `<button class="frow" data-food="${k}">${fthumb(k, 64)}<div class="grow"><b>${f.n}</b><span class="fi">${f.fi}</span>${f.ben ? `<span class="xs mut clamp">${f.ben}</span>` : ''}<span class="badges">${ibsB(f.ibs)}<i class="mid" style="background:var(--s2);color:var(--mut)">🗓 ${freqOf(k)}</i></span></div><div class="qty"><b class="num">${r1(s.p)}g</b><span>بروتين</span><span class="num">${Math.round(s.k)} سعرة</span><span>${f.sn || f.srv + ' غم'}</span></div></button>`; }).join('') || '<p class="mut">ما لگيت شي. جرّب كلمة ثانية.</p>'}</div>`}`;
   const s = $('#screen'); if (!s.hidden && s.querySelector('#fdq')) { s.innerHTML = `<div class="in">${html}</div>`; } else show(html);
 }
 function openDrinks() {
@@ -398,6 +412,7 @@ function openFood(k) {
   <div class="prod big">${fimg(k) ? `<img src="${fimg(k)}" alt="">` : '<span style="font-size:80px">🍽</span>'}</div>
   <span class="fi" style="font-size:14px">${f.fi}</span>
   ${f.ben ? `<div class="feel">💡 <b>شنو يفيدك:</b> ${f.ben}</div>` : ''}
+  <div class="warm">🗓 <b>شكد مرة:</b> ${freqOf(k)}</div>
   <div class="verd">${f.ibs === 'ok' ? '<div class="ok"><b>✓ يناسب القولون</b></div>' : f.ibs === 'limit' ? `<div class="mid"><b>⚠ للقولون: كمية قليلة</b><span>${f.note || ''}</span></div>` : `<div class="no"><b>✕ ينفخ القولون</b><span>${f.note || ''}</span></div>`}${f.cat === 'meat' ? '<div class="mid"><b>اشتريه من محل حلال</b><span>مكتوب Halal</span></div>' : ''}</div>
   <div class="card"><h3>بحصة ${f.sn || ''} (${f.srv} غم)</h3>${macroRow(s)}</div>
   <div class="card"><h3>بكل 100 غم</h3><div class="items">${rr('سعرات', v[0], 'سعرة')}${rr('بروتين', v[1])}${rr('كاربوهيدرات', v[2])}${rr('منها سكر', v[5])}${rr('دهون', v[3])}${rr('ألياف', v[4])}</div><p class="xs mut">${f.cat === 'market' ? 'من غلاف المنتج.' : 'من قاعدة القيم الغذائية الرسمية (USDA).'}</p></div>
@@ -452,16 +467,20 @@ function openSupp(cid, id) {
 }
 
 /* ================= الممنوعات ================= */
+const gOf = b => /جيلي|حلاوة|علكة|عرق السوس/.test(b.n) ? 'sweet' : /موس|پودينگ|جبن كريمي|حلاوة الپاشا/.test(b.n) ? 'dairy' : 'meat';
+const BAN = BAN0.map(b => Object.assign({ g: gOf(b) }, b)).concat(BAN2);
+let banG = 'all';
 let banView = 'haram';
 function vBan() {
   const seg = `<div class="seg"><button class="${banView === 'haram' ? 'on' : ''}" data-bv="haram">حرام</button><button class="${banView === 'ibs' ? 'on' : ''}" data-bv="ibs">ينفخ القولون</button><button class="${banView === 'words' ? 'on' : ''}" data-bv="words">اقرا الغلاف</button></div>`;
   let body = '';
   if (banView === 'haram') {
-    const sn = BAN.filter(b => b.sneaky), rest = BAN.filter(b => !b.sneaky);
+    const F = b => banG === 'all' || b.g === banG, sn = BAN.filter(b => b.sneaky && F(b)), rest = BAN.filter(b => !b.sneaky && F(b));
     const grid = L => `<div class="bgrid">${L.map(b => `<button class="bcard" data-ban="${BAN.indexOf(b)}"><span class="pimg"><img src="img/${b.img}.webp" alt="" loading="lazy"><i>✕</i></span><b>${b.n}</b><span class="xs mut">${b.why}</span><span class="fi">${b.fi}</span></button>`).join('')}</div>`;
     body = `<div class="danger"><span>${I.warn}</span><div><b>لا تشتري هاي المنتجات</b><p class="xs">كلها منتجات حقيقية بمحلات فنلندا، منها مستوردة من ألمانيا والدنمارك والسويد. تحت كل وحدة الكلمة المكتوبة بالمكونات.</p></div></div>
-    <div class="sec-h"><h2>🕵️ الخنزير المخفي</h2><span class="xs mut num">${AR(sn.length)} منتج</span></div><p class="sm mut" style="margin-top:-8px">تشوفها وتگول عادية، بس جوّاها خنزير أو جيلاتين خنزير.</p>${grid(sn)}
-    <div class="sec-h"><h2>🐖 لحم خنزير واضح</h2><span class="xs mut num">${AR(rest.length)} منتج</span></div>${grid(rest)}
+    <div class="chips">${[['all', 'الكل ' + BAN.length], ['meat', '🍕 أكل جاهز ولحوم'], ['sweet', '🍬 حلويات'], ['dairy', '🍮 ألبان وحلا']].map(([k, n]) => `<button class="${banG === k ? 'on' : ''}" data-bang="${k}">${n}</button>`).join('')}</div>
+    ${sn.length ? '' : '<!-- -->'}<div class="sec-h"><h2>🕵️ الخنزير المخفي</h2><span class="xs mut num">${AR(sn.length)} منتج</span></div><p class="sm mut" style="margin-top:-8px">تشوفها وتگول عادية، بس جوّاها خنزير أو جيلاتين خنزير.</p>${grid(sn)}
+    <div class="sec-h"><h2>🐖 خنزير أو جيلاتين بالمكونات</h2><span class="xs mut num">${AR(rest.length)} منتج</span></div>${grid(rest)}
     <div class="card"><h3>القاعدة الذهبية</h3><div class="good sm col"><p>اللحم والدجاج اشتريهم من المحلات العربية والتركية، مكتوب عليهم Halal</p><p>أي أكل جاهز (پيتزا، شوربة، سندويچ، كفتة) اقرا مكوناته قبل ما تشتري</p><p>أي حلاوة جيلي أو موس أو علكة: دوّر على كلمة liivate</p><p>الحلويات الحلال مكتوب عليها Halal أو "ilman liivatetta" يعني بدون جيلاتين</p></div></div>`;
   } else if (banView === 'ibs') {
     body = `<div class="danger mid"><span>🫃</span><div><b>هاي تنفخ القولون العصبي</b><p class="xs">مو حرام، بس قللها حتى بطنك يرتاح. وجرّب كل وحدة لحالها، لأن كل جسم يختلف.</p></div></div>
@@ -532,7 +551,7 @@ function openBan(i) {
 }
 
 /* ================= أنا ================= */
-const VERSION = '11';
+const VERSION = '12';
 function weightInfo() {
   const start = S.startW || (S.weights[0]?.w) || +S.w || 52, goal = +S.goal || 62, cur = curW();
   const ms = [start + 1, start + 3, start + 5, start + 7].filter(x => x < goal).concat([goal]).map(x => +x.toFixed(1));
@@ -610,20 +629,19 @@ function healthCard() {
 }
 function openHealth() {
   const h = (S.health || {})[today()] || {};
-  show(`<div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><h2>ساعة أبل والصحة</h2></div>
-  <div class="card"><div class="hk">${HK.map(([k, n, ic, c]) => `<div><span style="color:${c}">${ic}</span><b class="num">${h[k] != null ? AR(h[k]) : '—'}</b><small>${n}</small></div>`).join('')}</div>
-   <button class="btn wide" data-hkpaste>${I.watch} الصق أرقام الساعة</button><p class="xs mut">شغّل اختصار NEXFIT، بعدين ارجع هنا واضغط الزر. الآيفون يسألك "تسمح باللصق؟" اضغط سماح.</p></div>
-  <div class="warn"><b>بصراحة:</b> تطبيقنا مجاني ومن صفحة ويب، وأبل ما تسمح لصفحات الويب تقرا تطبيق الصحة مباشرة. فنستعمل تطبيق "الاختصارات" الي بموبايلك (مجاني) كجسر: يقرا أرقامك وينسخها، وNEXFIT يلصقها. تسويه مرة وحدة بس.</div>
-  <div class="card"><h2>سوّي الاختصار مرة وحدة (5 دقايق)</h2><div class="steps sm">
-   <p>افتح تطبيق <b>الاختصارات</b> (Shortcuts)، اضغط <b>+</b>، وسمّيه <b>NEXFIT</b>.</p>
-   <p>أضف إجراء <b>"العثور على عينات الصحة"</b> واختار النوع <b>الخطوات</b>، والتاريخ <b>اليوم</b>. بعده أضف <b>"حساب الإحصائيات"</b> واختار <b>المجموع</b>.</p>
-   <p>كرّرها لـ<b>الطاقة النشطة</b> (المجموع)، ولـ<b>معدل ضربات القلب أثناء الراحة</b> (آخر وحدة، يعني الحد 1 والترتيب الأحدث).</p>
-   <p>أضف إجراء <b>"نص"</b> واكتب بيه:<br><span class="fi" style="font-size:13px">steps=[الخطوات];kcal=[الطاقة];rhr=[النبض]</span><br>وبدل كل قوس حط الناتج من الخطوة الي فوگ (تضغط على مكانه ويطلعلك).</p>
-   <p>آخر شي أضف <b>"نسخ إلى الحافظة"</b>.</p>
-   <p>شغّله، وتعال اضغط <b>"الصق أرقام الساعة"</b>. وتگدر تخليه يشتغل لحاله كل ليلة من خانة <b>"الأتمتة"</b> بنفس تطبيق الاختصارات.</p></div></div>
-  <div class="card"><h3>ضغط الدم</h3><p class="sm">ساعة أبل ما تقيس رقم ضغط الدم. الموديلات الجديدة بس تنبهك إذا تشك بضغط عالي. إذا عندك جهاز ضغط للزند يرتبط بتطبيق الصحة، تگدر تضيف للنص <span class="fi" style="display:inline">;sys=[الانقباضي];dia=[الانبساطي]</span>.</p></div>
-  <div class="card"><h3>أو اكتبها بإيدك</h3><div class="mgrid">${[['steps', 'خطوات'], ['kcal', 'سعرات حركة'], ['rhr', 'نبض الراحة'], ['sleep', 'ساعات نوم']].map(([k, n]) => `<label class="f">${n}<input class="field num" inputmode="decimal" data-hk="${k}" value="${h[k] ?? ''}"></label>`).join('')}</div><label class="f">ضغط الدم (مثلاً 120/80)<input class="field num" data-hk="bp" value="${h.bp || ''}" inputmode="text"></label><button class="btn ghost wide" data-hksave>احفظ</button></div>
-  <div class="card"><h3>شلون المدرّب يستعملها</h3><div class="good sm col"><p>إذا نبض الراحة أعلى من عادتك بـ5 أو أكثر، يگلك خفّف التمرين لأن جسمك ما ارتاح</p><p>إذا نمت أقل من 6 ساعات، يخفف الأوزان</p><p>الخطوات والسعرات تبين بالرئيسية كل يوم</p></div></div>`, true);
+  show(`<div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><h2>صحتك اليوم</h2></div>
+  <div class="card"><div class="hk">${HK.map(([k, n, ic, c]) => `<div><span style="color:${c}">${ic}</span><b class="num">${h[k] != null ? h[k] : '—'}</b><small>${n}</small></div>`).join('')}</div></div>
+  <div class="card"><h3>سجّل أرقامك (10 ثواني)</h3><p class="xs mut">افتح تطبيق "الصحة" أو الساعة، شوف الرقم، واكتبه هنا. المدرّب يستعملها حتى يعدّل تمرينك.</p>
+   <div class="mgrid">${[['steps', 'خطوات اليوم'], ['rhr', 'نبض الراحة'], ['sleep', 'ساعات النوم'], ['kcal', 'سعرات الحركة']].map(([k, n]) => `<label class="f">${n}<input class="field num" inputmode="decimal" data-hk="${k}" value="${h[k] ?? ''}" placeholder="—"></label>`).join('')}</div>
+   <label class="f">ضغط الدم (إذا عندك جهاز، مثلاً 120/80)<input class="field num" data-hk="bp" value="${h.bp || ''}" inputmode="text" placeholder="—"></label>
+   <button class="btn wide" data-hksave>احفظ</button></div>
+  <div class="card"><h3>شلون المدرّب يستعملها</h3><div class="good sm col"><p>نبض الراحة أعلى من عادتك بـ5 أو أكثر: يگلك خفّف التمرين اليوم</p><p>نمت أقل من 6 ساعات: يخفف الأوزان</p><p>الخطوات والسعرات تبين بالرئيسية</p></div></div>
+  <div class="warn"><b>بصراحة:</b> ساعة أبل ما ترتبط مباشرة بتطبيق مثل NEXFIT، لأن أبل تسمح بهذا بس للتطبيقات المدفوعة بمتجرها. فالأسهل تكتب الأرقام بإيدك. وساعة أبل ما تقيس رقم ضغط الدم، بس تنبهك إذا تشك بضغط عالي.</div>
+  <details class="card"><summary><b>للمتقدمين: ربط شبه تلقائي بالاختصارات</b></summary>
+   <p class="xs mut" style="margin:8px 0">تطبيق "الاختصارات" بموبايلك يگدر يقرا أرقامك وينسخها، وانت تلصقها هنا بضغطة.</p>
+   <button class="btn ghost wide" data-hkpaste>${I.watch} الصق الأرقام المنسوخة</button>
+   <div class="steps sm" style="margin-top:12px"><p>افتح تطبيق الاختصارات واضغط + وسمّيه NEXFIT</p><p>أضف إجراء "العثور على عينات الصحة": النوع الخطوات، التاريخ اليوم. وبعده "حساب الإحصائيات": المجموع</p><p>كرّرها للطاقة النشطة (المجموع)، ولنبض الراحة (آخر وحدة)</p><p>أضف إجراء "نص" واكتب بيه السطر الي تحت، وبدّل كل كلمة بين قوسين بالرقم من الخطوة الي فوگها</p><p>آخر شي أضف "نسخ إلى الحافظة"، وشغّله، وارجع اضغط الزر الي فوگ</p></div>
+   <div class="code" dir="ltr">steps=[الخطوات];kcal=[الطاقة];rhr=[النبض]</div></details>`, true);
 }
 /* ================= المظهر ================= */
 function applyTheme() {
@@ -665,7 +683,7 @@ function openCheckin() {
   <button class="btn wide" data-cksave>خلّي المدرّب يشوف</button>`);
 }
 /* ================= تبديل التمرين ================= */
-function swapOpts(id) { const m = EX[id].m[0]; return Object.keys(EX).filter(k => k !== id && EX[k].m[0] === m && !REST_DAY.includes(k)); }
+function swapOpts(id) { const m = EX[id].m[0], e = EASY[id] && EX[EASY[id][0]] ? [EASY[id][0]] : []; return e.concat(Object.keys(EX).filter(k => k !== id && !e.includes(k) && EX[k].m[0] === m && !REST_DAY.includes(k))); }
 /* ================= الصور (تنحفظ بالموبايل بس) ================= */
 function idb() { return new Promise((res, rej) => { const r = indexedDB.open('coach-photos', 1); r.onupgradeneeded = () => r.result.createObjectStore('p', { keyPath: 'd' }); r.onsuccess = () => res(r.result); r.onerror = rej; }); }
 async function savePhoto(file) { const db = await idb(); const tx = db.transaction('p', 'readwrite'); tx.objectStore('p').put({ d: today() + '-' + Date.now(), date: today(), blob: file }); return new Promise(r => tx.oncomplete = r); }
@@ -739,6 +757,7 @@ document.addEventListener('click', e => {
   if (d.supp) { const [c, i] = d.supp.split(':'); openSupp(c, i); return; }
   if (d.bv) { banView = d.bv; reroute(); return; }
   if (d.ban != null) { openBan(+d.ban); return; }
+  if (d.bang) { banG = d.bang; reroute(); return; }
   if ('scan' in d) { openScan(); return; }
   if ('bcgo' in d) { lookupBC($('#bcIn').value); return; }
   if (d.bc) { lookupBC(d.bc); return; }
@@ -748,7 +767,7 @@ document.addEventListener('click', e => {
   if ('checkin' in d) { openCheckin(); return; }
   if (d.ck) { const [k, v] = d.ck.split(':'); CK[k] = +v; b.parentNode.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); return; }
   if ('cksave' in d) { if (Object.keys(CK).length < 4) { toast('جاوب كل الأسئلة'); return; } S.check = S.check || {}; S.check[today()] = CK; save(); closeScreen(); return; }
-  if (d.swap) { const alts = swapOpts(d.swap); if (!alts.length) { toast('ماكو بديل لهذا التمرين'); return; } killAnims(); show(`<div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><h2>الجهاز مشغول؟ بدّل بـ</h2></div><p class="sm mut">نفس العضلة، بتمرين ثاني.</p><div class="col">${alts.map(k => `<button class="exrow" data-swapto="${k}"><img src="img/ex3d/${k}.jpg" alt="" loading="lazy"><div class="grow"><h3>${EX[k].n}</h3><p class="xs mut">${EX[k].gym}</p></div></button>`).join('')}</div>`, true); $('#screen').hidden = false; return; }
+  if (d.swap) { const alts = swapOpts(d.swap); if (!alts.length) { toast('ماكو بديل لهذا التمرين'); return; } killAnims(); show(`<div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><h2>صعبة أو الجهاز مشغول؟ بدّل بـ</h2></div><p class="sm mut">نفس العضلة، بتمرين ثاني.</p><div class="col">${alts.map(k => `<button class="exrow" data-swapto="${k}"><img src="img/ex3d/${k}.jpg" alt="" loading="lazy"><div class="grow"><h3>${EX[k].n}</h3><p class="xs mut">${EASY[d.swap] && EASY[d.swap][0] === k ? '<span style="color:#34c759">✓ أسهل • ' + EASY[d.swap][1] + '</span>' : EX[k].gym}</p></div></button>`).join('')}</div>`, true); $('#screen').hidden = false; return; }
   if (d.swapto && SES) { const x = SES.items[SES.k]; SES.items = SES.items.slice(); SES.items[SES.k] = Object.assign({}, x, { id: d.swapto, w: EX[d.swapto].w0 }); SES.sets[SES.k].forEach(z => z.w = EX[d.swapto].w0 || ''); stack = []; const sc = $('#screen'); sc.hidden = true; sc.innerHTML = ''; renderPlayer(); toast('تبدّل التمرين'); return; }
   if ('hardupdate' in d) { hardUpdate(); return; }
   if (d.prod) { openProd(d.prod); return; }
