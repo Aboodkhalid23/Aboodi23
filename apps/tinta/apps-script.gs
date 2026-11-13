@@ -29,7 +29,7 @@ function dataFile_() {
 function readData_() {
   var d = {};
   try { d = JSON.parse(dataFile_().getBlob().getDataAsString() || '{}'); } catch (e) {}
-  d.notes = d.notes || {}; d.edits = d.edits || {};
+  d.notes = d.notes || {}; d.edits = d.edits || {}; d.needs = d.needs || [];
   return d;
 }
 function clean_(s, n) { return String(s || '').replace(/[<>]/g, '').slice(0, n); }
@@ -55,6 +55,27 @@ function doPost(e) {
   // Keittiö (PIN). / الشيفات بالرمز.
   if (!chef) return out_({ ok: false, err: 'pin' });
 
+  if (d.action === 'ping') return out_({ ok: true });
+
+  // Tarvitaan-lista (kaikille). / قائمة الطلبات (للكل).
+  if (d.action === 'need' || d.action === 'needdone') {
+    var lk = LockService.getScriptLock();
+    lk.waitLock(15000);
+    try {
+      var dd = readData_(), now = new Date().toISOString(), who = clean_(d.by, 40);
+      if (d.action === 'need') {
+        var txt = clean_(d.text, 200);
+        if (!txt) return out_({ ok: false });
+        dd.needs.push({ id: Utilities.getUuid().slice(0, 8), t: txt, by: who, at: now, done: false });
+        dd.needs = dd.needs.slice(-200);
+      } else {
+        dd.needs.forEach(function (x) { if (x.id === d.id) { x.done = !!d.done; x.doneBy = who; x.doneAt = now; } });
+      }
+      dataFile_().setContent(JSON.stringify(dd));
+      return out_({ ok: true, notes: dd.notes, edits: dd.edits, needs: dd.needs });
+    } finally { lk.releaseLock(); }
+  }
+
   if (d.action === 'note' || d.action === 'edit' || d.action === 'delnote') {
     if (d.action === 'delnote' && !admin) return out_({ ok: false, err: 'key' });
     var lock = LockService.getScriptLock();
@@ -79,7 +100,7 @@ function doPost(e) {
         (data.notes[id] = data.notes[id] || []).push({ t: clean_(d.text, 1000), by: by, at: at });
       }
       dataFile_().setContent(JSON.stringify(data));
-      return out_({ ok: true, notes: data.notes, edits: data.edits });
+      return out_({ ok: true, notes: data.notes, edits: data.edits, needs: data.needs });
     } finally {
       lock.releaseLock();
     }
@@ -104,7 +125,7 @@ function doGet(e) {
   // Kaikille: keittiön muutokset. / للكل: تعديلات المطبخ.
   if (p.what === 'changes') {
     var data = readData_();
-    return out_({ ok: true, notes: data.notes, edits: data.edits });
+    return out_({ ok: true, notes: data.notes, edits: data.edits, needs: data.needs });
   }
   // Vain omistaja. / بس صاحب المطعم.
   if (!same_(p.key, ADMIN)) return out_({ ok: false, err: 'key' });
