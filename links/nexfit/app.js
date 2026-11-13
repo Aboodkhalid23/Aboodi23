@@ -96,7 +96,7 @@ function dayItems(i) { const t = dayType(i); return t === 'R' ? REST_DAY.map(id 
 
 /* ================= الحسابات ================= */
 const curW = () => S.weights.length ? S.weights[S.weights.length - 1].w : +S.w || 52;
-function targets() { const w = curW(), h = +S.h || 168, a = +S.age || 20; let k = (10 * w + 6.25 * h - 5 * a + 5) * 1.55 + 400; const adj = S.evals.length ? S.evals[S.evals.length - 1].kcalAdj || 0 : 0; k = Math.round((k + adj) / 50) * 50; return { k, p: Math.round(w * 2), water: Math.round(w * .045 * 2) / 2 }; }
+function targets() { const w = curW(), h = +S.h || 168, a = +S.age || 20; let k = (10 * w + 6.25 * h - 5 * a + 5) * 1.55 + 400; const adj = (S.evals.length ? S.evals[S.evals.length - 1].kcalAdj || 0 : 0) + ((S.adapt || {}).adj || 0); k = Math.round((k + adj) / 50) * 50; return { k, p: Math.round(w * 2), water: Math.round(w * .045 * 2) / 2 }; }
 function optVal(o) { return o.it.reduce((s, [k, a]) => { const v = itemVal(k, a); return { k: s.k + v.k, p: s.p + v.p, c: s.c + v.c, f: s.f + v.f }; }, { k: 0, p: 0, c: 0, f: 0 }); }
 function weekHist() { const now = new Date(); now.setHours(0, 0, 0, 0); const st = new Date(now); st.setDate(st.getDate() - 6); return S.hist.filter(h => new Date(h.d + 'T12:00') >= st); }
 function muscleCount() { const c = {}; weekHist().forEach(h => (h.mus || []).forEach(m => c[m] = (c[m] || 0) + 1)); return c; }
@@ -135,6 +135,7 @@ function vHome() {
   <div class="sec-h"><h2>أكلك اليوم</h2><a class="xs" href="#food" style="color:var(--g)">كل القائمة</a></div>
   <div class="hscroll">${todayMeals().map(({ m, o }) => `<button class="mini ${eaten[m.k] ? 'on' : ''}" data-rec="${o.id}" data-slot="${m.k}"><span class="mimg"><img src="${recImg(o)}" alt="" loading="lazy" class="${isCut(o) ? 'cut' : ''}">${eaten[m.k] ? `<i>${I.check}</i>` : ''}</span><span class="xs mut">${m.n}</span><b>${o.fn}</b><span class="xs num" style="color:var(--g)">${o.it.length ? AR(Math.round(optVal(o).p)) + ' غ بروتين' : 'مي بس'}</span></button>`).join('')}</div>
   <div class="card"><div class="sec-h"><h2>حبوبك اليوم</h2><span class="xs mut">اضغط لما تاخذها</span></div><div class="pills">${daily.map(([id, n, w]) => `<button class="${sp[id] ? 'on' : ''}" data-took="${id}"><img src="img/supp/${SUPPS.find(z => z.id === id).img}.webp" alt=""><b>${n}</b><span>${sp[id] ? 'أخذته ✓' : w}</span></button>`).join('')}</div></div>
+  ${smartCard()}
   ${coachCard()}
   <div class="card lvl2"><div class="row between"><div><span class="xs mut">مستواك</span><h2>${L.name}</h2></div><span class="pill g num">${AR(L.x)} نقطة</span></div><div class="bar"><i style="width:${L.pct}%"></i></div><p class="xs mut">${L.next ? 'كمّل وتوصل لمستوى "' + L.next + '". كل سِت وكل وجبة وكل كوب مي يزيدلك نقاط.' : 'وصلت أعلى مستوى!'}</p></div>`;
 }
@@ -156,6 +157,7 @@ function vCourse() {
   ${t !== 'R' ? `<div class="col">${dayItems(c).map((x, k) => `<button class="exrow" data-ex="${x.id}"><img src="img/ex3d/${x.id}.jpg" alt="" loading="lazy"><div class="grow"><h3>${EX[x.id].n}${EX[x.id].star ? ' ⭐' : ''}</h3><p class="sm num" style="color:var(--g)">${AR(setsAt(x, c))} × ${rng(x.r)} ${EX[x.id].sec ? 'ثانية' : ''}</p><p class="xs mut">${x.w ? AR(x.w) + ' كغم' : 'بدون وزن'}</p></div><span class="k">${I.play}</span></button>`).join('')}</div>
   <button class="btn wide big" data-start="${c}">${I.play} يلا نبدي</button>` : ''}`}
   <div class="card"><div class="sec-h"><h2>هالأسبوع</h2><span class="xs mut num">${AR(doneN)}/${AR(MDAYS)} يوم بالشهر</span></div><div class="strip">${strip}</div><p class="xs mut">ص = صدر وأمامية • ظ = ظهر وخلفية • ك = كتف ورجل • ر = راحة</p></div>
+  <button class="forecard" data-fore><span>💪</span><div class="grow"><b>برنامج الساعد</b><small>${Object.keys(S.fore || {}).filter(d => daysBetween(d, today()) < 7 && S.fore[d]).length}/3 هالأسبوع • 6 دقايق، يكبّر الساعد ويقوّي القبضة</small></div>${I.chev}</button>
   <div class="sec-h"><h2>دليل المدرّب</h2></div>
   <details class="card guide"><summary><b>🏆 القواعد الذهبية للعضل</b></summary><div class="good sm col">
    <p><b>الزيادة التدريجية:</b> لما تكمّل كل السِتات بأعلى عدّات، زيد الوزن الجلسة الجاية. التطبيق يحسبها إلك لحاله</p>
@@ -310,7 +312,7 @@ function genMeal(seed) {
     prep: [St[2], `اطبخ ${FOODS[Cb[0]].n} على جنب`, `الخضرة: ${Vg.map(x => FOODS[x[0]].n).join(' و')}، مشوية أو مسلوقة`, 'رتّب الصحن: ربعه بروتين، ربعه نشويات، ونصه خضرة'] };
 }
 function recById(id) { return id[0] === 'g' ? genMeal(+id.slice(1)) : RECIPES.find(r => r.id === id); }
-function poolOf(slot, d) { const cats = POOL[slot]; const n = dayNo(d); const c = cats.length > 1 ? cats[n % cats.length] : cats[0]; const R = S.rate || {}; const L = RECIPES.filter(r => r.s === c && !((S.fx || {})[r.id] < 0) && !(R[r.id] && R[r.id] <= 2)); return L.concat(L.filter(r => R[r.id] >= 4)); }
+function poolOf(slot, d) { const cats = POOL[slot]; const n = dayNo(d); const c = cats.length > 1 ? cats[n % cats.length] : cats[0]; const R = S.rate || {}; const L0 = RECIPES.filter(r => r.s === c && !((S.fx || {})[r.id] < 0) && !(R[r.id] && R[r.id] <= 2)); const L1 = SUS && SUS.size ? L0.filter(r => !r.it.some(x => SUS.has(x[0]))) : L0; const L = L1.length >= 4 ? L1 : L0; return L.concat(L.filter(r => R[r.id] >= 4)); }
 function pickFor(slot, d = today()) {
   const own = ((S.mp || {})[d] || {})[slot]; if (own) return recById(own);
   const pool = poolOf(slot, d), n = dayNo(d), sw = ((S.msw || {})[d] || {})[slot] || 0;
@@ -319,7 +321,7 @@ function pickFor(slot, d = today()) {
   return pool[order[(n + sw) % pool.length]];
 }
 function itemVal(k, a) { const f = FOODS[k]; if (!f) return { k: 0, p: 0, c: 0, f: 0 }; const m = a / 100; return { k: f.v[0] * m, p: f.v[1] * m, c: f.v[2] * m, f: f.v[3] * m }; }
-function todayMeals() { return SLOTS.map(([k, n, t]) => ({ m: { k, n, t }, o: Object.assign({}, pickFor(k)), j: 0 })).map(x => (x.o.fn = x.o.n, x)); }
+function todayMeals() { calcScale(); return SLOTS.map(([k, n, t]) => ({ m: { k, n, t }, o: Object.assign({}, forMe(pickFor(k))), j: 0 })).map(x => (x.o.fn = x.o.n, x)); }
 const fimg = k => FOODS[k] && FOODS[k].img ? `img/${FOODS[k].img}.webp` : '';
 const fthumb = (k, sz = 52) => `<span class="pth" style="width:${sz}px;height:${sz}px">${fimg(k) ? `<img src="${fimg(k)}" alt="" loading="lazy">` : '🍽'}</span>`;
 const r1 = x => Math.round(x * 10) / 10;
@@ -346,7 +348,7 @@ function vFood() {
   const plan = TM.reduce((a, x) => { const v = optVal(x.o); return { k: a.k + v.k, p: a.p + v.p }; }, { k: 0, p: 0 });
   const bar = (v, max, col, n, u) => `<div class="mbar"><div class="row between"><span class="xs">${n}</span><span class="xs num"><b>${Math.round(v)}</b> / ${max} ${u}</span></div><div class="bar"><i style="width:${Math.min(100, v / max * 100)}%;background:${col}"></i></div></div>`;
   const IC = { b: ['🍳', '#ff9f0a'], s: ['🥣', '#34c759'], l: ['🍛', '#ff2d3d'], a: ['🥤', '#5e5ce6'], d: ['🥗', '#30b0c7'] }, SEC = { b: 'b', s: 's', l: 'l', a: 'sh', d: 'd' };
-  const extra = [['sw', '🍫', 'حلا صحي', 'حلو بدون ما يخرّب جسمك'], ['k', '🥜', 'كرزات وموالح', 'مكسرات وبذور وفوايدها'], ['sh', '🥤', 'شيكات التضخيم', 'سعرات وبروتين بگلاص'], ['drinks', '💧', 'المشروبات', 'شنو تشرب وشنو لا'], ['fdb', '🔎', 'الأطعمة والبذور', Object.keys(FOODS).length + ' أكلة بقيمها'], ['shop', '🛒', 'سلة الأسبوع', 'شنو تشتري من الماركت'], ['ban', '⛔', 'الممنوعات', 'حرام وينفخ القولون']];
+  const extra = [['fridge', '🧊', 'شنو عندي بالبيت؟', 'اختار الي بالثلاجة وأگلك شنو تطبخ'], ['sw', '🍫', 'حلا صحي', 'حلو بدون ما يخرّب جسمك'], ['k', '🥜', 'كرزات وموالح', 'مكسرات وبذور وفوايدها'], ['sh', '🥤', 'شيكات التضخيم', 'سعرات وبروتين بگلاص'], ['drinks', '💧', 'المشروبات', 'شنو تشرب وشنو لا'], ['fdb', '🔎', 'الأطعمة والبذور', Object.keys(FOODS).length + ' أكلة بقيمها'], ['shop', '🛒', 'سلة الأسبوع', 'شنو تشتري من الماركت'], ['ban', '⛔', 'الممنوعات', 'حرام وينفخ القولون']];
   return `${head('الأكل')}
   <div class="card"><div class="sec-h"><h2>أكلت اليوم</h2><span class="xs mut num">القائمة: ${Math.round(plan.k)} سعرة • ${Math.round(plan.p)}g بروتين</span></div>
    ${bar(tot.k, T.k, 'var(--g)', 'السعرات', 'سعرة')}${bar(tot.p, T.p, 'var(--gold)', 'البروتين', 'g')}${bar(tot.c, Math.round(T.k * .5 / 4), 'var(--blue)', 'الكارب', 'g')}${bar(tot.f, Math.round(T.k * .27 / 9), '#ff9f0a', 'الدهون', 'g')}
@@ -354,7 +356,7 @@ function vFood() {
   <div class="sec-h"><h2>وجباتك اليوم</h2><span class="xs mut">اضغط على الوجبة تشوف كل خياراتها</span></div>
   <div class="slist">${TM.map(({ m, o }) => { const v = optVal(o), c = IC[m.k]; return `<div class="slot ${eaten[m.k] ? 'on' : ''}"><button class="sbody" data-sec="${SEC[m.k]}" data-forslot="${m.k}"><span class="sico" style="background:${c[1]}22;color:${c[1]}">${c[0]}</span><span class="stxt"><span class="xs mut">${m.n} • ${m.t}</span><b>${o.n}</b><span class="xs num"><b style="color:var(--gold)">${Math.round(v.p)}g</b> بروتين • <b>${Math.round(v.k)}</b> سعرة • ${Math.round(v.c)}g كارب • ${Math.round(v.f)}g دهون</span></span>${I.chev}</button><button class="ib sm ${eaten[m.k] ? 'on' : ''}" data-eat="${m.k}" aria-label="أكلتها">${I.check}</button></div>`; }).join('')}</div>
   <div class="sec-h"><h2>أقسام ثانية</h2></div>
-  <div class="slist">${extra.map(([k, ic, n, sub]) => { const at = k === 'ban' ? 'href="#ban"' : ['drinks', 'fdb', 'shop'].includes(k) ? `data-${k}` : `data-sec="${k}"`; const tag = k === 'ban' ? 'a' : 'button'; return `<${tag} class="slot ex" ${at}><span class="sico">${ic}</span><span class="stxt"><b>${n}</b><span class="xs mut">${sub}${['sw', 'k', 'sh'].includes(k) ? ' • ' + RECIPES.filter(r => r.s === k).length + ' وصفة' : ''}</span></span>${I.chev}</${tag}>`; }).join('')}</div>`;
+  <div class="slist">${extra.map(([k, ic, n, sub]) => { const at = k === 'ban' ? 'href="#ban"' : ['drinks', 'fdb', 'shop', 'fridge'].includes(k) ? `data-${k}` : `data-sec="${k}"`; const tag = k === 'ban' ? 'a' : 'button'; return `<${tag} class="slot ex" ${at}><span class="sico">${ic}</span><span class="stxt"><b>${n}</b><span class="xs mut">${sub}${['sw', 'k', 'sh'].includes(k) ? ' • ' + RECIPES.filter(r => r.s === k).length + ' وصفة' : ''}</span></span>${I.chev}</${tag}>`; }).join('')}</div>`;
 }
 function openSection(k, forSlot) {
   const sec = SECTIONS.find(x => x[0] === k), L = RECIPES.filter(r => r.s === k).concat(k === 'l' ? [0, 1, 2, 3, 4, 5].map(i => genMeal(dayNo() * 7 + 100 + i)) : []);
@@ -367,11 +369,12 @@ function openSection(k, forSlot) {
   const s = $('#screen'); if (!s.hidden && s.querySelector('.curmeal,.rrow')) { const y = s.scrollTop; s.innerHTML = `<div class="in">${html}</div>`; s.scrollTop = y; } else show(html);
 }
 function openRecipe(id, slot) {
-  const o = recById(id), v = optVal(o), sl = SLOTS.find(x => x[0] === slot) || SLOTS.find(x => POOL[x[0]].includes(o.s)) || SLOTS[2], cur = pickFor(sl[0]).id === id, sc = score(o), my = (S.rate || {})[id] || 0;
+  calcScale(); const o = forMe(recById(id)), v = optVal(o), sl = SLOTS.find(x => x[0] === slot) || SLOTS.find(x => POOL[x[0]].includes(o.s)) || SLOTS[2], cur = pickFor(sl[0]).id === id, sc = score(o), my = (S.rate || {})[id] || 0;
   const bar5 = (n, x) => `<div class="sc"><span class="xs">${n}</span><span class="dots5">${[1, 2, 3, 4, 5].map(i => `<i class="${i <= x ? 'on' : ''}"></i>`).join('')}</span></div>`;
   show(`<div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><div class="grow"><p class="xs mut">${sl[1]}</p></div><span class="pill num">⏱ ${o.t || 15} دقيقة</span></div>
   <div class="dishhero ${isCut(o) ? 'cut' : ''}"><img src="${recImg(o)}" alt=""><div><h1>${o.n}</h1></div></div>
   ${o.tag ? `<p class="sm">${o.tag}</p>` : ''}
+  ${o.scaled ? `<div class="warm">🧠 الكميات معدّلة على هدفك (×${o.scaled.toFixed(2)})، حتى توصل ${targets().k} سعرة باليوم.</div>` : ''}
   <div class="card"><h3>مجموع الوجبة</h3>${macroRow(v, 1)}</div>
   <div class="card"><h3>المكونات وشكد بكل وحدة</h3>
    <div class="itab"><div class="ih"><span>المكوّن</span><span>بروتين</span><span>كارب</span><span>دهون</span><span>سعرة</span></div>
@@ -434,6 +437,79 @@ function openProd(k) {
   <div class="card"><h3>المكونات</h3><p class="sm">${i.ing}</p>${i.fiIng ? `<span class="fi">${i.fiIng}</span>` : ''}</div>
   ${f.note ? `<div class="warn">${f.note}</div>` : ''}`, true);
 }
+/* ================= مدرّب التضخيم الذكي =================
+   يقرا وزنك الأسبوعي: إذا ما يزيد يزيد سعراتك 150، وإذا يزيد بسرعة ينقص 100. هدف التضخيم النظيف 0.25-0.5 كغم بالأسبوع */
+function trend() {
+  const W = (S.weights || []).slice().sort((a, b) => a.d < b.d ? -1 : 1).filter(x => daysBetween(x.d, today()) <= 28);
+  if (W.length < 2) return null; const d0 = W[0].d, xs = W.map(x => daysBetween(d0, x.d)), ys = W.map(x => x.w);
+  const span = xs[xs.length - 1]; if (span < 6) return null;
+  const mx = xs.reduce((a, b) => a + b) / xs.length, my = ys.reduce((a, b) => a + b) / ys.length;
+  const sl = xs.reduce((a, x, i) => a + (x - mx) * (ys[i] - my), 0) / (xs.reduce((a, x) => a + (x - mx) ** 2, 0) || 1);
+  return sl * 7;
+}
+function bellyAsk(sl) { const r = pickFor(sl); let o = $('.sheet'); if (o) o.remove(); o = document.createElement('div'); o.className = 'sheet'; o.innerHTML = `<div><b>صحة وعافية 😋 +8 نقاط</b><p class="xs mut">${r.n}: شلون بطنك بعدها؟ (يعلّم كاشف القولون)</p><div class="row"><button class="btn ghost grow" data-bel="${r.id}:1">😌 مرتاح</button><button class="btn ghost grow" data-bel="${r.id}:-1">😣 نفخني</button></div></div>`; document.body.append(o); setTimeout(() => o.remove(), 9000); }
+function smartTick() {
+  const r = trend(); S.adapt = S.adapt || { adj: 0, log: [] }; const A = S.adapt;
+  if (r == null || (A.last && daysBetween(A.last, today()) < 7)) return;
+  let ch = 0, why = '';
+  if (r < .2) { ch = 150; why = `وزنك زاد ${r.toFixed(2)} كغم بالأسبوع، أقل من المطلوب. زدت سعراتك 150 (تقريباً سناك صغير).`; }
+  else if (r > .6) { ch = -100; why = `وزنك يزيد ${r.toFixed(2)} كغم بالأسبوع، أسرع من اللازم وممكن دهون. نقّصت 100 سعرة.`; }
+  else why = `وزنك يزيد ${r.toFixed(2)} كغم بالأسبوع: بالضبط مثل ما لازم. نكمّل نفس الشي 💪`;
+  A.adj = Math.max(-300, Math.min(900, A.adj + ch)); A.last = today(); A.log.unshift({ d: today(), r: +r.toFixed(2), ch, why }); A.log = A.log.slice(0, 12); save();
+}
+function smartCard() {
+  const A = S.adapt, r = trend(), T = targets();
+  const last = A && A.log && A.log[0];
+  return `<div class="smart"><div class="row"><span class="sico" style="background:rgba(255,45,61,.15);color:var(--g)">🧠</span><div class="grow"><b class="d">مدرّب التضخيم الذكي</b><p class="xs mut">${r == null ? 'سجّل وزنك مرة بالأسبوع (الصبح قبل الأكل)، وأنا أعدّل سعراتك لحالي' : `سرعتك: <b class="num" dir="ltr" style="color:${r < .2 ? 'var(--gold)' : r > .6 ? 'var(--red)' : '#34c759'}">${r >= 0 ? '+' : ''}${r.toFixed(2)}</b> كغم بالأسبوع • الهدف <span dir="ltr">0.25–0.5</span>`}</p></div><span class="pill g num">${T.k}</span></div>${last ? `<p class="sm">${last.why}</p>` : ''}</div>`;
+}
+/* الكميات تتعدل على هدفك: إذا هدفك أعلى من القائمة، نكبّر الحصص (مو البروتين الجاهز) */
+let SCALE = 1;
+function calcScale() { const T = targets(); const base = SLOTS.reduce((a, [k]) => a + optVal(pickFor(k)).k, 0); SCALE = base ? Math.max(.8, Math.min(1.45, T.k / base)) : 1; return SCALE; }
+function forMe(o) {
+  if (!o || Math.abs(SCALE - 1) < .04) return o;
+  const it = o.it.map(([k, a]) => { if (/^m_|^whey$/.test(k)) return [k, a]; const M = MEAS[k]; let g = a * SCALE; if (M && /بيضة|موزة|برتقالة|حبة|تمرة|جزرة|طماطة|خيارة|ليمونة|بطاطاية|علبة/.test(M[0])) g = k === 'egg' || k === 'tuna' || /^m_/.test(k) ? Math.max(M[1], Math.round(g / M[1]) * M[1]) : Math.max(M[1] * .5, Math.round(g / M[1] * 2) / 2 * M[1]); else g = Math.max(5, Math.round(g / 5) * 5); return [k, g]; });
+  return Object.assign({}, o, { it, scaled: SCALE });
+}
+/* ================= كاشف القولون: يتعلم شنو الأكل الي ينفخك إنت بالذات ================= */
+let SUS = null;
+function refreshSus() { SUS = new Set(); const D = ibsDetect(); SUS = new Set(D.sus.map(x => x.k)); }
+function ibsDetect() {
+  const ex = {}, add = (id, bad) => { const r = recById(id); if (!r) return; new Set(r.it.map(x => x[0])).forEach(k => { if (/olive_oil|rapeseed|water|lemon|mint|ginger/.test(k)) return; ex[k] = ex[k] || { b: 0, g: 0 }; ex[k][bad ? 'b' : 'g']++; }); };
+  Object.entries(S.fx || {}).forEach(([id, v]) => add(id, v < 0));
+  Object.entries(S.check || {}).forEach(([d, c]) => { const e = (S.eaten || {})[d] || {}; Object.keys(e).filter(k => e[k]).forEach(sl => add(pickFor(sl, d).id, c.belly >= 3)); });
+  const sus = Object.entries(ex).filter(([, v]) => v.b + v.g >= 3 && (v.b + 1) / (v.b + v.g + 2) >= .6).sort((a, b) => b[1].b - a[1].b).map(([k, v]) => ({ k, ...v }));
+  const safe = Object.entries(ex).filter(([, v]) => v.g >= 3 && v.b === 0).map(([k]) => k);
+  const n = Object.keys(S.fx || {}).length + Object.keys(S.check || {}).length;
+  return { sus, safe, n };
+}
+function ibsCard() {
+  const D = ibsDetect();
+  return `<div class="card"><h2>🔬 كاشف القولون</h2><p class="xs mut">كل ما تضغط 😌 أو 😣 بعد وجبة، أو تجاوب "بطنك اليوم"، أتعلم شنو الي ينفخك إنت بالذات. عندي هسه ${D.n} تسجيل${D.n < 6 ? '، أحتاج 6 على الأقل' : ''}.</p>
+  ${D.sus.length ? `<h3 style="color:var(--red)">مشتبه بيهم</h3><div class="col">${D.sus.slice(0, 6).map(x => `<button class="frow" data-food="${x.k}">${fthumb(x.k, 46)}<div class="grow"><b>${FOODS[x.k].n}</b><span class="xs mut">نفخك ${x.b} مرات من ${x.b + x.g}</span></div></button>`).join('')}</div><p class="xs mut">هاي الأكلات تنشال من قائمتك لحالها. جرّبها مرة ثانية بعد شهر بكمية صغيرة.</p>` : '<p class="sm">لحد هسه ما لگيت شي مشتبه بيه 👍</p>'}
+  ${D.safe.length ? `<h3 style="color:#34c759;margin-top:6px">آمنة إلك</h3><p class="sm">${D.safe.slice(0, 12).map(k => FOODS[k].n).join('، ')}</p>` : ''}</div>`;
+}
+/* ================= شنو عندي بالبيت؟ ================= */
+let fridge = new Set();
+function openFridge() {
+  const groups = [['البروتين', ['egg', 'chicken', 'thigh', 'beef', 'mince', 'lamb', 'turkey', 'salmon', 'tuna', 'cod', 'shrimp', 'm_rahka', 'quark', 'greek', 'm_rae', 'cheese_e', 'feta', 'mozz', 'whey']], ['النشويات', ['rice', 'basmati', 'potato', 'sweetpot', 'oats', 'glutenfree_pasta', 'bread_gf', 'tortilla', 'quinoa', 'couscous', 'ricenoodle', 'bun']], ['الخضرة والفواكه', ['tomato', 'cucumber', 'pepper', 'carrot', 'spinach', 'lettuce', 'zucchini', 'broccoli', 'greenbean', 'banana', 'blueb', 'strawb', 'orange', 'kiwi', 'avocado']], ['غيرها', ['milk_lf', 'pb', 'tahini', 'maple', 'choc', 'cocoa', 'walnut', 'almond', 'chia', 'butter']]];
+  const free = /olive_oil|rapeseed|water|lemon|mint|ginger|coffee|tea/;
+  const res = fridge.size ? RECIPES.map(r => { const need = r.it.map(x => x[0]).filter(k => !free.test(k)), have = need.filter(k => fridge.has(k)); return { r, miss: need.filter(k => !fridge.has(k)), f: have.length / (need.length || 1) }; }).filter(x => x.f >= .6).sort((a, b) => a.miss.length - b.miss.length || b.f - a.f).slice(0, 25) : [];
+  const html = `<div class="row"><button class="ib" data-close aria-label="رجوع">${I.back}</button><div class="grow"><h1>شنو عندي بالبيت؟</h1><p class="xs mut">اختار الي بثلاجتك، وأگلك شنو تگدر تطبخ هسه</p></div></div>
+  ${groups.map(([n, ks]) => `<h3>${n}</h3><div class="fchips">${ks.filter(k => FOODS[k]).map(k => `<button class="${fridge.has(k) ? 'on' : ''}" data-fr="${k}">${fimg(k) ? `<img src="${fimg(k)}" alt="">` : ''}${FOODS[k].n}</button>`).join('')}</div>`).join('')}
+  ${fridge.size ? `<div class="sec-h"><h2>تگدر تسوي ${res.filter(x => !x.miss.length).length} أكلة هسه</h2><button class="xs mut" style="background:none;border:0" data-frclear>امسح</button></div><div class="col">${res.map(({ r, miss }) => { const v = optVal(r); return `<button class="rrow" data-rec="${r.id}"><span class="rimg2"><img src="${recImg(r)}" alt="" loading="lazy" class="${isCut(r) ? 'cut' : ''}"></span><span class="grow col" style="gap:3px"><b>${r.n}</b><span class="xs" style="color:${miss.length ? 'var(--gold)' : '#34c759'}">${miss.length ? 'ناقصك: ' + miss.map(k => FOODS[k].n).join('، ') : '✓ عندك كل شي'}</span><span class="pmac num"><span><b style="color:var(--gold)">${Math.round(v.p)}g</b> بروتين</span><span>${Math.round(v.k)} سعرة</span></span></span></button>`; }).join('') || '<p class="mut sm">اختار أكثر حتى ألگى وصفات.</p>'}</div>` : ''}`;
+  const s = $('#screen'); if (!s.hidden && s.querySelector('.fchips')) { const y = s.scrollTop; s.innerHTML = `<div class="in">${html}</div>`; s.scrollTop = y; } else show(html);
+}
+/* ================= برنامج الساعد (بالبيت، 6 دقايق) ================= */
+const FORE = [['wristcurl', '3 × 15-20', 'كفك لفوگ، الحركة من الرسغ بس'], ['revcurl', '3 × 12-15', 'كفك لتحت، يقوّي ظهر الساعد'], ['farmer', '3 × 30-40 ثانية', 'امشي وانت ماسك أثقل دمبل تگدر عليه'], ['hang', '2 × لحد ما تتعب', 'تعلّگ بالعقلة: أقوى شي للقبضة']];
+function openFore() {
+  const L = S.fore || {}, days = Object.keys(L).sort(), wk = days.filter(d => daysBetween(d, today()) < 7).length, M = (S.meas || []).filter(m => m.fore), m0 = M[0], m1 = M[M.length - 1];
+  show(`<div class="row"><button class="ib" data-close aria-label="رجوع">${I.back}</button><div class="grow"><h1>برنامج الساعد</h1><p class="xs mut">3 مرات بالأسبوع، بعد التمرين أو بالبيت. 6 دقايق بس</p></div></div>
+  <div class="card fhero"><div class="row between"><div><span class="xs mut">هالأسبوع</span><h2 class="num">${wk} / 3</h2></div><div style="text-align:left"><span class="xs mut">ساعدك</span><h2 class="num">${m1 ? m1.fore + ' سم' : '—'}</h2>${m0 && m1 && m1 !== m0 ? `<span class="xs" style="color:#34c759">+${(m1.fore - m0.fore).toFixed(1)} سم من البداية</span>` : ''}</div></div><div class="bar"><i style="width:${Math.min(100, wk / 3 * 100)}%"></i></div></div>
+  <div class="col">${FORE.filter(([id]) => EX[id]).map(([id, r, w], i) => `<button class="exrow" data-ex="${id}"><img src="img/ex3d/${id}.jpg" alt="" loading="lazy"><div class="grow"><h3>${i + 1}. ${EX[id].n}</h3><p class="sm num" style="color:var(--g)">${r}</p><p class="xs mut">${w}</p></div><span class="k">${I.play}</span></button>`).join('')}</div>
+  <button class="btn wide ${L[today()] ? 'ghost' : ''}" data-foredone>${L[today()] ? '✓ سوّيته اليوم' : 'خلصت برنامج الساعد اليوم'}</button>
+  <div class="card"><h3>قيس ساعدك (كل أسبوعين)</h3><p class="xs mut">بشريط خياطة على أعرض مكان تحت الكوع، وإيدك مشدودة.</p><div class="row"><input class="field num grow" id="foreIn" inputmode="decimal" placeholder="مثلاً 24.5"><button class="btn sm" data-foremeas>احفظ</button></div></div>
+  <div class="card"><h3>ليش الساعد مهم؟</h3><div class="good sm col"><p>أول عضلة تبين بالتيشيرت نص كم</p><p>قبضة أقوى = ترفع أثقل بكل تمارين الظهر</p><p>عضلة صغيرة وترتاح بسرعة، فتتحمل تدريب أكثر من غيرها</p></div></div>`);
+}
 /* ================= رأس الصفحة وزر الإعدادات ================= */
 const gearBtn = () => `<button class="ib" data-settings aria-label="الإعدادات">${I.gear}</button>`;
 const head = (t, extra = '') => `<div class="row between"><h1>${t}</h1><div class="row" style="gap:8px">${extra}${gearBtn()}</div></div>`;
@@ -488,7 +564,7 @@ function vBan() {
     <div class="sec-h"><h2>🐖 خنزير أو جيلاتين بالمكونات</h2><span class="xs mut num">${AR(rest.length)} منتج</span></div>${grid(rest)}
     <div class="card"><h3>القاعدة الذهبية</h3><div class="good sm col"><p>اللحم والدجاج اشتريهم من المحلات العربية والتركية، مكتوب عليهم Halal</p><p>أي أكل جاهز (پيتزا، شوربة، سندويچ، كفتة) اقرا مكوناته قبل ما تشتري</p><p>أي حلاوة جيلي أو موس أو علكة: دوّر على كلمة liivate</p><p>الحلويات الحلال مكتوب عليها Halal أو "ilman liivatetta" يعني بدون جيلاتين</p></div></div>`;
   } else if (banView === 'ibs') {
-    body = `<div class="danger mid"><span>🫃</span><div><b>هاي تنفخ القولون العصبي</b><p class="xs">مو حرام، بس قللها حتى بطنك يرتاح. وجرّب كل وحدة لحالها، لأن كل جسم يختلف.</p></div></div>
+    body = `${ibsCard()}<div class="danger mid"><span>🫃</span><div><b>هاي تنفخ القولون العصبي</b><p class="xs">مو حرام، بس قللها حتى بطنك يرتاح. وجرّب كل وحدة لحالها، لأن كل جسم يختلف.</p></div></div>
     <div class="col">${IBS_BAN.map(x => `<div class="irow"><span class="pimg"><img src="img/${x.img}.webp" alt="" loading="lazy"></span><div class="grow col" style="gap:4px"><b>${x.n}</b><span class="xs mut">${x.why}</span><span class="xs alt">↩ بداله: ${x.alt}</span></div></div>`).join('')}</div>
     <h2 style="color:#34c759">✓ هاي تريّح بطنك</h2><div class="bgrid">${IBS_GOOD.map(x => `<div class="bcard good"><span class="pimg"><img src="img/${x.img}.webp" alt="" loading="lazy"></span><b>${x.n}</b><span class="xs mut">${x.why}</span></div>`).join('')}</div>
     <div class="card"><h2>عادات تريّح بطنك</h2><div class="good sm col">${IBS.tips.map(t => `<p>${t}</p>`).join('')}</div></div>`;
@@ -606,7 +682,7 @@ function openBan(i) {
 }
 
 /* ================= أنا ================= */
-const VERSION = '14';
+const VERSION = '15';
 function weightInfo() {
   const start = S.startW || (S.weights[0]?.w) || +S.w || 52, goal = +S.goal || 62, cur = curW();
   const ms = [start + 1, start + 3, start + 5, start + 7].filter(x => x < goal).concat([goal]).map(x => +x.toFixed(1));
@@ -631,7 +707,7 @@ function vMe() {
   <div class="card"><h2>وزنك بالرسم</h2><div class="chart">${chart(wi.W, wi.goal)}</div></div>
   <div class="tiles"><div class="tile">${I.dumb}<b class="num">${AR(nWork)}</b><span>تمرين خلصته</span></div><div class="tile">${I.bolt}<b class="num">${AR(nSets)}</b><span>سِت كلها</span></div><div class="tile">${I.fire}<b class="num">${AR(streak())}</b><span>أيام ورا بعض</span></div></div>
   <div class="card"><h2>قياسات جسمك (سم)</h2><p class="xs mut">بشريط خياطة كل أسبوعين. الزند وانت شادّه، والخصر على السرّة.</p>
-   <div class="mgrid">${[['arm', 'الزند'], ['chest', 'الصدر'], ['sh', 'الكتف'], ['waist', 'الخصر']].map(([k, n]) => { const d = m1[k] && m0[k] ? +(m1[k] - m0[k]).toFixed(1) : null; return `<label class="f">${n}${d ? ` <span style="color:${(k === 'waist' ? d < 0 : d > 0) ? 'var(--g)' : 'var(--gold)'}" dir="ltr">${d > 0 ? '+' : ''}${AR(d)}</span>` : ''}<input class="field num" inputmode="decimal" data-meas="${k}" value="${m1[k] || ''}" placeholder="—"></label>`; }).join('')}</div>
+   <div class="mgrid">${[['arm', 'الزند'], ['fore', 'الساعد'], ['chest', 'الصدر'], ['sh', 'الكتف'], ['waist', 'الخصر']].map(([k, n]) => { const d = m1[k] && m0[k] ? +(m1[k] - m0[k]).toFixed(1) : null; return `<label class="f">${n}${d ? ` <span style="color:${(k === 'waist' ? d < 0 : d > 0) ? 'var(--g)' : 'var(--gold)'}" dir="ltr">${d > 0 ? '+' : ''}${AR(d)}</span>` : ''}<input class="field num" inputmode="decimal" data-meas="${k}" value="${m1[k] || ''}" placeholder="—"></label>`; }).join('')}</div>
    <button class="btn ghost wide" data-savemeas>احفظ القياسات</button></div>
   ${bests.length ? `<div class="card"><h2>أرقامك القياسية</h2>${bests.map(([id, b]) => `<div class="row"><img src="img/ex3d/${id}.jpg" alt="" style="width:44px;height:44px;border-radius:12px;object-fit:cover"><span class="grow sm">${EX[id].n}</span><b class="num" style="color:var(--g)">${AR(b.w)} كغم × ${AR(b.r)}</b></div>`).join('')}</div>` : ''}
   <p class="xs mut" style="text-align:center">NEXFIT • النسخة ${VERSION} • بدون إعلانات • يتحدث لحاله</p>`;
@@ -754,9 +830,9 @@ function chart(W, goal = 62) {
 /* ================= التنقل ================= */
 const V = { home: vHome, course: vCourse, food: vFood, scan: vScan, supps: vSupps, ban: vBan, me: vMe };
 const TABS = Object.keys(V); let lastTab = null;
-function route() { let h = location.hash.slice(1); if (h.startsWith('hk')) { const r = parseHK(decodeURIComponent(h.slice(3))); if (r) { saveHK(r); toast('وصلت أرقام الساعة ✓'); } history.replaceState(null, '', '#home'); h = 'home'; } if (!V[h]) h = 'home'; $('#app').innerHTML = V[h](); if (h === 'me') loadPhotos(); const a = $('#app'); a.classList.remove('fade', 'sl', 'sr'); if (lastTab !== h) { void a.offsetWidth; a.classList.add(lastTab == null ? 'fade' : TABS.indexOf(h) > TABS.indexOf(lastTab) ? 'sl' : 'sr'); } lastTab = h; document.querySelectorAll('nav a').forEach(a => a.classList.toggle('on', a.dataset.t === h)); }
+function route() { if (SUS === null) refreshSus(); let h = location.hash.slice(1); if (h.startsWith('hk')) { const r = parseHK(decodeURIComponent(h.slice(3))); if (r) { saveHK(r); toast('وصلت أرقام الساعة ✓'); } history.replaceState(null, '', '#home'); h = 'home'; } if (!V[h]) h = 'home'; $('#app').innerHTML = V[h](); if (h === 'me') loadPhotos(); const a = $('#app'); a.classList.remove('fade', 'sl', 'sr'); if (lastTab !== h) { void a.offsetWidth; a.classList.add(lastTab == null ? 'fade' : TABS.indexOf(h) > TABS.indexOf(lastTab) ? 'sl' : 'sr'); } lastTab = h; document.querySelectorAll('nav a').forEach(a => a.classList.toggle('on', a.dataset.t === h)); }
 let stack = [];
-function show(html, push) { const s = $('#screen'); if (push && !s.hidden && s.innerHTML) stack.push(s.innerHTML); else { killAnims(); stack = []; } s.hidden = false; s.innerHTML = `<div class="in">${html}</div>`; s.scrollTop = 0; document.body.style.overflow = 'hidden'; }
+function show(html, push) { const sh = $('.sheet'); if (sh) sh.remove(); const s = $('#screen'); if (push && !s.hidden && s.innerHTML) stack.push(s.innerHTML); else { killAnims(); stack = []; } s.hidden = false; s.innerHTML = `<div class="in">${html}</div>`; s.scrollTop = 0; document.body.style.overflow = 'hidden'; }
 function closeScreen(keep) { stopScan(); killAnims(); stack = []; const s = $('#screen'); s.hidden = true; s.innerHTML = ''; if (!keep) { document.body.style.overflow = ''; route(); } }
 function back() { stopScan(); killAnims(); const s = $('#screen'); if (stack.length) { s.innerHTML = stack.pop(); s.scrollTop = 0; if (!$('#player').hidden) { s.hidden = true; renderPlayer(); } } else { closeScreen(!$('#player').hidden); if (!$('#player').hidden) renderPlayer(); } }
 window.addEventListener('hashchange', () => { const s = $('#screen'); if (!s.hidden) { stopScan(); killAnims(); stack = []; s.hidden = true; s.innerHTML = ''; document.body.style.overflow = ''; } route(); });
@@ -796,7 +872,7 @@ document.addEventListener('click', e => {
   if (d.fx) { const [id, v] = d.fx.split(':'); S.fx = S.fx || {}; S.fx[id] = +v; save(); toast(+v > 0 ? 'كفو، نخليها بأكلك' : 'انحفظت، ما راح تطلعلك'); openRecipe(id, (recById(id) || {}).s); return; }
   if (d.took) { const t = today(); S.supp[t] = S.supp[t] || {}; S.supp[t][d.took] = !S.supp[t][d.took]; save(); reroute(); return; }
   if ('hideinstall' in d) { S.hideInstall = 1; save(); route(); return; }
-  if ('addw' in d) { const v = +String($('#wIn').value).replace(',', '.'); if (!(v > 25 && v < 200)) { toast('اكتب وزن صحيح'); return; } const before = weightInfo(); const t = today(), x = S.weights.find(z => z.d === t); if (!S.startW) S.startW = before.start; if (x) x.w = v; else S.weights.push({ d: t, w: v }); S.reached = S.reached || {}; const hit = before.ms.filter(m => v >= m && !S.reached[m]); hit.forEach(m => S.reached[m] = t); save(); route(); if (hit.length) { const m = hit[hit.length - 1], i = before.ms.indexOf(m) + 1; show(`<div class="col" style="min-height:75vh;justify-content:center;align-items:center;text-align:center;gap:16px"><div class="medal" style="width:auto;padding:20px 28px"><span class="c" style="width:90px;height:90px">${I.trophy}</span></div><h1>${i === before.ms.length ? 'وصلت هدفك النهائي!' : 'وصلت الهدف ' + AR(i) + '!'}</h1><p class="mut">صار وزنك ${AR(v)} كغم. زدت ${AR(+(v - before.start).toFixed(1))} كغم من البداية 💪</p><button class="btn wide" data-close>كمّل</button></div>`); } else toast('انحفظ وزنك'); return; }
+  if ('addw' in d) { setTimeout(() => { const before = (S.adapt || {}).last; smartTick(); if ((S.adapt || {}).last !== before && S.adapt.log[0]) toast('🧠 ' + S.adapt.log[0].why.slice(0, 60) + '...'); }, 50); const v = +String($('#wIn').value).replace(',', '.'); if (!(v > 25 && v < 200)) { toast('اكتب وزن صحيح'); return; } const before = weightInfo(); const t = today(), x = S.weights.find(z => z.d === t); if (!S.startW) S.startW = before.start; if (x) x.w = v; else S.weights.push({ d: t, w: v }); S.reached = S.reached || {}; const hit = before.ms.filter(m => v >= m && !S.reached[m]); hit.forEach(m => S.reached[m] = t); save(); route(); if (hit.length) { const m = hit[hit.length - 1], i = before.ms.indexOf(m) + 1; show(`<div class="col" style="min-height:75vh;justify-content:center;align-items:center;text-align:center;gap:16px"><div class="medal" style="width:auto;padding:20px 28px"><span class="c" style="width:90px;height:90px">${I.trophy}</span></div><h1>${i === before.ms.length ? 'وصلت هدفك النهائي!' : 'وصلت الهدف ' + AR(i) + '!'}</h1><p class="mut">صار وزنك ${AR(v)} كغم. زدت ${AR(+(v - before.start).toFixed(1))} كغم من البداية 💪</p><button class="btn wide" data-close>كمّل</button></div>`); } else toast('انحفظ وزنك'); return; }
   if ('saveme' in d) { if (!$('#pN')) return; S.name = $('#pN').value.trim(); S.age = $('#pA').value; S.h = +$('#pH').value || 168; const st = +$('#pS').value, g = +$('#pG').value; if (st > 25) S.startW = st; if (g > 25) S.goal = g; save(); toast('انحفظ'); back(); return; }
   if ('settings' in d) { openSettings(); return; }
   if ('profile' in d) { openProfile(); return; }
@@ -823,7 +899,14 @@ document.addEventListener('click', e => {
   if ('bcgo' in d) { lookupBC($('#bcIn').value); return; }
   if (d.bc) { lookupBC(d.bc); return; }
   if ('water' in d) { S.water = S.water || {}; S.water[today()] = (S.water[today()] || 0) + 1; save(); reroute(); toast('💧 كفو! كوب ' + AR(S.water[today()])); return; }
-  if (d.eat) { const t = today(); S.eaten = S.eaten || {}; S.eaten[t] = S.eaten[t] || {}; S.eaten[t][d.eat] = !S.eaten[t][d.eat]; save(); reroute(); if (S.eaten[t][d.eat]) toast('صحة وعافية 😋 +8 نقاط'); return; }
+  if (d.bel) { const [id, v] = d.bel.split(':'); S.fx = S.fx || {}; S.fx[id] = +v; save(); refreshSus(); b.closest('.sheet').remove(); toast(+v > 0 ? 'كفو 👍' : 'انحفظت، ما راح تطلعلك هالأكلة'); if (+v < 0) reroute(); return; }
+  if ('fridge' in d) { openFridge(); return; }
+  if (d.fr) { fridge.has(d.fr) ? fridge.delete(d.fr) : fridge.add(d.fr); openFridge(); return; }
+  if ('frclear' in d) { fridge.clear(); openFridge(); return; }
+  if ('fore' in d) { openFore(); return; }
+  if ('foredone' in d) { S.fore = S.fore || {}; S.fore[today()] = !S.fore[today()]; save(); toast(S.fore[today()] ? 'كفو! الساعد يكبر 💪' : 'انشال'); openFore(); return; }
+  if ('foremeas' in d) { const v = +String($('#foreIn').value).replace(',', '.'); if (!(v > 10 && v < 60)) { toast('اكتب رقم صحيح بالسانتي'); return; } S.meas = S.meas || []; S.meas.push({ d: today(), fore: v }); save(); toast('انحفظ'); openFore(); return; }
+  if (d.eat) { const t = today(); S.eaten = S.eaten || {}; S.eaten[t] = S.eaten[t] || {}; S.eaten[t][d.eat] = !S.eaten[t][d.eat]; save(); reroute(); if (S.eaten[t][d.eat]) bellyAsk(d.eat); if (false) toast('صحة وعافية 😋 +8 نقاط'); return; }
   if ('plan' in d) { showPlan = !showPlan; reroute(); return; }
   if ('checkin' in d) { openCheckin(); return; }
   if (d.ck) { const [k, v] = d.ck.split(':'); CK[k] = +v; b.parentNode.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); return; }
