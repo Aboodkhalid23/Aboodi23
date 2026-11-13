@@ -1,5 +1,5 @@
 // مدرّبي: منطق التطبيق
-import { EX, REST_DAY, DAY_NAMES, DAY_IMG, MONTHS, FD, IBS, SUPPS, SCHEDULE, TIPS, INFO, SUPP_LIB, BAN, BAN_WORDS, IBS_BAN } from './data.js';
+import { EX, REST_DAY, DAY_NAMES, DAY_IMG, MONTHS, FD, IBS, SUPPS, SCHEDULE, TIPS, INFO, SUPP_LIB, BAN, BAN_WORDS, IBS_BAN, IBS_GOOD } from './data.js';
 import { BODY } from './bodymap.js';
 import { FOODS, RECIPES, CATS, GEN, DRINKS, MEAS, SECTIONS } from './food2.js';
 
@@ -89,7 +89,8 @@ function buildMonth(n, ev) {
 }
 if (!S.month) { S.month = buildMonth(1); save(); }
 function curDay() { for (let i = 0; i < MDAYS; i++) if (!S.month.done[i]) return i; return MDAYS; }
-function setsAt(item, i) { return (S.month.n === 1 && i < 14 && !EX[item.id].sec) ? Math.min(2, item.s) : item.s; }
+const isDeload = i => S.month.n % 2 === 0 && i >= 21;
+function setsAt(item, i) { if (S.month.n === 1 && i < 14 && !EX[item.id].sec) return Math.min(2, item.s); if (isDeload(i) && !EX[item.id].sec) return Math.max(2, item.s - 1); return item.s; }
 function dayItems(i) { const t = dayType(i); return t === 'R' ? REST_DAY.map(id => ({ id, s: 1, r: EX[id].sec ? [30, 30] : [10, 10], rest: 15, w: 0 })) : S.month.plan[t]; }
 
 /* ================= الحسابات ================= */
@@ -154,16 +155,35 @@ function vCourse() {
   ${t !== 'R' ? `<div class="col">${dayItems(c).map((x, k) => `<button class="exrow" data-ex="${x.id}"><img src="img/ex3d/${x.id}.jpg" alt="" loading="lazy"><div class="grow"><h3>${EX[x.id].n}${EX[x.id].star ? ' ⭐' : ''}</h3><p class="sm num" style="color:var(--g)">${AR(setsAt(x, c))} × ${rng(x.r)} ${EX[x.id].sec ? 'ثانية' : ''}</p><p class="xs mut">${x.w ? AR(x.w) + ' كغم' : 'بدون وزن'}</p></div><span class="k">${I.play}</span></button>`).join('')}</div>
   <button class="btn wide big" data-start="${c}">${I.play} يلا نبدي</button>` : ''}`}
   <div class="card"><div class="sec-h"><h2>هالأسبوع</h2><span class="xs mut num">${AR(doneN)}/${AR(MDAYS)} يوم بالشهر</span></div><div class="strip">${strip}</div><p class="xs mut">ص = صدر وأمامية • ظ = ظهر وخلفية • ك = كتف ورجل • ر = راحة</p></div>
+  <div class="sec-h"><h2>دليل المدرّب</h2></div>
+  <details class="card guide"><summary><b>🏆 القواعد الذهبية للعضل</b></summary><div class="good sm col">
+   <p><b>الزيادة التدريجية:</b> لما تكمّل كل السِتات بأعلى عدّات، زيد الوزن الجلسة الجاية. التطبيق يحسبها إلك لحاله</p>
+   <p><b>جهد صح:</b> آخر سِت تخلّي 1-2 عدّة بالخزان. أبعد من هيچ ما يكبّر، وأقرب يتعبك ويعوّرك</p>
+   <p><b>النزول على مهلك:</b> 3 ثواني للنزول. نص فايدة التمرين بالنزول</p>
+   <p><b>الحركة كاملة:</b> المدى الكامل يكبّر العضلة أكثر من الوزن الثقيل بنص حركة</p>
+   <p><b>عدد السِتات:</b> 10-20 سِت لكل عضلة بالأسبوع. الكورس محسوب على هالأساس</p>
+   <p><b>النوم 8 ساعات</b> وبروتين 2 غم لكل كيلو. العضلة تنبني بالفراش والمطبخ، مو بس بالجيم</p></div></details>
+  <details class="card guide"><summary><b>👕 العضلات الي تبين بالتيشيرت</b></summary><p class="xs mut">هاي العضلات صغيرة ومخفية، بس هي الي تسوي شكل الـV وتفرق بالمظهر. نشتغل عليها كل أسبوع:</p><div class="col">${[['lateral', 'الكتف الجانبي', 'يعرّض الكتف ويخلي الخصر يبين أنحف'], ['reardelt', 'الكتف الخلفي', 'يعدّل الوگفة ويحمي مفصل الكتف'], ['incline', 'أعلى الصدر', 'يملا فتحة التيشيرت'], ['wristcurl', 'الساعد (لگدام)', 'الساعد يبين أول شي بنص كم'], ['revcurl', 'الساعد (لورا)', 'يكمّل شكل الساعد ويقوّي القبضة'], ['farmer', 'القبضة', 'أقوى تمرين للساعد والقبضة'], ['calf', 'السمانة', 'ما تكبر إلا بعدّات كثيرة وتمطيط'], ['kneeraise', 'البطن السفلي', 'يبيّن البطن لما تقل الدهون']].filter(([id]) => EX[id]).map(([id, n, w]) => `<button class="exrow" data-ex="${id}"><img src="img/ex3d/${id}.jpg" alt="" loading="lazy"><div class="grow"><h3>${n}</h3><p class="xs mut">${w}</p></div></button>`).join('')}</div></details>
+  <details class="card guide"><summary><b>🦴 مفاصلك والوگفة</b></summary><div class="good sm col">
+   <p>إحماء المفاصل 5 دقايق قبل كل تمرين (موجود بصفحة اليوم)</p>
+   <p>الكتف: لا تنزل بالضغط لتحت كلش، والكوع بزاوية 45 درجة مو مفتوح</p>
+   <p>الركبة: باتجاه أصابع رجلك، ولا تقفلها بقوة فوگ</p>
+   <p>الظهر: صدرك لگدام وظهرك مستقيم بالسحب والرفعة الرومانية</p>
+   <p>الوگفة: تمرين الكتف الخلفي والسحب يرجّعون كتوفك لورا. حاول تسوي السحب أكثر من الدفع</p>
+   <p>وجع حاد بالمفصل = وگّف. وجع العضلة بعد يومين = طبيعي</p></div></details>
   <button class="card plan-t" data-plan><div class="row between"><h2>رحلتك (مفتوحة، ما إلها نهاية)</h2><span class="mut">${showPlan ? '▲' : '▼'}</span></div><p class="xs mut">أول 6 أشهر تأسيس لجسمك، وبعدها نكمّل دورات جديدة أثقل. كل شهر يتبنى على تقييمك.</p></button>
   ${showPlan ? `<div class="card"><div class="road">${Array.from({ length: Math.max(6, M.n + 2) }, (_, k) => tplFor(k + 1)).map((T, k) => { const n = k + 1, st = n < M.n ? 'done' : n === M.n ? 'now' : 'lock'; return `<div class="rstep ${st}"><span class="dot">${st === 'done' ? I.check : st === 'lock' ? '🔒' : AR(n)}</span><div><b>${T.mo}: ${T.n}</b><span class="xs mut">${T.goal}</span><span class="xs" style="color:var(--g)">هدف الوزن ${AR(T.tw)} كغم</span></div></div>`; }).join('')}</div><button class="btn ghost wide" data-eval>خلصت الشهر؟ قيّم نفسك</button></div>` : ''}`;
 }
 /* ================= شاشة اليوم ================= */
 let SES = null;
+const WARM = ['دقيقتين مشي سريع أو دراجة لحد ما تعرق شوية', 'تدوير الكتف لگدام وورا 10 مرات، وتدوير الذراع الممدودة 10', 'تدوير الرسغ 10 لكل جهة، وتدوير الورك 10', 'سكوات بدون وزن 10 مرات على مهلك', 'وقفة الجدار: ظهرك ويديك على الحايط، ارفع إيدك لفوگ 10 مرات (تفتح الكتف)'];
 function openDay(i) {
   if (i >= MDAYS) { openEval(); return; }
   const t = dayType(i), it = dayItems(i);
   show(`<div class="row"><button class="ib" data-close aria-label="رجوع">${I.back}</button><div class="grow"><p class="xs mut">اليوم ${AR(i + 1)} • الشهر ${AR(S.month.n)}</p><h2>${DAY_NAMES[t]}</h2></div></div>
   <div class="month" style="min-height:200px"><img src="img/ex3d/${DAY_IMG[t]}.jpg" alt=""><h1>${DAY_NAMES[t]}</h1><p class="sm mut">${t === 'R' ? 'مشي 30 دقيقة، وهاي التمارين 10 دقايق قبل النوم.' : 'إحماء: 5 دقايق مشي سريع أو دراجة، وأول تمرين سِت خفيف بنص الوزن.'}</p></div>
+  ${t !== 'R' ? `<details class="card warmc"><summary><b>🔥 إحماء المفاصل (5 دقايق)</b><span class="xs mut"> يحمي الكتف والركبة والرسغ</span></summary><div class="steps sm">${WARM.map(w => `<p>${w}</p>`).join('')}</div></details>` : ''}
+  ${isDeload(i) ? '<div class="warm">🌿 <b>أسبوع تخفيف:</b> سِت أقل وأوزان أخف 15٪. هذا مو كسل: العضل يكبر وقت الراحة، والمدربين الكبار يسوّوه كل 6-8 أسابيع.</div>' : ''}
   <div class="col">${it.map((x, k) => `<button class="exrow" data-ex="${x.id}"><img src="img/ex3d/${x.id}.jpg" alt="" loading="lazy"><div class="grow"><h3>${EX[x.id].n}${EX[x.id].star ? ' ⭐' : ''}</h3><p class="sm num" style="color:var(--g)">${AR(setsAt(x, i))} × ${rng(x.r)} ${EX[x.id].sec ? 'ثانية' : ''}</p><p class="xs mut">${x.w ? 'ابدي بـ ' + AR(x.w) + ' كغم' : 'بدون وزن'}</p></div><span class="k num">${AR(k + 1)}</span></button>`).join('')}</div>
   <button class="btn wide" data-start="${i}">${I.play} ${t === 'R' ? 'يلا نبدي' : 'ابدأ التمرين'}</button>
   ${S.month.done[i] ? '' : `<button class="btn ghost wide" data-skipday="${i}">${t === 'R' ? 'خلصت يوم الراحة ✓' : 'سوّيته بدون تسجيل ✓'}</button>`}`);
@@ -199,7 +219,8 @@ function openEx(id) { killAnims(); show(`<div class="row"><button class="ib" dat
 /* ================= مشغّل التمرين ================= */
 function startDay(i) {
   const it = dayItems(i);
-  SES = { i, k: 0, items: it, sets: it.map(x => Array.from({ length: setsAt(x, i) }, () => ({ w: x.w || '', r: EX[x.id].sec ? x.r[0] : x.r[1], ok: false }))) };
+  const dl = isDeload(i), lw = w => w ? (dl ? Math.round(w * .85 * 2) / 2 : w) : '';
+  SES = { i, k: 0, deload: dl, items: it, sets: it.map(x => Array.from({ length: setsAt(x, i) }, () => ({ w: lw(x.w), r: EX[x.id].sec ? x.r[0] : x.r[1], ok: false }))) };
   closeScreen(true); renderPlayer();
 }
 function renderPlayer() {
@@ -214,7 +235,9 @@ function renderPlayer() {
    ${S.last[x.id] ? `<div class="lastt"><span>المرة الفاتتة</span><b class="num">${S.last[x.id].map(z => AR(z.w) + '×' + AR(z.r)).join('  ')}</b></div>` : `<div class="lastt"><span>أول مرة</span><b>ابدي خفيف وتعلّم الحركة</b></div>`}
    <div class="row between"><div><h2>${e.n}${e.star ? ' ⭐' : ''}</h2><p class="xs mut">${e.gym}</p></div><span class="pill g num">${AR(sets.length)} × ${rng(x.r)}${e.sec ? ' ث' : ''}</span></div>
    ${sets.map((s, j) => `<div class="set ${s.ok ? 'done' : ''}"><span class="i ${j === cur ? 'cur' : ''}">${j === cur ? '●' : AR(j + 1)}</span>${!e.w0 ? `<div class="pillin"><span>${e.sec ? 'وزن الجسم' : 'بدون وزن'}</span></div>` : `<label class="pillin"><input inputmode="decimal" data-w="${j}" value="${s.w}" aria-label="الوزن"><span>كغم</span></label>`}<label class="pillin"><input inputmode="numeric" data-r="${j}" value="${s.r}" aria-label="العدّات"><span>${e.sec ? 'ث' : '×'}</span></label><button class="ok" data-ok="${j}" aria-label="خلصت السِت">${I.check}</button></div>`).join('')}
-   <p class="xs mut" style="text-align:center">بعد كل سِت اضغط ✓ ويبدي وكت الراحة (${AR(x.rest)} ثانية)</p>
+   ${SES.k === 0 && x.w ? `<div class="warm">🔥 <b>سِتات إحماء قبل:</b> <span class="num">${Math.round(x.w * .5 * 2) / 2}</span> كغم × 10، وبعدها <span class="num">${Math.round(x.w * .75 * 2) / 2}</span> كغم × 5. ما تنحسب.</div>` : ''}
+   ${SES.deload ? '<div class="warm">🌿 أسبوع تخفيف: نفس الحركة بوزن أخف 15٪. جسمك يرتاح ويرجع أقوى.</div>' : ''}
+   <p class="xs mut" style="text-align:center">خلي <b>1-2 عدّة بالخزان</b>: آخر عدّة صعبة بس حركتها صحيحة. ونزول الوزن على مهلك 3 ثواني. بعد كل سِت اضغط ✓ ويبدي وكت الراحة (${x.rest} ثانية)</p>
    ${SES.k < n - 1 ? `<button class="btn wide" data-pnext>التمرين الجاي</button>` : `<button class="btn wide" data-pfinish>خلصت اليوم 🎉</button>`}
    <div style="height:8px"></div>
   </div>
@@ -443,6 +466,7 @@ function vBan() {
   } else if (banView === 'ibs') {
     body = `<div class="danger mid"><span>🫃</span><div><b>هاي تنفخ القولون العصبي</b><p class="xs">مو حرام، بس قللها حتى بطنك يرتاح. وجرّب كل وحدة لحالها، لأن كل جسم يختلف.</p></div></div>
     <div class="col">${IBS_BAN.map(x => `<div class="irow"><span class="pimg"><img src="img/${x.img}.webp" alt="" loading="lazy"></span><div class="grow col" style="gap:4px"><b>${x.n}</b><span class="xs mut">${x.why}</span><span class="xs alt">↩ بداله: ${x.alt}</span></div></div>`).join('')}</div>
+    <h2 style="color:#34c759">✓ هاي تريّح بطنك</h2><div class="bgrid">${IBS_GOOD.map(x => `<div class="bcard good"><span class="pimg"><img src="img/${x.img}.webp" alt="" loading="lazy"></span><b>${x.n}</b><span class="xs mut">${x.why}</span></div>`).join('')}</div>
     <div class="card"><h2>عادات تريّح بطنك</h2><div class="good sm col">${IBS.tips.map(t => `<p>${t}</p>`).join('')}</div></div>`;
   } else {
     body = `<div class="card"><h2>اقرا المكونات بثواني</h2><p class="sm mut">بالغلاف دوّر على كلمة <b class="fi" style="display:inline">Ainesosat</b> (يعني المكونات). إذا لگيت وحدة من هاي الكلمات، رجّع المنتج.</p></div>
