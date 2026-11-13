@@ -16,7 +16,7 @@
       timer:'Ajastin',stop:'Pysäytä',ready:'Valmis!',
       newbtn:'Lisää uusi resepti kuvasta',newTitle:'Uusi resepti',newHint:'Ota kuva reseptipaperista. Jos resepti on usealla sivulla, lisää kaikki sivut. Resepti ilmestyy sovellukseen noin tunnin sisällä, suomeksi ja englanniksi.',
       newName:'Reseptin nimi (vapaaehtoinen)',newPick:'Ota kuva tai valitse',newSend:'Lähetä',newSending:'Lähetetään…',newOk:'Lähetetty! Resepti lisätään noin tunnin sisällä.',
-      newErr:'Lähetys ei onnistunut. Tarkista netti ja yritä uudelleen.',newOff:'Kuvien lähetys ei ole vielä käytössä.',newPages:'sivua',newRemove:'Poista kuva',isNew:'uusi',cats:'Kategoriat',allAZ:'Kaikki reseptit A–Ö',allCats:'Kaikki kategoriat'},
+      newErr:'Lähetys ei onnistunut. Tarkista netti ja yritä uudelleen.',newOff:'Kuvien lähetys ei ole vielä käytössä.',newPages:'sivua',newRemove:'Poista kuva',isNew:'uusi',cook:'Aloita kokkaus',cookStep:'Vaihe',cookPrev:'Edellinen',cookNext:'Seuraava',cookDone:'Valmis',cookHere:'Tässä vaiheessa',cookClose:'Sulje kokkaustila',size:'Tekstin koko',share:'Jaa resepti',copied:'Resepti kopioitu',notes:'Omat muistiinpanot',notesHint:'Näkyy vain tässä puhelimessa.',more:'Lisää',cats:'Kategoriat',allAZ:'Kaikki reseptit A–Ö',allCats:'Kaikki kategoriat'},
     en:{title:'Recipes',search:'Search: pesto, butter, chanterelle…',all:'All',recipes:'recipes',results:'Results',none:'No recipes for',
       batch:'Batch',auto:'Amounts update automatically',ingredients:'Ingredients',method:'Method',back:'Back',
       nomethod:'No method is written on the paper.',original:'Show original paper',minus:'Less',plus:'More',vegan:'vegan',parts:'parts',
@@ -33,7 +33,7 @@
       timer:'Timer',stop:'Stop',ready:'Ready!',
       newbtn:'Add a new recipe from a photo',newTitle:'New recipe',newHint:'Take a photo of the recipe paper. If it has several pages, add all of them. The recipe appears in the app within about an hour, in Finnish and English.',
       newName:'Recipe name (optional)',newPick:'Take or choose a photo',newSend:'Send',newSending:'Sending…',newOk:'Sent! The recipe will be added within about an hour.',
-      newErr:'Sending failed. Check the connection and try again.',newOff:'Photo upload is not switched on yet.',newPages:'pages',newRemove:'Remove photo',isNew:'new',cats:'Categories',allAZ:'All recipes A–Z',allCats:'All categories'}
+      newErr:'Sending failed. Check the connection and try again.',newOff:'Photo upload is not switched on yet.',newPages:'pages',newRemove:'Remove photo',isNew:'new',cook:'Start cooking',cookStep:'Step',cookPrev:'Back',cookNext:'Next',cookDone:'Done',cookHere:'In this step',cookClose:'Close cooking mode',size:'Text size',share:'Share recipe',copied:'Recipe copied',notes:'My notes',notesHint:'Only visible on this phone.',more:'More',cats:'Categories',allAZ:'All recipes A–Z',allCats:'All categories'}
   };
   var CATS = {
     kastike:['Kastikkeet ja dipit','Sauces & dips'], majo:['Majoneesit','Mayos'], oljy:['Öljyt ja vinegretit','Oils & dressings'],
@@ -43,7 +43,17 @@
   };
   var U = {g:['g','g'],kg:['kg','kg'],ml:['ml','ml'],cl:['cl','cl'],dl:['dl','dl'],l:['l','l'],tl:['tl','tsp'],rkl:['rkl','tbsp'],kpl:['kpl','pcs'],
     prk:['prk','tub'],pss:['pss','bag'],pnt:['nippu','bunch'],rss:['rasia','box'],tlk:['tlk','can'],levy:['levyä','sheets'],tuubi:['tuubia','tubes'],osa:['osa','part']};
+  var CICON = {
+    kastike:'M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z', majo:'M7 4h10M6 7h12v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z', oljy:'M10 2h4M10 2v4l-3 4v10a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V10l-3-4V2',
+    pesto:'M5 19c0-8 6-14 14-14 0 8-6 14-14 14zM5 19l8-8', voi:'M4 9l8-4 8 4-8 4zM4 9v6l8 4 8-4V9', liemi:'M4 10h16v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4zM2 10h20M9 6V4M15 6V4',
+    keitto:'M3 11h18a9 9 0 0 1-18 0zM8 7c0-1 1-1 1-2M12 7c0-1 1-1 1-2M16 7c0-1 1-1 1-2', pohja:'M4 14h16v4H4zM6 14V9h12v5', lisuke:'M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
+    mari:'M12 3c1 4 6 6 6 11a6 6 0 0 1-12 0c0-3 2-4 3-7 1 2 2 3 3 3 0-3-1-5 0-7z', sailyke:'M8 3h8v3H8zM6 6h12v13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2zM6 11h12', mauste:'M8 9h8l-1 11H9zM9 9l1-5h4l1 5', jalki:'M4 20h16M5 20v-7h14v7M8 13V9M12 13V9M16 13V9', az:'M4 6h16M4 12h16M4 18h16'
+  };
+  function cicon(k){ return '<span class="cico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+CICON[k]+'"></path></svg></span>'; }
   var ICON = {
+    aa:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19 8 6l5 13M4.8 14.5h6.4M14 19l3.5-9 3.5 9M15 16.5h5"></path></svg>',
+    play:'<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"></path></svg>',
+    share:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M8 7l4-4 4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"></path></svg>',
     back:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="m15 6-6 6 6 6"></path></svg>',
     star:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"></path></svg>',
     clock:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2.5 2M10 2h4"></path></svg>',
@@ -137,10 +147,10 @@
       if(rc2.length) html += '<h2 class="label">'+t.recent+'</h2><div class="strip">'+rc2.map(function(r){
         return '<button type="button" class="mini" data-open="'+r.id+'"><b>'+esc(r.n[i])+'</b><span>'+esc(CATS[r.c][i])+'</span></button>'; }).join('')+'</div>';
       html += '<h2 class="label">'+t.cats+'</h2><div class="cats">'+
-        '<button type="button" class="cat az" data-cat="az"><b>'+t.allAZ+'</b><span>'+R.length+' '+t.recipes+'</span></button>'+
+        '<button type="button" class="cat az" data-cat="az">'+cicon('az')+'<b>'+t.allAZ+'</b><span>'+R.length+' '+t.recipes+'</span></button>'+
         Object.keys(CATS).map(function(k){
           var n = R.filter(function(r){ return r.c===k; }).length; if(!n) return '';
-          return '<button type="button" class="cat" data-cat="'+k+'"><b>'+esc(CATS[k][i])+'</b><span>'+n+' '+t.recipes+'</span></button>';
+          return '<button type="button" class="cat" data-cat="'+k+'">'+cicon(k)+'<b>'+esc(CATS[k][i])+'</b><span>'+n+' '+t.recipes+'</span></button>';
         }).join('')+'</div>';
     } else {
       var list = R.filter(function(r){ return cat==='az' || r.c===cat; }).sort(sortN);
@@ -169,7 +179,7 @@
     var nIng = 0, nStep = 0; r.p.forEach(function(p){ nIng += p.i.length; nStep += (p.s||[]).length; });
     var html =
       '<div class="top"><button type="button" class="back" id="back">'+ICON.back+'<span>'+t.back+'</span></button>'+
-      '<div class="tools"><button type="button" class="icon" id="favbtn" aria-pressed="'+isFav+'" aria-label="'+(isFav?t.unfav:t.fav)+'">'+ICON.star+'</button>'+LANGS+'</div></div>'+
+      '<div class="tools"><button type="button" class="icon" id="sizebtn" aria-label="'+t.size+'">'+ICON.aa+'</button><button type="button" class="icon" id="favbtn" aria-pressed="'+isFav+'" aria-label="'+(isFav?t.unfav:t.fav)+'">'+ICON.star+'</button>'+LANGS+'</div></div>'+
       '<header class="rhead"><div class="eyebrow">'+esc(CATS[r.c][i])+(r.v?' · '+t.vegan:'')+(r.p.length>1?' · '+r.p.length+' '+t.parts:'')+'</div>'+
       '<h1 class="title">'+esc(r.n[i])+'</h1><div class="other">'+esc(r.n[1-i])+'</div></header>'+
       (r.note ? '<p class="callout">'+esc(r.note[i])+'</p>' : '')+
@@ -188,9 +198,10 @@
             (x[0]===null ? '' : '<button type="button" class="qty" data-have="'+pi+'-'+n+'" aria-label="'+esc(t.have+': '+x[2+i])+'">'+esc(fmt(x[0],x[1]))+'</button>')+'</div>'; }).join('')+'</div>';
       });
     } else {
-      var any = false;
+      var any = r.p.some(function(p){ return p.s && p.s.length; });
+      if(any) html += '<button type="button" class="cookbtn" id="cookbtn">'+ICON.play+' '+t.cook+'</button>';
       r.p.forEach(function(p, pi){
-        if(!(p.s && p.s.length)) return; any = true;
+        if(!(p.s && p.s.length)) return;
         html += (p.t ? '<h2 class="part">'+esc(p.t[i])+'</h2>' : '')+(p.gen?'<p class="gen">'+t.gen+'</p>':'')+'<ol class="steps">'+p.s.map(function(s,n){
           var sec = findTime(s[i]) || findTime(s[0]), k = r.id+'s'+pi+'-'+n;
           return '<li class="'+(stepDone[k]?'ok':'')+'"><button type="button" class="num" data-sdone="'+k+'" aria-pressed="'+(!!stepDone[k])+'" aria-label="'+(n+1)+'">'+(stepDone[k]?'✓':(n+1))+'</button><div class="txt">'+esc(s[i])+
@@ -199,6 +210,10 @@
       });
       if(!any) html += '<p class="nomethod">'+t.nomethod+'</p>';
     }
+    var note = notesAll[r.id] || '';
+    html += '<h2 class="label">'+t.more+'</h2><div class="card more">'+
+      '<label class="field" for="noteta"><span>'+t.notes+'</span><textarea id="noteta" rows="3" placeholder="'+t.notesHint+'">'+esc(note)+'</textarea></label>'+
+      '<button type="button" class="sharebtn" id="sharebtn">'+ICON.share+' '+t.share+'</button></div>';
     html += '<a class="orig" href="https://drive.google.com/file/d/'+r.f+'/view" target="_blank" rel="noopener">'+t.original+' ↗</a>';
     $('recipe').innerHTML = html;
   }
@@ -291,6 +306,12 @@
     if(b.id==='calcuse'){ var v=calcVal(); if(v>0 && cur){ mult=v; syncPrep(); closeSheets(); render(); } return; }
     if(b.id==='haveok'){ applyHave(); return; }
     if(b.id==='newbtn'){ openNew(); return; }
+    if(b.id==='sizebtn'){ zoomIdx = (zoomIdx+1)%ZOOMS.length; save('zoom', zoomIdx); applyZoom(); return; }
+    if(b.id==='cookbtn'){ openCook(0); return; }
+    if(b.id==='cookprev'){ openCook(cookAt-1); return; }
+    if(b.id==='cooknext'){ if(cookAt>=cookSteps.length-1) closeCook(); else openCook(cookAt+1); return; }
+    if(b.id==='cookclose'){ closeCook(); return; }
+    if(b.id==='sharebtn'){ shareRecipe(); return; }
     if(b.id==='newsend'){ sendNew(); return; }
     if(b.dataset.rmimg){ shots.splice(+b.dataset.rmimg,1); drawShots(); return; }
   });
@@ -451,5 +472,63 @@
   document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible') wake(); });
 
   document.documentElement.lang = lang;
+  /* ---------- Tekstin koko ---------- */
+  var ZOOMS = [1, 1.15, 1.3], zoomIdx = load('zoom', 0); if(!(zoomIdx>=0 && zoomIdx<3)) zoomIdx = 0;
+  function applyZoom(){ document.documentElement.style.setProperty('--z', ZOOMS[zoomIdx]); }
+  applyZoom();
+
+  /* ---------- Omat muistiinpanot ---------- */
+  var notesAll = load('notes', {});
+  document.addEventListener('input', function(e){
+    if(e.target.id==='noteta' && cur){ var v = e.target.value; if(v) notesAll[cur.id] = v; else delete notesAll[cur.id]; save('notes', notesAll); }
+  });
+
+  /* ---------- Jaa resepti tekstinä ---------- */
+  function recipeText(){
+    var r = cur, i = L(), t = T[lang], out = [r.n[i]+(mult!==1 ? ' ('+num(mult)+'×)' : ''), ''];
+    r.p.forEach(function(p){
+      if(p.t) out.push('— '+p.t[i]+' —');
+      p.i.forEach(function(x){ out.push('• '+(x[0]===null ? '' : fmt(x[0],x[1])+' ')+x[2+i]); });
+      if(p.s && p.s.length){ out.push(''); p.s.forEach(function(s,n){ out.push((n+1)+'. '+s[i]); }); }
+      out.push('');
+    });
+    return out.join('\n').trim();
+  }
+  function shareRecipe(){
+    var text = recipeText(), t = T[lang];
+    if(navigator.share){ navigator.share({title: cur.n[L()], text: text}).catch(function(){}); return; }
+    try{ navigator.clipboard.writeText(text).then(function(){ $('sharebtn').textContent = '✓ '+t.copied; }); }catch(e){}
+  }
+
+  /* ---------- Kokkaustila: vaihe kerrallaan ---------- */
+  var cookSteps = [], cookAt = 0;
+  function stepIngs(part, text){
+    var tx = norm(text);
+    return part.i.filter(function(x){
+      return [x[2], x[3]].some(function(nm){ var w = norm(nm).split(/[ ,(]/)[0]; return w.length>2 && tx.indexOf(w.slice(0, Math.max(4, w.length-2)))>-1; });
+    });
+  }
+  function openCook(n){
+    var r = cur; cookSteps = [];
+    r.p.forEach(function(p, pi){ (p.s||[]).forEach(function(s, si){ cookSteps.push({p:p, pi:pi, si:si, s:s}); }); });
+    if(!cookSteps.length) return;
+    cookAt = Math.max(0, Math.min(n, cookSteps.length-1));
+    var t = T[lang], i = L(), c = cookSteps[cookAt], sec = findTime(c.s[i]) || findTime(c.s[0]);
+    var ings = stepIngs(c.p, c.s[0]+' '+c.s[1]);
+    var bar = cookSteps.map(function(_, k){ return '<i class="'+(k<=cookAt?'on':'')+'"></i>'; }).join('');
+    $('cook').innerHTML =
+      '<div class="ctop"><button type="button" class="x" id="cookclose" aria-label="'+t.cookClose+'">×</button><div class="cname">'+esc(r.n[i])+(mult!==1?' · '+num(mult)+'×':'')+'</div><span class="ccount">'+(cookAt+1)+' / '+cookSteps.length+'</span></div>'+
+      '<div class="cbar" aria-hidden="true">'+bar+'</div>'+
+      '<div class="cbody">'+(c.p.t ? '<div class="cpart">'+esc(c.p.t[i])+'</div>' : '')+
+      '<div class="cstep">'+t.cookStep+' '+(c.si+1)+'</div><p class="ctext">'+esc(c.s[i])+'</p>'+
+      (ings.length ? '<div class="chere"><div class="k">'+t.cookHere+'</div>'+ings.map(function(x){ return '<div class="crow"><span>'+esc(x[2+i])+'</span><b>'+esc(fmt(x[0],x[1]))+'</b></div>'; }).join('')+'</div>' : '')+
+      (sec ? '<button type="button" class="tbtn big" data-timer="'+sec+'" data-tname="'+esc(r.n[i]+' · '+(c.si+1))+'">'+ICON.clock+' '+t.timer+' '+clock(sec)+'</button>' : '')+
+      '</div><div class="cnav"><button type="button" id="cookprev"'+(cookAt===0?' disabled':'')+'>'+t.cookPrev+'</button><button type="button" id="cooknext" class="go">'+(cookAt===cookSteps.length-1 ? t.cookDone : t.cookNext)+'</button></div>';
+    $('cook').hidden = false; document.body.classList.add('cooking'); wake();
+  }
+  function closeCook(){ $('cook').hidden = true; document.body.classList.remove('cooking'); }
+  document.addEventListener('keydown', function(e){ if($('cook').hidden) return; if(e.key==='ArrowRight') openCook(cookAt+1); if(e.key==='ArrowLeft') openCook(cookAt-1); if(e.key==='Escape') closeCook(); });
+  window.addEventListener('hashchange', closeCook);
+
   route(); renderTimers();
 })();
