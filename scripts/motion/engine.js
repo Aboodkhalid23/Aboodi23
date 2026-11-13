@@ -35,6 +35,7 @@ const SERIES = {
   akhira: { acc: '#f0c46a', accL: '#7a2d52', tint: '#7a6ad0', ta: .08, deep: ['#16122e', '#05040f'], tr: ['flash', 'iris', 'arch'] },
   akhlaq: { acc: '#f4c56c', accL: '#a2412c', tint: '#ff9a7a', ta: .06, deep: ['#2a1420', '#0c0509'], tr: ['iris', 'arch', 'slide'] },
   dhikr: { acc: '#f1cd72', accL: '#2a6b4c', tint: '#9fe0a0', ta: .05, deep: ['#0d2a1c', '#03100a'], tr: ['arch', 'flash', 'iris'] },
+  learn: { acc: '#f2c45f', accL: '#1f6b62', tint: '#7fd8e6', ta: .05, deep: ['#0b2b2c', '#03100f'], tr: ['arch', 'iris', 'slide'] },
   stories: { acc: '#f2c25e', accL: '#a2412c', tint: '#ffb070', ta: .06, deep: ['#2a1a0e', '#0d0804'], tr: ['slide', 'arch', 'iris'] },
 };
 const SK = D.ser || SER_OF[D.label] || 'nawawi', SE = SERIES[SK] || SERIES.nawawi;
@@ -100,6 +101,7 @@ const POSE = {
   point: { tor: 3, la: [6, 8], ra: [95, 0], legs: 0, finger: 2 },
   dua: { tor: 0, la: [30, 115], ra: [42, 112], legs: 0, palm: 2 },
   duasit: { tor: 0, la: [30, 115], ra: [42, 112], legs: 2, palm: 2 },
+  takbir: { tor: 0, la: [40, 118], ra: [48, 112], legs: 0, palm: 2 },
   pray: { tor: 0, la: [22, 118], ra: [28, 112], legs: 0 },
   ruku: { tor: 86, la: [-70, 0], ra: [-62, 0], legs: 0 },
   sujud: { tor: 108, la: [-40, 34], ra: [-32, 34], legs: 2, low: 1, head: -8 },
@@ -494,6 +496,12 @@ function palmSil(px, py, s, col) { x.save(); x.translate(px, py); x.scale(s, s);
 function fog(t, y, col, a, sp = 8) { x.save(); for (let i = 0; i < 4; i++) { const fx = ((t * sp * (1 + i * .3) + i * 260) % (W + 600)) - 300; const g = x.createRadialGradient(fx, y + i * 30, 0, fx, y + i * 30, 300); g.addColorStop(0, rgba(col, a)); g.addColorStop(1, rgba(col, 0)); x.fillStyle = g; x.save(); x.translate(0, y + i * 30); x.scale(1, .25); x.translate(0, -(y + i * 30)); x.fillRect(fx - 300, y + i * 30 - 300, 600, 600); x.restore(); } x.restore(); }
 
 const BG = {
+  lesson: (t) => {
+    L(.04, 'les0', () => { const g = x.createRadialGradient(360, 760, 40, 360, 700, 900); g.addColorStop(0, '#15504c'); g.addColorStop(.55, '#0b2e2d'); g.addColorStop(1, '#041312'); x.fillStyle = g; x.fillRect(-M, 0, W + 2 * M, H); x.strokeStyle = 'rgba(233,189,95,.06)'; x.lineWidth = 1.4; for (let r = -1; r < 13; r++) for (let c = -1; c < 8; c++) { const p = new Path2D(); starPoly(p, c * 110 + (r % 2) * 55, r * 110, 42, 8, 3); x.stroke(p); } });
+    L(.2, 'les1', () => { for (const cx of [60, 660]) { arch(cx, H, 170, 760, 'rgba(255,255,255,.035)'); arch(cx, H, 130, 720, 'rgba(0,0,0,.18)'); } });
+    A(.3, () => { lantern(110, 470, .7, t); lantern(610, 470, .7, t + 1); });
+    A(.6, () => motes(t, 18, '#bff0f5', 300, 1200, 7, 1.8));
+  },
   day: (t) => {
     L(.04, 'day0', () => { x.fillStyle = vgrad([[0, '#f6e5c6'], [.45, '#fae0b4'], [.8, '#f6cf98'], [1, '#efc086']]); x.fillRect(-M, 0, W + 2 * M, H); glow(540, 640, 420, '#fff2c8', .8); });
     if (!SKYP) A(.04, () => PROPS.sun({ x: 545, y: 655, s: .85 }, t));
@@ -942,6 +950,198 @@ function finish(t) {
 const GRAIN = [0, 1, 2].map(k => bake('grain' + k, () => { const id = x.createImageData(360, 640), d = id.data; for (let i = 0; i < d.length; i += 4) { const v = rnd(i * .37 + k * 9973 + 1); d[i] = d[i + 1] = d[i + 2] = v > .5 ? 255 : 0; d[i + 3] = Math.abs(v - .5) * 34; } x.putImageData(id, 0, 0); }, 360, 640, 0, 0));
 function grain(t) { x.save(); x.globalAlpha = .8; x.drawImage(GRAIN[Math.floor(t * 12) % 3], 0, 0, W, H); x.restore(); }
 
+// ===== دروس التعليم (الوضوء، الغسل، الصلاة، الأذكار): لوحة شرح لكل خطوة =====
+// D.lesson = {steps:[{t0,t1,art,x3,head}]}. الرسوم بلا ملامح وجه، والجسم بأيقونة رمزية محتشمة (مثل لوحات الإرشاد)
+const LS_ = D.lesson || null;
+const SKN = '#e3b48e', SKD = '#bf8a64', WA = '#8fdcf5', WD = '#3fa9d6', GOLD = '#f2c45f';
+const tri = p => 1 - Math.abs(((p % 1) + 1) % 1 * 2 - 1);   // 0→1→0
+function water(x0, y0, x1, y1, t, w = 14, a = 1) { // عمود ماي نازل بلمعة متحركة
+  x.save(); x.globalAlpha *= a; x.lineCap = 'round';
+  const wob = k => Math.sin(t * 9 + k * 7) * 3;
+  x.beginPath(); x.moveTo(x0, y0); for (let k = 1; k <= 12; k++) { const q = k / 12; x.lineTo(lerp(x0, x1, q) + wob(q) * q, lerp(y0, y1, q)); }
+  const g = x.createLinearGradient(x0 - w, 0, x0 + w, 0); g.addColorStop(0, rgba(WD, .55)); g.addColorStop(.45, rgba(WA, .95)); g.addColorStop(1, rgba(WD, .55));
+  x.strokeStyle = g; x.lineWidth = w; x.stroke();
+  x.setLineDash([10, 26]); x.lineDashOffset = -t * 260; x.strokeStyle = 'rgba(255,255,255,.75)'; x.lineWidth = w * .28; x.stroke(); x.setLineDash([]);
+  x.restore();
+}
+function drops(cx, cy, t, n = 10, spread = 60, fall = 160, seed = 1) { // قطرات تتساقط
+  for (let i = 0; i < n; i++) {
+    const q = ((t * (.9 + rnd(i + seed) * .6)) + rnd(i * 3 + seed)) % 1, dx = (rnd(i * 7 + seed) - .5) * spread;
+    x.save(); x.globalAlpha *= (1 - q) * .9; x.translate(cx + dx, cy + q * q * fall);
+    x.beginPath(); x.moveTo(0, -9); x.quadraticCurveTo(6, 0, 0, 5); x.quadraticCurveTo(-6, 0, 0, -9); x.fillStyle = WA; x.fill();
+    circ(-1.5, -1, 1.6, 'rgba(255,255,255,.9)'); x.restore();
+  }
+}
+function ripple(cx, cy, t, rx = 90) { for (let i = 0; i < 3; i++) { const q = (t * .8 + i / 3) % 1; x.save(); x.globalAlpha *= (1 - q) * .7; x.strokeStyle = WA; x.lineWidth = 3; x.beginPath(); x.ellipse(cx, cy, rx * (.3 + q), rx * (.3 + q) * .22, 0, 0, TAU); x.stroke(); x.restore(); } }
+function sheen(path, t, a = 1, dir = 1) { // لمعة ماي على شكل (path = Path2D): طبقة ماي شفافة + خطوط لمعة نازلة
+  x.save(); x.clip(path); x.globalAlpha *= a;
+  x.fillStyle = rgba(WD, .16); x.fillRect(-400, -400, 800, 800);
+  for (let i = 0; i < 5; i++) { const y = ((t * 110 * dir + i * 90) % 450) - 225; const g = x.createLinearGradient(0, y - 14, 0, y + 14); g.addColorStop(0, 'rgba(160,230,250,0)'); g.addColorStop(.5, 'rgba(190,240,255,.32)'); g.addColorStop(1, 'rgba(160,230,250,0)'); x.fillStyle = g; x.fillRect(-400, y - 14, 800, 28); }
+  for (let i = 0; i < 9; i++) { const dx = (rnd(i * 5) - .5) * 300, dy = (((t * 60 + rnd(i) * 400) % 400) - 200); circ(dx, dy, 2 + rnd(i + 2) * 2.5, 'rgba(225,250,255,.7)'); }
+  x.restore();
+}
+function label(txt, px, py, a = 1) { // شارة تسمية صغيرة
+  x.save(); x.globalAlpha *= a; x.font = AR ? '700 26px UI' : '700 24px Inter'; x.direction = AR ? 'rtl' : 'ltr';
+  const w = x.measureText(txt).width + 34; rr(px - w / 2, py - 22, w, 44, 22, 'rgba(10,30,28,.82)');
+  x.strokeStyle = rgba(GOLD, .8); x.lineWidth = 2; x.beginPath(); x.roundRect(px - w / 2, py - 22, w, 44, 22); x.stroke();
+  x.fillStyle = GOLD; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(txt, px, py + 1); x.restore();
+}
+function marker(px, py, t, a = 1) { x.save(); x.globalAlpha *= a; for (let i = 0; i < 2; i++) { const q = (t * .9 + i * .5) % 1; x.globalAlpha = a * (1 - q); x.strokeStyle = GOLD; x.lineWidth = 3; x.beginPath(); x.arc(px, py, 10 + q * 30, 0, TAU); x.stroke(); } x.globalAlpha = a; circ(px, py, 8, GOLD); x.restore(); }
+function palmPath(flip = 1) { // كف مفتوح، الرسغ عند (0,0) والأصابع لفوگ
+  const p = new Path2D(); p.roundRect(-38, -92, 76, 92, [18, 18, 26, 26]);
+  [[-29, 66], [-10, 78], [9, 74], [27, 60]].forEach(([fx, h]) => p.roundRect(fx - 9, -92 - h + 14, 18, h, 9));
+  p.ellipse(-44 * flip, -46, 13, 34, -.5 * flip, 0, TAU); return p;
+}
+function drawPalm(px, py, s, rot, flip, a = 1, wet = 0, t = 0, cuff = 1) {
+  x.save(); x.translate(px, py); x.rotate(rot); x.scale(s * flip, s); x.globalAlpha *= a;
+  const p = palmPath(1); x.fillStyle = hgrad([[0, SKD], [.5, SKN], [1, mix(SKN, '#ffffff', .15)]], -50, 50); x.fill(p);
+  x.strokeStyle = rgba('#7a4f34', .35); x.lineWidth = 2; x.stroke(p);
+  x.strokeStyle = rgba('#8a5a3c', .3); x.beginPath(); x.moveTo(-26, -40); x.quadraticCurveTo(0, -30, 24, -48); x.stroke();
+  if (cuff) { rr(-40, -6, 80, 40, 14, '#f1ece1'); rr(-40, -6, 80, 8, 4, '#d9d1c2'); }   // كُم
+  if (wet) sheen(p, t, wet);
+  x.restore();
+}
+function profilePath() { // رأس جانبي يطالع يمين، بلا ملامح
+  const p = new Path2D(), pts = [[-104, -30], [-92, -104], [-30, -150], [46, -138], [86, -96], [96, -52], [120, -24], [98, -10], [104, 10], [96, 40], [70, 70], [34, 84], [36, 150], [-60, 150], [-60, 80], [-100, 30]];
+  p.moveTo((pts[0][0] + pts[1][0]) / 2, (pts[0][1] + pts[1][1]) / 2);
+  for (let i = 1; i <= pts.length; i++) { const a = pts[i % pts.length], b = pts[(i + 1) % pts.length]; p.quadraticCurveTo(a[0], a[1], (a[0] + b[0]) / 2, (a[1] + b[1]) / 2); }
+  p.closePath(); return p;
+}
+function profileHead(wetHair = 0, t = 0, hairWet = null) {
+  const p = profilePath();
+  x.fillStyle = hgrad([[0, SKD], [.6, SKN], [1, mix(SKN, '#ffffff', .12)]], -110, 120); x.fill(p);
+  x.save(); x.clip(p); x.beginPath(); x.moveTo(-140, 60); x.quadraticCurveTo(-110, -60, -40, -84); x.quadraticCurveTo(30, -100, 84, -92); x.lineTo(120, -220); x.lineTo(-160, -220); x.closePath();
+  x.fillStyle = '#2b201a'; x.fill(); if (hairWet) hairWet(); x.restore();
+  ell(-18, -14, 15, 24, SKD); ell(-18, -14, 8, 15, mix(SKD, '#000000', .15));
+  rr(-64, 120, 104, 40, 16, '#f1ece1');
+  return p;
+}
+function frontHead() {
+  const p = new Path2D(); p.ellipse(0, -10, 118, 150, 0, 0, TAU);
+  rr(-48, 110, 96, 60, 10, SKD); rr(-110, 150, 220, 60, 28, '#f1ece1');
+  ell(-120, -6, 18, 34, SKD); ell(120, -6, 18, 34, SKD);
+  x.fillStyle = vgrad([[0, mix(SKN, '#ffffff', .1)], [1, SKD]], -160, 140); x.fill(p);
+  x.save(); x.clip(p); x.beginPath(); x.moveTo(-130, -40); x.quadraticCurveTo(-120, -112, -40, -122); x.quadraticCurveTo(0, -112, 40, -122); x.quadraticCurveTo(120, -112, 130, -40); x.lineTo(130, -200); x.lineTo(-130, -200); x.closePath(); x.fillStyle = '#2b201a'; x.fill(); x.restore();
+  return p;
+}
+// أيقونة جسم رمزية (مثل لوحات الإرشاد) من الگدّام
+const PIC = (() => {
+  const head = new Path2D(); head.arc(0, -232, 44, 0, TAU);
+  const body = new Path2D(); body.roundRect(-64, -178, 128, 190, [34, 34, 18, 18]);
+  const armL = new Path2D(); armL.roundRect(-100, -170, 30, 160, 15); const armR = new Path2D(); armR.roundRect(70, -170, 30, 160, 15);
+  const legL = new Path2D(); legL.roundRect(-56, 4, 46, 190, 18); const legR = new Path2D(); legR.roundRect(10, 4, 46, 190, 18);
+  const handL = new Path2D(); handL.arc(-85, 0, 17, 0, TAU); const handR = new Path2D(); handR.arc(85, 0, 17, 0, TAU);
+  const footL = new Path2D(); footL.roundRect(-62, 176, 54, 26, 12); const footR = new Path2D(); footR.roundRect(8, 176, 54, 26, 12);
+  const all = new Path2D(); [head, body, armL, armR, legL, legR, handL, handR, footL, footR].forEach(q => all.addPath(q));
+  const side = s => { const q = new Path2D(); q.rect(s < 0 ? -140 : 0, -300, 140, 520); return q; };
+  return { head, body, arms: (() => { const q = new Path2D(); q.addPath(armL); q.addPath(armR); return q; })(), hands: (() => { const q = new Path2D(); q.addPath(handL); q.addPath(handR); return q; })(), feet: (() => { const q = new Path2D(); q.addPath(footL); q.addPath(footR); return q; })(), all, side };
+})();
+function picto(hl, t) { // hl = {part: قوة اللمعة}
+  x.fillStyle = vgrad([[0, '#efe3c8'], [1, '#cdb994']], -280, 210); x.fill(PIC.all);
+  x.strokeStyle = 'rgba(80,60,30,.25)'; x.lineWidth = 2; x.stroke(PIC.all);
+  for (const k in hl) { const a = hl[k]; if (a <= 0) continue;
+    if (k === 'R' || k === 'L') { x.save(); x.clip(PIC.side(k === 'R' ? -1 : 1)); x.save(); x.globalCompositeOperation = 'lighter'; glow(k === 'R' ? -60 : 60, -40, 200, WA, .25 * a); x.restore(); sheen(PIC.all, t, a); x.restore(); }
+    else if (k === 'face') { const q = new Path2D(); q.arc(0, -226, 34, 0, TAU); sheen(q, t, a); }
+    else if (PIC[k]) sheen(PIC[k], t, a);
+  }
+}
+function showerHead(t, on = 1) {
+  x.save(); rr(-10, -360, 20, 50, 6, '#9aa7ad'); x.beginPath(); x.moveTo(-70, -300); x.quadraticCurveTo(0, -340, 70, -300); x.lineTo(60, -290); x.lineTo(-60, -290); x.closePath(); x.fillStyle = hgrad([[0, '#7f8c93'], [.5, '#dfe7ea'], [1, '#7f8c93']], -70, 70); x.fill();
+  if (on > 0) { x.globalAlpha *= on; x.strokeStyle = rgba(WA, .75); x.lineWidth = 3; x.lineCap = 'round';
+    for (let i = 0; i < 26; i++) { const sx = -60 + rnd(i) * 120, sp = .7 + rnd(i + 4) * .5; const y = ((t * 520 * sp + rnd(i + 9) * 560) % 560) - 290, dx = sx * (1 + (y + 290) / 300); x.beginPath(); x.moveTo(dx, y); x.lineTo(dx * 1.02, y + 26); x.stroke(); } }
+  x.restore();
+}
+function jugPour(px, py, t, pour = 1, s = .95) { // إبريق يميل ويصب
+  x.save(); x.translate(px, py); x.rotate(-.9 * pour); PROPS.jug({ x: 0, y: 0, s }, t); x.restore();
+}
+const ART = {
+  heart: (k, t) => { for (let i = 0; i < 3; i++) { const q = (t * .5 + i / 3) % 1; x.save(); x.globalAlpha = (1 - q) * .55; x.strokeStyle = GOLD; x.lineWidth = 3; x.beginPath(); x.arc(0, -10, 80 + q * 160, 0, TAU); x.stroke(); x.restore(); }
+    x.save(); x.globalCompositeOperation = 'lighter'; glow(0, -10, 220, '#ff8a7a', .3); x.restore(); const b = 1 + Math.sin(t * 5) * .04; heartShape(0, 20, 5.4 * b, '#d9534f'); x.globalAlpha *= .45; heartShape(-26, -10, 1.4 * b, '#ffffff'); },
+  bism: (k, t) => { x.save(); x.font = '400 112px Amiri'; x.direction = 'rtl'; x.textAlign = 'center'; x.textBaseline = 'middle'; const s = 'بِسْمِ اللَّهِ', w = x.measureText(s).width;
+    const q = eOut(k / 1.6); x.save(); x.beginPath(); x.rect(w / 2 - (w + 40) * q, -140, w + 40, 280); x.clip(); x.shadowColor = rgba(GOLD, .8); x.shadowBlur = 30; x.fillStyle = hgrad([[0, '#c9962e'], [.5, '#ffe39a'], [1, '#c9962e']], -w / 2, w / 2); x.fillText(s, 0, 0); x.restore();
+    x.globalAlpha = .5 * q; x.strokeStyle = GOLD; x.lineWidth = 2; x.beginPath(); x.moveTo(-w / 2 * q, 90); x.lineTo(w / 2 * q, 90); x.stroke(); x.restore(); star8(0, 90, 7 * q, GOLD); },
+  hands: (k, t) => { // كفين يتفركن تحت الحنفية
+    rr(-230, -250, 200, 26, 12, hgrad([[0, '#8d999f'], [.5, '#dfe7ea'], [1, '#8d999f']], -230, -30)); rr(-44, -250, 38, 56, 12, '#b9c4c8'); rr(-34, -200, 18, 12, 4, '#7f8c93');
+    water(-25, -188, -10, 40, t, 16);
+    const r = Math.sin(k * 7) * 16;
+    drawPalm(-70, 120 + r, 1.2, .42, 1, 1, .8, t); drawPalm(56, 120 - r, 1.2, -.42, -1, 1, .8, t);
+    drops(-6, 140, t, 12, 120, 70, 3); ell(0, 220, 170, 26, 'rgba(120,200,230,.18)'); ripple(0, 220, t, 150); },
+  mouth: (k, t) => { x.save(); x.translate(-30, -20); profileHead(); const ph = (k / 2.2) % 1;
+    x.save(); x.translate(108, 2); x.rotate(t * 4); x.strokeStyle = WA; x.lineWidth = 5; x.lineCap = 'round'; x.beginPath(); x.arc(0, 0, 26, 0, 4.4); x.stroke(); x.beginPath(); x.moveTo(26 * Math.cos(4.4), 26 * Math.sin(4.4)); x.lineTo(26 * Math.cos(4.4) + 10, 26 * Math.sin(4.4) - 4); x.stroke(); x.restore();
+    const ny = -26, up = tri(ph); x.save(); x.globalAlpha = .9; x.strokeStyle = WA; x.lineWidth = 6; x.lineCap = 'round'; x.beginPath(); x.moveTo(190, ny + 30); x.lineTo(lerp(190, 132, up), lerp(ny + 30, ny + 4, up)); x.stroke(); x.restore();
+    drops(150, ny + 10, t, 6, 30, 120, 7);
+    drawPalm(180, 150, .95, -1.25, 1, 1, .7, t); x.restore(); },
+  face: (k, t) => { const p = frontHead(); sheen(p, t, .75);
+    const q = clamp(k / 1.4); x.save(); x.setLineDash([16, 12]); x.lineDashOffset = -t * 40; x.strokeStyle = GOLD; x.lineWidth = 5; const b = new Path2D(); b.moveTo(-122, -36); b.quadraticCurveTo(-118, -104, 0, -112); b.quadraticCurveTo(118, -104, 122, -36); b.quadraticCurveTo(120, 130, 0, 140); b.quadraticCurveTo(-120, 130, -122, -36);
+    x.globalAlpha = q; x.stroke(b); x.restore(); drops(0, 140, t, 8, 90, 120, 5);
+    label(AR ? 'من الأذن إلى الأذن' : 'Ear to ear', 0, -200, q); },
+  arms: (k, t) => { const arm = new Path2D(); x.translate(40, 0); arm.roundRect(-236, 30, 420, 64, 32); arm.roundRect(122, -120, 64, 210, 32);
+    x.fillStyle = vgrad([[0, mix(SKN, '#ffffff', .1)], [1, SKD]], -120, 94); x.fill(arm); rr(110, -250, 88, 150, 30, '#f1ece1'); rr(110, -112, 88, 12, 5, '#d9d1c2');
+    drawPalm(-226, 62, 1, -Math.PI / 2, 1, 1, 0, t, 0);
+    const sw = (k / 1.3) % 1, edge = lerp(-340, 200, eIO(sw)); const zone = new Path2D(); zone.rect(-360, -60, edge + 360, 200);
+    x.save(); x.clip(zone); sheen(arm, t, 1); x.save(); x.translate(-226, 62); x.rotate(-Math.PI / 2); sheen(palmPath(1), t, 1); x.restore(); x.restore();
+    water(-60, -230, -60, 30, t, 13); drops(-60, 100, t, 8, 80, 90, 2);
+    marker(154, 62, t); label(AR ? 'المرفق' : 'Elbow', 154, 170); },
+  head: (k, t) => { x.save(); x.translate(10, 10); const ph = tri(k / 2.6), hx = lerp(70, -100, eIO(ph)), hy = -150 + Math.sin(ph * Math.PI) * -18;
+    profileHead(0, t, () => { const g = x.createLinearGradient(70, 0, -110, 0); g.addColorStop(0, rgba(WA, .5)); g.addColorStop(1, rgba(WA, .05)); x.fillStyle = g; x.fillRect(Math.min(hx, 70), -220, Math.abs(70 - hx) + 30, 200); });
+    x.save(); x.globalCompositeOperation = 'lighter'; glow(-18, -14, 50, WA, .35 * tri(t * .8)); x.restore();
+    drawPalm(hx, hy - 10, 1, Math.PI / 2 + .05, -1, 1, .6, t); x.restore(); },
+  feet: (k, t) => { const leg = new Path2D(); leg.roundRect(-120, -220, 96, 260, 36); x.fillStyle = hgrad([[0, SKD], [.6, SKN], [1, mix(SKN, '#ffffff', .1)]], -120, -24); x.fill(leg);
+    rr(-130, -250, 116, 140, 26, '#f1ece1');
+    const foot = new Path2D(); foot.moveTo(-124, 10); foot.quadraticCurveTo(-130, 100, -96, 112); foot.lineTo(170, 116); foot.quadraticCurveTo(200, 100, 176, 76); foot.quadraticCurveTo(60, 50, -22, 20); foot.closePath();
+    x.fillStyle = vgrad([[0, SKN], [1, SKD]], 10, 116); x.fill(foot); [[176, 92], [150, 98], [126, 102], [104, 104], [84, 106]].forEach(([a, b], i) => ell(a, b, 9 - i, 7 - i * .5, mix(SKN, '#ffffff', .2)));
+    const sw = (k / 1.3) % 1, edge = lerp(260, -150, eIO(sw)); const zone = new Path2D(); zone.rect(edge, -40, 300, 200);
+    x.save(); x.clip(zone); sheen(foot, t, 1); sheen(leg, t, .9); x.restore();
+    jugPour(150, -120, t, .9); water(92, -150, 60, 60, t, 11); drops(60, 110, t, 8, 160, 40, 9);
+    marker(-70, 40, t); label(AR ? 'الكعبين' : 'Ankles', -205, -30); ell(30, 150, 210, 22, 'rgba(120,200,230,.16)'); ripple(30, 150, t, 180); },
+  dua: (k, t) => { x.save(); x.globalCompositeOperation = 'lighter'; godrays(0, -260, 10, 520, 1.1, '#fff3c8', .12, t, 50); glow(0, -60, 240, '#ffe2a0', .28); x.restore();
+    drawPalm(-62, 160, 1.25, -.18, 1, 1); drawPalm(62, 160, 1.25, .18, -1, 1);
+    for (let i = 0; i < 14; i++) { const q = (t * .25 + rnd(i)) % 1; x.save(); x.globalAlpha = Math.sin(q * Math.PI) * .8; twinkle(-120 + rnd(i + 3) * 240, 60 - q * 300, 8, '#fff2c8'); x.restore(); } },
+  // الغسل: أيقونة رمزية
+  shower: (k, t) => { showerHead(t); picto({ all: clamp(k / 2) }, t); },
+  wash: (k, t) => ART.hands(k, t),
+  wudu: (k, t) => { const seq = ['hands', 'face', 'arms', 'head', 'feet'], d = (LSC.t1 - LSC.t0) / seq.length, j = Math.min(seq.length - 1, Math.floor(k / d)); const hl = {}; seq.forEach((s, i) => hl[s] = i < j ? .35 : i === j ? .5 + .5 * tri(k * 1.5) : 0); picto(hl, t);
+    label((AR ? ['الكفّين', 'الوجه', 'اليدين', 'الرأس', 'القدمين'] : ['Hands', 'Face', 'Arms', 'Head', 'Feet'])[j], 0, 250); },
+  headg: (k, t) => { const n = (LSC.t1 - LSC.t0) / 3, j = Math.min(2, Math.floor(k / n)), ph = (k - j * n) / n; jugPour(70, -330, t, clamp(ph * 3) * (1 - clamp((ph - .8) * 5)), 1.1);
+    if (ph > .2 && ph < .85) water(22, -330, 0, -260, t, 14); picto({ head: clamp(k / n), face: clamp(k / n) * .6 }, t); drops(0, -190, t, 8, 70, 60, 4); },
+  sides: (k, t) => { const h = (LSC.t1 - LSC.t0) / 2, R2 = clamp(k / (h * .6)), L2 = clamp((k - h) / (h * .6)); showerHead(t, .6); picto({ R: R2, L: L2 }, t);
+    label(AR ? 'الأيمن' : 'Right', -100, 250, R2); label(AR ? 'الأيسر' : 'Left', 100, 250, L2); },
+};
+let LSC = null;
+function stepAt(t) { if (!LS_) return -1; let j = -1; LS_.steps.forEach((s, i) => { if (t >= s.t0 - .2) j = i; }); return j; }
+function lessonLayer(t) {
+  if (!LS_ || t < 2.2 || t > D.total - 3.0) return;
+  const j = stepAt(t); if (j < 0) return; const S = LS_.steps[j]; LSC = S; const k = t - S.t0;
+  const inA = eOut((k + .2) / .5), outA = 1 - eIn((t - (S.t1 - .35)) / .35), a = inA * (j === LS_.steps.length - 1 ? 1 : outA) * (1 - eIn((t - (D.total - 3.4)) / .4));
+  const art = ART[S.art];
+  if (art && S.card) { // لوحة الشرح
+    x.save(); x.globalAlpha = a; const cy = 830, sc = .78 + .22 * eOut((k + .2) / .7);
+    x.save(); x.translate(360, cy); x.scale(sc, sc);
+    const cp = new Path2D(); cp.roundRect(-300, -255, 600, 510, 46);
+    x.fillStyle = 'rgba(6,24,24,.55)'; x.fill(cp); x.save(); x.clip(cp); x.save(); x.globalCompositeOperation = 'lighter'; glow(0, -40, 380, '#3fb8c8', .16); x.restore();
+    x.strokeStyle = rgba(GOLD, .05); x.lineWidth = 1.2; for (let r = -3; r < 4; r++) for (let c = -3; c < 4; c++) { const p = new Path2D(); starPoly(p, c * 96 + (r % 2) * 48, r * 96, 34, 8, 3); x.stroke(p); }
+    x.scale(.92, .92); art(k, t); x.restore();
+    x.strokeStyle = rgba(GOLD, .5); x.lineWidth = 2.5; x.stroke(cp); x.restore(); x.restore();
+  }
+  // شارة الخطوة + عدّاد ×٣
+  x.save(); x.globalAlpha = a; const cyc = 540, n = LS_.steps.length;
+  const num = AR ? `الخطوة ${String(j + 1).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d])} من ${String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d])}` : `Step ${j + 1} of ${n}`;
+  const head = S.head ? (AR ? ' · ' : ' · ') + S.head : '';
+  x.font = AR ? '700 27px UI' : '700 24px Inter'; x.direction = AR ? 'rtl' : 'ltr'; const tw = Math.min(560, x.measureText(num + head).width) + 44 + (S.x3 ? 120 : 0);
+  rr(360 - tw / 2, cyc - 26, tw, 52, 26, 'rgba(8,26,26,.78)'); x.strokeStyle = rgba(GOLD, .6); x.lineWidth = 2; x.beginPath(); x.roundRect(360 - tw / 2, cyc - 26, tw, 52, 26); x.stroke();
+  x.fillStyle = GOLD; x.textBaseline = 'middle'; x.textAlign = 'center'; x.fillText(num + head, 360 + (S.x3 ? (AR ? 60 : -60) : 0), cyc + 1, 560);
+  if (S.x3) { const d = S.t1 - S.t0; for (let i = 0; i < 3; i++) { const on = eOut((k - d * (i + .15) / 3) / .35), px = AR ? 360 - tw / 2 + 34 + i * 34 : 360 + tw / 2 - 34 - (2 - i) * 34;
+      x.strokeStyle = WA; x.lineWidth = 2.5; x.beginPath(); x.arc(px, cyc, 11, 0, TAU); x.stroke(); if (on > 0) { x.save(); x.globalCompositeOperation = 'lighter'; glow(px, cyc, 26 * on, WA, .6 * on); x.restore(); circ(px, cyc, 8 * on, WA); } } }
+  x.restore();
+  // شريط الخطوات
+  const ra = eOut((t - 2.4) / .6) * (1 - eIn((t - (D.total - 3.4)) / .4)); if (ra <= 0) return;
+  x.save(); x.globalAlpha = ra; const y = 1140, gap = Math.min(52, 560 / Math.max(1, n - 1)), x0 = 360 - gap * (n - 1) / 2;
+  x.strokeStyle = 'rgba(255,255,255,.14)'; x.lineWidth = 3; x.beginPath(); x.moveTo(x0, y); x.lineTo(x0 + gap * (n - 1), y); x.stroke();
+  const pr = clamp(k / Math.max(.1, S.t1 - S.t0)), cur = j + pr; x.strokeStyle = GOLD; x.beginPath(); const xs = i => AR ? x0 + gap * (n - 1) - gap * i : x0 + gap * i; x.moveTo(xs(0), y); x.lineTo(xs(cur), y); x.stroke();
+  for (let i = 0; i < n; i++) { const on = i < j ? 1 : i === j ? 1 : 0, r = i === j ? 12 + Math.sin(t * 4) * 1.5 : 7; circ(xs(i), y, r, on ? GOLD : 'rgba(255,255,255,.22)'); if (i === j) { x.save(); x.globalCompositeOperation = 'lighter'; glow(xs(i), y, 34, GOLD, .5); x.restore(); } }
+  x.restore();
+}
+
 window.R = function (t) {
   x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over'; x.clearRect(0, 0, W, H);
   let i = 0; shots.forEach((s, k) => { if (t >= s.t) i = k; });
@@ -949,7 +1149,7 @@ window.R = function (t) {
   // فاتح/غامق للنص: يتبدل بنعومة ويا الانتقال
   const L1 = LIGHT[S.bg] ? 1 : 0, L0 = P ? (LIGHT[P.bg] ? 1 : 0) : L1;
   curLight = lerp(L0, L1, eIO((t - S.t) / TD));
-  drawShot(i, t); finish(t);
+  drawShot(i, t); finish(t); lessonLayer(t);
   header(t); drawText(t); footer(t); intro(t); outro(t); grain(t);
 };
 })();

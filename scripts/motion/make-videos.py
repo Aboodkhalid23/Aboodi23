@@ -123,6 +123,7 @@ def beat_times(beats, segs, times, lang):
 
 END = ["رواه|حديث حسن|رويناه", "related|bukhari|tirmidhi|ibn majah|hasan hadeeth|reported|daraqutnee|bayhaqi|nawawi says", "scroll", [], ["stand@360,1060*1.3", "lantern@170,700", "lantern@550,700"], ["sparkle@360,880"]]
 ISNAD = ["", "", "scroll", [], ["stand@360,1060*1.3", "lantern@170,700", "lantern@550,700"], ["sparkle@360,880"]]
+STEPS = HERE / "steps"
 CAT = json.loads((HERE / "catalog.json").read_text(encoding="utf-8"))
 AR_DIG = str.maketrans("0123456789", "٠١٢٣٤٥٦٧٨٩")
 
@@ -146,8 +147,29 @@ def fetch(url, path):
             if i == 4: raise
             __import__("time").sleep(3)
 
+# ===== دروس التعليم (links/salah/learn.js): كل خطوة بالحرف من مصدرها =====
+def learn():
+    t = (ROOT / "learn.js").read_text(encoding="utf-8")
+    return json.loads(re.search(r"window\.LEARN=(\{.*\});?\s*$", t, re.S).group(1))
+LES_SER = {"ar": "تعلّم دينك", "en": "Learn your religion"}
+X3 = {"wudu": {"hands", "mouth", "face", "arms", "feet"}, "ghusl": {"head"}}
+SALAH_POSE = {"qibla": "stand", "takbir": "takbir", "read": "pray", "ruku": "ruku", "rise": "stand", "sujud": "sujud", "sit": "kneel", "stand": "stand"}
+# مشاهد دروس الأذكار: لكل خطوة (الخلفية، الأشخاص، الأدوات)
+LES_SC = {
+    "wd": [("home", ["man@290:wash"], ["tap@430,1122*1.1", "lantern@600,620"])] + [("mosque", ["man@360:dua"], ["rug@360,1124"])] * 3,
+    "ms": [("dawn", ["man@180:stand"], ["mosque@470,1110*.85"])] * 5 + [("day", ["man@100>400:walk"], ["mosque@560,1110*.7"]), ("mosque", ["man@360:stand"], ["rug@360,1124"]), ("dawn", ["man@420>650:walk"], ["mosque@200,1110*.8"])],
+    "hm": [("night", ["man@380>620:walk"], ["house@200,1120*.9"])] * 2 + [("home", ["man@360:stand"], []), ("home", ["man@280:stand"], ["door@500,1120*.75"]), ("home", ["man@480>220:walk"], ["door@560,1120*.75"])],
+    "fd": [("home", ["man@250:sit"], ["plate@430,1100*1.1"])] * 2 + [("home", ["man@250:duasit"], ["plate@430,1100*1.1"])] * 2,
+    "tr": [("desert", ["man@200:dua"], ["camel@470,1120"]), ("desert", ["man@120>380:walk"], ["camel@560,1120*.9", "palm@60,1110"])],
+    "is": [("night", ["man@360:duasit"], ["rug@360,1124", "lantern@170,700", "lantern@550,700"])],
+}
+
 def item(key):
     """يرجع كل شي عن المقطع: النص، المصدر، الصوت"""
+    if key.startswith("l-"):
+        k = key[2:]; Lr = learn(); mz = "sunni" if k in Lr.get("sunni", {}) else "all"; d = Lr[mz][k]
+        return {"key": key, "kind": "l", "les": k, "mz": mz, "d": d, "sc": {}, "ser": LES_SER, "ta": d["t"][0], "te": d["t"][1], "s": "learn",
+                "src_ar": d["src"][0], "src_en": d["src"][1]}
     SC = json.loads((HERE / "scenes.json").read_text(encoding="utf-8"))
     if key.isdigit():
         n = int(key); h = hadiths()[n]; ser = CAT["series"]["nawawi"]
@@ -181,15 +203,25 @@ def build(I, lang, tmp, preview=False, audio_dir=None):
                 us = say_units(segments(a["en"]), "en", hl)
                 for u in us[:-1]: units.append(u)
                 us[-1]["gap"] = GAP["end"] + 0.15; units.append(us[-1])   # سكتة أطول بين الآيات
+    elif I["kind"] == "l":
+        for j, st in enumerate(I["d"]["steps"]):
+            txt = st[0] if lang == "ar" else st[1]
+            if lang == "ar" and len(st) > 6 and st[6]:
+                units.append({"segs": segments(txt), "rec": st[6], "gap": 0.7, "step": j})   # تسجيل بشري حقيقي من حصن المسلم
+            else:
+                us = say_units(segments(txt), lang, [])
+                for u in us: u["step"] = j
+                us[-1]["gap"] = 0.9; units += us
     else:
         units = say_units(segments(I["ar"] if lang == "ar" else I["en"]), lang, hl)
     segs, times, clips, t = [], [], [], INTRO
+    step0 = {}
     for i, u in enumerate(units):
         if preview:
             d = 0.42 * sum(len(x.split()) for x in u["segs"]) + .3; rel = None
-        elif "q" in u:
+        elif "q" in u or "rec" in u:
             f = tmp / f"{lang}{key}_{i}.mp3"
-            fetch("https://everyayah.com/data/Alafasy_128kbps/%03d%03d.mp3" % u["q"], f)
+            fetch(u["rec"] if "rec" in u else "https://everyayah.com/data/Alafasy_128kbps/%03d%03d.mp3" % u["q"], f)
             x = AU.decode(f); d = len(x) / AU.SR; rel = None; clips.append((x, t))
         elif not re.search(r"[\u0621-\u064Aa-zA-Z]", " ".join(u["say"])):
             d = 0.3; rel = None   # ما بيها كلام (علامة بس): سكتة قصيرة
@@ -199,19 +231,37 @@ def build(I, lang, tmp, preview=False, audio_dir=None):
             d = len(x) / AU.SR; clips.append((x, t))
         if rel is None:
             rel = AU._even(u["segs"], 0.0, d)
+        if "step" in u: step0.setdefault(u["step"], t)
         for sg, (a_, b_) in zip(u["segs"], rel):
             segs.append(sg); times.append([round(t + a_, 2), round(t + b_, 2)])
         t += d + u["gap"]
     total = t + OUTRO
-    pre = [] if I["kind"] == "q" else [ISNAD]
+    lesson = None
+    if I["kind"] == "l":
+        st_, k_ = I["d"]["steps"], I["les"]; n_ = len(st_); beats = []; lesson = {"steps": []}
+        for j in range(n_):
+            t0 = step0[j]; t1 = step0[j + 1] if j + 1 < n_ else t - 0.2; art = st_[j][2]
+            hd = (st_[j][4] if lang == "ar" else st_[j][5]) if len(st_[j]) > 5 else ""
+            if k_ == "salah": hd = "" if hd in ("صفة الصلاة", "Description of prayer") else hd
+            card = k_ in ("wudu", "ghusl")
+            if k_ == "ghusl" and art == "head": art = "headg"
+            lesson["steps"].append({"t0": round(t0, 2), "t1": round(t1, 2), "art": art, "x3": art in X3.get(k_, ()) or art == "headg", "head": hd, "card": card})
+            if card: bg, a_, p_ = "lesson", [], []
+            elif k_ == "salah": bg, a_, p_ = "mosque", [f"man@360:{SALAH_POSE.get(st_[j][2], 'stand')}*1.25"], ["rug@360,1124*1.3"]
+            else: bg, a_, p_ = LES_SC[k_][min(j, len(LES_SC[k_]) - 1)]
+            beats.append({"t": 0.0 if j == 0 else round(t0 - 0.35, 2), "bg": bg, "a": a_, "p": p_, "f": []})
+        miss = []
+    else:
+        beats = None
+    pre = [] if I["kind"] in ("q", "l") else [ISNAD]
     post = [] if I["kind"] != "h" or sc.get("noend") else [END]
-    beats, miss = beat_times(pre + sc["b"] + post, segs, times, lang)
+    if beats is None: beats, miss = beat_times(pre + sc["b"] + post, segs, times, lang)
     if miss: print(f"  ⚠️ {key}-{lang} كلمات ما انلگت:", miss, file=sys.stderr)
     data = {"lang": lang, "n": I.get("n", 0), "segs": segs, "times": times, "total": total, "beats": beats, "quran": I["kind"] == "q",
             "icon": "data:image/png;base64," + __import__("base64").b64encode((ROOT / "icon-192.png").read_bytes()).decode(),
             "hl": sc.get("hl", {}).get(lang, []),
             "title": I["ta"] if lang == "ar" else I["te"], "label": I["ser"][lang],
-            "src": I["src_ar"] if lang == "ar" else I["src_en"]}
+            "src": I["src_ar"] if lang == "ar" else I["src_en"], "lesson": lesson, "ser": "learn" if lesson else None}
     html = tmp / f"{lang}{key}.html"
     html.write_text((HERE / "page.html").read_text(encoding="utf-8").replace("/*DATA*/", "window.D=" + json.dumps(data, ensure_ascii=False) + ";"), encoding="utf-8")
     for f in ("fonts/ui-700.woff2", "fonts/ui-500.woff2", "fonts/amiri.woff2", "icon-192.png"):
@@ -226,6 +276,8 @@ def build(I, lang, tmp, preview=False, audio_dir=None):
     voice = AU.np.zeros(int(total * AU.SR) + 1, AU.np.float32)
     for x, st in clips:
         a_ = int(st * AU.SR); voice[a_:a_ + len(x)] += x[:len(voice) - a_]
+    if lesson:   # أوقات الخطوات للتطبيق (يقفز للخطوة)
+        STEPS.mkdir(exist_ok=True); (STEPS / f"{key}-{lang}.json").write_text(json.dumps([s_["t0"] for s_ in lesson["steps"]]), encoding="utf-8")
     recite = I["kind"] == "q" and lang == "ar"
     m = AU.master(voice, audio, beats, total, amb=AMBIENCE and I["kind"] != "q", seed=sum(map(ord, key + lang)), quran=recite)
     print(f"  🔊 {key}-{lang}: {m['I']:.1f} LUFS · ذروة {m['TP']:.1f} dBTP · مدى {m['LRA']:.1f} LU", flush=True)
@@ -253,7 +305,14 @@ def index():
         if a.exists() and e.exists():
             b0 = SC[str(n)]["b"][0]
             items.append({"id": f"h{n}", "s": "nawawi", "n": n, "ar": a.name, "en": e.name, "da": round(dur(a)), "de": round(dur(e)), "ta": title(H[n][1], b0[0]), "te": title(H[n][2], b0[1])})
-    ser = [{"k": k, "ar": v["ar"], "en": v["en"]} for k, v in CAT["series"].items()]
+    Lr = learn()
+    for mz in ("sunni", "shia", "all"):
+        for k, d in Lr.get(mz, {}).items():
+            a, e = OUT / f"l-{k}-ar.mp4", OUT / f"l-{k}-en.mp4"
+            if a.exists() and e.exists():
+                st = {g: json.loads((STEPS / f"l-{k}-{g}.json").read_text()) for g in ("ar", "en")}
+                items.append({"id": f"l-{k}", "s": "learn", "mz": mz, "ar": a.name, "en": e.name, "da": round(dur(a)), "de": round(dur(e)), "ta": d["t"][0], "te": d["t"][1], "st": st})
+    ser = [{"k": k, "ar": v["ar"], "en": v["en"]} for k, v in CAT["series"].items()] + [{"k": "learn", "ar": LES_SER["ar"], "en": LES_SER["en"]}]
     (OUT / "index.json").write_text(json.dumps({"series": ser, "items": items}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     return len(items)
 

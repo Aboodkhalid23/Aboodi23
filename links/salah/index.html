@@ -171,6 +171,34 @@ nav a.on{background:var(--gold);color:var(--dark);font-weight:700}
 .lscene.dry i{display:none}
 @keyframes drop{0%{transform:translateY(0);opacity:0}15%{opacity:.95}80%{opacity:.9}100%{transform:translateY(520%);opacity:0}}
 .lscene em{position:absolute;bottom:9%;font-style:normal;font-size:14px;font-weight:700;background:var(--gold);color:var(--dark);border-radius:99px;padding:2px 10px}
+/* التعليم: مكتبة دروس بالفيديو + خطوات تقفز بيها */
+.lhero{flex:none;text-align:start;padding:4px 4px 2px}.lhero b{display:block;font-size:clamp(22px,3.4vh,28px);color:var(--acc)}.lhero small{font-size:13.5px;color:var(--mut)}
+.lmenu .lbig,.lmenu .lcard{animation:rise .55s cubic-bezier(.2,.8,.2,1) both}
+.lmenu .lbig{flex:none;display:flex;align-items:center;gap:14px;padding:10px;border-radius:24px;border:1px solid var(--line);background:linear-gradient(135deg,var(--card2),var(--card));text-align:start;font-size:17px;position:relative;overflow:hidden}
+.lbig img,.lcard img{flex:none;object-fit:cover;background:#0b2b2c}
+.lbig img{width:86px;aspect-ratio:9/16;border-radius:16px;box-shadow:0 8px 22px rgba(0,0,0,.35)}
+.lbig b,.lcard b{display:block;font-size:19px;color:var(--ink)}.lbig small,.lcard small{display:block;font-size:12.5px;font-weight:500;color:var(--mut);margin-top:4px}
+.lbig .pb{flex:none;margin-inline-start:auto;width:46px;height:46px;border-radius:50%;background:linear-gradient(160deg,var(--gold),var(--gold2));color:var(--dark);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(201,146,47,.4)}
+.lbig .pb svg{width:20px;height:20px;margin-inline-start:3px}
+.lbig:active,.lcard:active{transform:scale(.97)}
+.lsub{flex:none;font-size:14px;font-weight:700;color:var(--acc);text-align:start;margin:8px 4px 0}
+.lgrid{flex:none;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lmenu .lcard{display:flex;flex-direction:column;align-items:stretch;padding:0;border-radius:20px;border:1px solid var(--line);background:var(--card);overflow:hidden;text-align:start}
+.lcard img{width:100%;height:118px;object-position:50% 62%}.lcard div{padding:9px 11px 11px}.lcard b{font-size:16px}
+.lbig[disabled],.lcard[disabled]{opacity:.5}
+.lview.vm>.lscene,.lview.vm>#lnum,.lview.vm>.scroll,.lview.vm>#lsrc,.lview.vm>.tr{display:none}
+.lvid{display:none;flex:none;position:relative;height:min(44vh,108vw);aspect-ratio:9/16;border-radius:24px;overflow:hidden;border:1.5px solid var(--line);box-shadow:0 14px 40px rgba(0,0,0,.45);background:#041312}
+.lview.vm>.lvid{display:block}.lvid video{width:100%;height:100%;display:block;object-fit:cover}
+.lsteps{display:none;flex:1;min-height:0;width:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;text-align:start}
+.lview.vm>.lsteps{display:block}
+.lst{all:unset;box-sizing:border-box;display:flex;gap:12px;align-items:flex-start;width:100%;padding:11px 12px;border-radius:18px;border:1px solid transparent;cursor:pointer;transition:background .3s,border-color .3s}
+.lst i{flex:none;font-style:normal;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:var(--acc);border:1.5px solid var(--line);--p:0;background:conic-gradient(var(--card2) calc(var(--p)*1turn),transparent 0)}
+.lst.done i{background:var(--card2)}
+.lst.on{background:var(--card2);border-color:var(--line)}.lst.on i{background:conic-gradient(var(--gold) calc(var(--p)*1turn),rgba(233,189,95,.12) 0);color:var(--dark);border-color:var(--gold)}
+.lst .tx{flex:1;min-width:0;font-size:15.5px;line-height:1.75;color:var(--soft);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lst.on .tx{display:block;color:var(--ink)}.lst em{display:block;font-style:normal;font-size:12.5px;font-weight:700;color:var(--acc)}
+.lst .tx .lar{font-size:1.1em;line-height:1.9}
+.lsteps .lsrc2{font-size:11.5px;color:var(--mut);line-height:1.6;padding:10px 12px 16px}
 #lnum{flex:none;font-size:13.5px;color:var(--acc)}
 #ltext{font-size:var(--zf);line-height:1.9;font-weight:500;white-space:pre-line}
 :root[dir=ltr] #ltext{font-size:calc(var(--zf)*.8);line-height:1.6}
@@ -731,6 +759,8 @@ tr.td td{background:var(--gold);color:var(--leafink)}
   <div class="vh on"><button id="lback" data-en="← Back">→ رجوع</button><b id="ltitle"></b></div>
   <div class="lmenu" id="lmenu"></div>
   <div class="lview" id="lview">
+   <div class="lvid"><video id="lvplay" playsinline controls preload="metadata"></video></div>
+   <div class="lsteps" id="lsteps"></div>
    <div class="lscene" id="lscene"></div>
    <p id="lnum"></p>
    <div class="scroll" style="flex:1;min-height:0;width:100%"><p id="ltext"></p></div>
@@ -1051,11 +1081,31 @@ var LS={k:'',i:0,play:false}, LD={}, LW=window.LEARN||{};
 var LN=[['wudu',L('الوضوء','Wudu (ablution)'),'hands'],['ghusl',L('غسل الجنابة','Ghusl (full bath)'),'heart'],['salah',L('الصلاة','The prayer'),'mosque'],
  ['wd',L('أذكار الوضوء','Wudu remembrance'),'hands'],['ms',L('الأذان والمسجد','Adhan & the mosque'),'mosque'],['hm',L('البيت والخلاء','Home & restroom'),'star8'],
  ['fd',L('آداب الطعام','Eating'),'heart'],['tr',L('الركوب والسفر','Riding & travel'),'sun'],['is',L('صلاة الاستخارة','Istikharah prayer'),'hands']];
-function lmenu(){LA.pause();LS.play=false;LS.k='';$('lmenu').classList.remove('off');$('lview').classList.remove('on');
+var LV=null;
+function litem(k){var r=null;(VALL||[]).forEach(function(it){if(it.id=='l-'+k&&(!it.mz||it.mz=='all'||it.mz==MZ))r=it});return r}
+function lmenu(){LA.pause();LS.play=false;LS.k='';LV=null;$('lvplay').pause();$('lmenu').classList.remove('off');$('lview').classList.remove('on');
  LD={};var a=LW[MZ]||{},b=LW.all||{};Object.keys(a).forEach(function(k){LD[k]=a[k]});Object.keys(b).forEach(function(k){LD[k]=b[k]});
  $('ltitle').textContent=L('التعليم','Learn')+' · '+(MZ=='shia'?L('شيعي','Shia'):L('سني','Sunni'));
- $('lmenu').innerHTML=LN.map(function(x){var ok=!!LD[x[0]];return '<button data-k="'+x[0]+'"'+(ok?'':' disabled')+'>'+ic(x[2],'x')+'<span>'+x[1]+'</span><small>'+(ok?LD[x[0]].steps.length+L(' خطوات',' steps')+(LD[x[0]].steps.some(function(z){return z[6]})?' · 🔊':''):L('قيد التحضير','Coming'))+'</small></button>'}).join('');
- document.querySelectorAll('#lmenu button').forEach(function(b){b.onclick=function(){LS.k=b.getAttribute('data-k');LS.i=0;$('lmenu').classList.add('off');$('lview').classList.add('on');ldraw()}})}
+ vget(function(){var n=0,card=function(x,big){var ok=!!LD[x[0]],it=ok&&litem(x[0]),c=ok?LD[x[0]].steps.length:0,d=it?mmss(EN?it.de:it.da):'';
+   var meta=ok?(c+L(' خطوات',' steps')+(d?' · '+d:'')):L('قيد التحضير','Coming');var img=it?'<img loading="lazy" alt="" src="v/p/'+it.id+'-'+(EN?'en':'ar')+'.jpg">':'';
+   return big?'<button class="lbig" style="animation-delay:'+(n++*.07)+'s" data-k="'+x[0]+'"'+(ok?'':' disabled')+'>'+(img||'<span style="width:60px;display:flex;justify-content:center">'+ic(x[2],'x')+'</span>')+'<div><b>'+x[1]+'</b><small>'+meta+'</small></div>'+(it?'<span class="pb"><svg viewBox="0 0 24 24"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg></span>':'')+'</button>'
+    :'<button class="lcard" style="animation-delay:'+(n++*.06)+'s" data-k="'+x[0]+'"'+(ok?'':' disabled')+'>'+img+'<div><b>'+x[1]+'</b><small>'+meta+'</small></div></button>'};
+  $('lmenu').innerHTML='<div class="lhero"><b>'+L('تعلّم دينك','Learn your religion')+'</b><small>'+L('دروس بالفيديو خطوة بخطوة، والنص بالحرف من مصدره','Step-by-step video lessons, text verbatim from its source')+'</small></div>'+
+   LN.slice(0,3).map(function(x){return card(x,1)}).join('')+'<p class="lsub">'+L('أذكار وآداب','Remembrance & manners')+'</p><div class="lgrid">'+LN.slice(3).map(function(x){return card(x,0)}).join('')+'</div>';
+  document.querySelectorAll('#lmenu [data-k]').forEach(function(b){b.onclick=function(){LS.k=b.getAttribute('data-k');LS.i=0;$('lmenu').classList.add('off');$('lview').classList.add('on');var it=litem(LS.k);if(it)lvopen(it);else{$('lview').classList.remove('vm');ldraw()}}})})}
+function lvopen(it){var d=LD[LS.k],v=$('lvplay'),T=(it.st&&it.st[EN?'en':'ar'])||[];LV={it:it,T:T,i:-1};$('lview').classList.add('vm');$('ltitle').textContent=d.t[EN?1:0];
+ v.setAttribute('poster','v/p/'+it.id+'-'+(EN?'en':'ar')+'.jpg');v.src='v/'+(EN?it.en:it.ar);
+ $('lsteps').innerHTML=d.steps.map(function(st,i){return '<button class="lst" data-i="'+i+'"><i>'+(EN?i+1:String(i+1).replace(/\d/g,function(c){return '٠١٢٣٤٥٦٧٨٩'[c]}))+'</i><span class="tx"></span></button>'}).join('')+'<p class="lsrc2"></p>';
+ $('lsteps').querySelector('.lsrc2').textContent=d.src[EN?1:0];
+ document.querySelectorAll('#lsteps .lst').forEach(function(r){var i=+r.getAttribute('data-i'),st=d.steps[i],tx=r.querySelector('.tx'),h=st[4]?(EN?st[5]:st[4]):'';
+  if(h&&!/^(صفة الصلاة|Description of prayer)$/.test(h)){var e=document.createElement('em');e.textContent=h;tx.appendChild(e)}
+  if(st.length>6){var s1=document.createElement('span');s1.className='lar';s1.textContent=st[0];tx.appendChild(s1);if(EN){var s2=document.createElement('span');s2.className='ltr';s2.textContent=st[3]||'';tx.appendChild(s2);var s3=document.createElement('span');s3.className='len';s3.textContent=st[1];tx.appendChild(s3)}}
+  else tx.appendChild(document.createTextNode(st[EN?1:0]));
+  r.onclick=function(){if(T[i]!=null){v.currentTime=Math.max(0,T[i]-.3);v.play().catch(function(){})}lvmark(i,0)}});
+ lvmark(0,0);v.play().catch(function(){})}
+function lvmark(i,p){if(!LV)return;var rows=document.querySelectorAll('#lsteps .lst');if(LV.i!=i){rows.forEach(function(r,k){r.classList.toggle('on',k==i);r.classList.toggle('done',k<i);r.querySelector('i').style.setProperty('--p',k<i?1:0)});LV.i=i;var r=rows[i];if(r)r.scrollIntoView({block:'nearest',behavior:'smooth'})}if(rows[i])rows[i].querySelector('i').style.setProperty('--p',p)}
+$('lvplay').ontimeupdate=function(){if(!LV||!LV.T.length)return;var t=this.currentTime,T=LV.T,i=0;T.forEach(function(x,k){if(t>=x-.25)i=k});var e=i+1<T.length?T[i+1]:this.duration-3.2;lvmark(i,Math.max(0,Math.min(1,(t-T[i])/Math.max(.1,e-T[i]))))};
+$('lvplay').onplay=function(){if(!AU.paused)AU.pause();LA.pause()};
 function ldraw(){var d=LD[LS.k],st=d.steps[LS.i],a=st[2];
  $('ltitle').textContent=d.t[EN?1:0];
  $('lscene').className='lscene'+(WET[a]?'':' dry');
@@ -1100,7 +1150,7 @@ LA.onerror=function(){if(!LS.play)return;LS.play=false;ldraw();$('lsrc').textCon
 $('lplay').onclick=function(){LS.play=!LS.play;if(LS.play)lsay();else LA.pause();ldraw()};
 function lmove(n){var c=LD[LS.k].steps.length,i=LS.i+n;if(i<0||i>=c)return;LS.i=i;if(LS.play&&!hasRec(i)){LS.play=false;LA.pause()}ldraw();if(LS.play)lsay()}
 $('lprev').onclick=function(){lmove(-1)};$('lnext').onclick=function(){lmove(1)};
-$('lback').onclick=function(){if(LS.k)lmenu();else location.hash='#dhikr'};
+$('lback').onclick=function(){$('lvplay').pause();if(LS.k)lmenu();else location.hash='#dhikr'};
 
 // ---------- القرآن والأذكار المسموعة: مشغّل واحد يكمل بالخلفية ويمشي على القائمة وحده ----------
 var QD=window.QURAN||{s:[],r:[],au:{}}, AU=$('aud'), QS={rec:0,tab:'s',list:[],i:-1,kind:''};
@@ -1193,7 +1243,7 @@ function duaCard(){var P=window.DUA||[],H=window.HADITH||[],n=dayNo();DTODAY=P.l
  if(DTODAY){$('duah').textContent=EN?DTODAY[5]:DTODAY[4];$('duaa').textContent=DTODAY[0];$('duar').textContent=EN?DTODAY[3]:'';$('duae').textContent=EN?DTODAY[1]:''}
  if(HTODAY){$('hdh').textContent=L('الحديث '+HTODAY[0]+' من الأربعين النووية','Hadith '+HTODAY[0]+' of An-Nawawi\'s Forty');$('hda').textContent=HTODAY[1];$('hde').textContent=EN?HTODAY[2]:''}}
 // مكتبة المقاطع: فيديو موشن گرافيك لكل حديث (مصنوع بالكود: scripts/motion)، محفوظة بمجلد v. حديث اليوم يطلع أول وحده
-var VIDX=null,VID=null;var VSER=[];function vget(cb){if(VIDX){cb();return}fetch('v/index.json?'+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(j){VIDX=j&&j.items||[];VSER=j&&Array.isArray(j.series)?j.series:[];cb()}).catch(function(){VIDX=[];cb()})}
+var VIDX=null,VALL=null,VID=null;var VSER=[];function vmz(){VIDX=(VALL||[]).filter(function(it){return !it.mz||it.mz=='all'||it.mz==MZ})}function vget(cb){if(VALL){vmz();cb();return}fetch('v/index.json?'+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(j){VALL=j&&j.items||[];vmz();VSER=j&&Array.isArray(j.series)?j.series:[];cb()}).catch(function(){VALL=[];VIDX=[];cb()})}
 function vseen(){try{return JSON.parse(localStorage.getItem('vseen'))||{}}catch(e){return{}}}
 function loadVid(cb){vget(function(){VID=null;if(HTODAY)VIDX.forEach(function(it){if(it.n==HTODAY[0])VID=it});showVid();cb&&cb()})}
 function showVid(){var v=$('hvid');if(!VID){v.style.display='none';return}var f='v/'+(EN?VID.en:VID.ar);if(v.getAttribute('src')!=f)v.setAttribute('src',f);v.style.display=''}
@@ -1280,7 +1330,7 @@ $('zkgo').onclick=function(){zfetch().then(zcalc,zcalc)};
 function show(){var id=(location.hash||'#today').slice(1);if(!$(id))id='today';
  document.querySelectorAll('.sheet.on').forEach(function(x){x.classList.remove('on')});
  document.querySelectorAll('section').forEach(function(s){s.classList.toggle('on',s.id==id)});
- document.querySelectorAll('nav a').forEach(function(a){a.classList.toggle('on',a.getAttribute('href')=='#'+id)});navind();if(id!='quran'&&window.qfclose)qfclose();var r=id=='month'&&document.querySelector('tr.td');if(r)r.scrollIntoView({block:'center'});if(id=='dhikr')mode('menu');if(id=='vids')vlist();if(id=='learn')lmenu();else{LA.pause();LS.play=false}if(id=='quran')qlist()}
+ document.querySelectorAll('nav a').forEach(function(a){a.classList.toggle('on',a.getAttribute('href')=='#'+id)});navind();if(id!='quran'&&window.qfclose)qfclose();var r=id=='month'&&document.querySelector('tr.td');if(r)r.scrollIntoView({block:'center'});if(id=='dhikr')mode('menu');if(id=='vids')vlist();if(id=='learn')lmenu();else{LA.pause();LS.play=false;$('lvplay').pause()}if(id=='quran')qlist()}
 function navind(){var a=document.querySelector('nav a.on'),k=document.querySelector('nav .nind');if(!k)return;k.style.opacity=a?'':'0';if(!a)return;k.style.width=a.offsetWidth+'px';k.style.transform='translateX('+a.offsetLeft+'px)'}
 addEventListener('resize',navind);addEventListener('hashchange',show);show();setTimeout(navind,60);
 // رابط الاشتراك بالتقويم (webcal يفتح تطبيق التقويم مباشرة)
