@@ -375,6 +375,11 @@ body.locked{overflow:hidden}
 .kbox p{margin:0;font-size:14px;line-height:1.5;color:var(--fg)}
 .kbox.tip{background:var(--warm);border-color:rgba(208,138,80,.45)}
 .kbox.tip b{color:var(--accent-soft)}
+.wtiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
+.wtile{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 12px 14px;border:0;border-radius:20px;background:var(--surface);color:var(--fg);text-align:left;min-width:0}
+.wtile .dish{width:72%;max-width:120px;height:auto;align-self:center;margin-bottom:4px}
+.wtile b{font-size:15px;line-height:1.25}
+.wtile span{font-size:12.5px;color:var(--muted)}
 </style>
 
 <main id="scroller"><div class="wrap">

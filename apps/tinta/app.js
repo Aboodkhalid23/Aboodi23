@@ -2,7 +2,7 @@
   var T = {
     fi:{title:'Reseptit',search:'Hae: pesto, voi, kantarelli…',all:'Kaikki',recipes:'reseptiä',results:'Tulokset',none:'Ei reseptejä haulla',
       batch:'Määrä',auto:'Ainekset lasketaan itse',ingredients:'Ainekset',method:'Valmistus',back:'Takaisin',
-      nomethod:'Paperissa ei ole kirjoitettua valmistusohjetta.',original:'Näytä alkuperäinen paperi',minus:'Vähemmän',plus:'Enemmän',vegan:'vegaani',tWorld:'Maailma',keepT:'Säilytys ja lämpötila',tipT:'Keittiövinkki',wEyebrow:'Maailman keittiö',wTitle2:'Uusia ideoita testattavaksi',wSub:'Tunnettuja reseptejä eri maista. Testaa ja säädä ennen kuin lisäät menuun.',wCount:'reseptiä',wCardS:'{n} klassikkoa eri maista testattavaksi',wSeason:'Tämän kauden suositukset',wHits:'Maailman keittiöstä',gT:'Tintån keittiö',gH:'Kirjoita nimesi ja keittiön koodi. Puhelin muistaa ne, eikä kysy uudelleen.',gN:'Nimesi',gC:'Keittiön koodi',gB:'Avaa reseptit',gBad:'Väärä koodi. Kysy esihenkilöltä.',gWait:'Liian monta yritystä. Odota {s} s.',gNeed:'Kirjoita nimi ja koodi.',parts:'osaa',
+      nomethod:'Paperissa ei ole kirjoitettua valmistusohjetta.',original:'Näytä alkuperäinen paperi',minus:'Vähemmän',plus:'Enemmän',vegan:'vegaani',tWorld:'Maailma',keepT:'Säilytys ja lämpötila',tipT:'Keittiövinkki',wEyebrow:'Maailman keittiö',wTitle2:'Uusia ideoita testattavaksi',wSub:'Inspiraatiota menuun: tunnettuja reseptejä ja trendejä. Tee niistä Tintån omia ja testaa ennen menuun lisäämistä.',wCount:'reseptiä',wCardS:'{n} klassikkoa eri maista testattavaksi',wSeason:'Tämän kauden suositukset',wHits:'Maailman keittiöstä',gT:'Tintån keittiö',gH:'Kirjoita nimesi ja keittiön koodi. Puhelin muistaa ne, eikä kysy uudelleen.',gN:'Nimesi',gC:'Keittiön koodi',gB:'Avaa reseptit',gBad:'Väärä koodi. Kysy esihenkilöltä.',gWait:'Liian monta yritystä. Odota {s} s.',gNeed:'Kirjoita nimi ja koodi.',parts:'osaa',
       foot:'Reseptit luettu keittiön paperikansiosta. Jos jokin näyttää väärältä, tarkista alkuperäinen paperi.',
       have:'Minulla on',havehint:'Reseptissä {q}. Kirjoita, paljonko sinulla on, niin kaikki muut määrät lasketaan sen mukaan.',haveok:'Laske',
       calc:'Laskin',calcuse:'Käytä määränä',tiphave:'Vinkki: napauta minkä tahansa aineen määrää, niin voit laskea kaiken sen mukaan.',
@@ -19,7 +19,7 @@
       newErr:'Lähetys ei onnistunut. Tarkista netti ja yritä uudelleen.',newOff:'Kuvien lähetys ei ole vielä käytössä.',newPages:'sivua',newRemove:'Poista kuva',isNew:'uusi',cook:'Aloita kokkaus',partAmt:'Tämän osan määrä',partMain:'Pääosa · {m}× (yllä olevan määrän mukaan)',onlyPart:'Koskee vain osaa: {p}. Muille osille on oma määrä.',hiMorning:'Huomenta',hiDay:'Hei',hiEve:'Iltaa',helloSub:'Mitä tänään tehdään?',ingShort:'ainesta',stepShort:'vaihetta',tNeeds:'Tarvitaan',needTitle:'Mitä tarvitaan?',needSub:'Kirjoita mitä keittiö tarvitsee. Kaikki näkevät sen heti.',needAsk:'Mitä tarvitaan?',needEx:'Esim. Kurkkua 5 kg',needSend:'Lähetä',needSent:'Lähetetty kaikille',needOpen:'Odottaa',needNone:'Ei avoimia pyyntöjä.',needDone:'Hoidettu',needDoneList:'Hoidettu (3 pv)',needUndo:'Palauta',needNew:'Uusi pyyntö',wTitle:'Tervetuloa Tintå-keittiöön',wHint:'Kirjoita nimesi ja keittiön koodi kerran. Puhelin muistaa ne, eikä niitä kysytä uudelleen.',wStart:'Aloita',wSkip:'Myöhemmin',wOk:'Tervetuloa',wBad:'Väärä koodi. Kysy esimieheltä.',wWait:'Liian monta yritystä. Odota 15 min.',pinTitle:'Keittiön koodi',pinHint:'Kirjoita keittiön koodi. Saat sen esimieheltä. Koodi kysytään vain kerran tällä puhelimella.',pinOk:'Jatka',updTitle:'Resepti on päivitetty',updUse:'Keittiö on muuttanut tätä reseptiä. Tee tämän uuden version mukaan.',updTag:'päivitetty',updHome:'{n} reseptiä päivitetty – katso muutokset',kitchen:'Keittiön muutokset',editsOn:'{n} määrää muutettu keittiössä. Muutetut näkyvät aineksissa.',someone:'Joku',del:'Poista',yourName:'Nimesi',noteAll:'Kirjoita muutos kaikille',noteEx:'Esim. Vähemmän suolaa: 1 rkl riittää.',saveAll:'Tallenna kaikille',saving:'Tallennetaan…',saveErr:'Tallennus ei onnistunut. Tarkista netti.',editBtn:'Muokkaa määriä',editTitle:'Muokkaa määriä',editHint:'Muuta määrät yhden reseptin mukaan (1×). Tallennus näkyy kaikille.',editWhy:'Mitä muutit ja miksi?',cancel:'Peruuta',changed:'muutettu',was:'oli',autoNote:'{n} määrää muutettu.',howMuch:'Paljonko teet?',byIng:'Laske tämän aineen mukaan:',amount:'Määrä',unit:'Yksikkö',factor:'Kaikki ainekset lasketaan:',saved:'muistetaan tässä puhelimessa',cookStep:'Vaihe',cookPrev:'Edellinen',cookNext:'Seuraava',cookDone:'Valmis',cookHere:'Tässä vaiheessa',cookClose:'Sulje kokkaustila',size:'Tekstin koko',share:'Jaa resepti',copied:'Resepti kopioitu',notes:'Omat muistiinpanot',notesHint:'Näkyy vain tässä puhelimessa.',more:'Lisää',cats:'Kategoriat',allAZ:'Kaikki reseptit A–Ö',allCats:'Kaikki kategoriat'},
     en:{title:'Recipes',search:'Search: pesto, butter, chanterelle…',all:'All',recipes:'recipes',results:'Results',none:'No recipes for',
       batch:'Batch',auto:'Amounts update automatically',ingredients:'Ingredients',method:'Method',back:'Back',
-      nomethod:'No method is written on the paper.',original:'Show original paper',minus:'Less',plus:'More',vegan:'vegan',tWorld:'World',keepT:'Storage and temperature',tipT:'Chef’s tip',wEyebrow:'World kitchen',wTitle2:'New ideas to test',wSub:'Well-known recipes from around the world. Test and adjust before adding to the menu.',wCount:'recipes',wCardS:'{n} classics from around the world to test',wSeason:'Picks for this season',wHits:'From the world kitchen',gT:'Tintå kitchen',gH:'Enter your name and the kitchen code. The phone remembers them and will not ask again.',gN:'Your name',gC:'Kitchen code',gB:'Open recipes',gBad:'Wrong code. Ask your manager.',gWait:'Too many tries. Wait {s} s.',gNeed:'Enter your name and the code.',parts:'parts',
+      nomethod:'No method is written on the paper.',original:'Show original paper',minus:'Less',plus:'More',vegan:'vegan',tWorld:'World',keepT:'Storage and temperature',tipT:'Chef’s tip',wEyebrow:'World kitchen',wTitle2:'New ideas to test',wSub:'Inspiration for the menu: well-known recipes and trends. Make them Tintå’s own and test before they go on the menu.',wCount:'recipes',wCardS:'{n} classics from around the world to test',wSeason:'Picks for this season',wHits:'From the world kitchen',gT:'Tintå kitchen',gH:'Enter your name and the kitchen code. The phone remembers them and will not ask again.',gN:'Your name',gC:'Kitchen code',gB:'Open recipes',gBad:'Wrong code. Ask your manager.',gWait:'Too many tries. Wait {s} s.',gNeed:'Enter your name and the code.',parts:'parts',
       foot:'Recipes read from the kitchen binder. If something looks wrong, check the original paper.',
       have:'I have',havehint:'The recipe uses {q}. Type how much you have and every other amount is worked out from it.',haveok:'Calculate',
       calc:'Calculator',calcuse:'Use as batch',tiphave:'Tip: tap any ingredient amount to scale everything by it.',
@@ -43,7 +43,7 @@
     pesto:['Pestot','Pestos'], voi:['Voit','Butters'], liemi:['Liemet','Stocks'], keitto:['Keitot','Soups'], pohja:['Pohjat','Bases'],
     lisuke:['Lisukkeet ja risotot','Sides & risottos'], mari:['Marinadit','Marinades'], sailyke:['Hillot, chutneyt ja pikkelit','Jams, chutneys & pickles'],
     mauste:['Rapeat ja mausteet','Crunch & seasonings'], jalki:['Jälkiruoat','Desserts'],
-    risotto:['Risotot','Risottos'], salaatti:['Salaatit','Salads'], annos:['Kokonaiset annokset','Full dishes']
+    risotto:['Risotot','Risottos'], salaatti:['Salaatit','Salads'], annos:['Annokset','Dishes'], etikka:['Etikat ja salaattikastikkeet','Vinegars & dressings'], vege:['Kasvisannokset','Plant-based dishes']
   };
   var U = {g:['g','g'],kg:['kg','kg'],ml:['ml','ml'],cl:['cl','cl'],dl:['dl','dl'],l:['l','l'],tl:['tl','tsp'],rkl:['rkl','tbsp'],kpl:['kpl','pcs'],
     prk:['prk','tub'],pss:['pss','bag'],pnt:['nippu','bunch'],rss:['rasia','box'],tlk:['tlk','can'],levy:['levyä','sheets'],tuubi:['tuubia','tubes'],osa:['osa','part']};
@@ -373,7 +373,8 @@
       cur = r; view = 'recipe';
       recent = [r.id].concat(recent.filter(function(x){ return x!==r.id; })).slice(0,12); save('recent', recent);
     } else {
-      cur = null; view = h==='suosikit' ? 'favs' : h==='lista' ? 'prep' : h==='tarvitaan' ? 'needs' : h==='maailma' ? 'world' : 'home'; listView = view;
+      cur = null; view = h==='suosikit' ? 'favs' : h==='lista' ? 'prep' : h==='tarvitaan' ? 'needs' : (h==='maailma' || h.indexOf('maailma-')===0) ? 'world' : 'home';
+      if(view==='world'){ wsec = h.slice(8) || null; worldHash = h; } listView = view;
     }
     render(); $('scroller').scrollTop = 0; wake();
   }
@@ -392,10 +393,9 @@
     if(b.dataset.rtab){ rtab = b.dataset.rtab; renderRecipe(); setTabs(); return; }
     if(b.dataset.sdone){ if(stepDone[b.dataset.sdone]) delete stepDone[b.dataset.sdone]; else stepDone[b.dataset.sdone]=1; renderRecipe(); setTabs(); return; }
     if(b.dataset.open){ location.hash = 'r-'+b.dataset.open; return; }
-    if(b.id==='back'){ go(listView); return; }
-    if(b.id==='wback' || b.dataset.world){ go(b.dataset.world ? 'world' : 'home'); return; }
-    if(b.dataset.wseason){ wseason = b.dataset.wseason; renderWorld(); return; }
-    if(b.dataset.wtype){ wtype = b.dataset.wtype; renderWorld(); return; }
+    if(b.id==='back'){ if(listView==='world'){ location.hash = worldHash; return; } go(listView); return; }
+    if(b.id==='wback'){ location.hash = 'maailma'; return; }
+    if(b.dataset.wsec){ location.hash = 'maailma-'+b.dataset.wsec; return; }
     if(b.id==='favbtn'){ var k = favs.indexOf(cur.id); if(k>-1) favs.splice(k,1); else favs.push(cur.id); save('favs',favs); render(); return; }
     if(b.id==='prepbtn'){ var pe = prepEntry(cur.id); if(pe) prep = prep.filter(function(p){ return p!==pe; }); else prep.push({id:cur.id, m:mult}); save('prep',prep); render(); return; }
     if(b.dataset.prm){ prep = prep.filter(function(p){ return p.id!==b.dataset.prm; }); delete pdone[b.dataset.prm]; save('prep',prep); save('pdone',pdone); render(); return; }
@@ -852,22 +852,40 @@
   var vT; document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible'){ clearTimeout(vT); vT=setTimeout(checkVersion, 9000); } });
   setTimeout(checkVersion, 9000);
 
-  // ---- Maailman keittiö / المطبخ العالمي ----
-  var wseason = null, wtype = 'all';
-  var SEAS = {kev:['Kevät','Spring'], kes:['Kesä','Summer'], syk:['Syksy','Autumn'], tal:['Talvi','Winter']};
-  function nowSeason(){ var m = new Date().getMonth(); return (m===11 || m<2) ? 'tal' : m<5 ? 'kev' : m<8 ? 'kes' : 'syk'; }
+  // ---- Maailman keittiö / المطبخ العالمي: كل نوع بخانة لحاله ----
+  var wsec = null, worldHash = 'maailma';
+  var WSEC = [
+    ['annos','Annokset','Dishes','Kokonaiset lautaset: pääraaka-aine, lisuke, kasvikset, kastike ja kokoaminen.','Complete plates: main, side, vegetables, sauce and plating.'],
+    ['majo','Majoneesit','Mayonnaises','Myös vegaaniset versiot.','Vegan versions included.'],
+    ['kastike','Kastikkeet','Sauces',''],
+    ['oljy','Öljyt','Oils','Yrtti- ja mausteöljyt viimeistelyyn.','Herb and spice oils for finishing.'],
+    ['etikka','Etikat ja salaattikastikkeet','Vinegars & dressings',''],
+    ['keitto','Keitot','Soups',''],
+    ['risotto','Risotot','Risottos',''],
+    ['salaatti','Salaatit','Salads',''],
+    ['vegaani','Vegaaniset','Vegan','Kaikki vegaaniset reseptit ja annokset.','All vegan recipes and dishes.'],
+    ['mari','Marinadit grilliin','Marinades for the grill','Kana ja liha, marinoi edellisenä päivänä.','Chicken and meat, marinate the day before.'],
+    ['voi','Voit','Butters',''],
+    ['mauste','Mausteseokset','Spice mixes','']
+  ];
+  function wList(k){ return W.filter(function(r){ return k==='vegaani' ? (r.v || r.c==='vege') : r.c===k; }); }
   function renderWorld(){
-    var t = T[lang], i = L(); if(!wseason) wseason = nowSeason();
+    var t = T[lang], i = L();
     var sortN = function(a,b){ return a.n[i].localeCompare(b.n[i], lang); };
-    var inS = W.filter(function(r){ return wseason==='all' || r.s.indexOf(wseason)>-1; });
-    var types = Object.keys(CATS).filter(function(k){ return inS.some(function(r){ return r.c===k; }); });
-    if(wtype!=='all' && types.indexOf(wtype)<0) wtype = 'all';
-    var list = inS.filter(function(r){ return wtype==='all' || r.c===wtype; }).sort(sortN);
-    $('world').innerHTML = '<div class="top"><span></span><div class="tools">'+LANGS+'</div></div>'+
-      '<header class="whead"><div class="eyebrow">'+t.wEyebrow+'</div><h1 class="title">'+t.wTitle2+'</h1><p class="hint">'+t.wSub+'</p></header>'+
-      '<div class="wchips">'+['all','kev','kes','syk','tal'].map(function(s){ return '<button type="button" class="chip" data-wseason="'+s+'" aria-pressed="'+(wseason===s)+'">'+(s==='all' ? t.all : SEAS[s][i])+(s===nowSeason() ? ' •' : '')+'</button>'; }).join('')+'</div>'+
-      '<div class="wchips">'+['all'].concat(types).map(function(k){ return '<button type="button" class="chip" data-wtype="'+k+'" aria-pressed="'+(wtype===k)+'">'+(k==='all' ? t.all : esc(CATS[k][i]))+'</button>'; }).join('')+'</div>'+
-      '<h2 class="label">'+list.length+' '+t.wCount+'</h2><div class="rgrid">'+list.map(card).join('')+'</div>';
+    var sec = null; WSEC.forEach(function(s){ if(s[0]===wsec) sec = s; });
+    var html;
+    if(!sec){
+      html = '<div class="top"><span></span><div class="tools">'+LANGS+'</div></div>'+
+        '<header class="whead"><div class="eyebrow">'+t.wEyebrow+'</div><h1 class="title">'+t.wTitle2+'</h1><p class="hint">'+t.wSub+'</p></header>'+
+        '<div class="wtiles">'+WSEC.map(function(s){ var l = wList(s[0]); if(!l.length) return '';
+          return '<button type="button" class="wtile" data-wsec="'+s[0]+'">'+TintaDish.svg(l[0],'dish')+'<b>'+esc(s[1+i])+'</b><span>'+l.length+' '+t.wCount+'</span></button>'; }).join('')+'</div>';
+    } else {
+      var list = wList(sec[0]).sort(sortN), sub = sec[3] ? (i ? sec[4] : sec[3]) : '';
+      html = '<div class="top"><button type="button" class="back" id="wback">'+ICON.back+'<span>'+t.wEyebrow+'</span></button><div class="tools">'+LANGS+'</div></div>'+
+        '<header class="whead"><div class="eyebrow">'+t.wEyebrow+'</div><h1 class="title">'+esc(sec[1+i])+'</h1>'+(sub ? '<p class="hint">'+esc(sub)+'</p>' : '')+'</header>'+
+        '<h2 class="label">'+list.length+' '+t.wCount+'</h2><div class="rgrid">'+list.map(card).join('')+'</div>';
+    }
+    $('world').innerHTML = html;
     document.querySelectorAll('#world [data-lang]').forEach(function(x){ x.setAttribute('aria-pressed', x.dataset.lang===lang); });
   }
 
