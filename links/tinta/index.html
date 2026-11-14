@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
 <script src="config.js"></script>
-<script>window.TINTA_VER='1794662683';</script>
+<script>window.TINTA_VER='1794662892';</script>
 <title>Tintå Reseptit</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap">
 <style>
@@ -320,6 +320,30 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 #splash canvas{transition:transform .8s cubic-bezier(.5,0,.75,0)}
 #splash.out canvas{transform:scale(1.08)}
 #splash.gone{display:none}
+/* Vegaani-merkki / علامة النباتي */
+.vbadge{position:absolute;top:10px;right:10px;z-index:2;display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px 0 6px;border-radius:999px;background:#2F6B35;color:#E9F7E4!important;font:800 10px var(--sans);letter-spacing:.06em;text-transform:uppercase;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.vbadge svg{width:13px;height:13px;flex:none}
+.vbadge b{font-weight:800;color:inherit}
+.vbadge.low{top:38px}
+.vbadge.big{top:14px;right:auto;left:max(16px, env(safe-area-inset-left, 0px));height:28px;padding:0 12px 0 9px;font-size:12px}
+.vbadge.big svg{width:16px;height:16px}
+.tag.veg{display:inline-flex;align-items:center;gap:3px;background:#2F6B35;border-color:#2F6B35;color:#E9F7E4}
+.tag.veg svg{width:11px;height:11px}
+/* Liikkuva ruokakuva / حركة صورة الطبق */
+.rhero{position:relative}
+.rhero .dish.big{animation:dIn .9s cubic-bezier(.16,1,.3,1) both,dBob 5.5s 1s ease-in-out infinite}
+@keyframes dIn{from{opacity:0;transform:translateY(18px) scale(.9) rotate(-10deg)}to{opacity:1;transform:none}}
+@keyframes dBob{0%,100%{transform:none}50%{transform:translateY(-7px) rotate(1.6deg)}}
+.rhero .dish .gl{animation:gl 3.4s ease-in-out infinite}
+@keyframes gl{0%,100%{opacity:.18}50%{opacity:.55}}
+.rhero .dish .lf{transform-box:fill-box;transform-origin:50% 50%;animation:sway 2.8s ease-in-out infinite alternate}
+.rhero .dish .lf:nth-of-type(2n){animation-duration:3.4s;animation-delay:-1s}
+.rhero .dish .lf:nth-of-type(3n){animation-duration:2.4s;animation-delay:-.6s}
+@keyframes sway{from{transform:rotate(-9deg) scale(.96)}to{transform:rotate(9deg) scale(1.04)}}
+.rhero .steam{position:absolute;left:50%;top:6%;width:min(60%,240px);height:60%;transform:translateX(-50%);pointer-events:none;z-index:1}
+.rhero .steam i{position:absolute;bottom:0;width:34%;height:70%;border-radius:50%;background:radial-gradient(ellipse at 50% 60%,rgba(240,228,214,.5),rgba(240,228,214,0) 68%);filter:blur(5px);opacity:0;animation:rise 4.2s ease-in infinite}
+.rhero .steam i:nth-child(1){left:8%}.rhero .steam i:nth-child(2){left:34%;animation-delay:1.1s}.rhero .steam i:nth-child(3){left:58%;animation-delay:2.2s}.rhero .steam i:nth-child(4){left:22%;animation-delay:3.1s}
+@keyframes rise{0%{opacity:0;transform:translateY(40%) scaleX(.6)}30%{opacity:1}100%{opacity:0;transform:translateY(-55%) translateX(12%) scaleX(1.5)}}
 </style>
 
 <main id="scroller"></head>
@@ -735,7 +759,7 @@ T.NEW=NEW;T.base=T.SC.length;NEW.forEach(function(s){T.SC.push(s)});
 <script>
 var R = [
 {id:'pistaasikastike',c:'kastike',n:['Pistaasikastike','Pistachio sauce'],f:'2014',p:[{i:[[6,'dl','Cutteroitu pistaasirouhe','Finely chopped pistachios'],[4,'dl','Tomusokeri','Icing sugar'],[1,'tl','Suola','Salt'],[3,'dl','Rapsiöljy','Rapeseed oil']],s:[['Mittaa kaikki aineet blenderiin.','Measure all ingredients into the blender.'],['Aja tasaiseksi.','Blend until smooth.'],['Pullota.','Bottle.']]}]},
-{id:'vegesmetana',c:'kastike',n:['Vegesmetana','Vegan smetana'],f:'2015',p:[{i:[[2,'prk','Schalfix','Schalfix plant cream'],[400,'g','Kaurajugu','Oat yogurt (Kaurajugu)'],[1,'tl','Suola','Salt']],s:[['Vaahdota ensin Schalfix.','Whip the Schalfix first.'],['Lisää loput raaka-aineet joukkoon ja vaahdota huolella.','Add the rest of the ingredients and whip well.'],['Pussita.','Fill into piping bags.']]}]},
+{id:'vegesmetana',c:'kastike',n:['Vegesmetana','Vegan smetana'],v:1,f:'2015',p:[{i:[[2,'prk','Schalfix','Schalfix plant cream'],[400,'g','Kaurajugu','Oat yogurt (Kaurajugu)'],[1,'tl','Suola','Salt']],s:[['Vaahdota ensin Schalfix.','Whip the Schalfix first.'],['Lisää loput raaka-aineet joukkoon ja vaahdota huolella.','Add the rest of the ingredients and whip well.'],['Pussita.','Fill into piping bags.']]}]},
 {id:'wasabiseesam-limemajoneesi',c:'majo',n:['Wasabiseesam-limemajoneesi','Wasabi sesame lime mayo'],f:'2016',p:[{i:[[500,'g','Majoneesi','Mayonnaise'],[3,'kpl','Limen kuori','Lime zest'],[2,'kpl','Limen mehu','Lime juice'],[4,'g','Maldon-suola','Maldon salt'],[5,'g','Hunaja','Honey'],[20,'g','Vihreä wasabiseesaminsiemen','Green wasabi sesame seeds']],s:[['Sekoita ja pussita.','Mix and fill into piping bags.']]}]},
 {id:'ponzu',c:'kastike',n:['Ponzu-kastike','Ponzu sauce'],f:'2017',p:[{i:[[5,'dl','Ponzu-soija','Ponzu soy'],[5,'dl','Sweet soy','Sweet soy'],[10,'rkl','Sitruunanmehu','Lemon juice'],[10,'rkl','Tumma riisiviinietikka','Dark rice wine vinegar'],[null,'','Ripaus suolaa','Pinch of salt']],s:[['Sekoita ja pullota.','Mix and bottle.'],['PAKSUUN PONZUUN: poraa joukkoon 6 g xantaania / litra!','FOR THICK PONZU: blend in 6 g xanthan per litre!']]}]},
 {id:'wasabimajo',c:'majo',n:['Wasabimajo','Wasabi mayo'],f:'2017',p:[{i:[[9,'dl','Majoneesi','Mayonnaise'],[3,'tuubi','Wasabitahna (Blue Dragon)','Wasabi paste (Blue Dragon)'],[1.5,'tl','Suola','Salt']],s:[['Sekoita ja pussita.','Mix and fill into piping bags.']]}]},
@@ -818,7 +842,7 @@ var TintaDish = (function(){
       '<linearGradient id="'+r+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5B544C"/><stop offset=".5" stop-color="#2A2622"/><stop offset="1" stop-color="#0E0C0B"/></linearGradient></defs>'+
       '<circle cx="100" cy="100" r="88" fill="url(#'+r+')"/><circle cx="100" cy="100" r="82" fill="url(#'+g+')"/>'+
       '<circle cx="100" cy="100" r="66" fill="none" stroke="#000" stroke-width="3" opacity=".3"/>'+inner; }
-  function leaf(x, y, rot, c){ c = c || '#5E9E4E'; return '<g transform="rotate('+rot+' '+x+' '+y+')"><ellipse cx="'+x+'" cy="'+y+'" rx="9" ry="4" fill="'+c+'"/><path d="M'+(x-8)+' '+y+' L'+(x+8)+' '+y+'" stroke="#2F5A26" stroke-width=".8"/></g>'; }
+  function leaf(x, y, rot, c){ c = c || '#5E9E4E'; return '<g class="lf"><g transform="rotate('+rot+' '+x+' '+y+')"><ellipse cx="'+x+'" cy="'+y+'" rx="9" ry="4" fill="'+c+'"/><path d="M'+(x-8)+' '+y+' L'+(x+8)+' '+y+'" stroke="#2F5A26" stroke-width=".8"/></g></g>'; }
   function herbs(pts, c){ return pts.map(function(p){ return leaf(p[0], p[1], p[2], c); }).join(''); }
   function dots(n, c, cx, cy, rad, size, seed){ var s = '', a = seed || 1;
     for(var k = 0; k < n; k++){ a = (a * 9301 + 49297) % 233280; var r1 = a / 233280; a = (a * 9301 + 49297) % 233280; var r2 = a / 233280;
@@ -827,7 +851,7 @@ var TintaDish = (function(){
   function pool(c1, c2, extra){ var g = id('po');
     return '<defs><radialGradient id="'+g+'" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="'+c1+'"/><stop offset="1" stop-color="'+c2+'"/></radialGradient></defs>'+
       '<circle cx="100" cy="100" r="60" fill="url(#'+g+')"/>'+
-      '<path d="M64 90 C76 66 120 62 136 84" stroke="#fff" stroke-width="6" fill="none" opacity=".25" stroke-linecap="round"/>'+
+      '<path class="gl" d="M64 90 C76 66 120 62 136 84" stroke="#fff" stroke-width="6" fill="none" opacity=".25" stroke-linecap="round"/>'+
       '<path d="M74 116 C92 132 120 130 132 112" stroke="#000" stroke-width="4" fill="none" opacity=".15" stroke-linecap="round"/>'+(extra || ''); }
   var T = {
     bowl: function(o){ return plate(pool(o.c1, o.c2, (o.swirl ? '<path d="M82 98 q18 -20 36 0 q-18 18 -36 0z" fill="'+o.swirl+'" opacity=".9"/>' : '')+(o.specks ? dots(18, o.specks, 100, 100, 46, 2.2, o.seed) : '')+(o.herb === false ? '' : herbs([[112, 120, 30], [122, 113, -25], [80, 84, 60]], o.herb)))); },
@@ -966,6 +990,9 @@ var TintaDish = (function(){
       newName:'Recipe name (optional)',newPick:'Take or choose a photo',newSend:'Send',newSending:'Sending…',newOk:'Sent! The recipe will be added within about an hour.',
       newErr:'Sending failed. Check the connection and try again.',newOff:'Photo upload is not switched on yet.',newPages:'pages',newRemove:'Remove photo',isNew:'new',cook:'Start cooking',partAmt:'Amount for this part',partMain:'Main part · {m}× (from the amount above)',onlyPart:'Applies only to: {p}. Other parts have their own amount.',hiMorning:'Good morning',hiDay:'Hi',hiEve:'Good evening',helloSub:'What are we making today?',ingShort:'ingredients',stepShort:'steps',tNeeds:'Needed',needTitle:'What do we need?',needSub:'Write what the kitchen needs. Everyone sees it right away.',needAsk:'What is needed?',needEx:'E.g. Cucumber 5 kg',needSend:'Send',needSent:'Sent to everyone',needOpen:'Waiting',needNone:'No open requests.',needDone:'Done',needDoneList:'Done (3 days)',needUndo:'Undo',needNew:'New request',wTitle:'Welcome to the Tintå kitchen',wHint:'Enter your name and the kitchen code once. The phone remembers them and will not ask again.',wStart:'Start',wSkip:'Later',wOk:'Welcome',wBad:'Wrong code. Ask your manager.',wWait:'Too many tries. Wait 15 min.',pinTitle:'Kitchen code',pinHint:'Enter the kitchen code. Ask your manager for it. It is asked only once on this phone.',pinOk:'Continue',updTitle:'This recipe was updated',updUse:'The kitchen changed this recipe. Work from this new version.',updTag:'updated',updHome:'{n} recipes updated – see the changes',kitchen:'Kitchen changes',editsOn:'{n} amounts changed by the kitchen. They are marked in the ingredients.',someone:'Someone',del:'Delete',yourName:'Your name',noteAll:'Write a change for everyone',noteEx:'E.g. Less salt: 1 tbsp is enough.',saveAll:'Save for everyone',saving:'Saving…',saveErr:'Saving failed. Check the connection.',editBtn:'Edit amounts',editTitle:'Edit amounts',editHint:'Change amounts for one batch (1×). Saving shows it to everyone.',editWhy:'What did you change and why?',cancel:'Cancel',changed:'changed',was:'was',autoNote:'{n} amounts changed.',howMuch:'How much are you making?',byIng:'Scale by this ingredient:',amount:'Amount',unit:'Unit',factor:'All ingredients scaled:',saved:'remembered on this phone',cookStep:'Step',cookPrev:'Back',cookNext:'Next',cookDone:'Done',cookHere:'In this step',cookClose:'Close cooking mode',size:'Text size',share:'Share recipe',copied:'Recipe copied',notes:'My notes',notesHint:'Only visible on this phone.',more:'More',cats:'Categories',allAZ:'All recipes A–Z',allCats:'All categories'}
   };
+  var LEAF = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 2.5C7 2.5 3 5.5 3 10c0 1.2.4 2.3 1 3.1C5 9.8 7.5 7.4 10.5 6c-2.6 1.8-4.6 4.2-5.6 7.4.7.4 1.6.6 2.6.6 4.5 0 7-4 6-11.5z" fill="currentColor"/></svg>';
+  function vbadge(cls){ return '<span class="vbadge '+(cls||'')+'">'+LEAF+'<b>'+T[lang].vegan+'</b></span>'; }
+  var HOT = {kastike:1, liemi:1, keitto:1, pohja:1, lisuke:1};
   var CATS = {
     kastike:['Kastikkeet ja dipit','Sauces & dips'], majo:['Majoneesit','Mayos'], oljy:['Öljyt ja vinegretit','Oils & dressings'],
     pesto:['Pestot','Pestos'], voi:['Voit','Butters'], liemi:['Liemet','Stocks'], keitto:['Keitot','Soups'], pohja:['Pohjat','Bases'],
@@ -1047,7 +1074,7 @@ var TintaDish = (function(){
     var meta = CATS[r.c][i] + (r.p.length>1 ? ' · '+r.p.length+' '+t.parts : '');
     var fresh = r.added && (Date.now() - Date.parse(r.added)) < 14*864e5;
     return '<button type="button" class="row" data-open="'+r.id+'"><span class="thumb">'+TintaDish.svg(r,'dish')+'</span><div class="t"><div class="n">'+esc(r.n[i])+
-      (isUnseen(r.id)?'<span class="tag upd">'+t.updTag+'</span>':'')+(fresh?'<span class="tag">'+t.isNew+'</span>':'')+(r.v?'<span class="tag">'+t.vegan+'</span>':'')+'</div><div class="m">'+esc(r.n[1-i])+' · '+esc(meta)+'</div></div>'+
+      (isUnseen(r.id)?'<span class="tag upd">'+t.updTag+'</span>':'')+(fresh?'<span class="tag">'+t.isNew+'</span>':'')+(r.v?'<span class="tag veg">'+LEAF+t.vegan+'</span>':'')+'</div><div class="m">'+esc(r.n[1-i])+' · '+esc(meta)+'</div></div>'+
       (favs.indexOf(r.id)>-1 ? '<span class="star">★</span>' : '')+ICON.chev+'</button>';
   }
 
@@ -1055,7 +1082,7 @@ var TintaDish = (function(){
     var t = T[lang], i = L(), fresh = r.added && (Date.now() - Date.parse(r.added)) < 14*864e5, up = isUnseen(r.id);
     var nI = 0; r.p.forEach(function(p){ nI += p.i.length; });
     return '<button type="button" class="rcard" data-open="'+r.id+'">'+(up ? '<span class="ctag">'+t.updTag+'</span>' : fresh ? '<span class="ctag">'+t.isNew+'</span>' : '')+
-      (favs.indexOf(r.id)>-1 ? '<span class="cstar">★</span>' : '')+TintaDish.svg(r,'dish')+
+      (favs.indexOf(r.id)>-1 ? '<span class="cstar">★</span>' : '')+(r.v ? vbadge((up||fresh)?'low':'') : '')+TintaDish.svg(r,'dish')+
       '<b>'+esc(r.n[i])+'</b><span>'+esc(CATS[r.c][i])+' · '+nI+' '+t.ingShort+'</span></button>';
   }
   function mini(r){ var i = L(); return '<button type="button" class="mini" data-open="'+r.id+'">'+TintaDish.svg(r,'dish')+'<b>'+esc(r.n[i])+'</b></button>'; }
@@ -1183,7 +1210,7 @@ var TintaDish = (function(){
     var html =
       '<div class="top"><button type="button" class="back" id="back">'+ICON.back+'<span>'+t.back+'</span></button>'+
       '<div class="tools"><button type="button" class="icon" id="sizebtn" aria-label="'+t.size+'">'+ICON.aa+'</button><button type="button" class="icon" id="favbtn" aria-pressed="'+isFav+'" aria-label="'+(isFav?t.unfav:t.fav)+'">'+ICON.star+'</button>'+LANGS+'</div></div>'+
-      '<div class="rhero">'+TintaDish.svg(r,'dish big')+'</div>'+
+      '<div class="rhero'+(HOT[r.c]?' hot':'')+'">'+(r.v?vbadge('big'):'')+(HOT[r.c]?'<div class="steam" aria-hidden="true"><i></i><i></i><i></i><i></i></div>':'')+TintaDish.svg(r,'dish big')+'</div>'+
       '<header class="rhead sheet"><div class="eyebrow">'+esc(CATS[r.c][i])+(r.v?' · '+t.vegan:'')+(r.p.length>1?' · '+r.p.length+' '+t.parts:'')+'</div>'+
       '<h1 class="title">'+esc(r.n[i])+'</h1><div class="other">'+esc(r.n[1-i])+'</div>'+
       '<div class="stats"><div class="stt"><b>'+nIng+'</b><span>'+t.ingShort+'</span></div><div class="stt"><b>'+nStep+'</b><span>'+t.stepShort+'</span></div><div class="stt acc"><b>'+num(mult)+'×</b><span>'+t.batch+'</span></div></div></header>'+

@@ -35,6 +35,9 @@
       newName:'Recipe name (optional)',newPick:'Take or choose a photo',newSend:'Send',newSending:'Sending…',newOk:'Sent! The recipe will be added within about an hour.',
       newErr:'Sending failed. Check the connection and try again.',newOff:'Photo upload is not switched on yet.',newPages:'pages',newRemove:'Remove photo',isNew:'new',cook:'Start cooking',partAmt:'Amount for this part',partMain:'Main part · {m}× (from the amount above)',onlyPart:'Applies only to: {p}. Other parts have their own amount.',hiMorning:'Good morning',hiDay:'Hi',hiEve:'Good evening',helloSub:'What are we making today?',ingShort:'ingredients',stepShort:'steps',tNeeds:'Needed',needTitle:'What do we need?',needSub:'Write what the kitchen needs. Everyone sees it right away.',needAsk:'What is needed?',needEx:'E.g. Cucumber 5 kg',needSend:'Send',needSent:'Sent to everyone',needOpen:'Waiting',needNone:'No open requests.',needDone:'Done',needDoneList:'Done (3 days)',needUndo:'Undo',needNew:'New request',wTitle:'Welcome to the Tintå kitchen',wHint:'Enter your name and the kitchen code once. The phone remembers them and will not ask again.',wStart:'Start',wSkip:'Later',wOk:'Welcome',wBad:'Wrong code. Ask your manager.',wWait:'Too many tries. Wait 15 min.',pinTitle:'Kitchen code',pinHint:'Enter the kitchen code. Ask your manager for it. It is asked only once on this phone.',pinOk:'Continue',updTitle:'This recipe was updated',updUse:'The kitchen changed this recipe. Work from this new version.',updTag:'updated',updHome:'{n} recipes updated – see the changes',kitchen:'Kitchen changes',editsOn:'{n} amounts changed by the kitchen. They are marked in the ingredients.',someone:'Someone',del:'Delete',yourName:'Your name',noteAll:'Write a change for everyone',noteEx:'E.g. Less salt: 1 tbsp is enough.',saveAll:'Save for everyone',saving:'Saving…',saveErr:'Saving failed. Check the connection.',editBtn:'Edit amounts',editTitle:'Edit amounts',editHint:'Change amounts for one batch (1×). Saving shows it to everyone.',editWhy:'What did you change and why?',cancel:'Cancel',changed:'changed',was:'was',autoNote:'{n} amounts changed.',howMuch:'How much are you making?',byIng:'Scale by this ingredient:',amount:'Amount',unit:'Unit',factor:'All ingredients scaled:',saved:'remembered on this phone',cookStep:'Step',cookPrev:'Back',cookNext:'Next',cookDone:'Done',cookHere:'In this step',cookClose:'Close cooking mode',size:'Text size',share:'Share recipe',copied:'Recipe copied',notes:'My notes',notesHint:'Only visible on this phone.',more:'More',cats:'Categories',allAZ:'All recipes A–Z',allCats:'All categories'}
   };
+  var LEAF = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 2.5C7 2.5 3 5.5 3 10c0 1.2.4 2.3 1 3.1C5 9.8 7.5 7.4 10.5 6c-2.6 1.8-4.6 4.2-5.6 7.4.7.4 1.6.6 2.6.6 4.5 0 7-4 6-11.5z" fill="currentColor"/></svg>';
+  function vbadge(cls){ return '<span class="vbadge '+(cls||'')+'">'+LEAF+'<b>'+T[lang].vegan+'</b></span>'; }
+  var HOT = {kastike:1, liemi:1, keitto:1, pohja:1, lisuke:1};
   var CATS = {
     kastike:['Kastikkeet ja dipit','Sauces & dips'], majo:['Majoneesit','Mayos'], oljy:['Öljyt ja vinegretit','Oils & dressings'],
     pesto:['Pestot','Pestos'], voi:['Voit','Butters'], liemi:['Liemet','Stocks'], keitto:['Keitot','Soups'], pohja:['Pohjat','Bases'],
@@ -116,7 +119,7 @@
     var meta = CATS[r.c][i] + (r.p.length>1 ? ' · '+r.p.length+' '+t.parts : '');
     var fresh = r.added && (Date.now() - Date.parse(r.added)) < 14*864e5;
     return '<button type="button" class="row" data-open="'+r.id+'"><span class="thumb">'+TintaDish.svg(r,'dish')+'</span><div class="t"><div class="n">'+esc(r.n[i])+
-      (isUnseen(r.id)?'<span class="tag upd">'+t.updTag+'</span>':'')+(fresh?'<span class="tag">'+t.isNew+'</span>':'')+(r.v?'<span class="tag">'+t.vegan+'</span>':'')+'</div><div class="m">'+esc(r.n[1-i])+' · '+esc(meta)+'</div></div>'+
+      (isUnseen(r.id)?'<span class="tag upd">'+t.updTag+'</span>':'')+(fresh?'<span class="tag">'+t.isNew+'</span>':'')+(r.v?'<span class="tag veg">'+LEAF+t.vegan+'</span>':'')+'</div><div class="m">'+esc(r.n[1-i])+' · '+esc(meta)+'</div></div>'+
       (favs.indexOf(r.id)>-1 ? '<span class="star">★</span>' : '')+ICON.chev+'</button>';
   }
 
@@ -124,7 +127,7 @@
     var t = T[lang], i = L(), fresh = r.added && (Date.now() - Date.parse(r.added)) < 14*864e5, up = isUnseen(r.id);
     var nI = 0; r.p.forEach(function(p){ nI += p.i.length; });
     return '<button type="button" class="rcard" data-open="'+r.id+'">'+(up ? '<span class="ctag">'+t.updTag+'</span>' : fresh ? '<span class="ctag">'+t.isNew+'</span>' : '')+
-      (favs.indexOf(r.id)>-1 ? '<span class="cstar">★</span>' : '')+TintaDish.svg(r,'dish')+
+      (favs.indexOf(r.id)>-1 ? '<span class="cstar">★</span>' : '')+(r.v ? vbadge((up||fresh)?'low':'') : '')+TintaDish.svg(r,'dish')+
       '<b>'+esc(r.n[i])+'</b><span>'+esc(CATS[r.c][i])+' · '+nI+' '+t.ingShort+'</span></button>';
   }
   function mini(r){ var i = L(); return '<button type="button" class="mini" data-open="'+r.id+'">'+TintaDish.svg(r,'dish')+'<b>'+esc(r.n[i])+'</b></button>'; }
@@ -252,7 +255,7 @@
     var html =
       '<div class="top"><button type="button" class="back" id="back">'+ICON.back+'<span>'+t.back+'</span></button>'+
       '<div class="tools"><button type="button" class="icon" id="sizebtn" aria-label="'+t.size+'">'+ICON.aa+'</button><button type="button" class="icon" id="favbtn" aria-pressed="'+isFav+'" aria-label="'+(isFav?t.unfav:t.fav)+'">'+ICON.star+'</button>'+LANGS+'</div></div>'+
-      '<div class="rhero">'+TintaDish.svg(r,'dish big')+'</div>'+
+      '<div class="rhero'+(HOT[r.c]?' hot':'')+'">'+(r.v?vbadge('big'):'')+(HOT[r.c]?'<div class="steam" aria-hidden="true"><i></i><i></i><i></i><i></i></div>':'')+TintaDish.svg(r,'dish big')+'</div>'+
       '<header class="rhead sheet"><div class="eyebrow">'+esc(CATS[r.c][i])+(r.v?' · '+t.vegan:'')+(r.p.length>1?' · '+r.p.length+' '+t.parts:'')+'</div>'+
       '<h1 class="title">'+esc(r.n[i])+'</h1><div class="other">'+esc(r.n[1-i])+'</div>'+
       '<div class="stats"><div class="stt"><b>'+nIng+'</b><span>'+t.ingShort+'</span></div><div class="stt"><b>'+nStep+'</b><span>'+t.stepShort+'</span></div><div class="stt acc"><b>'+num(mult)+'×</b><span>'+t.batch+'</span></div></div></header>'+

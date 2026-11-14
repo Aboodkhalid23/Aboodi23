@@ -308,6 +308,30 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 #splash canvas{transition:transform .8s cubic-bezier(.5,0,.75,0)}
 #splash.out canvas{transform:scale(1.08)}
 #splash.gone{display:none}
+/* Vegaani-merkki / علامة النباتي */
+.vbadge{position:absolute;top:10px;right:10px;z-index:2;display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px 0 6px;border-radius:999px;background:#2F6B35;color:#E9F7E4!important;font:800 10px var(--sans);letter-spacing:.06em;text-transform:uppercase;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.vbadge svg{width:13px;height:13px;flex:none}
+.vbadge b{font-weight:800;color:inherit}
+.vbadge.low{top:38px}
+.vbadge.big{top:14px;right:auto;left:max(16px, env(safe-area-inset-left, 0px));height:28px;padding:0 12px 0 9px;font-size:12px}
+.vbadge.big svg{width:16px;height:16px}
+.tag.veg{display:inline-flex;align-items:center;gap:3px;background:#2F6B35;border-color:#2F6B35;color:#E9F7E4}
+.tag.veg svg{width:11px;height:11px}
+/* Liikkuva ruokakuva / حركة صورة الطبق */
+.rhero{position:relative}
+.rhero .dish.big{animation:dIn .9s cubic-bezier(.16,1,.3,1) both,dBob 5.5s 1s ease-in-out infinite}
+@keyframes dIn{from{opacity:0;transform:translateY(18px) scale(.9) rotate(-10deg)}to{opacity:1;transform:none}}
+@keyframes dBob{0%,100%{transform:none}50%{transform:translateY(-7px) rotate(1.6deg)}}
+.rhero .dish .gl{animation:gl 3.4s ease-in-out infinite}
+@keyframes gl{0%,100%{opacity:.18}50%{opacity:.55}}
+.rhero .dish .lf{transform-box:fill-box;transform-origin:50% 50%;animation:sway 2.8s ease-in-out infinite alternate}
+.rhero .dish .lf:nth-of-type(2n){animation-duration:3.4s;animation-delay:-1s}
+.rhero .dish .lf:nth-of-type(3n){animation-duration:2.4s;animation-delay:-.6s}
+@keyframes sway{from{transform:rotate(-9deg) scale(.96)}to{transform:rotate(9deg) scale(1.04)}}
+.rhero .steam{position:absolute;left:50%;top:6%;width:min(60%,240px);height:60%;transform:translateX(-50%);pointer-events:none;z-index:1}
+.rhero .steam i{position:absolute;bottom:0;width:34%;height:70%;border-radius:50%;background:radial-gradient(ellipse at 50% 60%,rgba(240,228,214,.5),rgba(240,228,214,0) 68%);filter:blur(5px);opacity:0;animation:rise 4.2s ease-in infinite}
+.rhero .steam i:nth-child(1){left:8%}.rhero .steam i:nth-child(2){left:34%;animation-delay:1.1s}.rhero .steam i:nth-child(3){left:58%;animation-delay:2.2s}.rhero .steam i:nth-child(4){left:22%;animation-delay:3.1s}
+@keyframes rise{0%{opacity:0;transform:translateY(40%) scaleX(.6)}30%{opacity:1}100%{opacity:0;transform:translateY(-55%) translateX(12%) scaleX(1.5)}}
 </style>
 
 <main id="scroller"><div class="wrap">

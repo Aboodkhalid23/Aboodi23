@@ -8,7 +8,7 @@ var TintaDish = (function(){
       '<linearGradient id="'+r+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5B544C"/><stop offset=".5" stop-color="#2A2622"/><stop offset="1" stop-color="#0E0C0B"/></linearGradient></defs>'+
       '<circle cx="100" cy="100" r="88" fill="url(#'+r+')"/><circle cx="100" cy="100" r="82" fill="url(#'+g+')"/>'+
       '<circle cx="100" cy="100" r="66" fill="none" stroke="#000" stroke-width="3" opacity=".3"/>'+inner; }
-  function leaf(x, y, rot, c){ c = c || '#5E9E4E'; return '<g transform="rotate('+rot+' '+x+' '+y+')"><ellipse cx="'+x+'" cy="'+y+'" rx="9" ry="4" fill="'+c+'"/><path d="M'+(x-8)+' '+y+' L'+(x+8)+' '+y+'" stroke="#2F5A26" stroke-width=".8"/></g>'; }
+  function leaf(x, y, rot, c){ c = c || '#5E9E4E'; return '<g class="lf"><g transform="rotate('+rot+' '+x+' '+y+')"><ellipse cx="'+x+'" cy="'+y+'" rx="9" ry="4" fill="'+c+'"/><path d="M'+(x-8)+' '+y+' L'+(x+8)+' '+y+'" stroke="#2F5A26" stroke-width=".8"/></g></g>'; }
   function herbs(pts, c){ return pts.map(function(p){ return leaf(p[0], p[1], p[2], c); }).join(''); }
   function dots(n, c, cx, cy, rad, size, seed){ var s = '', a = seed || 1;
     for(var k = 0; k < n; k++){ a = (a * 9301 + 49297) % 233280; var r1 = a / 233280; a = (a * 9301 + 49297) % 233280; var r2 = a / 233280;
@@ -17,7 +17,7 @@ var TintaDish = (function(){
   function pool(c1, c2, extra){ var g = id('po');
     return '<defs><radialGradient id="'+g+'" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="'+c1+'"/><stop offset="1" stop-color="'+c2+'"/></radialGradient></defs>'+
       '<circle cx="100" cy="100" r="60" fill="url(#'+g+')"/>'+
-      '<path d="M64 90 C76 66 120 62 136 84" stroke="#fff" stroke-width="6" fill="none" opacity=".25" stroke-linecap="round"/>'+
+      '<path class="gl" d="M64 90 C76 66 120 62 136 84" stroke="#fff" stroke-width="6" fill="none" opacity=".25" stroke-linecap="round"/>'+
       '<path d="M74 116 C92 132 120 130 132 112" stroke="#000" stroke-width="4" fill="none" opacity=".15" stroke-linecap="round"/>'+(extra || ''); }
   var T = {
     bowl: function(o){ return plate(pool(o.c1, o.c2, (o.swirl ? '<path d="M82 98 q18 -20 36 0 q-18 18 -36 0z" fill="'+o.swirl+'" opacity=".9"/>' : '')+(o.specks ? dots(18, o.specks, 100, 100, 46, 2.2, o.seed) : '')+(o.herb === false ? '' : herbs([[112, 120, 30], [122, 113, -25], [80, 84, 60]], o.herb)))); },
