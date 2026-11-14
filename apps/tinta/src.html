@@ -302,6 +302,10 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 .pq output{min-width:46px;text-align:center;font-weight:800;font-size:17px;color:var(--fg)}
 .pmeta{margin:-2px 0 10px;font-size:13px;color:var(--accent-soft);font-weight:600}
 @media (prefers-reduced-motion:no-preference){.view{animation:in .18s ease-out}@keyframes in{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}}
+/* Splash host / مكان حركة الشعار */
+#splash{position:fixed;inset:0;z-index:999;background:var(--bg);display:flex;align-items:center;justify-content:center;overflow:hidden;transition:opacity .5s ease}
+#splash.out{opacity:0;pointer-events:none}
+#splash.gone{display:none}
 </style>
 
 <main id="scroller"><div class="wrap">
@@ -382,6 +386,9 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
   <button type="button" class="sharebtn" id="welcomeskip" style="margin-top:8px"></button>
   <p class="status" id="wstatus" aria-live="polite"></p>
 </section>
+
+<div id="splash" aria-hidden="true"></div>
+<script>SPLASH_JS</script>
 
 <script>
 </script>
