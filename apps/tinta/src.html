@@ -255,17 +255,52 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 .nbtn{flex:none;height:44px;padding:0 14px;border-radius:12px;border:0;background:var(--accent);color:var(--bg);font-weight:700;font-size:14px}
 .nbtn.ghost{background:transparent;border:1px solid var(--line);color:var(--muted)}
 .toast{position:fixed;left:max(12px, env(safe-area-inset-left, 0px));right:max(12px, env(safe-area-inset-right, 0px));top:calc(env(safe-area-inset-top, 0px) + 10px);z-index:40;max-width:540px;margin:0 auto;padding:14px 16px;border-radius:16px;border:0;background:var(--accent);color:var(--bg);font-weight:700;font-size:15px;text-align:left;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.hometop{align-items:center}
+.hello{display:flex;align-items:center;gap:10px;min-width:0}
+.logo.sm{width:52px}
+.hitxt{min-width:0}
+.hi{font-size:19px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hisub{font-size:13px;color:var(--muted)}
+.langone{width:42px;height:42px;border-radius:14px;border:1px solid var(--line);background:transparent;color:var(--fg);font-weight:700;font-size:13px;flex:none}
+.avatar{width:42px;height:42px;border-radius:14px;border:0;background:var(--accent);color:var(--bg);font-weight:800;font-size:18px;flex:none;position:relative}
+.thumb{width:56px;height:56px;flex:none}
+.thumb .dish{width:56px;height:56px;display:block}
+.cchips{display:flex;gap:10px;margin-top:16px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none;margin-inline:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));padding-inline:max(16px, env(safe-area-inset-left, 0px))}
+.cchips::-webkit-scrollbar{display:none}
+.cchip{flex:none;width:78px;padding:8px 4px 10px;border-radius:20px;border:0;background:var(--surface);color:var(--muted);font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:4px}
+.cchip .cic{width:46px;height:46px;display:block}
+.cchip span.cic.all{display:flex;align-items:center;justify-content:center;border-radius:999px;background:#2A2724;color:var(--fg);font-size:15px;font-weight:800}
+.cchip.on{background:var(--accent);color:var(--bg)}
+.cchip.on span.cic.all{background:rgba(0,0,0,.18);color:var(--bg)}
+.rgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.rcard{position:relative;border:0;border-radius:22px;background:var(--surface);padding:10px 12px 14px;text-align:left;display:flex;flex-direction:column;gap:2px;min-width:0}
+.rcard .dish{width:100%;height:auto;display:block;margin:-2px 0 2px}
+.rcard b{font-size:15px;font-weight:700;line-height:1.25}
+.rcard span{font-size:12px;color:var(--muted)}
+.ctag{position:absolute;top:10px;right:10px;z-index:1;font-size:10px;font-weight:800;color:var(--bg)!important;background:var(--accent);border-radius:999px;padding:3px 8px}
+.cstar{position:absolute;top:10px;left:12px;z-index:1;color:var(--accent)!important;font-size:16px}
+.mini{flex:none;width:118px;border:0;border-radius:18px;background:var(--surface);padding:8px 10px 12px;text-align:left;display:flex;flex-direction:column;gap:4px}
+.mini .dish{width:100%;height:auto;display:block}
+.mini b{font-size:13px;font-weight:700;line-height:1.25;font-family:var(--sans)}
+.rhero{margin:0 calc(-1 * max(16px, env(safe-area-inset-left, 0px)));padding:6px 0 0;background:radial-gradient(110% 80% at 50% 40%, #2C231B 0%, var(--bg) 70%);display:flex;justify-content:center}
+.rhero .dish.big{width:min(74%, 300px);height:auto;display:block;margin-bottom:-26px;filter:drop-shadow(0 24px 30px rgba(0,0,0,.6))}
+.rhead.sheet{position:relative;margin:0 calc(-1 * max(16px, env(safe-area-inset-left, 0px)));padding:34px max(16px, env(safe-area-inset-left, 0px)) 18px;background:var(--surface);border-radius:28px 28px 0 0}
+.rhead.sheet .eyebrow{margin-top:0}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px}
+.stt{background:#232020;border-radius:16px;padding:10px;text-align:center}
+.stt b{display:block;font-size:20px}
+.stt span{font-size:12px;color:var(--muted)}
+.stt.acc{background:var(--accent);color:var(--bg)}
+.stt.acc span{color:#3A2A12}
 @media (prefers-reduced-motion:no-preference){.view{animation:in .18s ease-out}@keyframes in{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}}
 </style>
 
 <main id="scroller"><div class="wrap">
   <section id="home" class="view">
-    <div class="top">
-      <img class="logo" src="LOGO_DATA" alt="Tintå">
-      <div class="lang" role="group" aria-label="Kieli / Language"><button type="button" data-lang="fi">FI</button><button type="button" data-lang="en">EN</button></div>
+    <div class="top hometop">
+      <div class="hello"><img class="logo sm" src="LOGO_DATA" alt="Tintå"><div class="hitxt"><div id="hello" class="hi"></div><div id="hellosub" class="hisub"></div></div></div>
+      <div class="tools"><button type="button" class="langone" id="langone" aria-label="Kieli / Language">EN</button><button type="button" class="avatar" id="avatar" aria-label="Nimi / Name">T</button></div>
     </div>
-    <h1 class="big" id="hometitle"></h1>
-    <p class="sub" id="count"></p>
     <label class="search" for="q">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A39B90" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
       <input id="q" type="search" autocomplete="off" enterkeyhint="search">

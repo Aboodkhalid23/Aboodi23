@@ -2,7 +2,7 @@ import re,base64,sys
 import os
 A=os.path.dirname(os.path.abspath(__file__)); ROOT=os.path.dirname(os.path.dirname(A))
 s=open(A+'/src.html').read()
-s=re.sub(r'<script>\n.*</script>', lambda m:'<script>\n'+open(A+'/data.js').read()+'\n'+open(A+'/app.js').read()+'</script>', s, count=1, flags=re.S)
+s=re.sub(r'<script>\n.*</script>', lambda m:'<script>\n'+open(A+'/data.js').read()+'\n'+open(A+'/dish.js').read()+'\n'+open(A+'/app.js').read()+'</script>', s, count=1, flags=re.S)
 d='data:image/png;base64,'+base64.b64encode(open(A+'/logo-sm.png','rb').read()).decode()
 a=s.replace('LOGO_DATA',d)
 open('/tmp/tinta-check.js','w').write(re.search(r'<script>\n(.*?)</script>',a,re.S).group(1))
