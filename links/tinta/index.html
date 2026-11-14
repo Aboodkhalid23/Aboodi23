@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
 <script src="config.js"></script>
-<script>window.TINTA_VER='1794660777';</script>
+<script>window.TINTA_VER='1794660987';</script>
 <title>Tintå Reseptit</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap">
 <style>
@@ -316,7 +316,9 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 @media (prefers-reduced-motion:no-preference){.view{animation:in .18s ease-out}@keyframes in{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}}
 /* Splash host / مكان حركة الشعار */
 #splash{position:fixed;inset:0;z-index:999;background:var(--bg);display:flex;align-items:center;justify-content:center;overflow:hidden;transition:opacity .5s ease}
-#splash.out{opacity:0;pointer-events:none}
+#splash.out{opacity:0;pointer-events:none;transition:opacity .7s ease}
+#splash canvas{transition:transform .8s cubic-bezier(.5,0,.75,0)}
+#splash.out canvas{transform:scale(1.08)}
 #splash.gone{display:none}
 </style>
 
@@ -454,7 +456,7 @@ function drawKnife(x,lw){var L=lw*1.15,h=lw*.17,g=x.createLinearGradient(0,-h/2,
 // ---------- scenes ----------
 var SC=[
 // 1 نار الطباخ
-{k:'fire',d:7,init:function(S){S.f=[];S.e=[];var n=34;for(var i=0;i<n;i++)S.f.push({a:i/n*6.283-1.571,ph:R(0,50),h:R(.8,1.2),ti:.5+i/n*1.2})},
+{k:'fire',d:7.1,init:function(S){S.f=[];S.e=[];var n=34;for(var i=0;i<n;i++)S.f.push({a:i/n*6.283-1.571,ph:R(0,50),h:R(.8,1.2),ti:.5+i/n*1.2})},
  draw:function(S,t){var x=S.x,R0=S.lw*.64;bg(S,.6*E(P(t,.6,2.4)));
   x.globalAlpha=E(P(t,0,.5));x.lineWidth=S.lw*.034;x.strokeStyle='#2B2520';x.beginPath();x.arc(S.cx,S.cy,R0,0,6.283);x.stroke();x.lineWidth=1;x.strokeStyle='rgba(208,138,80,.3)';x.beginPath();x.arc(S.cx,S.cy,R0+S.lw*.02,0,6.283);x.stroke();
   x.globalCompositeOperation='lighter';
@@ -468,7 +470,7 @@ var SC=[
   if(heat>0)logo(S,a*heat*.8,.9+.1*E(P(t,1.7,3.2)),{src:S.tint('#FFB070')});
   fin(S,t,3.4,4.8)}},
 // 2 بخار الطبخ
-{k:'steam',d:7,init:function(S){S.p=[]},
+{k:'steam',d:7.3,init:function(S){S.p=[]},
  draw:function(S,t){var x=S.x,rimY=S.cy+S.lh*.95,rx=S.lw*.62;bg(S,.3);var thin=1-.45*P(t,3,4.5);
   x.globalAlpha=E(P(t,0,.8));var g=x.createLinearGradient(S.cx-rx,0,S.cx+rx,0);g.addColorStop(0,'#5A3A22');g.addColorStop(.35,'#E6A774');g.addColorStop(1,'#6E4325');x.strokeStyle=g;x.lineWidth=S.lw*.03;x.beginPath();x.ellipse(S.cx,rimY,rx,rx*.16,0,0,6.283);x.stroke();x.globalAlpha=1;
   if(t<6.4){var n=95*S.dt*(.4+P(t,0,1.4))*thin;for(;n>0;n--)if(n>=1||Math.random()<n)S.p.push({x:S.cx+R(-rx*.85,rx*.85),y:rimY-R(0,6),vy:-S.lw*R(.26,.4),r:R(.06,.11)*S.lw,l:0,L:R(2.4,3.6),ph:R(0,50),f:Math.random()<.18,a:.75})}
@@ -477,7 +479,7 @@ var SC=[
   var a=E(P(t,1.8,3.8));logo(S,a,1,{dy:(1-a)*S.lw*.1,g:S.tint('#EBDCCB'),gr:S.lw*.05*(1-a)+S.lw*.012,ga:a*.8*(1-P(t,3.6,5.2))});
   front=steamP(S,front,sp);S.p=back.concat(front);fin(S,t,4,5)}},
 // 3 غطاء الطبق
-{k:'cloche',d:7.4,init:function(S){S.p=[];S.b=0},
+{k:'cloche',d:7.2,init:function(S){S.p=[];S.b=0},
  draw:function(S,t){var x=S.x,lw=S.lw,py=S.cy+S.lh*.45,prx=lw*.92,pry=lw*.2,lift=EIO(P(t,2,3.2)),ap=E(P(t,0,.9));
   bg(S,.2+.5*E(P(t,2.1,3.4)));
   if(t>2){x.globalCompositeOperation='lighter';var ra=E(P(t,2,2.8))*(1-.65*P(t,3.6,6));x.save();x.translate(S.cx,py);for(var i=0;i<16;i++){var an=-Math.PI+(i+.5)/16*Math.PI+N(t*.5,i)*.06,L=lw*1.5,g=x.createLinearGradient(0,0,Math.cos(an)*L,Math.sin(an)*L);g.addColorStop(0,'rgba(255,190,120,'+(.2*ra)+')');g.addColorStop(1,'rgba(255,190,120,0)');x.fillStyle=g;x.beginPath();x.moveTo(0,0);x.lineTo(Math.cos(an-.06)*L,Math.sin(an-.06)*L);x.lineTo(Math.cos(an+.06)*L,Math.sin(an+.06)*L);x.closePath();x.fill()}x.restore();x.globalCompositeOperation='source-over'}
@@ -495,7 +497,7 @@ var SC=[
    x.fillStyle=g3;x.fillRect(-lw*.022,-dh*.86,lw*.044,lw*.06);x.beginPath();x.ellipse(0,-dh*.88,lw*.075,lw*.045,0,0,6.283);x.fill();x.restore()}
   fin(S,t,3.8,4.9)}},
 // 4 رشة ملح وبهارات
-{k:'salt',d:7.2,init:function(S){var c=S.L,w=c.width,h=c.height,d=c.getContext('2d').getImageData(0,0,w,h).data,pts=[],st=Math.max(1,Math.round(w/150));for(var y=0;y<h;y+=st)for(var i=0;i<w;i+=st)if(d[(y*w+i)*4+3]>110)pts.push([i/w,y/h]);
+{k:'salt',d:7.5,init:function(S){var c=S.L,w=c.width,h=c.height,d=c.getContext('2d').getImageData(0,0,w,h).data,pts=[],st=Math.max(1,Math.round(w/150));for(var y=0;y<h;y+=st)for(var i=0;i<w;i+=st)if(d[(y*w+i)*4+3]>110)pts.push([i/w,y/h]);
   for(var k=pts.length-1;k>0;k--){var j=Math.random()*(k+1)|0,q=pts[k];pts[k]=pts[j];pts[j]=q}pts=pts.slice(0,1400);
   var C=['#F3EEE6','#FFFFFF','#F3EEE6','#E6A774','#D08A50','#8C7766','#C0652A'],u=S.lw/200;
   S.g=pts.map(function(p,i){var ts=.35+Math.random()*1.7;return{tx:S.cx-S.lw/2+p[0]*S.lw,ty:S.cy-S.lh/2+p[1]*S.lh,x:0,y:0,vx:0,vy:0,on:false,ts:ts,ta:ts+R(.45,1),c:C[i%C.length],r:R(1,2)*u*1.4}})},
@@ -506,7 +508,7 @@ var SC=[
   if(t<3.1){x.save();x.globalAlpha=E(P(t,0,.4))*(1-P(t,2.5,3.1));x.translate(shx,shy);x.rotate(Math.PI+rot);drawShaker(x,S.lw);x.restore();x.globalAlpha=1}
   logo(S,E(P(t,3.6,4.5)),1,{});fin(S,t,4.4,5.2)}},
 // 5 ضربة سكين
-{k:'knife',d:7,init:function(S){S.p=[];S.sp=0},
+{k:'knife',d:7.5,init:function(S){S.p=[];S.sp=0},
  draw:function(S,t){var x=S.x,lw=S.lw,an=-.14,m=Math.tan(an);bg(S,.3);
   var a=E(P(t,.2,1.2)),sep=E(P(t,1.8,2.6))*(1-EB(P(t,3,3.9))),off=lw*.07*sep,cut=t>=1.75;
   function piece(top,dx,dy){x.save();x.translate(dx,dy);x.beginPath();if(top){x.moveTo(-50,-50);x.lineTo(S.W+50,-50)}else{x.moveTo(-50,S.H+50);x.lineTo(S.W+50,S.H+50)}x.lineTo(S.W+50,S.cy+m*(S.W+50-S.cx));x.lineTo(-50,S.cy+m*(-50-S.cx));x.closePath();x.clip();logo(S,a,1,{});x.restore()}
@@ -520,7 +522,7 @@ var SC=[
   if(kp>0&&kp<1){x.save();x.translate(kx,ky-lw*.06);x.rotate(an);drawKnife(x,lw);x.restore()}
   fin(S,t,4.2,5.2)}},
 // 6 لمسة الصوص
-{k:'sauce',d:7.2,init:function(S){var lw=S.lw,p0=[S.cx-lw*.68,S.cy+S.lh*.62],p1=[S.cx-lw*.2,S.cy+S.lh*.05],p2=[S.cx+lw*.25,S.cy+S.lh*1.05],p3=[S.cx+lw*.66,S.cy+S.lh*.22];S.pts=[];
+{k:'sauce',d:7.4,init:function(S){var lw=S.lw,p0=[S.cx-lw*.68,S.cy+S.lh*.62],p1=[S.cx-lw*.2,S.cy+S.lh*.05],p2=[S.cx+lw*.25,S.cy+S.lh*1.05],p3=[S.cx+lw*.66,S.cy+S.lh*.22];S.pts=[];
   for(var i=0;i<=180;i++){var u=i/180,v=1-u,X=v*v*v*p0[0]+3*v*v*u*p1[0]+3*v*u*u*p2[0]+u*u*u*p3[0],Y=v*v*v*p0[1]+3*v*v*u*p1[1]+3*v*u*u*p2[1]+u*u*u*p3[1];S.pts.push([X,Y,lw*.075*Math.pow(Math.sin(Math.PI*Math.min(.98,u*1.08+.02)),.55)*(1-u*.4)+lw*.006])}S.end=p3},
  draw:function(S,t){var x=S.x,lw=S.lw;bg(S,.3);var k=EIO(P(t,.5,1.9)),n=Math.floor(k*S.pts.length),i;
   x.fillStyle='rgba(0,0,0,.35)';for(i=0;i<n;i+=2){var q=S.pts[i];x.beginPath();x.arc(q[0]+1.5,q[1]+2.5,q[2],0,6.283);x.fill()}
@@ -531,7 +533,7 @@ var SC=[
   var w=P(t,2.1,4);if(w>0){var f=EIO(w),c=wipe(S,f,.12);x.globalAlpha=1;x.drawImage(c,S.cx-lw/2,S.cy-S.lh/2,lw,S.lh);if(w<1){x.globalCompositeOperation='lighter';dot(x,sprite('255,200,140',1),S.cx-lw/2+(f*1.12-.06)*lw,S.cy+N(t*7,2)*S.lh*.28,lw*.05,.9);x.globalCompositeOperation='source-over'}}
   fin(S,t,4.2,5.1)}},
 // 7 قطرة زيت
-{k:'oil',d:7.2,init:function(S){S.p=[];S.hit=0},
+{k:'oil',d:7.3,init:function(S){S.p=[];S.hit=0},
  draw:function(S,t){var x=S.x,lw=S.lw,sy=S.cy+S.lh*.66,rx=lw*.88,ry=lw*.13;bg(S,.2+.35*E(P(t,1.2,3.2)));
   x.globalAlpha=E(P(t,0,.8));var g=x.createRadialGradient(S.cx,sy,0,S.cx,sy,rx);g.addColorStop(0,'rgba(233,180,76,.26)');g.addColorStop(1,'rgba(233,180,76,0)');x.fillStyle=g;x.save();x.translate(S.cx,sy);x.scale(1,ry/rx);x.beginPath();x.arc(0,0,rx,0,6.283);x.restore();x.fill();x.globalAlpha=1;
   [1.2,1.5,1.85,2.8,3.9,5].forEach(function(t0,i){var k=P(t,t0,t0+1.8);if(k<=0||k>=1)return;x.globalAlpha=(1-k)*(i<3?.95:.4);x.strokeStyle=i%2?'#D08A50':'#E9B44C';x.lineWidth=1.4;x.beginPath();x.ellipse(S.cx,sy,rx*k*1.1+1,ry*k*1.1+.3,0,0,6.283);x.stroke()});x.globalAlpha=1;
@@ -550,7 +552,7 @@ var SC=[
    x.save();x.translate(X,Y);x.rotate(ro);x.scale(1,Math.abs(fl)<.08?.08:fl);drawLeaf(x,S.lw*.15*l.s,l.c);x.restore()});
   var a=E(P(t,2.6,3.8));logo(S,a,.95+.05*a,{g:S.tint('#7DA35F'),gr:S.lw*.02,ga:a*.4*(1-P(t,3.8,5.2))});fin(S,t,4.1,5.1)}},
 // 9 دقيق
-{k:'flour',d:7,init:function(S){S.p=[];S.c=[];S.b=0},
+{k:'flour',d:6.9,init:function(S){S.p=[];S.c=[];S.b=0},
  draw:function(S,t){var x=S.x,lw=S.lw;bg(S,.22);var dk=P(t,.2,.9);
   if(dk<1){var y=S.cy-S.H*.45+S.H*.45*dk*dk,g=x.createRadialGradient(S.cx-lw*.03,y-lw*.03,0,S.cx,y,lw*.1);g.addColorStop(0,'#FFF8EE');g.addColorStop(1,'#CDBFAE');x.globalAlpha=E(P(t,.2,.4));x.fillStyle=g;x.beginPath();x.arc(S.cx,y,lw*.085,0,6.283);x.fill();x.globalAlpha=1}
   if(dk>=1&&!S.b){S.b=1;for(var i=0;i<560;i++){var an=R(0,6.283),v=Math.pow(Math.random(),.6)*lw*2.7;S.p.push({x:S.cx,y:S.cy,vx:Math.cos(an)*v,vy:Math.sin(an)*v*.7-lw*.3,r:R(.7,1.9),l:0,L:R(2,4)})}for(i=0;i<28;i++){an=R(0,6.283);v=R(.2,1)*lw*.95;S.c.push({x:S.cx,y:S.cy,vx:Math.cos(an)*v,vy:Math.sin(an)*v*.6,r:lw*R(.15,.3),l:0,L:R(2,3.4)})}}
@@ -559,7 +561,7 @@ var SC=[
   x.fillStyle='#F5EEE4';S.p=S.p.filter(function(p){p.l+=S.dt;var d=Math.exp(-2.6*S.dt);p.vx*=d;p.vy=p.vy*d+lw*.35*S.dt;p.x+=p.vx*S.dt;p.y+=p.vy*S.dt;var k=p.l/p.L;if(k>=1)return false;x.globalAlpha=(1-k)*.9;x.fillRect(p.x,p.y,p.r,p.r);return true});x.globalAlpha=1;
   fin(S,t,3.6,4.6)}},
 // 10 قدر يغلي
-{k:'boil',d:7.2,init:function(S){S.b=[];S.p=[]},
+{k:'boil',d:7.3,init:function(S){S.b=[];S.p=[]},
  draw:function(S,t){var x=S.x,lw=S.lw,R0=lw*.74;bg(S,.25);x.globalAlpha=E(P(t,0,.8));
   var g=x.createRadialGradient(S.cx,S.cy,R0*.1,S.cx,S.cy,R0);g.addColorStop(0,'#33241A');g.addColorStop(1,'#120E0B');x.fillStyle=g;x.beginPath();x.arc(S.cx,S.cy,R0,0,6.283);x.fill();
   var gr=x.createLinearGradient(S.cx-R0,S.cy-R0,S.cx+R0,S.cy+R0);gr.addColorStop(0,'#F0B888');gr.addColorStop(.5,'#6E4325');gr.addColorStop(1,'#C98A55');x.lineWidth=lw*.05;x.strokeStyle=gr;x.beginPath();x.arc(S.cx,S.cy,R0+lw*.024,0,6.283);x.stroke();x.globalAlpha=1;
@@ -594,7 +596,6 @@ var RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches
 function go(){clearTimeout(tm);if(e.classList.contains('out'))return;e.classList.add('out');t2=setTimeout(function(){e.classList.add('gone');stop();e.innerHTML=''},700)}
 function show(){clearTimeout(tm);clearTimeout(t2);stop();e.classList.remove('out','gone');var i=pick();stop=mount(e,i,{still:RM});tm=setTimeout(go,RM?900:SC[i].d*1000)}
 function start(){if(started)return;started=true;show()}
-e.addEventListener('click',go);
 // نبدي الحركة بعد ما التطبيق يخلص تحميله، حتى تمشي ناعمة بدون تقطيع
 if(document.readyState==='complete')setTimeout(start,60);else{window.addEventListener('load',function(){setTimeout(start,120)});setTimeout(start,3000)}
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden'){hid=Date.now()}else if(started&&hid&&Date.now()-hid>3000&&!document.body.classList.contains('cooking')){show()}});

@@ -304,7 +304,9 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 @media (prefers-reduced-motion:no-preference){.view{animation:in .18s ease-out}@keyframes in{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}}
 /* Splash host / مكان حركة الشعار */
 #splash{position:fixed;inset:0;z-index:999;background:var(--bg);display:flex;align-items:center;justify-content:center;overflow:hidden;transition:opacity .5s ease}
-#splash.out{opacity:0;pointer-events:none}
+#splash.out{opacity:0;pointer-events:none;transition:opacity .7s ease}
+#splash canvas{transition:transform .8s cubic-bezier(.5,0,.75,0)}
+#splash.out canvas{transform:scale(1.08)}
 #splash.gone{display:none}
 </style>
 
