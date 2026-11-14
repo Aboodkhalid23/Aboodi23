@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
 <script src="config.js"></script>
-<script>window.TINTA_VER='1794660987';</script>
+<script>window.TINTA_VER='1794661504';</script>
 <title>Tintå Reseptit</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap">
 <style>
@@ -584,7 +584,7 @@ function mount(host,i,opts){opts=opts||{};var sc=SC[i],alive=true,raf=0;
     if(opts.still){x.setTransform(dpr,0,0,dpr,0,0);bg(S,.3);logo(S,1,1,{});tag(S,1,0);return}
     sc.init&&sc.init(S);var t0=null,last=0;
     function f(now){if(!alive)return;if(t0===null){t0=now;last=now}S.t=(now-t0)/1000;S.dt=Math.min(.05,Math.max(0,(now-last)/1000));last=now;
-      x.setTransform(dpr,0,0,dpr,0,0);try{sc.draw(S,S.t)}catch(err){alive=false;try{x.setTransform(dpr,0,0,dpr,0,0);bg(S,.3);logo(S,1,1,{});tag(S,1,0)}catch(e2){}return}x.globalAlpha=1;x.globalCompositeOperation='source-over';raf=requestAnimationFrame(f)}
+      x.setTransform(dpr,0,0,dpr,0,0);try{sc.draw(S,S.t)}catch(err){if(!S.fb){S.fb=1;sc=SC[1];try{sc.init(S)}catch(e3){}t0=now;raf=requestAnimationFrame(f);return}alive=false;try{x.setTransform(dpr,0,0,dpr,0,0);bg(S,.3);logo(S,1,1,{});tag(S,1,0)}catch(e2){}return}x.globalAlpha=1;x.globalCompositeOperation='source-over';raf=requestAnimationFrame(f)}
     raf=requestAnimationFrame(f)});
   return function(){alive=false;cancelAnimationFrame(raf)}}
 function pick(){var n=SC.length,last=-1,i;try{last=parseInt(localStorage.getItem('tinta-splash'),10)}catch(e){}i=Math.floor(Math.random()*n);if(i===last)i=(i+1+Math.floor(Math.random()*(n-1)))%n;try{localStorage.setItem('tinta-splash',String(i))}catch(e){}return i}
@@ -592,9 +592,10 @@ window.TintaSplash={SC:SC,mount:mount,pick:pick,dur:function(i){return SC[i].d*1
 
 // ---------- in the app / بالتطبيق ----------
 var e=document.getElementById('splash');if(!e)return;
-var RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches,tm,t2,stop=function(){},hid=0,started=false;
+// صاحب المطعم يريد الحركة تطلع دائماً، حتى لو التلفون مفعّل عليه "تقليل الحركة"
+var tm,t2,stop=function(){},hid=0,started=false;
 function go(){clearTimeout(tm);if(e.classList.contains('out'))return;e.classList.add('out');t2=setTimeout(function(){e.classList.add('gone');stop();e.innerHTML=''},700)}
-function show(){clearTimeout(tm);clearTimeout(t2);stop();e.classList.remove('out','gone');var i=pick();stop=mount(e,i,{still:RM});tm=setTimeout(go,RM?900:SC[i].d*1000)}
+function show(){clearTimeout(tm);clearTimeout(t2);stop();e.classList.remove('out','gone');var i=pick();stop=mount(e,i,{});tm=setTimeout(go,SC[i].d*1000)}
 function start(){if(started)return;started=true;show()}
 // نبدي الحركة بعد ما التطبيق يخلص تحميله، حتى تمشي ناعمة بدون تقطيع
 if(document.readyState==='complete')setTimeout(start,60);else{window.addEventListener('load',function(){setTimeout(start,120)});setTimeout(start,3000)}
