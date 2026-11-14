@@ -255,7 +255,9 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 .nbtn{flex:none;height:44px;padding:0 14px;border-radius:12px;border:0;background:var(--accent);color:var(--bg);font-weight:700;font-size:14px}
 .nbtn.ghost{background:transparent;border:1px solid var(--line);color:var(--muted)}
 .toast{position:fixed;left:max(12px, env(safe-area-inset-left, 0px));right:max(12px, env(safe-area-inset-right, 0px));top:calc(env(safe-area-inset-top, 0px) + 10px);z-index:40;max-width:540px;margin:0 auto;padding:14px 16px;border-radius:16px;border:0;background:var(--accent);color:var(--bg);font-weight:700;font-size:15px;text-align:left;box-shadow:0 10px 30px rgba(0,0,0,.5)}
-.hometop{align-items:center}
+.hometop{align-items:center;padding-block:14px}
+.logo.brand{width:118px;height:auto;display:block}
+.who{max-width:120px;height:40px;padding:0 4px;border:0;background:transparent;color:var(--fg);font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hello{display:flex;align-items:center;gap:10px;min-width:0}
 .logo.sm{width:52px}
 .hitxt{min-width:0}
@@ -305,8 +307,8 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 <main id="scroller"><div class="wrap">
   <section id="home" class="view">
     <div class="top hometop">
-      <div class="hello"><img class="logo sm" src="LOGO_DATA" alt="Tintå"><div class="hitxt"><div id="hello" class="hi"></div><div id="hellosub" class="hisub"></div></div></div>
-      <div class="tools"><button type="button" class="langone" id="langone" aria-label="Kieli / Language">EN</button><button type="button" class="avatar" id="avatar" aria-label="Nimi / Name">T</button></div>
+      <img class="logo brand" src="LOGO_DATA" alt="Tintå">
+      <div class="tools"><button type="button" class="who" id="avatar" aria-label="Nimi / Name"></button><div class="lang" role="group" aria-label="Kieli / Language"><button type="button" data-lang="fi">FI</button><button type="button" data-lang="en">EN</button></div></div>
     </div>
     <label class="search" for="q">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A39B90" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>

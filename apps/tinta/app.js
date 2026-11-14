@@ -109,7 +109,6 @@
     var nn = newNeeds().length; $('needbadge').hidden = !nn; $('needbadge').textContent = nn;
     try{ if(navigator.setAppBadge){ if(u+nn) navigator.setAppBadge(u+nn); else navigator.clearAppBadge(); } }catch(e){}
     document.querySelectorAll('[data-lang]').forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.lang===lang)); });
-    if($('langone')) $('langone').textContent = lang==='fi' ? 'EN' : 'FI';
   }
 
   function rowHtml(r){
@@ -131,10 +130,7 @@
   function mini(r){ var i = L(); return '<button type="button" class="mini" data-open="'+r.id+'">'+TintaDish.svg(r,'dish')+'<b>'+esc(r.n[i])+'</b></button>'; }
   function renderHome(){
     var t = T[lang], i = L(), fav = view==='favs';
-    var h = new Date().getHours(), hi = h < 10 ? t.hiMorning : h < 17 ? t.hiDay : t.hiEve;
-    $('hello').textContent = hi+(myName ? ', '+myName : '')+' 👋';
-    $('hellosub').textContent = t.helloSub;
-    $('avatar').textContent = (myName || 'T').trim().charAt(0).toUpperCase();
+    $('avatar').textContent = myName || t.yourName;
     $('foot').textContent = t.foot;
     $('q').placeholder = t.search; $('q').setAttribute('aria-label', t.search);
     var sortN = function(a,b){ return a.n[i].localeCompare(b.n[i], lang); };
