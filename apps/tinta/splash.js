@@ -181,7 +181,10 @@ function mount(host,i,opts){opts=opts||{};var sc=SC[i],alive=true,raf=0;
       x.setTransform(dpr,0,0,dpr,0,0);try{sc.draw(S,S.t)}catch(err){if(!S.fb){S.fb=1;sc=SC[1];try{sc.init(S)}catch(e3){}t0=now;raf=requestAnimationFrame(f);return}alive=false;try{x.setTransform(dpr,0,0,dpr,0,0);bg(S,.3);logo(S,1,1,{});tag(S,1,0)}catch(e2){}return}x.globalAlpha=1;x.globalCompositeOperation='source-over';raf=requestAnimationFrame(f)}
     raf=requestAnimationFrame(f)});
   return function(){alive=false;cancelAnimationFrame(raf)}}
-function pick(){var n=SC.length,last=-1,i;try{last=parseInt(localStorage.getItem('tinta-splash'),10)}catch(e){}i=Math.floor(Math.random()*n);if(i===last)i=(i+1+Math.floor(Math.random()*(n-1)))%n;try{localStorage.setItem('tinta-splash',String(i))}catch(e){}return i}
+// المناسبات (الكريسمس ورأس السنة) تطلع بأيامها بس، وعيد الميلاد مطفي. باقي الحركات عشوائية كل يوم.
+function pick(){var d=new Date(),sp=[],pool=[],last=-1,i;SC.forEach(function(s,j){if(s.when){if(s.when(d))sp.push(j)}else pool.push(j)});var L2=sp.length?sp:pool;
+  try{last=parseInt(localStorage.getItem('tinta-splash'),10)}catch(e){}i=L2[Math.floor(Math.random()*L2.length)];if(i===last&&L2.length>1){var k=L2.indexOf(i);i=L2[(k+1+Math.floor(Math.random()*(L2.length-1)))%L2.length]}
+  try{localStorage.setItem('tinta-splash',String(i))}catch(e){}return i}
 window.TintaSplash={SC:SC,mount:mount,pick:pick,dur:function(i){return SC[i].d*1000},H:{cl:cl,P:P,E:E,EIO:EIO,EB:EB,N:N,R:R,mk:mk,sprite:sprite,dot:dot,tint:tint,rr:rr,bg:bg,logo:logo,wipe:wipe,shine:shine,tag:tag,fin:fin,flame:flame,steamP:steamP,drawLeaf:drawLeaf}};
 
 // ---------- in the app / بالتطبيق ----------
