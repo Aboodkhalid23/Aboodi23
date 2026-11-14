@@ -2,7 +2,7 @@
   var T = {
     fi:{title:'Reseptit',search:'Hae: pesto, voi, kantarelli…',all:'Kaikki',recipes:'reseptiä',results:'Tulokset',none:'Ei reseptejä haulla',
       batch:'Määrä',auto:'Ainekset lasketaan itse',ingredients:'Ainekset',method:'Valmistus',back:'Takaisin',
-      nomethod:'Paperissa ei ole kirjoitettua valmistusohjetta.',original:'Näytä alkuperäinen paperi',minus:'Vähemmän',plus:'Enemmän',vegan:'vegaani',parts:'osaa',
+      nomethod:'Paperissa ei ole kirjoitettua valmistusohjetta.',original:'Näytä alkuperäinen paperi',minus:'Vähemmän',plus:'Enemmän',vegan:'vegaani',wEyebrow:'Maailman keittiö',wTitle2:'Uusia ideoita testattavaksi',wSub:'Tunnettuja reseptejä eri maista. Testaa ja säädä ennen kuin lisäät menuun.',wCount:'reseptiä',wCardS:'{n} klassikkoa eri maista testattavaksi',wSeason:'Tämän kauden suositukset',wHits:'Maailman keittiöstä',gT:'Tintån keittiö',gH:'Kirjoita nimesi ja keittiön koodi. Puhelin muistaa ne, eikä kysy uudelleen.',gN:'Nimesi',gC:'Keittiön koodi',gB:'Avaa reseptit',gBad:'Väärä koodi. Kysy esihenkilöltä.',gWait:'Liian monta yritystä. Odota {s} s.',gNeed:'Kirjoita nimi ja koodi.',parts:'osaa',
       foot:'Reseptit luettu keittiön paperikansiosta. Jos jokin näyttää väärältä, tarkista alkuperäinen paperi.',
       have:'Minulla on',havehint:'Reseptissä {q}. Kirjoita, paljonko sinulla on, niin kaikki muut määrät lasketaan sen mukaan.',haveok:'Laske',
       calc:'Laskin',calcuse:'Käytä määränä',tiphave:'Vinkki: napauta minkä tahansa aineen määrää, niin voit laskea kaiken sen mukaan.',
@@ -19,7 +19,7 @@
       newErr:'Lähetys ei onnistunut. Tarkista netti ja yritä uudelleen.',newOff:'Kuvien lähetys ei ole vielä käytössä.',newPages:'sivua',newRemove:'Poista kuva',isNew:'uusi',cook:'Aloita kokkaus',partAmt:'Tämän osan määrä',partMain:'Pääosa · {m}× (yllä olevan määrän mukaan)',onlyPart:'Koskee vain osaa: {p}. Muille osille on oma määrä.',hiMorning:'Huomenta',hiDay:'Hei',hiEve:'Iltaa',helloSub:'Mitä tänään tehdään?',ingShort:'ainesta',stepShort:'vaihetta',tNeeds:'Tarvitaan',needTitle:'Mitä tarvitaan?',needSub:'Kirjoita mitä keittiö tarvitsee. Kaikki näkevät sen heti.',needAsk:'Mitä tarvitaan?',needEx:'Esim. Kurkkua 5 kg',needSend:'Lähetä',needSent:'Lähetetty kaikille',needOpen:'Odottaa',needNone:'Ei avoimia pyyntöjä.',needDone:'Hoidettu',needDoneList:'Hoidettu (3 pv)',needUndo:'Palauta',needNew:'Uusi pyyntö',wTitle:'Tervetuloa Tintå-keittiöön',wHint:'Kirjoita nimesi ja keittiön koodi kerran. Puhelin muistaa ne, eikä niitä kysytä uudelleen.',wStart:'Aloita',wSkip:'Myöhemmin',wOk:'Tervetuloa',wBad:'Väärä koodi. Kysy esimieheltä.',wWait:'Liian monta yritystä. Odota 15 min.',pinTitle:'Keittiön koodi',pinHint:'Kirjoita keittiön koodi. Saat sen esimieheltä. Koodi kysytään vain kerran tällä puhelimella.',pinOk:'Jatka',updTitle:'Resepti on päivitetty',updUse:'Keittiö on muuttanut tätä reseptiä. Tee tämän uuden version mukaan.',updTag:'päivitetty',updHome:'{n} reseptiä päivitetty – katso muutokset',kitchen:'Keittiön muutokset',editsOn:'{n} määrää muutettu keittiössä. Muutetut näkyvät aineksissa.',someone:'Joku',del:'Poista',yourName:'Nimesi',noteAll:'Kirjoita muutos kaikille',noteEx:'Esim. Vähemmän suolaa: 1 rkl riittää.',saveAll:'Tallenna kaikille',saving:'Tallennetaan…',saveErr:'Tallennus ei onnistunut. Tarkista netti.',editBtn:'Muokkaa määriä',editTitle:'Muokkaa määriä',editHint:'Muuta määrät yhden reseptin mukaan (1×). Tallennus näkyy kaikille.',editWhy:'Mitä muutit ja miksi?',cancel:'Peruuta',changed:'muutettu',was:'oli',autoNote:'{n} määrää muutettu.',howMuch:'Paljonko teet?',byIng:'Laske tämän aineen mukaan:',amount:'Määrä',unit:'Yksikkö',factor:'Kaikki ainekset lasketaan:',saved:'muistetaan tässä puhelimessa',cookStep:'Vaihe',cookPrev:'Edellinen',cookNext:'Seuraava',cookDone:'Valmis',cookHere:'Tässä vaiheessa',cookClose:'Sulje kokkaustila',size:'Tekstin koko',share:'Jaa resepti',copied:'Resepti kopioitu',notes:'Omat muistiinpanot',notesHint:'Näkyy vain tässä puhelimessa.',more:'Lisää',cats:'Kategoriat',allAZ:'Kaikki reseptit A–Ö',allCats:'Kaikki kategoriat'},
     en:{title:'Recipes',search:'Search: pesto, butter, chanterelle…',all:'All',recipes:'recipes',results:'Results',none:'No recipes for',
       batch:'Batch',auto:'Amounts update automatically',ingredients:'Ingredients',method:'Method',back:'Back',
-      nomethod:'No method is written on the paper.',original:'Show original paper',minus:'Less',plus:'More',vegan:'vegan',parts:'parts',
+      nomethod:'No method is written on the paper.',original:'Show original paper',minus:'Less',plus:'More',vegan:'vegan',wEyebrow:'World kitchen',wTitle2:'New ideas to test',wSub:'Well-known recipes from around the world. Test and adjust before adding to the menu.',wCount:'recipes',wCardS:'{n} classics from around the world to test',wSeason:'Picks for this season',wHits:'From the world kitchen',gT:'Tintå kitchen',gH:'Enter your name and the kitchen code. The phone remembers them and will not ask again.',gN:'Your name',gC:'Kitchen code',gB:'Open recipes',gBad:'Wrong code. Ask your manager.',gWait:'Too many tries. Wait {s} s.',gNeed:'Enter your name and the code.',parts:'parts',
       foot:'Recipes read from the kitchen binder. If something looks wrong, check the original paper.',
       have:'I have',havehint:'The recipe uses {q}. Type how much you have and every other amount is worked out from it.',haveok:'Calculate',
       calc:'Calculator',calcuse:'Use as batch',tiphave:'Tip: tap any ingredient amount to scale everything by it.',
@@ -42,7 +42,8 @@
     kastike:['Kastikkeet ja dipit','Sauces & dips'], majo:['Majoneesit','Mayos'], oljy:['Öljyt ja vinegretit','Oils & dressings'],
     pesto:['Pestot','Pestos'], voi:['Voit','Butters'], liemi:['Liemet','Stocks'], keitto:['Keitot','Soups'], pohja:['Pohjat','Bases'],
     lisuke:['Lisukkeet ja risotot','Sides & risottos'], mari:['Marinadit','Marinades'], sailyke:['Hillot, chutneyt ja pikkelit','Jams, chutneys & pickles'],
-    mauste:['Rapeat ja mausteet','Crunch & seasonings'], jalki:['Jälkiruoat','Desserts']
+    mauste:['Rapeat ja mausteet','Crunch & seasonings'], jalki:['Jälkiruoat','Desserts'],
+    risotto:['Risotot','Risottos'], salaatti:['Salaatit','Salads']
   };
   var U = {g:['g','g'],kg:['kg','kg'],ml:['ml','ml'],cl:['cl','cl'],dl:['dl','dl'],l:['l','l'],tl:['tl','tsp'],rkl:['rkl','tbsp'],kpl:['kpl','pcs'],
     prk:['prk','tub'],pss:['pss','bag'],pnt:['nippu','bunch'],rss:['rasia','box'],tlk:['tlk','can'],levy:['levyä','sheets'],tuubi:['tuubia','tubes'],osa:['osa','part']};
@@ -73,7 +74,7 @@
 
   var L = function(){ return lang==='fi' ? 0 : 1; };
   var $ = function(id){ return document.getElementById(id); };
-  var byId = function(id){ return R.filter(function(x){ return x.id===id; })[0]; };
+  var byId = function(id){ return R.filter(function(x){ return x.id===id; })[0] || W.filter(function(x){ return x.id===id; })[0]; };
   function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]}); }
   function norm(s){ return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''); }
 
@@ -102,7 +103,7 @@
     var t = T[lang];
     $('tab1').textContent = t.tRecipes; $('tab2').textContent = t.tNeeds; $('tab3').textContent = t.tPrep; $('tab4').textContent = t.tCalc; $('tab5').textContent = t.tNew;
     document.querySelectorAll('[data-tab]').forEach(function(b){
-      var on = (b.dataset.tab==='home' && (view==='home' || (view==='recipe' && listView==='home'))) ||
+      var on = (b.dataset.tab==='home' && (view==='home' || view==='world' || (view==='recipe' && (listView==='home' || listView==='world')))) ||
                (b.dataset.tab==='needs' && view==='needs') ||
                (b.dataset.tab==='prep' && (view==='prep' || (view==='recipe' && listView==='prep')));
       if(on) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current');
@@ -128,7 +129,7 @@
     var nI = 0; r.p.forEach(function(p){ nI += p.i.length; });
     return '<button type="button" class="rcard" data-open="'+r.id+'">'+(up ? '<span class="ctag">'+t.updTag+'</span>' : fresh ? '<span class="ctag">'+t.isNew+'</span>' : '')+
       (favs.indexOf(r.id)>-1 ? '<span class="cstar">★</span>' : '')+(r.v ? vbadge((up||fresh)?'low':'') : '')+TintaDish.svg(r,'dish')+
-      '<b>'+esc(r.n[i])+'</b><span>'+esc(CATS[r.c][i])+' · '+nI+' '+t.ingShort+'</span></button>';
+      '<b>'+esc(r.n[i])+'</b><span>'+esc(r.o ? r.o[i] : CATS[r.c][i])+' · '+nI+' '+t.ingShort+'</span></button>';
   }
   function mini(r){ var i = L(); return '<button type="button" class="mini" data-open="'+r.id+'">'+TintaDish.svg(r,'dish')+'<b>'+esc(r.n[i])+'</b></button>'; }
   function renderHome(){
@@ -150,10 +151,14 @@
         r.p.forEach(function(p){ if(p.t) parts.push(p.t[0], p.t[1]); p.i.forEach(function(x){parts.push(x[2], x[3])}); });
         return norm(parts.join(' ')).indexOf(q)>-1;
       }).sort(sortN);
+      var whits = W.filter(function(r){ return norm([r.n[0], r.n[1], r.o[0], r.o[1]].join(' ')).indexOf(q)>-1; }).sort(sortN);
       html = '<h2 class="label">'+t.results+' · '+hits.length+'</h2>'+
-        (hits.length ? '<div class="rgrid">'+hits.map(card).join('')+'</div>' : '<p class="empty">'+esc(t.none)+' “'+esc($('q').value)+'”</p>');
+        (hits.length ? '<div class="rgrid">'+hits.map(card).join('')+'</div>' : (whits.length ? '' : '<p class="empty">'+esc(t.none)+' “'+esc($('q').value)+'”</p>'))+
+        (whits.length ? '<h2 class="label">'+t.wHits+' · '+whits.length+'</h2><div class="rgrid">'+whits.map(card).join('')+'</div>' : '');
       $('homelists').innerHTML = html; return;
     }
+    var ns = nowSeason(), nsN = W.filter(function(r){ return r.s.indexOf(ns)>-1; }).length;
+    html += '<button type="button" class="worldcard" data-world="1"><span class="wglobe" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.8 3 2.8 15 0 18M12 3c-2.8 3-2.8 15 0 18"/></svg></span><span class="wt"><b>'+t.wEyebrow+'</b><span>'+t.wCardS.replace('{n}', W.length)+' · '+t.wSeason+': '+nsN+'</span></span><span class="wgo" aria-hidden="true">›</span></button>';
     var keys = Object.keys(CATS).filter(function(k){ return R.some(function(r){ return r.c===k; }); });
     html += '<div class="cchips">'+'<button type="button" class="cchip'+(cat==='all'?' on':'')+'" data-cat="all"><span class="cic all">'+R.length+'</span>'+t.all+'</button>'+
       keys.map(function(k){ return '<button type="button" class="cchip'+(cat===k?' on':'')+'" data-cat="'+k+'">'+TintaDish.cat(k,'cic')+esc(CATS[k][i].split(' ')[0])+'</button>'; }).join('')+'</div>';
@@ -256,7 +261,7 @@
       '<div class="top"><button type="button" class="back" id="back">'+ICON.back+'<span>'+t.back+'</span></button>'+
       '<div class="tools"><button type="button" class="icon" id="sizebtn" aria-label="'+t.size+'">'+ICON.aa+'</button><button type="button" class="icon" id="favbtn" aria-pressed="'+isFav+'" aria-label="'+(isFav?t.unfav:t.fav)+'">'+ICON.star+'</button>'+LANGS+'</div></div>'+
       '<div class="rhero'+(HOT[r.c]?' hot':'')+'">'+(r.v?vbadge('big'):'')+(HOT[r.c]?'<div class="steam" aria-hidden="true"><i></i><i></i><i></i><i></i></div>':'')+TintaDish.svg(r,'dish big')+'</div>'+
-      '<header class="rhead sheet"><div class="eyebrow">'+esc(CATS[r.c][i])+(r.v?' · '+t.vegan:'')+(r.p.length>1?' · '+r.p.length+' '+t.parts:'')+'</div>'+
+      '<header class="rhead sheet"><div class="eyebrow">'+(r.w ? esc(t.wEyebrow+' · '+r.o[i])+' · ' : '')+esc(CATS[r.c][i])+(r.v?' · '+t.vegan:'')+(r.p.length>1?' · '+r.p.length+' '+t.parts:'')+'</div>'+
       '<h1 class="title">'+esc(r.n[i])+'</h1><div class="other">'+esc(r.n[1-i])+'</div>'+
       '<div class="stats"><div class="stt"><b>'+nIng+'</b><span>'+t.ingShort+'</span></div><div class="stt"><b>'+nStep+'</b><span>'+t.stepShort+'</span></div><div class="stt acc"><b>'+num(mult)+'×</b><span>'+t.batch+'</span></div></div></header>'+
       (r.note ? '<p class="callout">'+esc(r.note[i])+'</p>' : '')+
@@ -353,7 +358,8 @@
     $('needs').hidden = view!=='needs';
     $('recipe').hidden = view!=='recipe';
     $('prep').hidden = view!=='prep';
-    if(view==='recipe') renderRecipe(); else if(view==='prep') renderPrep(); else if(view==='needs') renderNeeds(); else renderHome();
+    $('world').hidden = view!=='world';
+    if(view==='recipe') renderRecipe(); else if(view==='prep') renderPrep(); else if(view==='needs') renderNeeds(); else if(view==='world') renderWorld(); else renderHome();
     setTabs();
   }
 
@@ -366,14 +372,14 @@
       cur = r; view = 'recipe';
       recent = [r.id].concat(recent.filter(function(x){ return x!==r.id; })).slice(0,12); save('recent', recent);
     } else {
-      cur = null; view = h==='suosikit' ? 'favs' : h==='lista' ? 'prep' : h==='tarvitaan' ? 'needs' : 'home'; listView = view;
+      cur = null; view = h==='suosikit' ? 'favs' : h==='lista' ? 'prep' : h==='tarvitaan' ? 'needs' : h==='maailma' ? 'world' : 'home'; listView = view;
     }
     render(); $('scroller').scrollTop = 0; wake();
   }
-  var HASH = {home:'', favs:'suosikit', prep:'lista', needs:'tarvitaan'};
+  var HASH = {home:'', favs:'suosikit', prep:'lista', needs:'tarvitaan', world:'maailma'};
   function go(v){ if(location.hash.replace('#','')===HASH[v]) route(); else location.hash = HASH[v]; }
 
-  function setLang(l){ lang = l; save('lang', l); document.documentElement.lang = l; render(); renderTimers(); drawInstall(); }
+  function setLang(l){ lang = l; save('lang', l); document.documentElement.lang = l; render(); renderTimers(); drawInstall(); drawGate(); }
   function syncPrep(){ var pe = cur && prepEntry(cur.id); if(pe){ pe.m = mult; save('prep', prep); } }
 
   document.addEventListener('click', function(e){
@@ -386,6 +392,9 @@
     if(b.dataset.sdone){ if(stepDone[b.dataset.sdone]) delete stepDone[b.dataset.sdone]; else stepDone[b.dataset.sdone]=1; renderRecipe(); setTabs(); return; }
     if(b.dataset.open){ location.hash = 'r-'+b.dataset.open; return; }
     if(b.id==='back'){ go(listView); return; }
+    if(b.id==='wback' || b.dataset.world){ go(b.dataset.world ? 'world' : 'home'); return; }
+    if(b.dataset.wseason){ wseason = b.dataset.wseason; renderWorld(); return; }
+    if(b.dataset.wtype){ wtype = b.dataset.wtype; renderWorld(); return; }
     if(b.id==='favbtn'){ var k = favs.indexOf(cur.id); if(k>-1) favs.splice(k,1); else favs.push(cur.id); save('favs',favs); render(); return; }
     if(b.id==='prepbtn'){ var pe = prepEntry(cur.id); if(pe) prep = prep.filter(function(p){ return p!==pe; }); else prep.push({id:cur.id, m:mult}); save('prep',prep); render(); return; }
     if(b.dataset.prm){ prep = prep.filter(function(p){ return p.id!==b.dataset.prm; }); delete pdone[b.dataset.prm]; save('prep',prep); save('pdone',pdone); render(); return; }
@@ -761,6 +770,7 @@
 
   /* ---------- Tervetuloa: nimi + koodi kerran ---------- */
   function welcome(force){
+    if(!GATE || !unlocked()) return;
     if(!UPLOAD || (!force && ((kpin && myName) || load('welcomed', 0)))) return;
     var t = T[lang];
     $('wtitle').textContent = t.wTitle; $('whint').textContent = t.wHint; $('wnamel').textContent = t.yourName; $('wpinl').textContent = t.pinTitle;
@@ -840,6 +850,64 @@
   // الفحص يصير بعد ما تخلص حركة الشعار، حتى ما يقطعها
   var vT; document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible'){ clearTimeout(vT); vT=setTimeout(checkVersion, 9000); } });
   setTimeout(checkVersion, 9000);
+
+  // ---- Maailman keittiö / المطبخ العالمي ----
+  var wseason = null, wtype = 'all';
+  var SEAS = {kev:['Kevät','Spring'], kes:['Kesä','Summer'], syk:['Syksy','Autumn'], tal:['Talvi','Winter']};
+  function nowSeason(){ var m = new Date().getMonth(); return (m===11 || m<2) ? 'tal' : m<5 ? 'kev' : m<8 ? 'kes' : 'syk'; }
+  function renderWorld(){
+    var t = T[lang], i = L(); if(!wseason) wseason = nowSeason();
+    var sortN = function(a,b){ return a.n[i].localeCompare(b.n[i], lang); };
+    var inS = W.filter(function(r){ return wseason==='all' || r.s.indexOf(wseason)>-1; });
+    var types = Object.keys(CATS).filter(function(k){ return inS.some(function(r){ return r.c===k; }); });
+    if(wtype!=='all' && types.indexOf(wtype)<0) wtype = 'all';
+    var list = inS.filter(function(r){ return wtype==='all' || r.c===wtype; }).sort(sortN);
+    $('world').innerHTML = '<div class="top"><button type="button" class="back" id="wback">'+ICON.back+'<span>'+t.back+'</span></button><div class="tools">'+LANGS+'</div></div>'+
+      '<header class="whead"><div class="eyebrow">'+t.wEyebrow+'</div><h1 class="title">'+t.wTitle2+'</h1><p class="hint">'+t.wSub+'</p></header>'+
+      '<div class="wchips">'+['all','kev','kes','syk','tal'].map(function(s){ return '<button type="button" class="chip" data-wseason="'+s+'" aria-pressed="'+(wseason===s)+'">'+(s==='all' ? t.all : SEAS[s][i])+(s===nowSeason() ? ' •' : '')+'</button>'; }).join('')+'</div>'+
+      '<div class="wchips">'+['all'].concat(types).map(function(k){ return '<button type="button" class="chip" data-wtype="'+k+'" aria-pressed="'+(wtype===k)+'">'+(k==='all' ? t.all : esc(CATS[k][i]))+'</button>'; }).join('')+'</div>'+
+      '<h2 class="label">'+list.length+' '+t.wCount+'</h2><div class="rgrid">'+list.map(card).join('')+'</div>';
+    document.querySelectorAll('#world [data-lang]').forEach(function(x){ x.setAttribute('aria-pressed', x.dataset.lang===lang); });
+  }
+
+  // ---- Portti / قفل الدخول: الاسم ورمز المطبخ مرة وحدة بكل تلفون ----
+  var GATE = {s:'8147c6e648f529248f61392e32f37f69', h:'96519d8b6f4e5b7f6c6625a823ec63eb0a42841d5f72f40dd90b218574b7cb98'};
+  function gateHash(code){
+    var enc = new TextEncoder(), salt = new Uint8Array(GATE.s.match(/../g).map(function(x){ return parseInt(x, 16); }));
+    return crypto.subtle.importKey('raw', enc.encode(code), 'PBKDF2', false, ['deriveBits'])
+      .then(function(k){ return crypto.subtle.deriveBits({name:'PBKDF2', salt:salt, iterations:150000, hash:'SHA-256'}, k, 256); })
+      .then(function(b){ return Array.prototype.map.call(new Uint8Array(b), function(x){ return ('0'+x.toString(16)).slice(-2); }).join(''); });
+  }
+  function unlocked(){ return load('gate', '') === GATE.h; }
+  function drawGate(){
+    var g = $('gate'); if(!g) return;
+    if(unlocked()){ g.hidden = true; document.body.classList.remove('locked'); return; }
+    var t = T[lang];
+    $('gtitle').textContent = t.gT; $('ghint').textContent = t.gH; $('gnamel').textContent = t.gN; $('gcodel').textContent = t.gC; $('gok').textContent = t.gB;
+    if(!$('gname').value) $('gname').value = myName || '';
+    g.querySelectorAll('[data-lang]').forEach(function(x){ x.setAttribute('aria-pressed', x.dataset.lang===lang); });
+    g.hidden = false; document.body.classList.add('locked');
+  }
+  function tryGate(){
+    var t = T[lang], nm = $('gname').value.trim().slice(0,40), code = $('gcode').value.trim(), st = $('gstatus'), until = +load('gwait', 0) || 0;
+    if(Date.now() < until){ st.textContent = t.gWait.replace('{s}', Math.ceil((until-Date.now())/1000)); return; }
+    if(!nm || !code){ st.textContent = t.gNeed; return; }
+    $('gok').disabled = true;
+    gateHash(code).then(function(h){
+      $('gok').disabled = false;
+      if(h === GATE.h){
+        save('gate', h); save('gbad', 0); myName = nm; save('name', nm); kpin = code; save('pin', code); save('welcomed', 1);
+        st.textContent = ''; $('gcode').value = ''; drawGate(); render(); toast('✓ '+nm);
+      } else {
+        var n = (+load('gbad', 0) || 0) + 1; save('gbad', n);
+        if(n >= 5) save('gwait', Date.now() + Math.min(3600, 60*Math.pow(2, n-5))*1000);
+        st.textContent = t.gBad; $('gcode').value = '';
+      }
+    }).catch(function(){ $('gok').disabled = false; st.textContent = t.gBad; });
+  }
+  $('gok').addEventListener('click', tryGate);
+  $('gcode').addEventListener('keydown', function(e){ if(e.key==='Enter') tryGate(); });
+  drawGate();
 
   // ---- Lisää kotinäytölle / زر "أضف للشاشة الرئيسية" للي يفتح الرابط بالمتصفح ----
   var IA = {

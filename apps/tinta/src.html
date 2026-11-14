@@ -347,6 +347,29 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 .isteps .ic svg{width:17px;height:17px}
 .iarrow{position:fixed;z-index:40;left:50%;bottom:calc(8px + env(safe-area-inset-bottom, 0px));width:0;height:0;margin-left:-14px;border:14px solid transparent;border-top-color:var(--accent);animation:ibob 1s ease-in-out infinite alternate;pointer-events:none}
 @keyframes ibob{to{transform:translateY(8px)}}
+/* Portti / قفل الدخول */
+#gate{position:fixed;inset:0;z-index:998;background:radial-gradient(120% 70% at 50% 20%,#2A2118 0%,var(--bg) 60%);display:flex;align-items:center;justify-content:center;padding:calc(20px + env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));overflow-y:auto}
+#gate[hidden]{display:none}
+#gate .gbox{width:100%;max-width:380px;display:flex;flex-direction:column;gap:12px}
+#gate .glang{display:flex;justify-content:flex-end}
+#gate .glogo{width:150px;margin:6px auto 4px;display:block}
+#gate h1{font-family:var(--serif);font-weight:600;font-size:30px;text-align:center;margin:0}
+#gate .hint{text-align:center;margin:0 0 6px}
+#gate .status{min-height:20px;text-align:center;color:#F08A6A;margin:0}
+body.locked{overflow:hidden}
+/* Maailman keittiö / المطبخ العالمي */
+.worldcard{display:flex;align-items:center;gap:12px;width:100%;margin:12px 0 4px;padding:14px;border-radius:18px;border:1px solid rgba(208,138,80,.4);background:linear-gradient(120deg,#22303A 0%,#1C1A18 70%);color:var(--fg);text-align:left}
+.worldcard .wglobe{flex:none;width:44px;height:44px;border-radius:50%;background:rgba(120,170,220,.15);color:#9CC7EE;display:flex;align-items:center;justify-content:center}
+.worldcard .wglobe svg{width:26px;height:26px}
+.worldcard .wt{flex:1;min-width:0}
+.worldcard .wt b{display:block;font-size:16px}
+.worldcard .wt span{display:block;font-size:12.5px;color:var(--muted);margin-top:2px;line-height:1.4}
+.worldcard .wgo{flex:none;font-size:26px;color:var(--accent)}
+.whead{padding:8px 0 4px}
+.whead .title{margin:4px 0}
+.wchips{display:flex;gap:8px;overflow-x:auto;padding:8px 0 4px;scrollbar-width:none}
+.wchips::-webkit-scrollbar{display:none}
+.wchips .chip{flex:none}
 </style>
 
 <main id="scroller"><div class="wrap">
@@ -366,6 +389,7 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
   <section id="recipe" class="view" hidden></section>
   <section id="prep" class="view" hidden></section>
   <section id="needs" class="view" hidden></section>
+  <section id="world" class="view" hidden></section>
 </div></main>
 
 <section id="cook" hidden aria-live="polite"></section>
@@ -436,6 +460,18 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
   <p class="status" id="wstatus" aria-live="polite"></p>
 </section>
 
+<section id="gate" hidden aria-labelledby="gtitle">
+  <div class="gbox">
+    <div class="glang"><div class="lang" role="group" aria-label="Kieli / Language"><button type="button" data-lang="fi">FI</button><button type="button" data-lang="en">EN</button></div></div>
+    <img class="glogo" src="LOGO_DATA" alt="Tintå">
+    <h1 id="gtitle"></h1>
+    <p class="hint" id="ghint"></p>
+    <label class="field" for="gname"><span id="gnamel"></span><input id="gname" type="text" autocomplete="name" maxlength="40"></label>
+    <label class="field" for="gcode"><span id="gcodel"></span><input id="gcode" type="password" inputmode="numeric" autocomplete="off" maxlength="12"></label>
+    <button type="button" class="use solid" id="gok"></button>
+    <p class="status" id="gstatus" aria-live="polite"></p>
+  </div>
+</section>
 <div id="splash" aria-hidden="true"></div>
 <script>SPLASH_JS</script>
 

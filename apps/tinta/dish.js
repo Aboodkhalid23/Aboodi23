@@ -112,7 +112,7 @@ var TintaDish = (function(){
     pesto:['bowl', {c1:'#6FAF3E', c2:'#2F6420', specks:'#2E4A1E'}], voi:['butter', {}], liemi:['bowl', {c1:'#A0622A', c2:'#4A2A0E'}], keitto:['bowl', {c1:'#F2C46D', c2:'#B57A26'}],
     pohja:['bowl', {c1:'#FFFDF6', c2:'#EAE2CE'}], lisuke:['bowl', {c1:'#F2D9A0', c2:'#C29A4E'}], mari:['bowl', {c1:'#E8904A', c2:'#A04010'}], sailyke:['jar', {c1:'#C2603A', c2:'#5E200A'}],
     mauste:['seeds', {c1:'#2A2420', c2:'#D9D3C8'}], jalki:['bowl', {c1:'#E04A6A', c2:'#8E1C3A'}] };
-  function pick(r){ return BY[r.id] || CAT[r.c] || CAT.kastike; }
+  function pick(r){ return r.d || BY[r.id] || CAT[r.c] || CAT.kastike; }
   function svg(r, cls){ var p = pick(r), o = {}; for(var k in p[1]) o[k] = p[1][k];
     return '<svg class="'+(cls || 'dish')+'" viewBox="0 0 200 200" aria-hidden="true">'+T[p[0]](o)+'</svg>'; }
   function cat(c, cls){ return svg({id:'', c:c}, cls); }
