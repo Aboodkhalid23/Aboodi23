@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
 <script src="config.js"></script>
-<script>window.TINTA_VER='1794654715';</script>
+<script>window.TINTA_VER='1794654847';</script>
 <title>Tintå Reseptit</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap">
 <style>
@@ -324,11 +324,11 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 #splash .sp-line{height:1px;width:min(40vw,160px);background:linear-gradient(90deg,transparent,var(--accent),transparent);transform:scaleX(0)}
 #splash .sp-tag{font:600 11px var(--sans);letter-spacing:.42em;padding-left:.42em;color:var(--accent-soft);opacity:0;text-transform:uppercase}
 @media (prefers-reduced-motion:no-preference){
-#splash .sp-glow{animation:spGlow 1.4s cubic-bezier(.2,.7,.2,1) forwards}
-#splash .sp-logo{animation:spLogo .9s cubic-bezier(.16,1,.3,1) both}
-#splash .sp-shine{animation:spShine 1s .55s cubic-bezier(.4,0,.2,1) forwards}
-#splash .sp-line{animation:spLine .7s .7s cubic-bezier(.16,1,.3,1) forwards}
-#splash .sp-tag{animation:spTag .6s .9s ease-out forwards}
+#splash.play .sp-glow{animation:spGlow 1.4s cubic-bezier(.2,.7,.2,1) forwards}
+#splash.play .sp-logo{animation:spLogo .9s cubic-bezier(.16,1,.3,1) both}
+#splash.play .sp-shine{animation:spShine 1s .55s cubic-bezier(.4,0,.2,1) forwards}
+#splash.play .sp-line{animation:spLine .7s .7s cubic-bezier(.16,1,.3,1) forwards}
+#splash.play .sp-tag{animation:spTag .6s .9s ease-out forwards}
 #splash.out .sp-logo{transform:scale(1.08);transition:transform .45s ease-in}
 @keyframes spGlow{to{opacity:1;transform:scale(1)}}
 @keyframes spLogo{from{opacity:0;transform:scale(.86);filter:blur(10px)}to{opacity:1;transform:none;filter:none}}
@@ -426,7 +426,12 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
   <div class="sp-line"></div>
   <div class="sp-tag">Reseptit · Recipes</div>
 </div>
-<script>(function(){var e=document.getElementById('splash');if(!e)return;var m=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;function go(){if(e.classList.contains('out'))return;e.classList.add('out');setTimeout(function(){e.remove()},600)}setTimeout(go,m?500:1800);e.addEventListener('click',go)})();</script>
+<script>(function(){var e=document.getElementById('splash');if(!e)return;var m=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches,t,hid=0;
+function go(){clearTimeout(t);e.classList.add('out')}
+function show(){e.classList.remove('out','play');void e.offsetWidth;e.classList.add('play');clearTimeout(t);t=setTimeout(go,m?500:1800)}
+e.addEventListener('click',go);show();
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden'){hid=Date.now()}else if(hid&&Date.now()-hid>3000&&!document.body.classList.contains('cooking')){show()}});
+window.addEventListener('pageshow',function(v){if(v.persisted)show()});})();</script>
 
 <script>
 var R = [
