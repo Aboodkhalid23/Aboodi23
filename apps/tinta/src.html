@@ -292,6 +292,13 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 .stt span{font-size:12px;color:var(--muted)}
 .stt.acc{background:var(--accent);color:var(--bg)}
 .stt.acc span{color:#3A2A12}
+.pctl{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin:-2px 0 10px;padding:10px 12px;border-radius:14px;background:#171513;border:1px solid var(--line)}
+.pctl .k{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.pq{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.pq button{min-width:40px;height:38px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--muted);font-weight:700;font-size:14px;padding:0 8px}
+.pq button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent-soft)}
+.pq output{min-width:46px;text-align:center;font-weight:800;font-size:17px;color:var(--fg)}
+.pmeta{margin:-2px 0 10px;font-size:13px;color:var(--accent-soft);font-weight:600}
 @media (prefers-reduced-motion:no-preference){.view{animation:in .18s ease-out}@keyframes in{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}}
 </style>
 
