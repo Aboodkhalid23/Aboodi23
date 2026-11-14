@@ -302,29 +302,40 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 .pq output{min-width:46px;text-align:center;font-weight:800;font-size:17px;color:var(--fg)}
 .pmeta{margin:-2px 0 10px;font-size:13px;color:var(--accent-soft);font-weight:600}
 @media (prefers-reduced-motion:no-preference){.view{animation:in .18s ease-out}@keyframes in{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}}
-/* Splash: avaus-animaatio / حركة الشعار عند فتح التطبيق */
-#splash{position:fixed;inset:0;z-index:999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .45s ease,visibility .45s}
-#splash.out{opacity:0;visibility:hidden;pointer-events:none}
-#splash .sp-glow{position:absolute;width:140vmax;height:140vmax;border-radius:50%;background:radial-gradient(circle,rgba(208,138,80,.22) 0,rgba(208,138,80,.07) 22%,transparent 46%);opacity:0;transform:scale(.6)}
-#splash .sp-logo{position:relative;width:min(58vw,240px);aspect-ratio:360/252}
-#splash .sp-logo img,#splash .sp-shine{position:absolute;inset:0;width:100%;height:100%}
-#splash .sp-shine{-webkit-mask:url(LOGO_DATA) center/contain no-repeat;mask:url(LOGO_DATA) center/contain no-repeat;background:linear-gradient(105deg,transparent 35%,#F6C08E 48%,#fff 50%,#F6C08E 52%,transparent 65%) no-repeat;background-size:300% 100%;background-position:120% 0}
-#splash .sp-line{height:1px;width:min(40vw,160px);background:linear-gradient(90deg,transparent,var(--accent),transparent);transform:scaleX(0)}
-#splash .sp-tag{font:600 11px var(--sans);letter-spacing:.42em;padding-left:.42em;color:var(--accent-soft);opacity:0;text-transform:uppercase}
+/* Splash 3D: avaus-animaatio / حركة الشعار 3D عند فتح التطبيق */
+#splash{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;perspective:900px;overflow:hidden}
+#splash.gone{visibility:hidden;pointer-events:none}
+#splash .sp-door{position:absolute;top:0;bottom:0;width:50.5%;background:var(--bg);transition:transform .8s cubic-bezier(.7,0,.3,1),opacity .8s ease}
+#splash .sp-l{left:0;transform-origin:0 50%}
+#splash .sp-r{right:0;transform-origin:100% 50%}
+#splash.out .sp-l{transform:rotateY(85deg);opacity:.2}
+#splash.out .sp-r{transform:rotateY(-85deg);opacity:.2}
+#splash .sp-glow{position:absolute;width:140vmax;height:140vmax;border-radius:50%;background:radial-gradient(circle,rgba(208,138,80,.26) 0,rgba(208,138,80,.08) 22%,transparent 46%);opacity:0;transition:opacity .5s}
+#splash.out .sp-glow{opacity:0!important}
+#splash .sp-stage{position:relative;display:flex;flex-direction:column;align-items:center;gap:18px;transform-style:preserve-3d}
+#splash .sp-logo{position:relative;width:min(58vw,240px);aspect-ratio:360/252;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.6,0,.4,1),opacity .35s ease}
+#splash.out .sp-logo{transform:translateZ(520px) rotateX(-8deg)!important;opacity:0}
+#splash .sp-logo img,#splash .sp-shine,#splash .sp-x{position:absolute;inset:0;width:100%;height:100%}
+#splash .sp-logo img{transform:translateZ(1px)}
+#splash .sp-x{-webkit-mask:url(LOGO_DATA) center/contain no-repeat;mask:url(LOGO_DATA) center/contain no-repeat;background:linear-gradient(180deg,#E6A774,#7A4A26);transform:translateZ(calc(var(--i) * -1.6px));filter:brightness(calc(1 - var(--i) * .06))}
+#splash .sp-shine{-webkit-mask:url(LOGO_DATA) center/contain no-repeat;mask:url(LOGO_DATA) center/contain no-repeat;background:linear-gradient(105deg,transparent 35%,#F6C08E 48%,#fff 50%,#F6C08E 52%,transparent 65%) no-repeat;background-size:300% 100%;background-position:120% 0;transform:translateZ(2px)}
+#splash .sp-line{height:1px;width:min(40vw,160px);background:linear-gradient(90deg,transparent,var(--accent),transparent);transform:scaleX(0);transition:opacity .3s}
+#splash .sp-tag{font:600 11px var(--sans);letter-spacing:.42em;padding-left:.42em;color:var(--accent-soft);opacity:0;text-transform:uppercase;transition:opacity .3s}
+#splash.out .sp-line,#splash.out .sp-tag{opacity:0!important}
 @media (prefers-reduced-motion:no-preference){
-#splash.play .sp-glow{animation:spGlow 1.4s cubic-bezier(.2,.7,.2,1) forwards}
-#splash.play .sp-logo{animation:spLogo .9s cubic-bezier(.16,1,.3,1) both}
-#splash.play .sp-shine{animation:spShine 1s .55s cubic-bezier(.4,0,.2,1) forwards}
-#splash.play .sp-line{animation:spLine .7s .7s cubic-bezier(.16,1,.3,1) forwards}
-#splash.play .sp-tag{animation:spTag .6s .9s ease-out forwards}
-#splash.out .sp-logo{transform:scale(1.08);transition:transform .45s ease-in}
-@keyframes spGlow{to{opacity:1;transform:scale(1)}}
-@keyframes spLogo{from{opacity:0;transform:scale(.86);filter:blur(10px)}to{opacity:1;transform:none;filter:none}}
+#splash.play .sp-glow{animation:spGlow 1.4s .2s cubic-bezier(.2,.7,.2,1) forwards}
+#splash.play .sp-logo{animation:spFly 1.6s linear both,spFloat 2.4s 1.5s ease-in-out infinite}
+#splash.play .sp-shine{animation:spShine 1s 1.05s cubic-bezier(.4,0,.2,1) forwards}
+#splash.play .sp-line{animation:spLine .7s 1.1s cubic-bezier(.16,1,.3,1) forwards}
+#splash.play .sp-tag{animation:spTag .6s 1.25s ease-out forwards}
+@keyframes spGlow{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+@keyframes spFly{0%{opacity:0;transform:translateZ(-900px) rotateY(-300deg) rotateX(30deg);animation-timing-function:cubic-bezier(.25,.1,.25,1)}70%{opacity:1;transform:translateZ(40px) rotateY(18deg) rotateX(-6deg);animation-timing-function:cubic-bezier(.4,0,.2,1)}100%{opacity:1;transform:translateZ(0) rotateY(0) rotateX(0)}}
+@keyframes spFloat{0%,100%{transform:rotateY(0) rotateX(0)}50%{transform:rotateY(-22deg) rotateX(7deg)}}
 @keyframes spShine{to{background-position:-20% 0}}
 @keyframes spLine{to{transform:scaleX(1)}}
 @keyframes spTag{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 }
-@media (prefers-reduced-motion:reduce){#splash .sp-glow,#splash .sp-tag{opacity:1;transform:none}#splash .sp-line{transform:none}}
+@media (prefers-reduced-motion:reduce){#splash .sp-glow,#splash .sp-tag{opacity:1}#splash .sp-line{transform:none}#splash .sp-door{transition:opacity .4s}#splash.out .sp-l,#splash.out .sp-r{transform:none;opacity:0}}
 </style>
 
 <main id="scroller"><div class="wrap">
@@ -407,14 +418,17 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 </section>
 
 <div id="splash" aria-hidden="true">
+  <div class="sp-door sp-l"></div><div class="sp-door sp-r"></div>
   <div class="sp-glow"></div>
-  <div class="sp-logo"><img src="LOGO_DATA" alt=""><div class="sp-shine"></div></div>
-  <div class="sp-line"></div>
-  <div class="sp-tag">Reseptit · Recipes</div>
+  <div class="sp-stage">
+    <div class="sp-logo"><div class="sp-x" style="--i:1"></div><div class="sp-x" style="--i:2"></div><div class="sp-x" style="--i:3"></div><div class="sp-x" style="--i:4"></div><div class="sp-x" style="--i:5"></div><div class="sp-x" style="--i:6"></div><div class="sp-x" style="--i:7"></div><div class="sp-x" style="--i:8"></div><div class="sp-x" style="--i:9"></div><div class="sp-x" style="--i:10"></div><img src="LOGO_DATA" alt=""><div class="sp-shine"></div></div>
+    <div class="sp-line"></div>
+    <div class="sp-tag">Reseptit · Recipes</div>
+  </div>
 </div>
-<script>(function(){var e=document.getElementById('splash');if(!e)return;var m=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches,t,hid=0;
-function go(){clearTimeout(t);e.classList.add('out')}
-function show(){e.classList.remove('out','play');void e.offsetWidth;e.classList.add('play');clearTimeout(t);t=setTimeout(go,m?500:1800)}
+<script>(function(){var e=document.getElementById('splash');if(!e)return;var m=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches,t,t2,hid=0;
+function go(){clearTimeout(t);if(e.classList.contains('out'))return;e.classList.add('out');t2=setTimeout(function(){e.classList.add('gone')},850)}
+function show(){clearTimeout(t);clearTimeout(t2);e.classList.remove('out','play','gone');void e.offsetWidth;e.classList.add('play');t=setTimeout(go,m?500:2300)}
 e.addEventListener('click',go);show();
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden'){hid=Date.now()}else if(hid&&Date.now()-hid>3000&&!document.body.classList.contains('cooking')){show()}});
 window.addEventListener('pageshow',function(v){if(v.persisted)show()});})();</script>
