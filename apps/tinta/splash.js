@@ -178,7 +178,7 @@ function mount(host,i,opts){opts=opts||{};var sc=SC[i],alive=true,raf=0;
     if(opts.still){x.setTransform(dpr,0,0,dpr,0,0);bg(S,.3);logo(S,1,1,{});tag(S,1,0);return}
     sc.init&&sc.init(S);var t0=null,last=0;
     function f(now){if(!alive)return;if(t0===null){t0=now;last=now}S.t=(now-t0)/1000;S.dt=Math.min(.05,Math.max(0,(now-last)/1000));last=now;
-      x.setTransform(dpr,0,0,dpr,0,0);try{sc.draw(S,S.t)}catch(err){alive=false;return}x.globalAlpha=1;x.globalCompositeOperation='source-over';raf=requestAnimationFrame(f)}
+      x.setTransform(dpr,0,0,dpr,0,0);try{sc.draw(S,S.t)}catch(err){alive=false;try{x.setTransform(dpr,0,0,dpr,0,0);bg(S,.3);logo(S,1,1,{});tag(S,1,0)}catch(e2){}return}x.globalAlpha=1;x.globalCompositeOperation='source-over';raf=requestAnimationFrame(f)}
     raf=requestAnimationFrame(f)});
   return function(){alive=false;cancelAnimationFrame(raf)}}
 function pick(){var n=SC.length,last=-1,i;try{last=parseInt(localStorage.getItem('tinta-splash'),10)}catch(e){}i=Math.floor(Math.random()*n);if(i===last)i=(i+1+Math.floor(Math.random()*(n-1)))%n;try{localStorage.setItem('tinta-splash',String(i))}catch(e){}return i}

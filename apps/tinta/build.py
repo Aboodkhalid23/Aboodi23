@@ -29,7 +29,7 @@ p=a
 for x in ['<meta name="claude:viewport-fit-sides" content="cover">\n','<meta name="apple-mobile-web-app-capable" content="yes">\n','<meta name="apple-mobile-web-app-title" content="Tintå">\n','<meta name="theme-color" content="#0E0D0C">\n']:
     p=p.replace(x,'',1)
 i=p.index('<div class="wrap">')
-p=head+p[:i]+'</head>\n<body>\n'+p[i:]+"\n<script>if('serviceWorker' in navigator){var _r=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(g){g.update();}).catch(function(){});navigator.serviceWorker.addEventListener('controllerchange',function(){if(_r){_r=false;location.reload();}});}</script>\n</body>\n</html>\n"
+p=head+p[:i]+'</head>\n<body>\n'+p[i:]+"\n<script>if('serviceWorker' in navigator){var _r=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(g){g.update();}).catch(function(){});}</script>\n</body>\n</html>\n"
 open(ROOT+'/links/tinta/index.html','w').write(p)
 
 import time

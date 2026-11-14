@@ -828,11 +828,15 @@
   function checkVersion(){
     if(!window.TINTA_VER || location.protocol.indexOf('http')!==0) return;
     fetch('version.txt?'+Date.now(), {cache:'no-store'}).then(function(r){ return r.ok ? r.text() : ''; }).then(function(v){
-      v = (v||'').trim(); if(v && v!==window.TINTA_VER){ location.reload(); }
+      v = (v||'').trim(); if(!v || v===window.TINTA_VER) return;
+      // نعيد التحميل مرة وحدة بس لكل نسخة، حتى ما يدخل بدوامة إعادة تحميل
+      try { if(sessionStorage.getItem('tinta-reloaded')===v) return; sessionStorage.setItem('tinta-reloaded', v); } catch(e){ return; }
+      location.reload();
     }).catch(function(){});
   }
-  document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible') checkVersion(); });
-  setTimeout(checkVersion, 1500);
+  // الفحص يصير بعد ما تخلص حركة الشعار، حتى ما يقطعها
+  var vT; document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible'){ clearTimeout(vT); vT=setTimeout(checkVersion, 9000); } });
+  setTimeout(checkVersion, 9000);
 
   route(); renderTimers();
 })();

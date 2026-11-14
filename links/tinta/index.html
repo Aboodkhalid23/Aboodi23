@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
 <script src="config.js"></script>
-<script>window.TINTA_VER='1794660622';</script>
+<script>window.TINTA_VER='1794660777';</script>
 <title>Tintå Reseptit</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap">
 <style>
@@ -582,7 +582,7 @@ function mount(host,i,opts){opts=opts||{};var sc=SC[i],alive=true,raf=0;
     if(opts.still){x.setTransform(dpr,0,0,dpr,0,0);bg(S,.3);logo(S,1,1,{});tag(S,1,0);return}
     sc.init&&sc.init(S);var t0=null,last=0;
     function f(now){if(!alive)return;if(t0===null){t0=now;last=now}S.t=(now-t0)/1000;S.dt=Math.min(.05,Math.max(0,(now-last)/1000));last=now;
-      x.setTransform(dpr,0,0,dpr,0,0);try{sc.draw(S,S.t)}catch(err){alive=false;return}x.globalAlpha=1;x.globalCompositeOperation='source-over';raf=requestAnimationFrame(f)}
+      x.setTransform(dpr,0,0,dpr,0,0);try{sc.draw(S,S.t)}catch(err){alive=false;try{x.setTransform(dpr,0,0,dpr,0,0);bg(S,.3);logo(S,1,1,{});tag(S,1,0)}catch(e2){}return}x.globalAlpha=1;x.globalCompositeOperation='source-over';raf=requestAnimationFrame(f)}
     raf=requestAnimationFrame(f)});
   return function(){alive=false;cancelAnimationFrame(raf)}}
 function pick(){var n=SC.length,last=-1,i;try{last=parseInt(localStorage.getItem('tinta-splash'),10)}catch(e){}i=Math.floor(Math.random()*n);if(i===last)i=(i+1+Math.floor(Math.random()*(n-1)))%n;try{localStorage.setItem('tinta-splash',String(i))}catch(e){}return i}
@@ -1629,16 +1629,20 @@ var TintaDish = (function(){
   function checkVersion(){
     if(!window.TINTA_VER || location.protocol.indexOf('http')!==0) return;
     fetch('version.txt?'+Date.now(), {cache:'no-store'}).then(function(r){ return r.ok ? r.text() : ''; }).then(function(v){
-      v = (v||'').trim(); if(v && v!==window.TINTA_VER){ location.reload(); }
+      v = (v||'').trim(); if(!v || v===window.TINTA_VER) return;
+      // نعيد التحميل مرة وحدة بس لكل نسخة، حتى ما يدخل بدوامة إعادة تحميل
+      try { if(sessionStorage.getItem('tinta-reloaded')===v) return; sessionStorage.setItem('tinta-reloaded', v); } catch(e){ return; }
+      location.reload();
     }).catch(function(){});
   }
-  document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible') checkVersion(); });
-  setTimeout(checkVersion, 1500);
+  // الفحص يصير بعد ما تخلص حركة الشعار، حتى ما يقطعها
+  var vT; document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible'){ clearTimeout(vT); vT=setTimeout(checkVersion, 9000); } });
+  setTimeout(checkVersion, 9000);
 
   route(); renderTimers();
 })();
 </script>
 
-<script>if('serviceWorker' in navigator){var _r=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(g){g.update();}).catch(function(){});navigator.serviceWorker.addEventListener('controllerchange',function(){if(_r){_r=false;location.reload();}});}</script>
+<script>if('serviceWorker' in navigator){var _r=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(g){g.update();}).catch(function(){});}</script>
 </body>
 </html>
