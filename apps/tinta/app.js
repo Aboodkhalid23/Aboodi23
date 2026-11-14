@@ -373,7 +373,7 @@
   var HASH = {home:'', favs:'suosikit', prep:'lista', needs:'tarvitaan'};
   function go(v){ if(location.hash.replace('#','')===HASH[v]) route(); else location.hash = HASH[v]; }
 
-  function setLang(l){ lang = l; save('lang', l); document.documentElement.lang = l; render(); renderTimers(); }
+  function setLang(l){ lang = l; save('lang', l); document.documentElement.lang = l; render(); renderTimers(); drawInstall(); }
   function syncPrep(){ var pe = cur && prepEntry(cur.id); if(pe){ pe.m = mult; save('prep', prep); } }
 
   document.addEventListener('click', function(e){
@@ -531,7 +531,7 @@
     show();
     $('calcsheet').hidden = false; $('veil').hidden = false;
   }
-  function closeSheets(){ $('calcsheet').hidden = true; $('havesheet').hidden = true; $('newsheet').hidden = true; $('pinsheet').hidden = true; $('veil').hidden = true; }
+  function closeSheets(){ $('calcsheet').hidden = true; $('havesheet').hidden = true; $('newsheet').hidden = true; $('pinsheet').hidden = true; $('instsheet').hidden = true; $('veil').hidden = true; }
   $('veil').addEventListener('click', closeSheets);
   document.addEventListener('keydown', function(e){
     if($('calcsheet').hidden){ if(e.key==='Escape') closeSheets(); return; }
@@ -840,6 +840,40 @@
   // الفحص يصير بعد ما تخلص حركة الشعار، حتى ما يقطعها
   var vT; document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible'){ clearTimeout(vT); vT=setTimeout(checkVersion, 9000); } });
   setTimeout(checkVersion, 9000);
+
+  // ---- Lisää kotinäytölle / زر "أضف للشاشة الرئيسية" للي يفتح الرابط بالمتصفح ----
+  var IA = {
+    fi:{t:'Lisää Tintå kotinäytölle',s:'Avautuu kuin sovellus, koko näytöllä.',b:'Lisää',how:'Lisää kotinäytölle',ok:'Selvä',
+      ios:['Napauta <b>Jaa</b>-painiketta {share}. Uusissa iPhoneissa se on alhaalla <b>•••</b>-valikossa.','Valitse listasta <b>Lisää Koti-valikkoon</b> {plus}','Napauta <b>Lisää</b>. Tintå on nyt kotinäytölläsi.'],
+      and:['Napauta selaimen valikkoa {dots} oikeasta yläkulmasta','Valitse <b>Asenna sovellus</b> tai <b>Lisää aloitusnäytölle</b>','Vahvista <b>Asenna</b>. Tintå on nyt kotinäytölläsi.']},
+    en:{t:'Add Tintå to your home screen',s:'Opens like an app, full screen.',b:'Add',how:'Add to home screen',ok:'Got it',
+      ios:['Tap the <b>Share</b> button {share}. On newer iPhones it is in the <b>•••</b> menu at the bottom.','Choose <b>Add to Home Screen</b> {plus}','Tap <b>Add</b>. Tintå is now on your home screen.'],
+      and:['Tap the browser menu {dots} in the top right','Choose <b>Install app</b> or <b>Add to Home screen</b>','Confirm <b>Install</b>. Tintå is now on your home screen.']}
+  };
+  var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent || '') || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var deferredInstall = null;
+  var IICON = {share:'<svg viewBox="0 0 24 24" fill="none" stroke="#5AA0FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M8 7l4-4 4 4"/><path d="M5 11v9h14v-9"/></svg>',
+    plus:'<svg viewBox="0 0 24 24" fill="none" stroke="#F3EEE6" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8M8 12h8"/></svg>',
+    dots:'<svg viewBox="0 0 24 24" fill="#F3EEE6"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>'};
+  function drawInstall(){ var el = $('install'); if(!el) return;
+    if(standalone || Date.now() < (+load('instx', 0) || 0)){ el.hidden = true; return; }
+    var a = IA[lang] || IA.fi;
+    el.innerHTML = '<img src="icon-180.png" alt=""><div class="it"><b>'+a.t+'</b><span>'+a.s+'</span></div><button type="button" class="ib" id="instgo">'+a.b+'</button><button type="button" class="ix" id="instno" aria-label="'+T[lang].cancel+'">×</button>';
+    el.hidden = false; }
+  function showHow(){ var a = IA[lang] || IA.fi, st = isIOS ? a.ios : a.and;
+    $('insttitle').textContent = a.how; $('instok').textContent = a.ok;
+    $('isteps').innerHTML = st.map(function(x, n){ return '<li><span class="n">'+(n+1)+'</span><span>'+x.replace(/\{(\w+)\}/g, function(m, k){ return '<span class="ic">'+IICON[k]+'</span>'; })+'</span></li>'; }).join('');
+    $('instsheet').hidden = false; $('veil').hidden = false; }
+  window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); deferredInstall = e; drawInstall(); });
+  window.addEventListener('appinstalled', function(){ deferredInstall = null; save('instx', Date.now() + 1e12); drawInstall(); });
+  document.addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('button'); if(!b) return;
+    if(b.id === 'instno'){ save('instx', Date.now() + 3*864e5); drawInstall(); }
+    else if(b.id === 'instgo'){
+      if(deferredInstall){ deferredInstall.prompt(); deferredInstall.userChoice.then(function(c){ if(c && c.outcome === 'accepted') save('instx', Date.now() + 1e12); deferredInstall = null; drawInstall(); }).catch(function(){}); }
+      else showHow(); }
+    else if(b.id === 'instok'){ closeSheets(); } });
+  drawInstall();
 
   route(); renderTimers();
 })();

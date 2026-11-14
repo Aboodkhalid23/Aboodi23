@@ -332,6 +332,21 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 .rhero .steam i{position:absolute;bottom:0;width:34%;height:70%;border-radius:50%;background:radial-gradient(ellipse at 50% 60%,rgba(240,228,214,.5),rgba(240,228,214,0) 68%);filter:blur(5px);opacity:0;animation:rise 4.2s ease-in infinite}
 .rhero .steam i:nth-child(1){left:8%}.rhero .steam i:nth-child(2){left:34%;animation-delay:1.1s}.rhero .steam i:nth-child(3){left:58%;animation-delay:2.2s}.rhero .steam i:nth-child(4){left:22%;animation-delay:3.1s}
 @keyframes rise{0%{opacity:0;transform:translateY(40%) scaleX(.6)}30%{opacity:1}100%{opacity:0;transform:translateY(-55%) translateX(12%) scaleX(1.5)}}
+/* Lisää kotinäytölle / إضافة للشاشة الرئيسية */
+.install{display:flex;align-items:center;gap:12px;margin:12px 0 2px;padding:12px 12px 12px 14px;border-radius:16px;background:linear-gradient(135deg,#2A2118,#1C1A18);border:1px solid rgba(208,138,80,.45)}
+.install img{width:44px;height:44px;border-radius:11px;flex:none}
+.install .it{flex:1;min-width:0}
+.install .it b{display:block;font-size:15px;color:var(--fg)}
+.install .it span{display:block;font-size:12.5px;color:var(--muted);line-height:1.4;margin-top:2px}
+.install .ib{flex:none;height:40px;padding:0 14px;border-radius:999px;border:0;background:var(--accent);color:var(--bg);font-weight:800;font-size:14px}
+.install .ix{flex:none;width:32px;height:32px;border:0;background:transparent;color:var(--muted);font-size:20px;line-height:1}
+.isteps{margin:6px 0 4px;padding:0;list-style:none;display:flex;flex-direction:column;gap:12px}
+.isteps li{display:flex;align-items:center;gap:12px;font-size:15px;line-height:1.45;color:var(--fg)}
+.isteps .n{flex:none;width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--bg);font-weight:800;display:flex;align-items:center;justify-content:center}
+.isteps .ic{display:inline-flex;vertical-align:middle;width:26px;height:26px;margin:0 3px;border-radius:7px;background:var(--raise);align-items:center;justify-content:center}
+.isteps .ic svg{width:17px;height:17px}
+.iarrow{position:fixed;z-index:40;left:50%;bottom:calc(8px + env(safe-area-inset-bottom, 0px));width:0;height:0;margin-left:-14px;border:14px solid transparent;border-top-color:var(--accent);animation:ibob 1s ease-in-out infinite alternate;pointer-events:none}
+@keyframes ibob{to{transform:translateY(8px)}}
 </style>
 
 <main id="scroller"><div class="wrap">
@@ -340,6 +355,7 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
       <img class="logo brand" src="LOGO_DATA" alt="Tintå">
       <div class="tools"><button type="button" class="who" id="avatar" aria-label="Nimi / Name"></button><div class="lang" role="group" aria-label="Kieli / Language"><button type="button" data-lang="fi">FI</button><button type="button" data-lang="en">EN</button></div></div>
     </div>
+    <div id="install" class="install" hidden></div>
     <label class="search" for="q">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A39B90" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
       <input id="q" type="search" autocomplete="off" enterkeyhint="search">
@@ -384,6 +400,13 @@ body.cooking .timers{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
   <div class="hrow"><input id="havein" type="text" inputmode="decimal" autocomplete="off"><span id="haveunit"></span></div>
   <button type="button" class="use solid" id="haveok">Laske</button>
 </section>
+
+<section class="sheet" id="instsheet" hidden aria-labelledby="insttitle">
+  <div class="shead"><h2 id="insttitle"></h2><button type="button" class="x" data-close="1" aria-label="Sulje / Close">×</button></div>
+  <ol class="isteps" id="isteps"></ol>
+  <button type="button" class="use solid" id="instok"></button>
+</section>
+<div class="iarrow" id="iarrow" hidden aria-hidden="true"></div>
 
 <section class="sheet" id="newsheet" hidden aria-labelledby="newtitle">
   <div class="shead"><h2 id="newtitle"></h2><button type="button" class="x" data-close="1" aria-label="Sulje / Close">×</button></div>
