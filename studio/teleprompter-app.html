@@ -56,6 +56,21 @@ svg{display:block;flex:none}
 .hlist svg{color:var(--accent)}
 textarea.edit{width:100%;min-height:90px;background:#1b1d22;border:1px solid #2b2f37;border-radius:12px;padding:10px 14px;font-family:"Cairo",var(--f-ui);font-weight:700;font-size:1.1rem;line-height:1.8;outline:0;max-width:760px;display:block;margin:0 auto 10px;resize:vertical}
 
+/* ===== القفل ===== */
+#lock{position:fixed;inset:0;z-index:200;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px}
+#lock .lt{font-size:1.05rem;color:var(--muted)}
+.dots{display:flex;gap:14px;direction:ltr}
+.dots i{width:14px;height:14px;border-radius:50%;border:2px solid #555}
+.dots i.on{background:#fff;border-color:#fff}
+.dots.bad{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+.keys{display:grid;grid-template-columns:repeat(3,74px);gap:14px;direction:ltr;margin-top:6px}
+.keys button{width:74px;height:74px;border-radius:50%;background:var(--surface2);font-size:1.7rem;font-weight:600;font-variant-numeric:tabular-nums}
+.keys button:active{background:#33373f}
+.keys button.ghost{background:none;font-size:1rem}
+.keyrow{display:flex;gap:8px;margin-top:8px}
+.keyrow input{flex:1;min-width:0;direction:ltr;text-align:left}
+
 /* ===== مساعدة القراءة ===== */
 #content.altc p.pa{color:var(--alt)}
 #content.mag p{transition:transform .3s ease,opacity .3s ease;transform-origin:100% 50%}
@@ -283,6 +298,13 @@ textarea.field{min-height:38vh;resize:vertical;font-size:1.05rem}
 </svg>
 <div id="splash" aria-hidden="true"><svg width="88" height="88"><use class="logoUse" href="#logo-a"/></svg><div class="wm">Noto</div><div class="tg">اقرا براحة، وصوّر بثقة</div></div>
 
+<div id="lock" hidden>
+  <svg width="72" height="72"><use class="logoUse" href="#logo-a"/></svg>
+  <div class="lt" id="lockMsg">اكتب الرمز حتى تفتح Noto</div>
+  <div class="dots" id="lockDots"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="keys" id="lockKeys"></div>
+</div>
+
 <!-- ============ المكتبة ============ -->
 <section class="view" id="home">
   <header class="appbar gutter"><div class="wrap">
@@ -425,6 +447,35 @@ const LS=store("tp3_"),OLD=store("tp2_");
 const hasClaude=!!(window.claude&&window.claude.use);
 /* بدون Claude = التطبيق المستقل (GitHub Pages): ملفات بدل الدرايف، والمايك مباشرة */
 const STANDALONE=!hasClaude;
+/* ---------- القفل (بس بالتطبيق المستقل). الرمز نفسه ما مكتوب بأي مكان: بس بصمته المشفّرة ---------- */
+const LOCK={salt:"d486abe166c1528c467755f302e4b9ec",hash:"7afe1d6ea9ece7412d373e6e0e5317cd208efbe685a4faee79650e3e43123e29",iter:300000,days:30};
+async function pinHash(pin){
+  const hex=h=>new Uint8Array(h.match(/../g).map(x=>parseInt(x,16)));
+  const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(pin),"PBKDF2",false,["deriveBits"]);
+  const bits=await crypto.subtle.deriveBits({name:"PBKDF2",salt:hex(LOCK.salt),iterations:LOCK.iter,hash:"SHA-256"},key,256);
+  return Array.from(new Uint8Array(bits)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+(function(){
+  if(!STANDALONE)return;
+  const ok=(()=>{try{const u=JSON.parse(localStorage.getItem("noto_unlock")||"null");return u&&u.h===LOCK.hash&&u.until>Date.now();}catch(e){return false;}})();
+  if(ok)return;
+  const L=document.getElementById("lock");L.hidden=false;let pin="",busy=false,fails=0,waitUntil=0;
+  const dots=[...document.querySelectorAll("#lockDots i")],msg=document.getElementById("lockMsg");
+  const paint=()=>dots.forEach((d,i)=>d.classList.toggle("on",i<pin.length));
+  async function check(){
+    busy=true;msg.textContent="لحظة…";let h="";try{h=await pinHash(pin);}catch(e){msg.textContent="جهازك ما يدعم القفل";busy=false;return;}
+    if(h===LOCK.hash){try{localStorage.setItem("noto_unlock",JSON.stringify({h,until:Date.now()+LOCK.days*864e5}));}catch(e){}L.remove();return;}
+    fails++;pin="";paint();const D=document.getElementById("lockDots");D.classList.remove("bad");void D.offsetWidth;D.classList.add("bad");
+    if(fails>=5){waitUntil=Date.now()+30000;msg.textContent="غلط كثير. استنى 30 ثانية";setTimeout(()=>{msg.textContent="اكتب الرمز حتى تفتح Noto";},30000);}
+    else msg.textContent="الرمز غلط، جرّب مرة ثانية";
+    busy=false;try{navigator.vibrate&&navigator.vibrate(120);}catch(e){}
+  }
+  function press(k){if(busy||Date.now()<waitUntil)return;if(k==="del"){pin=pin.slice(0,-1);paint();return;}if(pin.length>=6)return;pin+=k;paint();if(pin.length===6)check();}
+  const K=document.getElementById("lockKeys");["1","2","3","4","5","6","7","8","9","","0","del"].forEach(k=>{const b=document.createElement("button");
+    if(!k){b.className="ghost";b.disabled=true;}else if(k==="del"){b.className="ghost";b.textContent="مسح";b.setAttribute("aria-label","مسح");}else b.textContent=k;
+    b.addEventListener("click",()=>press(k));K.append(b);});
+  document.addEventListener("keydown",e=>{if(!document.getElementById("lock"))return;if(/^[0-9]$/.test(e.key))press(e.key);else if(e.key==="Backspace")press("del");},true);
+})();
 const use=n=>hasClaude?window.claude.use(n).catch(()=>null):Promise.resolve(null);
 
 /* ---------- الخطوط (كلها مفحوصة: بيها گ چ پ ڤ) ---------- */
@@ -635,7 +686,18 @@ async function readDocx(buf){
 }
 
 /* ---------- شاشة السكربت ---------- */
-function openDoc(d,skipSave){doc=d;show("prep");$("aiCard").hidden=STANDALONE;$("docTitle").textContent=(d.title||"بدون عنوان").replace(/\.(docx|txt)$/i,"");
+function renderKeyRow(){
+  const old=$("keyRow");if(old)old.remove();if(!STANDALONE)return;
+  const box=el("div");box.id="keyRow";
+  if(getKey()){const r=el("div","keyrow");const t=el("span","help","مفتاح Claude محفوظ بجهازك.");t.style.margin="0";t.style.flex="1";
+    const b=el("button","btn","احذف المفتاح");b.addEventListener("click",()=>{try{localStorage.removeItem(AKEY);}catch(e){}sampleNs=null;renderKeyRow();});r.append(t,b);box.append(r);}
+  else{box.append(el("p","help","حتى تشتغل مميزات Claude هنا، حط مفتاح Claude مالتك (يبدي بـ sk-ant-). تاخذه من console.anthropic.com ← API Keys. ينحفظ بجهازك بس."));
+    const r=el("div","keyrow"),i=el("input","field");i.type="password";i.placeholder="sk-ant-…";i.autocomplete="off";i.id="keyIn";
+    const b=el("button","btn primary","احفظ");b.addEventListener("click",()=>{const v=i.value.trim();if(!/^sk-ant-/.test(v)){toast("المفتاح لازم يبدي بـ sk-ant-");return;}
+      try{localStorage.setItem(AKEY,v);}catch(e){}sampleNs=apiSample();renderKeyRow();toast("انحفظ المفتاح");});r.append(i,b);box.append(r);}
+  $("aiCard").append(box);
+}
+function openDoc(d,skipSave){doc=d;show("prep");renderKeyRow();$("docTitle").textContent=(d.title||"بدون عنوان").replace(/\.(docx|txt)$/i,"");
   $("docText").value=d.text||"";$("prepReload").hidden=d.src!=="drive";refreshPrep();if(d.text&&!skipSave)saveRecent(d);}
 function hardIn(t){const n=" "+norm(t)+" ";return HARDN.filter(h=>n.includes(" "+h.w.join(" ")+" "));}
 function refreshPrep(){
@@ -827,7 +889,7 @@ function setPlay(on){
   else{$("play").classList.remove("idle");clearTimeout(idleT);}
   sendStatus(true);
 }
-function poke(){$("play").classList.remove("idle");clearTimeout(idleT);idleT=setTimeout(()=>{if((playing||voiceOn)&&$("panel").hidden)$("play").classList.add("idle");},2500);}
+function poke(){$("play").classList.remove("idle");clearTimeout(idleT);idleT=setTimeout(()=>{if(playing&&!voiceOn&&$("panel").hidden)$("play").classList.add("idle");},2500);}
 function toggle(){
   if(cardOn){cardNext();return;}
   if(voiceOn){stopVoice();return;}
@@ -894,7 +956,7 @@ $("cardv").addEventListener("click",e=>{e.stopPropagation();});
 function startPlay(resume){
   show("play");setBare(false);closePanel();cardOn=false;rehOn=false;$("cardv").hidden=true;content.style.visibility="";
   $("guide").style.visibility=$("shadeT").style.visibility=$("shadeB").style.visibility="";$("modePill").hidden=true;
-  fitWarned=false;build();pos=0;vel=0;cur=0;gi=0;maxPos=0;clockStart=0;takeMarks=[];goodMarks=[];anim=null;
+  fitWarned=false;painted=-1;build();pos=0;vel=0;cur=0;gi=0;maxPos=0;clockStart=0;takeMarks=[];goodMarks=[];anim=null;
   $("rec").classList.remove("on");$("retakes").hidden=true;$("clock").textContent="0:00";
   refreshRail();setPlay(false);cancelAnimationFrame(raf);last=0;raf=requestAnimationFrame(frame);
   requestAnimationFrame(()=>{measure();if(resume>0&&paras.length){const i=Math.min(resume,paras.length-1);seek(paraY(i));toast("كمّلنا من الجملة "+(i+1));}try{stage.focus({preventScroll:true});}catch(e){}});
@@ -1025,34 +1087,46 @@ document.addEventListener("visibilitychange",()=>{if(document.hidden){if(playing
 let dict=null;
 function webSpeech(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return null;
-  let rec=null,want=false,hp=null,hf=null,hs=null;
-  const mk=()=>{const r=new SR();r.lang="ar-SA";r.continuous=true;r.interimResults=true;
+  let rec=null,want=false,hp=null,hf=null,hs=null,t0=0,quick=0,restarts=0;
+  const giveUp=reason=>{want=false;try{rec&&rec.abort();}catch(e){}hs&&hs({state:"idle",reason});};
+  const mk=()=>{const r=new SR();r.lang="ar-SA";r.continuous=true;r.interimResults=true;r.onstart=()=>{t0=Date.now();};
     r.onresult=ev=>{let fin="",par="";for(let i=ev.resultIndex;i<ev.results.length;i++){const t=ev.results[i][0].transcript;if(ev.results[i].isFinal)fin+=t+" ";else par+=t+" ";}
       if(fin&&hf)hf({text:fin});if(par&&hp)hp({text:par});};
-    r.onerror=ev=>{if(ev.error==="not-allowed"||ev.error==="service-not-allowed"){want=false;hs&&hs({state:"idle",reason:"not_granted"});}};
-    r.onend=()=>{if(want){setTimeout(()=>{if(want){try{rec=mk();rec.start();}catch(e){}}},150);}else hs&&hs({state:"idle",reason:"stopped"});};
+    r.onerror=ev=>{const e=ev.error;if(e==="not-allowed"||e==="service-not-allowed")giveUp("not_granted");else if(e==="audio-capture"||e==="language-not-supported"||e==="network")giveUp("unavailable");};
+    /* إذا الجهاز يسكّر السماع بسرعة ورا بعض، نوگف بدل ما نعيد بدون نهاية (هذا الي چان يجمّد الشاشة) */
+    r.onend=()=>{if(!want){hs&&hs({state:"idle",reason:"stopped"});return;}
+      quick=(Date.now()-t0<2500)?quick+1:0;restarts++;
+      if(quick>=3||restarts>40){giveUp("unavailable");return;}
+      setTimeout(()=>{if(want){try{rec=mk();rec.start();}catch(e){giveUp("unavailable");}}},quick?1200:300);};
     return r;};
-  return {start(){want=true;rec=mk();try{rec.start();}catch(e){return Promise.reject({code:"unavailable"});}hs&&hs({state:"listening"});return Promise.resolve();},
+  return {start(){want=true;quick=0;restarts=0;rec=mk();try{rec.start();}catch(e){return Promise.reject({code:"unavailable"});}hs&&hs({state:"listening"});return Promise.resolve();},
     stop(){want=false;try{rec&&rec.stop();}catch(e){}return Promise.resolve();},
     onPartial(f){hp=f;},onFinal(f){hf=f;},onState(f){hs=f;}};
 }
 (STANDALONE?Promise.resolve(webSpeech()):use("dictation")).then(d=>{dict=d;if(!d)return;
   d.onPartial(({text})=>follow(text));d.onFinal(({text})=>follow(text));
-  d.onState(({state,reason})=>{if(state==="idle"&&voiceOn){voiceOn=false;paintVoiceUi();if(reason&&reason!=="stopped"&&reason!=="viewer_stopped")toast("وگف السماع، شغّله مرة ثانية من «أكثر»");}});
+  d.onState(({state,reason})=>{if(state==="idle"&&voiceOn){voiceOn=false;playing=false;paintVoiceUi();
+    if(reason==="not_granted")toast("لازم تسمح للمايك من إعدادات الجهاز");else if(reason==="unavailable")toast("السماع ما اشتغل زين بهذا الجهاز. استخدم التشغيل العادي أو الريموت");
+    else if(reason&&reason!=="stopped"&&reason!=="viewer_stopped")toast("وگف السماع، شغّله مرة ثانية من «أكثر»");}});
 });
 function startVoice(){
   if(!dict)return;if(voiceOn){stopVoice();return;}
   if(cardOn)setCard(false);
   let p;try{p=dict.start({language:"ar"});}catch(e){toast("ما گدرت أشغّل المايك");return;}
   setPlay(false);voiceOn=true;if(!clockStart){clockStart=performance.now();$("rec").classList.add("on");}
-  cur=wordAt(pos);paintVoiceUi();paintVoice();poke();
+  cur=wordAt(pos);paintVoiceUi();paintVoice(true);poke();
   Promise.resolve(p).catch(err=>{voiceOn=false;paintVoiceUi();toast(err&&err.code==="not_granted"?"ما سمحت للمايك":"ما گدرت أسمعك هسه");});
 }
 function stopVoice(){if(!voiceOn)return;voiceOn=false;try{dict&&dict.stop().catch(()=>{});}catch(e){}paintVoiceUi();}
 function paintVoiceUi(){$("modePill").hidden=!voiceOn&&!cardOn;if(voiceOn)$("modePill").textContent="يسمعك";content.classList.toggle("voice",voiceOn);
   const pb=$("rail").querySelector('[data-id="play"]');if(pb)pb.innerHTML=voiceOn?PAUSE_I:PLAY_I;}
 function voiceTarget(){const w=W[Math.min(cur,W.length-1)];return w?Math.min(maxPos,Math.max(0,w.y+w.h/2-guideY)):0;}
-function paintVoice(){W.forEach((w,i)=>{w.el.classList.toggle("done",i<cur);w.el.classList.toggle("next",i>=cur&&i<cur+7);});}
+let painted=-1;
+function paintVoice(full){
+  if(full||painted<0){W.forEach((w,i)=>{w.el.classList.toggle("done",i<cur);w.el.classList.toggle("next",i>=cur&&i<cur+7);});painted=cur;return;}
+  const a=Math.max(0,Math.min(painted,cur)-8),b=Math.min(W.length,Math.max(painted,cur)+8);
+  for(let i=a;i<b;i++){W[i].el.classList.toggle("done",i<cur);W[i].el.classList.toggle("next",i>=cur&&i<cur+7);}painted=cur;
+}
 const strip=x=>x.replace(/^(وال|بال|فال|كال|لل|ال|و|ف|ب)(?=..)/,"");
 function sim(a,b){if(!a||!b)return false;if(a===b)return true;const x=strip(a),y=strip(b);if(x===y&&x.length>=2)return true;
   return x.length>=4&&y.length>=4&&x.slice(0,4)===y.slice(0,4)&&Math.abs(x.length-y.length)<=2;}
@@ -1070,7 +1144,32 @@ function follow(text){
 }
 
 /* ---------- سهّل الجملة (Claude) ---------- */
-let sampleNs=null;use("sample").then(s=>{sampleNs=s;});
+let sampleNs=null;
+/* بالتطبيق المستقل: Claude بمفتاحك الخاص، محفوظ بجهازك بس. طلب HTTP مباشر لأن الصفحة ملف HTML واحد بدون أدوات بناء */
+const AKEY="noto_akey";
+function getKey(){try{return localStorage.getItem(AKEY)||"";}catch(e){return "";}}
+async function claudeCall(prompt){
+  const key=getKey();if(!key)throw {code:"no_key"};
+  let res;
+  try{res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"content-type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01",
+    "anthropic-dangerous-direct-browser-access":"true","anthropic-beta":"server-side-fallback-2026-07-01"},
+    body:JSON.stringify({model:"claude-opus-5-5",max_tokens:16000,output_config:{effort:"low"},fallbacks:"default",messages:[{role:"user",content:prompt}]})});}
+  catch(e){throw {code:"upstream_error"};}
+  if(res.status===401||res.status===403)throw {code:"bad_key"};
+  if(res.status===429)throw {code:"rate_limited"};
+  if(res.status===402||res.status===400){let t="";try{t=(await res.json()).error.message||"";}catch(e){}throw {code:/credit|balance|billing/i.test(t)?"no_credit":"upstream_error"};}
+  if(!res.ok)throw {code:"upstream_error"};
+  const j=await res.json();if(j.stop_reason==="refusal")throw {code:"refused"};
+  return (j.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("").trim();
+}
+function apiSample(){
+  const f=async(prompt)=>({text:await claudeCall(prompt)});
+  f.json=async(prompt)=>{const t=await claudeCall(prompt);const a=t.indexOf("{"),b=t.lastIndexOf("}");if(a<0||b<a)throw {code:"invalid_json"};
+    try{return JSON.parse(t.slice(a,b+1));}catch(e){throw {code:"invalid_json"};}};
+  return f;
+}
+if(STANDALONE){if(getKey())sampleNs=apiSample();}else use("sample").then(s=>{sampleNs=s;});
+const ERRMSG={bad_key:"مفتاح Claude غلط أو انلغى. غيّره من صفحة السكربت.",no_credit:"رصيد حساب Claude خلص. اشحنه من موقع Anthropic.",no_key:"ضيف مفتاح Claude أول، من صفحة السكربت.",refused:"Claude رفض هذا الطلب."};
 let sent=null;
 function sentenceMenu(target){
   const p=target&&target.closest&&target.closest("p[data-p]");const idx=p?+p.dataset.p:paraIdx();if(!paras.length)return;
@@ -1078,7 +1177,7 @@ function sentenceMenu(target){
 }
 async function simplify(){
   if(!sent||sent.busy)return;
-  if(!sampleNs){sent.err="هالميزة تشتغل لما تفتح التطبيق من رابطه بحساب Claude.";renderPanel();return;}
+  if(!sampleNs){sent.err=STANDALONE?"ضيف مفتاح Claude من صفحة السكربت أول.":"هالميزة تشتغل لما تفتح التطبيق من رابطه بحساب Claude.";renderPanel();return;}
   sent.busy=true;sent.err=null;sent.alt="";renderPanel();
   const prompt="انت محرر سكربتات يوتيوب باللهجة العراقية لمقدّم عنده صعوبة بالنطق.\n"+
     "أعد كتابة الجملة التالية بنفس المعنى بالضبط، باللهجة العراقية المحكية، بكلمات أسهل للنطق وأقصر:\n"+
@@ -1089,7 +1188,7 @@ async function simplify(){
     if(!sent)return;sent.alt=(r.text||"").trim().replace(/^["«»“”]+|["«»“”]+$/g,"");
   }catch(e){
     if(!sent)return;const c=e&&e.code;sent.alt=null;
-    sent.err=c==="not_granted"?"لازم تسمح للتطبيق يستخدم Claude، من نافذة الإذن الي تطلع.":c==="rate_limited"?"كثرت الطلبات، استنى شوية وجرّب.":"ما گدرت أسهّلها هسه، جرّب مرة ثانية.";
+    sent.err=ERRMSG[c]?ERRMSG[c]:c==="not_granted"?"لازم تسمح للتطبيق يستخدم Claude، من نافذة الإذن الي تطلع.":c==="rate_limited"?"كثرت الطلبات، استنى شوية وجرّب.":"ما گدرت أسهّلها هسه، جرّب مرة ثانية.";
   }
   if(sent){sent.busy=false;renderPanel();}
 }
@@ -1129,7 +1228,7 @@ function aiPrompt(kind,lines,offset){
 }
 async function aiRun(kind){
   if(aiBusy||!doc)return;doc.text=cleanText($("docText").value);
-  if(!sampleNs){$("aiNote").textContent="مساعد Claude يشتغل لما تفتح Noto من رابطه بحساب Claude.";return;}
+  if(!sampleNs){$("aiNote").textContent=STANDALONE?"ضيف مفتاح Claude تحت أول.":"مساعد Claude يشتغل لما تفتح Noto من رابطه بحساب Claude.";return;}
   const lines=scriptLines();if(!lines.length)return;
   aiBusy=true;document.querySelectorAll("[data-ai]").forEach(b=>b.disabled=true);
   const out=[];const B=50;
@@ -1146,7 +1245,7 @@ async function aiRun(kind){
     if(!out.length){$("aiNote").textContent="Claude ما لگى شي يحتاج تغيير بهذا السكربت.";}
     else openReview(kind,out);
   }catch(e){
-    const c=e&&e.code;$("aiNote").textContent=c==="not_granted"?"لازم تسمح لـ Noto يستخدم Claude من نافذة الإذن.":c==="rate_limited"?"كثرت الطلبات، استنى دقيقة وجرّب.":c==="prompt_too_large"?"السكربت كبير، جرّب مرة ثانية.":"ما گدر Claude يكمل هسه، جرّب مرة ثانية.";
+    const c=e&&e.code;$("aiNote").textContent=ERRMSG[c]?ERRMSG[c]:c==="not_granted"?"لازم تسمح لـ Noto يستخدم Claude من نافذة الإذن.":c==="rate_limited"?"كثرت الطلبات، استنى دقيقة وجرّب.":c==="prompt_too_large"?"السكربت كبير، جرّب مرة ثانية.":"ما گدر Claude يكمل هسه، جرّب مرة ثانية.";
   }finally{aiBusy=false;document.querySelectorAll("[data-ai]").forEach(b=>b.disabled=false);}
 }
 document.querySelectorAll("[data-ai]").forEach(b=>b.addEventListener("click",()=>aiRun(b.dataset.ai)));
@@ -1267,7 +1366,7 @@ function renderPanel(){
     [[I.speed,"السرعة"],[I.size,"حجم الخط"],[I.font,"نوع الخط"],[I.width,"عرض النص"],[I.theme,"الألوان"],[I.mirror,"المراية للزجاج"],
      [I.up,"رجوع سطر (ويسجّل الغلطة للمونتاج)"],[I.down,"قدّام سطر"],[I.card,"جملة وحدة كبيرة"],['<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',"شاشة كاملة"],[I.hide,"إخفاء الأزرار"],
      ['<path d="M8 12h8"/><circle cx="12" cy="12" r="9"/>',"ضغطة على النص: تشغيل وإيقاف"],['<path d="M12 5v14M8 9l4-4 4 4M8 15l4 4 4-4"/>',"سحب بإصبعك: تحريك النص"],
-     ['<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8" opacity=".4"/>',STANDALONE?"ضغطة طويلة على جملة: عدّلها، تمرّن عليها":"ضغطة طويلة على جملة: سهّلها، عدّلها، تمرّن"],
+     ['<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8" opacity=".4"/>',"ضغطة طويلة على جملة: سهّلها، عدّلها، تمرّن"],
      ['<path d="M5 12h14"/><path d="M5 12c3-6 11-6 14 0" opacity=".5"/>',"كلمة تحتها خط أصفر: ضغطة تبدّلها بالأسهل"]]
     .forEach(([ic,n])=>{const d=el("div");d.innerHTML=IC(ic,20);d.append(el("span",null,n));L.append(d);});
     P.append(L);}
@@ -1294,7 +1393,7 @@ function renderPanel(){
     if(sent.err)P.append(el("div","pnote",sent.err));
     const acts=el("div","acts");
     const mk=(t,cls,fn,dis)=>{const b=el("button","btn"+(cls?" "+cls:""),t);b.disabled=!!dis;b.addEventListener("click",fn);acts.append(b);};
-    if(!STANDALONE){if(sent.alt&&!sent.busy){mk("بدّلها","primary",applySimpler);mk("جرّب غيرها",null,simplify);}
+    {if(sent.alt&&!sent.busy){mk("بدّلها","primary",applySimpler);mk("جرّب غيرها",null,simplify);}
     else mk(sent.busy?"دا أسهّلها…":"سهّلها بالذكاء الاصطناعي","primary",simplify,sent.busy);}
     mk("عدّلها بإيدك",null,()=>{sent.edit=true;renderPanel();const t=$("sentEdit");if(t){t.focus();}});
     mk("تمرّن عليها",null,()=>{const i=sent.idx;closePanel();setCard(true,true);cardIdx=i;rehN=0;renderCard();});
