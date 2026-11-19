@@ -178,6 +178,9 @@ textarea.field{min-height:38vh;resize:vertical;font-size:1.05rem}
   padding-top:calc(8px + env(safe-area-inset-top,0px));padding-left:44px;padding-right:max(10px,env(safe-area-inset-right,0px));
   font-variant-numeric:tabular-nums;font-size:.84rem;pointer-events:none;transition:opacity .4s}
 .pill{background:rgba(20,22,26,.82);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-radius:999px;padding:5px 11px;display:flex;align-items:center;gap:6px;color:#e6e6e6;white-space:nowrap}
+.lvl{display:inline-flex;gap:2px;align-items:flex-end;height:12px}
+.lvl i{width:3px;border-radius:1px;background:#666;height:3px;transition:height .08s}
+.lvl.on i{background:var(--ok)}
 .rec{width:9px;height:9px;border-radius:50%;background:#666}
 .rec.on{background:var(--accent);animation:blink 1.2s infinite}
 @keyframes blink{50%{opacity:.25}}
@@ -447,6 +450,7 @@ const LS=store("tp3_"),OLD=store("tp2_");
 const hasClaude=!!(window.claude&&window.claude.use);
 /* بدون Claude = التطبيق المستقل (GitHub Pages): ملفات بدل الدرايف، والمايك مباشرة */
 const STANDALONE=!hasClaude;
+const VAD_OK=STANDALONE&&!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)&&!!(window.AudioContext||window.webkitAudioContext);
 /* ---------- القفل (بس بالتطبيق المستقل). الرمز نفسه ما مكتوب بأي مكان: بس بصمته المشفّرة ---------- */
 const LOCK={salt:"d486abe166c1528c467755f302e4b9ec",hash:"7afe1d6ea9ece7412d373e6e0e5317cd208efbe685a4faee79650e3e43123e29",iter:300000,days:30};
 async function pinHash(pin){
@@ -504,7 +508,7 @@ const HEAD_RE=/^(العنوان|الهوك|هوك بديل|السكربت|الم
 const KEY_DEF={toggle:[" ","Enter","MediaPlayPause","k"],faster:["ArrowUp"],slower:["ArrowDown"],back:["PageUp","ArrowRight"],fwd:["PageDown","ArrowLeft"],retake:["r","Backspace"],mark:["g"]};
 const KEY_NAMES={toggle:"تشغيل / إيقاف",back:"رجوع سطر",fwd:"قدّم سطر",retake:"عيد الجملة",mark:"علامة لقطة زينة",faster:"أسرع",slower:"أبطأ"};
 const DEF={wpm:130,target:0,size:(Math.min(screen.width,screen.height)<600?42:64),lh:1.55,width:88,guide:34,font:"cairo",weight:1,theme:"white",
-  mx:false,my:false,focus:true,pauseAt:true,pauseHead:true,hard:true,cd:3,chunk:true,smart:true,breath:true,map:true,dist:0,beep:false,logo:"a",altc:false,mag:false,kar:false,hideRead:false,tash:true,syll:false,keys:KEY_DEF};
+  mx:false,my:false,focus:true,pauseAt:true,pauseHead:true,hard:true,cd:3,chunk:true,smart:true,breath:true,map:true,dist:0,beep:false,vadK:3,vadHang:450,logo:"a",altc:false,mag:false,kar:false,hideRead:false,tash:true,syll:false,keys:KEY_DEF};
 const PRESET_KEYS=["wpm","size","lh","width","guide","font","weight","theme","mx","my","focus","chunk","smart","breath","map"];
 const PRESET_DEF=[
   {name:"ريل",v:{wpm:150,size:40,lh:1.5,width:92,guide:32,weight:1}},
@@ -875,6 +879,10 @@ function frame(t){
   const dt=last?Math.min(.05,(t-last)/1000):0;last=t;
   if(anim){const k=Math.min(1,Math.max(0,(t-anim.t0)/anim.d)),e=1-Math.pow(1-k,3);pos=anim.from+(anim.to-anim.from)*e;
     if(k>=1){pos=anim.to;anim=null;seekStops();}render();return;}
+  if(vad){const sp=vadTick(dt);let fac=1;if(S.smart){gi=guideWord(gi);fac=(W[gi]&&W[gi].f)||1;}
+    const tv=sp?S.wpm/60*pxPerWord*fac:0;vel+=(tv-vel)*Math.min(1,dt*(sp?5:7));pos+=vel*dt;
+    if(nextStop<stops.length&&pos>=stops[nextStop].y){pos=stops[nextStop].y;const m=stops[nextStop].msg;nextStop++;stopVoice();toast(m);}
+    if(pos>=maxPos){pos=maxPos;stopVoice();toast("خلص النص");}render();return;}
   if(voiceOn){const tgt=voiceTarget();pos+=(tgt-pos)*Math.min(1,dt*5);render();return;}
   if(!playing||cardOn){vel=0;if(clockStart)render();return;}
   let fac=1;if(S.smart){gi=guideWord(gi);fac=(W[gi]&&W[gi].f)||1;}
@@ -1081,7 +1089,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("keyup",e=>{if(!$("play").hidden&&actionFor(e))e.preventDefault();},true);
 window.addEventListener("resize",()=>requestAnimationFrame(measure));
 if(window.ResizeObserver)new ResizeObserver(()=>requestAnimationFrame(measure)).observe(stage);
-document.addEventListener("visibilitychange",()=>{if(document.hidden){if(playing)setPlay(false);}else if(!$("play").hidden)wakeOn();});
+document.addEventListener("visibilitychange",()=>{if(document.hidden){if(playing)setPlay(false);if(vad)stopVoice();}else if(!$("play").hidden)wakeOn();});
 
 /* ---------- يتبع صوتك (بالكمبيوتر بس) ---------- */
 let dict=null;
@@ -1103,13 +1111,40 @@ function webSpeech(){
     stop(){want=false;try{rec&&rec.stop();}catch(e){}return Promise.resolve();},
     onPartial(f){hp=f;},onFinal(f){hf=f;},onState(f){hs=f;}};
 }
-(STANDALONE?Promise.resolve(webSpeech()):use("dictation")).then(d=>{dict=d;if(!d)return;
+(STANDALONE?Promise.resolve(VAD_OK?null:webSpeech()):use("dictation")).then(d=>{dict=d;if(!d)return;
   d.onPartial(({text})=>follow(text));d.onFinal(({text})=>follow(text));
   d.onState(({state,reason})=>{if(state==="idle"&&voiceOn){voiceOn=false;playing=false;paintVoiceUi();
     if(reason==="not_granted")toast("لازم تسمح للمايك من إعدادات الجهاز");else if(reason==="unavailable")toast("السماع ما اشتغل زين بهذا الجهاز. استخدم التشغيل العادي أو الريموت");
     else if(reason&&reason!=="stopped"&&reason!=="viewer_stopped")toast("وگف السماع، شغّله مرة ثانية من «أكثر»");}});
 });
+/* ---------- السماع السريع على الجهاز: تحچي = يمشي، تسكت = يوگف (بدون نت وبدون تحويل لكلام) ---------- */
+let vad=null,vadSpeak=false,vadAbove=0,vadBelow=0,vadFloor=0.004,vadBuf=null,vadLvlT=0;
+async function startVad(){
+  if(cardOn)setCard(false);setPlay(false);
+  let ctx;try{ctx=new (window.AudioContext||window.webkitAudioContext)();ctx.resume&&ctx.resume();}catch(e){toast("ما گدرت أشغّل المايك");return;}
+  let stream;
+  try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});}
+  catch(e){try{ctx.close();}catch(x){}toast(e&&e.name==="NotAllowedError"?"لازم تسمح للمايك من إعدادات الجهاز":"ما لگيت مايك يشتغل");return;}
+  const src=ctx.createMediaStreamSource(stream),an=ctx.createAnalyser();an.fftSize=1024;an.smoothingTimeConstant=0;src.connect(an);
+  vadBuf=new Float32Array(an.fftSize);vad={ctx,stream,an};vadSpeak=false;vadAbove=vadBelow=0;vadFloor=0.004;
+  voiceOn=true;if(!clockStart){clockStart=performance.now();$("rec").classList.add("on");}
+  $("modePill").hidden=false;$("modePill").innerHTML='<span class="lvl" id="lvl"><i></i><i></i><i></i><i></i><i></i></span><span id="vadTx">اسمعك… ابدي احچي</span>';
+  const pb=$("rail").querySelector('[data-id="play"]');if(pb)pb.innerHTML=PAUSE_I;last=0;poke();
+}
+function vadTick(dt){
+  if(!vad)return false;vad.an.getFloatTimeDomainData(vadBuf);let s=0;for(let i=0;i<vadBuf.length;i++)s+=vadBuf[i]*vadBuf[i];const rms=Math.sqrt(s/vadBuf.length);
+  /* مستوى الضجة يتعلّم وحده: ينزل بسرعة ويصعد ببطء */
+  vadFloor=rms<vadFloor?vadFloor*.85+rms*.15:vadFloor*.9985+rms*.0015;vadFloor=Math.max(vadFloor,.0008);
+  const loud=rms>Math.max(vadFloor*S.vadK,.006);
+  if(loud){vadAbove+=dt;vadBelow=0;if(!vadSpeak&&vadAbove>.08)vadSpeak=true;}
+  else{vadBelow+=dt;vadAbove=0;if(vadSpeak&&vadBelow>S.vadHang/1000)vadSpeak=false;}
+  const now=performance.now();if(now-vadLvlT>80){vadLvlT=now;const L=$("lvl");if(L){const lv=Math.min(1,rms/Math.max(vadFloor*S.vadK*2.5,.02));
+    L.classList.toggle("on",vadSpeak);L.querySelectorAll("i").forEach((b,i)=>b.style.height=(3+Math.max(0,lv*12-i*1.6))+"px");$("vadTx").textContent=vadSpeak?"يمشي وياك":"ساكت · واگف";}}
+  return vadSpeak;
+}
+function stopVad(){if(!vad)return;try{vad.stream.getTracks().forEach(t=>t.stop());}catch(e){}try{vad.ctx.close();}catch(e){}vad=null;vadSpeak=false;vel=0;}
 function startVoice(){
+  if(VAD_OK){if(voiceOn){stopVoice();return;}startVad();return;}
   if(!dict)return;if(voiceOn){stopVoice();return;}
   if(cardOn)setCard(false);
   let p;try{p=dict.start({language:"ar"});}catch(e){toast("ما گدرت أشغّل المايك");return;}
@@ -1117,7 +1152,7 @@ function startVoice(){
   cur=wordAt(pos);paintVoiceUi();paintVoice(true);poke();
   Promise.resolve(p).catch(err=>{voiceOn=false;paintVoiceUi();toast(err&&err.code==="not_granted"?"ما سمحت للمايك":"ما گدرت أسمعك هسه");});
 }
-function stopVoice(){if(!voiceOn)return;voiceOn=false;try{dict&&dict.stop().catch(()=>{});}catch(e){}paintVoiceUi();}
+function stopVoice(){if(!voiceOn)return;voiceOn=false;if(vad){stopVad();$("modePill").hidden=!cardOn;const pb=$("rail").querySelector('[data-id="play"]');if(pb)pb.innerHTML=PLAY_I;return;}try{dict&&dict.stop().catch(()=>{});}catch(e){}paintVoiceUi();}
 function paintVoiceUi(){$("modePill").hidden=!voiceOn&&!cardOn;if(voiceOn)$("modePill").textContent="يسمعك";content.classList.toggle("voice",voiceOn);
   const pb=$("rail").querySelector('[data-id="play"]');if(pb)pb.innerHTML=voiceOn?PAUSE_I:PLAY_I;}
 function voiceTarget(){const w=W[Math.min(cur,W.length-1)];return w?Math.min(maxPos,Math.max(0,w.y+w.h/2-guideY)):0;}
@@ -1275,7 +1310,7 @@ $("revApply").addEventListener("click",()=>{
 let openPanel=null,panelBack=null;
 const RANGES={speed:{k:"wpm",min:60,max:260,step:5,f:v=>v+" ك/د",n:"السرعة"},size:{k:"size",min:28,max:180,step:2,f:v=>v,n:"حجم الخط"},lh:{k:"lh",min:1.2,max:2.4,step:.05,f:v=>(+v).toFixed(2),n:"المسافة بين السطور"},
   width:{k:"width",min:40,max:100,step:2,f:v=>v+"٪",n:"عرض النص"},guide:{k:"guide",min:12,max:70,step:1,f:v=>v+"٪",n:"مكان خط القراءة"}};
-const TITLES={aids:"مساعدة القراءة",help:"شلون أستخدمه",font:"الخط",weight:"السماكة",theme:"الألوان",mirror:"المراية",remote:"الريموت",presets:"إعدادات جاهزة",more:"أكثر",toggles:"تشغيل وإطفاء",dist:"بعدك عن الشاشة",sent:"الجملة"};
+const TITLES={voice:"السماع",aids:"مساعدة القراءة",help:"شلون أستخدمه",font:"الخط",weight:"السماكة",theme:"الألوان",mirror:"المراية",remote:"الريموت",presets:"إعدادات جاهزة",more:"أكثر",toggles:"تشغيل وإطفاء",dist:"بعدك عن الشاشة",sent:"الجملة"};
 function showPanel(id,back){openPanel=id;panelBack=back||null;learning=null;$("panel").hidden=false;renderPanel();refreshRail();poke();}
 function closePanel(){openPanel=null;panelBack=null;learning=null;sent=null;$("panel").hidden=true;refreshRail();}
 function setVal(k,v){
@@ -1287,7 +1322,7 @@ function setVal(k,v){
     else if(k==="map"){drawMap();render(true);}
     else if(k==="pauseAt"||k==="pauseHead")buildStops();
     else if(k==="hideRead"){measure();}
-    else if(k!=="wpm"&&k!=="cd"&&k!=="smart"&&k!=="beep"){applyLook();if(cardOn)renderCard();}
+    else if(k!=="wpm"&&k!=="cd"&&k!=="smart"&&k!=="beep"&&k!=="vadK"&&k!=="vadHang"){applyLook();if(cardOn)renderCard();}
     else render(true);
   }
   $("hudWpm").textContent=S.wpm;refreshRail();
@@ -1346,11 +1381,16 @@ function renderPanel(){
       tile(I.camera,"عيونك على الكاميرا",()=>{cameraPreset();renderPanel();},S.width<=62),tile(I.preset,"إعدادات جاهزة",go("presets")),
       tile('<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.01"/>',"شلون أستخدمه",go("help")),
       tile('<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',"مساعدة القراءة",go("aids")),
+      ...(VAD_OK?[tile('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',"إعدادات السماع",go("voice"))]:[]),
       tile(I.rehearse,"تمرين",()=>{closePanel();setCard(!rehOn,true);},rehOn),tile(I.remote,"الريموت",go("remote")),tile(I.toggles,"تشغيل وإطفاء",go("toggles")));
-    if(dict)g.append(tile('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',"يمشي ويا صوتك",()=>{closePanel();startVoice();},voiceOn));
+    if(dict||VAD_OK)g.append(tile('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',"يمشي ويا صوتك",()=>{closePanel();startVoice();},voiceOn));
     P.append(g);
     if(heads.length&&!cardOn)P.append(el("div","pnote","روح لقسم:"),optRow([{t:"البداية",fn:()=>{seek(0);closePanel();}}].concat(heads.map(h=>({t:h.name,fn:()=>{seek(h.y);closePanel();}})))));
   }
+  if(id==="voice"){
+    P.append(el("div","pnote","حساسية المايك"),optRow([[2,"عالية (غرفة هادية)"],[3,"متوسطة"],[4.5,"واطئة (بيها ضجة)"]].map(([k,n])=>({t:n,on:S.vadK===k,fn:()=>{setVal("vadK",k);renderPanel();}}))));
+    P.append(el("div","pnote","شگد يستنى بعد ما تسكت"),optRow([[300,"بسرعة"],[450,"عادي"],[800,"يستنى أكثر"]].map(([k,n])=>({t:n,on:S.vadHang===k,fn:()=>{setVal("vadHang",k);renderPanel();}}))));
+    P.append(el("div","pnote","تحچي فالنص يمشي بسرعتك، تسكت فيوگف. إذا حچيت شي برا السكربت ورجعت، دوس رجوع سطر."));}
   if(id==="aids"){
     P.append(optRow([
       {t:"ألوان متبدلة للجمل",on:S.altc,fn:()=>{setVal("altc",!S.altc);renderPanel();}},
