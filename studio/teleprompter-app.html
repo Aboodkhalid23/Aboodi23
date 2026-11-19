@@ -739,6 +739,7 @@ const RAIL=[
   {id:"fwd",i:I.down,n:"قدّام سطر",fn:()=>stepLine(1)},
   {gap:1},{sep:1},
   {id:"card",i:I.card,n:"جملة جملة",fn:()=>setCard(!cardOn,false),on:()=>cardOn&&!rehOn},
+  {id:"fs",i:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',n:"شاشة كاملة",fn:()=>toggleFs(),on:()=>!!fsEl()},
   {id:"hide",i:I.hide,n:"إخفاء",fn:()=>setBare(true)},
   {id:"more",i:I.more,n:"أكثر",p:1}
 ];
@@ -750,8 +751,21 @@ function refreshRail(){
     b.innerHTML=t.id==="play"?PLAY_I:IC(t.i);
     b.addEventListener("click",()=>{if(t.p){openPanel===t.id?closePanel():showPanel(t.id);}else t.fn();});R.append(b);});
   RAIL.forEach(t=>{if(!t.id)return;const b=R.querySelector('[data-id="'+t.id+'"]');
+    if(t.id==="fs")b.hidden=!fsOk;
     b.classList.toggle("on",openPanel===t.id||!!(t.on&&t.on()));b.classList.toggle("lit",!!(t.lit&&t.lit()));});
 }
+const fsEl=()=>document.fullscreenElement||document.webkitFullscreenElement||null;
+const fsOk=!!(document.fullscreenEnabled||document.webkitFullscreenEnabled);
+function toggleFs(){
+  const d=document.documentElement;
+  try{
+    if(fsEl()){(document.exitFullscreen||document.webkitExitFullscreen).call(document);return;}
+    const fn=d.requestFullscreen||d.webkitRequestFullscreen;
+    const r=fn&&fn.call(d);if(r&&r.catch)r.catch(()=>fsHelp());if(!fn)fsHelp();
+  }catch(e){fsHelp();}
+}
+function fsHelp(){toast("جهازك ما يسمح بالشاشة الكاملة من داخل الصفحة. اضغط زر التكبير بأعلى صفحة Claude، أو استخدم «إخفاء»");}
+["fullscreenchange","webkitfullscreenchange"].forEach(ev=>document.addEventListener(ev,()=>{refreshRail();requestAnimationFrame(measure);}));
 function setBare(on){$("play").classList.toggle("bare",on);$("ghost").hidden=!on;if(on){closePanel();toast("للرجوع: اضغط العين بالزاوية، أو ضغطة طويلة على النص");}requestAnimationFrame(measure);}
 $("ghost").addEventListener("click",()=>setBare(false));
 $("stage").addEventListener("pointerdown",poke);
