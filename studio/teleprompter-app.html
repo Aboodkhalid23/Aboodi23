@@ -519,7 +519,7 @@ const HEAD_RE=/^(العنوان|الهوك|هوك بديل|السكربت|الم
 const KEY_DEF={toggle:[" ","Enter","MediaPlayPause","k"],faster:["ArrowUp"],slower:["ArrowDown"],back:["PageUp","ArrowRight"],fwd:["PageDown","ArrowLeft"],retake:["r","Backspace"],mark:["g"]};
 const KEY_NAMES={toggle:"تشغيل / إيقاف",back:"رجوع سطر",fwd:"قدّم سطر",retake:"عيد الجملة",mark:"علامة لقطة زينة",faster:"أسرع",slower:"أبطأ"};
 const DEF={wpm:130,target:0,size:(Math.min(screen.width,screen.height)<600?42:64),lh:1.55,width:88,guide:34,font:"cairo",weight:1,theme:"white",
-  mx:false,my:false,focus:true,pauseAt:true,pauseHead:true,hard:true,cd:3,chunk:true,smart:true,breath:true,map:true,dist:0,beep:false,vadK:3,vadHang:450,smartEar:false,logo:"a",altc:false,mag:false,kar:false,hideRead:false,tash:true,syll:false,keys:KEY_DEF};
+  mx:false,my:false,focus:true,pauseAt:true,pauseHead:true,hard:true,cd:3,chunk:true,smart:true,breath:true,map:true,dist:0,beep:false,vadK:3,vadHang:900,smartEar:false,earHold:false,logo:"a",altc:false,mag:false,kar:false,hideRead:false,tash:true,syll:false,keys:KEY_DEF};
 const PRESET_KEYS=["wpm","size","lh","width","guide","font","weight","theme","mx","my","focus","chunk","smart","breath","map"];
 const PRESET_DEF=[
   {name:"ريل",v:{wpm:150,size:40,lh:1.5,width:92,guide:32,weight:1}},
@@ -527,6 +527,7 @@ const PRESET_DEF=[
   {name:"آيباد",v:{wpm:130,size:72,lh:1.5,width:76,guide:30,weight:2}}];
 const S=Object.assign({},DEF,LS.get("set",{}));
 if(!FONTS.some(f=>f.id===S.font))S.font="cairo";
+if(S.vadHang<600)S.vadHang=900;
 S.keys=Object.assign({},JSON.parse(JSON.stringify(KEY_DEF)),S.keys||{});
 const save=()=>LS.set("set",S);
 let PRESETS=LS.get("presets",null)||PRESET_DEF;
@@ -891,7 +892,7 @@ function frame(t){
   if(anim){const k=Math.min(1,Math.max(0,(t-anim.t0)/anim.d)),e=1-Math.pow(1-k,3);pos=anim.from+(anim.to-anim.from)*e;
     if(k>=1){pos=anim.to;anim=null;seekStops();}render();return;}
   if(vad){const sp=vadTick(dt);let fac=1;if(S.smart){gi=guideWord(gi);fac=(W[gi]&&W[gi].f)||1;}
-    const tv=sp?S.wpm/60*pxPerWord*fac:0;vel+=(tv-vel)*Math.min(1,dt*(sp?5:7));pos+=vel*dt;
+    const tv=sp?S.wpm/60*pxPerWord*fac:0;vel+=(tv-vel)*Math.min(1,dt*(sp?4:3));if(vel<.5&&!sp)vel=0;pos+=vel*dt;
     if(nextStop<stops.length&&pos>=stops[nextStop].y){pos=stops[nextStop].y;const m=stops[nextStop].msg;nextStop++;stopVoice();toast(m);}
     if(pos>=maxPos){pos=maxPos;stopVoice();toast("خلص النص");}render();return;}
   if(voiceOn){const tgt=voiceTarget();pos+=(tgt-pos)*Math.min(1,dt*5);render();return;}
@@ -1130,29 +1131,37 @@ function webSpeech(){
     else if(reason&&reason!=="stopped"&&reason!=="viewer_stopped")toast("وگف السماع، شغّله مرة ثانية من «أكثر»");}});
 });
 /* ---------- السماع السريع على الجهاز: تحچي = يمشي، تسكت = يوگف (بدون نت وبدون تحويل لكلام) ---------- */
-let vad=null,vadSpeak=false,vadAbove=0,vadBelow=0,vadFloor=0.004,vadBuf=null,vadLvlT=0;
+let vadEnv=0,vadCal=0,vad=null,vadSpeak=false,vadAbove=0,vadBelow=0,vadFloor=0.004,vadBuf=null,vadLvlT=0;
 async function startVad(){
   if(cardOn)setCard(false);setPlay(false);
   let ctx;try{ctx=new (window.AudioContext||window.webkitAudioContext)();ctx.resume&&ctx.resume();}catch(e){toast("ما گدرت أشغّل المايك");return;}
   let stream;
   try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});}
   catch(e){try{ctx.close();}catch(x){}toast(e&&e.name==="NotAllowedError"?"لازم تسمح للمايك من إعدادات الجهاز":"ما لگيت مايك يشتغل");return;}
-  const src=ctx.createMediaStreamSource(stream),an=ctx.createAnalyser();an.fftSize=1024;an.smoothingTimeConstant=0;src.connect(an);
-  vadBuf=new Float32Array(an.fftSize);vad={ctx,stream,an};earStart(ctx,src);vadSpeak=false;vadAbove=vadBelow=0;vadFloor=0.004;
+  const src=ctx.createMediaStreamSource(stream),an=ctx.createAnalyser();an.fftSize=1024;an.smoothingTimeConstant=0;
+  /* نخلي بس ترددات صوت الإنسان (150 لـ 4000 هيرتز): الطنين والضجة العالية ما تنحسب حچي */
+  const hp=ctx.createBiquadFilter();hp.type="highpass";hp.frequency.value=150;const lp=ctx.createBiquadFilter();lp.type="lowpass";lp.frequency.value=4000;
+  src.connect(hp);hp.connect(lp);lp.connect(an);
+  vadBuf=new Float32Array(an.fftSize);vad={ctx,stream,an};vadEnv=0;vadCal=0;earStart(ctx,src);vadSpeak=false;vadAbove=vadBelow=0;vadFloor=0.004;
   voiceOn=true;if(!clockStart){clockStart=performance.now();$("rec").classList.add("on");}
   $("modePill").hidden=false;$("modePill").innerHTML='<span class="lvl" id="lvl"><i></i><i></i><i></i><i></i><i></i></span><span id="vadTx">اسمعك… ابدي احچي</span>';
   const pb=$("rail").querySelector('[data-id="play"]');if(pb)pb.innerHTML=PAUSE_I;last=0;poke();
 }
 function vadTick(dt){
-  if(!vad)return false;vad.an.getFloatTimeDomainData(vadBuf);let s=0;for(let i=0;i<vadBuf.length;i++)s+=vadBuf[i]*vadBuf[i];const rms=Math.sqrt(s/vadBuf.length);
-  /* مستوى الضجة يتعلّم وحده: ينزل بسرعة ويصعد ببطء */
-  vadFloor=rms<vadFloor?vadFloor*.85+rms*.15:vadFloor*.9985+rms*.0015;vadFloor=Math.max(vadFloor,.0008);
-  const loud=rms>Math.max(vadFloor*S.vadK,.006);
-  if(loud){vadAbove+=dt;vadBelow=0;if(!vadSpeak&&vadAbove>.08)vadSpeak=true;}
+  if(!vad)return false;vad.an.getFloatTimeDomainData(vadBuf);let sq=0;for(let i=0;i<vadBuf.length;i++)sq+=vadBuf[i]*vadBuf[i];const rms=Math.sqrt(sq/vadBuf.length);
+  /* غلاف ناعم للصوت: يصعد بسرعة وينزل على مهل، حتى الفراغات الصغيرة بين الحروف ما تنحسب سكوت */
+  vadEnv=rms>vadEnv?vadEnv+(rms-vadEnv)*Math.min(1,dt*30):vadEnv+(rms-vadEnv)*Math.min(1,dt*6);
+  /* مستوى الضجة: يتعلّمه بس وانت ساكت (قبل چان يتعلّمه وانت تحچي، فيوگف النص) */
+  vadCal+=dt;
+  if(!vadSpeak){if(rms<vadFloor)vadFloor+=(rms-vadFloor)*Math.min(1,dt*4);else vadFloor+=(rms-vadFloor)*Math.min(1,dt*(vadCal<1.5?2:.25));}
+  vadFloor=Math.min(Math.max(vadFloor,.0006),.05);
+  const thr=Math.max(vadFloor*S.vadK,.005),loud=vadEnv>thr;
+  if(loud){vadAbove+=dt;vadBelow=0;if(!vadSpeak&&vadAbove>.12)vadSpeak=true;}
   else{vadBelow+=dt;vadAbove=0;if(vadSpeak&&vadBelow>S.vadHang/1000)vadSpeak=false;}
-  const now=performance.now();if(now-vadLvlT>80){vadLvlT=now;const L=$("lvl");if(L){const lv=Math.min(1,rms/Math.max(vadFloor*S.vadK*2.5,.02));
-    L.classList.toggle("on",vadSpeak);L.querySelectorAll("i").forEach((b,i)=>b.style.height=(3+Math.max(0,lv*12-i*1.6))+"px");$("vadTx").textContent=ear.offScript?"برا السكربت · واگف":vadSpeak?"يمشي وياك":"ساكت · واگف";}}
-  if(vadSpeak)ear.lastSpeak=now;
+  const now=performance.now();if(vadSpeak)ear.lastSpeak=now;
+  if(now-vadLvlT>80){vadLvlT=now;const L=$("lvl");if(L){const lv=Math.min(1,vadEnv/Math.max(thr*2.5,.02));
+    L.classList.toggle("on",vadSpeak);L.querySelectorAll("i").forEach((bb,i)=>bb.style.height=(3+Math.max(0,lv*12-i*1.6))+"px");
+    $("vadTx").textContent=ear.offScript?"برا السكربت · واگف":vadSpeak?"يمشي وياك":"ساكت · واگف";}}
   if(ear.offScript)return false;
   return vadSpeak;
 }
@@ -1206,7 +1215,7 @@ function matchSpeech(text){
   let best=-1,bs=0;
   for(let i=from;i<to;i++){let sc=0;for(const w of set){for(let k=Math.max(from,i-11);k<=i;k++){if(sim(W[k].n,w)){sc++;break;}}}
     if(sc>bs||(sc===bs&&best>=0&&Math.abs(i-base)<Math.abs(best-base))){bs=sc;best=i;}}
-  return bs>=Math.max(2,Math.ceil(set.length*.4))?best:-1;
+  return bs>=Math.max(2,Math.ceil(set.length*.3))?best:-1;
 }
 function onEarText(text){
   if(!vad)return;const m=matchSpeech(text);
@@ -1214,7 +1223,8 @@ function onEarText(text){
   if(m>=0){ear.off=0;if(ear.offScript){ear.offScript=false;toast("رجعنا للسكربت");}
     const w=W[Math.min(m+1,W.length-1)],tp=Math.min(maxPos,Math.max(0,w.y+w.h/2-guideY));
     if(Math.abs(tp-pos)>lineH*.8){anim={from:pos,to:tp,t0:performance.now(),d:350};}}
-  else{ear.off++;if(ear.off>=2&&!ear.offScript){ear.offScript=true;toast("حچي برا السكربت · النص واگف");}}
+  else{const nw=norm(text).split(" ").filter(w=>w.length>=2).length;if(nw<4)return;
+    ear.off++;if(S.earHold&&ear.off>=3&&!ear.offScript){ear.offScript=true;toast("حچي برا السكربت · النص واگف");}}
 }
 function startVoice(){
   if(VAD_OK){if(voiceOn){stopVoice();return;}startVad();return;}
@@ -1395,7 +1405,7 @@ function setVal(k,v){
     else if(k==="map"){drawMap();render(true);}
     else if(k==="pauseAt"||k==="pauseHead")buildStops();
     else if(k==="hideRead"){measure();}
-    else if(k!=="wpm"&&k!=="cd"&&k!=="smart"&&k!=="beep"&&k!=="vadK"&&k!=="vadHang"&&k!=="smartEar"){applyLook();if(cardOn)renderCard();}
+    else if(k!=="wpm"&&k!=="cd"&&k!=="smart"&&k!=="beep"&&k!=="vadK"&&k!=="vadHang"&&k!=="smartEar"&&k!=="earHold"){applyLook();if(cardOn)renderCard();}
     else render(true);
   }
   $("hudWpm").textContent=S.wpm;refreshRail();
@@ -1462,9 +1472,10 @@ function renderPanel(){
   }
   if(id==="voice"){
     P.append(el("div","pnote","حساسية المايك"),optRow([[2,"عالية (غرفة هادية)"],[3,"متوسطة"],[4.5,"واطئة (بيها ضجة)"]].map(([k,n])=>({t:n,on:S.vadK===k,fn:()=>{setVal("vadK",k);renderPanel();}}))));
-    P.append(el("div","pnote","شگد يستنى بعد ما تسكت"),optRow([[300,"بسرعة"],[450,"عادي"],[800,"يستنى أكثر"]].map(([k,n])=>({t:n,on:S.vadHang===k,fn:()=>{setVal("vadHang",k);renderPanel();}}))));
+    P.append(el("div","pnote","شگد يستنى بعد ما تسكت"),optRow([[600,"بسرعة"],[900,"عادي"],[1400,"يستنى أكثر"]].map(([k,n])=>({t:n,on:S.vadHang===k,fn:()=>{setVal("vadHang",k);renderPanel();}}))));
     P.append(el("div","pnote","السماع الذكي: يفهم الكلمات، فيصحّح مكانك بالنص ويوگف إذا حچيت شي برا السكربت. ينزل مرة وحدة (حوالي 80 ميغا) ويشتغل بدون نت. تجريبي."));
-    P.append(optRow([{t:S.smartEar?"السماع الذكي: شغّال":"شغّل السماع الذكي",on:S.smartEar,fn:()=>{setVal("smartEar",!S.smartEar);if(S.smartEar)earLoad();renderPanel();}}]));
+    P.append(optRow([{t:S.smartEar?"السماع الذكي: شغّال":"شغّل السماع الذكي",on:S.smartEar,fn:()=>{setVal("smartEar",!S.smartEar);if(S.smartEar)earLoad();renderPanel();}},
+      {t:"وگّف النص إذا حچيت برا السكربت",on:S.earHold,fn:()=>{setVal("earHold",!S.earHold);if(!S.earHold)ear.offScript=false;renderPanel();}}]));
     const st=el("div","pnote");st.id="earState";P.append(st);paintEar();
     if(S.smartEar&&vad&&ear.state==="ready"&&!ear.proc)P.append(el("div","pnote","وگّف السماع وشغّله مرة ثانية حتى يبدي السماع الذكي."));}
   if(id==="aids"){
