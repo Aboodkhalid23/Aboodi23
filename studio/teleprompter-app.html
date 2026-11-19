@@ -298,6 +298,7 @@ textarea.field{min-height:38vh;resize:vertical;font-size:1.05rem}
       <input id="q" type="search" placeholder="دوّر على سكربت…" enterkeyhint="search" autocomplete="off">
     </label>
     <div class="list" id="driveList"></div>
+    <input type="file" id="fileIn" hidden accept=".docx,.txt,.md,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
   </div></div>
 
   <div class="scroll gutter" id="paneRecent" hidden><div class="wrap" style="padding-top:12px"><div class="list" id="recentList"></div></div></div>
@@ -422,6 +423,8 @@ const store=(p)=>({get(k,d){try{const v=localStorage.getItem(p+k);return v===nul
   set(k,v){try{localStorage.setItem(p+k,JSON.stringify(v))}catch(e){}}});
 const LS=store("tp3_"),OLD=store("tp2_");
 const hasClaude=!!(window.claude&&window.claude.use);
+/* بدون Claude = التطبيق المستقل (GitHub Pages): ملفات بدل الدرايف، والمايك مباشرة */
+const STANDALONE=!hasClaude;
 const use=n=>hasClaude?window.claude.use(n).catch(()=>null):Promise.resolve(null);
 
 /* ---------- الخطوط (كلها مفحوصة: بيها گ چ پ ڤ) ---------- */
@@ -496,13 +499,20 @@ function saveRecent(d){recents=recents.filter(r=>r.id!==d.id);recents.unshift({i
 /* ---------- التبويبات ---------- */
 const TABS={Drive:["الدرايف","سكربتاتك من Google Drive"],Recent:["الأخيرة","الي فتحتها قبل، وتشتغل حتى إذا النت ضعيف"],New:["نص جديد","الصق أي نص وابدأ"],Remote:["ريموت","افتحه بالموبايل وتحكم بالآيباد"]};
 document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));
+if(STANDALONE){TABS.Drive=["الملفات","افتح سكربت من الدرايف أو من جهازك"];TABS.Remote=null;
+  const tb=document.querySelector('.tab[data-tab="Drive"]');tb.lastChild.textContent="الملفات";
+  document.querySelector('.tab[data-tab="Remote"]').hidden=true;
+  document.querySelector("#paneDrive .search").hidden=true;
+  document.addEventListener("DOMContentLoaded",()=>{});}
 function showTab(t){
   if(!TABS[t])t="Drive";
   document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on",b.dataset.tab===t));
   for(const k in TABS)$("pane"+k).hidden=k!==t;
+  if(STANDALONE&&TABS.Remote===null)$("paneRemote").hidden=true;
   $("homeTitle").textContent=TABS[t][0];$("homeSub").textContent=TABS[t][1];LS.set("tab",t);
   if(t==="Recent")renderRecent();
-  if(t==="Drive"&&!driveLoaded)driveBoot();
+  if(t==="Drive"&&STANDALONE){filesBoot();}
+  else if(t==="Drive"&&!driveLoaded)driveBoot();
   if(t==="Remote")remoteBoot();
 }
 function show(v){["home","prep","play"].forEach(id=>$(id).hidden=id!==v);sendStatus();}
@@ -579,8 +589,53 @@ async function openDrive(id,title){
   }finally{$("prepGo").disabled=false;$("prepReload").disabled=false;}
 }
 
+/* ---------- الملفات (التطبيق المستقل) ---------- */
+function filesBoot(){
+  const L=$("driveList");L.innerHTML="";const n=el("div","note");
+  n.append(el("span",null,"اضغط الزر وتنفتحلك «الملفات». من «المواقع» اختار Google Drive (لازم يكون تطبيق الدرايف منزّل)، وبعدين اختار السكربت."));
+  const b=el("button","btn primary","اختار سكربت");b.addEventListener("click",()=>$("fileIn").click());n.append(b);
+  n.append(el("span",null,"يفتح ملفات الوورد (.docx) والنص (.txt). مستندات Google نفسها: من تطبيق الدرايف سوّي «إرسال نسخة» بصيغة وورد، أو احفظها وورد بالدرايف."));
+  L.append(n);
+}
+$("fileIn").addEventListener("change",async()=>{
+  const f=$("fileIn").files&&$("fileIn").files[0];$("fileIn").value="";if(!f)return;
+  try{
+    let text="";
+    if(/\.docx$/i.test(f.name)||f.type.includes("wordprocessingml"))text=await readDocx(await f.arrayBuffer());
+    else text=await f.text();
+    text=cleanText(text);if(!countWords(text)){toast("الملف فاضي أو ما گدرت أقراه");return;}
+    openDoc({id:"file-"+f.name+"-"+f.size,title:f.name.replace(/\.(docx|txt|md)$/i,""),text,src:"file"});
+  }catch(e){toast("ما گدرت أفتح هذا الملف. جرّب ملف وورد (.docx) أو نص (.txt)");}
+});
+async function inflateRaw(u8){
+  if(window.DecompressionStream){const st=new Blob([u8]).stream().pipeThrough(new DecompressionStream("deflate-raw"));return new Uint8Array(await new Response(st).arrayBuffer());}
+  throw new Error("no-inflate");
+}
+async function readDocx(buf){
+  const dv=new DataView(buf),u8=new Uint8Array(buf);let e=-1;
+  for(let i=buf.byteLength-22;i>=Math.max(0,buf.byteLength-65600);i--){if(dv.getUint32(i,true)===0x06054b50){e=i;break;}}
+  if(e<0)throw new Error("not-zip");
+  let p=dv.getUint32(e+16,true);const n=dv.getUint16(e+10,true);const td=new TextDecoder();
+  for(let k=0;k<n;k++){
+    if(dv.getUint32(p,true)!==0x02014b50)break;
+    const method=dv.getUint16(p+10,true),csize=dv.getUint32(p+20,true),nl=dv.getUint16(p+28,true),xl=dv.getUint16(p+30,true),cl=dv.getUint16(p+32,true),lo=dv.getUint32(p+42,true);
+    const name=td.decode(u8.subarray(p+46,p+46+nl));
+    if(name==="word/document.xml"){
+      const start=lo+30+dv.getUint16(lo+26,true)+dv.getUint16(lo+28,true);const raw=u8.subarray(start,start+csize);
+      const xml=td.decode(method===0?raw:await inflateRaw(raw));
+      const d=new DOMParser().parseFromString(xml,"application/xml");const out=[];
+      for(const para of Array.from(d.getElementsByTagName("w:p"))){let t="";
+        for(const node of Array.from(para.getElementsByTagName("*"))){if(node.nodeName==="w:t")t+=node.textContent;else if(node.nodeName==="w:tab")t+=" ";else if(node.nodeName==="w:br")t+="\n";}
+        out.push(t);}
+      return out.join("\n");
+    }
+    p+=46+nl+xl+cl;
+  }
+  throw new Error("no-document");
+}
+
 /* ---------- شاشة السكربت ---------- */
-function openDoc(d,skipSave){doc=d;show("prep");$("docTitle").textContent=(d.title||"بدون عنوان").replace(/\.(docx|txt)$/i,"");
+function openDoc(d,skipSave){doc=d;show("prep");$("aiCard").hidden=STANDALONE;$("docTitle").textContent=(d.title||"بدون عنوان").replace(/\.(docx|txt)$/i,"");
   $("docText").value=d.text||"";$("prepReload").hidden=d.src!=="drive";refreshPrep();if(d.text&&!skipSave)saveRecent(d);}
 function hardIn(t){const n=" "+norm(t)+" ";return HARDN.filter(h=>n.includes(" "+h.w.join(" ")+" "));}
 function refreshPrep(){
@@ -968,7 +1023,20 @@ document.addEventListener("visibilitychange",()=>{if(document.hidden){if(playing
 
 /* ---------- يتبع صوتك (بالكمبيوتر بس) ---------- */
 let dict=null;
-use("dictation").then(d=>{dict=d;if(!d)return;
+function webSpeech(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return null;
+  let rec=null,want=false,hp=null,hf=null,hs=null;
+  const mk=()=>{const r=new SR();r.lang="ar-SA";r.continuous=true;r.interimResults=true;
+    r.onresult=ev=>{let fin="",par="";for(let i=ev.resultIndex;i<ev.results.length;i++){const t=ev.results[i][0].transcript;if(ev.results[i].isFinal)fin+=t+" ";else par+=t+" ";}
+      if(fin&&hf)hf({text:fin});if(par&&hp)hp({text:par});};
+    r.onerror=ev=>{if(ev.error==="not-allowed"||ev.error==="service-not-allowed"){want=false;hs&&hs({state:"idle",reason:"not_granted"});}};
+    r.onend=()=>{if(want){setTimeout(()=>{if(want){try{rec=mk();rec.start();}catch(e){}}},150);}else hs&&hs({state:"idle",reason:"stopped"});};
+    return r;};
+  return {start(){want=true;rec=mk();try{rec.start();}catch(e){return Promise.reject({code:"unavailable"});}hs&&hs({state:"listening"});return Promise.resolve();},
+    stop(){want=false;try{rec&&rec.stop();}catch(e){}return Promise.resolve();},
+    onPartial(f){hp=f;},onFinal(f){hf=f;},onState(f){hs=f;}};
+}
+(STANDALONE?Promise.resolve(webSpeech()):use("dictation")).then(d=>{dict=d;if(!d)return;
   d.onPartial(({text})=>follow(text));d.onFinal(({text})=>follow(text));
   d.onState(({state,reason})=>{if(state==="idle"&&voiceOn){voiceOn=false;paintVoiceUi();if(reason&&reason!=="stopped"&&reason!=="viewer_stopped")toast("وگف السماع، شغّله مرة ثانية من «أكثر»");}});
 });
@@ -1199,7 +1267,7 @@ function renderPanel(){
     [[I.speed,"السرعة"],[I.size,"حجم الخط"],[I.font,"نوع الخط"],[I.width,"عرض النص"],[I.theme,"الألوان"],[I.mirror,"المراية للزجاج"],
      [I.up,"رجوع سطر (ويسجّل الغلطة للمونتاج)"],[I.down,"قدّام سطر"],[I.card,"جملة وحدة كبيرة"],['<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',"شاشة كاملة"],[I.hide,"إخفاء الأزرار"],
      ['<path d="M8 12h8"/><circle cx="12" cy="12" r="9"/>',"ضغطة على النص: تشغيل وإيقاف"],['<path d="M12 5v14M8 9l4-4 4 4M8 15l4 4 4-4"/>',"سحب بإصبعك: تحريك النص"],
-     ['<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8" opacity=".4"/>',"ضغطة طويلة على جملة: سهّلها، عدّلها، تمرّن"],
+     ['<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8" opacity=".4"/>',STANDALONE?"ضغطة طويلة على جملة: عدّلها، تمرّن عليها":"ضغطة طويلة على جملة: سهّلها، عدّلها، تمرّن"],
      ['<path d="M5 12h14"/><path d="M5 12c3-6 11-6 14 0" opacity=".5"/>',"كلمة تحتها خط أصفر: ضغطة تبدّلها بالأسهل"]]
     .forEach(([ic,n])=>{const d=el("div");d.innerHTML=IC(ic,20);d.append(el("span",null,n));L.append(d);});
     P.append(L);}
@@ -1226,8 +1294,8 @@ function renderPanel(){
     if(sent.err)P.append(el("div","pnote",sent.err));
     const acts=el("div","acts");
     const mk=(t,cls,fn,dis)=>{const b=el("button","btn"+(cls?" "+cls:""),t);b.disabled=!!dis;b.addEventListener("click",fn);acts.append(b);};
-    if(sent.alt&&!sent.busy){mk("بدّلها","primary",applySimpler);mk("جرّب غيرها",null,simplify);}
-    else mk(sent.busy?"دا أسهّلها…":"سهّلها بالذكاء الاصطناعي","primary",simplify,sent.busy);
+    if(!STANDALONE){if(sent.alt&&!sent.busy){mk("بدّلها","primary",applySimpler);mk("جرّب غيرها",null,simplify);}
+    else mk(sent.busy?"دا أسهّلها…":"سهّلها بالذكاء الاصطناعي","primary",simplify,sent.busy);}
     mk("عدّلها بإيدك",null,()=>{sent.edit=true;renderPanel();const t=$("sentEdit");if(t){t.focus();}});
     mk("تمرّن عليها",null,()=>{const i=sent.idx;closePanel();setCard(true,true);cardIdx=i;rehN=0;renderCard();});
     P.append(acts);
