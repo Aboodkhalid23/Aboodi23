@@ -56,6 +56,23 @@ svg{display:block;flex:none}
 .hlist svg{color:var(--accent)}
 textarea.edit{width:100%;min-height:90px;background:#1b1d22;border:1px solid #2b2f37;border-radius:12px;padding:10px 14px;font-family:"Cairo",var(--f-ui);font-weight:700;font-size:1.1rem;line-height:1.8;outline:0;max-width:760px;display:block;margin:0 auto 10px;resize:vertical}
 
+/* ===== مساعدة القراءة ===== */
+#content.altc p.pa{color:var(--alt)}
+#content.mag p{transition:transform .3s ease,opacity .3s ease;transform-origin:100% 50%}
+#content.mag p.cur{transform:scale(1.08)}
+#content.kar .w.kd{opacity:.4}
+#content.kar .w.kw{color:var(--accent)}
+.sy{opacity:.35;font-size:.55em;margin:0 .06em;vertical-align:.25em}
+.aiacts{display:flex;flex-direction:column;gap:8px}
+.aiacts .btn{justify-content:flex-start;min-height:52px;background:var(--surface2);text-align:start}
+.aiacts .btn svg{color:var(--accent)}
+.rev{display:flex;flex-direction:column;gap:8px;margin:10px 0;max-height:52vh;overflow-y:auto}
+.rv{display:flex;gap:10px;align-items:flex-start;background:var(--surface2);border-radius:12px;padding:10px 12px;cursor:pointer;line-height:1.8}
+.rv input{width:20px;height:20px;accent-color:var(--accent);flex:none;margin-top:4px}
+.rv .o{color:var(--muted);text-decoration:line-through;font-size:.88rem}
+.rv .n{color:var(--fg);font-family:"Cairo",var(--f-ui);font-weight:700}
+.rv .cue2{color:var(--accent);font-weight:700}
+
 /* ===== المكتبة ===== */
 .appbar{padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:4px}
 .brand{display:flex;align-items:center;gap:12px}
@@ -331,6 +348,14 @@ textarea.field{min-height:38vh;resize:vertical;font-size:1.05rem}
     <h2 class="doc-title" id="docTitle"></h2>
     <div class="chips" id="docChips"></div>
     <div class="card" id="lastTake" hidden></div>
+    <div class="card" id="aiCard"><h4>مساعد Claude للنطق</h4>
+      <div class="aiacts">
+        <button class="btn" data-ai="pron"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 18h16M7 14l5-9 5 9M9 11h6"/><circle cx="17" cy="4" r="1.2" fill="currentColor"/></svg>شكّل وقطّع الكلمات الصعبة</button>
+        <button class="btn" data-ai="tone"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5s1.3 2 3.5 2 3.5-2 3.5-2M9 9.5h.01M15 9.5h.01"/></svg>ضيف توجيهات النبرة</button>
+        <button class="btn" data-ai="simp"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg>سهّل السكربت كله</button>
+      </div>
+      <p class="help" id="aiNote" style="margin-bottom:0">تشوف كل تغيير قبل ما ينطبق، وتختار الي يعجبك بس.</p>
+    </div>
     <div class="card" id="hardCard" hidden><h4>كلمات تمرّن عليها قبل التصوير</h4><div id="hardList"></div></div>
     <div class="lbl">النص (التعديل هنا ينحفظ بجهازك بس، وما يغيّر ملف الدرايف)</div>
     <textarea class="field" id="docText" aria-label="نص السكربت"></textarea>
@@ -365,6 +390,12 @@ textarea.field{min-height:38vh;resize:vertical;font-size:1.05rem}
 </section>
 
 <!-- ============ ملخص التصوير ============ -->
+<div class="scrim" id="revScrim" hidden></div>
+<div class="sheet" id="revSheet" hidden role="dialog" aria-label="مراجعة التغييرات">
+  <h3 id="revTitle"></h3><p class="help" id="revHelp" style="margin:0"></p>
+  <div class="rev" id="revList"></div>
+  <div style="display:flex;gap:8px"><button class="btn primary" id="revApply" style="flex:1">طبّق المختار</button><button class="btn" id="revCancel">إلغاء</button></div>
+</div>
 <div class="scrim" id="scrim" hidden></div>
 <div class="sheet" id="sheet" hidden role="dialog" aria-label="ملخص التصوير">
   <h3>خلص التصوير</h3>
@@ -403,11 +434,11 @@ const FONTS=[
   {id:"naskh",name:"نسخ",css:"Noto Naskh Arabic",w:[600,700,700]}
 ];
 const THEMES=[
-  {id:"white",bg:"#000000",fg:"#ffffff",cue:"#ffb3b3"},
-  {id:"yellow",bg:"#000000",fg:"#ffe14d",cue:"#ffffff"},
-  {id:"green",bg:"#000000",fg:"#86ffb8",cue:"#ffffff"},
-  {id:"cyan",bg:"#000d14",fg:"#94ecff",cue:"#ffffff"},
-  {id:"paper",bg:"#f6f3ec",fg:"#0d0d0d",cue:"#b3261e"}
+  {id:"white",bg:"#000000",fg:"#ffffff",cue:"#ffb3b3",alt:"#bfe0ff"},
+  {id:"yellow",bg:"#000000",fg:"#ffe14d",cue:"#ffffff",alt:"#ffffff"},
+  {id:"green",bg:"#000000",fg:"#86ffb8",cue:"#ffffff",alt:"#ffffff"},
+  {id:"cyan",bg:"#000d14",fg:"#94ecff",cue:"#ffffff",alt:"#ffffff"},
+  {id:"paper",bg:"#f6f3ec",fg:"#0d0d0d",cue:"#b3261e",alt:"#1f4e8c"}
 ];
 /* من studio/hard-words.md */
 const HARD=[["محكوم عليه","چانوا راح..."],["ينفك","ينشال"],["يفكونه","يشيلونه"],["وقّعوا","كتبوا"],["يسمونه بيها","گالوا عليه"],
@@ -419,7 +450,7 @@ const HEAD_RE=/^(العنوان|الهوك|هوك بديل|السكربت|الم
 const KEY_DEF={toggle:[" ","Enter","MediaPlayPause","k"],faster:["ArrowUp"],slower:["ArrowDown"],back:["PageUp","ArrowRight"],fwd:["PageDown","ArrowLeft"],retake:["r","Backspace"],mark:["g"]};
 const KEY_NAMES={toggle:"تشغيل / إيقاف",back:"رجوع سطر",fwd:"قدّم سطر",retake:"عيد الجملة",mark:"علامة لقطة زينة",faster:"أسرع",slower:"أبطأ"};
 const DEF={wpm:130,target:0,size:(Math.min(screen.width,screen.height)<600?42:64),lh:1.55,width:88,guide:34,font:"cairo",weight:1,theme:"white",
-  mx:false,my:false,focus:true,pauseAt:true,pauseHead:true,hard:true,cd:3,chunk:true,smart:true,breath:true,map:true,dist:0,beep:false,logo:"a",keys:KEY_DEF};
+  mx:false,my:false,focus:true,pauseAt:true,pauseHead:true,hard:true,cd:3,chunk:true,smart:true,breath:true,map:true,dist:0,beep:false,logo:"a",altc:false,mag:false,kar:false,hideRead:false,tash:true,syll:false,keys:KEY_DEF};
 const PRESET_KEYS=["wpm","size","lh","width","guide","font","weight","theme","mx","my","focus","chunk","smart","breath","map"];
 const PRESET_DEF=[
   {name:"ريل",v:{wpm:150,size:40,lh:1.5,width:92,guide:32,weight:1}},
@@ -584,7 +615,9 @@ let pos=0,maxPos=0,vel=0,playing=false,last=0,raf=0,guideY=0,lineH=0,pxPerWord=1
 let idleT=0,counting=false,cdTimer=0,wake=null,nextStop=0,voiceOn=false,cur=0,clockStart=0,takeMarks=[],uiT=0,toastT=0,lastBackLog=0;
 let cardOn=false,cardIdx=0,rehOn=false,rehN=0;
 
+let PRON={};
 function build(){
+  PRON=doc?LS.get("pron_"+doc.id,{}):{};karS=-1;karE=-1;karK=-1;curP=-1;
   content.innerHTML="";W=[];marks=[];heads=[];paras=[];paraRaw=[];paraEl=[];
   cleanText(doc.text).split("\n").forEach(line=>{
     if(!line)return;
@@ -607,12 +640,19 @@ function addPara(line){
     if(/^\[.*\]$/.test(seg)){const c=el("span","cue",seg.slice(1,-1));c.style.display="inline";p.append(c);return;}
     seg.split(/(\s+)/).forEach(tok=>{
       if(!tok)return;if(/^\s+$/.test(tok)){p.append(document.createTextNode(" "));return;}
-      const s=el("span","w",tok);s.dataset.i=W.length;W.push({el:s,n:norm(tok),y:0,h:0,f:1,g:-1});p.append(s);
+      const s=el("span","w");s.dataset.i=W.length;const nk=norm(tok),pr=PRON[nk];
+      if(pr&&(S.syll&&pr.s||S.tash&&pr.t)){const m=tok.match(/^([^\u0600-\u06FF\w]*)([\s\S]*?)([^\u0600-\u06FF\w]*)$/)||["",tok,"",""];
+        s.append(document.createTextNode(m[1]));
+        if(S.syll&&pr.s){pr.s.split("·").forEach((part,pi)=>{if(pi)s.append(el("span","sy","·"));s.append(document.createTextNode(part));});}
+        else s.append(document.createTextNode(pr.t));
+        s.append(document.createTextNode(m[3]));}
+      else s.textContent=tok;
+      W.push({el:s,n:nk,y:0,h:0,f:1,g:-1});p.append(s);
       if(S.breath&&/[.!؟?]$/.test(tok))p.append(el("span","br"));
     });
   });
   content.append(p);
-  if(W.length>start){p.dataset.p=paras.length;paras.push(start);paraRaw.push(line);paraEl.push(p);}
+  if(W.length>start){p.dataset.p=paras.length;if(paras.length%2)p.classList.add("pa");paras.push(start);paraRaw.push(line);paraEl.push(p);}
 }
 function markHard(){
   groups=[];W.forEach(w=>{w.el.classList.remove("hard");w.g=-1;w.f=1;});
@@ -640,7 +680,9 @@ function applyLook(){
   const f=font(),th=theme();
   content.style.fontFamily='"'+f.css+'","Noto Kufi Arabic",system-ui,sans-serif';content.style.fontWeight=f.w[S.weight]||f.w[1];
   content.style.fontSize=S.size+"px";content.style.lineHeight=S.lh;content.style.width=S.width+"%";
-  content.style.color=th.fg;stage.style.background=th.bg;
+  content.style.color=th.fg;stage.style.background=th.bg;content.style.setProperty("--alt",th.alt||th.fg);
+  content.classList.toggle("altc",!!S.altc);content.classList.toggle("mag",!!S.mag);content.classList.toggle("kar",!!S.kar);
+  if(!S.kar)clearKar();if(!S.mag&&curP>=0&&paraEl[curP]){paraEl[curP].classList.remove("cur");curP=-1;}
   const cv=$("cardv");cv.style.fontFamily=content.style.fontFamily;cv.style.fontWeight=content.style.fontWeight;cv.style.color=th.fg;cv.style.background=th.bg;cv.style.fontSize=Math.round(S.size*1.15)+"px";
   content.querySelectorAll(".cue").forEach(c=>c.style.color=th.cue);
   mirror.style.transform="scale("+(S.mx?-1:1)+","+(S.my?-1:1)+")";
@@ -670,7 +712,7 @@ function measure(){
   pxPerWord=W.length?Math.max(1,(lw.y+lw.h-W[0].y)/W.length):1;
   const g=$("guide");g.style.top=(guideY-lineH/2)+"px";g.style.height=lineH+"px";
   const bg=theme().bg,st=$("shadeT"),sb=$("shadeB");st.hidden=sb.hidden=!S.focus;
-  st.style.top="0";st.style.height=Math.max(0,guideY-lineH/2)+"px";st.style.background="linear-gradient(to bottom,"+rgba(bg,.92)+" 0%,"+rgba(bg,.5)+" 65%,"+rgba(bg,0)+" 100%)";
+  st.style.top="0";st.style.height=Math.max(0,guideY-lineH/2)+"px";st.style.background=S.hideRead?rgba(bg,1):"linear-gradient(to bottom,"+rgba(bg,.92)+" 0%,"+rgba(bg,.5)+" 65%,"+rgba(bg,0)+" 100%)";if(S.hideRead)st.hidden=false;
   sb.style.top=(guideY+lineH/2)+"px";sb.style.bottom="0";sb.style.background="linear-gradient(to top,"+rgba(bg,.9)+" 0%,"+rgba(bg,.45)+" 60%,"+rgba(bg,0)+" 100%)";
   pos=ratio*maxPos;buildStops();drawMap();render(true);
 }
@@ -684,8 +726,23 @@ function buildStops(){
 function seekStops(){nextStop=stops.findIndex(m=>m.y>pos+2);if(nextStop<0)nextStop=stops.length;}
 function guideWord(i){if(!W.length)return 0;i=Math.min(Math.max(0,i),W.length-1);const at=k=>W[k].y+W[k].h/2-guideY;
   while(i<W.length-1&&at(i)<pos-2)i++;while(i>0&&at(i-1)>=pos-2)i--;return i;}
+let karS=-1,karE=-1,karK=-1,curP=-1;
+function clearKar(){if(karS<0)return;for(let i=karS;i<=karE&&i<W.length;i++)W[i].el.classList.remove("kd","kw");karS=karE=karK=-1;}
+function lineAt(){
+  gi=guideWord(gi);const c=k=>W[k].y+W[k].h/2-guideY;let j=gi;
+  if(gi>0&&Math.abs(c(gi-1)-pos)<Math.abs(c(gi)-pos))j=gi-1;
+  let a=j,b=j;while(a>0&&W[a-1].y===W[j].y)a--;while(b<W.length-1&&W[b+1].y===W[j].y)b++;return [a,b,c(j)];
+}
+function readAids(){
+  if(!W.length||cardOn||(!S.kar&&!S.mag))return;
+  const [a,b,c]=lineAt();
+  if(S.mag){let pi=0;for(let k=0;k<paras.length;k++){if(paras[k]<=a)pi=k;else break;}
+    if(pi!==curP){if(curP>=0&&paraEl[curP])paraEl[curP].classList.remove("cur");curP=pi;paraEl[pi]&&paraEl[pi].classList.add("cur");}}
+  if(S.kar&&!voiceOn){const f=Math.min(1,Math.max(0,(pos-(c-lineH/2))/lineH));const k=a+Math.min(b-a,Math.floor(f*(b-a+1)));
+    if(a!==karS||k!==karK){clearKar();karS=a;karE=b;karK=k;for(let i=a;i<k;i++)W[i].el.classList.add("kd");W[k].el.classList.add("kw");}}
+}
 function render(force){
-  content.style.transform="translate3d(0,"+(-pos).toFixed(2)+"px,0)";
+  content.style.transform="translate3d(0,"+(-pos).toFixed(2)+"px,0)";readAids();
   const pr=cardOn?(paras.length?cardIdx/Math.max(1,paras.length-1)*100:0):(maxPos>0?pos/maxPos*100:0);
   $("progress").style.width=pr+"%";
   if(S.map){$("map").querySelector(".fill").style.height=pr+"%";$("map").querySelector(".knob").style.top=pr+"%";}
@@ -985,11 +1042,73 @@ function applySimpler(){
   closePanel();
 }
 
+/* ---------- مساعد Claude للسكربت كله ---------- */
+let aiBusy=false,revItems=[],revKind=null;
+function scriptLines(){
+  return cleanText(doc.text).split("\n").filter(l=>l&&!/^\[.*\]$/.test(l)).filter(l=>{const hm=l.match(HEAD_RE);return !(hm&&(hm[1]==="العنوان"||!hm[2]||hm[2].length<2));});
+}
+const AI_RULES="السكربت باللهجة العراقية المحكية، لمقدّم يوتيوب عنده صعوبة بالنطق. لا تغيّر الأرقام ولا الأسماء ولا المعلومات.";
+function aiPrompt(kind,lines,offset){
+  const numbered=lines.map((l,i)=>(i+offset)+": "+l).join("\n");
+  if(kind==="pron")return AI_RULES+"\nمن هالسطور، طلّع الكلمات الي ممكن المقدّم ينطقها غلط أو يتعثر بيها: أسماء أجنبية، أسماء أماكن وشركات وناس، كلمات طويلة، كلمات تنكتب نفس الشي وتنقرا بشكلين.\n"+
+    "لكل كلمة رجّع: w = الكلمة مثل ما مكتوبة بالضبط بالسطر، t = نفس الكلمة بتشكيل كامل حسب نطقها الصحيح، s = الكلمة بالتشكيل مقطّعة لمقاطع نطق ومفصولة بالرمز ·\n"+
+    "بحد أقصى 30 كلمة، والمهمة بس. رجّع JSON بس بهذا الشكل بدون أي كلام ثاني: {\"words\":[{\"w\":\"\",\"t\":\"\",\"s\":\"\"}]}\n\nالسطور:\n"+numbered;
+  if(kind==="tone")return AI_RULES+"\nاقترح توجيهات أداء قصيرة جداً للمقدّم (كلمة أو كلمتين باللهجة العراقية، مثل: ابتسم، بجدية، بطّئ، وگفة قصيرة، بحماس، بهدوء، باوع للكاميرا، شدّ على الكلمة) بالأماكن المهمة بس: بداية الهوك، المفاجآت، الأرقام الكبيرة، السؤال الأخير. تقريباً سطر من كل 5.\n"+
+    "رجّع JSON بس بهذا الشكل بدون أي كلام ثاني: {\"cues\":[{\"i\":رقم السطر,\"c\":\"التوجيه\"}]}\n\nالسطور:\n"+numbered;
+  return AI_RULES+"\nسهّل السطور الي بيها كلمات صعبة النطق، أو حروف تتلاصق باللسان، أو طويلة على نفَس واحد. خلي نفس المعنى بالضبط، باللهجة العراقية المحكية، وبكلمات أقصر وأسهل. لا تلمس السطور السهلة.\n"+
+    "لا تستعمل هذي الكلمات: "+HARD.map(h=>h[0]).join("، ")+"\n"+
+    "رجّع JSON بس بهذا الشكل بدون أي كلام ثاني: {\"lines\":[{\"i\":رقم السطر,\"new\":\"السطر الجديد\"}]}\n\nالسطور:\n"+numbered;
+}
+async function aiRun(kind){
+  if(aiBusy||!doc)return;doc.text=cleanText($("docText").value);
+  if(!sampleNs){$("aiNote").textContent="مساعد Claude يشتغل لما تفتح Noto من رابطه بحساب Claude.";return;}
+  const lines=scriptLines();if(!lines.length)return;
+  aiBusy=true;document.querySelectorAll("[data-ai]").forEach(b=>b.disabled=true);
+  const out=[];const B=50;
+  try{
+    for(let o=0;o<lines.length;o+=B){
+      $("aiNote").textContent="Claude دا يقرا السكربت… "+Math.min(100,Math.round(o/lines.length*100))+"٪";
+      const part=lines.slice(o,o+B);
+      const r=await sampleNs.json(aiPrompt(kind,part,o),{modelTier:kind==="pron"?"quick":"default",cache:false});
+      if(kind==="pron")(r&&Array.isArray(r.words)?r.words:[]).forEach(x=>{if(x&&typeof x.w==="string"&&x.w.trim()&&(x.t||x.s))out.push({w:x.w.trim(),t:String(x.t||"").trim(),s:String(x.s||"").trim()});});
+      if(kind==="tone")(r&&Array.isArray(r.cues)?r.cues:[]).forEach(x=>{const i=+x.i;if(lines[i]!==undefined&&x.c)out.push({i,line:lines[i],c:String(x.c).replace(/[\[\]]/g,"").trim().slice(0,30)});});
+      if(kind==="simp")(r&&Array.isArray(r.lines)?r.lines:[]).forEach(x=>{const i=+x.i;if(lines[i]!==undefined&&x.new&&String(x.new).trim()!==lines[i])out.push({i,line:lines[i],n:String(x.new).trim()});});
+    }
+    $("aiNote").textContent="تشوف كل تغيير قبل ما ينطبق، وتختار الي يعجبك بس.";
+    if(!out.length){$("aiNote").textContent="Claude ما لگى شي يحتاج تغيير بهذا السكربت.";}
+    else openReview(kind,out);
+  }catch(e){
+    const c=e&&e.code;$("aiNote").textContent=c==="not_granted"?"لازم تسمح لـ Noto يستخدم Claude من نافذة الإذن.":c==="rate_limited"?"كثرت الطلبات، استنى دقيقة وجرّب.":c==="prompt_too_large"?"السكربت كبير، جرّب مرة ثانية.":"ما گدر Claude يكمل هسه، جرّب مرة ثانية.";
+  }finally{aiBusy=false;document.querySelectorAll("[data-ai]").forEach(b=>b.disabled=false);}
+}
+document.querySelectorAll("[data-ai]").forEach(b=>b.addEventListener("click",()=>aiRun(b.dataset.ai)));
+function openReview(kind,items){
+  revKind=kind;revItems=items.map(x=>Object.assign({on:true},x));
+  $("revTitle").textContent=kind==="pron"?"كلمات صعبة ("+items.length+")":kind==="tone"?"توجيهات النبرة ("+items.length+")":"جمل أسهل ("+items.length+")";
+  $("revHelp").textContent=kind==="pron"?"الكلمات المختارة تطلع بالتشكيل وقت القراءة. التقطيع تشغّله من «مساعدة القراءة».":kind==="tone"?"التوجيهات تطلع ملاحظات صغيرة ما تنقرا.":"الجمل المختارة تتبدل بنسختك على الجهاز، وملف الدرايف ما يتغير.";
+  const L=$("revList");L.innerHTML="";
+  revItems.forEach(it=>{const row=el("label","rv"),cb=el("input");cb.type="checkbox";cb.checked=true;cb.addEventListener("change",()=>it.on=cb.checked);
+    const tx=el("div");
+    if(kind==="pron"){tx.append(el("div","n",it.t||it.w),el("div","o",it.w));if(it.s){const d=el("div",null,it.s);d.style.color="var(--muted)";tx.append(d);}tx.querySelector(".o").style.textDecoration="none";}
+    else if(kind==="tone"){tx.append(el("div","cue2","["+it.c+"]"),el("div",null,it.line.slice(0,90)));}
+    else tx.append(el("div","o",it.line),el("div","n",it.n));
+    row.append(cb,tx);L.append(row);});
+  $("revScrim").hidden=$("revSheet").hidden=false;
+}
+function closeReview(){$("revScrim").hidden=$("revSheet").hidden=true;revItems=[];}
+$("revCancel").addEventListener("click",closeReview);$("revScrim").addEventListener("click",closeReview);
+$("revApply").addEventListener("click",()=>{
+  const sel=revItems.filter(x=>x.on);if(!sel.length){closeReview();return;}
+  if(revKind==="pron"){const map=LS.get("pron_"+doc.id,{});sel.forEach(x=>{map[norm(x.w)]={t:x.t,s:x.s};});LS.set("pron_"+doc.id,map);if(!S.tash){S.tash=true;save();}}
+  else{let t=cleanText(doc.text);sel.forEach(x=>{if(revKind==="tone")t=t.replace(x.line,"["+x.c+"] "+x.line);else t=t.replace(x.line,x.n);});doc.text=t;$("docText").value=t;saveRecent(doc);}
+  closeReview();refreshPrep();$("aiNote").textContent="انطبق "+sel.length+" تغيير. افتح القراءة وشوف.";
+});
+
 /* ---------- اللوحات ---------- */
 let openPanel=null,panelBack=null;
 const RANGES={speed:{k:"wpm",min:60,max:260,step:5,f:v=>v+" ك/د",n:"السرعة"},size:{k:"size",min:28,max:180,step:2,f:v=>v,n:"حجم الخط"},lh:{k:"lh",min:1.2,max:2.4,step:.05,f:v=>(+v).toFixed(2),n:"المسافة بين السطور"},
   width:{k:"width",min:40,max:100,step:2,f:v=>v+"٪",n:"عرض النص"},guide:{k:"guide",min:12,max:70,step:1,f:v=>v+"٪",n:"مكان خط القراءة"}};
-const TITLES={help:"شلون أستخدمه",font:"الخط",weight:"السماكة",theme:"الألوان",mirror:"المراية",remote:"الريموت",presets:"إعدادات جاهزة",more:"أكثر",toggles:"تشغيل وإطفاء",dist:"بعدك عن الشاشة",sent:"الجملة"};
+const TITLES={aids:"مساعدة القراءة",help:"شلون أستخدمه",font:"الخط",weight:"السماكة",theme:"الألوان",mirror:"المراية",remote:"الريموت",presets:"إعدادات جاهزة",more:"أكثر",toggles:"تشغيل وإطفاء",dist:"بعدك عن الشاشة",sent:"الجملة"};
 function showPanel(id,back){openPanel=id;panelBack=back||null;learning=null;$("panel").hidden=false;renderPanel();refreshRail();poke();}
 function closePanel(){openPanel=null;panelBack=null;learning=null;sent=null;$("panel").hidden=true;refreshRail();}
 function setVal(k,v){
@@ -997,9 +1116,10 @@ function setVal(k,v){
     if(R){v=Math.min(R.max,Math.max(R.min,Math.round(v/R.step)*R.step));v=Math.round(v*100)/100;}}
   S[k]=v;if(k==="wpm")S.target=0;if(k==="size")S.dist=0;save();
   if(!$("play").hidden){
-    if(k==="chunk"||k==="hard"||k==="breath"){const r=maxPos>0?pos/maxPos:0;build();requestAnimationFrame(()=>{measure();pos=r*maxPos;seekStops();render(true);if(cardOn){cardIdx=Math.min(cardIdx,paras.length-1);renderCard();}});}
+    if(k==="chunk"||k==="hard"||k==="breath"||k==="tash"||k==="syll"){const r=maxPos>0?pos/maxPos:0;build();requestAnimationFrame(()=>{measure();pos=r*maxPos;seekStops();render(true);if(cardOn){cardIdx=Math.min(cardIdx,paras.length-1);renderCard();}});}
     else if(k==="map"){drawMap();render(true);}
     else if(k==="pauseAt"||k==="pauseHead")buildStops();
+    else if(k==="hideRead"){measure();}
     else if(k!=="wpm"&&k!=="cd"&&k!=="smart"&&k!=="beep"){applyLook();if(cardOn)renderCard();}
     else render(true);
   }
@@ -1058,11 +1178,22 @@ function renderPanel(){
     g.append(tile(I.weight,"السماكة",go("weight")),tile(I.lh,"السطور",go("lh")),tile(I.guide,"مكان القراءة",go("guide")),tile(I.dist,"بعدك عن الشاشة",go("dist")),
       tile(I.camera,"عيونك على الكاميرا",()=>{cameraPreset();renderPanel();},S.width<=62),tile(I.preset,"إعدادات جاهزة",go("presets")),
       tile('<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.01"/>',"شلون أستخدمه",go("help")),
+      tile('<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',"مساعدة القراءة",go("aids")),
       tile(I.rehearse,"تمرين",()=>{closePanel();setCard(!rehOn,true);},rehOn),tile(I.remote,"الريموت",go("remote")),tile(I.toggles,"تشغيل وإطفاء",go("toggles")));
     if(dict)g.append(tile('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',"يمشي ويا صوتك",()=>{closePanel();startVoice();},voiceOn));
     P.append(g);
     if(heads.length&&!cardOn)P.append(el("div","pnote","روح لقسم:"),optRow([{t:"البداية",fn:()=>{seek(0);closePanel();}}].concat(heads.map(h=>({t:h.name,fn:()=>{seek(h.y);closePanel();}})))));
   }
+  if(id==="aids"){
+    P.append(optRow([
+      {t:"ألوان متبدلة للجمل",on:S.altc,fn:()=>{setVal("altc",!S.altc);renderPanel();}},
+      {t:"تكبير السطر الحالي",on:S.mag,fn:()=>{setVal("mag",!S.mag);renderPanel();}},
+      {t:"مؤشر الكلمة",on:S.kar,fn:()=>{setVal("kar",!S.kar);renderPanel();}},
+      {t:"إخفاء الي قريته",on:S.hideRead,fn:()=>{setVal("hideRead",!S.hideRead);renderPanel();}},
+      {t:"التشكيل",on:S.tash,fn:()=>{setVal("tash",!S.tash);renderPanel();}},
+      {t:"تقطيع الكلمات",on:S.syll,fn:()=>{setVal("syll",!S.syll);renderPanel();}}
+    ]));
+    P.append(el("div","pnote",Object.keys(PRON).length?"التشكيل والتقطيع يطلعون على "+Object.keys(PRON).length+" كلمة صعبة.":"التشكيل والتقطيع يحتاجون «شكّل وقطّع الكلمات الصعبة» من صفحة السكربت أول."));}
   if(id==="help"){
     const L=el("div","hlist");
     [[I.speed,"السرعة"],[I.size,"حجم الخط"],[I.font,"نوع الخط"],[I.width,"عرض النص"],[I.theme,"الألوان"],[I.mirror,"المراية للزجاج"],
