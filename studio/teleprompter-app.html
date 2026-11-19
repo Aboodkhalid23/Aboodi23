@@ -1,0 +1,274 @@
+<title>ملقّن الاستوديو</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700&family=Readex+Pro:wght@400;600&display=swap">
+<style>
+/* تخطيط: شاشتين — كتابة النص، ثم شاشة التلقين بالعرض الكامل ويا شريط تحكم تحت */
+:root{
+  --bg:#0b0d10; --panel:#15181d; --line:#262b33; --fg:#f2f0ea; --muted:#8d949f;
+  --accent:#e0403a; --accent-ink:#fff; --guide:rgba(224,64,58,.16);
+  --f-ui:"Readex Pro","Noto Kufi Arabic",system-ui,sans-serif;
+  --f-read:"Noto Kufi Arabic","Readex Pro",system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:16px}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ===== شاشة الكتابة ===== */
+#editor{min-height:100%;display:flex;flex-direction:column;gap:16px;
+  padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  max-width:900px;margin:0 auto;box-sizing:border-box}
+.top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--f-read);font-size:1.6rem;margin:0;text-wrap:balance}
+h1 span{color:var(--accent)}
+.stats{color:var(--muted);font-size:.9rem;font-variant-numeric:tabular-nums}
+textarea#text{flex:1;min-height:45vh;width:100%;box-sizing:border-box;resize:vertical;
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;
+  font-family:var(--f-read);font-size:1.15rem;line-height:1.9}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.opt{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.opt label{font-size:.85rem;color:var(--muted)}
+.opt .row{display:flex;align-items:center;gap:10px}
+.opt input[type=range]{flex:1;accent-color:var(--accent);min-width:0}
+.opt output{font-variant-numeric:tabular-nums;min-width:2.5ch;text-align:center}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer}
+.toggle input{width:20px;height:20px;accent-color:var(--accent)}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:12px 18px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600;flex:1;font-size:1.15rem}
+.hint{color:var(--muted);font-size:.85rem;line-height:1.7}
+kbd{border:1px solid var(--line);border-radius:4px;padding:0 5px;font-family:inherit;font-size:.8rem}
+
+/* ===== شاشة التلقين ===== */
+#prompter{position:fixed;inset:0;background:#000;display:flex;flex-direction:column;z-index:5}
+#stage{position:relative;flex:1;overflow:hidden}
+#scroller{position:absolute;inset:0;overflow-y:scroll;scrollbar-width:none;transition:transform .25s}
+#scroller::-webkit-scrollbar{display:none}
+#content{margin:0 auto;font-family:var(--f-read);color:#fff;line-height:1.65;font-weight:600;white-space:pre-wrap;word-wrap:break-word}
+#content .pad{height:50vh}
+#guide{position:absolute;left:0;right:0;pointer-events:none;background:var(--guide);border-block:1px solid rgba(224,64,58,.5)}
+#guide::before,#guide::after{content:"";position:absolute;top:50%;transform:translateY(-50%);border:10px solid transparent}
+#guide::before{right:4px;border-right-color:var(--accent)}
+#guide::after{left:4px;border-left-color:var(--accent)}
+#count{position:absolute;inset:0;display:grid;place-items:center;font-size:30vmin;font-weight:700;color:var(--accent);background:rgba(0,0,0,.75);pointer-events:none}
+#bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center;background:#0d0f12;border-top:1px solid var(--line);
+  padding-top:8px;padding-bottom:calc(8px + env(safe-area-inset-bottom,0px));
+  padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px));transition:opacity .3s}
+#bar.dim{opacity:.08}
+#bar button{background:#1a1e24;border:1px solid var(--line);border-radius:8px;min-width:44px;height:44px;padding:0 10px;font-size:1rem}
+#bar button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+#bar .grp{display:flex;align-items:center;gap:4px}
+#bar .val{min-width:3ch;text-align:center;font-variant-numeric:tabular-nums;color:var(--muted);font-size:.85rem}
+#progress{position:absolute;top:0;right:0;height:3px;background:var(--accent);width:0;pointer-events:none}
+@media (prefers-reduced-motion:reduce){#scroller,#bar{transition:none}}
+</style>
+
+<section id="editor">
+  <div class="top">
+    <h1>ملقّن <span>الاستوديو</span></h1>
+    <div class="stats" id="stats"></div>
+  </div>
+  <textarea id="text" aria-label="نص السكربت" placeholder="الصق السكربت هنا…"></textarea>
+
+  <div class="opts">
+    <div class="opt"><label for="speed">السرعة</label>
+      <div class="row"><input type="range" id="speed" min="1" max="20" value="5"><output id="speedOut">5</output></div></div>
+    <div class="opt"><label for="size">حجم الخط</label>
+      <div class="row"><input type="range" id="size" min="24" max="140" value="56"><output id="sizeOut">56</output></div></div>
+    <div class="opt"><label for="width">عرض النص</label>
+      <div class="row"><input type="range" id="width" min="40" max="100" value="85"><output id="widthOut">85</output></div></div>
+    <div class="opt">
+      <label class="toggle" for="mirrorX">مراية يمين ويسار (للزجاج العاكس)<input type="checkbox" id="mirrorX"></label>
+      <label class="toggle" for="mirrorY">قلب فوق وجوه<input type="checkbox" id="mirrorY"></label>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn primary" id="start">▶ ابدأ التلقين</button>
+    <button class="btn" id="clear">امسح النص</button>
+  </div>
+  <p class="hint">
+    النص ينحفظ بجهازك تلقائياً. بشاشة التلقين: اضغط على الشاشة يوگف أو يمشي، واسحب بإصبعك ترجع أو تتقدم.
+    بالكيبورد: <kbd>مسافة</kbd> تشغيل/إيقاف، <kbd>↑</kbd><kbd>↓</kbd> السرعة، <kbd>+</kbd><kbd>-</kbd> الخط، <kbd>M</kbd> مراية، <kbd>Esc</kbd> رجوع.
+    إذا تستخدم ريموت بلوتوث للتلقين، أزراره تشتغل ويا هذي الأزرار.
+  </p>
+</section>
+
+<section id="prompter" hidden>
+  <div id="stage">
+    <div id="scroller"><div id="content"></div></div>
+    <div id="guide"></div>
+    <div id="progress"></div>
+    <div id="count" hidden></div>
+  </div>
+  <div id="bar">
+    <button id="back" title="رجوع للكتابة">✕</button>
+    <button id="play" title="تشغيل / إيقاف" style="min-width:64px">▶</button>
+    <button id="restart" title="من البداية">⟲</button>
+    <div class="grp"><button id="slower" title="أبطأ">−</button><span class="val" id="spdVal">5</span><button id="faster" title="أسرع">+</button><span class="val">سرعة</span></div>
+    <div class="grp"><button id="smaller" title="خط أصغر">A−</button><span class="val" id="szVal">56</span><button id="bigger" title="خط أكبر">A+</button></div>
+    <button id="mx" title="مراية يمين ويسار">⇋ مراية</button>
+    <button id="my" title="قلب فوق وجوه">⇅</button>
+    <button id="fs" title="شاشة كاملة">⛶</button>
+    <span class="val" id="left"></span>
+  </div>
+</section>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const store = {
+    get(k,d){ try{ const v = localStorage.getItem('tp_'+k); return v===null? d : JSON.parse(v);}catch(e){return d} },
+    set(k,v){ try{ localStorage.setItem('tp_'+k, JSON.stringify(v)); }catch(e){} }
+  };
+  const SAMPLE = "هلا بيكم.\n\nهذا نص تجريبي حتى تشوف شلون يشتغل الملقّن.\n\nامسحه والصق السكربت مالتك، واضغط ابدأ.\n\nالخط الأحمر بنص الشاشة هو مكان عيونك. خلي الجملة الي دا تحچيها دائماً عليه.\n\nإذا تصوّر ويا زجاج عاكس، فعّل المراية حتى ينگلب الكلام ويطلع صحيح بالزجاج.\n\nبالتوفيق بالتصوير.";
+
+  const s = {
+    text: store.get('text', SAMPLE), speed: store.get('speed',5), size: store.get('size',56),
+    width: store.get('width',85), mx: store.get('mx',false), my: store.get('my',false)
+  };
+  let playing=false, pos=0, last=0, raf=0, dimTimer=0, wake=null;
+
+  const ta=$('text'), sp=$('speed'), sz=$('size'), wd=$('width'), mX=$('mirrorX'), mY=$('mirrorY');
+  ta.value=s.text; sp.value=s.speed; sz.value=s.size; wd.value=s.width; mX.checked=s.mx; mY.checked=s.my;
+
+  function words(t){ return (t.trim().match(/\S+/g)||[]).length; }
+  function stats(){
+    const w = words(ta.value);
+    $('stats').textContent = w + ' كلمة · تقريباً ' + Math.max(1,Math.round(w/140)) + ' دقيقة حچي';
+  }
+  function syncOuts(){ $('speedOut').textContent=sp.value; $('sizeOut').textContent=sz.value; $('widthOut').textContent=wd.value+'٪'; }
+
+  ta.addEventListener('input',()=>{ s.text=ta.value; store.set('text',s.text); stats(); });
+  sp.addEventListener('input',()=>{ s.speed=+sp.value; store.set('speed',s.speed); syncOuts(); });
+  sz.addEventListener('input',()=>{ s.size=+sz.value; store.set('size',s.size); syncOuts(); });
+  wd.addEventListener('input',()=>{ s.width=+wd.value; store.set('width',s.width); syncOuts(); });
+  mX.addEventListener('change',()=>{ s.mx=mX.checked; store.set('mx',s.mx); });
+  mY.addEventListener('change',()=>{ s.my=mY.checked; store.set('my',s.my); });
+  $('clear').addEventListener('click',()=>{ ta.value=''; s.text=''; store.set('text',''); stats(); ta.focus(); });
+
+  const scroller=$('scroller'), content=$('content'), guide=$('guide');
+
+  function render(){
+    content.innerHTML='';
+    const top=document.createElement('div'); top.className='pad';
+    const body=document.createElement('div'); body.textContent=s.text.trim() || '…';
+    const end=document.createElement('div'); end.className='pad';
+    content.append(top,body,end);
+    applyLook();
+  }
+  function applyLook(){
+    content.style.fontSize=s.size+'px';
+    content.style.width=s.width+'%';
+    content.style.paddingInline='max(16px, env(safe-area-inset-left,0px))';
+    scroller.style.transform='scale('+(s.mx?-1:1)+','+(s.my?-1:1)+')';
+    const gh = s.size*1.65;
+    guide.style.height=gh+'px';
+    guide.style.top='calc('+(s.my?'60%':'40%')+' - '+(gh/2)+'px)';
+    $('spdVal').textContent=s.speed; $('szVal').textContent=s.size;
+    $('mx').classList.toggle('on',s.mx); $('my').classList.toggle('on',s.my);
+  }
+  function maxPos(){ return scroller.scrollHeight-scroller.clientHeight; }
+  function updateInfo(){
+    const m=maxPos(); const p = m>0? pos/m : 0;
+    $('progress').style.width=(p*100)+'%';
+    const remainPx=m-pos, pxs=s.speed*s.size*0.09;
+    const sec=Math.max(0,Math.round(remainPx/pxs));
+    $('left').textContent = Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0');
+  }
+  function tick(t){
+    if(!playing) return;
+    const dt=last? (t-last)/1000 : 0; last=t;
+    pos+= s.speed*s.size*0.09*dt;   // السرعة تتناسب ويا حجم الخط حتى تبقى سرعة القراءة ثابتة
+    const m=maxPos();
+    if(pos>=m){ pos=m; setPlay(false); }
+    scroller.scrollTop=pos; updateInfo();
+    raf=requestAnimationFrame(tick);
+  }
+  function setPlay(on){
+    playing=on; $('play').textContent=on?'❚❚':'▶'; $('play').classList.toggle('on',on);
+    cancelAnimationFrame(raf); last=0;
+    if(on){ raf=requestAnimationFrame(tick); dimLater(); } else { $('bar').classList.remove('dim'); }
+  }
+  function dimLater(){ clearTimeout(dimTimer); $('bar').classList.remove('dim'); dimTimer=setTimeout(()=>{ if(playing) $('bar').classList.add('dim'); },2500); }
+  function toggle(){
+    if(playing){ setPlay(false); return; }
+    if(pos>=maxPos()-1){ pos=0; scroller.scrollTop=0; }
+    countdown(()=>setPlay(true));
+  }
+  let counting=false;
+  function countdown(done){
+    if(counting) return; counting=true;
+    const c=$('count'); let n=3; c.hidden=false; c.textContent=n;
+    const iv=setInterval(()=>{ n--; if(n<=0){ clearInterval(iv); c.hidden=true; counting=false; done(); } else c.textContent=n; },800);
+  }
+  async function wakeOn(){ try{ if(navigator.wakeLock) wake=await navigator.wakeLock.request('screen'); }catch(e){} }
+  function wakeOff(){ try{ wake && wake.release(); }catch(e){} wake=null; }
+
+  function open(){
+    $('editor').hidden=true; $('prompter').hidden=false;
+    render(); pos=0; scroller.scrollTop=0; updateInfo(); wakeOn();
+    setTimeout(()=>countdown(()=>setPlay(true)),300);
+  }
+  function close(){
+    setPlay(false); wakeOff();
+    try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(e){}
+    $('prompter').hidden=true; $('editor').hidden=false;
+  }
+  function speed(d){ s.speed=Math.min(20,Math.max(1,s.speed+d)); sp.value=s.speed; store.set('speed',s.speed); syncOuts(); applyLook(); updateInfo(); }
+  function size(d){
+    const ratio = maxPos()>0? pos/maxPos() : 0;
+    s.size=Math.min(140,Math.max(24,s.size+d)); sz.value=s.size; store.set('size',s.size); syncOuts(); applyLook();
+    pos=ratio*maxPos(); scroller.scrollTop=pos; updateInfo();
+  }
+
+  $('start').addEventListener('click',open);
+  $('back').addEventListener('click',close);
+  $('play').addEventListener('click',toggle);
+  $('restart').addEventListener('click',()=>{ setPlay(false); pos=0; scroller.scrollTop=0; updateInfo(); });
+  $('faster').addEventListener('click',()=>speed(1));
+  $('slower').addEventListener('click',()=>speed(-1));
+  $('bigger').addEventListener('click',()=>size(6));
+  $('smaller').addEventListener('click',()=>size(-6));
+  $('mx').addEventListener('click',()=>{ s.mx=!s.mx; mX.checked=s.mx; store.set('mx',s.mx); applyLook(); });
+  $('my').addEventListener('click',()=>{ s.my=!s.my; mY.checked=s.my; store.set('my',s.my); applyLook(); });
+  $('fs').addEventListener('click',()=>{
+    try{ const el=document.documentElement;
+      if(document.fullscreenElement) document.exitFullscreen();
+      else if(el.requestFullscreen) el.requestFullscreen().catch(()=>{});
+    }catch(e){}
+  });
+  $('bar').addEventListener('pointerdown',dimLater);
+
+  // ضغطة على النص = تشغيل/إيقاف، والسحب = تحريك يدوي
+  let dragY=null, moved=false;
+  $('stage').addEventListener('pointerdown',e=>{ dragY=e.clientY; moved=false; });
+  $('stage').addEventListener('pointermove',e=>{
+    if(dragY===null) return;
+    const dy=e.clientY-dragY; if(Math.abs(dy)>4) moved=true;
+    if(moved){ pos=Math.min(maxPos(),Math.max(0,pos-(s.my?-dy:dy))); scroller.scrollTop=pos; dragY=e.clientY; updateInfo(); }
+  });
+  $('stage').addEventListener('pointerup',()=>{ if(dragY!==null && !moved) toggle(); dragY=null; });
+  $('stage').addEventListener('wheel',e=>{ e.preventDefault(); pos=Math.min(maxPos(),Math.max(0,pos+e.deltaY)); scroller.scrollTop=pos; updateInfo(); },{passive:false});
+
+  document.addEventListener('keydown',e=>{
+    if($('prompter').hidden) return;
+    const k=e.key;
+    if(k===' '||k==='Enter'||k==='PageDown'&&false){ e.preventDefault(); toggle(); }
+    else if(k==='ArrowUp'){ e.preventDefault(); speed(1); }
+    else if(k==='ArrowDown'){ e.preventDefault(); speed(-1); }
+    else if(k==='PageDown'||k==='ArrowLeft'){ e.preventDefault(); pos=Math.min(maxPos(),pos+scroller.clientHeight*0.4); scroller.scrollTop=pos; updateInfo(); }
+    else if(k==='PageUp'||k==='ArrowRight'){ e.preventDefault(); pos=Math.max(0,pos-scroller.clientHeight*0.4); scroller.scrollTop=pos; updateInfo(); }
+    else if(k==='+'||k==='='){ size(6); }
+    else if(k==='-'){ size(-6); }
+    else if(k==='m'||k==='M'||k==='ة'){ $('mx').click(); }
+    else if(k==='Escape'){ close(); }
+  });
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden && !$('prompter').hidden) wakeOn(); });
+
+  syncOuts(); stats();
+})();
+</script>
