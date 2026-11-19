@@ -227,7 +227,8 @@ textarea.field{min-height:38vh;resize:vertical;font-size:1.05rem}
 #ghost:hover,#ghost:focus-visible{opacity:1}
 
 /* العمود الجانبي */
-#rail{width:64px;flex:none;background:#0c0d10;border-right:1px solid #1d2025;display:flex;flex-direction:column;align-items:center;gap:4px;overflow-y:auto;scrollbar-width:none;
+#play{padding-right:env(safe-area-inset-right,0px)}
+#rail{width:calc(64px + env(safe-area-inset-left,0px));flex:none;background:#0c0d10;border-right:1px solid #1d2025;display:flex;flex-direction:column;align-items:center;gap:4px;overflow-y:auto;scrollbar-width:none;
   padding-top:calc(8px + env(safe-area-inset-top,0px));padding-bottom:calc(8px + env(safe-area-inset-bottom,0px));padding-left:env(safe-area-inset-left,0px);transition:opacity .4s}
 #rail::-webkit-scrollbar{display:none}
 .rb{width:46px;height:46px;min-height:46px;border-radius:13px;display:grid;place-items:center;color:#cfd2d7;position:relative}
@@ -285,7 +286,17 @@ textarea.field{min-height:38vh;resize:vertical;font-size:1.05rem}
 .stat{background:var(--surface2);border-radius:14px;padding:12px 6px;text-align:center}
 .stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums}
 .stat span{font-size:.78rem;color:var(--muted)}
-@media (max-height:480px){.rb{width:40px;height:40px;min-height:40px}.rb.play{width:46px;height:46px;min-height:46px}#rail{gap:1px;width:56px}.pnote{display:none}}
+@media (orientation:landscape) and (max-height:860px), (max-height:520px){
+  #rail{display:grid;grid-template-columns:repeat(2,42px);grid-auto-rows:42px;gap:4px;align-content:center;justify-content:center;width:calc(104px + env(safe-area-inset-left,0px));padding-top:6px;padding-bottom:6px}
+  .rb{width:42px;height:42px;min-height:42px;border-radius:12px}
+  .rb.play{grid-column:span 2;justify-self:center;width:50px;height:50px;min-height:50px;margin:0}
+  .rsep,.rgap{display:none}
+  .rb[data-id="speed"],.rb[data-id="size"],.rb[data-id="font"],.rb[data-id="width"],.rb[data-id="theme"],.rb[data-id="mirror"]{order:1}
+  .rb[data-id="back"],.rb[data-id="fwd"]{order:2}.rb[data-id="play"]{order:3}
+  .rb[data-id="card"],.rb[data-id="fs"],.rb[data-id="hide"],.rb[data-id="more"]{order:4}.rb[data-id="close"]{order:5}
+  .pnote{display:none}
+  #panel{max-height:75%}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -508,7 +519,7 @@ const HEAD_RE=/^(العنوان|الهوك|هوك بديل|السكربت|الم
 const KEY_DEF={toggle:[" ","Enter","MediaPlayPause","k"],faster:["ArrowUp"],slower:["ArrowDown"],back:["PageUp","ArrowRight"],fwd:["PageDown","ArrowLeft"],retake:["r","Backspace"],mark:["g"]};
 const KEY_NAMES={toggle:"تشغيل / إيقاف",back:"رجوع سطر",fwd:"قدّم سطر",retake:"عيد الجملة",mark:"علامة لقطة زينة",faster:"أسرع",slower:"أبطأ"};
 const DEF={wpm:130,target:0,size:(Math.min(screen.width,screen.height)<600?42:64),lh:1.55,width:88,guide:34,font:"cairo",weight:1,theme:"white",
-  mx:false,my:false,focus:true,pauseAt:true,pauseHead:true,hard:true,cd:3,chunk:true,smart:true,breath:true,map:true,dist:0,beep:false,vadK:3,vadHang:450,logo:"a",altc:false,mag:false,kar:false,hideRead:false,tash:true,syll:false,keys:KEY_DEF};
+  mx:false,my:false,focus:true,pauseAt:true,pauseHead:true,hard:true,cd:3,chunk:true,smart:true,breath:true,map:true,dist:0,beep:false,vadK:3,vadHang:450,smartEar:false,logo:"a",altc:false,mag:false,kar:false,hideRead:false,tash:true,syll:false,keys:KEY_DEF};
 const PRESET_KEYS=["wpm","size","lh","width","guide","font","weight","theme","mx","my","focus","chunk","smart","breath","map"];
 const PRESET_DEF=[
   {name:"ريل",v:{wpm:150,size:40,lh:1.5,width:92,guide:32,weight:1}},
@@ -962,6 +973,7 @@ $("cardv").addEventListener("click",e=>{e.stopPropagation();});
 
 /* ---------- البدء والإنهاء ---------- */
 function startPlay(resume){
+  if(VAD_OK&&S.smartEar)earLoad();
   show("play");setBare(false);closePanel();cardOn=false;rehOn=false;$("cardv").hidden=true;content.style.visibility="";
   $("guide").style.visibility=$("shadeT").style.visibility=$("shadeB").style.visibility="";$("modePill").hidden=true;
   fitWarned=false;painted=-1;build();pos=0;vel=0;cur=0;gi=0;maxPos=0;clockStart=0;takeMarks=[];goodMarks=[];anim=null;
@@ -1126,7 +1138,7 @@ async function startVad(){
   try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});}
   catch(e){try{ctx.close();}catch(x){}toast(e&&e.name==="NotAllowedError"?"لازم تسمح للمايك من إعدادات الجهاز":"ما لگيت مايك يشتغل");return;}
   const src=ctx.createMediaStreamSource(stream),an=ctx.createAnalyser();an.fftSize=1024;an.smoothingTimeConstant=0;src.connect(an);
-  vadBuf=new Float32Array(an.fftSize);vad={ctx,stream,an};vadSpeak=false;vadAbove=vadBelow=0;vadFloor=0.004;
+  vadBuf=new Float32Array(an.fftSize);vad={ctx,stream,an};earStart(ctx,src);vadSpeak=false;vadAbove=vadBelow=0;vadFloor=0.004;
   voiceOn=true;if(!clockStart){clockStart=performance.now();$("rec").classList.add("on");}
   $("modePill").hidden=false;$("modePill").innerHTML='<span class="lvl" id="lvl"><i></i><i></i><i></i><i></i><i></i></span><span id="vadTx">اسمعك… ابدي احچي</span>';
   const pb=$("rail").querySelector('[data-id="play"]');if(pb)pb.innerHTML=PAUSE_I;last=0;poke();
@@ -1139,10 +1151,71 @@ function vadTick(dt){
   if(loud){vadAbove+=dt;vadBelow=0;if(!vadSpeak&&vadAbove>.08)vadSpeak=true;}
   else{vadBelow+=dt;vadAbove=0;if(vadSpeak&&vadBelow>S.vadHang/1000)vadSpeak=false;}
   const now=performance.now();if(now-vadLvlT>80){vadLvlT=now;const L=$("lvl");if(L){const lv=Math.min(1,rms/Math.max(vadFloor*S.vadK*2.5,.02));
-    L.classList.toggle("on",vadSpeak);L.querySelectorAll("i").forEach((b,i)=>b.style.height=(3+Math.max(0,lv*12-i*1.6))+"px");$("vadTx").textContent=vadSpeak?"يمشي وياك":"ساكت · واگف";}}
+    L.classList.toggle("on",vadSpeak);L.querySelectorAll("i").forEach((b,i)=>b.style.height=(3+Math.max(0,lv*12-i*1.6))+"px");$("vadTx").textContent=ear.offScript?"برا السكربت · واگف":vadSpeak?"يمشي وياك":"ساكت · واگف";}}
+  if(vadSpeak)ear.lastSpeak=now;
+  if(ear.offScript)return false;
   return vadSpeak;
 }
-function stopVad(){if(!vad)return;try{vad.stream.getTracks().forEach(t=>t.stop());}catch(e){}try{vad.ctx.close();}catch(e){}vad=null;vadSpeak=false;vel=0;}
+function stopVad(){if(!vad)return;earStop();try{vad.stream.getTracks().forEach(t=>t.stop());}catch(e){}try{vad.ctx.close();}catch(e){}vad=null;vadSpeak=false;vel=0;}
+/* ---------- السماع الذكي: Whisper يشتغل بالجهاز بعامل منفصل (حتى الشاشة ما تتجمد) ---------- */
+const EAR_LIB="https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.1";
+const EAR_MODEL="onnx-community/whisper-base";
+let ear={worker:null,state:"off",pct:0,err:"",busy:false,ring:null,ri:0,filled:0,proc:null,timer:0,off:0,offScript:false,lastSpeak:0,id:0};
+function earWorker(){
+  if(ear.worker)return ear.worker;
+  const code=`import {pipeline,env} from "${EAR_LIB}";env.allowLocalModels=false;let asr=null;
+self.onmessage=async e=>{const d=e.data;
+ if(d.type==="load"){try{asr=await pipeline("automatic-speech-recognition","${EAR_MODEL}",{dtype:"q8",progress_callback:p=>{if(p&&p.status==="progress")self.postMessage({type:"progress",file:p.file,loaded:p.loaded,total:p.total});}});self.postMessage({type:"ready"});}
+   catch(err){self.postMessage({type:"error",msg:String(err&&err.message||err)});}}
+ if(d.type==="asr"){if(!asr){self.postMessage({type:"text",text:"",id:d.id});return;}
+   try{const r=await asr(d.audio,{language:"arabic",task:"transcribe"});self.postMessage({type:"text",text:(r&&r.text)||"",id:d.id});}
+   catch(err){self.postMessage({type:"text",text:"",id:d.id});}}};`;
+  const w=new Worker(URL.createObjectURL(new Blob([code],{type:"text/javascript"})),{type:"module"});
+  const files={};
+  w.onmessage=e=>{const d=e.data;
+    if(d.type==="progress"){files[d.file]=[d.loaded||0,d.total||0];let a=0,b=0;for(const k in files){a+=files[k][0];b+=files[k][1];}ear.pct=b?Math.round(a/b*100):0;if(openPanel==="voice")paintEar();}
+    else if(d.type==="ready"){ear.state="ready";if(openPanel==="voice")renderPanel();toast("السماع الذكي جاهز");}
+    else if(d.type==="error"){ear.state="error";ear.err=d.msg;if(openPanel==="voice")renderPanel();}
+    else if(d.type==="text"){ear.busy=false;onEarText(d.text);}};
+  w.onerror=()=>{ear.state="error";ear.err="worker";if(openPanel==="voice")renderPanel();};
+  ear.worker=w;return w;
+}
+function earLoad(){if(ear.state==="loading"||ear.state==="ready")return;ear.state="loading";ear.pct=0;try{earWorker().postMessage({type:"load"});}catch(e){ear.state="error";ear.err=String(e);}}
+function paintEar(){const n=$("earState");if(!n)return;n.textContent=ear.state==="loading"?"دا ينزل… "+ear.pct+"٪ (مرة وحدة بس)":ear.state==="ready"?"جاهز ويشتغل بدون نت":ear.state==="error"?"ما گدر ينزل. تأكد من النت وجرّب":"";}
+function earStart(ctx,src){
+  if(!S.smartEar||ear.state!=="ready")return;
+  ear.ring=new Float32Array(16000*5);ear.ri=0;ear.filled=0;ear.off=0;ear.offScript=false;
+  const ratio=ctx.sampleRate/16000;let acc=0,accN=0,step=0;
+  const proc=ctx.createScriptProcessor(4096,1,1);
+  proc.onaudioprocess=ev=>{const x=ev.inputBuffer.getChannelData(0);
+    for(let i=0;i<x.length;i++){acc+=x[i];accN++;step+=1;if(step>=ratio){step-=ratio;ear.ring[ear.ri]=acc/accN;ear.ri=(ear.ri+1)%ear.ring.length;ear.filled=Math.min(ear.ring.length,ear.filled+1);acc=0;accN=0;}}};
+  src.connect(proc);const mute=ctx.createGain();mute.gain.value=0;proc.connect(mute);mute.connect(ctx.destination);ear.proc=proc;
+  clearInterval(ear.timer);ear.timer=setInterval(earTick,1400);
+}
+function earTick(){
+  if(!vad||ear.busy||ear.state!=="ready"||ear.filled<16000*1.5)return;
+  if(performance.now()-ear.lastSpeak>2500)return;
+  const n=Math.min(ear.filled,16000*4),out=new Float32Array(n);let j=(ear.ri-n+ear.ring.length)%ear.ring.length;
+  for(let i=0;i<n;i++){out[i]=ear.ring[j];j=(j+1)%ear.ring.length;}
+  ear.busy=true;ear.id++;ear.worker.postMessage({type:"asr",audio:out,id:ear.id},[out.buffer]);
+}
+function earStop(){clearInterval(ear.timer);ear.timer=0;try{ear.proc&&ear.proc.disconnect();}catch(e){}ear.proc=null;ear.offScript=false;ear.busy=false;}
+function matchSpeech(text){
+  const sp=norm(text).split(" ").filter(w=>w.length>=2);if(sp.length<2)return -2;
+  const base=guideWord(gi),from=Math.max(0,base-15),to=Math.min(W.length,base+80),set=sp.slice(-8);
+  let best=-1,bs=0;
+  for(let i=from;i<to;i++){let sc=0;for(const w of set){for(let k=Math.max(from,i-11);k<=i;k++){if(sim(W[k].n,w)){sc++;break;}}}
+    if(sc>bs||(sc===bs&&best>=0&&Math.abs(i-base)<Math.abs(best-base))){bs=sc;best=i;}}
+  return bs>=Math.max(2,Math.ceil(set.length*.4))?best:-1;
+}
+function onEarText(text){
+  if(!vad)return;const m=matchSpeech(text);
+  if(m===-2)return;
+  if(m>=0){ear.off=0;if(ear.offScript){ear.offScript=false;toast("رجعنا للسكربت");}
+    const w=W[Math.min(m+1,W.length-1)],tp=Math.min(maxPos,Math.max(0,w.y+w.h/2-guideY));
+    if(Math.abs(tp-pos)>lineH*.8){anim={from:pos,to:tp,t0:performance.now(),d:350};}}
+  else{ear.off++;if(ear.off>=2&&!ear.offScript){ear.offScript=true;toast("حچي برا السكربت · النص واگف");}}
+}
 function startVoice(){
   if(VAD_OK){if(voiceOn){stopVoice();return;}startVad();return;}
   if(!dict)return;if(voiceOn){stopVoice();return;}
@@ -1322,7 +1395,7 @@ function setVal(k,v){
     else if(k==="map"){drawMap();render(true);}
     else if(k==="pauseAt"||k==="pauseHead")buildStops();
     else if(k==="hideRead"){measure();}
-    else if(k!=="wpm"&&k!=="cd"&&k!=="smart"&&k!=="beep"&&k!=="vadK"&&k!=="vadHang"){applyLook();if(cardOn)renderCard();}
+    else if(k!=="wpm"&&k!=="cd"&&k!=="smart"&&k!=="beep"&&k!=="vadK"&&k!=="vadHang"&&k!=="smartEar"){applyLook();if(cardOn)renderCard();}
     else render(true);
   }
   $("hudWpm").textContent=S.wpm;refreshRail();
@@ -1390,7 +1463,10 @@ function renderPanel(){
   if(id==="voice"){
     P.append(el("div","pnote","حساسية المايك"),optRow([[2,"عالية (غرفة هادية)"],[3,"متوسطة"],[4.5,"واطئة (بيها ضجة)"]].map(([k,n])=>({t:n,on:S.vadK===k,fn:()=>{setVal("vadK",k);renderPanel();}}))));
     P.append(el("div","pnote","شگد يستنى بعد ما تسكت"),optRow([[300,"بسرعة"],[450,"عادي"],[800,"يستنى أكثر"]].map(([k,n])=>({t:n,on:S.vadHang===k,fn:()=>{setVal("vadHang",k);renderPanel();}}))));
-    P.append(el("div","pnote","تحچي فالنص يمشي بسرعتك، تسكت فيوگف. إذا حچيت شي برا السكربت ورجعت، دوس رجوع سطر."));}
+    P.append(el("div","pnote","السماع الذكي: يفهم الكلمات، فيصحّح مكانك بالنص ويوگف إذا حچيت شي برا السكربت. ينزل مرة وحدة (حوالي 80 ميغا) ويشتغل بدون نت. تجريبي."));
+    P.append(optRow([{t:S.smartEar?"السماع الذكي: شغّال":"شغّل السماع الذكي",on:S.smartEar,fn:()=>{setVal("smartEar",!S.smartEar);if(S.smartEar)earLoad();renderPanel();}}]));
+    const st=el("div","pnote");st.id="earState";P.append(st);paintEar();
+    if(S.smartEar&&vad&&ear.state==="ready"&&!ear.proc)P.append(el("div","pnote","وگّف السماع وشغّله مرة ثانية حتى يبدي السماع الذكي."));}
   if(id==="aids"){
     P.append(optRow([
       {t:"ألوان متبدلة للجمل",on:S.altc,fn:()=>{setVal("altc",!S.altc);renderPanel();}},
