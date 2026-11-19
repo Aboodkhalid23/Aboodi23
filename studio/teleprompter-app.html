@@ -37,7 +37,11 @@ svg{display:block;flex:none}
 #splash .tg{color:var(--muted);font-size:.95rem;animation:up .6s .22s both}
 @keyframes pop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
 @keyframes up{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
-.wordmark{display:flex;align-items:center;gap:10px}
+.wordmark{display:flex;align-items:center;gap:10px;text-align:start}
+.logos{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;align-items:center}
+.logos button{border-radius:16px;padding:4px;border:2px solid transparent}
+.logos button.on{border-color:var(--accent)}
+.logos small{color:var(--muted);font-size:.8rem;flex-basis:100%}
 .wordmark b{font-size:1.15rem;font-weight:800;letter-spacing:.02em}
 .wordmark span{color:var(--muted);font-size:.8rem}
 .rowi{display:flex;gap:8px;align-items:stretch}
@@ -250,12 +254,23 @@ textarea.field{min-height:38vh;resize:vertical;font-size:1.05rem}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
-<div id="splash" aria-hidden="true"><svg width="88" height="88" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="lgs" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5d52"/><stop offset="1" stop-color="#b3171b"/></linearGradient></defs><rect width="64" height="64" rx="16" fill="url(#lgs)"/><rect x="10" y="29" width="44" height="6" rx="3" fill="#fff" opacity=".28"/><path d="M20 46V18l24 28V18" fill="none" stroke="#fff" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="wm">Noto</div><div class="tg">اقرا براحة، وصوّر بثقة</div></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="nG1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5d52"/><stop offset="1" stop-color="#b3171b"/></linearGradient>
+    <linearGradient id="nG2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d2026"/><stop offset="1" stop-color="#050506"/></linearGradient>
+  </defs>
+  <symbol id="logo-a" viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="url(#nG1)"/><rect x="10" y="29" width="44" height="6" rx="3" fill="#fff" opacity=".28"/><path d="M20 46V18l24 28V18" fill="none" stroke="#fff" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="logo-b" viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="url(#nG2)"/><path d="M14 16h36a6 6 0 0 1 6 6v18a6 6 0 0 1-6 6H30l-10 8v-8h-6a6 6 0 0 1-6-6V22a6 6 0 0 1 6-6z" fill="#e5383b"/><rect x="18" y="24" width="28" height="4.5" rx="2.25" fill="#fff"/><rect x="18" y="33" width="18" height="4.5" rx="2.25" fill="#fff" opacity=".6"/></symbol>
+  <symbol id="logo-c" viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="#0b0c0f"/><rect x=".75" y=".75" width="62.5" height="62.5" rx="14.5" fill="none" stroke="#2b2f37" stroke-width="1.5"/><path d="M15 27c0 12 8 20 17 20s17-8 17-20" fill="none" stroke="#e5383b" stroke-width="7" stroke-linecap="round"/><circle cx="32" cy="17" r="5" fill="#fff"/><rect x="8" y="37" width="48" height="2.5" rx="1.25" fill="#fff" opacity=".22"/></symbol>
+  <symbol id="logo-d" viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="url(#nG1)"/><circle cx="32" cy="32" r="19" fill="#0b0c0f"/><circle cx="32" cy="32" r="19" fill="none" stroke="#fff" stroke-width="3" opacity=".9"/><rect x="21" y="26" width="22" height="3.5" rx="1.75" fill="#fff" opacity=".45"/><rect x="19" y="31" width="26" height="4" rx="2" fill="#fff"/><rect x="23" y="37" width="18" height="3.5" rx="1.75" fill="#fff" opacity=".45"/><circle cx="44.5" cy="20" r="3" fill="#ff5d52"/></symbol>
+</svg>
+<div id="splash" aria-hidden="true"><svg width="88" height="88"><use class="logoUse" href="#logo-a"/></svg><div class="wm">Noto</div><div class="tg">اقرا براحة، وصوّر بثقة</div></div>
 
 <!-- ============ المكتبة ============ -->
 <section class="view" id="home">
   <header class="appbar gutter"><div class="wrap">
-    <div class="wordmark"><svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="lgh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5d52"/><stop offset="1" stop-color="#b3171b"/></linearGradient></defs><rect width="64" height="64" rx="16" fill="url(#lgh)"/><rect x="10" y="29" width="44" height="6" rx="3" fill="#fff" opacity=".28"/><path d="M20 46V18l24 28V18" fill="none" stroke="#fff" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/></svg><b>Noto</b><span>ملقّن الاستوديو</span></div>
+    <button class="wordmark" id="brandBtn" aria-label="غيّر اللوغو"><svg width="34" height="34"><use class="logoUse" href="#logo-a"/></svg><b>Noto</b><span>ملقّن الاستوديو</span></button>
+    <div class="logos" id="logoPick" hidden></div>
     <h1 class="big" id="homeTitle" style="margin-top:14px">الدرايف</h1>
     <p class="sub" id="homeSub">سكربتاتك من Google Drive</p>
   </div></header>
@@ -404,7 +419,7 @@ const HEAD_RE=/^(العنوان|الهوك|هوك بديل|السكربت|الم
 const KEY_DEF={toggle:[" ","Enter","MediaPlayPause","k"],faster:["ArrowUp"],slower:["ArrowDown"],back:["PageUp","ArrowRight"],fwd:["PageDown","ArrowLeft"],retake:["r","Backspace"],mark:["g"]};
 const KEY_NAMES={toggle:"تشغيل / إيقاف",back:"رجوع سطر",fwd:"قدّم سطر",retake:"عيد الجملة",mark:"علامة لقطة زينة",faster:"أسرع",slower:"أبطأ"};
 const DEF={wpm:130,target:0,size:(Math.min(screen.width,screen.height)<600?42:64),lh:1.55,width:88,guide:34,font:"cairo",weight:1,theme:"white",
-  mx:false,my:false,focus:true,pauseAt:true,pauseHead:true,hard:true,cd:3,chunk:true,smart:true,breath:true,map:true,dist:0,beep:false,keys:KEY_DEF};
+  mx:false,my:false,focus:true,pauseAt:true,pauseHead:true,hard:true,cd:3,chunk:true,smart:true,breath:true,map:true,dist:0,beep:false,logo:"a",keys:KEY_DEF};
 const PRESET_KEYS=["wpm","size","lh","width","guide","font","weight","theme","mx","my","focus","chunk","smart","breath","map"];
 const PRESET_DEF=[
   {name:"ريل",v:{wpm:150,size:40,lh:1.5,width:92,guide:32,weight:1}},
@@ -1214,6 +1229,17 @@ document.querySelectorAll(".rspeed .step").forEach(b=>b.addEventListener("click"
   B.addEventListener("pointerup",e=>{if(!rDragging)return;rDragging=false;send("seek",k(e));});
   B.addEventListener("pointercancel",()=>{rDragging=false;});
 })();
+
+/* ---------- اللوغو: أربعة، تختار بيناتهم ---------- */
+const LOGOS=[["a","حرف N"],["b","فقاعة الحچي"],["c","حرف ن"],["d","العدسة"]];
+function paintLogo(){document.querySelectorAll(".logoUse").forEach(u=>u.setAttribute("href","#logo-"+S.logo));}
+function renderLogoPick(){const L=$("logoPick");L.innerHTML="";
+  LOGOS.forEach(([id,n])=>{const b=el("button",S.logo===id?"on":null);b.setAttribute("aria-label",n);b.title=n;
+    b.innerHTML='<svg width="48" height="48"><use href="#logo-'+id+'"/></svg>';
+    b.addEventListener("click",()=>{S.logo=id;save();paintLogo();renderLogoPick();});L.append(b);});
+  L.append(el("small",null,"اختار اللوغو الي يعجبك، وتگدر تبدّله أي وقت من هنا."));}
+$("brandBtn").addEventListener("click",()=>{const L=$("logoPick");L.hidden=!L.hidden;if(!L.hidden)renderLogoPick();});
+paintLogo();
 
 /* ---------- البداية ---------- */
 setTimeout(()=>{const sp=$("splash");sp.classList.add("out");setTimeout(()=>sp.remove(),500);},matchMedia("(prefers-reduced-motion: reduce)").matches?0:900);
