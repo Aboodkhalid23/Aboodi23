@@ -12,7 +12,7 @@
 <link rel="icon" href="icon-192.png">
 <title>Noto</title>
 <style>body{margin:0}</style>
-<script>if("serviceWorker" in navigator&&location.protocol==="https:"){addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=1795201457",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));let re=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(re)return;re=true;location.reload();});}</script>
+<script>if("serviceWorker" in navigator&&location.protocol==="https:"){addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=1795201696",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));let re=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(re)return;re=true;location.reload();});}</script>
 </head>
 <body>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -1164,7 +1164,7 @@ stage.addEventListener("pointerup",()=>{if(S.mode==="phrase"&&moved&&paraEl.leng
 stage.addEventListener("contextmenu",e=>e.preventDefault());
 /* ---------- كاشف الإشارات: يسجّل كل شي يوصل من أي جهاز ---------- */
 let diagOn=false,diagLines=[],gpT=0;
-function dlog(t){if(!diagOn)return;const ts=new Date().toTimeString().slice(3,8);diagLines.unshift(ts+"  "+t);diagLines=diagLines.slice(0,80);
+function dlog(t){if(!diagOn)return;const d=new Date(),ts=d.toTimeString().slice(3,8)+"."+String(d.getMilliseconds()).padStart(3,"0");diagLines.unshift(ts+"  "+t);diagLines=diagLines.slice(0,80);
   const L=$("diagLog");L.innerHTML="";diagLines.forEach(x=>L.append(el("div",null,x)));}
 function diagOpen(){diagOn=true;diagLines=[];$("diag").hidden=false;dlog("ready · "+navigator.userAgent.replace(/.*\((.*?)\).*/,"$1"));mediaOn();
   clearInterval(gpT);gpT=setInterval(()=>{try{for(const g of navigator.getGamepads?navigator.getGamepads():[]){if(!g)continue;g.buttons.forEach((b,i)=>{if(b.pressed)dlog("GAMEPAD "+g.id.slice(0,20)+" button "+i);});g.axes.forEach((a,i)=>{if(Math.abs(a)>.5)dlog("GAMEPAD axis "+i+" = "+a.toFixed(2));});}}catch(e){}},120);}
@@ -1234,18 +1234,24 @@ document.addEventListener("pointerup",e=>{
 },true);
 /* أزرار الميديا: نشغّل صوت صامت حتى الآيباد يرسلنا أزرار التشغيل والجاي */
 let mAudio=null;
-function silentWav(){const n=8000,b=new ArrayBuffer(44+n*2),v=new DataView(b);const w=(o,s2)=>{for(let i=0;i<s2.length;i++)v.setUint8(o+i,s2.charCodeAt(i));};
+function silentWav(){const n=80000,b=new ArrayBuffer(44+n*2),v=new DataView(b);const w=(o,s2)=>{for(let i=0;i<s2.length;i++)v.setUint8(o+i,s2.charCodeAt(i));};
   w(0,"RIFF");v.setUint32(4,36+n*2,true);w(8,"WAVE");w(12,"fmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,8000,true);v.setUint32(28,16000,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,"data");v.setUint32(40,n*2,true);
   return URL.createObjectURL(new Blob([b],{type:"audio/wav"}));}
 function mediaOn(){
   if(!S.mediaKeys||!("mediaSession" in navigator))return;
-  try{if(!mAudio){mAudio=new Audio(silentWav());mAudio.loop=true;mAudio.setAttribute("playsinline","");}mAudio.play().catch(()=>{});
+  mediaWant=true;
+  try{if(!mAudio){mAudio=new Audio(silentWav());mAudio.loop=true;mAudio.preload="auto";mAudio.setAttribute("playsinline","");
+      mAudio.addEventListener("pause",()=>{dlog("AUDIO paused");if(mediaWant)setTimeout(()=>{if(mediaWant&&mAudio.paused)mAudio.play().then(()=>dlog("AUDIO resumed")).catch(e=>dlog("AUDIO resume blocked "+e.name));},40);});
+      mAudio.addEventListener("playing",()=>dlog("AUDIO playing"));}
+    mAudio.play().catch(e=>dlog("AUDIO play blocked "+e.name));
     navigator.mediaSession.metadata=new MediaMetadata({title:"Noto",artist:doc?doc.title:""});
     const H=(a,g)=>{try{navigator.mediaSession.setActionHandler(a,()=>{dlog("MEDIA "+a);if(diagOn&&$("play").hidden)return;remoteInput(g);try{mAudio.play().catch(()=>{});navigator.mediaSession.playbackState="playing";}catch(x){}});}catch(x){}};
+    ["stop","seekto","skipad"].forEach(a=>{try{navigator.mediaSession.setActionHandler(a,()=>{dlog("MEDIA "+a);try{mAudio.play().catch(()=>{});}catch(x){}});}catch(x){}});
     H("play","media:playpause");H("pause","media:playpause");H("nexttrack","media:nexttrack");H("previoustrack","media:previoustrack");H("seekforward","media:seekforward");H("seekbackward","media:seekbackward");
     navigator.mediaSession.playbackState="playing";}catch(e){}
 }
-function mediaOff(){try{mAudio&&mAudio.pause();}catch(e){}try{["play","pause","nexttrack","previoustrack","seekforward","seekbackward"].forEach(a=>navigator.mediaSession.setActionHandler(a,null));}catch(e){}}
+let mediaWant=false;
+function mediaOff(){mediaWant=false;try{mAudio&&mAudio.pause();}catch(e){}try{["play","pause","nexttrack","previoustrack","seekforward","seekbackward"].forEach(a=>navigator.mediaSession.setActionHandler(a,null));}catch(e){}}
 
 /* عجلة الماوس أو عجلة الريموت (مثل خاتم التمرير): كل حركة = سطر، أو مقطع بوضع المقاطع */
 let wAcc=0,wT=0,wLast=0;
