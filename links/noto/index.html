@@ -12,7 +12,7 @@
 <link rel="icon" href="icon-192.png">
 <title>Noto</title>
 <style>body{margin:0}</style>
-<script>if("serviceWorker" in navigator&&location.protocol==="https:"){addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=1795200502",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));let re=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(re)return;re=true;location.reload();});}</script>
+<script>if("serviceWorker" in navigator&&location.protocol==="https:"){addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=1795201457",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));let re=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(re)return;re=true;location.reload();});}</script>
 </head>
 <body>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -1183,10 +1183,12 @@ document.addEventListener("visibilitychange",()=>dlog("visibility "+document.vis
 window.addEventListener("blur",()=>dlog("window blur"));window.addEventListener("focus",()=>dlog("window focus"));
 
 /* ---------- ريموت يتعلّم: أي إشارة (كيبورد، ماوس، عجلة، لمس، ميديا) تنربط بأي حركة ---------- */
-const BIND_DEF={"wheel:down":"next","wheel:up":"prev","media:playpause":"toggle","media:nexttrack":"faster","media:previoustrack":"slower",
+const BIND_DEF={"wheel:down":"next","wheel:up":"prev","media:playpause":"toggle","media:nexttrack":"next","media:previoustrack":"prev",
   "media:seekforward":"next","media:seekbackward":"prev","mouse:2":"toggle","mouse:1":"toggle","mouse:3":"prev","mouse:4":"next",
   "wheel:right":"faster","wheel:left":"slower"};
 if(!S.binds)S.binds=Object.assign({},BIND_DEF);
+/* ريموتات العجلة (مثل خاتم التيك توك) ترسل «الجاي» و«الي قبله»: نخليهن تنقّل بدل السرعة */
+if(S.bv!==2){if(S.binds["media:nexttrack"]==="faster")S.binds["media:nexttrack"]="next";if(S.binds["media:previoustrack"]==="slower")S.binds["media:previoustrack"]="prev";S.bv=2;save();}
 let learnAct=null,lastSig="";
 function sigName(g){
   const [t,v]=g.split(/:(.*)/);
