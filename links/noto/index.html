@@ -12,7 +12,7 @@
 <link rel="icon" href="icon-192.png">
 <title>Noto</title>
 <style>body{margin:0}</style>
-<script>if("serviceWorker" in navigator&&location.protocol==="https:"){addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=1795200337",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));let re=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(re)return;re=true;location.reload();});}</script>
+<script>if("serviceWorker" in navigator&&location.protocol==="https:"){addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=1795200502",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));let re=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(re)return;re=true;location.reload();});}</script>
 </head>
 <body>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -72,6 +72,12 @@ svg{display:block;flex:none}
 .hlist svg{color:var(--accent)}
 textarea.edit{width:100%;min-height:90px;background:#1b1d22;border:1px solid #2b2f37;border-radius:12px;padding:10px 14px;font-family:"Cairo",var(--f-ui);font-weight:700;font-size:1.1rem;line-height:1.8;outline:0;max-width:760px;display:block;margin:0 auto 10px;resize:vertical}
 
+#diag{position:fixed;inset:0;z-index:300;background:#000;color:#fff;display:flex;flex-direction:column;gap:8px;padding:calc(10px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) 10px max(12px,env(safe-area-inset-left,0px))}
+#diag .dh{display:flex;gap:8px;align-items:center}#diag .dh b{flex:1;font-size:1.1rem}#diag .btn{min-height:38px;padding:0 12px}
+#diag .dn{margin:0;color:var(--muted);font-size:.85rem;line-height:1.7}
+#diag .dz{height:90px;border:2px dashed #444;border-radius:14px;display:grid;place-items:center;color:#777;touch-action:none}
+#diag .dl{flex:1;overflow-y:auto;font-family:ui-monospace,Menlo,monospace;font-size:.82rem;line-height:1.6;direction:ltr;text-align:left;background:#0d0e11;border-radius:12px;padding:8px}
+#diag .dl div{border-bottom:1px solid #1d2026;padding:2px 0}
 /* ===== القفل ===== */
 #lock{position:fixed;inset:0;z-index:200;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px}
 #lock .lt{font-size:1.05rem;color:var(--muted)}
@@ -356,6 +362,12 @@ textarea.field{min-height:38vh;resize:vertical;font-size:1.05rem}
   <div class="keys" id="lockKeys"></div>
 </div>
 
+<div id="diag" hidden>
+  <div class="dh"><b>كاشف الإشارات</b><button class="btn" id="diagCopy">انسخ</button><button class="btn" id="diagClear">امسح</button><button class="btn primary" id="diagClose">سكّر</button></div>
+  <p class="dn">اضغط كل زر بالريموت مرة وحدة، ودوّر العجلة لفوق ولجوه. كل شي يوصل يطلع هنا. صوّر الشاشة ودزها.</p>
+  <div class="dz" id="diagZone">حرّك مؤشر الماوس هنا</div>
+  <div class="dl" id="diagLog"></div>
+</div>
 <!-- ============ المكتبة ============ -->
 <section class="view" id="home">
   <header class="appbar gutter"><div class="wrap">
@@ -363,6 +375,7 @@ textarea.field{min-height:38vh;resize:vertical;font-size:1.05rem}
     <div class="logos" id="logoPick" hidden></div>
     <h1 class="big" id="homeTitle" style="margin-top:14px">الدرايف</h1>
     <p class="sub" id="homeSub">سكربتاتك من Google Drive</p>
+    <button class="btn" id="diagHome" style="margin-top:10px;min-height:38px">🔬 كاشف إشارات الريموت</button>
   </div></header>
 
   <div class="scroll gutter" id="paneDrive"><div class="wrap">
@@ -1149,6 +1162,26 @@ stage.addEventListener("pointerup",e=>{clearTimeout(lpT);if(skipTap){skipTap=fal
 stage.addEventListener("pointercancel",()=>{clearTimeout(lpT);dragY=null;});
 stage.addEventListener("pointerup",()=>{if(S.mode==="phrase"&&moved&&paraEl.length){let best=0,bd=1e9;paraEl.forEach((p,i)=>{const d=Math.abs(paraC(i)-pos);if(d<bd){bd=d;best=i;}});phrGo(best,true);}});
 stage.addEventListener("contextmenu",e=>e.preventDefault());
+/* ---------- كاشف الإشارات: يسجّل كل شي يوصل من أي جهاز ---------- */
+let diagOn=false,diagLines=[],gpT=0;
+function dlog(t){if(!diagOn)return;const ts=new Date().toTimeString().slice(3,8);diagLines.unshift(ts+"  "+t);diagLines=diagLines.slice(0,80);
+  const L=$("diagLog");L.innerHTML="";diagLines.forEach(x=>L.append(el("div",null,x)));}
+function diagOpen(){diagOn=true;diagLines=[];$("diag").hidden=false;dlog("ready · "+navigator.userAgent.replace(/.*\((.*?)\).*/,"$1"));mediaOn();
+  clearInterval(gpT);gpT=setInterval(()=>{try{for(const g of navigator.getGamepads?navigator.getGamepads():[]){if(!g)continue;g.buttons.forEach((b,i)=>{if(b.pressed)dlog("GAMEPAD "+g.id.slice(0,20)+" button "+i);});g.axes.forEach((a,i)=>{if(Math.abs(a)>.5)dlog("GAMEPAD axis "+i+" = "+a.toFixed(2));});}}catch(e){}},120);}
+function diagClose(){diagOn=false;$("diag").hidden=true;clearInterval(gpT);}
+$("diagClose").addEventListener("click",diagClose);$("diagHome").addEventListener("click",diagOpen);$("diagClear").addEventListener("click",()=>{diagLines=[];$("diagLog").innerHTML="";});
+$("diagCopy").addEventListener("click",()=>{const t=diagLines.join("\n");try{navigator.clipboard.writeText(t).then(()=>toast("انسخ")).catch(()=>{});}catch(e){}});
+["keydown","keyup"].forEach(n=>document.addEventListener(n,e=>dlog(n.toUpperCase()+" key="+JSON.stringify(e.key)+" code="+e.code+" keyCode="+e.keyCode),true));
+["pointerdown","pointerup"].forEach(n=>document.addEventListener(n,e=>dlog(n+" type="+e.pointerType+" button="+e.button+" buttons="+e.buttons+" @"+Math.round(e.clientX)+","+Math.round(e.clientY)),true));
+let dMove=0;document.addEventListener("pointermove",e=>{const n=performance.now();if(n-dMove>400){dMove=n;dlog("pointermove type="+e.pointerType+" buttons="+e.buttons+" @"+Math.round(e.clientX)+","+Math.round(e.clientY));}},true);
+document.addEventListener("wheel",e=>dlog("WHEEL dx="+Math.round(e.deltaX)+" dy="+Math.round(e.deltaY)+" mode="+e.deltaMode),{capture:true,passive:true});
+["touchstart","touchend"].forEach(n=>document.addEventListener(n,e=>dlog(n+" touches="+e.touches.length+" @"+Math.round((e.changedTouches[0]||{}).clientX)+","+Math.round((e.changedTouches[0]||{}).clientY)),{capture:true,passive:true}));
+["click","auxclick","contextmenu","dblclick"].forEach(n=>document.addEventListener(n,e=>dlog(n+" button="+e.button),true));
+document.addEventListener("scroll",()=>dlog("scroll"),true);
+window.addEventListener("gamepadconnected",e=>dlog("GAMEPAD connected "+e.gamepad.id));
+document.addEventListener("visibilitychange",()=>dlog("visibility "+document.visibilityState));
+window.addEventListener("blur",()=>dlog("window blur"));window.addEventListener("focus",()=>dlog("window focus"));
+
 /* ---------- ريموت يتعلّم: أي إشارة (كيبورد، ماوس، عجلة، لمس، ميديا) تنربط بأي حركة ---------- */
 const BIND_DEF={"wheel:down":"next","wheel:up":"prev","media:playpause":"toggle","media:nexttrack":"faster","media:previoustrack":"slower",
   "media:seekforward":"next","media:seekbackward":"prev","mouse:2":"toggle","mouse:1":"toggle","mouse:3":"prev","mouse:4":"next",
@@ -1206,7 +1239,7 @@ function mediaOn(){
   if(!S.mediaKeys||!("mediaSession" in navigator))return;
   try{if(!mAudio){mAudio=new Audio(silentWav());mAudio.loop=true;mAudio.setAttribute("playsinline","");}mAudio.play().catch(()=>{});
     navigator.mediaSession.metadata=new MediaMetadata({title:"Noto",artist:doc?doc.title:""});
-    const H=(a,g)=>{try{navigator.mediaSession.setActionHandler(a,()=>{remoteInput(g);try{mAudio.play().catch(()=>{});navigator.mediaSession.playbackState="playing";}catch(x){}});}catch(x){}};
+    const H=(a,g)=>{try{navigator.mediaSession.setActionHandler(a,()=>{dlog("MEDIA "+a);if(diagOn&&$("play").hidden)return;remoteInput(g);try{mAudio.play().catch(()=>{});navigator.mediaSession.playbackState="playing";}catch(x){}});}catch(x){}};
     H("play","media:playpause");H("pause","media:playpause");H("nexttrack","media:nexttrack");H("previoustrack","media:previoustrack");H("seekforward","media:seekforward");H("seekbackward","media:seekbackward");
     navigator.mediaSession.playbackState="playing";}catch(e){}
 }
@@ -1716,6 +1749,7 @@ function renderPanel(){
     P.append(el("div","pnote","اختار شگد تبعد عن الشاشة، والحجم ينضبط وحده. بعدين تگدر تعدّله من زر الحجم."));}
   if(id==="remote"){
     const kt=el("div","keytest",learnAct?"اضغط الزر أو حرّك العجلة هسه…":"اضغط أي زر بالريموت هسه، ويطلعلك هنا شنو وصل");kt.id="keyTest";if(learnAct)kt.classList.add("ok");P.append(kt);
+    P.append(optRow([{t:"🔬 كاشف الإشارات (يبين كل شي يرسله الريموت)",fn:()=>{closePanel();diagOpen();}}]));
     P.append(el("div","psec","اربط أزرار ريموتك"));
     P.append(el("div","pnote","دوس «علّم» جنب الحركة، وبعدها اضغط زر الريموت (أو حرّك العجلة). ينحفظ وحده. خلّي مؤشر الماوس الدائري فوگ النص."));
     const L=el("div","binds");
