@@ -12,7 +12,7 @@
 <link rel="icon" href="icon-192.png">
 <title>Noto</title>
 <style>body{margin:0}</style>
-<script>if("serviceWorker" in navigator&&location.protocol==="https:"){addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=1795206049",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));let re=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(re)return;re=true;location.reload();});}</script>
+<script>if("serviceWorker" in navigator&&location.protocol==="https:"){addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=1795207500",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));let re=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(re)return;re=true;location.reload();});}</script>
 </head>
 <body>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -365,6 +365,28 @@ textarea.field{min-height:38vh;resize:vertical;font-size:1.05rem}
   #panel{max-height:75%}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+#selfie{position:fixed;inset:0;z-index:200;background:#000;color:#fff;font-family:var(--f-ui)}
+#selfie video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+#selfie .sfTop{position:absolute;top:calc(env(safe-area-inset-top) + 6px);left:8px;right:8px;border-radius:18px;padding:10px 14px 12px;text-align:center;direction:rtl}
+#sfTxt{line-height:1.4;cursor:pointer}
+#selfie .sfBar{height:5px;border-radius:5px;background:rgba(255,255,255,.2);margin-top:8px;overflow:hidden}
+#selfie .sfBar i{display:block;height:100%;width:0;background:#e5383b;margin-inline-start:auto}
+#selfie .sfMsg{position:absolute;left:16px;right:16px;top:45%;text-align:center;font-size:20px;font-weight:700;text-shadow:0 2px 8px #000;line-height:1.6}
+#selfie .sfMsg:empty{display:none}
+#selfie .sfBot{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 12px);display:flex;flex-direction:column;align-items:center;gap:10px}
+#selfie .sfRow{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
+#selfie .sfRow[hidden]{display:none}
+#selfie button{height:46px;min-width:50px;border-radius:14px;border:0;background:rgba(0,0,0,.55);color:#fff;font:700 17px var(--f-ui);padding:0 12px}
+#selfie .sfrec{width:74px;height:74px;border-radius:50%;background:rgba(255,255,255,.25);border:4px solid #fff;display:grid;place-items:center;padding:0}
+#selfie .sfrec i{width:54px;height:54px;border-radius:50%;background:#e5383b;transition:all .2s}
+#selfie .sfrec.on i{width:28px;height:28px;border-radius:7px}
+#selfie .sfsave{background:#e5383b}
+#sfClock{min-width:60px;font-weight:700;text-shadow:0 1px 4px #000}
+.camBox{border:1px solid #2a2e36;border-radius:16px;padding:12px;margin:10px 0;display:flex;flex-direction:column;gap:8px}
+.camBox b{font-size:1.05rem}
+.flPrev{width:100%;border-radius:12px;background:#000;aspect-ratio:960/400}
+.flPrev[hidden]{display:none}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -600,7 +622,7 @@ const HEAD_RE=/^(العنوان|الهوك|هوك بديل|السكربت|الم
 const KEY_DEF={toggle:[" ","Enter","MediaPlayPause","MediaTrackNext","k"],faster:["ArrowUp"],slower:["ArrowDown"],back:["PageUp","ArrowRight","MediaTrackPrevious"],fwd:["PageDown","ArrowLeft"],retake:["r","Backspace"],mark:["g"]};
 const KEY_NAMES={toggle:"الجاي / تشغيل",back:"رجوع",fwd:"قدّام",retake:"عيد الجملة",mark:"علامة لقطة زينة",faster:"أسرع",slower:"أبطأ"};
 const DEF={wpm:130,target:0,size:(Math.min(screen.width,screen.height)<600?42:64),lh:1.55,width:88,guide:34,font:"cairo",weight:1,theme:"white",
-  mx:false,my:false,focus:true,pauseAt:true,pauseHead:false,hard:true,cd:3,chunk:false,smart:false,breath:false,map:false,ver:4,dist:0,beep:false,vadAbs:0,vadK:3,vadHang:900,smartEar:false,earHold:false,earSize:"base",tools:{},rehListen:true,mode:"phrase",phrLen:5,binds:null,mediaKeys:true,logo:"a",altc:false,mag:false,kar:false,hideRead:false,tash:true,syll:false,cardSec:10,cardFit:"fixed",cardPos:"mid",cardMemo:false,cardNx:true,cardGap:false,cardNarrow:false,cardSize:0,cardW:92,cardShadow:false,fgC:"",bgC:"",keys:KEY_DEF};
+  mx:false,my:false,focus:true,pauseAt:true,pauseHead:false,hard:true,cd:3,chunk:false,smart:false,breath:false,map:false,ver:4,dist:0,beep:false,vadAbs:0,vadK:3,vadHang:900,smartEar:false,earHold:false,earSize:"base",tools:{},rehListen:true,mode:"phrase",phrLen:5,binds:null,mediaKeys:true,logo:"a",altc:false,mag:false,kar:false,hideRead:false,tash:true,syll:false,cardSec:10,cardFit:"fixed",cardPos:"mid",cardMemo:false,cardNx:true,cardGap:false,cardNarrow:false,cardSize:0,cardW:92,cardShadow:false,fgC:"",bgC:"",selfSize:30,keys:KEY_DEF};
 const PRESET_KEYS=["wpm","size","lh","width","guide","font","weight","theme","mx","my","focus","chunk","smart","breath","map"];
 const PRESET_DEF=[
   {name:"ريل",v:{wpm:150,size:40,lh:1.5,width:92,guide:32,weight:1}},
@@ -1099,7 +1121,7 @@ function renderCard(){
     const c=el("div","cctl"),B=(t,cl,fn,lbl)=>{const b=el("button",cl,t);b.setAttribute("aria-label",lbl);b.addEventListener("click",e=>{e.stopPropagation();fn();});return b;};
     const sec=el("div","sec"),lf=el("span",null,S.cardSec+"");lf.id="cardSecV";
     sec.append(B("−",null,()=>cardSecAdd(-1),"أقل وقت"),lf,el("span",null,S.cardFit==="len"?"ثانية (معدّل)":"ثانية"),B("+",null,()=>cardSecAdd(1),"أكثر وقت"));
-    c.append(B("→ اللي قبلها",null,()=>cardPrev(),"الجملة السابقة"),B(playing?"⏸ وگّف":"▶ مشّي",playing?"go":"go",()=>cardAuto(),"تشغيل"),B("↺ عيدها",null,()=>cardAgain(),"عيد الجملة"),B("اللي بعدها ←",null,()=>cardNext(),"الجملة الجاية"),sec,B("Aa",null,()=>showPanel("look"),"شكل الجملة"),B("⚙",null,()=>openCardSet(),"إعدادات جملة جملة"));cv.append(c);
+    c.append(B("→ اللي قبلها",null,()=>cardPrev(),"الجملة السابقة"),B(playing?"⏸ وگّف":"▶ مشّي",playing?"go":"go",()=>cardAuto(),"تشغيل"),B("↺ عيدها",null,()=>cardAgain(),"عيد الجملة"),B("اللي بعدها ←",null,()=>cardNext(),"الجملة الجاية"),sec,B("🎥 صوّر",null,()=>showPanel("cam"),"صوّر وانت تقرا"),B("Aa",null,()=>showPanel("look"),"شكل الجملة"),B("⚙",null,()=>openCardSet(),"إعدادات جملة جملة"));cv.append(c);
     if(S.cardMemo&&!playing)cv.append(el("div","tip","الجملة تختفي بنص الوقت حتى تطالع الكاميرا. دوس عليها إذا نسيت."));
     cv.classList.toggle("run",playing);cardTick();}
   fitCard();render(true);
@@ -1123,7 +1145,7 @@ addEventListener("resize",()=>{if(cardOn)requestAnimationFrame(cardRoom);});
 function cardWords(i){const st=paras[i]||0,en=i+1<paras.length?paras[i+1]:W.length;return Math.max(1,en-st);}
 function cardDur(i){if(S.cardFit!=="len")return S.cardSec;return Math.round(Math.min(60,Math.max(3,S.cardSec*cardWords(i)/6)));}
 function cardAgain(){cardT=0;cardPeek=false;logRetake();renderCard();toast("عيدها على راحتك");poke();}
-function cardTick(){const cv=$("cardv");if(!cv||!cardOn||rehOn)return;const du=cardDur(cardIdx),b=$("cardBar");
+function cardTick(){if(sf.on)selfieTick();const cv=$("cardv");if(!cv||!cardOn||rehOn)return;const du=cardDur(cardIdx),b=$("cardBar");
   if(b){b.style.width=Math.min(100,cardT/du*100)+"%";b.parentNode.classList.toggle("warn",playing&&du-cardT<=2&&cardT<du);}
   const cc=$("cardCnt");if(cc)cc.textContent=(cardIdx+1)+" / "+paras.length+(playing?" · باقي "+Math.max(0,Math.ceil(du-cardT)):" · "+du+" ثانية");
   cv.classList.toggle("memo",playing&&S.cardMemo&&!cardPeek&&cardT>=du*.45&&cardT<du);
@@ -1131,6 +1153,95 @@ function cardTick(){const cv=$("cardv");if(!cv||!cardOn||rehOn)return;const du=c
 function openCardSet(){const m=$("rail").querySelector('[data-id="more"]');if(m)m.click();setTimeout(()=>{const x=document.getElementById("cardSet");if(x)x.scrollIntoView({block:"start",behavior:"smooth"});},120);}
 function cardSecAdd(d){setVal("cardSec",S.cardSec+d);toast(S.cardFit==="len"?"جملة متوسطة: "+S.cardSec+" ثانية":"كل جملة "+S.cardSec+" ثانية");renderCard();}
 $("cardv").addEventListener("click",e=>{e.stopPropagation();});
+/* ---------- صوّر وانت تقرا: كاميرا سيلفي داخل التطبيق + سكربت عائم فوق أي تطبيق ---------- */
+const cardText=i=>(paraRaw[i]||"").replace(/\[[^\]]*\]|\/\//g,"").replace(/\s+/g," ").trim();
+let sf={on:false,stream:null,rec:null,chunks:[],t0:0,file:null,timer:0,mime:""};
+function sfEl(){let o=$("selfie");if(o)return o;o=el("div");o.id="selfie";o.hidden=true;
+  o.innerHTML='<video id="sfV" playsinline muted autoplay></video><div class="sfTop"><div id="sfTxt"></div><div class="sfBar"><i id="sfBarI"></i></div></div>'+
+   '<div class="sfMsg" id="sfMsg"></div><div class="sfBot"><div class="sfRow"><button id="sfPrev" aria-label="اللي قبلها">→</button><button id="sfPause" aria-label="وگّف الجمل">مشّي</button><button id="sfNext" aria-label="اللي بعدها">←</button>'+
+   '<button id="sfSm" aria-label="أصغر">A−</button><button id="sfBg" aria-label="أكبر">A+</button></div>'+
+   '<div class="sfRow"><button id="sfClose" class="sfx">إغلاق</button><button id="sfRec" class="sfrec" aria-label="سجّل"><i></i></button><span id="sfClock">0:00</span></div>'+
+   '<div class="sfRow" id="sfSaveRow" hidden><button id="sfSave" class="sfsave">احفظ الفيديو</button><button id="sfAgain" class="sfx">صوّر مرة ثانية</button></div></div>';
+  document.body.append(o);
+  $("sfClose").onclick=selfieClose;$("sfRec").onclick=()=>sf.rec&&sf.rec.state==="recording"?selfieStop():selfieStart();
+  $("sfPrev").onclick=()=>{cardPrev();selfieTick();};$("sfNext").onclick=()=>{cardNext();selfieTick();};
+  $("sfPause").onclick=()=>{if(playing){setPlay(false);}else{setPlay(true);}selfieTick();};
+  $("sfSm").onclick=()=>{S.selfSize=Math.max(16,(S.selfSize||30)-2);save();selfieTick();};$("sfBg").onclick=()=>{S.selfSize=Math.min(72,(S.selfSize||30)+2);save();selfieTick();};
+  $("sfSave").onclick=selfieSave;$("sfAgain").onclick=()=>{$("sfSaveRow").hidden=true;sf.file=null;cardIdx=0;cardT=0;selfieTick();};
+  $("sfTxt").addEventListener("click",()=>{if(playing){setPlay(false);}else setPlay(true);selfieTick();});
+  return o;}
+function sfMsg(t){const m=$("sfMsg");if(m){m.textContent=t||"";m.hidden=!t;}}
+async function selfieOpen(){closePanel();if(!cardOn)setCard(true,false);setPlay(false);stopVoice&&stopVoice();const o=sfEl();o.hidden=false;sf.on=true;selfieTick();sfMsg("دا أفتح الكاميرا…");
+  try{if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error("nocam");
+    sf.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user",width:{ideal:1920},height:{ideal:1920},frameRate:{ideal:30}},audio:true});
+    const v=$("sfV");v.srcObject=sf.stream;await v.play().catch(()=>{});sfMsg("");wakeOn();
+  }catch(e){sfMsg(e&&e.name==="NotAllowedError"?"ما انطيت إذن الكاميرا. افتح الإعدادات ← Safari ← الكاميرا، وخليها «اسمح»، وجرّب مرة ثانية.":"ما گدرت أفتح الكاميرا هنا. افتح Noto من أيقونته على الشاشة الرئيسية وجرّب.");}}
+function selfieTick(){if(!sf.on)return;const t=$("sfTxt");if(!t)return;const th=theme();
+  const tx=cardText(cardIdx);if(t.textContent!==tx)t.textContent=tx;t.style.fontSize=(S.selfSize||30)+"px";t.style.fontFamily='"'+font().css+'",system-ui';t.style.fontWeight=font().w[S.weight]||800;t.style.color=th.fg;
+  t.parentNode.style.background=th.bg+"cc";const du=cardDur(cardIdx);$("sfBarI").style.width=Math.min(100,cardT/du*100)+"%";
+  $("sfPause").textContent=playing?"وگّف":"مشّي";}
+function sfMime(){if(!window.MediaRecorder)return "";for(const m of ["video/mp4;codecs=avc1,mp4a.40.2","video/mp4","video/webm;codecs=vp9,opus","video/webm"])if(MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(m))return m;return "";}
+function selfieStart(){if(!sf.stream){sfMsg("الكاميرا مو مفتوحة بعد.");return;}if(!window.MediaRecorder){sfMsg("هذا الجهاز ما يدعم التسجيل من هنا.");return;}
+  $("sfSaveRow").hidden=true;sf.file=null;let n=3;sfMsg(String(n));
+  const go=()=>{sfMsg("");sf.mime=sfMime();sf.chunks=[];try{sf.rec=new MediaRecorder(sf.stream,sf.mime?{mimeType:sf.mime,videoBitsPerSecond:8000000}:{});}catch(e){sf.rec=new MediaRecorder(sf.stream);}
+    sf.rec.ondataavailable=e=>{if(e.data&&e.data.size)sf.chunks.push(e.data);};sf.rec.onstop=selfieDone;sf.rec.start(1000);sf.t0=performance.now();
+    $("sfRec").classList.add("on");cardT=0;setPlay(true);if(!clockStart){clockStart=performance.now();$("rec").classList.add("on");}
+    clearInterval(sf.timer);sf.timer=setInterval(()=>{$("sfClock").textContent=fmt((performance.now()-sf.t0)/1000);},500);selfieTick();};
+  const iv=setInterval(()=>{n--;if(n<=0){clearInterval(iv);go();}else sfMsg(String(n));},800);}
+function selfieStop(){if(sf.rec&&sf.rec.state!=="inactive")sf.rec.stop();setPlay(false);clearInterval(sf.timer);$("sfRec").classList.remove("on");selfieTick();}
+function selfieDone(){const type=(sf.rec&&sf.rec.mimeType)||sf.mime||"video/mp4";const ext=/mp4/.test(type)?"mp4":"webm";
+  const b=new Blob(sf.chunks,{type:type.split(";")[0]});const d=new Date(),p=n=>String(n).padStart(2,"0");
+  sf.file=new File([b],"Noto-"+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"-"+p(d.getHours())+p(d.getMinutes())+"."+ext,{type:b.type});
+  $("sfSaveRow").hidden=false;sfMsg("خلص التصوير ("+Math.round(b.size/1048576*10)/10+" ميغا). اضغط «احفظ الفيديو» واختار «حفظ الفيديو».");}
+async function selfieSave(){if(!sf.file)return;try{if(navigator.canShare&&navigator.canShare({files:[sf.file]})){await navigator.share({files:[sf.file]});return;}}catch(e){if(e&&e.name==="AbortError")return;}
+  const a=document.createElement("a");a.href=URL.createObjectURL(sf.file);a.download=sf.file.name;document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);}
+function selfieClose(){if(sf.rec&&sf.rec.state==="recording"){if(!confirm("بعده دا يصوّر. توگّف وتطلع؟"))return;selfieStop();}
+  if(sf.stream)sf.stream.getTracks().forEach(t=>t.stop());sf.stream=null;sf.on=false;setPlay(false);clearInterval(sf.timer);const o=$("selfie");if(o)o.hidden=true;renderCard();}
+
+/* السكربت العائم: نصنع فيديو صغير بيه الجمل بالتوقيت، ويطفو فوق أي تطبيق (صورة داخل صورة) */
+let fl={url:null,v:null,starts:[],total:0,busy:false,live:0};
+function flWrap(ctx,text,maxW){const w=text.split(" "),L=[];let cur="";for(const x of w){const t=cur?cur+" "+x:x;if(ctx.measureText(t).width>maxW&&cur){L.push(cur);cur=x;}else cur=t;}if(cur)L.push(cur);return L;}
+function flDraw(ctx,W0,H0,text,frac,th,f,idx,n){ctx.fillStyle=th.bg;ctx.fillRect(0,0,W0,H0);ctx.direction="rtl";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillStyle=th.fg;
+  let fs=Math.round(H0*.24),L;for(;;){ctx.font=(f.w[S.weight]||800)+" "+fs+'px "'+f.css+'",system-ui';L=flWrap(ctx,text,W0*.92);if(L.length*fs*1.35<=H0*.8||fs<=18)break;fs-=2;}
+  const lh=fs*1.35,y0=H0*.45-(L.length-1)*lh/2;L.forEach((l,k)=>ctx.fillText(l,W0/2,y0+k*lh));
+  ctx.fillStyle="rgba(127,127,127,.35)";ctx.fillRect(W0*.1,H0-18,W0*.8,6);ctx.fillStyle=frac>.8?"#f5a524":"#e5383b";ctx.fillRect(W0*.9-W0*.8*frac,H0-18,W0*.8*frac,6);
+  ctx.font="600 16px system-ui";ctx.fillStyle=th.fg;ctx.globalAlpha=.5;ctx.textAlign="left";ctx.fillText((idx+1)+"/"+n,14,22);ctx.globalAlpha=1;}
+async function flBuild(onPct){
+  if(!window.VideoEncoder||!window.VideoFrame)throw new Error("نسخة الجهاز قديمة وما تدعم صنع الفيديو. حدّث النظام، أو استخدم «صوّر هنا».");
+  if(!window.Mp4Muxer)await new Promise((ok,no)=>{const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/build/mp4-muxer.min.js";s.onload=ok;s.onerror=()=>no(new Error("ما گدرت أنزّل أداة الفيديو. تأكد من النت."));document.head.append(s);});
+  const W0=960,H0=400,f=font(),th=theme();try{await document.fonts.load((f.w[S.weight]||800)+' 40px "'+f.css+'"',"اگچ");}catch(e){}
+  let cfg=null,mux="avc";for(const [c,m] of [["avc1.42001f","avc"],["avc1.4d0028","avc"],["vp09.00.10.08","vp9"]]){const k={codec:c,width:W0,height:H0,bitrate:600000,framerate:4};if(m==="avc")k.avc={format:"avc"};
+    try{if((await VideoEncoder.isConfigSupported(k)).supported){cfg=k;mux=m;break;}}catch(e){}}
+  if(!cfg)throw new Error("الجهاز ما يدعم صنع الفيديو.");
+  const muxer=new Mp4Muxer.Muxer({target:new Mp4Muxer.ArrayBufferTarget(),video:{codec:mux,width:W0,height:H0},fastStart:"in-memory"});
+  let err=null;const enc=new VideoEncoder({output:(ch,meta)=>muxer.addVideoChunk(ch,meta),error:e=>{err=e;}});enc.configure(cfg);
+  const cv=document.createElement("canvas");cv.width=W0;cv.height=H0;const ctx=cv.getContext("2d");
+  const step=.25,n=paras.length,gap=S.cardGap?.8:0;let t=0;fl.starts=[];
+  const put=async(dur,draw,key)=>{for(let k=0;k*step<dur-1e-6;k++){const d=Math.min(step,dur-k*step);draw(k*step/dur);const fr=new VideoFrame(cv,{timestamp:Math.round(t*1e6),duration:Math.round(d*1e6)});
+      enc.encode(fr,{keyFrame:key&&k===0||k%40===0});fr.close();t+=d;if(enc.encodeQueueSize>8)await new Promise(r=>setTimeout(r,0));if(err)throw err;}};
+  for(let c=3;c>=1;c--)await put(1,()=>flDraw(ctx,W0,H0,"جاهز؟ "+c,0,th,f,-1,n),true);
+  for(let i=0;i<n;i++){fl.starts.push(t);const du=cardDur(i);await put(du,fr=>flDraw(ctx,W0,H0,cardText(i),fr,th,f,i,n),true);if(gap)await put(gap,()=>{ctx.fillStyle=th.bg;ctx.fillRect(0,0,W0,H0);},true);onPct&&onPct(Math.round((i+1)/n*100));}
+  await put(2,()=>flDraw(ctx,W0,H0,"خلص السكربت",1,th,f,n-1,n),true);
+  await enc.flush();enc.close();muxer.finalize();fl.total=t;if(fl.url)URL.revokeObjectURL(fl.url);fl.url=URL.createObjectURL(new Blob([muxer.target.buffer],{type:"video/mp4"}));return fl.url;}
+async function flFloat(){const v=fl.v;if(!v||!fl.url)return;try{v.currentTime=Math.max(0,(fl.starts[cardIdx]||3)-3);}catch(e){}
+  try{await v.play();}catch(e){}
+  try{if(document.pictureInPictureEnabled&&v.requestPictureInPicture&&!v.disablePictureInPicture){await v.requestPictureInPicture();return true;}}catch(e){}
+  try{if(v.webkitSupportsPresentationMode&&v.webkitSupportsPresentationMode("picture-in-picture")){v.webkitSetPresentationMode("picture-in-picture");return true;}}catch(e){}
+  toast("الجهاز ما خلّاني أطلّعه عائم. اطلع للشاشة الرئيسية وهو شغّال، يطلع وحده.");return false;}
+function camPanel(P){
+  const box=(t,d)=>{const b=el("div","camBox");b.append(el("b",null,t),el("div","pnote",d));return b;};
+  const b1=box("١. صوّر هنا (مضمون)","تنفتح الكاميرا الأمامية داخل Noto، والجملة فوگ قرب العدسة وتتبدل وحدها بنفس ثواني «جملة جملة». تسجّل، وبعدها تحفظ الفيديو بالصور. الفيديو ما بيه أي كتابة.");
+  const o1=el("button","opt on","افتح الكاميرا");o1.addEventListener("click",selfieOpen);b1.append(o1);P.append(b1);
+  const b2=box("٢. سكربت عائم فوگ أي تطبيق","يصنع شاشة صغيرة بيها الجمل، تطفو فوگ كاميرا الآيفون أو تيك توك أو إنستغرام. تسحبها لفوگ قرب الكاميرا وتكبرها بإصبعين. الكتابة ما تطلع بالفيديو.");
+  const st=el("div","pnote");const v=fl.v||document.createElement("video");fl.v=v;v.playsInline=true;v.muted=true;v.setAttribute("playsinline","");v.setAttribute("autopictureinpicture","");v.autoPictureInPicture=true;v.className="flPrev";v.controls=true;
+  const mk=el("button","opt",fl.url?"جهّزه من جديد":"جهّزه");const go=el("button","opt on","طلّعه عائم");go.hidden=!fl.url;if(fl.url&&v.src!==fl.url)v.src=fl.url;v.hidden=!fl.url;
+  mk.addEventListener("click",async()=>{if(fl.busy)return;fl.busy=true;mk.disabled=true;st.textContent="دا أجهّزه… 0٪";
+    try{await flBuild(p=>st.textContent="دا أجهّزه… "+p+"٪");v.src=fl.url;v.hidden=false;go.hidden=false;st.textContent="جاهز ("+fmt(fl.total)+"). اضغط «طلّعه عائم»، وبعدها روح للكاميرا.";}
+    catch(e){st.textContent=e.message||"صار خطأ";}fl.busy=false;mk.disabled=false;mk.textContent="جهّزه من جديد";});
+  go.addEventListener("click",flFloat);
+  b2.append(el("div","opts"),v,st);b2.querySelector(".opts").append(mk,go);
+  b2.append(el("div","pnote","مهم: إذا غيّرت الثواني أو النص، اضغط «جهّزه من جديد». الشاشة العائمة بيها زر تشغيل وإيقاف ورجوع وتقديم. إذا كاميرا الآيفون شالتها، صوّر من «صوّر هنا» أو من تطبيق ثاني."));P.append(b2);}
+
 
 /* ---------- البدء والإنهاء ---------- */
 function startPlay(resume){
@@ -1275,7 +1386,7 @@ function remoteInput(sig){
   if(a&&a!=="none"){doAct(a);return true;}
   return a==="none";
 }
-const inPanel=e=>e.target&&e.target.closest&&e.target.closest("#panel,#rail,#ghost,.cctl");
+const inPanel=e=>e.target&&e.target.closest&&e.target.closest("#panel,#rail,#ghost,.cctl,#selfie");
 /* ماوس: كل الأزرار */
 let skipTap=false;
 document.addEventListener("pointerdown",e=>{
@@ -1769,7 +1880,7 @@ $("revApply").addEventListener("click",()=>{
 let openPanel=null,panelBack=null;
 const RANGES={cardSize:{k:"cardSize",min:30,max:220,step:2,f:v=>v,n:"حجم الجملة"},cardW:{k:"cardW",min:40,max:100,step:2,f:v=>v+"٪",n:"عرض السطر"},cardSec:{k:"cardSec",min:5,max:30,step:1,f:v=>v+" ثانية",n:"وقت كل جملة"},speed:{k:"wpm",min:20,max:260,step:5,f:v=>v+" ك/د",n:"السرعة"},size:{k:"size",min:28,max:180,step:2,f:v=>v,n:"حجم الخط"},lh:{k:"lh",min:1.2,max:2.4,step:.05,f:v=>(+v).toFixed(2),n:"المسافة بين السطور"},
   width:{k:"width",min:40,max:100,step:2,f:v=>v+"٪",n:"عرض النص"},guide:{k:"guide",min:12,max:70,step:1,f:v=>v+"٪",n:"مكان خط القراءة"}};
-const TITLES={look:"شكل الجملة",tools:"مركز الأدوات",more:"الإعدادات",voice:"السماع",aids:"مساعدة القراءة",help:"شلون أستخدمه",font:"الخط",weight:"السماكة",theme:"الألوان",mirror:"المراية",remote:"الريموت",presets:"إعدادات جاهزة",toggles:"تشغيل وإطفاء",dist:"بعدك عن الشاشة",sent:"الجملة"};
+const TITLES={cam:"صوّر وانت تقرا",look:"شكل الجملة",tools:"مركز الأدوات",more:"الإعدادات",voice:"السماع",aids:"مساعدة القراءة",help:"شلون أستخدمه",font:"الخط",weight:"السماكة",theme:"الألوان",mirror:"المراية",remote:"الريموت",presets:"إعدادات جاهزة",toggles:"تشغيل وإطفاء",dist:"بعدك عن الشاشة",sent:"الجملة"};
 function showPanel(id,back){openPanel=id;panelBack=back||null;learning=null;$("panel").hidden=false;renderPanel();refreshRail();poke();cardRoom();}
 function closePanel(){openPanel=null;panelBack=null;learning=null;sent=null;$("panel").hidden=true;refreshRail();cardRoom();}
 function setVal(k,v){
@@ -1813,6 +1924,7 @@ function renderPanel(){
   P.append(head(TITLES[id]||""));
   if(id==="font")P.append(optRow(FONTS.map(f=>({t:f.name,on:S.font===f.id,style:{fontFamily:'"'+f.css+'"',fontWeight:f.w[1]},fn:()=>{setVal("font",f.id);renderPanel();}}))));
   if(id==="weight")P.append(optRow(["عادي","عريض","أعرض"].map((n,i)=>({t:n,on:S.weight===i,style:{fontFamily:'"'+font().css+'"',fontWeight:font().w[i]},fn:()=>{setVal("weight",i);renderPanel();}}))));
+  if(id==="cam"){camPanel(P);return;}
   if(id==="look"){if(!S.cardSize){S.cardSize=Math.round(S.size*1.15);save();}
     const lab=t=>el("div","pnote",t);const rr=(k,t)=>{const r=rangeRow(RANGES[k]);r.prepend(el("span","plab",t));return r;};
     P.append(lab("الحجم"),rr("cardSize","الحجم"),lab("عرض السطر (أضيق = عيونك تتحرك أقل)"),rr("cardW","العرض"),lab("المسافة بين السطور"),rr("lh","المسافة"));
@@ -1883,7 +1995,7 @@ function renderPanel(){
       ...(fsOk?[tile('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',"شاشة كاملة",()=>{closePanel();toggleFs();},!!fsEl())]:[]),
       tile(I.camera,"عيونك على الكاميرا",()=>{cameraPreset();renderPanel();},S.width<=62));P.append(g);
     sec("طرق القراءة");g=el("div","tiles");
-    g.append(tile(I.card,"جملة جملة",()=>{closePanel();setCard(!cardOn||rehOn,false);},cardOn&&!rehOn),tile(I.rehearse,"تمرين",()=>{closePanel();setCard(!rehOn,true);},rehOn),
+    g.append(tile(I.card,"جملة جملة",()=>{closePanel();setCard(!cardOn||rehOn,false);},cardOn&&!rehOn),tile(I.rehearse,"تمرين",()=>{closePanel();setCard(!rehOn,true);},rehOn),tile('<rect x="3" y="7" width="13" height="10" rx="2"/><path d="m16 10 5-3v10l-5-3z"/>',"صوّر وانت تقرا",()=>{if(!cardOn||rehOn)setCard(true,false);showPanel("cam");}),
       tile('<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',"مساعدة القراءة",go("aids")),tile(I.toggles,"تشغيل وإطفاء",go("toggles")));P.append(g);
     sec("الصوت والتحكم");g=el("div","tiles");
     if(VAD_OK)g.append(tile(MIC_I,"إعدادات السماع",go("voice")));
