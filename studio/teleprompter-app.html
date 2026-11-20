@@ -181,6 +181,20 @@ textarea.field{min-height:38vh;resize:vertical;font-size:1.05rem}
 #cardv .cnt{font-family:var(--f-ui);font-size:max(.28em,15px);color:var(--muted);font-weight:600}
 #cardv .reh{display:flex;gap:.4em}
 #cardv .tbar{width:min(70%,640px);height:max(.09em,6px);border-radius:9px;background:rgba(127,127,127,.25);overflow:hidden}
+#cardv.top{justify-content:flex-start;padding-top:max(6vh,56px)}
+#cardv .stk{display:grid;place-items:center}
+#cardv .stk>*{grid-area:1/1}
+#cardv .now{transition:opacity .45s}
+#cardv.narrow .now{max-width:min(62vw,15em)}
+#cardv .cue{opacity:0;transition:opacity .45s;color:var(--muted);font-size:.7em;pointer-events:none}
+#cardv.memo .now{opacity:0}
+#cardv.memo .cue{opacity:.75}
+#cardv.blank .now,#cardv.blank .cue,#cardv.blank .nx{opacity:0}
+#cardv .nx{transition:opacity .3s}
+#cardv .tbar.warn i{background:#f5a524}
+#cardv .cctl,#cardv .tbar,#cardv .cnt{transition:opacity .4s}
+#cardv.run .cctl{opacity:.38}
+#cardv .tip{font-family:var(--f-ui);font-size:max(.22em,13px);color:var(--muted);opacity:.8}
 #cardv .tbar i{display:block;height:100%;width:0;background:var(--accent);border-radius:9px}
 #cardv .cctl{display:flex;flex-wrap:wrap;max-width:100%;gap:max(.2em,10px);align-items:center;justify-content:center;font-family:var(--f-ui);margin-top:.2em}
 #cardv .cctl button{min-width:max(1.3em,64px);height:max(1.1em,58px);border-radius:18px;border:0;background:rgba(127,127,127,.22);color:inherit;font:600 max(.26em,16px) var(--f-ui);display:grid;place-items:center;padding:0 .5em;cursor:pointer}
@@ -561,7 +575,7 @@ const HEAD_RE=/^(العنوان|الهوك|هوك بديل|السكربت|الم
 const KEY_DEF={toggle:[" ","Enter","MediaPlayPause","MediaTrackNext","k"],faster:["ArrowUp"],slower:["ArrowDown"],back:["PageUp","ArrowRight","MediaTrackPrevious"],fwd:["PageDown","ArrowLeft"],retake:["r","Backspace"],mark:["g"]};
 const KEY_NAMES={toggle:"الجاي / تشغيل",back:"رجوع",fwd:"قدّام",retake:"عيد الجملة",mark:"علامة لقطة زينة",faster:"أسرع",slower:"أبطأ"};
 const DEF={wpm:130,target:0,size:(Math.min(screen.width,screen.height)<600?42:64),lh:1.55,width:88,guide:34,font:"cairo",weight:1,theme:"white",
-  mx:false,my:false,focus:true,pauseAt:true,pauseHead:false,hard:true,cd:3,chunk:false,smart:false,breath:false,map:false,ver:4,dist:0,beep:false,vadAbs:0,vadK:3,vadHang:900,smartEar:false,earHold:false,earSize:"base",tools:{},rehListen:true,mode:"phrase",phrLen:5,binds:null,mediaKeys:true,logo:"a",altc:false,mag:false,kar:false,hideRead:false,tash:true,syll:false,cardSec:10,keys:KEY_DEF};
+  mx:false,my:false,focus:true,pauseAt:true,pauseHead:false,hard:true,cd:3,chunk:false,smart:false,breath:false,map:false,ver:4,dist:0,beep:false,vadAbs:0,vadK:3,vadHang:900,smartEar:false,earHold:false,earSize:"base",tools:{},rehListen:true,mode:"phrase",phrLen:5,binds:null,mediaKeys:true,logo:"a",altc:false,mag:false,kar:false,hideRead:false,tash:true,syll:false,cardSec:10,cardFit:"fixed",cardPos:"mid",cardMemo:false,cardNx:true,cardGap:false,cardNarrow:false,keys:KEY_DEF};
 const PRESET_KEYS=["wpm","size","lh","width","guide","font","weight","theme","mx","my","focus","chunk","smart","breath","map"];
 const PRESET_DEF=[
   {name:"ريل",v:{wpm:150,size:40,lh:1.5,width:92,guide:32,weight:1}},
@@ -790,7 +804,7 @@ const stage=$("stage"),mirror=$("mirror"),content=$("content");
 let W=[],marks=[],heads=[],paras=[],paraRaw=[],paraEl=[],groups=[],stops=[];
 let pos=0,maxPos=0,vel=0,playing=false,last=0,raf=0,guideY=0,lineH=0,pxPerWord=1,gi=0,anim=null;
 let idleT=0,counting=false,cdTimer=0,wake=null,nextStop=0,voiceOn=false,cur=0,clockStart=0,takeMarks=[],uiT=0,toastT=0,lastBackLog=-1e9;
-let cardOn=false,cardIdx=0,rehOn=false,rehN=0,cardT=0;
+let cardOn=false,cardIdx=0,rehOn=false,rehN=0,cardT=0,cardPeek=false;
 
 let PRON={};
 function build(){
@@ -963,8 +977,9 @@ function frame(t){
       const dwell=Math.max(1.4,(en-st)/(S.wpm/60)+.6+endPause(en-1));
       if(phrT>=dwell){phrT=0;if(phr<paras.length-1)phrGo(phr+1);else{setPlay(false);toast("خلص النص");}}}
     if(clockStart)render();return;}
-  if(cardOn&&!rehOn){if(playing){cardT+=dt;const b=$("cardBar");if(b)b.style.width=Math.min(100,cardT/S.cardSec*100)+"%";const sl=$("cardLeft");if(sl)sl.textContent=Math.max(0,Math.ceil(S.cardSec-cardT));
-      if(cardT>=S.cardSec){cardT=0;if(cardIdx<paras.length-1)cardNext();else{setPlay(false);renderCard();toast("خلص النص");}}}}
+  if(cardOn&&!rehOn){if(playing){cardT+=dt;cardTick();
+      const du=cardDur(cardIdx),gp=S.cardGap?.8:0;
+      if(cardT>=du+gp){if(cardIdx<paras.length-1)cardNext();else{cardT=0;setPlay(false);renderCard();toast("خلص النص");}}}}
   if(!playing||cardOn){vel=0;if(clockStart)render();return;}
   let fac=1;if(S.smart){gi=guideWord(gi);fac=(W[gi]&&W[gi].f)||1;}
   vel+=(S.wpm/60*pxPerWord*fac-vel)*Math.min(1,dt*2.5);pos+=vel*dt;
@@ -974,7 +989,7 @@ function frame(t){
 }
 const NEXT_I='<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
 function modeUi(){const ph=S.mode==="phrase";$("pillPhr").hidden=!ph;$("pillWpm").hidden=ph;
-  const pb=$("rail").querySelector('[data-id="play"]');if(pb&&ph&&!voiceOn)pb.innerHTML=NEXT_I;if(pb)pb.title=pb.ariaLabel=ph?"الجاي":"تشغيل";
+  const pb=$("rail").querySelector('[data-id="play"]');if(pb&&ph&&!voiceOn)pb.innerHTML=(cardOn&&!rehOn)?(playing?PAUSE_I:PLAY_I):NEXT_I;if(pb)pb.title=pb.ariaLabel=ph?"الجاي":"تشغيل";
   ["fwd"].forEach(id=>{const b=$("rail").querySelector('[data-id="'+id+'"]');if(b)b.hidden=ph;});}
 function setPlay(on){
   playing=on;const pb=$("rail").querySelector('[data-id="play"]');if(pb)pb.innerHTML=S.mode==="phrase"&&!on&&!(cardOn&&!rehOn)?NEXT_I:on?PAUSE_I:PLAY_I;
@@ -1027,7 +1042,7 @@ function stepLine(dir){
   const base=anim?anim.to:pos;glideTo(base+dir*lineH);if(dir<0)logRetake();poke();
 }
 function retakeSentence(){
-  if(cardOn){logRetake();rehN=0;renderCard();toast("عيد الجملة");return;}
+  if(cardOn){if(!rehOn){cardAgain();return;}logRetake();rehN=0;renderCard();toast("عيد الجملة");return;}
   if(!paras.length)return;let i=paraIdx();if((anim?anim.to:pos)-paraY(i)<lineH*0.5&&i>0)i--;
   setPlay(false);glideTo(paraY(i));logRetake();toast("رجعنا لبداية الجملة");poke();
 }
@@ -1047,27 +1062,41 @@ let lastSaid=-1;
 function renderCard(){
   const cv=$("cardv");cv.innerHTML="";if(!paras.length)return;
   if(rehOn&&rehN===0&&STANDALONE&&S.rehListen&&tts.state==="ready"&&lastSaid!==cardIdx){lastSaid=cardIdx;say(paraRaw[cardIdx]);}
-  const now=el("div","now");now.append(paraEl[cardIdx].cloneNode(true));cv.append(now);
+  cv.classList.toggle("top",!rehOn&&S.cardPos==="top");cv.classList.toggle("narrow",!rehOn&&S.cardNarrow);cv.classList.remove("memo","blank");
+  const stk=el("div","stk"),now=el("div","now");now.append(paraEl[cardIdx].cloneNode(true));stk.append(now);
+  if(!rehOn&&S.cardMemo){const w=paraRaw[cardIdx].replace(/\[[^\]]*\]|\/\//g,"").trim().split(/\s+/);stk.append(el("div","cue",w.slice(0,2).join(" ")+(w.length>2?" …":"")));}
+  cv.append(stk);
   if(rehOn){const r=el("div","reh");for(let k=0;k<3;k++)r.append(el("i",k<rehN?"on":null));cv.append(r);
     cv.append(el("div","cnt","اقراها بصوت عالي، واضغط بعد كل مرة ("+rehN+" من 3)"));}
-  else if(paraEl[cardIdx+1]){const nx=el("div","nx");nx.textContent=paraRaw[cardIdx+1].replace(/\[[^\]]*\]|\/\//g,"");cv.append(nx);}
-  cv.append(el("div","cnt",(cardIdx+1)+" / "+paras.length));
-  if(!rehOn){const tb=el("div","tbar"),bi=el("i");bi.id="cardBar";bi.style.width=Math.min(100,cardT/S.cardSec*100)+"%";tb.append(bi);cv.append(tb);
+  else if(paraEl[cardIdx+1]&&S.cardNx){const nx=el("div","nx");nx.textContent=paraRaw[cardIdx+1].replace(/\[[^\]]*\]|\/\//g,"");cv.append(nx);}
+  const cn=el("div","cnt",(cardIdx+1)+" / "+paras.length);if(!rehOn)cn.id="cardCnt";cv.append(cn);
+  if(!rehOn){const tb=el("div","tbar"),bi=el("i");bi.id="cardBar";bi.style.width=Math.min(100,cardT/cardDur(cardIdx)*100)+"%";tb.append(bi);cv.append(tb);
     const c=el("div","cctl"),B=(t,cl,fn,lbl)=>{const b=el("button",cl,t);b.setAttribute("aria-label",lbl);b.addEventListener("click",e=>{e.stopPropagation();fn();});return b;};
-    const sec=el("div","sec"),lf=el("span",null,(playing?Math.max(0,Math.ceil(S.cardSec-cardT)):S.cardSec)+"");lf.id="cardLeft";
-    sec.append(B("−",null,()=>cardSecAdd(-1),"أقل وقت"),lf,el("span",null,"ثانية"),B("+",null,()=>cardSecAdd(1),"أكثر وقت"));
-    c.append(B("→ اللي قبلها",null,()=>cardPrev(),"الجملة السابقة"),B(playing?"⏸ وگّف":"▶ مشّي",playing?"go":"go",()=>cardAuto(),"تشغيل"),B("اللي بعدها ←",null,()=>cardNext(),"الجملة الجاية"),sec);cv.append(c);}
+    const sec=el("div","sec"),lf=el("span",null,S.cardSec+"");lf.id="cardSecV";
+    sec.append(B("−",null,()=>cardSecAdd(-1),"أقل وقت"),lf,el("span",null,S.cardFit==="len"?"ثانية (معدّل)":"ثانية"),B("+",null,()=>cardSecAdd(1),"أكثر وقت"));
+    c.append(B("→ اللي قبلها",null,()=>cardPrev(),"الجملة السابقة"),B(playing?"⏸ وگّف":"▶ مشّي",playing?"go":"go",()=>cardAuto(),"تشغيل"),B("↺ عيدها",null,()=>cardAgain(),"عيد الجملة"),B("اللي بعدها ←",null,()=>cardNext(),"الجملة الجاية"),sec,B("⚙",null,()=>openCardSet(),"إعدادات جملة جملة"));cv.append(c);
+    if(S.cardMemo&&!playing)cv.append(el("div","tip","الجملة تختفي بنص الوقت حتى تطالع الكاميرا. دوس عليها إذا نسيت."));
+    cv.classList.toggle("run",playing);cardTick();}
   render(true);
 }
 function cardNext(){
-  cardT=0;
+  cardT=0;cardPeek=false;
   if(rehOn){rehN++;if(rehN<3){renderCard();return;}rehN=0;toast("زين! الجملة الجاية");}
   if(cardIdx<paras.length-1){cardIdx++;if(!clockStart){clockStart=performance.now();$("rec").classList.add("on");}}else toast("خلص النص");
   renderCard();poke();
 }
-function cardPrev(){cardT=0;if(cardIdx>0)cardIdx--;rehN=0;logRetake();renderCard();poke();}
-function cardAuto(){if(playing){setPlay(false);toast("وگف");}else{cardT=0;setPlay(true);toast("كل جملة "+S.cardSec+" ثانية");}renderCard();}
-function cardSecAdd(d){setVal("cardSec",S.cardSec+d);toast("كل جملة "+S.cardSec+" ثانية");renderCard();}
+function cardPrev(){cardT=0;cardPeek=false;if(cardIdx>0)cardIdx--;rehN=0;logRetake();renderCard();poke();}
+function cardAuto(){if(playing){setPlay(false);toast("وگف");}else{cardT=0;cardPeek=false;setPlay(true);toast(S.cardFit==="len"?"الوقت حسب طول الجملة":"كل جملة "+S.cardSec+" ثانية");}renderCard();}
+function cardWords(i){const st=paras[i]||0,en=i+1<paras.length?paras[i+1]:W.length;return Math.max(1,en-st);}
+function cardDur(i){if(S.cardFit!=="len")return S.cardSec;return Math.round(Math.min(60,Math.max(3,S.cardSec*cardWords(i)/6)));}
+function cardAgain(){cardT=0;cardPeek=false;logRetake();renderCard();toast("عيدها على راحتك");poke();}
+function cardTick(){const cv=$("cardv");if(!cv||!cardOn||rehOn)return;const du=cardDur(cardIdx),b=$("cardBar");
+  if(b){b.style.width=Math.min(100,cardT/du*100)+"%";b.parentNode.classList.toggle("warn",playing&&du-cardT<=2&&cardT<du);}
+  const cc=$("cardCnt");if(cc)cc.textContent=(cardIdx+1)+" / "+paras.length+(playing?" · باقي "+Math.max(0,Math.ceil(du-cardT)):" · "+du+" ثانية");
+  cv.classList.toggle("memo",playing&&S.cardMemo&&!cardPeek&&cardT>=du*.45&&cardT<du);
+  cv.classList.toggle("blank",playing&&S.cardGap&&cardT>=du);}
+function openCardSet(){const m=$("rail").querySelector('[data-id="more"]');if(m)m.click();setTimeout(()=>{const x=document.getElementById("cardSet");if(x)x.scrollIntoView({block:"start",behavior:"smooth"});},120);}
+function cardSecAdd(d){setVal("cardSec",S.cardSec+d);toast(S.cardFit==="len"?"جملة متوسطة: "+S.cardSec+" ثانية":"كل جملة "+S.cardSec+" ثانية");renderCard();}
 $("cardv").addEventListener("click",e=>{e.stopPropagation();});
 
 /* ---------- البدء والإنهاء ---------- */
@@ -1158,7 +1187,7 @@ stage.addEventListener("pointermove",e=>{
   if(moved){anim=null;const s=S.my?-1:1;seek(pos-dy*s);dragY=e.clientY;const n=performance.now();flick=(e.clientY-lmY)/Math.max(1,n-lmT);lmY=e.clientY;lmT=n;}
 });
 stage.addEventListener("pointerup",e=>{clearTimeout(lpT);if(skipTap){skipTap=false;dragY=null;return;}if(dragY===null)return;const d=dragY;dragY=null;if(lpFired)return;
-  if(cardOn&&!moved){cardNext();return;}
+  if(cardOn&&!moved){const cv=$("cardv");if(cv.classList.contains("memo")){cardPeek=true;cv.classList.remove("memo");return;}cardNext();return;}
   if(!moved){if(tapHard(e.target))return;
     if(PHR()){const r=stage.getBoundingClientRect();if(e.clientY-r.top<r.height*.25){phrGo(phr-1);logRetake();}else phrGo(phr+1);return;}
     toggle();}else if(Math.abs(flick)>.7&&!playing){seek(pos-flick*220*(S.my?-1:1));}});
@@ -1705,7 +1734,7 @@ $("revApply").addEventListener("click",()=>{
 
 /* ---------- اللوحات ---------- */
 let openPanel=null,panelBack=null;
-const RANGES={cardSec:{k:"cardSec",min:3,max:30,step:1,f:v=>v+" ثانية",n:"وقت كل جملة"},speed:{k:"wpm",min:20,max:260,step:5,f:v=>v+" ك/د",n:"السرعة"},size:{k:"size",min:28,max:180,step:2,f:v=>v,n:"حجم الخط"},lh:{k:"lh",min:1.2,max:2.4,step:.05,f:v=>(+v).toFixed(2),n:"المسافة بين السطور"},
+const RANGES={cardSec:{k:"cardSec",min:5,max:30,step:1,f:v=>v+" ثانية",n:"وقت كل جملة"},speed:{k:"wpm",min:20,max:260,step:5,f:v=>v+" ك/د",n:"السرعة"},size:{k:"size",min:28,max:180,step:2,f:v=>v,n:"حجم الخط"},lh:{k:"lh",min:1.2,max:2.4,step:.05,f:v=>(+v).toFixed(2),n:"المسافة بين السطور"},
   width:{k:"width",min:40,max:100,step:2,f:v=>v+"٪",n:"عرض النص"},guide:{k:"guide",min:12,max:70,step:1,f:v=>v+"٪",n:"مكان خط القراءة"}};
 const TITLES={tools:"مركز الأدوات",more:"الإعدادات",voice:"السماع",aids:"مساعدة القراءة",help:"شلون أستخدمه",font:"الخط",weight:"السماكة",theme:"الألوان",mirror:"المراية",remote:"الريموت",presets:"إعدادات جاهزة",toggles:"تشغيل وإطفاء",dist:"بعدك عن الشاشة",sent:"الجملة"};
 function showPanel(id,back){openPanel=id;panelBack=back||null;learning=null;$("panel").hidden=false;renderPanel();refreshRail();poke();}
@@ -1719,7 +1748,7 @@ function setVal(k,v){
     else if(k==="map"){drawMap();render(true);}
     else if(k==="pauseAt"||k==="pauseHead")buildStops();
     else if(k==="hideRead"){measure();}
-    else if(k!=="wpm"&&k!=="cardSec"&&k!=="cd"&&k!=="smart"&&k!=="beep"&&k!=="vadK"&&k!=="vadHang"&&k!=="smartEar"&&k!=="earHold"&&k!=="vadAbs"&&k!=="rehListen"){applyLook();if(cardOn)renderCard();}
+    else if(k!=="wpm"&&!/^card/.test(k)&&k!=="cd"&&k!=="smart"&&k!=="beep"&&k!=="vadK"&&k!=="vadHang"&&k!=="smartEar"&&k!=="earHold"&&k!=="vadAbs"&&k!=="rehListen"){applyLook();if(cardOn)renderCard();}
     else render(true);
   }
   $("hudWpm").textContent=S.wpm;refreshRail();
@@ -1789,6 +1818,15 @@ function renderPanel(){
     P.append(optRow([{t:"ضغطة = مقطع (للريموت)",on:S.mode==="phrase",fn:()=>{setMode("phrase");renderPanel();}},{t:"تمرير تلقائي",on:S.mode!=="phrase",fn:()=>{setMode("scroll");renderPanel();}}]));
     if(S.mode==="phrase")P.append(optRow([[4,"مقاطع قصيرة"],[6,"متوسطة"],[99,"جملة كاملة"]].map(([n,t])=>({t,on:S.phrLen===n||(n===6&&S.phrLen===5),fn:()=>{S.phrLen=n;save();rebuildKeep();renderPanel();}}))));
     sec("السرعة والحجم");const r1=rangeRow(RANGES.speed);r1.prepend(el("span","plab","السرعة"));P.append(r1);const r2=rangeRow(RANGES.size);r2.prepend(el("span","plab","الحجم"));r2.style.marginTop="8px";P.append(r2);const r3=rangeRow(RANGES.cardSec);r3.prepend(el("span","plab","وقت الجملة"));r3.style.marginTop="8px";P.append(r3);
+    {const cs=el("div","psec","جملة جملة");cs.id="cardSet";P.append(cs);const T=(k,v)=>{setVal(k,v);renderPanel();if(cardOn)renderCard();};
+    P.append(el("div","pnote","الوقت"),optRow([{t:"حسب طول الجملة",on:S.cardFit==="len",fn:()=>T("cardFit","len")},{t:"ثابت لكل جملة",on:S.cardFit!=="len",fn:()=>T("cardFit","fixed")}]));
+    P.append(el("div","pnote",S.cardFit==="len"?"الجملة القصيرة تاخذ وقت أقل والطويلة أكثر. الرقم فوق هو وقت جملة متوسطة (6 كلمات).":"كل جملة تاخذ نفس الثواني الي فوق."));
+    P.append(el("div","pnote","مكان الجملة"),optRow([{t:"بالنص (زجاج الملقّن)",on:S.cardPos!=="top",fn:()=>T("cardPos","mid")},{t:"فوق، قرب الكاميرا",on:S.cardPos==="top",fn:()=>T("cardPos","top")}]));
+    P.append(el("div","pnote","حتى ما يبين إنك تقرا"),optRow([
+      {t:"احفظ وطالع الكاميرا",on:S.cardMemo,fn:()=>T("cardMemo",!S.cardMemo)},
+      {t:"سطر ضيق (عيونك ما تتحرك)",on:S.cardNarrow,fn:()=>T("cardNarrow",!S.cardNarrow)},
+      {t:"أخفي الجملة الجاية",on:!S.cardNx,fn:()=>T("cardNx",!S.cardNx)},
+      {t:"فراغ بين الجمل (للمونتاج)",on:S.cardGap,fn:()=>T("cardGap",!S.cardGap)}]));}
     sec("شكل النص");let g=el("div","tiles");
     g.append(tile(I.font,"الخط · "+font().name,go("font")),tile(I.weight,"السماكة",go("weight")),tile(I.width,"العرض",go("width")),tile(I.lh,"بين السطور",go("lh")),
       tile(I.theme,"الألوان",go("theme")),tile(I.guide,"مكان القراءة",go("guide")),tile(I.dist,"بعدك عن الشاشة",go("dist")));P.append(g);
