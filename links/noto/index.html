@@ -12,7 +12,7 @@
 <link rel="icon" href="icon-192.png">
 <title>Noto</title>
 <style>body{margin:0}</style>
-<script>if("serviceWorker" in navigator&&location.protocol==="https:"){addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=1795205815",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));let re=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(re)return;re=true;location.reload();});}</script>
+<script>if("serviceWorker" in navigator&&location.protocol==="https:"){addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=1795206049",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));let re=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(re)return;re=true;location.reload();});}</script>
 </head>
 <body>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -201,13 +201,16 @@ textarea.field{min-height:38vh;resize:vertical;font-size:1.05rem}
 #cardv .stk{display:grid;place-items:center;align-content:center;flex:1 1 auto;min-height:0;width:100%;overflow:hidden}
 #cardv .stk>*{grid-area:1/1}
 #cardv .now{transition:opacity .45s}
+#cardv .now{max-width:var(--cw,92%)}
 #cardv.narrow .now{max-width:min(62vw,15em)}
+#cardv.shadow .now{text-shadow:0 0 .08em rgba(0,0,0,.9),0 .04em .12em rgba(0,0,0,.8)}
 #cardv .cue{opacity:0;transition:opacity .45s;color:var(--muted);font-size:.7em;pointer-events:none}
 #cardv.memo .now{opacity:0}
 #cardv.memo .cue{opacity:.75}
 #cardv.blank .now,#cardv.blank .cue,#cardv.blank .nx{opacity:0}
 #cardv .nx{transition:opacity .3s}
 #cardv .tbar.warn i{background:#f5a524}
+#cardv.peek .cctl,#cardv.peek .tip,#cardv.peek .nx{display:none}
 #cardv .cctl,#cardv .tbar,#cardv .cnt{transition:opacity .4s}
 #cardv.run .cctl{opacity:.38}
 #cardv .tip{flex:none;font-family:var(--f-ui);font-size:13px;color:var(--muted);opacity:.8}
@@ -579,7 +582,13 @@ const THEMES=[
   {id:"yellow",bg:"#000000",fg:"#ffe14d",cue:"#ffffff",alt:"#ffffff"},
   {id:"green",bg:"#000000",fg:"#86ffb8",cue:"#ffffff",alt:"#ffffff"},
   {id:"cyan",bg:"#000d14",fg:"#94ecff",cue:"#ffffff",alt:"#ffffff"},
-  {id:"paper",bg:"#f6f3ec",fg:"#0d0d0d",cue:"#b3261e",alt:"#1f4e8c"}
+  {id:"paper",bg:"#f6f3ec",fg:"#0d0d0d",cue:"#b3261e",alt:"#1f4e8c"},
+  {id:"red",bg:"#000000",fg:"#ff5a52",cue:"#ffffff",alt:"#ffffff"},
+  {id:"redbg",bg:"#8e1116",fg:"#ffffff",cue:"#ffe14d",alt:"#ffd9d9"},
+  {id:"cream",bg:"#191611",fg:"#f2e3c2",cue:"#ff9a8a",alt:"#c9dcff"},
+  {id:"amber",bg:"#000000",fg:"#ffb347",cue:"#ffffff",alt:"#ffffff"},
+  {id:"navy",bg:"#0b1a33",fg:"#ffffff",cue:"#ffb3b3",alt:"#bfe0ff"},
+  {id:"whitered",bg:"#ffffff",fg:"#c1121f",cue:"#0d0d0d",alt:"#1f4e8c"}
 ];
 /* من studio/hard-words.md */
 const HARD=[["محكوم عليه","چانوا راح..."],["ينفك","ينشال"],["يفكونه","يشيلونه"],["وقّعوا","كتبوا"],["يسمونه بيها","گالوا عليه"],
@@ -591,7 +600,7 @@ const HEAD_RE=/^(العنوان|الهوك|هوك بديل|السكربت|الم
 const KEY_DEF={toggle:[" ","Enter","MediaPlayPause","MediaTrackNext","k"],faster:["ArrowUp"],slower:["ArrowDown"],back:["PageUp","ArrowRight","MediaTrackPrevious"],fwd:["PageDown","ArrowLeft"],retake:["r","Backspace"],mark:["g"]};
 const KEY_NAMES={toggle:"الجاي / تشغيل",back:"رجوع",fwd:"قدّام",retake:"عيد الجملة",mark:"علامة لقطة زينة",faster:"أسرع",slower:"أبطأ"};
 const DEF={wpm:130,target:0,size:(Math.min(screen.width,screen.height)<600?42:64),lh:1.55,width:88,guide:34,font:"cairo",weight:1,theme:"white",
-  mx:false,my:false,focus:true,pauseAt:true,pauseHead:false,hard:true,cd:3,chunk:false,smart:false,breath:false,map:false,ver:4,dist:0,beep:false,vadAbs:0,vadK:3,vadHang:900,smartEar:false,earHold:false,earSize:"base",tools:{},rehListen:true,mode:"phrase",phrLen:5,binds:null,mediaKeys:true,logo:"a",altc:false,mag:false,kar:false,hideRead:false,tash:true,syll:false,cardSec:10,cardFit:"fixed",cardPos:"mid",cardMemo:false,cardNx:true,cardGap:false,cardNarrow:false,keys:KEY_DEF};
+  mx:false,my:false,focus:true,pauseAt:true,pauseHead:false,hard:true,cd:3,chunk:false,smart:false,breath:false,map:false,ver:4,dist:0,beep:false,vadAbs:0,vadK:3,vadHang:900,smartEar:false,earHold:false,earSize:"base",tools:{},rehListen:true,mode:"phrase",phrLen:5,binds:null,mediaKeys:true,logo:"a",altc:false,mag:false,kar:false,hideRead:false,tash:true,syll:false,cardSec:10,cardFit:"fixed",cardPos:"mid",cardMemo:false,cardNx:true,cardGap:false,cardNarrow:false,cardSize:0,cardW:92,cardShadow:false,fgC:"",bgC:"",keys:KEY_DEF};
 const PRESET_KEYS=["wpm","size","lh","width","guide","font","weight","theme","mx","my","focus","chunk","smart","breath","map"];
 const PRESET_DEF=[
   {name:"ريل",v:{wpm:150,size:40,lh:1.5,width:92,guide:32,weight:1}},
@@ -897,7 +906,7 @@ function tapHard(target){
   if(doc&&doc.text.includes(G.h.h)){doc.text=doc.text.replace(G.h.h,G.h.alt);saveRecent(doc);}
   toast("تبدّلت: "+G.h.h+" ← "+G.h.alt);requestAnimationFrame(measure);return true;
 }
-const theme=()=>THEMES.find(x=>x.id===S.theme)||THEMES[0];
+const theme=()=>{const t=THEMES.find(x=>x.id===S.theme)||THEMES[0];return (S.fgC||S.bgC)?Object.assign({},t,{fg:S.fgC||t.fg,bg:S.bgC||t.bg}):t;};
 const font=()=>FONTS.find(x=>x.id===S.font)||FONTS[0];
 function applyLook(){
   const f=font(),th=theme();
@@ -906,7 +915,7 @@ function applyLook(){
   content.style.color=th.fg;stage.style.background=th.bg;content.style.setProperty("--alt",th.alt||th.fg);
   content.classList.toggle("altc",!!S.altc);content.classList.toggle("mag",!!S.mag);content.classList.toggle("kar",!!S.kar);
   if(!S.kar)clearKar();if(!S.mag&&curP>=0&&paraEl[curP]){paraEl[curP].classList.remove("cur");curP=-1;}
-  const cv=$("cardv");cv.style.fontFamily=content.style.fontFamily;cv.style.fontWeight=content.style.fontWeight;cv.style.color=th.fg;cv.style.background=th.bg;cv.style.fontSize=Math.round(S.size*1.15)+"px";
+  const cv=$("cardv");cv.style.fontFamily=content.style.fontFamily;cv.style.fontWeight=content.style.fontWeight;cv.style.color=th.fg;cv.style.background=th.bg;cv.style.fontSize=(S.cardSize||Math.round(S.size*1.15))+"px";cv.style.setProperty("--cw",(S.cardW||92)+"%");cv.classList.toggle("shadow",!!S.cardShadow);
   content.querySelectorAll(".cue").forEach(c=>c.style.color=th.cue);
   mirror.style.transform="scale("+(S.mx?-1:1)+","+(S.my?-1:1)+")";
   const band=$("guide").querySelector(".band");const light=th.id==="paper";
@@ -1090,7 +1099,7 @@ function renderCard(){
     const c=el("div","cctl"),B=(t,cl,fn,lbl)=>{const b=el("button",cl,t);b.setAttribute("aria-label",lbl);b.addEventListener("click",e=>{e.stopPropagation();fn();});return b;};
     const sec=el("div","sec"),lf=el("span",null,S.cardSec+"");lf.id="cardSecV";
     sec.append(B("−",null,()=>cardSecAdd(-1),"أقل وقت"),lf,el("span",null,S.cardFit==="len"?"ثانية (معدّل)":"ثانية"),B("+",null,()=>cardSecAdd(1),"أكثر وقت"));
-    c.append(B("→ اللي قبلها",null,()=>cardPrev(),"الجملة السابقة"),B(playing?"⏸ وگّف":"▶ مشّي",playing?"go":"go",()=>cardAuto(),"تشغيل"),B("↺ عيدها",null,()=>cardAgain(),"عيد الجملة"),B("اللي بعدها ←",null,()=>cardNext(),"الجملة الجاية"),sec,B("⚙",null,()=>openCardSet(),"إعدادات جملة جملة"));cv.append(c);
+    c.append(B("→ اللي قبلها",null,()=>cardPrev(),"الجملة السابقة"),B(playing?"⏸ وگّف":"▶ مشّي",playing?"go":"go",()=>cardAuto(),"تشغيل"),B("↺ عيدها",null,()=>cardAgain(),"عيد الجملة"),B("اللي بعدها ←",null,()=>cardNext(),"الجملة الجاية"),sec,B("Aa",null,()=>showPanel("look"),"شكل الجملة"),B("⚙",null,()=>openCardSet(),"إعدادات جملة جملة"));cv.append(c);
     if(S.cardMemo&&!playing)cv.append(el("div","tip","الجملة تختفي بنص الوقت حتى تطالع الكاميرا. دوس عليها إذا نسيت."));
     cv.classList.toggle("run",playing);cardTick();}
   fitCard();render(true);
@@ -1105,7 +1114,12 @@ function cardPrev(){cardT=0;cardPeek=false;if(cardIdx>0)cardIdx--;rehN=0;logReta
 function cardAuto(){if(playing){setPlay(false);toast("وگف");}else{cardT=0;cardPeek=false;setPlay(true);toast(S.cardFit==="len"?"الوقت حسب طول الجملة":"كل جملة "+S.cardSec+" ثانية");}renderCard();}
 function fitCard(){const cv=$("cardv");if(!cv||cv.hidden)return;const st=cv.querySelector(".stk"),nw=cv.querySelector(".now");if(!st||!nw)return;
   nw.style.fontSize="";let f=1;for(let k=0;k<14&&nw.scrollHeight>st.clientHeight+2&&f>.35;k++){f-=.05;nw.style.fontSize=f+"em";}}
-addEventListener("resize",()=>{if(cardOn)requestAnimationFrame(fitCard);});
+function cardRoom(){const cv=$("cardv"),P=$("panel");if(!cv)return;cv.style.paddingLeft=cv.style.paddingBottom="";cv.classList.remove("peek");
+  if(cardOn&&!P.hidden){const r=P.getBoundingClientRect(),c=cv.getBoundingClientRect();
+    if(r.top<=c.top+8&&r.right<c.right-120){cv.style.paddingLeft=Math.max(16,r.right-c.left+16)+"px";cv.classList.add("peek");}
+    else if(r.top>c.top+80){cv.style.paddingBottom=Math.max(14,c.bottom-r.top+10)+"px";cv.classList.add("peek");}}
+  if(cardOn)requestAnimationFrame(fitCard);}
+addEventListener("resize",()=>{if(cardOn)requestAnimationFrame(cardRoom);});
 function cardWords(i){const st=paras[i]||0,en=i+1<paras.length?paras[i+1]:W.length;return Math.max(1,en-st);}
 function cardDur(i){if(S.cardFit!=="len")return S.cardSec;return Math.round(Math.min(60,Math.max(3,S.cardSec*cardWords(i)/6)));}
 function cardAgain(){cardT=0;cardPeek=false;logRetake();renderCard();toast("عيدها على راحتك");poke();}
@@ -1753,11 +1767,11 @@ $("revApply").addEventListener("click",()=>{
 
 /* ---------- اللوحات ---------- */
 let openPanel=null,panelBack=null;
-const RANGES={cardSec:{k:"cardSec",min:5,max:30,step:1,f:v=>v+" ثانية",n:"وقت كل جملة"},speed:{k:"wpm",min:20,max:260,step:5,f:v=>v+" ك/د",n:"السرعة"},size:{k:"size",min:28,max:180,step:2,f:v=>v,n:"حجم الخط"},lh:{k:"lh",min:1.2,max:2.4,step:.05,f:v=>(+v).toFixed(2),n:"المسافة بين السطور"},
+const RANGES={cardSize:{k:"cardSize",min:30,max:220,step:2,f:v=>v,n:"حجم الجملة"},cardW:{k:"cardW",min:40,max:100,step:2,f:v=>v+"٪",n:"عرض السطر"},cardSec:{k:"cardSec",min:5,max:30,step:1,f:v=>v+" ثانية",n:"وقت كل جملة"},speed:{k:"wpm",min:20,max:260,step:5,f:v=>v+" ك/د",n:"السرعة"},size:{k:"size",min:28,max:180,step:2,f:v=>v,n:"حجم الخط"},lh:{k:"lh",min:1.2,max:2.4,step:.05,f:v=>(+v).toFixed(2),n:"المسافة بين السطور"},
   width:{k:"width",min:40,max:100,step:2,f:v=>v+"٪",n:"عرض النص"},guide:{k:"guide",min:12,max:70,step:1,f:v=>v+"٪",n:"مكان خط القراءة"}};
-const TITLES={tools:"مركز الأدوات",more:"الإعدادات",voice:"السماع",aids:"مساعدة القراءة",help:"شلون أستخدمه",font:"الخط",weight:"السماكة",theme:"الألوان",mirror:"المراية",remote:"الريموت",presets:"إعدادات جاهزة",toggles:"تشغيل وإطفاء",dist:"بعدك عن الشاشة",sent:"الجملة"};
-function showPanel(id,back){openPanel=id;panelBack=back||null;learning=null;$("panel").hidden=false;renderPanel();refreshRail();poke();}
-function closePanel(){openPanel=null;panelBack=null;learning=null;sent=null;$("panel").hidden=true;refreshRail();}
+const TITLES={look:"شكل الجملة",tools:"مركز الأدوات",more:"الإعدادات",voice:"السماع",aids:"مساعدة القراءة",help:"شلون أستخدمه",font:"الخط",weight:"السماكة",theme:"الألوان",mirror:"المراية",remote:"الريموت",presets:"إعدادات جاهزة",toggles:"تشغيل وإطفاء",dist:"بعدك عن الشاشة",sent:"الجملة"};
+function showPanel(id,back){openPanel=id;panelBack=back||null;learning=null;$("panel").hidden=false;renderPanel();refreshRail();poke();cardRoom();}
+function closePanel(){openPanel=null;panelBack=null;learning=null;sent=null;$("panel").hidden=true;refreshRail();cardRoom();}
 function setVal(k,v){
   if(typeof S[k]==="number"&&typeof v==="number"){const R=Object.values(RANGES).find(r=>r.k===k);
     if(R){v=Math.min(R.max,Math.max(R.min,Math.round(v/R.step)*R.step));v=Math.round(v*100)/100;}}
@@ -1767,7 +1781,7 @@ function setVal(k,v){
     else if(k==="map"){drawMap();render(true);}
     else if(k==="pauseAt"||k==="pauseHead")buildStops();
     else if(k==="hideRead"){measure();}
-    else if(k!=="wpm"&&!/^card/.test(k)&&k!=="cd"&&k!=="smart"&&k!=="beep"&&k!=="vadK"&&k!=="vadHang"&&k!=="smartEar"&&k!=="earHold"&&k!=="vadAbs"&&k!=="rehListen"){applyLook();if(cardOn)renderCard();}
+    else if(k!=="wpm"&&!/^card(Sec|Fit|Pos|Memo|Nx|Gap)$/.test(k)&&k!=="cd"&&k!=="smart"&&k!=="beep"&&k!=="vadK"&&k!=="vadHang"&&k!=="smartEar"&&k!=="earHold"&&k!=="vadAbs"&&k!=="rehListen"){applyLook();if(cardOn)renderCard();}
     else render(true);
   }
   $("hudWpm").textContent=S.wpm;refreshRail();
@@ -1799,8 +1813,23 @@ function renderPanel(){
   P.append(head(TITLES[id]||""));
   if(id==="font")P.append(optRow(FONTS.map(f=>({t:f.name,on:S.font===f.id,style:{fontFamily:'"'+f.css+'"',fontWeight:f.w[1]},fn:()=>{setVal("font",f.id);renderPanel();}}))));
   if(id==="weight")P.append(optRow(["عادي","عريض","أعرض"].map((n,i)=>({t:n,on:S.weight===i,style:{fontFamily:'"'+font().css+'"',fontWeight:font().w[i]},fn:()=>{setVal("weight",i);renderPanel();}}))));
+  if(id==="look"){if(!S.cardSize){S.cardSize=Math.round(S.size*1.15);save();}
+    const lab=t=>el("div","pnote",t);const rr=(k,t)=>{const r=rangeRow(RANGES[k]);r.prepend(el("span","plab",t));return r;};
+    P.append(lab("الحجم"),rr("cardSize","الحجم"),lab("عرض السطر (أضيق = عيونك تتحرك أقل)"),rr("cardW","العرض"),lab("المسافة بين السطور"),rr("lh","المسافة"));
+    P.append(lab("نوع الخط"),optRow(FONTS.map(f=>({t:f.name,on:S.font===f.id,style:{fontFamily:'"'+f.css+'"',fontWeight:f.w[1]},fn:()=>{setVal("font",f.id);renderPanel();}}))));
+    P.append(lab("سماكة الخط"),optRow(["عادي","عريض","أعرض"].map((n,i)=>({t:n,on:S.weight===i,style:{fontFamily:'"'+font().css+'"',fontWeight:font().w[i]},fn:()=>{setVal("weight",i);renderPanel();}}))));
+    P.append(lab("الألوان (الكتابة على الخلفية)"));const o=el("div","opts");
+    THEMES.forEach(t=>{const b=el("button","sw"+(S.theme===t.id&&!S.fgC&&!S.bgC?" on":""),"أ");b.style.background=t.bg;b.style.color=t.fg;b.style.boxShadow="inset 0 0 0 1px rgba(127,127,127,.4)";
+      b.setAttribute("aria-label","لون");b.addEventListener("click",()=>{S.fgC="";S.bgC="";setVal("theme",t.id);renderPanel();});o.append(b);});P.append(o);
+    const cp=(k,t)=>{const w=el("label","opt");w.style.display="inline-flex";w.style.alignItems="center";w.style.gap="8px";const i=el("input");i.type="color";i.value=S[k]||(k==="fgC"?theme().fg:theme().bg);
+      i.style.cssText="width:34px;height:34px;border:0;padding:0;background:none";i.addEventListener("input",()=>{setVal(k,i.value);});i.addEventListener("change",()=>renderPanel());w.append(i,el("span",null,t));return w;};
+    const o2=el("div","opts");o2.append(cp("fgC","لون الكتابة"),cp("bgC","لون الخلفية"));
+    if(S.fgC||S.bgC){const rs=el("button","opt","رجّع الألوان");rs.addEventListener("click",()=>{S.fgC="";setVal("bgC","");renderPanel();});o2.append(rs);}P.append(o2);
+    P.append(lab("وضوح"),optRow([{t:"ظل حول الكلمات",on:S.cardShadow,fn:()=>{setVal("cardShadow",!S.cardShadow);renderPanel();}},{t:"سطر ضيق جداً",on:S.cardNarrow,fn:()=>{setVal("cardNarrow",!S.cardNarrow);renderPanel();if(cardOn)renderCard();}}]));
+    P.append(lab("نصيحة للعين: الكتابة الصفرة أو الكريمية على خلفية غامقة أريح للعين بالتصوير الطويل من الأبيض الصافي."));
+    return;}
   if(id==="theme"){const o=el("div","opts");THEMES.forEach(t=>{const b=el("button","sw"+(S.theme===t.id?" on":""),"أ");b.style.background=t.bg;b.style.color=t.fg;
-    b.setAttribute("aria-label","لون");b.addEventListener("click",()=>{setVal("theme",t.id);renderPanel();});o.append(b);});
+    b.setAttribute("aria-label","لون");b.addEventListener("click",()=>{S.fgC="";S.bgC="";setVal("theme",t.id);renderPanel();});o.append(b);});
     const f=el("button","opt"+(S.focus?" on":""),"تظليل حول السطر");f.addEventListener("click",()=>{setVal("focus",!S.focus);renderPanel();});o.append(f);P.append(o);
     P.append(el("div","pnote","بالإضاءة القوية: الأبيض أو الأصفر على أسود أوضح شي، وارفع إضاءة الشاشة للآخر."));}
   if(id==="mirror")P.append(optRow([{t:"يمين ↔ يسار (للزجاج)",on:S.mx,fn:()=>{setVal("mx",!S.mx);renderPanel();}},{t:"فوق ↕ جوه",on:S.my,fn:()=>{setVal("my",!S.my);renderPanel();}}]));
