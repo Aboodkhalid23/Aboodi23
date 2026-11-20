@@ -12,7 +12,7 @@
 <link rel="icon" href="icon-192.png">
 <title>Noto</title>
 <style>body{margin:0}</style>
-<script>if("serviceWorker" in navigator&&location.protocol==="https:"){addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=1795200027",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));let re=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(re)return;re=true;location.reload();});}</script>
+<script>if("serviceWorker" in navigator&&location.protocol==="https:"){addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=1795200502",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));let re=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(re)return;re=true;location.reload();});}</script>
 </head>
 <body>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -72,6 +72,12 @@ svg{display:block;flex:none}
 .hlist svg{color:var(--accent)}
 textarea.edit{width:100%;min-height:90px;background:#1b1d22;border:1px solid #2b2f37;border-radius:12px;padding:10px 14px;font-family:"Cairo",var(--f-ui);font-weight:700;font-size:1.1rem;line-height:1.8;outline:0;max-width:760px;display:block;margin:0 auto 10px;resize:vertical}
 
+#diag{position:fixed;inset:0;z-index:300;background:#000;color:#fff;display:flex;flex-direction:column;gap:8px;padding:calc(10px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) 10px max(12px,env(safe-area-inset-left,0px))}
+#diag .dh{display:flex;gap:8px;align-items:center}#diag .dh b{flex:1;font-size:1.1rem}#diag .btn{min-height:38px;padding:0 12px}
+#diag .dn{margin:0;color:var(--muted);font-size:.85rem;line-height:1.7}
+#diag .dz{height:90px;border:2px dashed #444;border-radius:14px;display:grid;place-items:center;color:#777;touch-action:none}
+#diag .dl{flex:1;overflow-y:auto;font-family:ui-monospace,Menlo,monospace;font-size:.82rem;line-height:1.6;direction:ltr;text-align:left;background:#0d0e11;border-radius:12px;padding:8px}
+#diag .dl div{border-bottom:1px solid #1d2026;padding:2px 0}
 /* ===== القفل ===== */
 #lock{position:fixed;inset:0;z-index:200;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px}
 #lock .lt{font-size:1.05rem;color:var(--muted)}
@@ -237,6 +243,10 @@ textarea.field{min-height:38vh;resize:vertical;font-size:1.05rem}
 .tcard .btn{min-height:40px}
 .keytest{max-width:760px;margin:0 auto 6px;background:#1b1e24;border:1.5px dashed #3a3e47;border-radius:14px;padding:14px;text-align:center;font-weight:700;font-size:1.05rem}
 .keytest.ok{border-color:var(--ok);color:var(--ok)}
+.binds{display:flex;flex-direction:column;gap:6px;max-width:760px;margin:0 auto}
+.brow{display:flex;align-items:center;gap:10px;background:#1b1e24;border-radius:12px;padding:8px 10px}
+.brow b{min-width:7.5em;font-size:.9rem}.brow .bg{flex:1;min-width:0;color:var(--muted);font-size:.82rem;overflow-wrap:anywhere}
+.brow .btn{min-height:38px;padding:0 14px}
 .psec{font-size:.8rem;color:var(--muted);margin:14px auto 8px;max-width:760px;font-weight:600}
 .psec:first-of-type{margin-top:4px}
 .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;max-width:760px;margin:0 auto}
@@ -352,6 +362,12 @@ textarea.field{min-height:38vh;resize:vertical;font-size:1.05rem}
   <div class="keys" id="lockKeys"></div>
 </div>
 
+<div id="diag" hidden>
+  <div class="dh"><b>كاشف الإشارات</b><button class="btn" id="diagCopy">انسخ</button><button class="btn" id="diagClear">امسح</button><button class="btn primary" id="diagClose">سكّر</button></div>
+  <p class="dn">اضغط كل زر بالريموت مرة وحدة، ودوّر العجلة لفوق ولجوه. كل شي يوصل يطلع هنا. صوّر الشاشة ودزها.</p>
+  <div class="dz" id="diagZone">حرّك مؤشر الماوس هنا</div>
+  <div class="dl" id="diagLog"></div>
+</div>
 <!-- ============ المكتبة ============ -->
 <section class="view" id="home">
   <header class="appbar gutter"><div class="wrap">
@@ -359,6 +375,7 @@ textarea.field{min-height:38vh;resize:vertical;font-size:1.05rem}
     <div class="logos" id="logoPick" hidden></div>
     <h1 class="big" id="homeTitle" style="margin-top:14px">الدرايف</h1>
     <p class="sub" id="homeSub">سكربتاتك من Google Drive</p>
+    <button class="btn" id="diagHome" style="margin-top:10px;min-height:38px">🔬 كاشف إشارات الريموت</button>
   </div></header>
 
   <div class="scroll gutter" id="paneDrive"><div class="wrap">
@@ -553,7 +570,7 @@ const HEAD_RE=/^(العنوان|الهوك|هوك بديل|السكربت|الم
 const KEY_DEF={toggle:[" ","Enter","MediaPlayPause","MediaTrackNext","k"],faster:["ArrowUp"],slower:["ArrowDown"],back:["PageUp","ArrowRight","MediaTrackPrevious"],fwd:["PageDown","ArrowLeft"],retake:["r","Backspace"],mark:["g"]};
 const KEY_NAMES={toggle:"الجاي / تشغيل",back:"رجوع",fwd:"قدّام",retake:"عيد الجملة",mark:"علامة لقطة زينة",faster:"أسرع",slower:"أبطأ"};
 const DEF={wpm:130,target:0,size:(Math.min(screen.width,screen.height)<600?42:64),lh:1.55,width:88,guide:34,font:"cairo",weight:1,theme:"white",
-  mx:false,my:false,focus:true,pauseAt:true,pauseHead:false,hard:true,cd:3,chunk:false,smart:false,breath:false,map:false,ver:4,dist:0,beep:false,vadAbs:0,vadK:3,vadHang:900,smartEar:false,earHold:false,earSize:"base",tools:{},rehListen:true,mode:"phrase",phrLen:5,logo:"a",altc:false,mag:false,kar:false,hideRead:false,tash:true,syll:false,keys:KEY_DEF};
+  mx:false,my:false,focus:true,pauseAt:true,pauseHead:false,hard:true,cd:3,chunk:false,smart:false,breath:false,map:false,ver:4,dist:0,beep:false,vadAbs:0,vadK:3,vadHang:900,smartEar:false,earHold:false,earSize:"base",tools:{},rehListen:true,mode:"phrase",phrLen:5,binds:null,mediaKeys:true,logo:"a",altc:false,mag:false,kar:false,hideRead:false,tash:true,syll:false,keys:KEY_DEF};
 const PRESET_KEYS=["wpm","size","lh","width","guide","font","weight","theme","mx","my","focus","chunk","smart","breath","map"];
 const PRESET_DEF=[
   {name:"ريل",v:{wpm:150,size:40,lh:1.5,width:92,guide:32,weight:1}},
@@ -769,8 +786,8 @@ let editT=0;
 $("docText").addEventListener("input",()=>{if(!doc)return;doc.text=$("docText").value;clearTimeout(editT);editT=setTimeout(()=>{saveRecent(doc);refreshPrep();},400);});
 $("prepBack").addEventListener("click",()=>{show("home");showTab(LS.get("tab","Drive"));});
 $("prepReload").addEventListener("click",()=>{if(doc&&doc.src==="drive")openDrive(doc.id,doc.title);});
-$("prepGo").addEventListener("click",()=>{doc.text=$("docText").value;if(!countWords(doc.text))return;saveRecent(doc);startPlay(0);});
-$("prepResume").addEventListener("click",()=>{doc.text=$("docText").value;if(!countWords(doc.text))return;saveRecent(doc);startPlay(LS.get("pos_"+doc.id,0));});
+$("prepGo").addEventListener("click",()=>{doc.text=$("docText").value;if(!countWords(doc.text))return;saveRecent(doc);mediaOn();startPlay(0);});
+$("prepResume").addEventListener("click",()=>{mediaOn();doc.text=$("docText").value;if(!countWords(doc.text))return;saveRecent(doc);startPlay(LS.get("pos_"+doc.id,0));});
 $("newGo").addEventListener("click",()=>{
   const text=cleanText($("newText").value);if(!text){$("newText").focus();return;}
   const d={id:"local-"+Date.now(),title:$("newTitle").value.trim()||text.split("\n")[0].slice(0,60),text,src:"local"};
@@ -951,6 +968,10 @@ function frame(t){
     if(nextStop<stops.length&&pos>=stops[nextStop].y){pos=stops[nextStop].y;const m=stops[nextStop].msg;nextStop++;stopVoice();toast(m);}
     if(pos>=maxPos){pos=maxPos;stopVoice();toast("خلص النص");}render();return;}
   if(voiceOn){const tgt=voiceTarget();pos+=(tgt-pos)*Math.min(1,dt*5);render();return;}
+  if(PHR()){if(playing&&!anim){phrT+=dt;const st=paras[phr]||0,en=phr+1<paras.length?paras[phr+1]:W.length;
+      const dwell=Math.max(1.1,(en-st)/(S.wpm/60)+.35);
+      if(phrT>=dwell){phrT=0;if(phr<paras.length-1)phrGo(phr+1);else{setPlay(false);toast("خلص النص");}}}
+    if(clockStart)render();return;}
   if(!playing||cardOn){vel=0;if(clockStart)render();return;}
   let fac=1;if(S.smart){gi=guideWord(gi);fac=(W[gi]&&W[gi].f)||1;}
   vel+=(S.wpm/60*pxPerWord*fac-vel)*Math.min(1,dt*2.5);pos+=vel*dt;
@@ -997,7 +1018,8 @@ function paraIdx(){const wi=voiceOn?Math.max(0,cur-1):wordAt(anim?anim.to:pos);l
 function logRetake(){if(!clockStart)return;const now=performance.now();if(now-lastBackLog>4000){takeMarks.push((now-clockStart)/1000);$("retakes").hidden=false;$("retakes").textContent="· رجعات "+takeMarks.length;}lastBackLog=now;}
 function glideTo(y){y=Math.min(maxPos,Math.max(0,y));anim={from:pos,to:y,t0:performance.now(),d:240};if(voiceOn){cur=wordAt(y);paintVoice();}}
 const PHR=()=>S.mode==="phrase"&&!cardOn&&!vad;
-let phr=0;
+let phr=0,phrT=0;
+function phrAuto(){if(playing){setPlay(false);toast("وگف");}else{if(!clockStart){clockStart=performance.now();$("rec").classList.add("on");}phrT=0;setPlay(true);toast("يمشي وحده · "+S.wpm+" ك/د");}}
 function paraC(i){const p=paraEl[i];return p?p.offsetTop+p.offsetHeight/2-guideY:0;}
 function markPhr(){paraEl.forEach((p,i)=>p.classList.toggle("cur",i===phr));const c=$("phrCount");if(c)c.textContent="مقطع "+(phr+1)+" من "+paras.length;}
 function phrGo(i,quiet){
@@ -1058,7 +1080,7 @@ function startPlay(resume){
   requestAnimationFrame(()=>{measure();if(resume>0&&paras.length){const i=Math.min(resume,paras.length-1);seek(paraY(i));toast("كمّلنا من الجملة "+(i+1));}try{stage.focus({preventScroll:true});}catch(e){}});
   wakeOn();
 }
-function stopPlay(){
+function stopPlay(){mediaOff();
   const total=clockStart?(performance.now()-clockStart)/1000:0;
   clearInterval(cdTimer);counting=false;$("count").hidden=true;
   if(doc&&paras.length){const pi=cardOn?cardIdx:S.mode==="phrase"?phr:paraIdx();LS.set("pos_"+doc.id,pi>=paras.length-1?0:pi);}
@@ -1087,7 +1109,7 @@ const RAIL=[
   {id:"close",i:I.close,n:"إغلاق",fn:()=>stopPlay()},
   {gap:1},
   {id:"back",i:I.up,n:"رجوع سطر",fn:()=>stepLine(-1)},
-  {id:"play",n:"تشغيل",fn:()=>toggle()},
+  {id:"play",n:"تشغيل",fn:()=>{if(PHR()&&playing)setPlay(false);toggle();}},
   {id:"fwd",i:I.down,n:"قدّام سطر",fn:()=>stepLine(1)},
   {gap:1},
   {id:"voice",i:MIC_I,n:"يمشي ويا صوتك",fn:()=>startVoice(),on:()=>voiceOn,avail:()=>!!(dict||VAD_OK)},
@@ -1132,7 +1154,7 @@ stage.addEventListener("pointermove",e=>{
   if(dragY===null||cardOn)return;const dy=e.clientY-dragY;if(!moved&&Math.abs(dy)>8){moved=true;clearTimeout(lpT);}
   if(moved){anim=null;const s=S.my?-1:1;seek(pos-dy*s);dragY=e.clientY;const n=performance.now();flick=(e.clientY-lmY)/Math.max(1,n-lmT);lmY=e.clientY;lmT=n;}
 });
-stage.addEventListener("pointerup",e=>{clearTimeout(lpT);if(dragY===null)return;const d=dragY;dragY=null;if(lpFired)return;
+stage.addEventListener("pointerup",e=>{clearTimeout(lpT);if(skipTap){skipTap=false;dragY=null;return;}if(dragY===null)return;const d=dragY;dragY=null;if(lpFired)return;
   if(cardOn&&!moved){cardNext();return;}
   if(!moved){if(tapHard(e.target))return;
     if(PHR()){const r=stage.getBoundingClientRect();if(e.clientY-r.top<r.height*.25){phrGo(phr-1);logRetake();}else phrGo(phr+1);return;}
@@ -1140,6 +1162,89 @@ stage.addEventListener("pointerup",e=>{clearTimeout(lpT);if(dragY===null)return;
 stage.addEventListener("pointercancel",()=>{clearTimeout(lpT);dragY=null;});
 stage.addEventListener("pointerup",()=>{if(S.mode==="phrase"&&moved&&paraEl.length){let best=0,bd=1e9;paraEl.forEach((p,i)=>{const d=Math.abs(paraC(i)-pos);if(d<bd){bd=d;best=i;}});phrGo(best,true);}});
 stage.addEventListener("contextmenu",e=>e.preventDefault());
+/* ---------- كاشف الإشارات: يسجّل كل شي يوصل من أي جهاز ---------- */
+let diagOn=false,diagLines=[],gpT=0;
+function dlog(t){if(!diagOn)return;const ts=new Date().toTimeString().slice(3,8);diagLines.unshift(ts+"  "+t);diagLines=diagLines.slice(0,80);
+  const L=$("diagLog");L.innerHTML="";diagLines.forEach(x=>L.append(el("div",null,x)));}
+function diagOpen(){diagOn=true;diagLines=[];$("diag").hidden=false;dlog("ready · "+navigator.userAgent.replace(/.*\((.*?)\).*/,"$1"));mediaOn();
+  clearInterval(gpT);gpT=setInterval(()=>{try{for(const g of navigator.getGamepads?navigator.getGamepads():[]){if(!g)continue;g.buttons.forEach((b,i)=>{if(b.pressed)dlog("GAMEPAD "+g.id.slice(0,20)+" button "+i);});g.axes.forEach((a,i)=>{if(Math.abs(a)>.5)dlog("GAMEPAD axis "+i+" = "+a.toFixed(2));});}}catch(e){}},120);}
+function diagClose(){diagOn=false;$("diag").hidden=true;clearInterval(gpT);}
+$("diagClose").addEventListener("click",diagClose);$("diagHome").addEventListener("click",diagOpen);$("diagClear").addEventListener("click",()=>{diagLines=[];$("diagLog").innerHTML="";});
+$("diagCopy").addEventListener("click",()=>{const t=diagLines.join("\n");try{navigator.clipboard.writeText(t).then(()=>toast("انسخ")).catch(()=>{});}catch(e){}});
+["keydown","keyup"].forEach(n=>document.addEventListener(n,e=>dlog(n.toUpperCase()+" key="+JSON.stringify(e.key)+" code="+e.code+" keyCode="+e.keyCode),true));
+["pointerdown","pointerup"].forEach(n=>document.addEventListener(n,e=>dlog(n+" type="+e.pointerType+" button="+e.button+" buttons="+e.buttons+" @"+Math.round(e.clientX)+","+Math.round(e.clientY)),true));
+let dMove=0;document.addEventListener("pointermove",e=>{const n=performance.now();if(n-dMove>400){dMove=n;dlog("pointermove type="+e.pointerType+" buttons="+e.buttons+" @"+Math.round(e.clientX)+","+Math.round(e.clientY));}},true);
+document.addEventListener("wheel",e=>dlog("WHEEL dx="+Math.round(e.deltaX)+" dy="+Math.round(e.deltaY)+" mode="+e.deltaMode),{capture:true,passive:true});
+["touchstart","touchend"].forEach(n=>document.addEventListener(n,e=>dlog(n+" touches="+e.touches.length+" @"+Math.round((e.changedTouches[0]||{}).clientX)+","+Math.round((e.changedTouches[0]||{}).clientY)),{capture:true,passive:true}));
+["click","auxclick","contextmenu","dblclick"].forEach(n=>document.addEventListener(n,e=>dlog(n+" button="+e.button),true));
+document.addEventListener("scroll",()=>dlog("scroll"),true);
+window.addEventListener("gamepadconnected",e=>dlog("GAMEPAD connected "+e.gamepad.id));
+document.addEventListener("visibilitychange",()=>dlog("visibility "+document.visibilityState));
+window.addEventListener("blur",()=>dlog("window blur"));window.addEventListener("focus",()=>dlog("window focus"));
+
+/* ---------- ريموت يتعلّم: أي إشارة (كيبورد، ماوس، عجلة، لمس، ميديا) تنربط بأي حركة ---------- */
+const BIND_DEF={"wheel:down":"next","wheel:up":"prev","media:playpause":"toggle","media:nexttrack":"faster","media:previoustrack":"slower",
+  "media:seekforward":"next","media:seekbackward":"prev","mouse:2":"toggle","mouse:1":"toggle","mouse:3":"prev","mouse:4":"next",
+  "wheel:right":"faster","wheel:left":"slower"};
+if(!S.binds)S.binds=Object.assign({},BIND_DEF);
+let learnAct=null,lastSig="";
+function sigName(g){
+  const [t,v]=g.split(/:(.*)/);
+  if(t==="wheel")return {down:"العجلة لجوه",up:"العجلة لفوق",left:"العجلة لليسار",right:"العجلة لليمين"}[v]||g;
+  if(t==="mouse")return {"0":"ضغطة (يسار)","1":"ضغطة الوسط","2":"ضغطة يمين","3":"زر جانبي ١","4":"زر جانبي ٢"}[v]||"زر ماوس "+v;
+  if(t==="media")return {playpause:"زر التشغيل (ميديا)",nexttrack:"زر الجاي (ميديا)",previoustrack:"زر الي قبله (ميديا)",seekforward:"تقديم (ميديا)",seekbackward:"ترجيع (ميديا)"}[v]||g;
+  if(t==="swipe")return {up:"سحبة لفوق",down:"سحبة لجوه",left:"سحبة لليسار",right:"سحبة لليمين"}[v]||g;
+  if(t==="tap")return "لمسة بمكان "+v;
+  if(t==="key")return "زر "+keyLabel(v);
+  return g;
+}
+/* يرجّع true إذا الإشارة انربطت أو انتعلّمت (حتى نوگف التصرف العادي) */
+function remoteInput(sig){
+  lastSig=sig;
+  if(learnAct){for(const k in S.binds)if(S.binds[k]===learnAct&&k!==sig)delete S.binds[k];S.binds[sig]=learnAct;save();
+    toast("انربط: "+sigName(sig)+" ← "+ACTS[learnAct]);learnAct=null;if(openPanel==="remote")renderPanel();return true;}
+  const a=S.binds[sig];
+  if(openPanel==="remote"){const t=$("keyTest");if(t){t.textContent="وصل: "+sigName(sig)+(a?" ← "+ACTS[a]:" (مو مربوط)");t.classList.add("ok");}}
+  if(a&&a!=="none"){doAct(a);return true;}
+  return a==="none";
+}
+const inPanel=e=>e.target&&e.target.closest&&e.target.closest("#panel,#rail,#ghost");
+/* ماوس: كل الأزرار */
+let skipTap=false;
+document.addEventListener("pointerdown",e=>{
+  if($("play").hidden||e.pointerType!=="mouse"||inPanel(e))return;
+  const g="mouse:"+e.button;
+  if(learnAct||S.binds[g]){if(remoteInput(g)){e.preventDefault();e.stopPropagation();skipTap=true;}}
+  else if(openPanel==="remote")remoteInput(g);
+},true);
+document.addEventListener("contextmenu",e=>{if(!$("play").hidden)e.preventDefault();});
+document.addEventListener("auxclick",e=>{if(!$("play").hidden)e.preventDefault();});
+/* لمس من ريموت يقلّد الإصبع: لمسة بمكان ثابت أو سحبة */
+let tch=null;
+document.addEventListener("pointerdown",e=>{if($("play").hidden||e.pointerType!=="touch"||inPanel(e))return;tch={x:e.clientX,y:e.clientY,t:performance.now(),pos};},true);
+document.addEventListener("pointerup",e=>{
+  if(!tch||e.pointerType!=="touch")return;const dx=e.clientX-tch.x,dy=e.clientY-tch.y,dt=performance.now()-tch.t,st=tch;tch=null;
+  let g=null;
+  if(dt<450&&Math.max(Math.abs(dx),Math.abs(dy))>45)g="swipe:"+(Math.abs(dy)>Math.abs(dx)?(dy<0?"up":"down"):(dx<0?"left":"right"));
+  else if(dt<350&&Math.abs(dx)<10&&Math.abs(dy)<10){const zx=Math.min(2,Math.floor(e.clientX/innerWidth*3)),zy=Math.min(2,Math.floor(e.clientY/innerHeight*3));g="tap:"+(zy*3+zx+1);}
+  if(!g)return;
+  if(learnAct||S.binds[g]){if(remoteInput(g)){e.stopPropagation();if(g.startsWith("swipe")){anim=null;pos=st.pos;render(true);}dragY=null;}}
+},true);
+/* أزرار الميديا: نشغّل صوت صامت حتى الآيباد يرسلنا أزرار التشغيل والجاي */
+let mAudio=null;
+function silentWav(){const n=8000,b=new ArrayBuffer(44+n*2),v=new DataView(b);const w=(o,s2)=>{for(let i=0;i<s2.length;i++)v.setUint8(o+i,s2.charCodeAt(i));};
+  w(0,"RIFF");v.setUint32(4,36+n*2,true);w(8,"WAVE");w(12,"fmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,8000,true);v.setUint32(28,16000,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,"data");v.setUint32(40,n*2,true);
+  return URL.createObjectURL(new Blob([b],{type:"audio/wav"}));}
+function mediaOn(){
+  if(!S.mediaKeys||!("mediaSession" in navigator))return;
+  try{if(!mAudio){mAudio=new Audio(silentWav());mAudio.loop=true;mAudio.setAttribute("playsinline","");}mAudio.play().catch(()=>{});
+    navigator.mediaSession.metadata=new MediaMetadata({title:"Noto",artist:doc?doc.title:""});
+    const H=(a,g)=>{try{navigator.mediaSession.setActionHandler(a,()=>{dlog("MEDIA "+a);if(diagOn&&$("play").hidden)return;remoteInput(g);try{mAudio.play().catch(()=>{});navigator.mediaSession.playbackState="playing";}catch(x){}});}catch(x){}};
+    H("play","media:playpause");H("pause","media:playpause");H("nexttrack","media:nexttrack");H("previoustrack","media:previoustrack");H("seekforward","media:seekforward");H("seekbackward","media:seekbackward");
+    navigator.mediaSession.playbackState="playing";}catch(e){}
+}
+function mediaOff(){try{mAudio&&mAudio.pause();}catch(e){}try{["play","pause","nexttrack","previoustrack","seekforward","seekbackward"].forEach(a=>navigator.mediaSession.setActionHandler(a,null));}catch(e){}}
+
 /* عجلة الماوس أو عجلة الريموت (مثل خاتم التمرير): كل حركة = سطر، أو مقطع بوضع المقاطع */
 let wAcc=0,wT=0,wLast=0;
 function remoteSaw(txt){if(openPanel!=="remote")return;const t=$("keyTest");if(t){t.textContent="وصل: "+txt;t.classList.add("ok");}}
@@ -1147,14 +1252,15 @@ document.addEventListener("wheel",e=>{
   if($("play").hidden)return;if(e.target.closest&&e.target.closest("#panel"))return;e.preventDefault();poke();
   const now=performance.now();if(now-wLast>400)wAcc=0;wLast=now;
   wAcc+=e.deltaY*(e.deltaMode===1?40:e.deltaMode===2?400:1);
+  if(Math.abs(e.deltaX)>Math.abs(e.deltaY))return;
   if(Math.abs(wAcc)<(S.wheelStep||30)||now-wT<150)return;
-  const d=Math.sign(wAcc);wAcc=0;wT=now;
-  remoteSaw(d>0?"عجلة لجوه ← "+(PHR()?"المقطع الجاي":"سطر لجوه"):"عجلة لفوق ← "+(PHR()?"المقطع الي قبله":"سطر لفوق"));
-  if(cardOn){d>0?cardNext():cardPrev();return;}
-  stepLine(d);
+  const d=Math.sign(wAcc);wAcc=0;wT=now;remoteInput(d>0?"wheel:down":"wheel:up");
 },{passive:false});
-/* ضغطة زر الريموت (مثل ضغطة ماوس) بلوحة الاختبار */
-document.addEventListener("pointerdown",e=>{if(openPanel==="remote"&&e.pointerType==="mouse"&&!(e.target.closest&&e.target.closest("#panel")))remoteSaw("ضغطة ← "+(PHR()?"المقطع الجاي":"تشغيل / إيقاف"));},true);
+/* عجلة يمين ويسار (أزرار بعض الريموتات ترسلها هيچ) */
+let hAcc=0,hT=0;
+document.addEventListener("wheel",e=>{if($("play").hidden||inPanel(e)||Math.abs(e.deltaX)<=Math.abs(e.deltaY))return;
+  hAcc+=e.deltaX;const now=performance.now();if(Math.abs(hAcc)<30||now-hT<250)return;const d=Math.sign(hAcc);hAcc=0;hT=now;remoteInput(d>0?"wheel:right":"wheel:left");},{passive:false});
+
 
 /* ---------- خريطة السكربت ---------- */
 function drawMap(){
@@ -1180,6 +1286,7 @@ document.addEventListener("keydown",e=>{
     for(const a in S.keys)S.keys[a]=S.keys[a].filter(x=>x!==e.key&&x!==e.code);
     S.keys[learning]=[e.key];save();toast("انربط: "+KEY_NAMES[learning]);learning=null;renderPanel();return;
   }
+  if(!(e.repeat&&learnAct)){const g="key:"+(e.key===" "?" ":e.key||e.code);if((learnAct||S.binds[g])&&remoteInput(g)){e.preventDefault();e.stopPropagation();return;}}
   const a=actionFor(e);
   if(a){e.preventDefault();e.stopPropagation();if(e.repeat&&a==="toggle")return;act(a);return;}
   if(e.key==="Escape"){if($("play").classList.contains("bare"))setBare(false);else if(openPanel)closePanel();else if(cardOn)setCard(false);else stopPlay();}
@@ -1641,15 +1748,21 @@ function renderPanel(){
   if(id==="dist"){P.append(optRow(DISTS.map(([d,n])=>({t:n,on:S.dist===d,fn:()=>{const sz=Math.round(Math.min(180,Math.max(28,d*38+18))/2)*2;setVal("size",sz);S.dist=d;save();toast("الحجم صار "+sz+" حتى تقرا من "+n);renderPanel();}}))));
     P.append(el("div","pnote","اختار شگد تبعد عن الشاشة، والحجم ينضبط وحده. بعدين تگدر تعدّله من زر الحجم."));}
   if(id==="remote"){
-    const kt=el("div","keytest","حرّك عجلة الريموت أو اضغط أي زر هسه…");kt.id="keyTest";P.append(kt);
-    P.append(el("div","pnote","ريموتات العجلة (مثل خاتم التمرير): الآيباد يشوفها ماوس. لازم يطلع مؤشر دائري صغير بالشاشة، وخليه فوق النص. العجلة لجوه = الجاي، ولفوق = رجوع، والضغطة = الجاي. إذا ما طلع شي: تأكد إنه مقترن من إعدادات البلوتوث بالآيباد."));
-    const o=el("div","opts");Object.keys(KEY_NAMES).forEach(a=>{
-      const b=el("button","opt"+(learning===a?" on":""),learning===a?"اضغط زر الريموت هسه…":KEY_NAMES[a]+" · "+keyLabel((S.keys[a]||[])[0]));
-      b.addEventListener("click",()=>{learning=learning===a?null:a;renderPanel();});o.append(b);});
-    const rs=el("button","opt","رجّع الافتراضي");rs.addEventListener("click",()=>{S.keys=JSON.parse(JSON.stringify(KEY_DEF));save();learning=null;renderPanel();toast("رجعت أزرار الريموت");});o.append(rs);
+    const kt=el("div","keytest",learnAct?"اضغط الزر أو حرّك العجلة هسه…":"اضغط أي زر بالريموت هسه، ويطلعلك هنا شنو وصل");kt.id="keyTest";if(learnAct)kt.classList.add("ok");P.append(kt);
+    P.append(optRow([{t:"🔬 كاشف الإشارات (يبين كل شي يرسله الريموت)",fn:()=>{closePanel();diagOpen();}}]));
+    P.append(el("div","psec","اربط أزرار ريموتك"));
+    P.append(el("div","pnote","دوس «علّم» جنب الحركة، وبعدها اضغط زر الريموت (أو حرّك العجلة). ينحفظ وحده. خلّي مؤشر الماوس الدائري فوگ النص."));
+    const L=el("div","binds");
+    ["next","prev","toggle","faster","slower","retake","mark"].forEach(a2=>{
+      const row=el("div","brow"),nm=el("b",null,ACTS[a2]),got=Object.keys(S.binds).filter(k=>S.binds[k]===a2).map(sigName).join("، ")||"—";
+      const g=el("span","bg",got),btn=el("button","btn"+(learnAct===a2?" primary":""),learnAct===a2?"اضغط هسه…":"علّم");
+      btn.addEventListener("click",()=>{learnAct=learnAct===a2?null:a2;renderPanel();});row.append(nm,g,btn);L.append(row);});
+    P.append(L);
+    const o=el("div","acts");const rs=el("button","btn","رجّع الافتراضي");rs.addEventListener("click",()=>{S.binds=Object.assign({},BIND_DEF);save();learnAct=null;renderPanel();toast("رجع الربط الافتراضي");});
+    const cl=el("button","btn","امسح كل الربط");cl.addEventListener("click",()=>{S.binds={};save();learnAct=null;renderPanel();});o.append(rs,cl);P.append(o);
     P.append(el("div","psec","حساسية العجلة"),optRow([[15,"عالية"],[30,"عادية"],[60,"واطئة"]].map(([v,n])=>({t:n,on:(S.wheelStep||30)===v,fn:()=>{S.wheelStep=v;save();renderPanel();}}))));
-    P.append(el("div","psec","أزرار الكيبورد (للريموتات الي ترسل أزرار)"));
-    P.append(o);P.append(el("div","pnote","اختار حركة، بعدين اضغط الزر الي تريده بالريموت، وينربط."));}
+    P.append(optRow([{t:"أزرار الميديا (تشغيل، الجاي، الي قبله)",on:S.mediaKeys,fn:()=>{S.mediaKeys=!S.mediaKeys;save();if(S.mediaKeys)mediaOn();else mediaOff();renderPanel();}}]));
+    P.append(el("div","pnote","إذا ضغطت زر وما طلع «وصل» فوگ: هذا الزر يرسل رفع أو خفض الصوت، والآيفون والآيباد ما يسمحون لأي صفحة تقراه. اربط الحركة بزر ثاني أو بالعجلة."));}
   if(id==="presets"){
     const g=el("div","slots");
     PRESETS.forEach((pr,i)=>{const c=el("div","slot");c.append(el("b",null,pr.name),el("small",null,(pr.v.wpm||S.wpm)+" ك/د · حجم "+(pr.v.size||S.size)));
@@ -1799,6 +1912,17 @@ function goHead(dir){
   if(dir<0&&k>=0&&(anim?anim.to:pos)-heads[k].y>lineH)k=k; else k=k+dir;
   if(k<0){glideTo(0);toast("البداية");return;}if(k>=heads.length){toast("هذا آخر قسم");return;}
   setPlay(false);glideTo(heads[k].y);toast(heads[k].name);
+}
+/* حركات الريموت الموحّدة: نفس الاسم يشتغل صح بكل وضع */
+const ACTS={next:"الجاي (سطر أو مقطع)",prev:"رجوع (سطر أو مقطع)",toggle:"تشغيل / إيقاف",faster:"أسرع",slower:"أبطأ",retake:"عيد الجملة",mark:"⭐ علامة لقطة زينة",none:"ولا شي"};
+function doAct(a){
+  if(a==="next"){if(cardOn)cardNext();else if(PHR()){phrT=0;phrGo(phr+1);}else stepLine(1);}
+  else if(a==="prev"){if(cardOn)cardPrev();else if(PHR()){phrT=0;phrGo(phr-1);logRetake();}else stepLine(-1);}
+  else if(a==="toggle"){if(PHR())phrAuto();else toggle();}
+  else if(a==="faster"){setWpm(S.wpm+5);toast(S.wpm+" كلمة بالدقيقة");}
+  else if(a==="slower"){setWpm(S.wpm-5);toast(S.wpm+" كلمة بالدقيقة");}
+  else if(a==="retake")retakeSentence();else if(a==="mark")act("mark");
+  poke();
 }
 function act(a,v){
   if(a==="toggle")toggle();else if(a==="back")stepLine(-1);else if(a==="fwd")stepLine(1);else if(a==="retake")retakeSentence();
