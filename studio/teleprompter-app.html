@@ -395,7 +395,7 @@ textarea.field{min-height:38vh;resize:vertical;font-size:1.05rem}
       <small>ضغطة: تشغيل وإيقاف · اسحب لفوق: قدّام · اسحب لجوه: رجوع · ضغطة طويلة: عيد الجملة</small>
       <div class="fx" id="rFx"></div>
     </div>
-    <div class="rspeed"><button class="step" data-sp="-5" aria-label="أبطأ">−</button><input type="range" id="rSpeed" min="60" max="260" step="5" value="130" aria-label="السرعة"><button class="step" data-sp="5" aria-label="أسرع">+</button><b id="rWpm">—</b></div>
+    <div class="rspeed"><button class="step" data-sp="-5" aria-label="أبطأ">−</button><input type="range" id="rSpeed" min="20" max="260" step="5" value="130" aria-label="السرعة"><button class="step" data-sp="5" aria-label="أسرع">+</button><b id="rWpm">—</b></div>
     <div class="rgrid" id="rGrid"></div>
     <div class="rtools"><span class="help" style="margin:0">لازم يكون نفس حسابك مفتوح بالجهازين.</span><button class="linkb" id="rEditBtn">تعديل الأزرار</button></div>
     <div class="redit" id="rEdit" hidden></div>
@@ -953,7 +953,7 @@ function frame(t){
     if(pos>=maxPos){pos=maxPos;stopVoice();toast("خلص النص");}render();return;}
   if(voiceOn){const tgt=voiceTarget();pos+=(tgt-pos)*Math.min(1,dt*5);render();return;}
   if(PHR()){if(playing&&!anim){phrT+=dt;const st=paras[phr]||0,en=phr+1<paras.length?paras[phr+1]:W.length;
-      const dwell=Math.max(1.1,(en-st)/(S.wpm/60)+.35);
+      const dwell=Math.max(1.4,(en-st)/(S.wpm/60)+.6+endPause(en-1));
       if(phrT>=dwell){phrT=0;if(phr<paras.length-1)phrGo(phr+1);else{setPlay(false);toast("خلص النص");}}}
     if(clockStart)render();return;}
   if(!playing||cardOn){vel=0;if(clockStart)render();return;}
@@ -1022,6 +1022,8 @@ function retakeSentence(){
   if(!paras.length)return;let i=paraIdx();if((anim?anim.to:pos)-paraY(i)<lineH*0.5&&i>0)i--;
   setPlay(false);glideTo(paraY(i));logRetake();toast("رجعنا لبداية الجملة");poke();
 }
+function endPause(i){const w=W[i];if(!w||!w.el)return 0;const t=(w.el.textContent||"").trim();const sl=S.wpm<60?1.6:1;
+  if(/[.!?؟…]$/.test(t)||i===W.length-1||(paras.includes(i+1)&&w.el.nextSibling==null))return 1.2*sl;if(/[،,؛:]$/.test(t))return .5*sl;return 0;}
 function setWpm(v){setVal("wpm",v);}
 
 /* ---------- وضع الجملة الوحدة والتمرين ---------- */
@@ -1686,7 +1688,7 @@ $("revApply").addEventListener("click",()=>{
 
 /* ---------- اللوحات ---------- */
 let openPanel=null,panelBack=null;
-const RANGES={speed:{k:"wpm",min:60,max:260,step:5,f:v=>v+" ك/د",n:"السرعة"},size:{k:"size",min:28,max:180,step:2,f:v=>v,n:"حجم الخط"},lh:{k:"lh",min:1.2,max:2.4,step:.05,f:v=>(+v).toFixed(2),n:"المسافة بين السطور"},
+const RANGES={speed:{k:"wpm",min:20,max:260,step:5,f:v=>v+" ك/د",n:"السرعة"},size:{k:"size",min:28,max:180,step:2,f:v=>v,n:"حجم الخط"},lh:{k:"lh",min:1.2,max:2.4,step:.05,f:v=>(+v).toFixed(2),n:"المسافة بين السطور"},
   width:{k:"width",min:40,max:100,step:2,f:v=>v+"٪",n:"عرض النص"},guide:{k:"guide",min:12,max:70,step:1,f:v=>v+"٪",n:"مكان خط القراءة"}};
 const TITLES={tools:"مركز الأدوات",more:"الإعدادات",voice:"السماع",aids:"مساعدة القراءة",help:"شلون أستخدمه",font:"الخط",weight:"السماكة",theme:"الألوان",mirror:"المراية",remote:"الريموت",presets:"إعدادات جاهزة",toggles:"تشغيل وإطفاء",dist:"بعدك عن الشاشة",sent:"الجملة"};
 function showPanel(id,back){openPanel=id;panelBack=back||null;learning=null;$("panel").hidden=false;renderPanel();refreshRail();poke();}
@@ -1991,7 +1993,7 @@ $("rEditBtn").addEventListener("click",()=>{const E=$("rEdit");E.hidden=!E.hidde
 /* السرعة من الموبايل */
 let spT=0;
 $("rSpeed").addEventListener("input",()=>{$("rWpm").textContent=$("rSpeed").value;clearTimeout(spT);spT=setTimeout(()=>send("setwpm",+$("rSpeed").value),250);});
-document.querySelectorAll(".rspeed .step").forEach(b=>b.addEventListener("click",()=>{const v=Math.min(260,Math.max(60,(+$("rSpeed").value)+(+b.dataset.sp)));$("rSpeed").value=v;$("rWpm").textContent=v;send("setwpm",v);}));
+document.querySelectorAll(".rspeed .step").forEach(b=>b.addEventListener("click",()=>{const v=Math.min(260,Math.max(20,(+$("rSpeed").value)+(+b.dataset.sp)));$("rSpeed").value=v;$("rWpm").textContent=v;send("setwpm",v);}));
 /* شريط المكان: اسحب حتى تروح لأي مكان */
 (function(){
   const B=$("rBar");const k=e=>{const r=B.getBoundingClientRect();return Math.min(1,Math.max(0,(r.right-e.clientX)/r.width));};
