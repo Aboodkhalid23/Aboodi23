@@ -1124,7 +1124,21 @@ stage.addEventListener("pointerup",e=>{clearTimeout(lpT);if(dragY===null)return;
 stage.addEventListener("pointercancel",()=>{clearTimeout(lpT);dragY=null;});
 stage.addEventListener("pointerup",()=>{if(S.mode==="phrase"&&moved&&paraEl.length){let best=0,bd=1e9;paraEl.forEach((p,i)=>{const d=Math.abs(paraC(i)-pos);if(d<bd){bd=d;best=i;}});phrGo(best,true);}});
 stage.addEventListener("contextmenu",e=>e.preventDefault());
-stage.addEventListener("wheel",e=>{if(e.target.closest("#panel"))return;e.preventDefault();if(cardOn){if(Math.abs(e.deltaY)>30)(e.deltaY>0?cardNext:cardPrev)();return;}seek(pos+e.deltaY);poke();},{passive:false});
+/* عجلة الماوس أو عجلة الريموت (مثل خاتم التمرير): كل حركة = سطر، أو مقطع بوضع المقاطع */
+let wAcc=0,wT=0,wLast=0;
+function remoteSaw(txt){if(openPanel!=="remote")return;const t=$("keyTest");if(t){t.textContent="وصل: "+txt;t.classList.add("ok");}}
+document.addEventListener("wheel",e=>{
+  if($("play").hidden)return;if(e.target.closest&&e.target.closest("#panel"))return;e.preventDefault();poke();
+  const now=performance.now();if(now-wLast>400)wAcc=0;wLast=now;
+  wAcc+=e.deltaY*(e.deltaMode===1?40:e.deltaMode===2?400:1);
+  if(Math.abs(wAcc)<(S.wheelStep||30)||now-wT<150)return;
+  const d=Math.sign(wAcc);wAcc=0;wT=now;
+  remoteSaw(d>0?"عجلة لجوه ← "+(PHR()?"المقطع الجاي":"سطر لجوه"):"عجلة لفوق ← "+(PHR()?"المقطع الي قبله":"سطر لفوق"));
+  if(cardOn){d>0?cardNext():cardPrev();return;}
+  stepLine(d);
+},{passive:false});
+/* ضغطة زر الريموت (مثل ضغطة ماوس) بلوحة الاختبار */
+document.addEventListener("pointerdown",e=>{if(openPanel==="remote"&&e.pointerType==="mouse"&&!(e.target.closest&&e.target.closest("#panel")))remoteSaw("ضغطة ← "+(PHR()?"المقطع الجاي":"تشغيل / إيقاف"));},true);
 
 /* ---------- خريطة السكربت ---------- */
 function drawMap(){
@@ -1611,13 +1625,15 @@ function renderPanel(){
   if(id==="dist"){P.append(optRow(DISTS.map(([d,n])=>({t:n,on:S.dist===d,fn:()=>{const sz=Math.round(Math.min(180,Math.max(28,d*38+18))/2)*2;setVal("size",sz);S.dist=d;save();toast("الحجم صار "+sz+" حتى تقرا من "+n);renderPanel();}}))));
     P.append(el("div","pnote","اختار شگد تبعد عن الشاشة، والحجم ينضبط وحده. بعدين تگدر تعدّله من زر الحجم."));}
   if(id==="remote"){
-    const kt=el("div","keytest","اضغط أي زر بالريموت هسه…");kt.id="keyTest";P.append(kt);
-    P.append(el("div","pnote","إذا ضغطت وما طلع شي هنا: الريموت ما يوصل للتطبيق. ريموتات السيلفي الصغيرة ترسل «رفع الصوت» والآيفون ما يسمح للصفحات تقراه. تحتاج ريموت «قلّاب صفحات» (Page Turner) أو ريموت ملقّن بلوتوث، وهذا يشتغل مباشرة."));
+    const kt=el("div","keytest","حرّك عجلة الريموت أو اضغط أي زر هسه…");kt.id="keyTest";P.append(kt);
+    P.append(el("div","pnote","ريموتات العجلة (مثل خاتم التمرير): الآيباد يشوفها ماوس. لازم يطلع مؤشر دائري صغير بالشاشة، وخليه فوق النص. العجلة لجوه = الجاي، ولفوق = رجوع، والضغطة = الجاي. إذا ما طلع شي: تأكد إنه مقترن من إعدادات البلوتوث بالآيباد."));
     const o=el("div","opts");Object.keys(KEY_NAMES).forEach(a=>{
       const b=el("button","opt"+(learning===a?" on":""),learning===a?"اضغط زر الريموت هسه…":KEY_NAMES[a]+" · "+keyLabel((S.keys[a]||[])[0]));
       b.addEventListener("click",()=>{learning=learning===a?null:a;renderPanel();});o.append(b);});
     const rs=el("button","opt","رجّع الافتراضي");rs.addEventListener("click",()=>{S.keys=JSON.parse(JSON.stringify(KEY_DEF));save();learning=null;renderPanel();toast("رجعت أزرار الريموت");});o.append(rs);
-    P.append(o);P.append(el("div","pnote","اختار حركة، بعدين اضغط الزر الي تريده بالريموت، وينربط. تگدر هم تفتح التطبيق بالموبايل من تبويب «ريموت» وتتحكم منه."));}
+    P.append(el("div","psec","حساسية العجلة"),optRow([[15,"عالية"],[30,"عادية"],[60,"واطئة"]].map(([v,n])=>({t:n,on:(S.wheelStep||30)===v,fn:()=>{S.wheelStep=v;save();renderPanel();}}))));
+    P.append(el("div","psec","أزرار الكيبورد (للريموتات الي ترسل أزرار)"));
+    P.append(o);P.append(el("div","pnote","اختار حركة، بعدين اضغط الزر الي تريده بالريموت، وينربط."));}
   if(id==="presets"){
     const g=el("div","slots");
     PRESETS.forEach((pr,i)=>{const c=el("div","slot");c.append(el("b",null,pr.name),el("small",null,(pr.v.wpm||S.wpm)+" ك/د · حجم "+(pr.v.size||S.size)));
