@@ -3,6 +3,7 @@ name: صفحة الروابط
 
 on:
   push:
+    branches: ["claude/github-skills-development-3orc6c"]   # الفرع الوحيد المسموحله بالنشر (الفروع الثانية كانت تفشل وتلغي النشر الصحيح)
     paths: ["links/**", "scripts/update-salah.py", "scripts/make-salah-ics.py", ".github/workflows/links-page.yml"]
   schedule:
     - cron: "17 1 * * *"   # كل يوم بالليل: يحدّث جدول الصلاة من موقع مسجد توركو
@@ -18,11 +19,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  # خطوتين منفصلات (مثل ما ينصح GitHub): وحدة تجهز الملفات، والثانية تنشرها.
+  # لما چانت خطوة وحدة، GitHub أحياناً ما يلگى الملفات المرفوعة لأنها كبيرة ويفشل النشر.
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - name: تحديث جدول الصلاة من موقع المسجد
@@ -31,5 +31,14 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: links
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: انتظار قصير حتى GitHub يسجّل الملفات
+        run: sleep 20
       - id: deployment
         uses: actions/deploy-pages@v4
