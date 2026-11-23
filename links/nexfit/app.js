@@ -353,7 +353,7 @@ function openSection(k, forSlot) {
   ${mine ? `<button class="curmeal noimg" data-rec="${cur}" data-slot="${slot}"><div><span class="xs">✓ ${slotN} اليوم</span><b>${curR.n}</b>${macroRow(cv)}<span class="xs" style="opacity:.85">اضغط تشوف المكونات بالغرام وشلون تسويها</span></div></button>` : ''}
   <div class="sec-h"><h2>${mine ? 'بدّل بوحدة من هاي' : 'كل الوصفات'}</h2><span class="xs mut">الأعلى بروتين أول</span></div>
   <div class="col">${L.filter(r => r.id !== cur).map(r => [r, optVal(r)]).sort((a, b) => b[1].p - a[1].p).map(([r, v]) => `<div class="rrow"><button class="rmain" data-rec="${r.id}" data-slot="${slot}">${r.gen ? '<span class="newtag">✨ جديدة</span>' : ''}<span class="grow col" style="gap:3px"><b>${r.n}</b><span class="xs mut clamp">${r.tag || ''}</span><span class="pmac num"><span><b style="color:var(--gold)">${Math.round(v.p)}g</b> بروتين</span><span><b>${Math.round(v.k)}</b> سعرة</span><span>⏱ ${r.t || 15}د</span></span></span></button><button class="pick" data-userec="${r.id}:${slot}:${k}">اختارها</button></div>`).join('')}</div>`;
-  const s = $('#screen'); if (!s.hidden && s.querySelector('.curmeal,.rrow')) { const y = s.scrollTop; s.innerHTML = `<div class="in">${html}</div>`; s.scrollTop = y; } else show(html);
+  const s = $('#screen'); if (!s.hidden && s.querySelector('.curmeal,.rrow')) { const y = s.scrollTop; s.innerHTML = `<div class="in keep">${html}</div>`; s.scrollTop = y; } else show(html);
 }
 function openRecipe(id, slot) {
   calcScale(); const o = forMe(recById(id)), v = optVal(o), sl = SLOTS.find(x => x[0] === slot) || SLOTS.find(x => POOL[x[0]].includes(o.s)) || SLOTS[2], cur = pickFor(sl[0]).id === id, sc = score(o), my = (S.rate || {})[id] || 0;
@@ -381,7 +381,7 @@ function openDB() {
   ${q ? '' : `<div class="cats">${CATS.map(([k, n, ic]) => `<button class="${fdCat === k ? 'on' : ''}" data-fcat="${k}"><span>${ic}</span>${n}</button>`).join('')}<button class="${fdCat === 'fin' ? 'on' : ''}" data-fcat="fin"><span>🇫🇮</span>منتجات بيتك</button></div>`}
   ${!q && fdCat === 'fin' ? `<div class="pgrid">${Object.keys(INFO).map(k => { const f = FD[k], i = INFO[k]; return `<button class="pcard" data-prod="${k}"><span class="pimg"><img src="img/${f.img}.webp" alt="" loading="lazy"></span><b>${f.n}</b><span class="fi">${f.b || ''}</span><span class="badges"><i class="ok">حلال</i>${i.lac === 'yes' ? '<i class="no">لاكتوز</i>' : '<i class="ok">بدون لاكتوز</i>'}</span></button>`; }).join('')}</div>`
   : `<p class="xs mut">${keys.length} • مرتّبة من الأعلى بروتين. الأرقام للحصة العادية.</p><div class="col">${keys.map(k => { const f = FOODS[k], s = itemVal(k, f.srv); return `<button class="frow" data-food="${k}">${fthumb(k, 64)}<div class="grow"><b>${f.n}</b><span class="fi">${f.fi}</span>${f.ben ? `<span class="xs mut clamp">${f.ben}</span>` : ''}<span class="badges">${ibsB(f.ibs)}<i class="mid" style="background:var(--s2);color:var(--mut)">🗓 ${freqOf(k)}</i></span></div><div class="qty"><b class="num">${r1(s.p)}g</b><span>بروتين</span><span class="num">${Math.round(s.k)} سعرة</span><span>${f.sn || f.srv + ' غم'}</span></div></button>`; }).join('') || '<p class="mut">ما لگيت شي. جرّب كلمة ثانية.</p>'}</div>`}`;
-  const s = $('#screen'); if (!s.hidden && s.querySelector('#fdq')) { s.innerHTML = `<div class="in">${html}</div>`; } else show(html);
+  const s = $('#screen'); if (!s.hidden && s.querySelector('#fdq')) { s.innerHTML = `<div class="in keep">${html}</div>`; } else show(html);
 }
 function openDrinks() {
   const T = targets(), row = ([k, n, w], c) => `<div class="irow ${c}"><span class="pimg">${k && fimg(k) ? `<img src="${fimg(k)}" alt="">` : c === 'no' ? '⛔' : '🥤'}</span><div class="grow col" style="gap:4px"><b>${n}</b><span class="xs mut">${w}</span></div></div>`;
@@ -484,7 +484,7 @@ function openFridge() {
   const html = `<div class="row"><button class="ib" data-close aria-label="رجوع">${I.back}</button><div class="grow"><h1>شنو عندي بالبيت؟</h1><p class="xs mut">اختار الي بثلاجتك، وأگلك شنو تگدر تطبخ هسه</p></div></div>
   ${groups.map(([n, ks]) => `<h3>${n}</h3><div class="fchips">${ks.filter(k => FOODS[k]).map(k => `<button class="${fridge.has(k) ? 'on' : ''}" data-fr="${k}">${fimg(k) ? `<img src="${fimg(k)}" alt="">` : ''}${FOODS[k].n}</button>`).join('')}</div>`).join('')}
   ${fridge.size ? `<div class="sec-h"><h2>تگدر تسوي ${res.filter(x => !x.miss.length).length} أكلة هسه</h2><button class="xs mut" style="background:none;border:0" data-frclear>امسح</button></div><div class="col">${res.map(({ r, miss }) => { const v = optVal(r); return `<button class="rrow" data-rec="${r.id}"><span class="rimg2"><img src="${recImg(r)}" alt="" loading="lazy" class="${isCut(r) ? 'cut' : ''}"></span><span class="grow col" style="gap:3px"><b>${r.n}</b><span class="xs" style="color:${miss.length ? 'var(--gold)' : '#34c759'}">${miss.length ? 'ناقصك: ' + miss.map(k => FOODS[k].n).join('، ') : '✓ عندك كل شي'}</span><span class="pmac num"><span><b style="color:var(--gold)">${Math.round(v.p)}g</b> بروتين</span><span>${Math.round(v.k)} سعرة</span></span></span></button>`; }).join('') || '<p class="mut sm">اختار أكثر حتى ألگى وصفات.</p>'}</div>` : ''}`;
-  const s = $('#screen'); if (!s.hidden && s.querySelector('.fchips')) { const y = s.scrollTop; s.innerHTML = `<div class="in">${html}</div>`; s.scrollTop = y; } else show(html);
+  const s = $('#screen'); if (!s.hidden && s.querySelector('.fchips')) { const y = s.scrollTop; s.innerHTML = `<div class="in keep">${html}</div>`; s.scrollTop = y; } else show(html);
 }
 /* ================= برنامج الساعد (بالبيت، 6 دقايق) ================= */
 const FORE = [['wristcurl', '3 × 15-20', 'كفك لفوگ، الحركة من الرسغ بس'], ['revcurl', '3 × 12-15', 'كفك لتحت، يقوّي ظهر الساعد'], ['farmer', '3 × 30-40 ثانية', 'امشي وانت ماسك أثقل دمبل تگدر عليه'], ['hang', '2 × لحد ما تتعب', 'تعلّگ بالعقلة: أقوى شي للقبضة']];
@@ -605,7 +605,7 @@ async function openStore(k) {
   const html = `<div class="row"><button class="ib" data-close aria-label="رجوع">${I.back}</button><div class="grow"><h1>${st[1]} ${st[2]}</h1><p class="xs mut">${all.length} منتج مفحوص • ${st[3]}</p></div></div>
   <div class="chips">${[['all', 'الكل'], ['pro', '💪 بروتين عالي']].map(([f, n]) => `<button class="${mkFilter === f ? 'on' : ''}" data-mkf="${f}:${k}">${n}</button>`).join('')}</div>
   <div class="mgrid2">${L.map(x => `<button class="mcard" data-mitem="${k}:${all.indexOf(x)}"><span class="pimg"><img src="${x.img}" alt="" loading="lazy"></span><b>${esc(x.n)}</b><span class="xs mut">${esc(x.b)}</span><span class="xs">${x.p != null ? `<b class="num" style="color:var(--g)">${x.p}g</b> بروتين • ${x.k != null ? x.k + ' سعرة' : ''}` : ''}</span></button>`).join('') || '<p class="mut">ماكو منتجات بهالفلتر.</p>'}</div>`;
-  const s = $('#screen'); if (!s.hidden && s.querySelector('.mgrid2')) { const y = s.scrollTop; s.innerHTML = `<div class="in">${html}</div>`; s.scrollTop = y; } else show(html);
+  const s = $('#screen'); if (!s.hidden && s.querySelector('.mgrid2')) { const y = s.scrollTop; s.innerHTML = `<div class="in keep">${html}</div>`; s.scrollTop = y; } else show(html);
 }
 async function openMItem(k, i) { const { MARKET } = await mk(); const x = MARKET[k][i]; show(productView(x, x.c), true); }
 async function nameSearch() {
@@ -698,7 +698,7 @@ function openBan(i) {
 }
 
 /* ================= أنا ================= */
-const VERSION = '23';
+const VERSION = '24';
 function weightInfo() {
   const start = S.startW || (S.weights[0]?.w) || +S.w || 52, goal = +S.goal || 62, cur = curW();
   const ms = [start + 1, start + 3, start + 5, start + 7].filter(x => x < goal).concat([goal]).map(x => +x.toFixed(1));
@@ -847,11 +847,53 @@ function chart(W, goal = 62) {
 const V = { home: vHome, course: vCourse, food: vFood, supps: vSupps, me: vMe };
 const TABS = Object.keys(V); let lastTab = null;
 function route() { if (SUS === null) refreshSus(); let h = location.hash.slice(1); if (h.startsWith('hk')) { const r = parseHK(decodeURIComponent(h.slice(3))); if (r) { saveHK(r); toast('وصلت أرقام الساعة ✓'); } history.replaceState(null, '', '#home'); h = 'home'; } if (!V[h]) h = 'home'; $('#app').innerHTML = V[h](); if (h === 'me') loadPhotos(); const a = $('#app'); a.classList.remove('fade', 'sl', 'sr'); if (lastTab !== h) { void a.offsetWidth; a.classList.add(lastTab == null ? 'fade' : TABS.indexOf(h) > TABS.indexOf(lastTab) ? 'sl' : 'sr'); } lastTab = h; document.querySelectorAll('nav a').forEach(a => a.classList.toggle('on', a.dataset.t === h)); }
-let stack = [];
-function show(html, push) { const sh = $('.sheet'); if (sh) sh.remove(); const s = $('#screen'); if (push && !s.hidden && s.innerHTML) stack.push(s.innerHTML); else { killAnims(); stack = []; } s.hidden = false; s.innerHTML = `<div class="in">${html}</div>`; s.scrollTop = 0; document.body.style.overflow = 'hidden'; }
-function closeScreen(keep) { stopScan(); killAnims(); stack = []; const s = $('#screen'); s.hidden = true; s.innerHTML = ''; if (!keep) { document.body.style.overflow = ''; route(); } }
-function back() { stopScan(); killAnims(); const s = $('#screen'); if (stack.length) { s.innerHTML = stack.pop(); s.scrollTop = 0; if ($('#scv')) startCam(); if (!$('#player').hidden) { s.hidden = true; renderPlayer(); } } else { closeScreen(!$('#player').hidden); if (!$('#player').hidden) renderPlayer(); } }
-window.addEventListener('hashchange', () => { const s = $('#screen'); if (!s.hidden) { stopScan(); killAnims(); stack = []; s.hidden = true; s.innerHTML = ''; document.body.style.overflow = ''; } route(); });
+let stack = [], hdepth = 0, skipPops = 0, animating = false;
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const EASE = 'cubic-bezier(.22,1,.36,1)';
+// حركة انتقال: الصفحة الجديدة تدخل من اليسار (عربي) والقديمة تطلع شوية لليمين وتغمق
+function slideSwap(dir) { // dir: 1 دخول، -1 رجوع
+  if (RM) return; const s = $('#screen'), cur = s.querySelector('.in'); if (!cur) return;
+  cur.animate([{ transform: `translateX(${dir > 0 ? '-100%' : '30%'})`, opacity: dir > 0 ? 1 : .4 }, { transform: 'none', opacity: 1 }], { duration: 420, easing: EASE });
+}
+function ghost(dir) { // نسخة من الصفحة القديمة تتحرك وتختفي
+  if (RM) return; const s = $('#screen'), cur = s.querySelector('.in'); if (!cur || s.hidden) return;
+  const g = cur.cloneNode(true); g.classList.add('ghost'); g.style.top = (-s.scrollTop) + 'px'; s.appendChild(g);
+  g.animate([{ transform: 'none', opacity: 1 }, { transform: `translateX(${dir > 0 ? '30%' : '-100%'})`, opacity: dir > 0 ? .3 : 1 }], { duration: 420, easing: EASE }).onfinish = () => g.remove();
+}
+function show(html, push) {
+  const sh = $('.sheet'); if (sh) sh.remove(); const s = $('#screen'), wasOpen = !s.hidden && s.innerHTML;
+  if (push && wasOpen) { ghost(1); stack.push({ h: s.querySelector('.in').innerHTML, y: s.scrollTop }); } else { killAnims(); stack = []; }
+  if (!wasOpen) { history.pushState({ nx: 1 }, ''); hdepth = 1; } else if (push) { history.pushState({ nx: hdepth + 1 }, ''); hdepth++; }
+  s.querySelectorAll('.in:not(.ghost)').forEach(x => x.remove());
+  s.hidden = false; const d = document.createElement('div'); d.className = 'in'; d.innerHTML = html; s.prepend(d); s.scrollTop = 0; document.body.style.overflow = 'hidden';
+  if (!wasOpen) { if (!RM) { s.animate([{ transform: 'translateX(-100%)' }, { transform: 'none' }], { duration: 440, easing: EASE }); $('#app').animate([{ transform: 'none', filter: 'brightness(1)' }, { transform: 'translateX(25%)', filter: 'brightness(.5)' }], { duration: 440, easing: EASE, fill: 'forwards' }); } }
+  else if (push) slideSwap(1); else d.classList.add('pop');
+}
+function hideScreen(keep, animate = true) {
+  const s = $('#screen'); stack = []; hdepth = 0;
+  const done = () => { s.hidden = true; s.innerHTML = ''; s.style.transform = ''; $('#app').getAnimations().forEach(a => a.cancel()); if (!keep) { document.body.style.overflow = ''; route(); } };
+  if (RM || !animate || s.hidden) { done(); return; }
+  s.animate([{ transform: getComputedStyle(s).transform === 'none' ? 'none' : getComputedStyle(s).transform }, { transform: 'translateX(-100%)' }], { duration: 340, easing: EASE }).onfinish = done;
+  $('#app').getAnimations().forEach(a => { a.cancel(); }); $('#app').animate([{ transform: 'translateX(25%)', filter: 'brightness(.5)' }, { transform: 'none', filter: 'brightness(1)' }], { duration: 340, easing: EASE });
+}
+function closeScreen(keep) { stopScan(); killAnims(); if (hdepth > 0 && !keep) { skipPops += hdepth; history.go(-hdepth); } hideScreen(keep); }
+function doBack() {
+  stopScan(); killAnims(); const s = $('#screen');
+  if (stack.length) { ghost(-1); const p = stack.pop(); s.querySelectorAll('.in:not(.ghost)').forEach(x => x.remove()); const d = document.createElement('div'); d.className = 'in'; d.innerHTML = p.h; s.prepend(d); s.scrollTop = p.y || 0; slideSwap(-1); if ($('#scv')) startCam(); if (!$('#player').hidden) { s.hidden = true; renderPlayer(); } }
+  else { const pl = !$('#player').hidden; hideScreen(pl); if (pl) renderPlayer(); }
+}
+function back() { if (hdepth > 0) history.back(); else doBack(); }
+addEventListener('popstate', () => { if (skipPops > 0) { skipPops--; return; } const s = $('#screen'); if (!s.hidden && hdepth > 0) { hdepth--; doBack(); } });
+// السحب من حافة الشاشة للرجوع (مثل الآيفون)
+(() => {
+  let x0 = 0, y0 = 0, t0 = 0, on = false, dx = 0, el = null;
+  addEventListener('touchstart', e => { const s = $('#screen'); if (s.hidden) return; const t = e.touches[0], w = innerWidth; if (t.clientX > w - 30 || t.clientX < 30) { x0 = t.clientX; y0 = t.clientY; t0 = Date.now(); on = true; dx = 0; el = s.querySelector('.in:not(.ghost)'); } }, { passive: true });
+  addEventListener('touchmove', e => { if (!on) return; const t = e.touches[0]; const d = (x0 > innerWidth / 2 ? x0 - t.clientX : t.clientX - x0); if (Math.abs(t.clientY - y0) > 40 && dx < 10) { on = false; return; } dx = Math.max(0, d); const dirX = x0 > innerWidth / 2 ? -1 : 1; const tgt = stack.length ? el : $('#screen'); tgt.style.transition = 'none'; tgt.style.transform = `translateX(${dirX * dx}px)`; tgt.style.opacity = 1 - dx / innerWidth * .4; }, { passive: true });
+  addEventListener('touchend', () => { if (!on) return; on = false; const tgt = stack.length ? el : $('#screen'); const fast = dx > 60 && Date.now() - t0 < 260;
+    if (dx > innerWidth * .33 || fast) { tgt.style.transition = ''; tgt.style.opacity = ''; if (stack.length) tgt.style.transform = ''; back(); }
+    else { tgt.style.transition = 'transform .35s cubic-bezier(.22,1,.36,1), opacity .35s'; tgt.style.transform = ''; tgt.style.opacity = ''; } });
+})();
+window.addEventListener('hashchange', () => { const s = $('#screen'); if (!s.hidden) { stopScan(); killAnims(); stack = []; hdepth = 0; s.hidden = true; s.innerHTML = ''; $('#app').getAnimations().forEach(a => a.cancel()); document.body.style.overflow = ''; } route(); });
 const reroute = () => { const y = scrollY; route(); scrollTo(0, y); };
 
 document.addEventListener('click', e => {
@@ -946,6 +988,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id
 document.addEventListener('change', async e => { if (e.target.id === 'ingImg' && e.target.files[0]) { ocrIngredients(e.target.files[0], e.target.dataset.code || ''); e.target.value = ''; return; } if (e.target.id === 'bcImg' && e.target.files[0]) { decodeImage(e.target.files[0]); e.target.value = ''; return; } if (e.target.id === 'impIn' && e.target.files[0]) { try { const o = JSON.parse(await e.target.files[0].text()); if (!o || !o.month) throw 0; S = Object.assign(def(), o); save(); applyTheme(); closeScreen(); toast('رجعت معلوماتك ✓'); } catch (er) { toast('الملف مو صحيح'); } return; } if (e.target.id === 'photoIn' && e.target.files[0]) { await savePhoto(e.target.files[0]); toast('انحفظت الصورة'); loadPhotos(); } });
 document.addEventListener('input', e => { const t = e.target; if (t.id === 'fdq') { fdQ = t.value; const pos = t.selectionStart; openDB(); const n = $('#fdq'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (er) {} } return; } if (!SES) return; if (t.dataset.w != null) SES.sets[SES.k][+t.dataset.w].w = t.value; if (t.dataset.r != null) SES.sets[SES.k][+t.dataset.r].r = t.value; });
 route();
+(() => { const sp = document.getElementById('splash'); if (!sp) return; const go = () => { sp.classList.add('out'); setTimeout(() => sp.remove(), 600); }; setTimeout(go, RM ? 200 : 1500); })();
 
 /* ================= التحديث التلقائي ================= */
 if ('serviceWorker' in navigator) {
