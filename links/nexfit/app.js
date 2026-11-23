@@ -698,7 +698,7 @@ function openBan(i) {
 }
 
 /* ================= أنا ================= */
-const VERSION = '24';
+const VERSION = '25';
 function weightInfo() {
   const start = S.startW || (S.weights[0]?.w) || +S.w || 52, goal = +S.goal || 62, cur = curW();
   const ms = [start + 1, start + 3, start + 5, start + 7].filter(x => x < goal).concat([goal]).map(x => +x.toFixed(1));
@@ -988,7 +988,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id
 document.addEventListener('change', async e => { if (e.target.id === 'ingImg' && e.target.files[0]) { ocrIngredients(e.target.files[0], e.target.dataset.code || ''); e.target.value = ''; return; } if (e.target.id === 'bcImg' && e.target.files[0]) { decodeImage(e.target.files[0]); e.target.value = ''; return; } if (e.target.id === 'impIn' && e.target.files[0]) { try { const o = JSON.parse(await e.target.files[0].text()); if (!o || !o.month) throw 0; S = Object.assign(def(), o); save(); applyTheme(); closeScreen(); toast('رجعت معلوماتك ✓'); } catch (er) { toast('الملف مو صحيح'); } return; } if (e.target.id === 'photoIn' && e.target.files[0]) { await savePhoto(e.target.files[0]); toast('انحفظت الصورة'); loadPhotos(); } });
 document.addEventListener('input', e => { const t = e.target; if (t.id === 'fdq') { fdQ = t.value; const pos = t.selectionStart; openDB(); const n = $('#fdq'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (er) {} } return; } if (!SES) return; if (t.dataset.w != null) SES.sets[SES.k][+t.dataset.w].w = t.value; if (t.dataset.r != null) SES.sets[SES.k][+t.dataset.r].r = t.value; });
 route();
-(() => { const sp = document.getElementById('splash'); if (!sp) return; const go = () => { sp.classList.add('out'); setTimeout(() => sp.remove(), 600); }; setTimeout(go, RM ? 200 : 1500); })();
+(() => { const sp = document.getElementById('splash'); if (!sp) return; const go = () => { sp.classList.add('out'); setTimeout(() => sp.remove(), 600); }; setTimeout(go, RM ? 200 : 3100); sp.addEventListener('click', go); })();
 
 /* ================= التحديث التلقائي ================= */
 if ('serviceWorker' in navigator) {

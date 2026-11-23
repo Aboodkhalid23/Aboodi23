@@ -9,8 +9,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="NEXFIT">
-<link rel="apple-touch-icon" href="icons/icon-180.png?v=nexfit">
-<link rel="icon" href="icons/icon-192.png?v=nexfit">
+<link rel="apple-touch-icon" href="icons/icon-180.png?v=x2">
+<link rel="icon" href="icons/icon-192.png?v=x2">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -720,15 +720,30 @@ nav a.on>span svg{width:22px!important;height:22px!important}
 .pcard b{font-size:14.5px;line-height:1.35;margin-top:4px}.pcard small{font-size:11px;color:var(--mut);direction:ltr;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* ===== v24: الحركة والتنقل ===== */
-#splash{position:fixed;inset:0;z-index:999;background:radial-gradient(500px 400px at 50% 42%,rgba(255,150,20,.28),transparent 70%),#0b0b0d;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:opacity .5s ease,transform .6s cubic-bezier(.22,1,.36,1)}
-#splash img{width:110px;height:110px;border-radius:30px;box-shadow:0 0 0 1px rgba(255,170,40,.4),0 20px 60px rgba(255,140,0,.45);animation:spIn .9s cubic-bezier(.34,1.56,.64,1) both}
-#splash .sp-logo{position:relative;width:110px;height:110px}#splash .sp-ring{position:absolute;inset:0;border-radius:30px;border:2px solid rgba(255,170,40,.75);animation:spRing 1.4s ease-out .35s both}#splash .sp-ring.r2{animation-delay:.6s}
-#splash b{font-family:var(--fd);font-size:34px;letter-spacing:8px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;animation:spTx .7s cubic-bezier(.22,1,.36,1) .35s both;direction:ltr}
-#splash small{color:var(--mut);font-size:14px;animation:spTx .7s cubic-bezier(.22,1,.36,1) .55s both}
-#splash.out{opacity:0;transform:scale(1.08);pointer-events:none}
-@keyframes spIn{from{opacity:0;transform:scale(.4) rotate(-12deg)}to{opacity:1;transform:none}}
-@keyframes spRing{0%{opacity:0;transform:scale(.8)}30%{opacity:1}100%{opacity:0;transform:scale(2.2)}}
-@keyframes spTx{from{opacity:0;transform:translateY(14px);letter-spacing:20px}to{opacity:1;transform:none}}
+#splash{position:fixed;inset:0;z-index:999;background:#1b1b1d;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;transition:opacity .55s ease,transform .7s cubic-bezier(.22,1,.36,1)}
+#splash.out{opacity:0;transform:scale(1.12);pointer-events:none}
+.sp-svg{width:min(88vw,460px);height:auto;overflow:visible;animation:spZoom 3s cubic-bezier(.22,1,.36,1) both}
+.spx1,.spx2{stroke-dasharray:1;stroke-dashoffset:1;animation:spDraw .55s cubic-bezier(.65,0,.35,1) forwards,spHide .2s linear 1.05s forwards}.spx2{animation-delay:.28s,1.05s}@keyframes spHide{to{opacity:0}}.sp-xfull{animation:spTag .25s ease .8s both}
+.sp-head{transform-box:fill-box;transform-origin:center;animation:spPop .6s cubic-bezier(.34,1.8,.64,1) .7s both}
+.sp-body{transform-box:fill-box;transform-origin:50% 100%;animation:spSquash .5s ease-out 1.38s both}
+.sp-bar{animation:spDrop .75s cubic-bezier(.5,0,.75,0) .95s both,spLift .6s cubic-bezier(.34,1.56,.64,1) 1.55s both}
+.sp-glow{transform-box:fill-box;transform-origin:center;animation:spGlow 1.2s ease-out 1.35s both}
+.sp-l,.sp-r{opacity:0;animation:.65s cubic-bezier(.22,1,.36,1) both}
+.sp-l{animation-name:spInL;animation-delay:1.75s}.sp-l.l2{animation-delay:1.65s}
+.sp-r{animation-name:spInR;animation-delay:1.65s}.sp-r.r2{animation-delay:1.73s}.sp-r.r3{animation-delay:1.81s}
+.sp-shine{animation:spShine .9s ease-in-out 2.35s both}
+.sp-tag{color:#8e8e98;font-size:14px;letter-spacing:1px;animation:spTag .6s ease 2.3s both}
+@keyframes spDraw{to{stroke-dashoffset:0}}
+@keyframes spPop{from{transform:scale(0)}to{transform:none}}
+@keyframes spDrop{0%{transform:translateY(-700px);opacity:0}15%{opacity:1}100%{transform:translateY(40px)}}
+@keyframes spLift{from{transform:translateY(40px)}to{transform:none}}
+@keyframes spSquash{0%{transform:none}35%{transform:scale(1.04,.9)}100%{transform:none}}
+@keyframes spGlow{0%{opacity:0;transform:scale(.3)}40%{opacity:1}100%{opacity:.55;transform:scale(1)}}
+@keyframes spInL{from{opacity:0;transform:translateX(260px)}to{opacity:1;transform:none}}
+@keyframes spInR{from{opacity:0;transform:translateX(-260px)}to{opacity:1;transform:none}}
+@keyframes spShine{from{transform:skewX(-20deg) translateX(0)}to{transform:skewX(-20deg) translateX(2500px)}}
+@keyframes spTag{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes spZoom{0%{transform:scale(1.25)}60%{transform:scale(1)}100%{transform:scale(.98)}}
 .screen{overflow-x:hidden;box-shadow:0 0 60px rgba(0,0,0,.6);will-change:transform}
 .screen:not([hidden]) .in{animation:none}
 .screen .in.ghost{position:absolute;left:0;right:0;margin:0 auto;pointer-events:none;z-index:-1}
@@ -755,7 +770,20 @@ nav a{transition:color .3s}
 </style>
 </head>
 <body>
-<div id="splash" aria-hidden="true"><div class="sp-logo"><i class="sp-ring"></i><i class="sp-ring r2"></i><img src="img/logo.webp" alt=""></div><b>NEXFIT</b><small>تمرّن صح</small></div>
+<div id="splash" aria-hidden="true"><svg class="sp-svg" viewBox="160 600 1780 860" xmlns="http://www.w3.org/2000/svg">
+<defs>
+
+<linearGradient id="spgl" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<radialGradient id="spglow"><stop offset="0" stop-color="#ff9d1a" stop-opacity=".55"/><stop offset="1" stop-color="#ff9d1a" stop-opacity="0"/></radialGradient>
+<clipPath id="sptxt"><path d="M215.0 1045.5L215.0 883.0L248.8 883.1L282.5 883.1L296.5 901.3C304.2 911.2 321.5 933.4 334.9 950.4C348.4 967.5 365.9 989.8 373.9 1000.0C382.0 1010.2 399.8 1032.9 413.5 1050.4L438.5 1082.2L438.8 982.6L439.0 883.0L476.0 883.0L513.0 883.0L513.0 1045.5L513.0 1208.0L480.2 1208.0L447.5 1208.0L420.5 1173.3C397.3 1143.5 353.5 1087.6 312.1 1035.0C297.6 1016.6 290.9 1008.6 289.9 1008.2C289.4 1008.0 289.0 1052.6 289.0 1107.9L289.0 1208.0L252.0 1208.0L215.0 1208.0L215.0 1045.5ZM575.0 1045.5L575.0 883.0L699.8 883.0L824.5 883.0L824.4 913.2L824.2 943.5L737.1 943.8L650.0 944.0L650.0 978.5L650.0 1013.0L727.5 1013.0L805.0 1013.0L805.0 1042.5L805.0 1072.0L727.5 1072.0L650.0 1072.0L650.0 1109.4L650.0 1146.8L671.2 1147.3C682.9 1147.6 723.4 1147.8 761.2 1147.7L830.0 1147.5L830.0 1177.8L830.0 1208.0L702.5 1208.0L575.0 1208.0L575.0 1045.5ZM1215.0 1045.5L1215.0 883.0L1334.5 883.0L1454.0 883.0L1453.8 913.2L1453.5 943.5L1372.3 943.8L1291.1 944.0L1290.8 969.3C1290.6 983.1 1290.6 1001.6 1290.8 1010.2L1291.1 1026.0L1363.5 1026.0L1436.0 1026.0L1436.0 1056.5L1436.0 1087.0L1363.2 1087.2L1290.5 1087.5L1290.5 1147.5L1290.5 1207.5L1252.8 1207.8L1215.0 1208.0L1215.0 1045.5ZM1494.0 1045.5L1494.0 883.0L1531.5 883.0L1569.0 883.0L1569.0 1045.5L1569.0 1208.0L1531.5 1208.0L1494.0 1208.0L1494.0 1045.5ZM1709.0 1076.0L1709.0 944.0L1658.0 944.0L1607.0 944.0L1607.0 913.5L1607.0 883.0L1747.0 883.0L1887.0 883.0L1887.0 913.5L1887.0 944.0L1836.2 944.2L1785.5 944.5L1785.2 1076.2L1785.0 1208.0L1747.0 1208.0L1709.0 1208.0L1709.0 1076.0Z"/></clipPath>
+</defs>
+<circle class="sp-glow" cx="1024" cy="1050" r="520" fill="url(#spglow)"/>
+<g class="sp-left"><path class="sp-l" d="M215.0 1045.5L215.0 883.0L248.8 883.1L282.5 883.1L296.5 901.3C304.2 911.2 321.5 933.4 334.9 950.4C348.4 967.5 365.9 989.8 373.9 1000.0C382.0 1010.2 399.8 1032.9 413.5 1050.4L438.5 1082.2L438.8 982.6L439.0 883.0L476.0 883.0L513.0 883.0L513.0 1045.5L513.0 1208.0L480.2 1208.0L447.5 1208.0L420.5 1173.3C397.3 1143.5 353.5 1087.6 312.1 1035.0C297.6 1016.6 290.9 1008.6 289.9 1008.2C289.4 1008.0 289.0 1052.6 289.0 1107.9L289.0 1208.0L252.0 1208.0L215.0 1208.0L215.0 1045.5Z" fill="#fff"/><path class="sp-l l2" d="M575.0 1045.5L575.0 883.0L699.8 883.0L824.5 883.0L824.4 913.2L824.2 943.5L737.1 943.8L650.0 944.0L650.0 978.5L650.0 1013.0L727.5 1013.0L805.0 1013.0L805.0 1042.5L805.0 1072.0L727.5 1072.0L650.0 1072.0L650.0 1109.4L650.0 1146.8L671.2 1147.3C682.9 1147.6 723.4 1147.8 761.2 1147.7L830.0 1147.5L830.0 1177.8L830.0 1208.0L702.5 1208.0L575.0 1208.0L575.0 1045.5Z" fill="#fff"/></g>
+<g class="sp-right"><path class="sp-r" d="M1215.0 1045.5L1215.0 883.0L1334.5 883.0L1454.0 883.0L1453.8 913.2L1453.5 943.5L1372.3 943.8L1291.1 944.0L1290.8 969.3C1290.6 983.1 1290.6 1001.6 1290.8 1010.2L1291.1 1026.0L1363.5 1026.0L1436.0 1026.0L1436.0 1056.5L1436.0 1087.0L1363.2 1087.2L1290.5 1087.5L1290.5 1147.5L1290.5 1207.5L1252.8 1207.8L1215.0 1208.0L1215.0 1045.5Z" fill="#fff"/><path class="sp-r r2" d="M1494.0 1045.5L1494.0 883.0L1531.5 883.0L1569.0 883.0L1569.0 1045.5L1569.0 1208.0L1531.5 1208.0L1494.0 1208.0L1494.0 1045.5Z" fill="#fff"/><path class="sp-r r3" d="M1709.0 1076.0L1709.0 944.0L1658.0 944.0L1607.0 944.0L1607.0 913.5L1607.0 883.0L1747.0 883.0L1887.0 883.0L1887.0 913.5L1887.0 944.0L1836.2 944.2L1785.5 944.5L1785.2 1076.2L1785.0 1208.0L1747.0 1208.0L1709.0 1208.0L1709.0 1076.0Z" fill="#fff"/></g>
+<g class="sp-body"><path class="spx1" d="M875 747 L1235 1395" stroke="#e09b36" stroke-width="86" fill="none" pathLength="1"/><path class="spx2" d="M1195 747 L815 1395" stroke="#e09b36" stroke-width="86" fill="none" pathLength="1"/><path class="sp-xfull" d="M737.8 1389.8C735.9 1388.7 737.8 1379.9 741.5 1372.5C749.8 1355.7 764.0 1345.9 784.2 1342.7L792.3 1341.5L807.5 1317.5C815.8 1304.3 835.8 1272.8 852.0 1247.5C868.1 1222.2 885.5 1194.8 890.7 1186.6C895.9 1178.5 905.2 1163.8 911.4 1154.1C951.1 1092.1 978.5 1048.2 978.5 1046.5C978.4 1044.9 937.2 979.3 903.0 926.5C899.8 921.5 891.5 908.7 884.7 898.0C877.8 887.3 867.6 871.3 862.0 862.5C838.4 825.8 803.1 770.2 800.5 765.7C798.5 762.2 798.0 760.6 798.8 759.8C800.3 758.3 865.3 745.0 871.2 745.0C872.1 745.0 873.9 746.7 875.1 748.8C882.7 761.2 960.6 883.3 990.8 930.0C1001.3 946.2 1012.9 964.3 1016.6 970.2C1020.4 976.2 1023.8 981.0 1024.1 981.0C1024.5 981.0 1029.1 974.4 1034.3 966.2C1039.5 958.1 1049.9 941.8 1057.5 930.0C1074.5 903.5 1107.7 851.7 1118.0 835.5C1151.9 782.4 1170.1 753.8 1172.4 749.8C1174.3 746.6 1175.9 745.0 1177.2 745.0C1179.5 745.0 1222.3 753.0 1236.5 756.1C1246.7 758.3 1250.0 759.5 1250.0 761.0C1250.0 762.2 1211.6 822.6 1118.0 969.0C1080.2 1028.1 1069.0 1045.9 1069.0 1046.5C1069.0 1046.9 1072.8 1053.1 1077.4 1060.4C1081.9 1067.6 1103.8 1102.1 1126.0 1137.0C1148.2 1171.9 1177.4 1217.8 1190.8 1239.0C1204.2 1260.2 1216.7 1279.8 1218.5 1282.5C1223.3 1289.9 1251.3 1333.9 1253.8 1338.2L1256.0 1341.8L1262.3 1342.5C1276.1 1344.1 1288.2 1350.1 1297.6 1360.2C1304.0 1367.2 1309.6 1378.0 1310.6 1385.2L1311.3 1390.0L1303.4 1390.1C1261.8 1390.5 1200.7 1390.1 1200.1 1389.4C1199.6 1388.9 1193.4 1379.3 1186.3 1368.0C1152.4 1314.5 1083.5 1206.0 1064.0 1175.5C1052.1 1156.8 1038.4 1135.3 1033.6 1127.8C1028.8 1120.2 1024.5 1114.0 1024.2 1114.0C1023.8 1114.0 1018.3 1122.2 1011.9 1132.3C993.0 1161.8 896.6 1313.4 872.2 1352.0C859.9 1371.5 849.2 1388.1 848.6 1388.8C847.3 1390.2 739.9 1391.2 737.8 1389.8Z" fill="#e09b36"/><path class="sp-head" d="M1007.8 878.6C985.3 870.6 971.2 847.8 974.7 824.9C981.1 783.7 1032.3 767.7 1060.5 798.2C1085.5 825.2 1074.2 868.2 1039.2 879.0C1029.9 881.9 1016.6 881.7 1007.8 878.6Z" fill="#e09b36"/></g>
+<g class="sp-bar"><path d="M727.6 828.8C724.4 817.3 688.0 676.9 686.3 669.4C685.9 667.8 686.4 667.1 688.2 666.6C699.3 663.5 722.3 658.0 722.7 658.4C722.9 658.6 726.2 670.9 730.0 685.6C737.4 714.8 740.7 727.0 741.4 727.7C741.6 727.9 745.6 727.0 750.1 725.6C806.6 708.6 878.1 695.7 950.0 689.4C974.5 687.2 1052.6 686.4 1077.4 687.9C1152.2 692.7 1217.5 703.5 1288.9 723.1C1299.0 725.8 1307.3 728.0 1307.5 727.8C1307.9 727.3 1314.5 702.4 1320.0 680.5C1322.9 669.0 1325.7 659.1 1326.1 658.7C1326.7 657.9 1360.6 666.3 1361.9 667.6C1362.6 668.2 1352.8 707.4 1339.0 759.5C1336.8 767.8 1331.6 787.8 1327.4 804.0C1323.2 820.2 1319.6 833.6 1319.5 833.8C1319.0 834.4 1286.0 825.7 1284.6 824.6C1283.2 823.6 1284.1 819.2 1291.6 789.6C1296.3 771.0 1299.9 755.3 1299.7 754.7C1299.3 753.4 1295.2 752.2 1267.0 745.0C1139.3 712.8 1021.6 705.5 897.5 722.1C846.4 728.9 747.1 751.1 748.5 755.3C750.6 761.4 765.0 821.8 764.8 823.3C764.5 825.0 762.0 826.0 748.0 829.6C738.9 832.0 731.0 833.9 730.3 834.0C729.6 834.0 728.4 831.6 727.6 828.8ZM673.1 815.2C666.4 793.0 644.7 708.2 645.5 707.0C646.7 705.1 679.3 696.0 680.5 697.2C680.9 697.6 685.4 714.0 690.5 733.7C695.6 753.4 702.3 779.1 705.3 790.9C708.4 802.7 710.8 812.5 710.7 812.6C710.3 812.9 677.0 822.0 676.1 822.0C675.6 822.0 674.3 819.0 673.1 815.2ZM1354.8 817.1C1346.2 814.6 1338.9 812.2 1338.6 811.9C1338.1 811.4 1345.6 781.9 1362.6 716.8C1365.2 707.1 1367.6 698.6 1368.1 697.9C1368.8 696.8 1370.2 696.9 1376.2 698.4C1385.6 700.8 1402.3 706.0 1403.2 706.9C1404.0 707.6 1384.6 783.7 1374.3 820.2C1373.6 822.6 1373.0 822.5 1354.8 817.1Z" fill="#fff"/></g>
+<g clip-path="url(#sptxt)"><rect class="sp-shine" x="-300" y="860" width="260" height="380" fill="url(#spgl)" transform="skewX(-20)"/></g>
+</svg><small class="sp-tag">تمرّن صح • NEXFIT</small></div>
 <main id="app"></main>
 <nav aria-label="القائمة"><div class="in">
   <a href="#home" data-t="home"><span data-i="home"></span>الرئيسية</a>
@@ -766,6 +794,6 @@ nav a{transition:color .3s}
 </div></nav>
 <div id="screen" class="screen" hidden></div>
 <div id="player" class="player" hidden></div>
-<script type="module" src="app.js?v=24"></script>
+<script type="module" src="app.js?v=25"></script>
 </body>
 </html>
