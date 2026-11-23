@@ -135,48 +135,34 @@ function bars7(vals, goal) { const mx = Math.max(goal || 1, ...vals); return `<d
 const kcalOn = d => { const e = (S.eaten || {})[d] || {}; return SLOTS.reduce((a, [s]) => e[s] ? a + optVal(pickFor(s, d)).k : a, 0); };
 const proOn = d => { const e = (S.eaten || {})[d] || {}; return SLOTS.reduce((a, [s]) => e[s] ? a + optVal(pickFor(s, d)).p : a, 0); };
 function vHome() {
-  const c = curDay(), t = c < MDAYS ? dayType(c) : null, T = targets(), water = (S.water || {})[today()] || 0, wT = Math.round(T.water * 4);
-  const doneToday = S.hist.some(h => h.d === today()), K = last7(kcalOn), P = last7(proOn), L = level();
-  const sp = (S.supp || {})[today()] || {}, supN = SUPPS.filter(s => s.id !== 'mag').length, supD = SUPPS.filter(s => s.id !== 'mag' && sp[s.id]).length;
-  const ch = [['💧', `اشرب ${wT} گلاصات مي`, water, wT, 'data-water', '+1 گلاص'], ['🍗', `كمّل ${T.p}g بروتين`, Math.round(P[6]), T.p, 'data-goto="food"', 'الأكل'], ['🏋️', t === 'R' ? 'مشي 30 دقيقة (يوم راحة)' : 'خلّص تمرين اليوم', doneToday ? 1 : 0, 1, t === 'R' ? `data-day="${c}"` : `data-start="${c}"`, 'ابدأ'], ['💊', 'خذ مكملاتك', supD, supN, 'data-goto="supps"', 'افتح']];
   const st = streak(), w = S.hist.filter(h => h.t !== 'R').length, wi = weightInfo();
   const badges = [['🥇', 'أول تمرين', w >= 1], ['🔥', '7 أيام ورا بعض', st >= 7], ['💪', '10 تمارين', w >= 10], ['🏆', '30 تمرين', w >= 30], ['⚖️', 'أول كيلو', wi.cur - wi.start >= 1], ['👑', 'وصلت هدفك', wi.cur >= wi.goal]];
-  const muscles = t && t !== 'R' ? [...new Set(dayItems(c).map(x => MGROUP(x.id)))].map(g => (MUS.find(m => m[0] === g) || [, g])[1]) : [];
-  return `<div class="topbar"><button class="ib" data-settings aria-label="الإعدادات">${I.gear}</button><div class="hi"><b>هلا <span>${esc((S.name || 'بطل').split(' ')[0])}</span>!</b><small>أهلاً بيك بـ NEXFIT</small></div><span class="coin">🔥<b class="num">${st}</b></span></div>
+  const total = Object.keys(EX).filter(id => MGROUP(id) && !REST_DAY.includes(id)).length;
+  return `<div class="topbar"><button class="ib" data-settings aria-label="الإعدادات">${I.gear}</button><div class="hi"><b>هلا <span>${esc((S.name || 'بطل').split(' ')[0])}</span>!</b><small>شنو تتمرن اليوم؟</small></div><span class="coin">🔥<b class="num">${st}</b></span></div>
   ${installCard()}${healthCard()}
-  <div class="sec-h"><h2>تقدّم اليوم</h2><span class="coin sm">⭐<b class="num">${L.x}</b></span></div>
-  <div class="statg"><button class="stat" data-goto="food"><div class="sh"><span class="si">🔥</span><div><b class="num">${Math.round(K[6]).toLocaleString('en')}</b><small>سعرة من ${T.k}</small></div></div>${spark(K)}<div class="days"><span>آخر 7 أيام</span></div></button>
-   <button class="stat" data-goto="food"><div class="sh"><span class="si">🍗</span><div><b class="num">${Math.round(P[6])}<small class="u">g</small></b><small>بروتين من ${T.p}</small></div></div>${bars7(P, T.p)}<div class="days"><span>آخر 7 أيام</span></div></button></div>
-  ${t === null ? `<div class="gcard"><h2>خلصت الشهر 🎉</h2><p>قيّم نفسك وأبنيلك الشهر الجاي.</p><button class="gbtn" data-eval>قيّم الشهر</button></div>`
-   : `<div class="gcard wcard"><img src="img/ex3d/${t === 'R' ? 'child' : (dayItems(c)[0] || {}).id}.jpg" alt=""><div class="wt"><small>${t === 'R' ? 'يوم راحة' : 'تمرين اليوم'} • اليوم ${c + 1}</small><h2>${t === 'R' ? 'راحة ومشي' : DAY_NAMES[t]}</h2><div class="mchips">${muscles.map(m => `<i>${m}</i>`).join('')}</div>${doneToday ? '<span class="done">✓ خلصته اليوم</span>' : `<button class="gbtn" data-${t === 'R' ? 'day' : 'start'}="${c}">${t === 'R' ? 'شوف تمارين الراحة' : 'ابدأ التمرين'}</button>`}</div></div>`}
-  <div class="sec-h"><h2>تحديات اليوم</h2><span class="xs mut num">${ch.filter(x => x[2] >= x[3]).length}/${ch.length}</span></div>
-  <div class="chl">${ch.map(([ic, n, v, g, at, bt]) => { const ok = v >= g; return `<div class="chc ${ok ? 'ok' : ''}"><span class="ci">${ic}</span><div class="grow"><b>${n}</b><div class="pbar"><i style="width:${Math.min(100, v / g * 100)}%"></i></div><small class="num">${Math.min(v, g)} / ${g}</small></div>${ok ? '<span class="tick">✓</span>' : `<button class="gbtn sm" ${at}>${bt}</button>`}</div>`; }).join('')}</div>
+  <a class="hero2" href="#course"><img src="img/ex3d/incline.jpg" alt=""><div><small>مكتبة التمارين</small><h2>${total} تمرين بالرسم والشرح</h2><span class="gbtn sm">اختار العضلة</span></div></a>
+  <div class="sec-h"><h2>اختار عضلة</h2></div>
+  <div class="hs">${MUS.map(([g, n, img]) => `<button class="mus sm" data-mus="${g}"><img src="img/ex3d/${img}.jpg" alt="" loading="lazy"><div><b>${n}</b><small class="num">${exList(g).length} تمرين</small></div></button>`).join('')}</div>
+  <a class="hero2 sup" href="#supps"><img src="img/supp/creapure.webp" alt=""><div><small>المكملات</small><h2>الكرياتين والبروتين والفيتامينات</h2><span class="gbtn sm">شوف المنتجات</span></div></a>
   <div class="sec-h"><h2>إنجازاتك</h2><span class="xs mut num">${badges.filter(b => b[2]).length}/${badges.length}</span></div>
   <div class="medals2">${badges.map(([ic, n, ok]) => `<div class="md ${ok ? 'on' : ''}"><span>${ic}</span><b>${n}</b></div>`).join('')}</div>
   ${smartCard()}`;
 }
 /* ================= التمارين حسب العضلة ================= */
-const MUS = [['chest', 'الصدر', 'dbbench'], ['back', 'الظهر', 'latpull'], ['shoulders', 'الأكتاف', 'lateral'], ['legs', 'الرجل', 'legpress'], ['biceps', 'البايسبس', 'curl'], ['triceps', 'الترايسبس', 'pushdown'], ['forearms', 'الساعد', 'wristcurl'], ['abs', 'البطن', 'crunch']];
+const MUS = [['chest', 'الصدر', 'bbbench'], ['back', 'الظهر', 'pullup'], ['shoulders', 'الأكتاف', 'lateral'], ['legs', 'الرجل', 'squat'], ['biceps', 'البايسبس', 'preacher'], ['triceps', 'الترايسبس', 'skull'], ['forearms', 'الساعد', 'wristcurl'], ['abs', 'البطن', 'legraise']];
 const MGROUP = id => { const m = (EX[id] || {}).m ? EX[id].m[0] : ''; return ['quads', 'hamstrings', 'glutes', 'calves'].includes(m) ? 'legs' : m === 'lowerback' ? 'back' : m; };
-const exList = g => Object.keys(EX).filter(id => MGROUP(id) === g && !REST_DAY.includes(id));
+const GOF = m => ['quads', 'hamstrings', 'glutes', 'calves'].includes(m) ? 'legs' : m === 'lowerback' ? 'back' : m === 'traps' ? 'shoulders' : m;
+const exList = g => Object.keys(EX).filter(id => EX[id].m && !REST_DAY.includes(id) && EX[id].m.some(m => GOF(m) === g));
 function planOf(id) { for (const d of ['A', 'B', 'C', 'D']) { const x = (S.month.plan[d] || []).find(z => z.id === id); if (x) return x; } return null; }
 function vCourse() {
-  const c = curDay(), M = S.month, t = c < MDAYS ? dayType(c) : null, doneN = Object.keys(M.done).length;
-  const wk = Math.min(3, Math.floor(Math.min(c, MDAYS - 1) / 7));
-  const strip = Array.from({ length: 7 }, (_, k) => wk * 7 + k).map(i => { const ty = dayType(i); return `<button class="dd ${M.done[i] ? 'done' : ''} ${i === c ? 'now' : ''} ${ty === 'R' ? 'rest' : ''}" data-day="${i}"><span class="xs">${ty === 'R' ? 'راحة' : 'تمرين'}</span><b class="num">${i + 1}</b></button>`; }).join('');
-  const muscles = t && t !== 'R' ? [...new Set(dayItems(c).map(x => MGROUP(x.id)))].map(g => (MUS.find(m => m[0] === g) || [, g])[1]) : [];
   return `${head('التمارين')}
-  ${t === null ? `<div class="gcard"><h2>خلصت الشهر 🎉</h2><button class="gbtn" data-eval>قيّم الشهر</button></div>` : `<div class="gcard wcard"><img src="img/ex3d/${t === 'R' ? 'child' : (dayItems(c)[0] || {}).id}.jpg" alt=""><div class="wt"><small>اليوم ${c + 1} من الشهر</small><h2>${t === 'R' ? 'يوم راحة' : DAY_NAMES[t]}</h2><div class="mchips">${muscles.map(m => `<i>${m}</i>`).join('')}</div><div class="row" style="gap:8px"><button class="gbtn" data-${t === 'R' ? 'day' : 'start'}="${c}">${t === 'R' ? 'تمارين الراحة' : 'ابدأ'}</button><button class="obtn" data-day="${c}">شوف التمارين</button></div></div></div>`}
-  <div class="card"><div class="sec-h"><h2>أسبوعك</h2><span class="xs mut num">${doneN}/${MDAYS}</span></div><div class="strip">${strip}</div></div>
-  <div class="sec-h"><h2>كل التمارين حسب العضلة</h2></div>
-  <div class="mgrid3">${MUS.map(([g, n, img]) => `<button class="mus" data-mus="${g}"><img src="img/ex3d/${img}.jpg" alt="" loading="lazy"><div><b>${n}</b><small class="num">${exList(g).length} تمارين</small></div></button>`).join('')}</div>
-  <button class="forecard" data-fore><span>💪</span><div class="grow"><b>برنامج الساعد</b><small>6 دقايق، 3 مرات بالأسبوع</small></div>${I.chev}</button>
-  <details class="card guide"><summary><b>🏆 قواعد العضل</b></summary><div class="good sm col"><p><b>زيد الوزن تدريجياً:</b> لما تخلّص كل السِتات بأعلى عدّات، زيد الجلسة الجاية</p><p><b>آخر سِت:</b> خلي 1-2 عدّة بالخزان</p><p><b>النزول 3 ثواني</b> والحركة كاملة</p><p><b>كل عضلة مرتين بالأسبوع</b>، و10-20 سِت بالأسبوع</p><p><b>نام 8 ساعات</b> وكُل بروتين 2 غم لكل كيلو</p></div></details>`;
+  <p class="sm mut" style="margin-top:-6px">اختار العضلة، وتطلعلك كل تماريناها بالرسم: السهم يأشّر على العضلة الي تشتغل.</p>
+  <div class="mgrid3">${MUS.map(([g, n, img]) => `<button class="mus" data-mus="${g}"><img src="img/ex3d/${img}.jpg" alt="" loading="lazy"><div><b>${n}</b><small class="num">${exList(g).length} تمرين</small></div></button>`).join('')}</div>`;
 }
 function openMuscle(g) {
-  const [, n] = MUS.find(m => m[0] === g), L = exList(g).sort((a, b) => (EX[b].star ? 1 : 0) - (EX[a].star ? 1 : 0));
-  show(`<div class="row"><button class="ib" data-close aria-label="رجوع">${I.back}</button><div class="grow"><h1>تمارين ${n}</h1><p class="xs mut">${L.length} تمارين • اضغط على أي تمرين تشوف الحركة</p></div></div>
-  <div class="col">${L.map(id => { const e = EX[id], p = planOf(id); return `<button class="exrow" data-ex="${id}"><img src="img/ex3d/${id}.jpg" alt="" loading="lazy"><div class="grow"><h3>${e.n}${e.star ? ' ⭐' : ''}</h3><p class="xs mut">${e.gym}</p><p class="sm num" style="color:var(--g)">${p ? p.s + ' × ' + p.r[0] + '-' + p.r[1] + (e.sec ? ' ثانية' : '') + ' • بخطتك' : e.sec ? '3 × 20-40 ثانية' : '3 × 10-12'}</p></div><span class="k">${I.play}</span></button>`; }).join('')}</div>`);
+  const [, n] = MUS.find(m => m[0] === g), L = exList(g).sort((a, b) => (MGROUP(b) === g ? 2 : 0) + (EX[b].star ? 1 : 0) - (MGROUP(a) === g ? 2 : 0) - (EX[a].star ? 1 : 0));
+  show(`<div class="row"><button class="ib" data-close aria-label="رجوع">${I.back}</button><div class="grow"><h1>تمارين ${n}</h1><p class="xs mut">${L.length} تمرين • اضغط على التمرين تشوف الحركة والشرح</p></div></div>
+  <div class="exgrid">${L.map(id => { const e = EX[id]; return `<button class="excard" data-ex="${id}"><img src="img/ex3d/${id}.jpg" alt="" loading="lazy"><div><h3>${e.n}${e.star ? ' ⭐' : ''}</h3><p class="xs num">${e.sec ? '3 × 20-40 ثانية' : e.c ? '3 × 8-12' : '3 × 10-15'}</p></div></button>`; }).join('')}</div>`);
 }
 /* ================= شاشة اليوم ================= */
 let SES = null;
@@ -208,10 +194,11 @@ async function mountAnim(canvas, id, phEl) {
 function killAnims() { anims.forEach(a => { try { a.dispose(); } catch (e) {} }); anims = []; }
 
 /* ================= شرح التمرين ================= */
+const MNAME = { chest: 'الصدر', back: 'الظهر', shoulders: 'الكتف', traps: 'الترابيس', biceps: 'البايسبس', triceps: 'الترايسبس', forearms: 'الساعد', abs: 'البطن', obliques: 'الخواصر', quads: 'الفخذ الأمامي', hamstrings: 'الفخذ الخلفي', glutes: 'المؤخرة', calves: 'السمانة', lowerback: 'أسفل الظهر', hipflex: 'الورك' };
 function exInfo(id) {
   const e = EX[id];
   return `<div class="anim"><canvas id="ac"></canvas><span class="ph"><i></i><span id="aph">استعد</span></span></div>
-  <div><p class="xs mut">اسمه بالجيم: ${e.gym}</p><h1>${e.n}${e.star ? ' ⭐' : ''}</h1></div>
+  <div><p class="xs mut">اسمه بالجيم: ${e.gym}</p><h1>${e.n}${e.star ? ' ⭐' : ''}</h1><div class="mchips" style="margin-top:8px">${e.m.map((m, i) => `<i style="${i ? '' : 'background:var(--grad);color:#1a1000;font-weight:800'}">${i ? '' : '🎯 '}${MNAME[m] || m}</i>`).join('')}</div></div>
   <div class="card"><h3>شلون تسويه</h3><div class="steps sm">${e.st.map(s => `<p>${s}</p>`).join('')}</div></div>
   ${e.bad.length ? `<div class="card"><h3>لا تسوي هيچ</h3><div class="bad sm col">${e.bad.map(s => `<p>${s}</p>`).join('')}</div></div>` : ''}
   ${EASY[id] && EX[EASY[id][0]] ? `<button class="easy" data-ex="${EASY[id][0]}"><img src="img/ex3d/${EASY[id][0]}.jpg" alt=""><div class="grow"><span class="xs" style="color:#34c759">صعبة عليك؟ جرّب الأسهل</span><b>${EX[EASY[id][0]].n}</b><span class="xs mut">نفس العضلة • ${EASY[id][1]}</span></div>${I.chev}</button>` : ''}
@@ -519,18 +506,12 @@ const tags = ok => `<span class="badges">${ok.filter(([, t]) => !/حلال/.test
 /* ================= المكملات ================= */
 let suppCat = 'protein';
 function vSupps() {
-  const d = S.supp[today()] || {}, minor = +S.age && +S.age < 18, C = SUPP_LIB.find(c => c.id === suppCat) || SUPP_LIB[0];
+  const minor = +S.age && +S.age < 18;
   return `${head('المكملات')}
-  <div class="card"><div class="sec-h"><h2>حبوبك اليوم</h2><span class="xs mut">اضغط لما تاخذها</span></div>
-   <div class="pills">${SUPPS.filter(s => s.id !== 'mag').map(s => `<button class="${d[s.id] ? 'on' : ''}" data-took="${s.id}"><img src="img/supp/${s.img}.webp" alt=""><b>${s.n.split(' (')[0].replace('الكرياتين', 'كرياتين').replace('بروتين أيزوليت', 'بروتين')}</b><span>${d[s.id] ? 'أخذته ✓' : s.when.split('،')[0]}</span></button>`).join('')}</div>
-   <details class="sched"><summary class="sm">جدول اليوم بالوكت</summary><div class="timeline">${SCHEDULE.map(([t, w, ic]) => `<div class="tl"><span class="ic">${I[ic]}</span><div><b class="d">${t}</b><p class="sm mut">${w}</p></div></div>`).join('')}</div></details></div>
+  <p class="sm mut" style="margin-top:-6px">بس الي يفيدك بالتضخيم. اضغط على المنتج تشوف شلون تاخذه ومنين تشتريه.</p>
   ${minor ? '<div class="warn"><b>عمرك أقل من 18:</b> لا تاخذ كرياتين ولا بروتين قبل ما تسأل طبيب.</div>' : ''}
-  <div class="cats">${SUPP_LIB.map(c => `<button class="${c.id === C.id ? 'on' : ''}" data-scat="${c.id}"><span>${c.ic}</span>${c.n}</button>`).join('')}</div>
-  <div class="card"><h2>${C.ic} ${C.n}</h2><p class="sm">${C.intro}</p>${C.helps ? `<div class="chips">${C.helps.map(h => `<span class="pill">${h}</span>`).join('')}</div>` : ''}<div class="feel">💪 <b>شكد يساعدك:</b> ${C.help}</div></div>
-  <div class="col">${C.items.map(x => `<button class="scard ${x.bad ? 'bad' : ''}" data-supp="${C.id}:${x.id}"><span class="pimg"><img src="img/${x.img}.webp" alt="" loading="lazy">${x.best ? '<em>⭐ الأفضل إلك</em>' : ''}${x.bad ? '<i>✕</i>' : ''}</span>
-    <div class="grow col" style="gap:6px"><div><h3>${x.n}</h3><span class="fi">${esc(x.b)}</span></div>${x.buy ? '<span class="xs" style="color:#34c759">🛒 يتشرى أونلاين</span>' : ''}<span class="xs mut">${x.srv}${x.nut.k ? `: <b class="num" style="color:var(--gold)">${AR(x.nut.p)} غ بروتين</b> • ${AR(x.nut.k)} سعرة` : ' • ما بيه سعرات'}</span>${tags(x.ok)}</div></button>`).join('')}</div>
-  ${C.skip.length ? `<div class="card" style="border-color:rgba(255,77,94,.4)"><h3>ليش ما اخترنا غيرها</h3><div class="bad sm col">${C.skip.map(t => `<p>${t}</p>`).join('')}</div></div>` : ''}
-  <p class="xs mut">تثقيف عام مو وصفة طبية. اسأل الطبيب أو الصيدلي قبل أي مكمّل، خصوصاً ويا القولون. الأحسن تسوي فحص دم: فيتامين د، B12، الحديد.</p>`;
+  ${SUPP_LIB.map(C => { const it = C.items.filter(x => !x.bad); return it.length ? `<div class="sec-h"><h2>${C.ic} ${C.n}</h2></div><div class="pgrid">${it.map(x => `<button class="pcard" data-supp="${C.id}:${x.id}"><span class="pi"><img src="img/${x.img}.webp" alt="" loading="lazy">${x.best ? '<em>⭐ الأفضل</em>' : ''}</span><b>${x.n}</b><small>${esc(x.b)}</small></button>`).join('')}</div>` : ''; }).join('')}
+  <p class="xs mut">تثقيف عام مو وصفة طبية. اسأل الطبيب أو الصيدلي قبل أي مكمّل.</p>`;
 }
 function openSupp(cid, id) {
   const C = SUPP_LIB.find(c => c.id === cid), x = C.items.find(i => i.id === id), alts = C.items.filter(i => i.id !== id && !i.bad), daily = SUPPS.find(s => s.img === x.img.replace('supp/', ''));
@@ -717,7 +698,7 @@ function openBan(i) {
 }
 
 /* ================= أنا ================= */
-const VERSION = '22';
+const VERSION = '23';
 function weightInfo() {
   const start = S.startW || (S.weights[0]?.w) || +S.w || 52, goal = +S.goal || 62, cur = curW();
   const ms = [start + 1, start + 3, start + 5, start + 7].filter(x => x < goal).concat([goal]).map(x => +x.toFixed(1));
@@ -863,7 +844,7 @@ function chart(W, goal = 62) {
 }
 
 /* ================= التنقل ================= */
-const V = { home: vHome, course: vCourse, food: vFood, scan: vScan, supps: vSupps, ban: vBan, me: vMe };
+const V = { home: vHome, course: vCourse, food: vFood, supps: vSupps, me: vMe };
 const TABS = Object.keys(V); let lastTab = null;
 function route() { if (SUS === null) refreshSus(); let h = location.hash.slice(1); if (h.startsWith('hk')) { const r = parseHK(decodeURIComponent(h.slice(3))); if (r) { saveHK(r); toast('وصلت أرقام الساعة ✓'); } history.replaceState(null, '', '#home'); h = 'home'; } if (!V[h]) h = 'home'; $('#app').innerHTML = V[h](); if (h === 'me') loadPhotos(); const a = $('#app'); a.classList.remove('fade', 'sl', 'sr'); if (lastTab !== h) { void a.offsetWidth; a.classList.add(lastTab == null ? 'fade' : TABS.indexOf(h) > TABS.indexOf(lastTab) ? 'sl' : 'sr'); } lastTab = h; document.querySelectorAll('nav a').forEach(a => a.classList.toggle('on', a.dataset.t === h)); }
 let stack = [];

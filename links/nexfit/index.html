@@ -699,6 +699,25 @@ nav a.on>span svg{width:22px!important;height:22px!important}
 .hero{background:var(--s1)!important}
 .pill.g{background:rgba(255,164,27,.14);color:var(--g)}
 .mlist .p{color:var(--g)}
+
+/* ===== v23 ===== */
+.hero2{position:relative;display:flex;align-items:flex-end;min-height:190px;border-radius:26px;overflow:hidden;border:1px solid rgba(255,170,40,.25);background:#000;color:#fff;text-decoration:none}
+.hero2>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.9}
+.hero2.sup{display:grid;grid-template-columns:minmax(0,1fr) 40%;align-items:center;min-height:170px;background:radial-gradient(circle at 20% 50%,rgba(255,170,40,.25),transparent 60%),var(--s1)}.hero2.sup>img{position:static;width:100%;height:150px;object-fit:contain;opacity:1}
+.hero2>div{position:relative;width:100%;padding:16px;background:linear-gradient(transparent,rgba(0,0,0,.92) 55%);display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.hero2.sup>div{background:none;width:auto}.hero2.sup h2{font-size:17px}
+.hero2 small{color:var(--g);font-weight:800}.hero2 h2{font-size:21px;line-height:1.35}
+.hs{display:flex;gap:10px;overflow-x:auto;margin:0 -16px;padding:2px 16px 6px;scrollbar-width:none}.hs::-webkit-scrollbar{display:none}
+.mus.sm{flex:none;width:132px;height:150px}.mus.sm b{font-size:16px}
+.mgrid3 .mus{height:190px}
+.exgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.excard{min-width:0}
+.excard{background:var(--s1);border:1px solid var(--line);border-radius:20px;overflow:hidden;padding:0;text-align:right;color:var(--fg);display:flex;flex-direction:column}
+.excard img{width:100%;aspect-ratio:1;object-fit:cover;display:block}.excard>div{padding:9px 11px 11px}.excard h3{font-size:14.5px;line-height:1.35}.excard p{color:var(--g);margin-top:3px}
+.pgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.pcard{min-width:0}
+.pcard{background:var(--s1);border:1px solid var(--line);border-radius:22px;padding:10px;text-align:right;color:var(--fg);display:flex;flex-direction:column;gap:4px}
+.pcard .pi{position:relative;display:grid;place-items:center;height:150px;border-radius:16px;background:radial-gradient(circle at 50% 45%,#fff 0,#f1f1f3 60%,#dcdce0 100%);overflow:hidden}
+.pcard .pi img{max-width:88%;max-height:136px;object-fit:contain}.pcard .pi em{position:absolute;top:8px;right:8px;font-style:normal;font-size:11px;font-weight:800;background:var(--grad);color:#1a1000;border-radius:999px;padding:3px 8px}
+.pcard b{font-size:14.5px;line-height:1.35;margin-top:4px}.pcard small{font-size:11px;color:var(--mut);direction:ltr;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -707,11 +726,11 @@ nav a.on>span svg{width:22px!important;height:22px!important}
   <a href="#home" data-t="home"><span data-i="home"></span>الرئيسية</a>
   <a href="#course" data-t="course"><span data-i="dumb"></span>التمارين</a>
   <a href="#food" data-t="food"><span data-i="food"></span>الأكل</a>
-  <a href="#scan" data-t="scan"><span data-i="scan"></span>الماسح</a>
+  <a href="#supps" data-t="supps"><span data-i="pill"></span>المكملات</a>
   <a href="#me" data-t="me"><span data-i="user"></span>أنا</a>
 </div></nav>
 <div id="screen" class="screen" hidden></div>
 <div id="player" class="player" hidden></div>
-<script type="module" src="app.js?v=22"></script>
+<script type="module" src="app.js?v=23"></script>
 </body>
 </html>

@@ -409,6 +409,170 @@ export const EXERCISES = {
   },
 };
 
+
+/* ================= تمارين إضافية (v23): كل عضلة بتمارين كثيرة ================= */
+function barbell(M, len = .62, pr = .17, n = 2) { const g = new THREE.Group(); g.add(rod(M.metal, V(-len, 0, 0), V(len, 0, 0), .014));
+  for (const s of [-1, 1]) { for (let i = 0; i < n; i++) { const p = mesh(new THREE.CylinderGeometry(pr - i * .03, pr - i * .03, .04, 28), M.black); p.rotation.z = Math.PI / 2; p.position.x = s * (len - .1 + i * .045); g.add(p); } const c = mesh(new THREE.CylinderGeometry(.03, .03, .03, 16), M.metal); c.rotation.z = Math.PI / 2; c.position.x = s * (len - .14); g.add(c); }
+  return g; }
+const _mid = S => S.hands[0].clone().add(S.hands[1]).multiplyScalar(.5);
+function withBar(base, M, o = {}) { const bar = o.ez ? (() => { const g = new THREE.Group(); g.add(rod(M.metal, V(-.32, 0, 0), V(.32, 0, 0), .013)); for (const s of [-1, 1]) { const p = mesh(new THREE.CylinderGeometry(.09, .09, .035, 24), M.black); p.rotation.z = Math.PI / 2; p.position.x = s * .27; g.add(p); } return g; })() : barbell(M, o.len || .62, o.pr || .17, o.n || 2);
+  base.g.add(bar); const up = base.update;
+  return { g: base.g, update(S, P) { bar.position.copy(_mid(S)); const d = S.hands[0].clone().sub(S.hands[1]); if (d.lengthSq() > 1e-4) bar.quaternion.setFromUnitVectors(V(1, 0, 0), d.normalize()); if (up) up(S, P); } }; }
+function tower(M, g, x, z, py) { g.add(box(M.frame, .14, 2.2, .14, x, 1.1, z)); g.add(stack(M, x, .02, z + (z > 0 ? .2 : -.2), 1.1)); const p = V(x, py, z + (z > 0 ? -.1 : .1)); g.add(pulley(M, p)); return p; }
+function cableTo(M, base, pts, idx = 'mid', handle = 'bar', w = .12) { // كيبل من البكرات للإيد
+  const lines = pts.map(() => cableLine(M)); base.g.add(...lines); let h = null;
+  if (handle === 'bar') { h = rod(M.metal, V(-w, 0, 0), V(w, 0, 0), .014); base.g.add(h); }
+  const up = base.update; return { g: base.g, update(S, P) { if (idx === 'mid') { const m = _mid(S); if (h) h.position.copy(m); lines[0].set(m, pts[0]); } else lines.forEach((l, i) => l.set(S.hands[i], pts[i])); if (up) up(S, P); } }; }
+const lying = (z = .25) => ({ hip: V(0, .57, z), pitch: -90 * D, feet: [V(.28, .08, .62), V(-.28, .08, .62)], kneePole: s => V(s * .3, .6, .6), footDir: [V(.1, -.2, 1), V(-.1, -.2, 1)] });
+const bent = (p = 55) => ({ hip: V(0, .84, -.14), pitch: p * D, feet: [V(.14, .08, .05), V(-.14, .08, .05)], kneePole: s => V(s * .15, 0, 1), footDir: [V(.08, -.1, 1), V(-.08, -.1, 1)] });
+const mat = M => EQ.mat(M);
+const dipEq = M => { const g = new THREE.Group(); for (const x of [-.27, .27]) { g.add(rod(M.metal, V(x, 1.17, -.35), V(x, 1.17, .4), .02)); g.add(box(M.frame, .07, 1.17, .07, x, .585, -.3), box(M.frame, .07, 1.17, .07, x, .585, .35)); } g.add(box(M.frame, 1, .04, 1, 0, .02, 0)); return { g }; };
+const seatOnly = (M, z = .06) => { const g = new THREE.Group(); g.add(rbox(M.pad, .38, .08, .4, .03, 0, .46, z)); g.add(rod(M.frame, V(0, .02, z), V(0, .42, z), .035)); g.add(box(M.frame, .7, .04, 1.2, 0, .02, .1)); return { g }; };
+
+Object.assign(EXERCISES, {
+  /* ---------- صدر ---------- */
+  bbbench: { title: 'البنچ بريس بالبار', lbl: 'وسط الصدر', prim: ['chest'], sec: ['shoulders', 'triceps'], tempo: [1, .3, 2, .5], phases: ['ادفع لفوگ', 'نزّل لصدرك ببطء'],
+    pose(t) { const P = lying(); P.hands = [1, -1].map(s => lv(V(s * .3, .74, -.12), V(s * .3, 1.17, -.18), t)); P.armPole = s => V(s, -.7, .2); P.hold = ['bar', 'bar']; return P; },
+    equip(M) { const b = EQ.flatBench(M, .45); b.g.position.z = -.05; for (const x of [-.45, .45]) b.g.add(box(M.frame, .06, 1.15, .06, x, .58, -.55)); return withBar(b, M); }, cam: { target: V(0, .75, -.05), r: 3.3, h: 1.8, yaw: [30, 70] }, path: 1 },
+  inclinebb: { title: 'البنچ المائل بالبار', lbl: 'أعلى الصدر', prim: ['chest'], sec: ['shoulders', 'triceps'], tempo: [1, .3, 2, .5], phases: ['ادفع لفوگ', 'نزّل لأعلى صدرك'],
+    pose(t) { const P = EXERCISES.incline.pose(0); P.hands = [1, -1].map(s => lv(V(s * .3, .99, -.22), V(s * .3, 1.38, -.36), t)); P.armPole = s => V(s, -.55, -.35); P.hold = ['bar', 'bar']; return P; },
+    equip(M) { return withBar(EQ.adjBench(M, 38), M); }, cam: { target: V(0, .85, -.15), r: 3.3, h: 1.9, yaw: [25, 70] }, path: 1 },
+  dbfly: { title: 'التفتيح بالدمبل', lbl: 'وسط الصدر (التمدد)', prim: ['chest'], sec: ['shoulders'], tempo: [1, .4, 2.2, .5], phases: ['جمّع لفوگ', 'افتح ببطء'],
+    pose(t) { const P = lying(); const f = lerp(82, 10, t) * D; P.hands = [1, -1].map(s => V(s * .17, .66, -.18).add(V(s * Math.sin(f) * .56, Math.cos(f) * .56, 0))); P.armPole = s => V(s * .2, -1, .4); P.hold = ['dbn', 'dbn']; return P; },
+    equip(M) { const b = EQ.flatBench(M, .45); b.g.position.z = -.05; return b; }, cam: { target: V(0, .75, -.05), r: 3.2, h: 1.8, yaw: [-20, 20] }, path: 1 },
+  cablecross: { title: 'الكروس أوفر بالكيبل', lbl: 'أسفل ووسط الصدر', prim: ['chest'], sec: ['shoulders'], tempo: [1, .5, 2, .5], phases: ['جمّع گدامك واعصر', 'رجّع ببطء'],
+    pose(t) { const P = { ...STAND, pitch: 16 * D, feet: [V(.12, .08, .2), V(-.12, .08, -.12)] }; P.hands = [1, -1].map(s => lv(V(s * .72, 1.5, -.02), V(s * .07, 1.0, .46), t)); P.armPole = s => V(s, .2, -.6); P.hold = ['grip', 'grip']; return P; },
+    equip(M) { const g = EQ.mat(M).g; const a = tower(M, g, .95, -.15, 1.95), b = tower(M, g, -.95, -.15, 1.95); return cableTo(M, { g }, [a, b], 'each'); }, cam: { target: V(0, 1.2, 0), r: 3.8, h: 1.7, yaw: [20, 55] }, path: 1 },
+  dips: { title: 'المتوازي', lbl: 'أسفل الصدر والترايسبس', prim: ['chest', 'triceps'], sec: ['shoulders'], tempo: [1, .3, 2, .5], phases: ['ادفع لفوگ', 'انزل ببطء'],
+    pose(t) { const y = lerp(.95, 1.25, t); const P = { hip: V(0, y, -.02), pitch: 14 * D, feet: [V(.08, y - .55, -.32), V(-.08, y - .55, -.32)], kneePole: () => V(0, 0, 1), footDir: [V(0, -.6, -.6), V(0, -.6, -.6)] };
+      P.hands = [V(.27, 1.19, .08), V(-.27, 1.19, .08)]; P.armPole = s => V(s * .2, 0, -1); P.hold = ['grip', 'grip']; return P; },
+    equip(M) { return dipEq(M); }, cam: { target: V(0, 1.1, 0), r: 3.6, h: 1.6, yaw: [55, 95] }, path: 0, pathHip: true },
+  /* ---------- ظهر ---------- */
+  pullup: { title: 'العقلة', lbl: 'عرض الظهر (اللاتس)', prim: ['back'], sec: ['biceps', 'forearms'], tempo: [1, .3, 2, .5], phases: ['اسحب نفسك لفوگ', 'انزل ببطء'],
+    pose(t) { const y = lerp(1.08, 1.47, t); const P = { hip: V(0, y, 0), pitch: -4 * D, feet: [V(.08, y - .62, -.22), V(-.08, y - .62, -.22)], kneePole: () => V(0, 0, 1), footDir: [V(0, -.6, .6), V(0, -.6, .6)] };
+      P.hands = [V(.34, 2.1, 0), V(-.34, 2.1, 0)]; P.armPole = s => V(s, -.2, -.3); P.hold = ['grip', 'grip']; return P; },
+    equip(M) { return EXERCISES.hang.equip(M); }, cam: { target: V(0, 1.4, 0), r: 4, h: 1.7, yaw: [155, 205] }, path: 0, pathHip: true, ringBack: true },
+  chinup: { title: 'العقلة بالقبضة المقلوبة', lbl: 'البايسبس والظهر', prim: ['biceps', 'back'], sec: ['forearms'], tempo: [1, .3, 2, .5], phases: ['اسحب لفوگ', 'انزل ببطء'],
+    pose(t) { const P = EXERCISES.pullup.pose(t); P.hands = [V(.16, 2.1, 0), V(-.16, 2.1, 0)]; P.armPole = s => V(s * .2, -.2, 1); return P; },
+    equip(M) { return EXERCISES.hang.equip(M); }, cam: { target: V(0, 1.4, 0), r: 4, h: 1.7, yaw: [30, 70] }, path: 0, pathHip: true },
+  closelat: { title: 'السحب الأمامي بقبضة ضيقة', lbl: 'أسفل اللاتس', prim: ['back'], sec: ['biceps'], tempo: [1, .4, 2, .5], phases: ['اسحب لصدرك', 'رجّع ببطء'],
+    pose(t) { const P = EXERCISES.latpull.pose(t); P.hands = [1, -1].map(s => lv(V(s * .09, 1.64, .12), V(s * .1, 1.08, .24), t)); P.armPole = s => V(s * .3, -.5, -1); return P; },
+    equip(M) { return EXERCISES.latpull.equip(M); }, cam: { target: V(0, 1.1, 0), r: 3.4, h: 1.65, yaw: [60, 110] }, path: 1 },
+  bbrow: { title: 'السحب بالبار منحني', lbl: 'وسط الظهر', prim: ['back'], sec: ['biceps', 'lowerback'], tempo: [1, .4, 2, .5], phases: ['اسحب لبطنك', 'نزّل ببطء'],
+    pose(t) { const P = bent(58); P.hands = [1, -1].map(s => { const sh = fromTorso(P, V(s * .2, .45, .02)); return lv(sh.clone().add(V(0, -.57, .03)), fromTorso(P, V(s * .22, .1, .2)), t); }); P.armPole = s => V(s * .3, .6, -1); P.hold = ['bar', 'bar']; return P; },
+    equip(M) { return withBar(mat(M), M); }, cam: { target: V(0, .8, 0), r: 3.3, h: 1.3, yaw: [65, 105] }, path: 1, pathHand: 0, ringBack: true },
+  straightarm: { title: 'السحب بإيد مستقيمة بالكيبل', lbl: 'اللاتس', prim: ['back'], sec: ['triceps'], tempo: [1, .5, 2, .5], phases: ['اسحب لفخذك', 'رجّع ببطء'],
+    pose(t) { const P = { ...STAND, pitch: 24 * D, hip: V(0, .9, -.05) }; P.hands = [1, -1].map(s => lv(V(s * .2, 1.78, .52), V(s * .2, .92, .22), t)); P.armPole = () => V(0, -.3, -1); P.hold = ['bar', 'bar']; return P; },
+    equip(M) { const g = EQ.mat(M).g; const p = tower(M, g, 0, .85, 2.05); return cableTo(M, { g }, [p], 'mid', 'bar', .22); }, cam: { target: V(0, 1.2, .2), r: 3.5, h: 1.6, yaw: [65, 105] }, path: 1, pathHand: 0, ringBack: true },
+  machrow: { title: 'جهاز السحب', lbl: 'وسط الظهر', prim: ['back'], sec: ['biceps', 'shoulders'], tempo: [1, .5, 2, .5], phases: ['اسحب لورا واعصر', 'رجّع ببطء'],
+    pose(t) { const P = { hip: V(0, .55, 0), pitch: 8 * D, ...SEAT(.4) }; P.hands = [1, -1].map(s => lv(V(s * .2, 1.0, .62), V(s * .24, .97, .16), t)); P.armPole = s => V(s * .4, 0, -1); P.hold = ['grip', 'grip']; return P; },
+    equip(M) { const s = seatOnly(M, 0); const g = s.g; g.add(rbox(M.pad, .34, .45, .08, .03, 0, 1.0, .3)); g.add(box(M.frame, .1, 1.7, .1, 0, .85, .95)); g.add(stack(M, 0, .02, 1.2, 1.1));
+      const arms = [rod(M.metal, V(), V(), .025), rod(M.metal, V(), V(), .025)]; g.add(...arms); return { g, update(S) { [0, 1].forEach(i => setRod(arms[i], V(S.hands[i].x, 1.6, .9), S.hands[i])); } }; },
+    cam: { target: V(0, .95, .2), r: 3.3, h: 1.6, yaw: [55, 100] }, path: 1, ringBack: true },
+  deadlift: { title: 'الرفعة الميتة بالبار', lbl: 'أسفل الظهر والمؤخرة', prim: ['lowerback', 'glutes', 'hamstrings'], sec: ['back', 'quads', 'forearms'], tempo: [1.2, .3, 1.8, .6], phases: ['اوگف بالبار', 'نزّله گريب رجلك'],
+    pose(t) { const P = { hip: lv(V(0, .62, -.24), V(0, .93, 0), t), pitch: lerp(52, 0, t) * D, feet: [V(.14, .08, .05), V(-.14, .08, .05)], kneePole: s => V(s * .2, 0, 1), footDir: [V(.08, -.1, 1), V(-.08, -.1, 1)] };
+      P.hands = [1, -1].map(s => fromTorso(P, V(s * .2, .45, .02)).add(V(0, -.58, .03))); P.armPole = () => V(0, 0, -1); P.hold = ['bar', 'bar']; return P; },
+    equip(M) { return withBar(mat(M), M); }, cam: { target: V(0, .8, 0), r: 3.4, h: 1.3, yaw: [65, 100] }, path: 0, pathHip: true, ringBack: true },
+  /* ---------- أكتاف ---------- */
+  machpress: { title: 'جهاز ضغط الكتف', lbl: 'الكتف الأمامي', prim: ['shoulders'], sec: ['triceps'], tempo: [1, .35, 2, .5], phases: ['ادفع لفوگ', 'نزّل ببطء'],
+    pose(t) { const P = { hip: V(0, .55, 0), pitch: -6 * D, ...SEAT(.44) }; P.hands = [1, -1].map(s => lv(V(s * .3, 1.12, .1), V(s * .2, 1.58, .08), t)); P.armPole = s => V(s, -1, -.15); P.hold = ['grip', 'grip']; return P; },
+    equip(M) { const s = EQ.seatMachine(M, -6); const g = s.g; g.add(box(M.frame, .08, 1.9, .08, .45, .95, -.35), box(M.frame, .08, 1.9, .08, -.45, .95, -.35)); g.add(stack(M, 0, .02, -.6, 1.1));
+      const arms = [rod(M.metal, V(), V(), .025), rod(M.metal, V(), V(), .025)]; g.add(...arms); return { g, update(S) { [1, -1].forEach((s, i) => setRod(arms[i], V(s * .45, .9, -.3), S.hands[i])); } }; },
+    cam: { target: V(0, 1.05, 0), r: 3.3, h: 1.5, yaw: [20, 60] }, path: 1 },
+  bbpress: { title: 'ضغط الكتف بالبار واگف', lbl: 'الكتف الأمامي', prim: ['shoulders'], sec: ['triceps', 'abs'], tempo: [1, .3, 2, .5], phases: ['ادفع فوگ راسك', 'نزّل لصدرك'],
+    pose(t) { const P = { ...STAND }; P.hands = [1, -1].map(s => lv(V(s * .25, 1.42, .14), V(s * .25, 1.96, .02), t)); P.armPole = s => V(s * .4, -1, .5); P.hold = ['bar', 'bar']; return P; },
+    equip(M) { return withBar(mat(M), M); }, cam: { target: V(0, 1.2, 0), r: 3.5, h: 1.5, yaw: [35, 75] }, path: 1, pathHand: 0 },
+  frontraise: { title: 'الرفرفة الأمامية', lbl: 'الكتف الأمامي', prim: ['shoulders'], sec: [], tempo: [1, .4, 2.2, .5], phases: ['ارفع لگدامك', 'نزّل ببطء'],
+    pose(t) { const P = { ...STAND }; P.hands = [1, -1].map(s => arc(V(s * .19, 1.37, .03), .57, 8, 86, t)); P.armPole = () => V(0, -1, 0); P.hold = ['db', 'db']; return P; },
+    equip(M) { return mat(M); }, cam: { target: V(0, 1.15, 0), r: 3.3, h: 1.4, yaw: [55, 95] }, path: 1 },
+  facepull: { title: 'الفيس بول بالحبل', lbl: 'الكتف الخلفي', prim: ['shoulders'], sec: ['back', 'traps'], tempo: [1, .5, 2, .5], phases: ['اسحب لوجهك', 'رجّع ببطء'],
+    pose(t) { const P = { ...STAND, pitch: -4 * D }; P.hands = [1, -1].map(s => lv(V(s * .07, 1.55, .66), V(s * .24, 1.62, .14), t)); P.armPole = s => V(s, .7, 0); P.hold = ['grip', 'grip']; return P; },
+    equip(M) { const g = EQ.mat(M).g; const p = tower(M, g, 0, .95, 1.62); return cableTo(M, { g }, [p, p], 'each'); }, cam: { target: V(0, 1.4, .2), r: 3.5, h: 1.8, yaw: [120, 160] }, path: 1, ringBack: true },
+  uprow: { title: 'السحب العمودي بالدمبل', lbl: 'الكتف الجانبي والترابيس', prim: ['shoulders', 'traps'], sec: ['biceps'], tempo: [1, .4, 2, .5], phases: ['اسحب لصدرك', 'نزّل ببطء'],
+    pose(t) { const P = { ...STAND }; P.hands = [1, -1].map(s => lv(V(s * .12, .86, .13), V(s * .14, 1.3, .14), t)); P.armPole = s => V(s, .8, 0); P.hold = ['db', 'db']; return P; },
+    equip(M) { return mat(M); }, cam: { target: V(0, 1.15, 0), r: 3.2, h: 1.4, yaw: [20, 55] }, path: 1 },
+  revfly: { title: 'التفتيح الخلفي بالدمبل', lbl: 'الكتف الخلفي', prim: ['shoulders'], sec: ['back', 'traps'], tempo: [1, .5, 2, .5], phases: ['افتح لجنب', 'نزّل ببطء'],
+    pose(t) { const P = bent(72); const f = lerp(6, 80, t) * D; P.hands = [1, -1].map(s => fromTorso(P, V(s * .19, .45, .02)).add(V(s * Math.sin(f) * .56, -Math.cos(f) * .56, .04))); P.armPole = () => V(0, 1, 0); P.hold = ['dbz', 'dbz']; return P; },
+    equip(M) { return mat(M); }, cam: { target: V(0, .95, 0), r: 3.3, h: 1.9, yaw: [150, 200] }, path: 1, ringBack: true },
+  /* ---------- رجل ---------- */
+  squat: { title: 'السكوات بالبار', lbl: 'الفخذ الأمامي والمؤخرة', prim: ['quads', 'glutes'], sec: ['hamstrings', 'lowerback'], tempo: [2, .3, 1, .6], df: true, phases: ['انزل ببطء', 'اصعد بقوة'],
+    pose(t) { const P = { hip: lv(V(0, .93, 0), V(0, .54, -.26), t), pitch: lerp(4, 38, t) * D, feet: [V(.17, .08, .05), V(-.17, .08, .05)], kneePole: s => V(s * .35, 0, 1), footDir: [V(.3, -.1, 1), V(-.3, -.1, 1)] };
+      P.hands = [1, -1].map(s => fromTorso(P, V(s * .33, .47, -.1))); P.armPole = s => V(s * .3, -1, -.4); P.hold = ['bar', 'bar']; return P; },
+    equip(M) { return withBar(mat(M), M, { len: .7 }); }, cam: { target: V(0, .85, 0), r: 3.4, h: 1.35, yaw: [45, 90] }, path: 0, pathHip: true },
+  lunge: { title: 'الطعنة بالدمبل (لانج)', lbl: 'الفخذ والمؤخرة', prim: ['quads', 'glutes'], sec: ['hamstrings'], tempo: [1.6, .3, 1, .5], df: true, phases: ['انزل بركبتك', 'اصعد'],
+    pose(t) { const y = lerp(.9, .56, t); const P = { hip: V(0, y, -.04), pitch: 0, feet: [V(.12, .08, .38), V(-.12, lerp(.1, .1, t), -.46)], kneePole: () => V(0, 0, 1), footDir: [V(.05, -.1, 1), V(0, -.75, .65)] };
+      P.hands = [V(.25, y - .46, -.03), V(-.25, y - .46, -.03)]; P.armPole = () => V(0, 0, -1); P.hold = ['dbn', 'dbn']; return P; },
+    equip(M) { return mat(M); }, cam: { target: V(0, .7, 0), r: 3.3, h: 1.25, yaw: [70, 105] }, path: 0, pathHip: true },
+  bulgarian: { title: 'السكوات البلغاري', lbl: 'الفخذ الأمامي والمؤخرة', prim: ['quads', 'glutes'], sec: ['hamstrings'], tempo: [1.6, .3, 1, .5], df: true, phases: ['انزل ببطء', 'اصعد'],
+    pose(t) { const y = lerp(.92, .6, t); const P = { hip: V(0, y, -.12), pitch: lerp(4, 14, t) * D, feet: [V(.12, .08, .34), V(-.12, .5, -.68)], kneePole: () => V(0, 0, 1), footDir: [V(.05, -.1, 1), V(0, -.3, -1)] };
+      P.hands = [V(.25, y - .45, -.1), V(-.25, y - .45, -.1)]; P.armPole = () => V(0, 0, -1); P.hold = ['dbn', 'dbn']; return P; },
+    equip(M) { const b = EQ.flatBench(M, .44); b.g.rotation.y = Math.PI / 2; b.g.position.set(-.12, 0, -.72); return b; }, cam: { target: V(0, .7, -.1), r: 3.4, h: 1.3, yaw: [70, 110] }, path: 0, pathHip: true },
+  hipthrust: { title: 'الهِب ثرست بالبار', lbl: 'المؤخرة', prim: ['glutes'], sec: ['hamstrings'], tempo: [1, .8, 1.6, .4], phases: ['ادفع وركك لفوگ واعصر', 'نزّل ببطء'],
+    pose(t) { const P = { hip: lv(V(0, .28, .09), V(0, .5, .15), t), pitch: lerp(-58, -92, t) * D, feet: [V(.17, .08, .5), V(-.17, .08, .5)], kneePole: s => V(s * .2, 1, .3), footDir: [V(.1, -.2, 1), V(-.1, -.2, 1)] };
+      P.hands = [1, -1].map(s => P.hip.clone().add(V(s * .3, .13, .02))); P.armPole = s => V(s, 1, 0); P.hold = ['bar', 'bar']; return P; },
+    equip(M) { const b = EQ.flatBench(M, .42); b.g.rotation.y = Math.PI / 2; b.g.position.z = -.4; return withBar(b, M); }, cam: { target: V(0, .4, .05), r: 3.2, h: 1.2, yaw: [65, 100] }, path: 0, pathHip: true },
+  standcalf: { title: 'السمانة واگف بالدمبل', lbl: 'السمانة', prim: ['calves'], sec: [], tempo: [.8, .6, 1.6, .4], phases: ['ارفع كعبك', 'نزّل ببطء'],
+    pose(t) { const y = lerp(0, .08, t); const P = { ...STAND, hip: V(0, .93 + y, 0), feet: [V(.11, .08 + y, .02), V(-.11, .08 + y, .02)], footDir: [1, -1].map(s => V(s * .08, -lerp(.1, .9, t), 1)) };
+      P.hands = [V(.25, .47 + y, .03), V(-.25, .47 + y, .03)]; P.armPole = () => V(0, 0, -1); P.hold = ['dbn', 'dbn']; return P; },
+    equip(M) { return mat(M); }, cam: { target: V(0, .8, 0), r: 3.6, h: 1.2, yaw: [-60, -100] }, ringBack: true },
+  /* ---------- بايسبس ---------- */
+  bbcurl: { title: 'البايسبس بالبار', lbl: 'البايسبس', prim: ['biceps'], sec: ['forearms'], tempo: [1, .4, 2, .5], phases: ['ارفع واعصر', 'نزّل ببطء'],
+    pose(t) { const P = EXERCISES.revcurl.pose(t); P.hands = [1, -1].map(s => arc(V(s * .22, 1.11, .03), .3, 6, 136, t)); return P; },
+    equip(M) { return withBar(mat(M), M, { len: .55, pr: .13, n: 1 }); }, cam: { target: V(0, 1.05, 0), r: 3.1, h: 1.35, yaw: [45, 95] }, path: 1, pathHand: 0 },
+  preacher: { title: 'الكيرل على مسند الواعظ', lbl: 'أسفل البايسبس', prim: ['biceps'], sec: ['forearms'], tempo: [1, .4, 2.2, .5], phases: ['ارفع واعصر', 'نزّل ببطء'],
+    pose(t) { const P = { hip: V(0, .55, -.05), pitch: 14 * D, ...SEAT(.4) }; const a = lerp(42, 160, t) * D; P.elbows = [V(.17, .88, .32), V(-.17, .88, .32)];
+      P.hands = P.elbows.map(e => e.clone().add(V(0, -Math.cos(a) * .3, Math.sin(a) * .3 * (a < Math.PI / 2 ? 1 : 1)))); P.hands = P.elbows.map(e => e.clone().add(V(0, -Math.cos(a) * .3, Math.sin(a) * .3))); P.armPole = () => V(0, -1, 0); P.hold = ['bar', 'bar']; return P; },
+    equip(M) { const s = seatOnly(M, -.05); const pad = rbox(M.pad, .42, .06, .36, .03); pad.rotation.x = 45 * D; pad.position.set(0, .82, .38); s.g.add(pad); s.g.add(rod(M.frame, V(0, .02, .5), V(0, .72, .45), .035)); return withBar(s, M, { ez: 1 }); }, cam: { target: V(0, .9, .2), r: 3, h: 1.4, yaw: [60, 100] }, path: 1, pathHand: 0 },
+  cablecurl: { title: 'البايسبس بالكيبل', lbl: 'البايسبس', prim: ['biceps'], sec: ['forearms'], tempo: [1, .5, 2, .5], phases: ['ارفع واعصر', 'نزّل ببطء'],
+    pose(t) { const P = EXERCISES.bbcurl.pose(t); P.hands = [1, -1].map(s => arc(V(s * .16, 1.11, .03), .3, 10, 134, t)); P.hold = ['bar', 'bar']; return P; },
+    equip(M) { const g = EQ.mat(M).g; const p = tower(M, g, 0, .8, .12); return cableTo(M, { g }, [p], 'mid', 'bar', .16); }, cam: { target: V(0, 1, .2), r: 3.3, h: 1.35, yaw: [60, 100] }, path: 1, pathHand: 0 },
+  inclinecurl: { title: 'البايسبس على المسند المائل', lbl: 'رأس البايسبس الطويل', prim: ['biceps'], sec: [], tempo: [1, .4, 2.2, .5], phases: ['ارفع واعصر', 'نزّل لحد آخر'],
+    pose(t) { const P = { hip: V(0, .55, .06), pitch: -34 * D, feet: [V(.22, .08, .62), V(-.22, .08, .62)], kneePole: s => V(s * .2, .6, 1), footDir: [V(.1, -.25, 1), V(-.1, -.25, 1)] }; const a = lerp(4, 128, t) * D;
+      P.elbows = [V(.22, .66, -.26), V(-.22, .66, -.26)]; P.hands = P.elbows.map(e => e.clone().add(V(0, -Math.cos(a) * .3, Math.sin(a) * .3))); P.armPole = () => V(0, 0, -1); P.hold = ['db', 'db']; return P; },
+    equip(M) { return EQ.adjBench(M, 56); }, cam: { target: V(0, .8, -.1), r: 3.1, h: 1.4, yaw: [60, 100] }, path: 1 },
+  /* ---------- ترايسبس ---------- */
+  ropepush: { title: 'الخلفية بالحبل', lbl: 'الرأس الجانبي للترايسبس', prim: ['triceps'], sec: [], tempo: [1, .5, 2, .5], phases: ['ادفع وافتح الحبل', 'رجّع ببطء'],
+    pose(t) { const P = EXERCISES.pushdown.pose(t); P.hands = P.hands.map((h, i) => h.clone().add(V((i ? -1 : 1) * .08 * t, 0, 0))); P.hold = ['grip', 'grip']; return P; },
+    equip(M) { const g = new THREE.Group(); g.add(box(M.frame, .45, 2.3, .12, 0, 1.15, .62)); g.add(stack(M, 0, .02, .82, 1.2)); const p = V(0, 2.12, .5); g.add(pulley(M, p)); const ls = [cableLine(M), cableLine(M)]; g.add(...ls);
+      return { g, update(S) { const k = V(0, 1.3, .3); const m = _mid(S).add(V(0, .18, 0)); ls[0].set(S.hands[0], m, p); ls[1].set(S.hands[1], m, p); } }; },
+    cam: { target: V(0, 1.15, .1), r: 3.2, h: 1.5, yaw: [50, 95] }, path: 1, ringBack: true },
+  skull: { title: 'السكل كراشر بالبار', lbl: 'الرأس الطويل للترايسبس', prim: ['triceps'], sec: [], tempo: [1, .4, 2, .5], phases: ['افرد إيدك لفوگ', 'نزّل لجبهتك ببطء'],
+    pose(t) { const P = lying(); const a = lerp(118, 6, t) * D; P.elbows = [V(.13, .9, -.3), V(-.13, .9, -.3)]; P.hands = P.elbows.map(e => e.clone().add(V(0, Math.cos(a) * .3, -Math.sin(a) * .3))); P.armPole = () => V(0, 0, 1); P.hold = ['bar', 'bar']; return P; },
+    equip(M) { const b = EQ.flatBench(M, .45); b.g.position.z = -.05; return withBar(b, M, { ez: 1 }); }, cam: { target: V(0, .8, -.1), r: 3.1, h: 1.6, yaw: [65, 105] }, path: 1, pathHand: 0 },
+  closebench: { title: 'البنچ بقبضة ضيقة', lbl: 'الترايسبس', prim: ['triceps', 'chest'], sec: ['shoulders'], tempo: [1, .3, 2, .5], phases: ['ادفع لفوگ', 'نزّل ببطء'],
+    pose(t) { const P = lying(); P.hands = [1, -1].map(s => lv(V(s * .14, .76, -.08), V(s * .14, 1.18, -.18), t)); P.armPole = s => V(s * .25, -.8, .5); P.hold = ['bar', 'bar']; return P; },
+    equip(M) { const b = EQ.flatBench(M, .45); b.g.position.z = -.05; for (const x of [-.45, .45]) b.g.add(box(M.frame, .06, 1.15, .06, x, .58, -.55)); return withBar(b, M); }, cam: { target: V(0, .75, -.05), r: 3.3, h: 1.8, yaw: [30, 70] }, path: 1, pathHand: 0 },
+  benchdip: { title: 'الغطس على المسند', lbl: 'الترايسبس', prim: ['triceps'], sec: ['chest', 'shoulders'], tempo: [1, .3, 2, .5], phases: ['ادفع لفوگ', 'انزل ببطء'],
+    pose(t) { const y = lerp(.27, .52, t); const P = { hip: V(0, y, -.2), pitch: -4 * D, feet: [V(.12, .08, .62), V(-.12, .08, .62)], kneePole: () => V(0, 1, .4), footDir: [V(0, .3, 1), V(0, .3, 1)] };
+      P.hands = [V(.2, .5, -.4), V(-.2, .5, -.4)]; P.armPole = () => V(0, 0, -1); return P; },
+    equip(M) { const b = EQ.flatBench(M, .46); b.g.rotation.y = Math.PI / 2; b.g.position.z = -.5; return b; }, cam: { target: V(0, .6, 0), r: 3.2, h: 1.3, yaw: [65, 105] }, path: 0, pathHip: true, ringBack: true },
+  kickback: { title: 'الكيك باك بالدمبل', lbl: 'الترايسبس (العصرة)', prim: ['triceps'], sec: [], tempo: [1, .6, 2, .5], phases: ['افرد لورا واعصر', 'رجّع ببطء'],
+    pose(t) { const P = bent(70); const p = 70 * D; const back = V(0, -Math.cos(p), -Math.sin(p)), down = V(0, -1, 0);
+      P.elbows = [1, -1].map(s => fromTorso(P, V(s * .2, .17, .02))); P.hands = P.elbows.map(e => e.clone().add(down.clone().lerp(back, t).normalize().multiplyScalar(.3))); P.armPole = () => V(0, 1, 0); P.hold = ['dbn', 'dbn']; return P; },
+    equip(M) { return mat(M); }, cam: { target: V(0, .9, 0), r: 3.2, h: 1.4, yaw: [70, 110] }, path: 1, ringBack: true },
+  /* ---------- ساعد ---------- */
+  revwrist: { title: 'لف الرسغ المقلوب', lbl: 'أعلى الساعد', prim: ['forearms'], sec: [], tempo: [.8, .4, 1.4, .4], phases: ['ارفع ظهر إيدك', 'نزّل ببطء'],
+    pose(t) { const P = EXERCISES.wristcurl.pose(t); P.hands = [1, -1].map(s => V(s * .11, lerp(.56, .67, t), .44)); return P; },
+    equip(M) { return EXERCISES.wristcurl.equip(M); }, cam: { target: V(0, .6, .25), r: 2.6, h: 1.1, yaw: [-50, -95] }, path: 1 },
+  /* ---------- بطن ---------- */
+  legraise: { title: 'رفع الرجلين نايم', lbl: 'أسفل البطن', prim: ['abs'], sec: ['hipflex'], tempo: [1, .4, 2, .4], phases: ['ارفع رجلك', 'نزّل ببطء بدون ما تلمس'],
+    pose(t) { const P = { hip: V(0, .12, .05), pitch: -90 * D, kneePole: () => V(0, 1, 0) }; const a = lerp(8, 86, t) * D; const d = V(0, Math.sin(a), Math.cos(a));
+      P.knees = [1, -1].map(s => P.hip.clone().add(V(s * .09, 0, 0)).addScaledVector(d, .43)); P.feet = [1, -1].map(s => P.hip.clone().add(V(s * .09, 0, 0)).addScaledVector(d, .85)); P.footDir = [1, 2].map(() => V(0, Math.cos(a), -Math.sin(a)).negate().multiplyScalar(-1));
+      P.hands = [V(.24, .04, -.1), V(-.24, .04, -.1)]; P.armPole = s => V(s, 1, 0); return P; },
+    equip(M) { return mat(M); }, cam: { target: V(0, .3, .1), r: 3.1, h: 1.1, yaw: [65, 105] }, path: 0, pathFoot: true },
+  deadbug: { title: 'الحشرة الميتة', lbl: 'عمق البطن', prim: ['abs'], sec: ['hipflex'], tempo: [1.2, .5, 1.2, .5], phases: ['مد إيد ورجل', 'رجّع وبدّل'],
+    pose(t) { const P = { hip: V(0, .12, .05), pitch: -90 * D, kneePole: () => V(0, 1, .2) }; const e = t;
+      P.knees = [V(.1, .45, .12), V(-.1, lerp(.45, .2, e), lerp(.12, .45, e))]; P.feet = [V(.1, .46, .55), V(-.1, lerp(.46, .14, e), lerp(.55, .86, e))]; P.footDir = [V(0, .3, 1), V(0, .3, 1)];
+      P.hands = [V(.2, lerp(.68, .14, e), lerp(-.2, -.72, e)), V(-.2, .68, -.2)]; P.armPole = () => V(0, 0, -1); return P; },
+    equip(M) { return mat(M); }, cam: { target: V(0, .3, 0), r: 3.1, h: 1.2, yaw: [60, 100] } },
+  russian: { title: 'الالتفاف الروسي', lbl: 'الخواصر وجوانب البطن', prim: ['obliques', 'abs'], sec: [], tempo: [.9, .2, .9, .2], phases: ['لف يمين', 'لف يسار'],
+    pose(t) { const P = { hip: V(0, .14, 0), pitch: -42 * D, yaw: lerp(-32, 32, t) * D, feet: [V(.12, .2, .55), V(-.12, .2, .55)], kneePole: () => V(0, 1, .3), footDir: [V(0, .2, 1), V(0, .2, 1)] };
+      const c = fromTorso(P, V(0, .3, .32)); P.hands = [c.clone().add(V(.06, 0, 0)), c.clone().add(V(-.06, 0, 0))]; P.armPole = s => V(s, -1, 0); P.hold = ['single', null]; return P; },
+    equip(M) { return mat(M); }, cam: { target: V(0, .4, .1), r: 3, h: 1.3, yaw: [10, 40] } },
+});
+
+Object.entries({"chestpress": "وسط الصدر", "incline": "أعلى الصدر", "dbbench": "وسط الصدر", "pecdeck": "وسط الصدر (العصرة)", "pushup": "الصدر والترايسبس", "kneepush": "الصدر والترايسبس", "latpull": "عرض الظهر (اللاتس)", "row": "وسط الظهر", "dbrow": "اللاتس ووسط الظهر", "backext": "أسفل الظهر", "pushdown": "الترايسبس", "ohtri": "الرأس الطويل للترايسبس", "legpress": "الفخذ الأمامي والمؤخرة", "legext": "الفخذ الأمامي", "legcurl": "الفخذ الخلفي", "shpress": "الكتف الأمامي", "lateral": "الكتف الجانبي", "reardelt": "الكتف الخلفي", "calf": "السمانة", "goblet": "الفخذ الأمامي والمؤخرة", "rdl": "الفخذ الخلفي والمؤخرة", "wristcurl": "باطن الساعد", "revcurl": "أعلى الساعد", "farmer": "القبضة والساعد", "kneeraise": "أسفل البطن", "crunch": "أعلى البطن", "plank": "عمق البطن", "curl": "البايسبس", "hammer": "البايسبس والساعد", "glutebridge": "المؤخرة", "wallsit": "الفخذ الأمامي"}).forEach(([k, v]) => { if (EXERCISES[k]) EXERCISES[k].lbl = v; });
+
 /* ================= المشهد ================= */
 export function createAnimator(canvas, exId, opts = {}) {
   const ex = EXERCISES[exId];
@@ -531,6 +695,7 @@ export function createAnimator(canvas, exId, opts = {}) {
   if (opts.manual) playing = false; else raf = requestAnimationFrame(frame);
   return {
     ex, renderAt: renderTime,
+    focus() { const p = ring.position.clone().project(camera); return { x: (p.x + 1) / 2 * canvas.clientWidth, y: (1 - p.y) / 2 * canvas.clientHeight }; },
     stop() { playing = false; cancelAnimationFrame(raf); },
     play() { if (!playing) { playing = true; last = 0; raf = requestAnimationFrame(frame); } },
     toggle() { playing ? this.stop() : this.play(); return playing; },
