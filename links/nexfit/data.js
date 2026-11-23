@@ -72,7 +72,7 @@ export const EX = {
   child: { n: 'وضعية الطفل', gym: 'چايلد پوز', m: ['back'], sec: 1, w0: 0, inc: 0, st: ['اگعد على ركبك', 'مد إيدك لگدام ونزّل صدرك', 'تنفس ببطء', '30 ثانية'], bad: [] },
 };
 export const REST_DAY = ['hipflex', 'cat', 'chest', 'hang', 'child'];
-export const DAY_NAMES = { A: 'علوي: صدر + ظهر + ذراع', B: 'سفلي: رجل + بطن', C: 'علوي: كتف + ذراع + ساعد', D: 'سفلي: مؤخرة + فخذ + بطن', R: 'راحة' };
+export const DAY_NAMES = { A: 'صدر + ظهر + ذراع', B: 'رجل + بطن', C: 'أكتاف + ذراع + ساعد', D: 'رجل + بطن (يوم 2)', R: 'راحة' };
 export const DAY_IMG = { A: 'dayA', B: 'dayL', C: 'dayC', D: 'dayL2', R: 'rest' };
 
 /* ================= برامج الشهور =================

@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Oswald:wght@500;600;700&display=swap">
 <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
-<script>try{var _t=JSON.parse(localStorage.getItem("coach-v4")||"{}").theme||"light";if(_t==="auto")_t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=_t;}catch(e){}</script>
+<script>try{var _t=JSON.parse(localStorage.getItem("coach-v4")||"{}").theme||"dark";if(_t==="auto")_t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=_t;}catch(e){}</script>
 <style>
 /* هوية NEXFIT: أسود وأحمر وفضي مثل اللوغو، خط فازير يدعم كل الحروف العراقية */
 :root{
@@ -662,19 +662,56 @@ nav a{display:flex;flex-direction:column;align-items:center;justify-content:flex
 nav a>span{width:28px;height:26px;display:grid;place-items:center;flex:none}nav a svg{width:24px!important;height:24px!important}
 :root:not([data-theme=light]) nav{background:rgba(22,22,24,.96)!important}
 main{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+
+/* ===== v22: داكن بالذهبي (مثل الصورة الي دزيتها) ===== */
+:root,:root:not([data-theme=light]){--bg:#0b0b0d;--s1:#161619;--s2:#1f1f24;--s3:#2a2a30;--line:rgba(255,255,255,.06);--fg:#f5f5f7;--mut:#8e8e98;--g:#ffa41b;--g2:#ff7a00;--gold:#ffc145;--grad:linear-gradient(135deg,#ffc145,#ff8a00);--glow:0 8px 26px rgba(255,150,20,.35)}
+:root:not([data-theme=light]) body{background:radial-gradient(700px 420px at 110% -80px,rgba(255,140,0,.22),transparent 65%),radial-gradient(500px 400px at -20% 40%,rgba(255,140,0,.07),transparent),var(--bg)!important;background-attachment:fixed!important}
+:root:not([data-theme=light]) .card,:root:not([data-theme=light]) .slist,:root:not([data-theme=light]) .exrow,:root:not([data-theme=light]) .rrow,:root:not([data-theme=light]) .frow,:root:not([data-theme=light]) .mcard,:root:not([data-theme=light]) .store,:root:not([data-theme=light]) .smart,:root:not([data-theme=light]) .coach,:root:not([data-theme=light]) .scard,:root:not([data-theme=light]) .forecard,:root:not([data-theme=light]) .sgrp,:root:not([data-theme=light]) .sprof{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015)),var(--s1)!important;border:1px solid var(--line)!important;box-shadow:0 10px 30px rgba(0,0,0,.35)!important}
+.btn{background:var(--grad)!important;color:#1a1000!important;box-shadow:var(--glow)}.btn.ghost{background:var(--s2)!important;color:var(--fg)!important;box-shadow:none}.btn.dark{background:var(--grad)!important;color:#1a1000!important}
+.gbtn{background:var(--grad);color:#1a1000;border:0;border-radius:999px;padding:12px 22px;font-family:var(--fd);font-weight:800;font-size:16px;box-shadow:var(--glow)}.gbtn.sm{padding:8px 14px;font-size:13px;box-shadow:none}
+.obtn{background:rgba(255,255,255,.08);color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:12px 18px;font-family:var(--fd);font-weight:700;font-size:15px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px}.topbar .hi{text-align:center;flex:1}.topbar .hi b{font-family:var(--fd);font-size:22px;font-style:italic}.topbar .hi b span{color:var(--g)}.topbar .hi small{display:block;color:var(--mut);font-size:12.5px}
+.coin{display:inline-flex;align-items:center;gap:6px;background:var(--s1);border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:15px}.coin b{color:var(--gold)}.coin.sm{padding:4px 10px;font-size:13px}
+.statg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.stat{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.015)),var(--s1);border:1px solid var(--line);border-radius:24px;padding:14px;color:var(--fg);text-align:right;display:flex;flex-direction:column;gap:8px;min-height:180px}
+.stat .sh{display:flex;gap:10px;align-items:center}.si{width:36px;height:36px;border-radius:12px;background:rgba(255,164,27,.14);display:grid;place-items:center;font-size:18px;flex:none}
+.stat b{font-size:26px;line-height:1}.stat b .u{font-size:14px;color:var(--mut)}.stat small{display:block;color:var(--mut);font-size:11.5px;margin-top:3px}
+.spark{width:100%;height:70px;margin-top:auto}.days{font-size:10.5px;color:var(--mut)}
+.bars7{display:flex;align-items:flex-end;gap:6px;height:70px;margin-top:auto}.bars7 i{flex:1;border-radius:6px;background:rgba(255,164,27,.28)}.bars7 i.on{background:var(--grad);box-shadow:0 0 12px rgba(255,160,20,.5)}
+.gcard{position:relative;overflow:hidden;border-radius:26px;padding:18px;background:linear-gradient(135deg,rgba(255,180,40,.16),rgba(255,120,0,.05)),var(--s1);border:1px solid rgba(255,170,40,.25)}
+.wcard{display:flex;gap:14px;align-items:center}.wcard img{width:110px;height:130px;object-fit:cover;border-radius:18px;flex:none}.wt{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}.wt small{color:var(--g);font-weight:700}.wt h2{font-size:20px;line-height:1.3}.wt .done{color:#34c759;font-weight:800}
+.mchips{display:flex;flex-wrap:wrap;gap:6px}.mchips i{font-style:normal;font-size:12px;background:rgba(255,255,255,.08);border-radius:999px;padding:3px 10px}
+.chl{display:flex;flex-direction:column;gap:10px}.chc{display:flex;align-items:center;gap:12px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015)),var(--s1);border:1px solid var(--line);border-radius:20px;padding:12px}
+.chc .ci{font-size:22px;width:44px;height:44px;border-radius:14px;background:rgba(255,164,27,.12);display:grid;place-items:center;flex:none}.chc b{font-size:15px}.chc small{color:var(--mut);font-size:11.5px}
+.pbar{height:6px;background:rgba(255,255,255,.08);border-radius:4px;margin:6px 0 2px;overflow:hidden}.pbar i{display:block;height:100%;background:var(--grad);border-radius:4px}
+.chc .tick{width:32px;height:32px;border-radius:50%;background:var(--grad);color:#1a1000;display:grid;place-items:center;font-weight:900}.chc.ok{border-color:rgba(255,170,40,.35)}
+.medals2{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.md{background:var(--s1);border:1px solid var(--line);border-radius:20px;padding:14px 6px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
+.md span{font-size:34px;filter:grayscale(1) opacity(.35)}.md b{font-size:12px;color:var(--mut)}.md.on{border-color:rgba(255,170,40,.35);background:radial-gradient(circle at 50% 30%,rgba(255,170,40,.18),transparent 70%),var(--s1)}.md.on span{filter:drop-shadow(0 4px 12px rgba(255,160,20,.5))}.md.on b{color:var(--fg)}
+.mgrid3{display:grid;grid-template-columns:1fr 1fr;gap:12px}.mus{position:relative;border:1px solid var(--line);border-radius:22px;overflow:hidden;height:150px;padding:0;background:#000;text-align:right}
+.mus img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.85}.mus>div{position:absolute;inset:auto 0 0 0;padding:10px 12px;background:linear-gradient(transparent,rgba(0,0,0,.9))}.mus b{font-family:var(--fd);font-size:19px;color:#fff}.mus small{display:block;color:var(--g);font-size:12px}
+.dd.now{background:var(--grad)!important}.dd.now span,.dd.now b{color:#1a1000!important}.dd.done b{color:var(--g)}
+.curmeal.noimg{height:auto;background:linear-gradient(135deg,rgba(255,180,40,.16),rgba(255,120,0,.05)),var(--s1);border:1px solid rgba(255,170,40,.25)}.curmeal.noimg>div{position:static;background:none;color:var(--fg)}
+.rtitle{font-size:28px}.newtag{font-size:11.5px;color:var(--g);font-weight:700}
+.rrow .rmain{padding:6px 4px}
+nav{background:rgba(16,16,19,.94)!important;border-top:1px solid var(--line)!important}
+nav a.on{color:var(--g)!important}nav a.on>span{background:var(--grad);color:#1a1000;border-radius:50%;width:48px!important;height:48px!important;margin-top:-26px;box-shadow:var(--glow);border:4px solid var(--bg)}
+nav a.on>span svg{width:22px!important;height:22px!important}
+.hero{background:var(--s1)!important}
+.pill.g{background:rgba(255,164,27,.14);color:var(--g)}
+.mlist .p{color:var(--g)}
 </style>
 </head>
 <body>
 <main id="app"></main>
 <nav aria-label="القائمة"><div class="in">
-  <a href="#home" data-t="home"><span data-i="home"></span>اليوم</a>
-  <a href="#course" data-t="course"><span data-i="dumb"></span>تمريني</a>
+  <a href="#home" data-t="home"><span data-i="home"></span>الرئيسية</a>
+  <a href="#course" data-t="course"><span data-i="dumb"></span>التمارين</a>
   <a href="#food" data-t="food"><span data-i="food"></span>الأكل</a>
-  <a href="#scan" data-t="scan"><span data-i="scan"></span>الماركت</a>
+  <a href="#scan" data-t="scan"><span data-i="scan"></span>الماسح</a>
   <a href="#me" data-t="me"><span data-i="user"></span>أنا</a>
 </div></nav>
 <div id="screen" class="screen" hidden></div>
 <div id="player" class="player" hidden></div>
-<script type="module" src="app.js?v=21"></script>
+<script type="module" src="app.js?v=22"></script>
 </body>
 </html>

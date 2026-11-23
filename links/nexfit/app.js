@@ -120,27 +120,6 @@ const QUOTES = ['اليوم الي ما تحب تروح بيه، هو اليوم
 const quote = () => QUOTES[new Date().getDate() % QUOTES.length];
 function eatenPro() { const e = (S.eaten || {})[today()] || {}; return todayMeals().reduce((a, x) => e[x.m.k] ? a + optVal(x.o).p : a, 0); }
 function ring3(v, col, r) { const C = 2 * Math.PI * r; return `<circle cx="70" cy="70" r="${r}" style="stroke:var(--ringbg)" stroke-width="11" fill="none"/><circle cx="70" cy="70" r="${r}" stroke="${col}" stroke-width="11" fill="none" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - Math.min(1, v))}"/>`; }
-function vHome() {
-  const c = curDay(), t = c < MDAYS ? dayType(c) : null, T = targets();
-  const doneToday = S.hist.some(h => h.d === today()), water = (S.water || {})[today()] || 0, wT = Math.round(T.water * 4), pro = eatenPro();
-  const hr = new Date().getHours(), greet = hr < 12 ? 'صباح الخير' : hr < 18 ? 'هلا بيك' : 'مساء الخير';
-  const sp = (S.supp || {})[today()] || {}, eaten = (S.eaten || {})[today()] || {}, TM = todayMeals();
-  const kc = TM.reduce((a, x) => eaten[x.m.k] ? a + optVal(x.o).k : a, 0);
-  const wk = t === 'R' || t === null, IC = { b: '🍳', s: '🥣', l: '🍛', a: '🥤', d: '🥗' };
-  const ring = (v, r, col, bg) => { const C = 2 * Math.PI * r; return `<circle cx="70" cy="70" r="${r}" stroke="${bg}" stroke-width="12" fill="none"/><circle cx="70" cy="70" r="${r}" stroke="${col}" stroke-width="12" fill="none" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - Math.min(1, v))}"/>`; };
-  const supN = SUPPS.filter(s => s.id !== 'mag').length, supD = SUPPS.filter(s => s.id !== 'mag' && sp[s.id]).length;
-  return `<div class="hhead"><div><p class="mut">${greet}${S.name ? '، ' + esc(S.name) : ''} 👋</p><h1>${doneToday ? 'كفو! خلصت تمرين اليوم' : wk ? 'اليوم راحة' : 'يومك بنظرة وحدة'}</h1></div><div class="row" style="gap:8px"><span class="streak">${I.fire}<b class="num">${streak()}</b></span>${gearBtn()}</div></div>
-  ${installCard()}${healthCard()}
-  <div class="card rings2"><svg viewBox="0 0 140 140">${ring(kc / T.k, 60, 'var(--g)', 'var(--rg1)')}${ring(pro / T.p, 44, 'var(--gold)', 'var(--rg2)')}${ring(water / wT, 28, 'var(--blue)', 'var(--rg3)')}</svg>
-   <div class="lg"><div><i style="background:var(--g)"></i><span>السعرات</span><b class="num" dir="ltr">${Math.round(kc)} / ${T.k}</b></div><div><i style="background:var(--gold)"></i><span>البروتين</span><b class="num" dir="ltr">${Math.round(pro)} / ${T.p}g</b></div><div><i style="background:var(--blue)"></i><span>المي</span><b class="num" dir="ltr">${water} / ${wT}</b></div><button class="btn sm ghost" data-water>💧 شربت گلاص</button></div></div>
-  ${t === null ? `<div class="card"><h2>خلصت الشهر 🎉</h2><p class="sm mut">قيّم نفسك وأبنيلك الشهر الجاي.</p><button class="btn dark wide" data-eval>قيّم الشهر</button></div>`
-   : `<div class="card"><button class="wo" data-day="${c}"><img src="img/ex3d/${t === 'R' ? 'child' : (dayItems(c)[0] || {}).id || 'chestpress'}.jpg" alt=""><div><small>${t === 'R' ? 'يوم راحة' : 'تمرين اليوم'} • اليوم ${c + 1}</small><h2>${DAY_NAMES[t]}</h2><p class="num">${t === 'R' ? 'مشي 30 دقيقة + إطالات' : dayItems(c).length + ' تمارين • 50 دقيقة'}</p></div></button>${doneToday ? '<div class="donebox">✓ خلصته اليوم، كفو</div>' : `<button class="btn dark wide" data-${t === 'R' ? 'day' : 'start'}="${c}">${t === 'R' ? 'شوف تمارين الراحة' : 'ابدأ التمرين'}</button>`}</div>`}
-  <div class="card"><div class="sec-h"><h2>أكلك اليوم</h2><a class="xs" href="#food" style="color:var(--g)">كل الأكل</a></div>
-   <div class="mlist">${TM.map(({ m, o }) => { const v = optVal(o); return `<button class="${eaten[m.k] ? 'on' : ''}" data-rec="${o.id}" data-slot="${m.k}"><span class="e">${eaten[m.k] ? '✓' : IC[m.k]}</span><span class="grow"><b>${o.n}</b><small>${m.n}</small></span><b class="num p">${Math.round(v.p)}g</b></button>`; }).join('')}</div></div>
-  <a class="card linkc" href="#supps"><span class="e">💊</span><span class="grow"><b>حبوبك اليوم</b><small class="num">${supD} من ${supN} أخذتها</small></span>${I.chev}</a>
-  ${smartCard()}
-  ${coachCard()}`;
-}
 function installCard() {
   const sa = window.navigator.standalone || matchMedia('(display-mode: standalone)').matches;
   if (sa || S.hideInstall) return '';
@@ -149,42 +128,55 @@ function installCard() {
 
 /* ================= الكورس ================= */
 let showPlan = false;
+/* ================= الرئيسية v22 (تصميم داكن بالذهبي) ================= */
+function last7(fn) { return Array.from({ length: 7 }, (_, k) => { const d = new Date(); d.setDate(d.getDate() - 6 + k); return fn(dk(d)); }); }
+function spark(vals, h = 60) { const W = 140, mx = Math.max(1, ...vals), pts = vals.map((v, i) => [i * W / 6, h - 6 - v / mx * (h - 14)]); const path = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' '); return `<svg viewBox="0 0 ${W} ${h}" class="spark"><defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb020" stop-opacity=".45"/><stop offset="1" stop-color="#ffb020" stop-opacity="0"/></linearGradient></defs><path d="${path} L${W} ${h} L0 ${h} Z" fill="url(#sg)"/><path d="${path}" fill="none" stroke="#ffb020" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`; }
+function bars7(vals, goal) { const mx = Math.max(goal || 1, ...vals); return `<div class="bars7">${vals.map((v, i) => `<i style="height:${Math.max(6, v / mx * 100)}%" class="${i === 6 ? 'on' : ''}"></i>`).join('')}</div>`; }
+const kcalOn = d => { const e = (S.eaten || {})[d] || {}; return SLOTS.reduce((a, [s]) => e[s] ? a + optVal(pickFor(s, d)).k : a, 0); };
+const proOn = d => { const e = (S.eaten || {})[d] || {}; return SLOTS.reduce((a, [s]) => e[s] ? a + optVal(pickFor(s, d)).p : a, 0); };
+function vHome() {
+  const c = curDay(), t = c < MDAYS ? dayType(c) : null, T = targets(), water = (S.water || {})[today()] || 0, wT = Math.round(T.water * 4);
+  const doneToday = S.hist.some(h => h.d === today()), K = last7(kcalOn), P = last7(proOn), L = level();
+  const sp = (S.supp || {})[today()] || {}, supN = SUPPS.filter(s => s.id !== 'mag').length, supD = SUPPS.filter(s => s.id !== 'mag' && sp[s.id]).length;
+  const ch = [['💧', `اشرب ${wT} گلاصات مي`, water, wT, 'data-water', '+1 گلاص'], ['🍗', `كمّل ${T.p}g بروتين`, Math.round(P[6]), T.p, 'data-goto="food"', 'الأكل'], ['🏋️', t === 'R' ? 'مشي 30 دقيقة (يوم راحة)' : 'خلّص تمرين اليوم', doneToday ? 1 : 0, 1, t === 'R' ? `data-day="${c}"` : `data-start="${c}"`, 'ابدأ'], ['💊', 'خذ مكملاتك', supD, supN, 'data-goto="supps"', 'افتح']];
+  const st = streak(), w = S.hist.filter(h => h.t !== 'R').length, wi = weightInfo();
+  const badges = [['🥇', 'أول تمرين', w >= 1], ['🔥', '7 أيام ورا بعض', st >= 7], ['💪', '10 تمارين', w >= 10], ['🏆', '30 تمرين', w >= 30], ['⚖️', 'أول كيلو', wi.cur - wi.start >= 1], ['👑', 'وصلت هدفك', wi.cur >= wi.goal]];
+  const muscles = t && t !== 'R' ? [...new Set(dayItems(c).map(x => MGROUP(x.id)))].map(g => (MUS.find(m => m[0] === g) || [, g])[1]) : [];
+  return `<div class="topbar"><button class="ib" data-settings aria-label="الإعدادات">${I.gear}</button><div class="hi"><b>هلا <span>${esc((S.name || 'بطل').split(' ')[0])}</span>!</b><small>أهلاً بيك بـ NEXFIT</small></div><span class="coin">🔥<b class="num">${st}</b></span></div>
+  ${installCard()}${healthCard()}
+  <div class="sec-h"><h2>تقدّم اليوم</h2><span class="coin sm">⭐<b class="num">${L.x}</b></span></div>
+  <div class="statg"><button class="stat" data-goto="food"><div class="sh"><span class="si">🔥</span><div><b class="num">${Math.round(K[6]).toLocaleString('en')}</b><small>سعرة من ${T.k}</small></div></div>${spark(K)}<div class="days"><span>آخر 7 أيام</span></div></button>
+   <button class="stat" data-goto="food"><div class="sh"><span class="si">🍗</span><div><b class="num">${Math.round(P[6])}<small class="u">g</small></b><small>بروتين من ${T.p}</small></div></div>${bars7(P, T.p)}<div class="days"><span>آخر 7 أيام</span></div></button></div>
+  ${t === null ? `<div class="gcard"><h2>خلصت الشهر 🎉</h2><p>قيّم نفسك وأبنيلك الشهر الجاي.</p><button class="gbtn" data-eval>قيّم الشهر</button></div>`
+   : `<div class="gcard wcard"><img src="img/ex3d/${t === 'R' ? 'child' : (dayItems(c)[0] || {}).id}.jpg" alt=""><div class="wt"><small>${t === 'R' ? 'يوم راحة' : 'تمرين اليوم'} • اليوم ${c + 1}</small><h2>${t === 'R' ? 'راحة ومشي' : DAY_NAMES[t]}</h2><div class="mchips">${muscles.map(m => `<i>${m}</i>`).join('')}</div>${doneToday ? '<span class="done">✓ خلصته اليوم</span>' : `<button class="gbtn" data-${t === 'R' ? 'day' : 'start'}="${c}">${t === 'R' ? 'شوف تمارين الراحة' : 'ابدأ التمرين'}</button>`}</div></div>`}
+  <div class="sec-h"><h2>تحديات اليوم</h2><span class="xs mut num">${ch.filter(x => x[2] >= x[3]).length}/${ch.length}</span></div>
+  <div class="chl">${ch.map(([ic, n, v, g, at, bt]) => { const ok = v >= g; return `<div class="chc ${ok ? 'ok' : ''}"><span class="ci">${ic}</span><div class="grow"><b>${n}</b><div class="pbar"><i style="width:${Math.min(100, v / g * 100)}%"></i></div><small class="num">${Math.min(v, g)} / ${g}</small></div>${ok ? '<span class="tick">✓</span>' : `<button class="gbtn sm" ${at}>${bt}</button>`}</div>`; }).join('')}</div>
+  <div class="sec-h"><h2>إنجازاتك</h2><span class="xs mut num">${badges.filter(b => b[2]).length}/${badges.length}</span></div>
+  <div class="medals2">${badges.map(([ic, n, ok]) => `<div class="md ${ok ? 'on' : ''}"><span>${ic}</span><b>${n}</b></div>`).join('')}</div>
+  ${smartCard()}`;
+}
+/* ================= التمارين حسب العضلة ================= */
+const MUS = [['chest', 'الصدر', 'dbbench'], ['back', 'الظهر', 'latpull'], ['shoulders', 'الأكتاف', 'lateral'], ['legs', 'الرجل', 'legpress'], ['biceps', 'البايسبس', 'curl'], ['triceps', 'الترايسبس', 'pushdown'], ['forearms', 'الساعد', 'wristcurl'], ['abs', 'البطن', 'crunch']];
+const MGROUP = id => { const m = (EX[id] || {}).m ? EX[id].m[0] : ''; return ['quads', 'hamstrings', 'glutes', 'calves'].includes(m) ? 'legs' : m === 'lowerback' ? 'back' : m; };
+const exList = g => Object.keys(EX).filter(id => MGROUP(id) === g && !REST_DAY.includes(id));
+function planOf(id) { for (const d of ['A', 'B', 'C', 'D']) { const x = (S.month.plan[d] || []).find(z => z.id === id); if (x) return x; } return null; }
 function vCourse() {
-  const c = curDay(), M = S.month, doneN = Object.keys(M.done).length, t = c < MDAYS ? dayType(c) : null;
+  const c = curDay(), M = S.month, t = c < MDAYS ? dayType(c) : null, doneN = Object.keys(M.done).length;
   const wk = Math.min(3, Math.floor(Math.min(c, MDAYS - 1) / 7));
-  const strip = Array.from({ length: 7 }, (_, k) => wk * 7 + k).map(i => { const ty = dayType(i); return `<button class="dd ${M.done[i] ? 'done' : ''} ${i === c ? 'now' : ''} ${ty === 'R' ? 'rest' : ''}" data-day="${i}"><span class="xs">${({ A: 'ع', B: 'س', C: 'ع', D: 'س', R: 'ر' })[ty]}</span><b class="num">${AR(i + 1)}</b></button>`; }).join('');
-  return `${head('تمريني')}<span class="pill g" style="align-self:flex-start">${M.mo || tplFor(M.n).mo} • ${tplFor(M.n).n}</span>
-  ${t === null ? `<div class="card"><h2>خلصت الشهر 🎉</h2><p class="sm mut">قيّم نفسك وأبنيلك الشهر الجاي.</p><button class="btn wide" data-eval>قيّم الشهر</button></div>` : `
-  <button class="hero" data-day="${c}"><div class="wm">اليوم ${AR(c + 1)}</div><div class="txt"><span class="lab">${t === 'R' ? 'يوم راحة' : 'تمرين اليوم'}</span><h1>${DAY_NAMES[t]}</h1><p class="sm">${t === 'R' ? 'مشي + وگفة' : AR(dayItems(c).length) + ' تمارين'}</p><span class="go">${I.play}</span></div><img src="img/ex3d/${DAY_IMG[t]}.jpg" alt=""></button>
-  ${t !== 'R' ? `<div class="col">${dayItems(c).map((x, k) => `<button class="exrow" data-ex="${x.id}"><img src="img/ex3d/${x.id}.jpg" alt="" loading="lazy"><div class="grow"><h3>${EX[x.id].n}${EX[x.id].star ? ' ⭐' : ''}</h3><p class="sm num" style="color:var(--g)">${AR(setsAt(x, c))} × ${rng(x.r)} ${EX[x.id].sec ? 'ثانية' : ''}</p><p class="xs mut">${x.w ? AR(x.w) + ' كغم' : 'بدون وزن'}</p></div><span class="k">${I.play}</span></button>`).join('')}</div>
-  <button class="btn wide big" data-start="${c}">${I.play} يلا نبدي</button>` : ''}`}
-  <div class="card"><div class="sec-h"><h2>هالأسبوع</h2><span class="xs mut num">${AR(doneN)}/${AR(MDAYS)} يوم بالشهر</span></div><div class="strip">${strip}</div><p class="xs mut">ع = علوي (صدر، ظهر، كتف، ذراع) • س = سفلي (رجل وبطن) • ر = راحة. كل عضلة تتمرن مرتين بالأسبوع.</p></div>
-  <button class="forecard" data-fore><span>💪</span><div class="grow"><b>برنامج الساعد</b><small>${Object.keys(S.fore || {}).filter(d => daysBetween(d, today()) < 7 && S.fore[d]).length}/3 هالأسبوع • 6 دقايق، يكبّر الساعد ويقوّي القبضة</small></div>${I.chev}</button>
-  <div class="sec-h"><h2>دليل المدرّب</h2></div>
-  <details class="card guide"><summary><b>📊 ليش هالتقسيم؟ (علوي / سفلي)</b></summary><div class="good sm col">
-   <p><b>كل عضلة مرتين بالأسبوع:</b> الدراسات (مثل مراجعة شونفيلد 2016) لگت إن تمرين العضلة مرتين بالأسبوع يكبّرها أكثر من مرة وحدة، بنفس عدد السِتات</p>
-   <p><b>4 أيام بس:</b> علوي، سفلي، راحة، علوي، سفلي، راحتين. جسمك النحيف يحتاج راحة وأكل حتى يكبر، مو تمرين كل يوم</p>
-   <p><b>10-20 سِت لكل عضلة بالأسبوع:</b> هذا المدى الي يتفق عليه المدربين الكبار مثل جيف نيپارد ومايك إسرائيتل</p>
-   <p><b>الأجهزة أول شهرين:</b> تتعلم الحركة بأمان، وبعدها ننتقل للدمبل والحركات الحرة</p>
-   <p><b>الساعد والبطن والكتف الخلفي:</b> موجودين كل أسبوع، لأن هذولة الي يفرقون بالشكل</p></div></details>
-  <details class="card guide"><summary><b>🏆 القواعد الذهبية للعضل</b></summary><div class="good sm col">
-   <p><b>الزيادة التدريجية:</b> لما تكمّل كل السِتات بأعلى عدّات، زيد الوزن الجلسة الجاية. التطبيق يحسبها إلك لحاله</p>
-   <p><b>جهد صح:</b> آخر سِت تخلّي 1-2 عدّة بالخزان. أبعد من هيچ ما يكبّر، وأقرب يتعبك ويعوّرك</p>
-   <p><b>النزول على مهلك:</b> 3 ثواني للنزول. نص فايدة التمرين بالنزول</p>
-   <p><b>الحركة كاملة:</b> المدى الكامل يكبّر العضلة أكثر من الوزن الثقيل بنص حركة</p>
-   <p><b>عدد السِتات:</b> 10-20 سِت لكل عضلة بالأسبوع. الكورس محسوب على هالأساس</p>
-   <p><b>النوم 8 ساعات</b> وبروتين 2 غم لكل كيلو. العضلة تنبني بالفراش والمطبخ، مو بس بالجيم</p></div></details>
-  <details class="card guide"><summary><b>👕 العضلات الي تبين بالتيشيرت</b></summary><p class="xs mut">هاي العضلات صغيرة ومخفية، بس هي الي تسوي شكل الـV وتفرق بالمظهر. نشتغل عليها كل أسبوع:</p><div class="col">${[['lateral', 'الكتف الجانبي', 'يعرّض الكتف ويخلي الخصر يبين أنحف'], ['reardelt', 'الكتف الخلفي', 'يعدّل الوگفة ويحمي مفصل الكتف'], ['incline', 'أعلى الصدر', 'يملا فتحة التيشيرت'], ['wristcurl', 'الساعد (لگدام)', 'الساعد يبين أول شي بنص كم'], ['revcurl', 'الساعد (لورا)', 'يكمّل شكل الساعد ويقوّي القبضة'], ['farmer', 'القبضة', 'أقوى تمرين للساعد والقبضة'], ['calf', 'السمانة', 'ما تكبر إلا بعدّات كثيرة وتمطيط'], ['kneeraise', 'البطن السفلي', 'يبيّن البطن لما تقل الدهون']].filter(([id]) => EX[id]).map(([id, n, w]) => `<button class="exrow" data-ex="${id}"><img src="img/ex3d/${id}.jpg" alt="" loading="lazy"><div class="grow"><h3>${n}</h3><p class="xs mut">${w}</p></div></button>`).join('')}</div></details>
-  <details class="card guide"><summary><b>🎬 مكتبة الحركات (${Object.keys(EX).length} حركة بالأنيميشن)</b></summary><p class="xs mut">كل حركة إلها أنيميشن وشرح، والصعبة إلها بديل أسهل.</p>${Object.entries(Object.keys(EX).reduce((a, id) => { const m = EX[id].m[0]; (a[m] = a[m] || []).push(id); return a; }, {})).map(([m, ids]) => `<h3 style="margin-top:10px">${MN[m] || m}</h3><div class="hscroll">${ids.map(id => `<button class="mini" data-ex="${id}"><span class="mimg"><img src="img/ex3d/${id}.jpg" alt="" loading="lazy"></span><b class="xs">${EX[id].n}</b>${EASY[id] ? '<span class="xs" style="color:#34c759">إلها بديل أسهل</span>' : ''}</button>`).join('')}</div>`).join('')}</details>
-  <details class="card guide"><summary><b>🦴 مفاصلك والوگفة</b></summary><div class="good sm col">
-   <p>إحماء المفاصل 5 دقايق قبل كل تمرين (موجود بصفحة اليوم)</p>
-   <p>الكتف: لا تنزل بالضغط لتحت كلش، والكوع بزاوية 45 درجة مو مفتوح</p>
-   <p>الركبة: باتجاه أصابع رجلك، ولا تقفلها بقوة فوگ</p>
-   <p>الظهر: صدرك لگدام وظهرك مستقيم بالسحب والرفعة الرومانية</p>
-   <p>الوگفة: تمرين الكتف الخلفي والسحب يرجّعون كتوفك لورا. حاول تسوي السحب أكثر من الدفع</p>
-   <p>وجع حاد بالمفصل = وگّف. وجع العضلة بعد يومين = طبيعي</p></div></details>
-  <button class="card plan-t" data-plan><div class="row between"><h2>رحلتك (مفتوحة، ما إلها نهاية)</h2><span class="mut">${showPlan ? '▲' : '▼'}</span></div><p class="xs mut">أول 6 أشهر تأسيس لجسمك، وبعدها نكمّل دورات جديدة أثقل. كل شهر يتبنى على تقييمك.</p></button>
-  ${showPlan ? `<div class="card"><div class="road">${Array.from({ length: Math.max(6, M.n + 2) }, (_, k) => tplFor(k + 1)).map((T, k) => { const n = k + 1, st = n < M.n ? 'done' : n === M.n ? 'now' : 'lock'; return `<div class="rstep ${st}"><span class="dot">${st === 'done' ? I.check : st === 'lock' ? '🔒' : AR(n)}</span><div><b>${T.mo}: ${T.n}</b><span class="xs mut">${T.goal}</span><span class="xs" style="color:var(--g)">هدف الوزن ${AR(T.tw)} كغم</span></div></div>`; }).join('')}</div><button class="btn ghost wide" data-eval>خلصت الشهر؟ قيّم نفسك</button></div>` : ''}`;
+  const strip = Array.from({ length: 7 }, (_, k) => wk * 7 + k).map(i => { const ty = dayType(i); return `<button class="dd ${M.done[i] ? 'done' : ''} ${i === c ? 'now' : ''} ${ty === 'R' ? 'rest' : ''}" data-day="${i}"><span class="xs">${ty === 'R' ? 'راحة' : 'تمرين'}</span><b class="num">${i + 1}</b></button>`; }).join('');
+  const muscles = t && t !== 'R' ? [...new Set(dayItems(c).map(x => MGROUP(x.id)))].map(g => (MUS.find(m => m[0] === g) || [, g])[1]) : [];
+  return `${head('التمارين')}
+  ${t === null ? `<div class="gcard"><h2>خلصت الشهر 🎉</h2><button class="gbtn" data-eval>قيّم الشهر</button></div>` : `<div class="gcard wcard"><img src="img/ex3d/${t === 'R' ? 'child' : (dayItems(c)[0] || {}).id}.jpg" alt=""><div class="wt"><small>اليوم ${c + 1} من الشهر</small><h2>${t === 'R' ? 'يوم راحة' : DAY_NAMES[t]}</h2><div class="mchips">${muscles.map(m => `<i>${m}</i>`).join('')}</div><div class="row" style="gap:8px"><button class="gbtn" data-${t === 'R' ? 'day' : 'start'}="${c}">${t === 'R' ? 'تمارين الراحة' : 'ابدأ'}</button><button class="obtn" data-day="${c}">شوف التمارين</button></div></div></div>`}
+  <div class="card"><div class="sec-h"><h2>أسبوعك</h2><span class="xs mut num">${doneN}/${MDAYS}</span></div><div class="strip">${strip}</div></div>
+  <div class="sec-h"><h2>كل التمارين حسب العضلة</h2></div>
+  <div class="mgrid3">${MUS.map(([g, n, img]) => `<button class="mus" data-mus="${g}"><img src="img/ex3d/${img}.jpg" alt="" loading="lazy"><div><b>${n}</b><small class="num">${exList(g).length} تمارين</small></div></button>`).join('')}</div>
+  <button class="forecard" data-fore><span>💪</span><div class="grow"><b>برنامج الساعد</b><small>6 دقايق، 3 مرات بالأسبوع</small></div>${I.chev}</button>
+  <details class="card guide"><summary><b>🏆 قواعد العضل</b></summary><div class="good sm col"><p><b>زيد الوزن تدريجياً:</b> لما تخلّص كل السِتات بأعلى عدّات، زيد الجلسة الجاية</p><p><b>آخر سِت:</b> خلي 1-2 عدّة بالخزان</p><p><b>النزول 3 ثواني</b> والحركة كاملة</p><p><b>كل عضلة مرتين بالأسبوع</b>، و10-20 سِت بالأسبوع</p><p><b>نام 8 ساعات</b> وكُل بروتين 2 غم لكل كيلو</p></div></details>`;
+}
+function openMuscle(g) {
+  const [, n] = MUS.find(m => m[0] === g), L = exList(g).sort((a, b) => (EX[b].star ? 1 : 0) - (EX[a].star ? 1 : 0));
+  show(`<div class="row"><button class="ib" data-close aria-label="رجوع">${I.back}</button><div class="grow"><h1>تمارين ${n}</h1><p class="xs mut">${L.length} تمارين • اضغط على أي تمرين تشوف الحركة</p></div></div>
+  <div class="col">${L.map(id => { const e = EX[id], p = planOf(id); return `<button class="exrow" data-ex="${id}"><img src="img/ex3d/${id}.jpg" alt="" loading="lazy"><div class="grow"><h3>${e.n}${e.star ? ' ⭐' : ''}</h3><p class="xs mut">${e.gym}</p><p class="sm num" style="color:var(--g)">${p ? p.s + ' × ' + p.r[0] + '-' + p.r[1] + (e.sec ? ' ثانية' : '') + ' • بخطتك' : e.sec ? '3 × 20-40 ثانية' : '3 × 10-12'}</p></div><span class="k">${I.play}</span></button>`; }).join('')}</div>`);
 }
 /* ================= شاشة اليوم ================= */
 let SES = null;
@@ -356,7 +348,7 @@ function vFood() {
   const plan = TM.reduce((a, x) => { const v = optVal(x.o); return { k: a.k + v.k, p: a.p + v.p }; }, { k: 0, p: 0 });
   const bar = (v, max, col, n, u) => `<div class="mbar"><div class="row between"><span class="xs">${n}</span><span class="xs num"><span dir="ltr"><b>${Math.round(v)}</b> / ${max}</span> ${u}</span></div><div class="bar"><i style="width:${Math.min(100, v / max * 100)}%;background:${col}"></i></div></div>`;
   const IC = { b: ['🍳', '#ff9f0a'], s: ['🥣', '#34c759'], l: ['🍛', '#ff2d3d'], a: ['🥤', '#5e5ce6'], d: ['🥗', '#30b0c7'] }, SEC = { b: 'b', s: 's', l: 'l', a: 'sh', d: 'd' };
-  const extra = [['fridge', '🧊', 'شنو عندي بالبيت؟', 'اختار الي بالثلاجة وأگلك شنو تطبخ'], ['sw', '🍫', 'حلا صحي', 'حلو بدون ما يخرّب جسمك'], ['k', '🥜', 'كرزات وموالح', 'مكسرات وبذور وفوايدها'], ['sh', '🥤', 'شيكات التضخيم', 'سعرات وبروتين بگلاص'], ['drinks', '💧', 'المشروبات', 'شنو تشرب وشنو لا'], ['fdb', '🔎', 'الأطعمة والبذور', Object.keys(FOODS).length + ' أكلة بقيمها'], ['shop', '🛒', 'سلة الأسبوع', 'شنو تشتري من الماركت'], ['supps', '💊', 'المكملات', 'بروتين وكرياتين وفيتامينات وروابط الشراء'], ['ban', '⛔', 'الممنوعات', 'حرام وينفخ القولون']];
+  const extra = [['fridge', '🧊', 'شنو عندي بالبيت؟', 'اختار الي بالثلاجة وأگلك شنو تطبخ'], ['sw', '🍫', 'حلا صحي', 'حلو بدون ما يخرّب جسمك'], ['k', '🥜', 'كرزات وموالح', 'مكسرات وبذور وفوايدها'], ['sh', '🥤', 'شيكات التضخيم', 'سعرات وبروتين بگلاص'], ['drinks', '💧', 'المشروبات', 'شنو تشرب وشنو لا'], ['fdb', '🔎', 'الأطعمة والبذور', Object.keys(FOODS).length + ' أكلة بقيمها'], ['shop', '🛒', 'سلة الأسبوع', 'شنو تشتري من الماركت'], ['supps', '💊', 'المكملات', 'بروتين وكرياتين وفيتامينات وروابط الشراء']];
   return `${head('الأكل')}
   <div class="card"><div class="sec-h"><h2>أكلت اليوم</h2><span class="xs mut num">القائمة: ${Math.round(plan.k)} سعرة • ${Math.round(plan.p)}g بروتين</span></div>
    ${bar(tot.k, T.k, 'var(--g)', 'السعرات', 'سعرة')}${bar(tot.p, T.p, 'var(--gold)', 'البروتين', 'غم')}${bar(tot.c, Math.round(T.k * .5 / 4), 'var(--blue)', 'الكارب', 'غم')}${bar(tot.f, Math.round(T.k * .27 / 9), '#ff9f0a', 'الدهون', 'غم')}
@@ -371,16 +363,16 @@ function openSection(k, forSlot) {
   const slot = forSlot || { b: 'b', l: 'l', d: 'd', s: 's', sh: 'a', sw: 's', k: 's' }[k], curR = pickFor(slot), cur = curR.id, slotN = (SLOTS.find(x => x[0] === slot) || [])[1];
   const cv = optVal(curR), mine = curR.s === k || (k === 'sh' && slot === 'a');
   const html = `<div class="row"><button class="ib" data-close aria-label="رجوع">${I.back}</button><div class="grow"><h1>${sec[1]}</h1><p class="xs mut">${sec[2]} • ${L.length} وصفة</p></div></div>
-  ${mine ? `<button class="curmeal" data-rec="${cur}" data-slot="${slot}"><img src="${recImg(curR)}" alt="" class="${isCut(curR) ? 'cut' : ''}"><div><span class="xs">✓ ${slotN} اليوم</span><b>${curR.n}</b>${macroRow(cv)}<span class="xs" style="opacity:.85">اضغط تشوف المكونات بالغرام وشلون تسويها</span></div></button>` : ''}
+  ${mine ? `<button class="curmeal noimg" data-rec="${cur}" data-slot="${slot}"><div><span class="xs">✓ ${slotN} اليوم</span><b>${curR.n}</b>${macroRow(cv)}<span class="xs" style="opacity:.85">اضغط تشوف المكونات بالغرام وشلون تسويها</span></div></button>` : ''}
   <div class="sec-h"><h2>${mine ? 'بدّل بوحدة من هاي' : 'كل الوصفات'}</h2><span class="xs mut">الأعلى بروتين أول</span></div>
-  <div class="col">${L.filter(r => r.id !== cur).map(r => [r, optVal(r)]).sort((a, b) => b[1].p - a[1].p).map(([r, v]) => `<div class="rrow"><button class="rmain" data-rec="${r.id}" data-slot="${slot}"><span class="rimg2"><img src="${recImg(r)}" alt="" loading="lazy" class="${isCut(r) ? 'cut' : ''}">${r.gen ? '<em>✨ جديدة</em>' : ''}</span><span class="grow col" style="gap:3px"><b>${r.n}</b><span class="xs mut clamp">${r.tag || ''}</span><span class="pmac num"><span><b style="color:var(--gold)">${Math.round(v.p)}g</b> بروتين</span><span><b>${Math.round(v.k)}</b> سعرة</span><span>⏱ ${r.t || 15}د</span></span></span></button><button class="pick" data-userec="${r.id}:${slot}:${k}">اختارها</button></div>`).join('')}</div>`;
+  <div class="col">${L.filter(r => r.id !== cur).map(r => [r, optVal(r)]).sort((a, b) => b[1].p - a[1].p).map(([r, v]) => `<div class="rrow"><button class="rmain" data-rec="${r.id}" data-slot="${slot}">${r.gen ? '<span class="newtag">✨ جديدة</span>' : ''}<span class="grow col" style="gap:3px"><b>${r.n}</b><span class="xs mut clamp">${r.tag || ''}</span><span class="pmac num"><span><b style="color:var(--gold)">${Math.round(v.p)}g</b> بروتين</span><span><b>${Math.round(v.k)}</b> سعرة</span><span>⏱ ${r.t || 15}د</span></span></span></button><button class="pick" data-userec="${r.id}:${slot}:${k}">اختارها</button></div>`).join('')}</div>`;
   const s = $('#screen'); if (!s.hidden && s.querySelector('.curmeal,.rrow')) { const y = s.scrollTop; s.innerHTML = `<div class="in">${html}</div>`; s.scrollTop = y; } else show(html);
 }
 function openRecipe(id, slot) {
   calcScale(); const o = forMe(recById(id)), v = optVal(o), sl = SLOTS.find(x => x[0] === slot) || SLOTS.find(x => POOL[x[0]].includes(o.s)) || SLOTS[2], cur = pickFor(sl[0]).id === id, sc = score(o), my = (S.rate || {})[id] || 0;
   const bar5 = (n, x) => `<div class="sc"><span class="xs">${n}</span><span class="dots5">${[1, 2, 3, 4, 5].map(i => `<i class="${i <= x ? 'on' : ''}"></i>`).join('')}</span></div>`;
   show(`<div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><div class="grow"><p class="xs mut">${sl[1]}</p></div><span class="pill num">⏱ ${o.t || 15} دقيقة</span></div>
-  <div class="dishhero ${isCut(o) ? 'cut' : ''}"><img src="${recImg(o)}" alt=""><div><h1>${o.n}</h1></div></div>
+  <h1 class="rtitle">${o.n}</h1>
   ${o.tag ? `<p class="sm">${o.tag}</p>` : ''}
   ${o.scaled ? `<div class="warm">🧠 الكميات معدّلة على هدفك (×${o.scaled.toFixed(2)})، حتى توصل ${targets().k} سعرة باليوم.</div>` : ''}
   <div class="card"><h3>مجموع الوجبة</h3>${macroRow(v, 1)}</div>
@@ -388,7 +380,7 @@ function openRecipe(id, slot) {
    <div class="itab"><div class="ih"><span>المكوّن</span><span>بروتين</span><span>كارب</span><span>دهون</span><span>سعرة</span></div>
    ${o.it.map(([k, a]) => { const iv = itemVal(k, a), A = amt(k, a); return `<button class="ir" data-food="${k}">${fthumb(k, 40)}<span class="inm"><b>${FOODS[k].n}</b><small class="num">${A.g}${A.h ? ' • ' + A.h : ''}</small></span><span class="num">${r1(iv.p)}</span><span class="num">${r1(iv.c)}</span><span class="num">${r1(iv.f)}</span><span class="num">${Math.round(iv.k)}</span></button>`; }).join('')}
    <div class="ir tot"><span class="inm"><b>المجموع</b></span><span class="num">${r1(v.p)}</span><span class="num">${r1(v.c)}</span><span class="num">${r1(v.f)}</span><span class="num">${Math.round(v.k)}</span></div></div>
-   ${o.it.some(([k]) => FOODS[k].cat === 'meat') ? '<p class="xs" style="color:var(--gold)">اللحم والدجاج من محل حلال.</p>' : ''}</div>
+</div>
   <div class="card"><h3>شلون تسويها</h3><div class="steps sm">${o.prep.map(p => `<p>${p}</p>`).join('')}</div></div>
   <div class="card"><h3>تقييم NEXFIT</h3>${bar5('البروتين', sc.pro)}${bar5('السهولة', sc.ease)}${bar5('راحة القولون', sc.ibs)}<p class="xs mut">محسوب من مكونات الوجبة ووكتها.</p>
    <h3 style="margin-top:6px">تقييمك إنت للطعم</h3><div class="stars">${[1, 2, 3, 4, 5].map(i => `<button data-rate="${id}:${i}" class="${i <= my ? 'on' : ''}" aria-label="${i}">★</button>`).join('')}</div><p class="xs mut">${my ? (my >= 4 ? 'راح أطلعلك ياها أكثر 😋' : my <= 2 ? 'راح أقللها من قائمتك' : 'انحفظ تقييمك') : 'بعد ما تاكلها قيّمها، والقائمة تتعلم ذوقك.'}</p></div>
@@ -429,7 +421,7 @@ function openFood(k) {
   <span class="fi" style="font-size:14px">${f.fi}</span>
   ${f.ben ? `<div class="feel">💡 <b>شنو يفيدك:</b> ${f.ben}</div>` : ''}
   <div class="warm">🗓 <b>شكد مرة:</b> ${freqOf(k)}</div>
-  <div class="verd">${f.ibs === 'ok' ? '<div class="ok"><b>✓ يناسب القولون</b></div>' : f.ibs === 'limit' ? `<div class="mid"><b>⚠ للقولون: كمية قليلة</b><span>${f.note || ''}</span></div>` : `<div class="no"><b>✕ ينفخ القولون</b><span>${f.note || ''}</span></div>`}${f.cat === 'meat' ? '<div class="mid"><b>اشتريه من محل حلال</b><span>مكتوب Halal</span></div>' : ''}</div>
+  <div class="verd">${f.ibs === 'ok' ? '<div class="ok"><b>✓ يناسب القولون</b></div>' : f.ibs === 'limit' ? `<div class="mid"><b>⚠ للقولون: كمية قليلة</b><span>${f.note || ''}</span></div>` : `<div class="no"><b>✕ ينفخ القولون</b><span>${f.note || ''}</span></div>`}</div>
   <div class="card"><h3>بحصة ${f.sn || ''} (${f.srv} غم)</h3>${macroRow(s)}</div>
   <div class="card"><h3>بكل 100 غم</h3><div class="items">${rr('سعرات', v[0], 'سعرة')}${rr('بروتين', v[1])}${rr('كاربوهيدرات', v[2])}${rr('منها سكر', v[5])}${rr('دهون', v[3])}${rr('ألياف', v[4])}</div><p class="xs mut">${f.cat === 'market' ? 'من غلاف المنتج.' : 'من قاعدة القيم الغذائية الرسمية (USDA).'}</p></div>
   ${inR.length ? `<div class="card"><h3>وصفات بيها ${f.n}</h3><div class="hscroll">${inR.map(r => `<button class="mini" data-rec="${r.id}"><span class="mimg"><img src="${recImg(r)}" alt="" loading="lazy" class="${isCut(r) ? 'cut' : ''}"></span><b>${r.n}</b></button>`).join('')}</div></div>` : ''}`, true);
@@ -522,7 +514,7 @@ function openFore() {
 const gearBtn = () => `<button class="ib" data-settings aria-label="الإعدادات">${I.gear}</button>`;
 const head = (t, extra = '') => `<div class="row between"><h1>${t}</h1><div class="row" style="gap:8px">${extra}${gearBtn()}</div></div>`;
 const nutTiles = n => `<div class="nut4"><div><b class="num">${AR(n.k)}</b><span>سعرة</span></div><div><b class="num" style="color:var(--gold)">${AR(n.p)}</b><span>بروتين غ</span></div><div><b class="num">${AR(n.c)}</b><span>كارب غ</span></div><div><b class="num">${AR(n.f)}</b><span>دهون غ</span></div></div>`;
-const tags = ok => `<span class="badges">${ok.map(([c, t]) => `<i class="${c}">${c === 'no' ? '✕ ' : c === 'mid' ? '⚠ ' : '✓ '}${t}</i>`).join('')}</span>`;
+const tags = ok => `<span class="badges">${ok.filter(([, t]) => !/حلال/.test(t)).map(([c, t]) => `<i class="${c}">${c === 'no' ? '✕ ' : c === 'mid' ? '⚠ ' : '✓ '}${t}</i>`).join('')}</span>`;
 
 /* ================= المكملات ================= */
 let suppCat = 'protein';
@@ -604,33 +596,25 @@ async function analyzeP(p) {
 }
 const VB = { no: ['⛔', 'حرام'], mid: ['⚠', 'مشكوك'], ok: ['✓', 'ما بيه حرام'], unk: ['?', 'مو معروف'] };
 function productView(x, code) {
-  const v = n => n == null || n === '' ? '—' : Math.round(n * 10) / 10;
-  const verdict = x.v === 'no' ? `<div class="danger"><span>${I.warn}</span><div><b>⛔ حرام، لا تشتريه</b><p class="sm">لگينا بالمكونات: ${x.h.join('، ')}</p></div></div>`
-    : x.v === 'mid' ? `<div class="danger mid"><span>⚠</span><div><b>مشكوك، الأحسن تتركه</b><p class="sm">${x.d.join('، ')}</p></div></div>`
-    : x.v === 'ok' ? `<div class="okbox"><b>✓ ما لگينا بيه خنزير ولا جيلاتين ولا خمر</b><p class="xs">حسب المكونات المكتوبة. ${x.hl ? 'وعليه علامة حلال ✓' : 'اللحم والدجاج لازم يكون مذبوح حلال حتى لو المكونات نظيفة.'}</p></div>`
-    : '<div class="warn">المكونات مو مكتوبة بالقاعدة. اقراها من الغلاف، أو صوّر الباركود من جديد.</div>';
-  const fit = x.v === 'ok' && !(x.i || []).length ? ['🟢', 'يناسبك: حلال حسب المكونات وما بيه شي ينفخ'] : x.v === 'ok' ? ['🟡', 'حلال حسب المكونات، بس انتبه للقولون'] : x.v === 'mid' ? ['🟠', 'الأحسن تتركه'] : x.v === 'no' ? ['🔴', 'ما يناسبك'] : ['⚪', 'ما نعرف'];
+  const v = n => n == null || n === '' ? '—' : Math.round(n * 10) / 10, ibs = (x.i || []).length;
+  const fit = ibs ? ['🟡', 'انتبه للقولون: بيه ' + x.i.join('، ')] : x.ing ? ['🟢', 'ما بيه أشياء معروفة تنفخ القولون'] : ['⚪', 'المكونات مو مكتوبة بالقاعدة'];
   return `<div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><h2 class="grow">${esc(x.n || 'منتج')}</h2></div>
-  ${x.img ? `<div class="prod big"><img src="${x.img.replace('.400.jpg', '.full.jpg')}" onerror="this.src='${x.img}'" alt=""></div>` : ''}
+  ${x.img ? `<div class="prod big"><img src="${String(x.img).replace('.400.jpg', '.full.jpg')}" onerror="this.src='${x.img}'" alt=""></div>` : ''}
   <span class="fi" style="font-size:14px">${esc(x.b || '')} ${esc(x.q || '')} ${code ? '• ' + code : ''}</span>
+  <div class="card"><h3>بكل 100 غم</h3>${nutTiles({ k: v(x.k), p: v(x.p), c: v(x.cb), f: v(x.f) })}${x.p >= 10 ? '<p class="xs" style="color:var(--g)">💪 بروتين عالي، يفيدك بالتضخيم</p>' : ''}</div>
   <div class="fitbig"><span>${fit[0]}</span><b>${fit[1]}</b></div>
-  ${verdict}
-  ${x.v !== 'unk' ? ((x.i || []).length ? `<div class="danger mid"><span>🫃</span><div><b>للقولون: انتبه</b><p class="sm">بيه ${x.i.join('، ')}</p></div></div>` : '<div class="okbox"><b>✓ ما بيه أشياء معروفة تنفخ القولون</b></div>') : ''}
-  <div class="card"><h3>بكل 100 غم</h3>${nutTiles({ k: v(x.k), p: v(x.p), c: v(x.cb), f: v(x.f) })}${x.p >= 10 ? '<p class="xs" style="color:var(--gold)">💪 بروتين عالي</p>' : ''}</div>
   ${x.ing ? `<details class="card"><summary class="sm">المكونات كما مكتوبة</summary><p class="fi" style="font-size:13px;line-height:1.7;margin-top:8px">${esc(x.ing.slice(0, 1400))}</p></details>` : ''}
-  <p class="xs mut">الفحص يقرا المكونات المكتوبة بالقاعدة. إذا الغلاف بإيدك يختلف، صدّق الغلاف.</p>
   <button class="btn ghost wide" data-scan>📷 افحص منتج ثاني</button>`;
 }
 function vScan() {
   const sc = (S.scans || []).slice(0, 10);
-  return `${head('الماركت')}
-  <button class="scanhero" data-scan><span class="ring">📷</span><b>افحص منتج</b><small>وجّه الكاميرا على الباركود، ويگلك حلال لو لا، ويناسب القولون لو لا، وشكد بيه بروتين</small></button>
+  return `${head('الماسح')}
+  <button class="scanhero" data-scan><span class="ring">📷</span><b>افحص منتج</b><small>وجّه الكاميرا على الباركود، ويگلك شكد بيه بروتين وسعرات، ويناسب القولون لو لا</small></button>
   <div class="row"><label class="btn ghost grow" style="font-size:14px">🖼 صورة الباركود<input type="file" accept="image/*" capture="environment" id="bcImg" hidden></label><label class="btn ghost grow" style="font-size:14px">📄 صوّر المكونات<input type="file" accept="image/*" capture="environment" id="ingImg" hidden></label></div><button class="btn ghost wide" style="font-size:14px" data-bctype>⌨ اكتب رقم الباركود</button>
   <div class="card"><h3>🔎 دوّر على منتج بالاسم</h3><div class="row"><input class="field" id="mq" type="search" placeholder="مثلاً: Shin Ramyun، Pocky، Indomie"><button class="btn sm" data-msearch>دوّر</button></div><div id="mres"></div></div>
   <div class="sec-h"><h2>محلات العالم</h2><span class="xs mut">منتجات مفحوصة</span></div>
   <div class="stores">${(window.__STORES || []).map(([k, f, n, sub]) => `<button class="store" data-store="${k}"><span>${f}</span><b>${n}</b><small>${sub}</small></button>`).join('') || '<p class="xs mut">دا يحمّل...</p>'}</div>
-  ${sc.length ? `<div class="sec-h"><h2>آخر الي فحصته</h2></div><div class="slist">${sc.map(x => `<button class="slot ex" data-bc="${x.c}"><span class="sico">${x.r === 'no' ? '⛔' : x.r === 'mid' ? '⚠' : '✓'}</span><span class="stxt"><b>${esc(x.n || x.c)}</b><span class="xs mut">${x.t}</span></span>${I.chev}</button>`).join('')}</div>` : ''}
-  <a class="banlink" href="#ban"><span>${I.warn}</span><div class="grow"><b>الممنوعات المعروفة</b><p class="xs">96 منتج بفنلندا بيهم خنزير أو جيلاتين</p></div>${I.chev}</a>`;
+  ${sc.length ? `<div class="sec-h"><h2>آخر الي فحصته</h2></div><div class="slist">${sc.map(x => `<button class="slot ex" data-bc="${x.c}"><span class="sico">🔎</span><span class="stxt"><b>${esc(x.n || x.c)}</b><span class="xs mut">${x.t}</span></span>${I.chev}</button>`).join('')}</div>` : ''}`;
 }
 mk().then(m => { window.__STORES = m.STORES; if (location.hash === '#scan') reroute(); });
 async function openStore(k) {
@@ -638,8 +622,8 @@ async function openStore(k) {
   const L = all.filter(x => mkFilter === 'all' || x.v === mkFilter || (mkFilter === 'pro' && x.p >= 8 && x.v === 'ok'));
   const cnt = v => all.filter(x => x.v === v).length;
   const html = `<div class="row"><button class="ib" data-close aria-label="رجوع">${I.back}</button><div class="grow"><h1>${st[1]} ${st[2]}</h1><p class="xs mut">${all.length} منتج مفحوص • ${st[3]}</p></div></div>
-  <div class="chips">${[['all', 'الكل'], ['ok', '✓ حلال ' + cnt('ok')], ['mid', '⚠ مشكوك ' + cnt('mid')], ['no', '⛔ حرام ' + cnt('no')], ['pro', '💪 بروتين عالي']].map(([f, n]) => `<button class="${mkFilter === f ? 'on' : ''}" data-mkf="${f}:${k}">${n}</button>`).join('')}</div>
-  <div class="mgrid2">${L.map(x => `<button class="mcard ${x.v}" data-mitem="${k}:${all.indexOf(x)}"><span class="pimg"><img src="${x.img}" alt="" loading="lazy"><i class="vb">${VB[x.v][0]}</i></span><b>${esc(x.n)}</b><span class="xs mut">${esc(x.b)}</span><span class="xs"><span class="vt ${x.v}">${VB[x.v][1]}</span>${x.p != null ? ` • <b class="num" style="color:var(--gold)">${x.p}g</b> بروتين` : ''}</span></button>`).join('') || '<p class="mut">ماكو منتجات بهالفلتر.</p>'}</div>`;
+  <div class="chips">${[['all', 'الكل'], ['pro', '💪 بروتين عالي']].map(([f, n]) => `<button class="${mkFilter === f ? 'on' : ''}" data-mkf="${f}:${k}">${n}</button>`).join('')}</div>
+  <div class="mgrid2">${L.map(x => `<button class="mcard" data-mitem="${k}:${all.indexOf(x)}"><span class="pimg"><img src="${x.img}" alt="" loading="lazy"></span><b>${esc(x.n)}</b><span class="xs mut">${esc(x.b)}</span><span class="xs">${x.p != null ? `<b class="num" style="color:var(--g)">${x.p}g</b> بروتين • ${x.k != null ? x.k + ' سعرة' : ''}` : ''}</span></button>`).join('') || '<p class="mut">ماكو منتجات بهالفلتر.</p>'}</div>`;
   const s = $('#screen'); if (!s.hidden && s.querySelector('.mgrid2')) { const y = s.scrollTop; s.innerHTML = `<div class="in">${html}</div>`; s.scrollTop = y; } else show(html);
 }
 async function openMItem(k, i) { const { MARKET } = await mk(); const x = MARKET[k][i]; show(productView(x, x.c), true); }
@@ -649,7 +633,7 @@ async function nameSearch() {
   let on = [];
   const qs = { search_terms: q, page_size: 15, fields: 'code,product_name,brands,image_front_url' };
   const cg = 'https://world.openfoodfacts.org/cgi/search.pl?' + new URLSearchParams(Object.assign({ search_simple: 1, json: 1, action: 'process' }, qs)); for (const u of [cg, cg, cg]) {  try { const r = await fetch(u); if (!r.ok) { await new Promise(z => setTimeout(z, 1500)); continue; } on = ((await r.json()).products || []).filter(h => h.product_name && h.code); if (on.length) break; } catch (e) {} }
-  box.innerHTML = (loc.length || on.length) ? `<div class="slist" style="margin-top:10px">${loc.map(([k, i, x]) => `<button class="slot ex" data-mitem="${k}:${i}"><span class="sico">${VB[x.v][0]}</span><span class="stxt"><b>${esc(x.n)}</b><span class="xs mut">${esc(x.b)} • ${VB[x.v][1]}</span></span>${I.chev}</button>`).join('')}${on.map(h => `<button class="slot ex" data-bc="${h.code}">${h.image_front_url ? `<img src="${h.image_front_url}" alt="" style="width:46px;height:46px;object-fit:contain;background:#fff;border-radius:12px">` : '<span class="sico">🔎</span>'}<span class="stxt"><b>${esc(h.product_name)}</b><span class="xs mut">${esc([].concat(h.brands || []).join(', '))} • اضغط حتى أفحصه</span></span>${I.chev}</button>`).join('')}</div>` : '<p class="xs mut">ما لگيت شي. جرّب اسم ثاني أو صوّر الباركود.</p>';
+  box.innerHTML = (loc.length || on.length) ? `<div class="slist" style="margin-top:10px">${loc.map(([k, i, x]) => `<button class="slot ex" data-mitem="${k}:${i}"><span class="sico">🛒</span><span class="stxt"><b>${esc(x.n)}</b><span class="xs mut">${esc(x.b)}${x.p != null ? ' • ' + x.p + 'g بروتين' : ''}</span></span>${I.chev}</button>`).join('')}${on.map(h => `<button class="slot ex" data-bc="${h.code}">${h.image_front_url ? `<img src="${h.image_front_url}" alt="" style="width:46px;height:46px;object-fit:contain;background:#fff;border-radius:12px">` : '<span class="sico">🔎</span>'}<span class="stxt"><b>${esc(h.product_name)}</b><span class="xs mut">${esc([].concat(h.brands || []).join(', '))} • اضغط حتى أفحصه</span></span>${I.chev}</button>`).join('')}</div>` : '<p class="xs mut">ما لگيت شي. جرّب اسم ثاني أو صوّر الباركود.</p>';
 }
 async function decodeImage(file) {
   toast('دا أقرا الصورة...');
@@ -678,7 +662,7 @@ function openScan() {
   <div class="scanbox"><video id="scv" playsinline muted autoplay></video><div class="scanline"></div><p id="scmsg">دا أفتح الكاميرا...</p></div>
   <div class="row"><label class="btn ghost grow" style="font-size:15px">🖼 صوّر الباركود<input type="file" accept="image/*" capture="environment" id="bcImg" hidden></label><label class="btn ghost grow" style="font-size:15px">📄 صوّر المكونات<input type="file" accept="image/*" capture="environment" id="ingImg" hidden></label></div>
   <div class="card"><h3>أو اكتب رقم الباركود</h3><div class="row"><input class="field num" id="bcIn" inputmode="numeric" placeholder="6408430043019" dir="ltr"><button class="btn sm" data-bcgo>افحص</button></div></div>
-  <p class="xs mut">نفحص بقاعدة المنتجات العالمية (Open Food Facts). إذا المنتج مو بيها، صوّر المكونات وأنا أقراها وأگلك حلال لو لا.</p>`, true);
+  <p class="xs mut">نفحص بقاعدة المنتجات العالمية (Open Food Facts). إذا المنتج مو بيها، صوّر المكونات وأنا أقراها.</p>`, true);
   startCam();
 }
 async function fetchOFF(code) {
@@ -700,7 +684,7 @@ async function lookupBC(code) {
   S.scans = [{ c: code, n: x.n || '', t: today(), r: x.v }].concat((S.scans || []).filter(z => z.c !== code)).slice(0, 30); save();
   const s = $('#screen'); s.innerHTML = `<div class="in">${productView(x, code)}${x.v === 'unk' || !x.ing ? ingBox(code) : ''}</div>`;
 }
-const ingBox = code => `<div class="card"><h3>📄 خلّيني أقرا المكونات بنفسي</h3><p class="xs mut">صوّر قائمة المكونات (Ainesosat / Ingredients) قريب وواضح، وأنا أقراها وأگلك حلال لو لا، ويناسب القولون لو لا.</p><label class="btn wide">📷 صوّر المكونات<input type="file" accept="image/*" capture="environment" id="ingImg" data-code="${code || ''}" hidden></label><details style="margin-top:6px"><summary class="xs mut">أو الصق المكونات ككتابة</summary><textarea id="ingTxt" placeholder="sokeri, glukoosisiirappi, liivate..." style="margin-top:8px"></textarea><button class="btn ghost sm" data-ingtxt="${code || ''}">افحص الكتابة</button></details></div>`;
+const ingBox = code => `<div class="card"><h3>📄 خلّيني أقرا المكونات بنفسي</h3><p class="xs mut">صوّر قائمة المكونات (Ainesosat / Ingredients) قريب وواضح، وأنا أقراها وأگلك يناسب القولون لو لا.</p><label class="btn wide">📷 صوّر المكونات<input type="file" accept="image/*" capture="environment" id="ingImg" data-code="${code || ''}" hidden></label><details style="margin-top:6px"><summary class="xs mut">أو الصق المكونات ككتابة</summary><textarea id="ingTxt" placeholder="sokeri, glukoosisiirappi, liivate..." style="margin-top:8px"></textarea><button class="btn ghost sm" data-ingtxt="${code || ''}">افحص الكتابة</button></details></div>`;
 function notFound(code) {
   const s = $('#screen');
   s.innerHTML = `<div class="in"><div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><h2 class="grow">هذا المنتج مو بالقاعدة</h2></div>
@@ -720,7 +704,7 @@ async function ocrIngredients(file, code) {
 }
 async function checkText(text, code, fromPhoto) {
   const A = await analyzeP({ ingredients_text: text });
-  const x = { n: fromPhoto ? 'فحص من صورة المكونات' : 'فحص من الكتابة', b: '', img: code ? `https://public.keskofiles.com/f/k-ruoka/product/${code}?h=600` : '', v: A.v === 'unk' ? 'ok' : A.v, h: A.h, d: A.d, i: A.i, ing: text };
+  const x = { n: fromPhoto ? 'فحص من صورة المكونات' : 'فحص من الكتابة', b: '', img: code ? `https://public.keskofiles.com/f/k-ruoka/product/${code}?h=600` : '', i: A.i, ing: text };
   if (code) { S.scans = [{ c: code, n: 'منتج ' + code.slice(-4), t: today(), r: x.v }].concat((S.scans || []).filter(z => z.c !== code)).slice(0, 30); save(); }
   const s = $('#screen'); s.innerHTML = `<div class="in">${productView(x, code)}<p class="xs" style="color:var(--gold)">القراءة من الصورة ممكن تغلط بحرف. تأكد من المكونات تحت إذا الحكم مهم إلك.</p></div>`;
 }
@@ -733,7 +717,7 @@ function openBan(i) {
 }
 
 /* ================= أنا ================= */
-const VERSION = '21';
+const VERSION = '22';
 function weightInfo() {
   const start = S.startW || (S.weights[0]?.w) || +S.w || 52, goal = +S.goal || 62, cur = curW();
   const ms = [start + 1, start + 3, start + 5, start + 7].filter(x => x < goal).concat([goal]).map(x => +x.toFixed(1));
@@ -767,7 +751,7 @@ function vMe() {
 const row = (ic, col, t, sub, attr, right = I.chev) => `<button class="srow" ${attr}><span class="sic" style="background:${col}">${ic}</span><span class="grow"><b>${t}</b>${sub ? `<small>${sub}</small>` : ''}</span><span class="sr">${right}</span></button>`;
 const tgl = on => `<span class="tg ${on ? 'on' : ''}"><i></i></span>`;
 function openSettings() {
-  const th = S.theme || 'light', hd = (S.health || {})[today()];
+  const th = S.theme || 'dark', hd = (S.health || {})[today()];
   show(`<div class="row"><button class="ib" data-close aria-label="رجوع">${I.back}</button><h1>الإعدادات</h1></div>
   <button class="sprof" data-profile><div class="ava big">${esc((S.name || 'ب')[0])}</div><div class="grow"><b>${esc(S.name || 'اكتب اسمك')}</b><small>${S.age ? AR(S.age) + ' سنة • ' : ''}${AR(S.h)} سم • هدفك ${AR(weightInfo().goal)} كغم</small></div>${I.chev}</button>
   <p class="sh">المظهر</p>
@@ -827,7 +811,7 @@ function openHealth() {
 }
 /* ================= المظهر ================= */
 function applyTheme() {
-  const t = S.theme || 'light', dark = t === 'auto' ? matchMedia('(prefers-color-scheme: dark)').matches : t === 'dark';
+  const t = S.theme || 'dark', dark = t === 'auto' ? matchMedia('(prefers-color-scheme: dark)').matches : t === 'dark';
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
   document.documentElement.classList.toggle('noanim', !!S.noAnim);
   const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = dark ? '#09090b' : '#f2f2f7';
@@ -913,6 +897,8 @@ document.addEventListener('click', e => {
   if (d.food) { openFood(d.food); return; }
   if (d.fcat) { fdCat = d.fcat; openDB(); return; }
   if (d.sec) { openSection(d.sec, d.forslot); return; }
+  if (d.mus) { openMuscle(d.mus); return; }
+  if (d.goto) { location.hash = '#' + d.goto; return; }
   if ('drinks' in d) { openDrinks(); return; }
   if ('fdb' in d) { openDB(); return; }
   if ('shop' in d) { openShop(); return; }
