@@ -216,8 +216,8 @@ textarea.field{min-height:96px;line-height:1.8;resize:vertical}
 #splash .stage{position:relative;width:min(46vmin,230px);aspect-ratio:1;display:grid;place-items:center}
 #splash .tile{position:absolute;inset:0;border-radius:23%;background:linear-gradient(160deg,#fbf8f2,#ece5d8);box-shadow:0 30px 60px -20px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.06);transform:scale(.55) rotate(-8deg);opacity:0;animation:spTile 1s cubic-bezier(.2,.9,.25,1.15) .2s forwards}
 #splash svg{position:absolute;inset:0;width:100%;height:100%}
-#splash .rib{fill:none;stroke:url(#spG);stroke-width:26;stroke-linecap:butt;stroke-linejoin:round;stroke-dasharray:520;stroke-dashoffset:520;animation:spDraw 2.6s cubic-bezier(.5,.05,.3,1) 1.1s forwards}
-#splash .ribHi{fill:none;stroke:rgba(255,255,255,.35);stroke-width:3;stroke-dasharray:520;stroke-dashoffset:520;animation:spDraw 2.6s cubic-bezier(.5,.05,.3,1) 1.25s forwards}
+#splash .rib{fill:none;stroke:url(#spG);stroke-width:26;stroke-linecap:butt;stroke-linejoin:round;stroke-dasharray:520;stroke-dashoffset:520;animation:spDraw var(--rl,2.6s) cubic-bezier(.5,.05,.3,1) var(--rd,1.1s) forwards}
+#splash .ribHi{fill:none;stroke:rgba(255,255,255,.35);stroke-width:3;stroke-dasharray:520;stroke-dashoffset:520;animation:spDraw var(--rl,2.6s) cubic-bezier(.5,.05,.3,1) calc(var(--rd,1.1s) + .15s) forwards}
 #splash .line{fill:none;stroke:#9ee7ff;stroke-width:1.6;stroke-linecap:round;stroke-dasharray:140;stroke-dashoffset:140;opacity:.9;animation:spDraw 1s ease-out 3.3s forwards}
 #splash img{position:absolute;inset:0;width:100%;height:100%;border-radius:23%;opacity:0;transform:scale(.96);animation:spReal .9s ease 4.1s forwards}
 #splash .glow{position:absolute;inset:-30%;border-radius:50%;background:radial-gradient(closest-side,rgba(33,96,255,.45),transparent 70%);opacity:0;animation:spGlow 1.8s ease 3.4s forwards}
@@ -230,20 +230,57 @@ textarea.field{min-height:96px;line-height:1.8;resize:vertical}
 @keyframes spGlow{0%{opacity:0}40%{opacity:1}100%{opacity:.35}}
 @keyframes spChar{to{opacity:1;transform:none}}
 #splash:not(.go) *{animation-play-state:paused!important}
+
+#splash .fx{position:absolute;inset:0;pointer-events:none}
+#splash .ribG{transform-box:view-box;transform-origin:100px 100px}
+#splash.v-write{--rd:3s;--rl:1s}#splash.v-wave{--rd:2.8s;--rl:1.1s}#splash.v-lines{--rd:2.8s;--rl:1.1s}#splash.v-lens{--rd:2.6s;--rl:1.3s}
+#splash.v-count{--rd:2.9s;--rl:1s}#splash.v-fly{--rd:.5s;--rl:2.8s}#splash.v-ink{--rd:2s;--rl:1.6s}
+@keyframes fxOut{to{opacity:0}}
+@keyframes spFill{to{fill:#2452d6}}
+#splash .fxW text{font:900 64px "Vazirmatn","Noto Kufi Arabic",system-ui;fill:transparent;stroke:#2452d6;stroke-width:1.4;stroke-dasharray:420;stroke-dashoffset:420;animation:spDraw 2s ease .5s forwards,spFill .5s ease 2.4s forwards}
+#splash .fxW{animation:fxOut .4s ease 2.9s forwards}
+#splash .fxB{inset:24% 20%;display:flex;align-items:center;justify-content:space-between;animation:fxOut .4s ease 2.7s forwards}
+#splash .fxB i{width:5.5%;height:76%;border-radius:9px;background:linear-gradient(#4d82ff,#1b3fb3);transform:scaleY(.12);animation:fxBar .42s ease-in-out calc(.35s + var(--k)*.05s) infinite alternate}
+@keyframes fxBar{to{transform:scaleY(var(--h,1))}}
+#splash .fxL{inset:17% 19%;overflow:hidden;animation:fxOut .4s ease 2.8s forwards}
+#splash .fxL b{position:absolute;left:0;right:0;top:0;height:220%;display:flex;flex-direction:column;justify-content:space-between;animation:fxScroll 2.4s linear .35s forwards}
+#splash .fxL b i{height:5%;border-radius:9px;background:#cfc7b8;width:100%}#splash .fxL b i:nth-child(3n){width:70%}#splash .fxL b i:nth-child(4n+1){width:86%}
+#splash .fxL::after{content:"";position:absolute;left:-2%;right:-2%;top:45%;height:9%;border-radius:9px;background:#2452d6;opacity:0;animation:fxOn .35s ease 1.5s forwards}
+@keyframes fxScroll{to{transform:translateY(-52%)}}@keyframes fxOn{to{opacity:1}}
+#splash .fxO{animation:fxOut .4s ease 2.6s forwards}
+#splash .fxO i{position:absolute;left:50%;top:50%;border-radius:50%;border:3px solid #2452d6;transform:translate(-50%,-50%) scale(0);animation:fxRing .6s cubic-bezier(.2,.9,.3,1.3) forwards}
+#splash .fxO i:nth-child(1){width:78%;height:78%;animation-delay:.4s}#splash .fxO i:nth-child(2){width:56%;height:56%;animation-delay:.7s;background:#0e1430}#splash .fxO i:nth-child(3){width:30%;height:30%;animation-delay:1s;border-color:#4d82ff}
+#splash .fxO u{position:absolute;right:16%;top:16%;width:9%;height:9%;border-radius:50%;background:#ff3b30;opacity:0;animation:fxBlink .5s steps(1) 1.4s 3 forwards}
+@keyframes fxRing{to{transform:translate(-50%,-50%) scale(1)}}@keyframes fxBlink{0%{opacity:1}50%{opacity:.15}100%{opacity:1}}
+#splash .fxC i{position:absolute;inset:0;display:grid;place-items:center;font:900 calc(min(46vmin,230px)*.55)/1 -apple-system,system-ui,sans-serif;color:#2452d6;font-style:normal;opacity:0;animation:fxNum .8s ease forwards}
+#splash .fxC i:nth-child(1){animation-delay:.5s}#splash .fxC i:nth-child(2){animation-delay:1.3s}#splash .fxC i:nth-child(3){animation-delay:2.1s}
+@keyframes fxNum{0%{opacity:0;transform:scale(1.7)}22%{opacity:1;transform:scale(1)}78%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.6)}}
+#splash.v-fly .ribG{animation:spFly 2.8s cubic-bezier(.2,.75,.2,1) .5s both}
+@keyframes spFly{0%{transform:translate(-170px,-70px) rotate(-40deg) scale(1.6);opacity:0}15%{opacity:1}100%{transform:none;opacity:1}}
+#splash .fxI b{position:absolute;left:43%;top:43%;width:14%;height:14%;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;background:#1a2f8f;transform:translateY(-330%);opacity:0;animation:fxDrop .75s cubic-bezier(.55,0,1,.45) .4s forwards,fxOut .3s ease 1.25s forwards}
+#splash .fxI i{position:absolute;left:43%;top:43%;width:14%;height:14%;border-radius:50%;border:2px solid #1a2f8f;opacity:0;animation:fxRip 1.1s ease-out 1.15s forwards}
+#splash .fxI i:nth-child(3){animation-delay:1.45s}
+@keyframes fxDrop{0%{opacity:1}100%{transform:none;opacity:1}}@keyframes fxRip{0%{opacity:.9;transform:scale(.5)}100%{opacity:0;transform:scale(5)}}
+#splash.v-ink .rib{stroke:#1a2f8f;filter:blur(6px);animation:spDraw var(--rl) ease var(--rd) forwards,spSharp 1.4s ease 2.3s forwards}
+@keyframes spSharp{to{filter:blur(0)}}
 </style>
 
-<div id="splash" aria-hidden="true"><div class="stage"><div class="glow"></div><div class="tile"></div>
-<svg viewBox="0 0 200 200"><defs><linearGradient id="spG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3f7bf0"/><stop offset=".55" stop-color="#2452d6"/><stop offset="1" stop-color="#1b3fb3"/></linearGradient></defs>
-<path class="rib" d="M58 152 V70 Q58 52 72 64 L128 136 Q142 152 142 132 V48"/>
-<path class="ribHi" d="M58 152 V70 Q58 52 72 64 L128 136 Q142 152 142 132 V48"/>
-<path class="line" d="M80 82 L120 132"/></svg>
-<img class="logoImg" alt=""><div class="word"><span>N</span><span>o</span><span>t</span><span>o</span></div></div></div>
-<script>(function(){var s=document.getElementById("splash"),started=false;
-/* الحركة تبدي بس بعد ما الشاشة تطلع فعلاً، وتخلص كاملة قبل ما يفتح التطبيق */
-function start(){if(started||document.visibilityState==="hidden")return;started=true;requestAnimationFrame(function(){requestAnimationFrame(function(){s.classList.add("go");
-  setTimeout(function(){s.classList.add("out");setTimeout(function(){s.remove();},600);},6900);});});}
-if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start);else start();
-document.addEventListener("visibilitychange",start);})();</script>
+<script>(function(){
+/* حركات البداية: كلها تنتهي بالشعار الحقيقي وكلمة Noto، والتطبيق ما يفتح إلا لما تخلص */
+var V=["draw","write","wave","lines","lens","count","fly","ink"];
+var FX={write:'<svg class="fx fxW" viewBox="0 0 200 200"><text x="100" y="122" text-anchor="middle">نوتو</text></svg>',
+ wave:'<div class="fx fxB">'+[.35,.6,.9,.5,1,.7,.95,.55,.85,.4,.75,.5,.3].map(function(h,k){return '<i style="--k:'+k+';--h:'+h+'"></i>';}).join("")+'</div>',
+ lines:'<div class="fx fxL"><b>'+new Array(13).join("<i></i>")+'</b></div>',lens:'<div class="fx fxO"><i></i><i></i><i></i><u></u></div>',
+ count:'<div class="fx fxC"><i>3</i><i>2</i><i>1</i></div>',ink:'<div class="fx fxI"><b></b><i></i><i></i></div>'};
+function pick(){var v="draw";try{v=(JSON.parse(localStorage.getItem("noto2_set")||"{}").splash)||"draw";}catch(e){}if(v==="random")v=V[Math.floor(Math.random()*V.length)];return V.indexOf(v)<0?"draw":v;}
+function play(v){v=v||pick();var old=document.getElementById("splash");if(old)old.remove();var s=document.createElement("div");s.id="splash";s.className="v-"+v;s.setAttribute("aria-hidden","true");
+ s.innerHTML='<div class="stage"><div class="glow"></div><div class="tile"></div>'+(FX[v]||"")+'<svg viewBox="0 0 200 200"><defs><linearGradient id="spG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3f7bf0"/><stop offset=".55" stop-color="#2452d6"/><stop offset="1" stop-color="#1b3fb3"/></linearGradient></defs><g class="ribG"><path class="rib" d="M58 152 V70 Q58 52 72 64 L128 136 Q142 152 142 132 V48"/><path class="ribHi" d="M58 152 V70 Q58 52 72 64 L128 136 Q142 152 142 132 V48"/></g><path class="line" d="M80 82 L120 132"/></svg><img class="logoImg" alt=""><div class="word"><span>N</span><span>o</span><span>t</span><span>o</span></div></div>';
+ var li=document.querySelector(".brand .logoImg");if(li&&li.src)s.querySelector("img").src=li.src;
+ (document.body||document.documentElement).appendChild(s);var started=false;
+ function start(){if(started||document.visibilityState==="hidden")return;started=true;requestAnimationFrame(function(){requestAnimationFrame(function(){s.classList.add("go");
+   setTimeout(function(){s.classList.add("out");setTimeout(function(){s.remove();},600);},6900);});});}
+ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start);else start();document.addEventListener("visibilitychange",start);}
+window.__notoSplash=play;window.__notoSplashList=V;play();})();</script>
 <div id="lock" hidden>
   <img class="logoImg" alt="">
   <div class="lt" id="lockMsg"></div>
@@ -401,6 +438,8 @@ const T={ar:{
  step1_openai:"تنفتح صفحة OpenAI. سجّل دخول بحساب ChatGPT مالتك، واضغط «Create new secret key»، وسمّيه Noto، واضغط «Create»، وبعدين «Copy». (لازم يكون بحسابك رصيد من Billing، 5 دولار تكفي شهور.)",
  step1_claude:"تنفتح صفحة Anthropic. سجّل دخول بحساب Claude مالتك، واضغط «Create Key»، وسمّيه Noto، وبعدين «Copy». (لازم يكون بحسابك رصيد من Billing.)",
  step1_deepseek:"تنفتح صفحة DeepSeek. سجّل دخول، واضغط «Create new API key»، وسمّيه Noto، وبعدين «Copy». (لازم تشحن رصيد صغير من Top up، رخيص كلش.)",
+ splashT:"حركة البداية",splashS:"اضغط أي وحدة حتى تشوفها، وتبقى هي الي تطلع من تفتح Noto.",spRandom:"تتبدّل كل مرة",
+ sp_draw:"الشريط ينرسم",sp_write:"الكتابة",sp_wave:"موجة الصوت",sp_lines:"سطور الملقّن",sp_lens:"العدسة",sp_count:"العد التنازلي",sp_fly:"الشريط يطير",sp_ink:"الحبر",
  aBack5:"رجوع 5 ثواني",aFwd5:"قدّام 5 ثواني",aEnd:"المقطع الجاي",aPrevPara:"المقطع الي قبله"},
 en:{
  lockMsg:"Enter your code to open Noto",lockWait:"One moment…",lockBad:"Wrong code, try again",lockMany:"Too many tries. Wait 30 seconds",lockNo:"This device can't use the lock",del:"Delete",
@@ -464,6 +503,8 @@ en:{
  step1_openai:"The OpenAI page opens. Sign in with your ChatGPT account, tap “Create new secret key”, name it Noto, tap Create, then Copy. (The account needs credit under Billing; $5 lasts months.)",
  step1_claude:"The Anthropic page opens. Sign in with your Claude account, tap “Create Key”, name it Noto, then Copy. (The account needs credit under Billing.)",
  step1_deepseek:"The DeepSeek page opens. Sign in, tap “Create new API key”, name it Noto, then Copy. (Top up a small amount; it's very cheap.)",
+ splashT:"Opening animation",splashS:"Tap one to preview it. It becomes the one that plays when Noto opens.",spRandom:"Different each time",
+ sp_draw:"Ribbon draw",sp_write:"Handwriting",sp_wave:"Voice wave",sp_lines:"Prompter lines",sp_lens:"Lens",sp_count:"Countdown",sp_fly:"Flying ribbon",sp_ink:"Ink",
  aBack5:"Back 5 seconds",aFwd5:"Forward 5 seconds",aEnd:"Next section",aPrevPara:"Previous section"}};
 const t=(k,...a)=>{let s=(T[S.lang]||T.ar)[k];if(s==null)s=T.ar[k]||k;a.forEach((v,i)=>{s=s.replace("{"+i+"}",v);});return s;};
 let toastT=0;
@@ -877,6 +918,8 @@ function settingsSheet(){openSheet(t("settings"),B=>{
   {const av=Object.keys(PROV).filter(isDirect);if(av.length>1){const wa=el("div");wa.style.marginTop="12px";wa.append(el("b",null,t("aiWhich")));g.append(wa);chips(g,av.map(id=>({t:PROV[id].name,on:aiPick()===id,fn:()=>{S.ai=id;save();settingsSheet();}})));}}
   const dr=el("div","conn"),dlg=el("span","lg","D"),dt=el("div","tx");dlg.style.background="linear-gradient(135deg,#1fa463,#4285f4 55%,#ffcd40)";dt.append(el("b",null,"Google Drive"),el("small",null,STANDALONE?t("driveVia"):t("builtin")));
   const db=el("button","chipBtn",t("driveOpen"));db.addEventListener("click",()=>{if(STANDALONE)driveFilesSheet();else driveSheet();});dr.append(dlg,dt,db);g.append(dr);
+  g=grp(B,t("splashT"));g.append(el("p","note",t("splashS")));const spv=S.splash||"draw";
+  chips(g,(window.__notoSplashList||[]).map(v=>({t:t("sp_"+v),on:spv===v,fn:()=>{S.splash=v;save();settingsSheet();window.__notoSplash&&window.__notoSplash(v);}})).concat([{t:"🔀 "+t("spRandom"),on:spv==="random",fn:()=>{S.splash="random";save();settingsSheet();window.__notoSplash&&window.__notoSplash();}}]));
   g=grp(B,t("language"));chips(g,[["ar","العربية"],["en","English"]].map(([v,n])=>({t:n,on:S.lang===v,fn:()=>{S.lang=v;save();applyLang();settingsSheet();}})));
   if(STANDALONE)B.append(el("p","note",t("lockInfo")));B.append(el("p","note",t("version")));});}
 
