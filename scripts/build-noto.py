@@ -32,15 +32,15 @@ head = f"""<!doctype html>
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
 <title>Noto</title>
-<style>body{{margin:0}}</style>
-<script>if("serviceWorker" in navigator&&location.protocol==="https:"){{addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v={ver}",{{updateViaCache:"none"}}).then(r=>r.update()).catch(()=>{{}}));let re=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{{if(re)return;re=true;location.reload();}});}}</script>
+<style>body{{margin:0;background:#121316}}</style>
+<script>if("serviceWorker" in navigator&&location.protocol==="https:"){{addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v={ver}",{{updateViaCache:"none"}}).then(r=>r.update()).catch(()=>{{}}));let re=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{{if(re||window.__notoReading)return;re=true;location.reload();}});}}</script>
 </head>
 <body>
 """
 open(os.path.join(OUT, "index.html"), "w", encoding="utf-8").write(head + body + "\n</body>\n</html>\n")
 
 manifest = {"name": "Noto", "short_name": "Noto", "lang": "ar", "dir": "rtl", "start_url": "./", "scope": "./",
-            "display": "standalone", "orientation": "any", "background_color": "#0a0b0d", "theme_color": "#0a0b0d",
+            "display": "standalone", "orientation": "any", "background_color": "#121316", "theme_color": "#121316",
             "icons": [{"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
                       {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"},
                       {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}]}
