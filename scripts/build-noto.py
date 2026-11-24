@@ -11,7 +11,7 @@ from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "studio", "teleprompter-app.html")
-ICON = os.path.join(ROOT, "studio", "noto-icons", "Noto-N.png")
+ICON = os.path.join(ROOT, "studio", "noto-icons", "Noto-ribbon.png")
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, "links", "noto")
 os.makedirs(OUT, exist_ok=True)
 ver = str(int(time.time()))
