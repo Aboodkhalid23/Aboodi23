@@ -12,7 +12,7 @@
 <link rel="icon" href="icon-192.png">
 <title>Noto</title>
 <style>body{margin:0;background:#121316}</style>
-<script>if("serviceWorker" in navigator&&location.protocol==="https:"){addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=1795534360",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));let re=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(re||window.__notoReading)return;re=true;location.reload();});}</script>
+<script>if("serviceWorker" in navigator&&location.protocol==="https:"){addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=1795550244",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));let re=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(re||window.__notoReading)return;re=true;location.reload();});}</script>
 </head>
 <body>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -39,6 +39,7 @@ svg{flex:none}
 .wrap{width:100%;max-width:720px;margin:0 auto;padding-left:max(20px,var(--sar));padding-right:max(20px,var(--sal))}
 .btn{height:52px;border-radius:16px;padding:0 20px;background:var(--s2);font-weight:700;font-size:16px;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .12s}
 .btn:active{transform:scale(.97)}
+a.btn{color:var(--fg)}
 .btn.p{background:var(--acc);color:#fff;box-shadow:0 10px 28px -8px rgba(33,96,255,.75)}
 .btn.w{width:100%}
 .ib{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--s2);transition:transform .12s}
@@ -366,6 +367,11 @@ const T={ar:{
  sfPrev:"قبلها",sfNext:"بعدها",sfPause:"وگّف",sfPlay:"مشّي",sfClose:"إغلاق",sfSave:"احفظ الفيديو",sfAgain:"صوّر مرة ثانية",flNo:"نسخة الجهاز قديمة. حدّث النظام أو استعمل «صوّر هنا».",flNet:"ما گدرت أنزّل أداة الفيديو. تأكد من النت.",flNo2:"الجهاز ما يدعم صنع الفيديو.",flFly:"الجهاز ما خلّاني أطلّعه عائم. اطلع للشاشة الرئيسية وهو شغّال.",
  rdy:"جاهز؟ {0}",flEnd:"خلص السكريبت",
  aClose:"رجوع لسكريبتاتك",aCam:"صوّر وانت تقرا",aSet:"الإعدادات",aPlay:"مشّي",aPause:"وگّف",aPrev:"الي قبلها",aNext:"الي بعدها",aMore:"خيارات",aLess:"أقل",aMoreV:"أكثر",
+ aiTitle:"الذكاء الاصطناعي",aiSub:"يشتغل بحسابك الي عندك بتطبيقاتهم، بدون أي ربط ولا مفتاح.",aiWhich:"أي واحد تستعمل؟",adv:"متقدم: ربط بمفتاح (يشتغل داخل Noto بدون ما تطلع)",
+ waitTitle:"كمّل بـ {0}",w1q:"انفتح {0} والطلب مكتوب جاهز. اضغط إرسال.",w1c:"انفتح {0} والطلب منسوخ. اضغط مطوّل بخانة الكتابة ← «لصق»، وبعدين إرسال.",w2:"لما يخلص، اضغط «نسخ» تحت الجواب.",w3:"ارجع لـ Noto واضغط:",
+ pasteAns:"الصق الجواب",orPaste:"أو الصق الجواب هنا بإصبعك",done2:"تم",reopen:"افتح {0} مرة ثانية",ansEmpty:"الحافظة فاضية. انسخ الجواب من {0} أول.",ansBad:"ما لگيت الجمل بالجواب. انسخ الجواب كله وجرّب.",
+ drivePick:"اختار سكريبت من Drive",driveFix:"ما يطلعلك Drive؟ سوّيها مرة وحدة بس",driveFixS:"١. افتح تطبيق «الملفات».\n٢. تحت اضغط «تصفّح».\n٣. فوق اضغط (⋯) ← «تعديل».\n٤. شغّل «Drive» ← «تم».\nبعدها Drive يطلعلك دائماً. (لازم تطبيق Google Drive منزّل ومسجّل دخول.)",
+ driveDocs:"أو من تطبيق Google Docs: افتح السكريبت ← اضغط مطوّل ← «تحديد الكل» ← «نسخ»، وارجع اضغط:",driveClaude:"أو افتح Noto من داخل تطبيق Claude، هناك يشوف الدرايف مباشرة ويدوّر بيه.",openInClaude:"افتح Noto داخل Claude",direct:"مربوط بمفتاح ✓",
  aBack5:"رجوع 5 ثواني",aFwd5:"قدّام 5 ثواني",aEnd:"المقطع الجاي",aPrevPara:"المقطع الي قبله"},
 en:{
  lockMsg:"Enter your code to open Noto",lockWait:"One moment…",lockBad:"Wrong code, try again",lockMany:"Too many tries. Wait 30 seconds",lockNo:"This device can't use the lock",del:"Delete",
@@ -414,6 +420,11 @@ en:{
  sfPrev:"Previous",sfNext:"Next",sfPause:"Pause",sfPlay:"Play",sfClose:"Close",sfSave:"Save video",sfAgain:"Record again",flNo:"This device is too old. Update it or use “Record here”.",flNet:"Couldn't download the video tool. Check your internet.",flNo2:"This device can't make the video.",flFly:"The device didn't allow floating. Go to the home screen while it plays.",
  rdy:"Ready? {0}",flEnd:"End of script",
  aClose:"Back to your scripts",aCam:"Record while reading",aSet:"Settings",aPlay:"Play",aPause:"Pause",aPrev:"Previous",aNext:"Next",aMore:"Options",aLess:"Less",aMoreV:"More",
+ aiTitle:"AI",aiSub:"Works with your own account in their apps. No setup, no keys.",aiWhich:"Which one do you use?",adv:"Advanced: connect with a key (works inside Noto)",
+ waitTitle:"Continue in {0}",w1q:"{0} opened with the request ready. Tap send.",w1c:"{0} opened and the request is copied. Long-press the message box → Paste, then send.",w2:"When it's done, tap Copy under the answer.",w3:"Come back to Noto and tap:",
+ pasteAns:"Paste the answer",orPaste:"Or paste the answer here",done2:"Done",reopen:"Open {0} again",ansEmpty:"The clipboard is empty. Copy the answer from {0} first.",ansBad:"Couldn't find the sentences. Copy the whole answer and try again.",
+ drivePick:"Pick a script from Drive",driveFix:"Don't see Drive? Do this once",driveFixS:"1. Open the Files app.\n2. Tap Browse.\n3. Tap (⋯) → Edit.\n4. Turn on Drive → Done.\nDrive will always show after that. (The Google Drive app must be installed and signed in.)",
+ driveDocs:"Or from Google Docs: open the script → long-press → Select All → Copy, then come back and tap:",driveClaude:"Or open Noto inside the Claude app, where it searches Drive directly.",openInClaude:"Open Noto in Claude",direct:"Connected with key ✓",
  aBack5:"Back 5 seconds",aFwd5:"Forward 5 seconds",aEnd:"Next section",aPrevPara:"Previous section"}};
 const t=(k,...a)=>{let s=(T[S.lang]||T.ar)[k];if(s==null)s=T.ar[k]||k;a.forEach((v,i)=>{s=s.replace("{"+i+"}",v);});return s;};
 let toastT=0;
@@ -580,7 +591,13 @@ async function readDocx(buf){
     p+=46+nl+xl+cl;}
   throw new Error("no-document");
 }
-function driveFilesSheet(){openSheet(t("fromDrive"),B=>{B.append(el("p","note",t("driveFiles")));const b=el("button","btn p w",t("pick"));b.style.marginTop="12px";b.addEventListener("click",()=>$("fileIn").click());B.append(b,el("p","note",t("driveFilesNote")));});}
+function driveFilesSheet(){openSheet(t("fromDrive"),B=>{
+  const b=el("button","btn p w",t("drivePick"));b.addEventListener("click",()=>$("fileIn").click());B.append(b);
+  const c=el("div","card");c.append(el("b",null,t("driveFix")));const st=el("p","note",t("driveFixS"));st.style.whiteSpace="pre-line";c.append(st);B.append(c);
+  B.append(el("p","note",t("driveDocs")));const pc=el("button","btn w",t("fromClip"));pc.style.marginTop="6px";
+  pc.addEventListener("click",async()=>{try{const x=await navigator.clipboard.readText();if(!wc(x)){toast(t("clipEmpty"));return;}closeSheet();openEdit({id:"local-"+Date.now(),title:"",text:cleanText(x),src:"local"},true);}catch(e){toast(t("clipNo"));}});B.append(pc);
+  B.append(el("p","note",t("driveClaude")));const oc=el("a","btn w",t("openInClaude"));oc.href="https://claude.ai/artifact/1Kfi3zdh1zcfYLWbFzzM7N";oc.target="_blank";oc.rel="noopener";oc.style.cssText="margin-top:6px;text-decoration:none";B.append(oc);
+  B.append(el("p","note",t("driveFilesNote")));});}
 const DRIVE="Google Drive";let mcp=null,driveSeq=0;const mcpP=use("mcp");
 const escQ=s=>s.replace(/\\/g,"\\\\").replace(/'/g,"\\'");
 function driveSheet(){
@@ -793,26 +810,40 @@ function settingsSheet(){openSheet(t("settings"),B=>{
     swRow(g3,t("boxRow"),null,S.box,v=>{S.box=v;save();if(cur==="read")$("gBox").hidden=!v;});
   }
   g=grp(B,t("screen"));swRow(g,t("cd"),null,S.cd,v=>{S.cd=v;save();});swRow(g,t("mirror"),t("mirrorS"),S.mirror,v=>{S.mirror=v;upd();});
-  g=grp(B,t("accounts"));g.append(el("p","note",t("accountsS")));
-  const dr=el("div","conn"),dl=el("span","lg","D"),dt=el("div","tx");dl.style.background="linear-gradient(135deg,#1fa463,#4285f4 55%,#ffcd40)";dt.append(el("b",null,t("driveCard")),el("small",null,STANDALONE?t("driveVia"):t("builtin")));
-  const db=el("button","chipBtn",t("driveOpen"));db.addEventListener("click",()=>{if(STANDALONE)driveFilesSheet();else driveSheet();});dr.append(dl,dt,db);g.append(dr);
+  g=grp(B,t("aiTitle"));g.append(el("p","note",t("aiSub")));const wa=el("div");wa.style.marginTop="10px";wa.append(el("b",null,t("aiWhich")));g.append(wa);
+  chips(g,Object.keys(PROV).map(id=>({t:PROV[id].name+(isDirect(id)?" ✓":""),on:aiPick()===id,fn:()=>{S.ai=id;save();settingsSheet();}})));
+  g=grp(B,t("driveCard"));const dbt=el("button","btn w",t("fromDrive"));dbt.addEventListener("click",()=>{if(STANDALONE)driveFilesSheet();else driveSheet();});g.append(dbt);
+  const det=el("details");det.style.marginTop="18px";const sm=el("summary",null,t("adv"));sm.style.cssText="color:var(--mut);font-weight:700;cursor:pointer;padding:8px 0";det.append(sm);B.append(det);
   Object.keys(PROV).forEach(id=>{const P=PROV[id],k=KEYS[id],has=!!(k&&k.k),built=id==="claude"&&!STANDALONE&&!has,r=el("div","conn"),lg=el("span","lg",P.mono),tx=el("div","tx");lg.style.background=P.color;
-    tx.append(el("b",null,P.name),el("small",has||built?"ok":null,built?t("builtin"):has?t("connected")+(k.m?" · "+k.m.replace(/^models\//,""):""):t("notConn")));
-    const b=el("button","chipBtn"+(has?"":" p"),has?t("disconnect"):t("connect"));b.hidden=built;
-    b.addEventListener("click",()=>{if(has){delete KEYS[id];N.set("keys",KEYS);if(S.ai===id){S.ai="";save();}settingsSheet();}else connectSheet(id);});r.append(lg,tx,b);g.append(r);});
-  const av=aiList();if(av.length>1){const g4=grp(B,t("defAI"));chips(g4,av.map(id=>({t:PROV[id].name,on:aiPick()===id,fn:()=>{S.ai=id;save();settingsSheet();}})));}
+    tx.append(el("b",null,P.name),el("small",has||built?"ok":null,built?t("builtin"):has?t("direct")+(k.m?" · "+k.m.replace(/^models\//,""):""):t("notConn")));
+    const b=el("button","chipBtn",has?t("disconnect"):t("connect"));b.hidden=built;
+    b.addEventListener("click",()=>{if(has){delete KEYS[id];N.set("keys",KEYS);settingsSheet();}else connectSheet(id);});r.append(lg,tx,b);det.append(r);});
   g=grp(B,t("language"));chips(g,[["ar","العربية"],["en","English"]].map(([v,n])=>({t:n,on:S.lang===v,fn:()=>{S.lang=v;save();applyLang();settingsSheet();}})));
   if(STANDALONE)B.append(el("p","note",t("lockInfo")));B.append(el("p","note",t("version")));});}
 
 /* ---------- الذكاء الاصطناعي: Claude و ChatGPT و Gemini و DeepSeek (كل وحد يتجرّب فعلاً قبل ما ينحفظ) ---------- */
 const PROV={
-  claude:{name:"Claude",mono:"C",color:"#d97757",url:"https://console.anthropic.com/settings/keys",ph:"sk-ant-…"},
-  openai:{name:"ChatGPT",mono:"G",color:"#10a37f",url:"https://platform.openai.com/api-keys",ph:"sk-…"},
-  gemini:{name:"Gemini",mono:"✦",color:"#4c7cf3",url:"https://aistudio.google.com/apikey",ph:"AIza…"},
-  deepseek:{name:"DeepSeek",mono:"D",color:"#4d6bfe",url:"https://platform.deepseek.com/api_keys",ph:"sk-…"}};
+  claude:{name:"Claude",mono:"C",color:"#d97757",url:"https://console.anthropic.com/settings/keys",ph:"sk-ant-…",app:"https://claude.ai/new?q="},
+  openai:{name:"ChatGPT",mono:"G",color:"#10a37f",url:"https://platform.openai.com/api-keys",ph:"sk-…",app:"https://chatgpt.com/?q="},
+  gemini:{name:"Gemini",mono:"✦",color:"#4c7cf3",url:"https://aistudio.google.com/apikey",ph:"AIza…",app:"https://gemini.google.com/app"},
+  deepseek:{name:"DeepSeek",mono:"D",color:"#4d6bfe",url:"https://platform.deepseek.com/api_keys",ph:"sk-…",app:"https://chat.deepseek.com/"}};
 const KEYS=N.get("keys",{});
 const aiList=()=>Object.keys(PROV).filter(id=>(KEYS[id]&&KEYS[id].k)||(id==="claude"&&!STANDALONE));
-const aiPick=()=>{const l=aiList();return l.includes(S.ai)?S.ai:l[0]||"";};
+const aiPick=()=>PROV[S.ai]?S.ai:(aiList()[0]||"openai");
+const isDirect=id=>!!(KEYS[id]&&KEYS[id].k)||(id==="claude"&&!STANDALONE);
+/* بدون مفتاح: ننسخ الطلب ونفتح تطبيق الذكاء بحسابك، وترجع تلصق الجواب */
+function handoff(id,prompt,onText){const P=PROV[id];try{navigator.clipboard&&navigator.clipboard.writeText(prompt).catch(()=>{});}catch(e){}
+  const hasQ=/[?=]$/.test(P.app);const url=hasQ?P.app+encodeURIComponent(prompt):P.app;const w=window.open(url,"_blank","noopener");
+  openSheet(t("waitTitle",P.name),B=>{const st=(n,x)=>{const s=el("div","stepN"),i=el("i",null,AR(n)),d=el("div");d.append(el("b",null,x));s.append(i,d);B.append(s);return d;};
+    st(1,hasQ?t("w1q",P.name):t("w1c",P.name));st(2,t("w2"));const d3=st(3,t("w3"));const pb=el("button","btn p w",t("pasteAns"));pb.style.marginTop="8px";d3.append(pb);const out=el("p","note");d3.append(out);
+    const take=x=>{x=String(x||"").trim();if(!wc(x)){out.textContent=t("ansEmpty",P.name);return;}if(onText(x)===false)out.textContent=t("ansBad");};
+    pb.addEventListener("click",async()=>{try{take(await navigator.clipboard.readText());}catch(e){out.textContent=t("ansEmpty",P.name);}});
+    const g=grp(B,t("orPaste"));const ta=el("textarea","field");ta.dir="auto";const ok=el("button","btn w",t("done2"));ok.style.marginTop="8px";ok.addEventListener("click",()=>take(ta.value));g.append(ta,ok);
+    const ro=el("a","btn w",t("reopen",P.name));ro.href=url;ro.target="_blank";ro.rel="noopener";ro.style.cssText="margin-top:14px;text-decoration:none";ro.addEventListener("click",()=>{try{navigator.clipboard.writeText(prompt);}catch(e){}});B.append(ro);});}
+function parseOpts(x){try{const a=x.indexOf("{"),b=x.lastIndexOf("}");if(a>=0&&b>a){const j=JSON.parse(x.slice(a,b+1));if(Array.isArray(j.options))return {options:j.options,names:j.names||[]};}}catch(e){}
+  const L=x.split("\n").map(l=>l.trim()).filter(Boolean);const num=L.map(l=>l.match(/^(?:[*#-]\s*)?(?:[1-3١-٣])\s*[.)\-:ـ]\s*(.+)$/)).filter(Boolean).map(m=>m[1].replace(/\*\*/g,"").trim());
+  const names=[];L.forEach(l=>{const m=l.match(/^(.{2,30}?)\s*[=:]\s*([^\s].*·.*)$/);if(m)names.push({w:m[1].replace(/[*-]/g,"").trim(),s:m[2].trim()});});
+  return {options:num.length?num.slice(0,3):[],names};}
 function aiErr(status,txt){const e={code:"upstream"};if(status===401||status===403)e.code="bad";else if(status===402||/credit|balance|billing|quota|insufficient/i.test(txt||""))e.code="money";else if(status===429)e.code="limit";else if(status===400&&/API key not valid|invalid.*key|API_KEY_INVALID/i.test(txt||""))e.code="bad";return e;}
 async function jfetch(url,opt){let r;try{r=await fetch(url,opt);}catch(e){throw {code:"net"};}const txt=await r.text();if(!r.ok)throw aiErr(r.status,txt);try{return JSON.parse(txt);}catch(e){throw {code:"upstream"};}}
 const ANT=k=>({"content-type":"application/json","x-api-key":k,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true","anthropic-beta":"server-side-fallback-2026-07-01"});
@@ -853,21 +884,23 @@ function connectSheet(id){const P=PROV[id];openSheet(t("connTitle",P.name),B=>{
 
 /* ---------- خلّي الذكاء يكتب السكريبت ---------- */
 function writeSheet(){openSheet(t("writeTitle"),B=>{
-  const av=aiList();if(!av.length){B.append(el("p","note",t("noAI")));const b=el("button","btn p w",t("connectNow"));b.style.marginTop="10px";b.addEventListener("click",settingsSheet);B.append(b);return;}
+  const av=Object.keys(PROV);
   let g=grp(B,t("topic"));const q=el("textarea","field");q.placeholder=t("topicPh");q.dir="auto";g.append(q);
   let len="short";g=grp(B,t("length"));const lc=chips(g,[["reel","lReel"],["short","lShort"],["long","lLong"]].map(([v,n])=>({t:t(n),on:v===len,fn:e=>{len=v;[...lc.children].forEach(c=>c.classList.toggle("on",c===e.currentTarget));}})));
-  let who=aiPick();if(av.length>1){g=grp(B,t("with"));const wc2=chips(g,av.map(id=>({t:PROV[id].name,on:id===who,fn:e=>{who=id;[...wc2.children].forEach(c=>c.classList.toggle("on",c===e.currentTarget));}})));}
+  let who=aiPick();g=grp(B,t("with"));const wc2=chips(g,av.map(id=>({t:PROV[id].name,on:id===who,fn:e=>{who=id;S.ai=id;save();[...wc2.children].forEach(c=>c.classList.toggle("on",c===e.currentTarget));}})));
   const goB=el("button","btn p w",t("writeGo"));goB.style.marginTop="16px";const out=el("p","note");B.append(goB,out);
-  goB.addEventListener("click",async()=>{const topic=q.value.trim();if(!topic){q.focus();return;}goB.disabled=true;out.innerHTML='<span class="spin"></span> '+t("writing",PROV[who].name);
+  goB.addEventListener("click",async()=>{const topic=q.value.trim();if(!topic){q.focus();return;}
     const L={reel:"45 ثانية تقريباً (100 كلمة)",short:"3 دقايق تقريباً (400 كلمة)",long:"10 دقايق تقريباً (1300 كلمة)"}[len];
     const prompt="اكتب سكريبت فيديو يوتيوب "+(S.lang==="en"?"in simple spoken English":"باللهجة العراقية المحكية")+" عن: «"+topic+"».\nالطول: "+L+".\n"+
       "القواعد: ابدأ بهوك قوي بأول جملتين. جمل قصيرة سهلة النطق لأن المقدّم عنده صعوبة بالنطق، وكل جملة بسطر. كلمات بسيطة، بدون كلمات طويلة متلاصقة، والأسماء الأجنبية قليلة.\n"+
       "أول سطر: العنوان: (عنوان قصير). بعده سطر: الهوك: وبعدين السكريبت. بدون أي شرح وبدون نجوم أو رموز، بس السكريبت.\nلا تستعمل: "+HARD.map(h=>h[0]).join("، ");
-    try{const x=cleanText(await aiAsk(prompt,who));if(!wc(x))throw {code:"upstream"};const tm=x.match(/^العنوان\s*[:：]\s*(.+)$/m);closeSheet();openEdit({id:"ai-"+Date.now(),title:tm?tm[1].trim():topic.slice(0,50),text:x,src:"ai"},true);}
-    catch(e){out.textContent=AIMSG(e&&e.code);goB.disabled=false;}});});}
+    const done=raw=>{const x=cleanText(raw);if(!wc(x))return false;const tm=x.match(/^العنوان\s*[:：]\s*(.+)$/m);closeSheet();openEdit({id:"ai-"+Date.now(),title:tm?tm[1].trim():topic.slice(0,50),text:x,src:"ai"},true);return true;};
+    if(!isDirect(who)){handoff(who,prompt,done);return;}
+    goB.disabled=true;out.innerHTML='<span class="spin"></span> '+t("writing",PROV[who].name);
+    try{if(!done(await aiAsk(prompt,who)))throw {code:"upstream"};}catch(e){out.textContent=AIMSG(e&&e.code);goB.disabled=false;}});});}
 
 /* ---------- سهّل الجملة ---------- */
-let undoText=null;
+let undoText=null,pendingEasy=null;
 function replaceSent(i,nt){nt=String(nt||"").replace(/\s+/g," ").trim();const s=SENT[i];if(!s||!nt||nt===s.t)return false;
   const lines=cleanText(doc.text).split("\n");const L=lines[s.li];if(L==null||!L.includes(s.t)){toast(t("notFound"));return false;}
   undoText={text:doc.text,idx:i};lines[s.li]=L.replace(s.t,nt);doc.text=lines.join("\n");saveDoc(doc);SENT=parse(doc.text);R.idx=Math.min(i,SENT.length-1);R.t=0;showSent();savePos();return true;}
@@ -877,20 +910,24 @@ function easySheet(){const i=R.idx,s=SENT[i];if(!s)return;openSheet(t("easyTitle
   if(hit.length){const g=grp(B,t("hardIn"));hit.forEach(h=>{const b=el("button","opt",h.h.h+"  ←  "+h.h.alt);if(!h.h.swap){b.append(el("small",null,t("adviceOnly")));b.disabled=true;}
     else b.addEventListener("click",()=>{const t2=tok.slice();t2.splice(h.i,h.n,h.h.alt);if(replaceSent(i,t2.join(" "))){toast(t("wordReplaced"));easySheet();}});g.append(b);});}
   const g=grp(B,t("aiEasy"));g.append(el("p","note",t("aiEasyS")));
-  if(!aiList().length){const b=el("button","btn p w",t("connectNow"));b.style.marginTop="8px";b.addEventListener("click",settingsSheet);g.append(el("p","note",t("noAI")),b);}
-  else{const goB=el("button","btn p w",t("easyGo"));goB.style.marginTop="8px";g.append(goB);const out=el("div");g.append(out);
-    goB.addEventListener("click",async()=>{goB.disabled=true;out.innerHTML='<p class="note"><span class="spin"></span> '+t("thinking",PROV[aiPick()].name)+'</p>';
-      const prompt="انت تساعد مقدّم يوتيوب عراقي عنده صعوبة بالنطق، يقرا من الملقّن جملة جملة.\nالجملة: «"+s.t+"»\n"+(SENT[i-1]?"الي قبلها: «"+SENT[i-1].t+"»\n":"")+(SENT[i+1]?"الي بعدها: «"+SENT[i+1].t+"»\n":"")+
-        "اكتب 3 طرق أسهل للنطق لنفس الجملة، بنفس لغة ولهجة الجملة، بنفس المعنى والمعلومة والأرقام:\n1) نفس الجملة بكلمات أسهل وأقصر.\n2) أقصر ما يمكن.\n3) إذا بيها اسم أو كلمة أجنبية صعبة، عوّضها بوصف بسيط (مثل: هذا الرسام، الشركة). إذا ماكو، خليها طريقة ثالثة سهلة.\n"+
-        "تجنب الكلمات الطويلة والحروف المتلاصقة. لا تستعمل: "+HARD.map(h=>h[0]).join("، ")+"\nوطلّع الأسماء أو الكلمات الصعبة بالجملة نفسها، لكل وحدة: w = الكلمة مثل ما مكتوبة بالضبط، s = نطقها مقطّع بالحروف العربية ومفصول بـ · (مثل: ليو·نار·دو).\n"+
-        "رجّع JSON بس: {\"options\":[\"\",\"\",\"\"],\"names\":[{\"w\":\"\",\"s\":\"\"}]}";
-      try{const r=await aiJson(prompt);out.innerHTML="";const ops=(r&&Array.isArray(r.options)?r.options:[]).map(x=>String(x||"").replace(/^["«»“”]+|["«»“”]+$/g,"").trim()).filter(x=>x&&x!==s.t);
-        if(!ops.length)out.append(el("p","note",t("easySame")));
+  {let who=aiPick();const wc3=chips(g,Object.keys(PROV).map(id=>({t:PROV[id].name,on:id===who,fn:e=>{who=id;S.ai=id;save();[...wc3.children].forEach(c=>c.classList.toggle("on",c===e.currentTarget));}})));wc3.style.marginTop="8px";
+    const goB=el("button","btn p w",t("easyGo"));goB.style.marginTop="10px";g.append(goB);const out=el("div");g.append(out);
+    const show=r=>{out.innerHTML="";const ops=(r&&Array.isArray(r.options)?r.options:[]).map(x=>String(x||"").replace(/^["«»“”]+|["«»“”]+$/g,"").trim()).filter(x=>x&&x!==s.t);
+        if(!ops.length){out.append(el("p","note",t("easySame")));}
         ["o1","o2","o3"].forEach((lab,k)=>{if(!ops[k])return;const b=el("button","opt",ops[k]);b.dir="auto";b.append(el("small",null,t(lab)+" · "+t("useIt")));b.addEventListener("click",()=>{if(replaceSent(i,ops[k])){toast(t("replaced"));closeSheet();}});out.append(b);});
         const nm=(r&&Array.isArray(r.names)?r.names:[]).filter(x=>x&&x.w&&x.s&&s.t.includes(String(x.w).trim()));
         if(nm.length){out.append(el("p","note",t("namesHow")));nm.forEach(x=>{const b=el("button","opt",x.w+"  =  "+x.s);b.addEventListener("click",()=>{const P=N.get("pron_"+doc.id,{});P[norm(x.w)]=x.s;N.set("pron_"+doc.id,P);showSent();toast(t("pronSaved"));});out.append(b);});}
-      }catch(e){out.innerHTML="";out.append(el("p","note",AIMSG(e&&e.code)));}
-      goB.disabled=false;goB.textContent=t("easyMore");});}
+        return ops.length>0;};
+    goB.addEventListener("click",async()=>{
+      const prompt="انت تساعد مقدّم يوتيوب عراقي عنده صعوبة بالنطق، يقرا من الملقّن جملة جملة.\nالجملة: «"+s.t+"»\n"+(SENT[i-1]?"الي قبلها: «"+SENT[i-1].t+"»\n":"")+(SENT[i+1]?"الي بعدها: «"+SENT[i+1].t+"»\n":"")+
+        "اكتب 3 طرق أسهل للنطق لنفس الجملة، بنفس لغة ولهجة الجملة، بنفس المعنى والمعلومة والأرقام:\n1) نفس الجملة بكلمات أسهل وأقصر.\n2) أقصر ما يمكن.\n3) إذا بيها اسم أو كلمة أجنبية صعبة، عوّضها بوصف بسيط (مثل: هذا الرسام، الشركة). إذا ماكو، خليها طريقة ثالثة سهلة.\n"+
+        "تجنب الكلمات الطويلة والحروف المتلاصقة. لا تستعمل: "+HARD.map(h=>h[0]).join("، ")+"\nوطلّع الأسماء أو الكلمات الصعبة بالجملة نفسها، لكل وحدة: w = الكلمة مثل ما مكتوبة بالضبط، s = نطقها مقطّع بالحروف العربية ومفصول بـ · (مثل: ليو·نار·دو).\n"+
+        (isDirect(who)?"رجّع JSON بس: {\"options\":[\"\",\"\",\"\"],\"names\":[{\"w\":\"\",\"s\":\"\"}]}":"اكتب الجواب بهذا الشكل بالضبط وبدون أي كلام ثاني:\n1. الطريقة الأولى\n2. الطريقة الثانية\n3. الطريقة الثالثة\nوبعدها كل اسم صعب بسطر: الكلمة = نطقها·مقطّع");
+      if(!isDirect(who)){handoff(who,prompt,x=>{const r=parseOpts(x);if(!r.options.length)return false;pendingEasy=r;easySheet();return true;});return;}
+      goB.disabled=true;out.innerHTML='<p class="note"><span class="spin"></span> '+t("thinking",PROV[who].name)+'</p>';
+      try{show(await aiJson(prompt,who));}catch(e){out.innerHTML="";out.append(el("p","note",AIMSG(e&&e.code)));}
+      goB.disabled=false;goB.textContent=t("easyMore");});
+    if(pendingEasy){const r=pendingEasy;pendingEasy=null;show(r);setTimeout(()=>out.scrollIntoView({block:"start",behavior:"smooth"}),300);}}
   const g2=grp(B,t("selfWrite"));const ta=el("textarea","field");ta.value=s.t;ta.dir="auto";g2.append(ta);
   const sv=el("button","btn w",t("saveSent"));sv.style.marginTop="8px";sv.addEventListener("click",()=>{if(replaceSent(i,ta.value)){toast(t("saved"));closeSheet();}});g2.append(sv);
   if(undoText){const u=el("button","btn w",t("undo"));u.style.marginTop="8px";u.addEventListener("click",()=>{doc.text=undoText.text;saveDoc(doc);SENT=parse(doc.text);R.idx=Math.min(undoText.idx,SENT.length-1);undoText=null;showSent();toast(t("undone"));closeSheet();});g2.append(u);}
