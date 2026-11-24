@@ -356,6 +356,10 @@ const T={ar:{
  pasteAns:"الصق الجواب",orPaste:"أو الصق الجواب هنا بإصبعك",done2:"تم",reopen:"افتح {0} مرة ثانية",ansEmpty:"الحافظة فاضية. انسخ الجواب من {0} أول.",ansBad:"ما لگيت الجمل بالجواب. انسخ الجواب كله وجرّب.",
  drivePick:"اختار سكريبت من Drive",driveFix:"ما يطلعلك Drive؟ سوّيها مرة وحدة بس",driveFixS:"١. افتح تطبيق «الملفات».\n٢. تحت اضغط «تصفّح».\n٣. فوق اضغط (⋯) ← «تعديل».\n٤. شغّل «Drive» ← «تم».\nبعدها Drive يطلعلك دائماً. (لازم تطبيق Google Drive منزّل ومسجّل دخول.)",
  driveDocs:"أو من تطبيق Google Docs: افتح السكريبت ← اضغط مطوّل ← «تحديد الكل» ← «نسخ»، وارجع اضغط:",driveClaude:"أو افتح Noto من داخل تطبيق Claude، هناك يشوف الدرايف مباشرة ويدوّر بيه.",openInClaude:"افتح Noto داخل Claude",direct:"مربوط بمفتاح ✓",
+ setupT:"اربط مرة وحدة بس",setupWhy:"آبل ما تخلّي أي تطبيق يستعمل حساب تطبيق ثاني، حتى لو منزّل بجهازك. فالربط لازم مرة وحدة، وبعدها كلشي يصير داخل Noto بدون ما تطلع.",
+ gemFree:"اربط Gemini مجاناً (دقيقة وحدة)",orOthers:"أو اربط غيره (يحتاج رصيد بحسابه):",onceCopy:"هالمرة بس، بالنسخ واللصق",
+ step1Gem:"تنفتح صفحة Google. سجّل دخول بحساب Google مالتك، واضغط «Create API key»، وإذا سألك اختار «Create API key in new project». بعدين اضغط زر النسخ 📋 جنب المفتاح.",
+ aiOk:"✓ مربوط بـ {0}. كل شي يشتغل داخل Noto.",
  aBack5:"رجوع 5 ثواني",aFwd5:"قدّام 5 ثواني",aEnd:"المقطع الجاي",aPrevPara:"المقطع الي قبله"},
 en:{
  lockMsg:"Enter your code to open Noto",lockWait:"One moment…",lockBad:"Wrong code, try again",lockMany:"Too many tries. Wait 30 seconds",lockNo:"This device can't use the lock",del:"Delete",
@@ -409,6 +413,10 @@ en:{
  pasteAns:"Paste the answer",orPaste:"Or paste the answer here",done2:"Done",reopen:"Open {0} again",ansEmpty:"The clipboard is empty. Copy the answer from {0} first.",ansBad:"Couldn't find the sentences. Copy the whole answer and try again.",
  drivePick:"Pick a script from Drive",driveFix:"Don't see Drive? Do this once",driveFixS:"1. Open the Files app.\n2. Tap Browse.\n3. Tap (⋯) → Edit.\n4. Turn on Drive → Done.\nDrive will always show after that. (The Google Drive app must be installed and signed in.)",
  driveDocs:"Or from Google Docs: open the script → long-press → Select All → Copy, then come back and tap:",driveClaude:"Or open Noto inside the Claude app, where it searches Drive directly.",openInClaude:"Open Noto in Claude",direct:"Connected with key ✓",
+ setupT:"Connect once",setupWhy:"Apple doesn't let any app use another app's account, even if it's installed. Connect once, and after that everything works inside Noto.",
+ gemFree:"Connect Gemini for free (1 minute)",orOthers:"Or connect another (needs credit on that account):",onceCopy:"Just this time, with copy and paste",
+ step1Gem:"A Google page opens. Sign in with your Google account, tap “Create API key” (choose “Create API key in new project” if asked), then tap the copy button next to the key.",
+ aiOk:"✓ Connected to {0}. Everything works inside Noto.",
  aBack5:"Back 5 seconds",aFwd5:"Forward 5 seconds",aEnd:"Next section",aPrevPara:"Previous section"}};
 const t=(k,...a)=>{let s=(T[S.lang]||T.ar)[k];if(s==null)s=T.ar[k]||k;a.forEach((v,i)=>{s=s.replace("{"+i+"}",v);});return s;};
 let toastT=0;
@@ -794,7 +802,8 @@ function settingsSheet(){openSheet(t("settings"),B=>{
     swRow(g3,t("boxRow"),null,S.box,v=>{S.box=v;save();if(cur==="read")$("gBox").hidden=!v;});
   }
   g=grp(B,t("screen"));swRow(g,t("cd"),null,S.cd,v=>{S.cd=v;save();});swRow(g,t("mirror"),t("mirrorS"),S.mirror,v=>{S.mirror=v;upd();});
-  g=grp(B,t("aiTitle"));g.append(el("p","note",t("aiSub")));const wa=el("div");wa.style.marginTop="10px";wa.append(el("b",null,t("aiWhich")));g.append(wa);
+  g=grp(B,t("aiTitle"));{const dl=Object.keys(PROV).filter(x=>KEYS[x]&&KEYS[x].k);if(dl.length)g.append(el("p","note",t("aiOk",dl.map(x=>PROV[x].name).join("، "))));
+    else{g.append(el("p","note",t("setupWhy")));const gb=el("button","btn p w",t("gemFree"));gb.style.marginTop="8px";gb.addEventListener("click",()=>connectSheet("gemini"));g.append(gb);}}const wa=el("div");wa.style.marginTop="10px";wa.append(el("b",null,t("aiWhich")));g.append(wa);
   chips(g,Object.keys(PROV).map(id=>({t:PROV[id].name+(isDirect(id)?" ✓":""),on:aiPick()===id,fn:()=>{S.ai=id;save();settingsSheet();}})));
   g=grp(B,t("driveCard"));const dbt=el("button","btn w",t("fromDrive"));dbt.addEventListener("click",()=>{if(STANDALONE)driveFilesSheet();else driveSheet();});g.append(dbt);
   const det=el("details");det.style.marginTop="18px";const sm=el("summary",null,t("adv"));sm.style.cssText="color:var(--mut);font-weight:700;cursor:pointer;padding:8px 0";det.append(sm);B.append(det);
@@ -855,14 +864,19 @@ async function aiAsk(prompt,id){id=id||aiPick();if(!id)throw {code:"noai"};
   if(id==="claude"&&!STANDALONE&&!(KEYS.claude&&KEYS.claude.k)){const s=await sampleP;if(!s)throw {code:"noai"};const r=await s(prompt,{cache:false});return (r&&r.text)||"";}
   const k=KEYS[id];return GEN[id](k.k,k.m,prompt);}
 async function aiJson(prompt,id){const x=await aiAsk(prompt,id);const a=x.indexOf("{"),b=x.lastIndexOf("}");if(a<0||b<a)throw {code:"upstream"};return JSON.parse(x.slice(a,b+1));}
-function connectSheet(id){const P=PROV[id];openSheet(t("connTitle",P.name),B=>{
+function setupSheet(id,prompt,cb){openSheet(t("setupT"),B=>{B.append(el("p","note",t("setupWhy")));
+  const run=async nid=>{toast(t("writing",PROV[nid].name));try{const x=await aiAsk(prompt,nid);if(cb(x)===false)toast(t("ansBad"));}catch(e){toast(AIMSG(e&&e.code));}};
+  const g=el("button","btn p w",t("gemFree"));g.style.marginTop="14px";g.addEventListener("click",()=>connectSheet("gemini",run));B.append(g);
+  B.append(el("p","note",t("orOthers")));const c=el("div","chips");["openai","claude","deepseek"].forEach(x=>{const b=el("button","chip",PROV[x].name);b.addEventListener("click",()=>connectSheet(x,run));c.append(b);});B.append(c);
+  const h=el("button","btn w",t("onceCopy"));h.style.marginTop="18px";h.addEventListener("click",()=>handoff(id,prompt,cb));B.append(h);});}
+function connectSheet(id,onOk){const P=PROV[id];openSheet(t("connTitle",P.name),B=>{
   const st=(n,title,sub)=>{const s=el("div","stepN"),i=el("i",null,AR(n)),d=el("div");d.append(el("b",null,title));if(sub)d.append(el("p","note",sub));s.append(i,d);B.append(s);return d;};
-  const d1=st(1,t("step1",P.name),t("step1S",P.name));const o=el("a","btn w",t("openSite",P.name));o.href=P.url;o.target="_blank";o.rel="noopener";o.style.marginTop="8px";o.style.textDecoration="none";d1.append(o);
+  const d1=st(1,t("step1",P.name),id==="gemini"?t("step1Gem"):t("step1S",P.name));const o=el("a","btn w",t("openSite",P.name));o.href=P.url;o.target="_blank";o.rel="noopener";o.style.marginTop="8px";o.style.textDecoration="none";d1.append(o);
   const d2=st(2,t("step2"));const row=el("div","chips");row.style.marginTop="8px";row.style.flexWrap="nowrap";const inp=el("input","field");inp.placeholder=P.ph;inp.autocomplete="off";inp.spellcheck=false;inp.style.direction="ltr";inp.type="password";
-  const pb=el("button","chip",t("pasteBtn"));pb.addEventListener("click",async()=>{try{inp.value=(await navigator.clipboard.readText()).trim();}catch(e){inp.focus();}});row.append(inp,pb);d2.append(row);
+  const pb=el("button","chip",t("pasteBtn"));pb.addEventListener("click",async()=>{try{inp.value=(await navigator.clipboard.readText()).trim();if(inp.value.length>20)goB.click();}catch(e){inp.focus();}});row.append(inp,pb);d2.append(row);
   const d3=st(3,t("step3"));const goB=el("button","btn p w",t("connect"));goB.style.marginTop="8px";const out=el("p","note");d3.append(goB,out);
   goB.addEventListener("click",async()=>{const k=inp.value.trim();if(!k){out.textContent=t("keyEmpty");return;}goB.disabled=true;out.innerHTML='<span class="spin"></span> '+t("testing");
-    try{const m=await TEST[id](k);KEYS[id]={k,m};N.set("keys",KEYS);if(!S.ai){S.ai=id;save();}out.textContent=t("connOk",m.replace(/^models\//,""));goB.textContent="✓";setTimeout(()=>{if(shOpen)settingsSheet();},1400);}
+    try{const m=await TEST[id](k);KEYS[id]={k,m};N.set("keys",KEYS);if(!S.ai){S.ai=id;save();}out.textContent=t("connOk",m.replace(/^models\//,""));goB.textContent="✓";S.ai=id;save();setTimeout(()=>{if(onOk){closeSheet();onOk(id);}else if(shOpen)settingsSheet();},1100);}
     catch(e){out.textContent=AIMSG(e&&e.code);goB.disabled=false;}});
   B.append(el("p","note",t("connWhy",P.name)),el("p","note",id==="gemini"?t("costGemini"):t("costPaid",P.name)));});}
 
@@ -879,7 +893,8 @@ function writeSheet(){openSheet(t("writeTitle"),B=>{
       "القواعد: ابدأ بهوك قوي بأول جملتين. جمل قصيرة سهلة النطق لأن المقدّم عنده صعوبة بالنطق، وكل جملة بسطر. كلمات بسيطة، بدون كلمات طويلة متلاصقة، والأسماء الأجنبية قليلة.\n"+
       "أول سطر: العنوان: (عنوان قصير). بعده سطر: الهوك: وبعدين السكريبت. بدون أي شرح وبدون نجوم أو رموز، بس السكريبت.\nلا تستعمل: "+HARD.map(h=>h[0]).join("، ");
     const done=raw=>{const x=cleanText(raw);if(!wc(x))return false;const tm=x.match(/^العنوان\s*[:：]\s*(.+)$/m);closeSheet();openEdit({id:"ai-"+Date.now(),title:tm?tm[1].trim():topic.slice(0,50),text:x,src:"ai"},true);return true;};
-    if(!isDirect(who)){handoff(who,prompt,done);return;}
+    if(!isDirect(who)&&aiList().length)who=aiList()[0];
+    if(!isDirect(who)){setupSheet(who,prompt,done);return;}
     goB.disabled=true;out.innerHTML='<span class="spin"></span> '+t("writing",PROV[who].name);
     try{if(!done(await aiAsk(prompt,who)))throw {code:"upstream"};}catch(e){out.textContent=AIMSG(e&&e.code);goB.disabled=false;}});});}
 
@@ -902,14 +917,14 @@ function easySheet(){const i=R.idx,s=SENT[i];if(!s)return;openSheet(t("easyTitle
         const nm=(r&&Array.isArray(r.names)?r.names:[]).filter(x=>x&&x.w&&x.s&&s.t.includes(String(x.w).trim()));
         if(nm.length){out.append(el("p","note",t("namesHow")));nm.forEach(x=>{const b=el("button","opt",x.w+"  =  "+x.s);b.addEventListener("click",()=>{const P=N.get("pron_"+doc.id,{});P[norm(x.w)]=x.s;N.set("pron_"+doc.id,P);showSent();toast(t("pronSaved"));});out.append(b);});}
         return ops.length>0;};
-    goB.addEventListener("click",async()=>{
+    goB.addEventListener("click",async()=>{if(!isDirect(who)&&aiList().length)who=aiList()[0];
       const prompt="انت تساعد مقدّم يوتيوب عراقي عنده صعوبة بالنطق، يقرا من الملقّن جملة جملة.\nالجملة: «"+s.t+"»\n"+(SENT[i-1]?"الي قبلها: «"+SENT[i-1].t+"»\n":"")+(SENT[i+1]?"الي بعدها: «"+SENT[i+1].t+"»\n":"")+
         "اكتب 3 طرق أسهل للنطق لنفس الجملة، بنفس لغة ولهجة الجملة، بنفس المعنى والمعلومة والأرقام:\n1) نفس الجملة بكلمات أسهل وأقصر.\n2) أقصر ما يمكن.\n3) إذا بيها اسم أو كلمة أجنبية صعبة، عوّضها بوصف بسيط (مثل: هذا الرسام، الشركة). إذا ماكو، خليها طريقة ثالثة سهلة.\n"+
         "تجنب الكلمات الطويلة والحروف المتلاصقة. لا تستعمل: "+HARD.map(h=>h[0]).join("، ")+"\nوطلّع الأسماء أو الكلمات الصعبة بالجملة نفسها، لكل وحدة: w = الكلمة مثل ما مكتوبة بالضبط، s = نطقها مقطّع بالحروف العربية ومفصول بـ · (مثل: ليو·نار·دو).\n"+
         (isDirect(who)?"رجّع JSON بس: {\"options\":[\"\",\"\",\"\"],\"names\":[{\"w\":\"\",\"s\":\"\"}]}":"اكتب الجواب بهذا الشكل بالضبط وبدون أي كلام ثاني:\n1. الطريقة الأولى\n2. الطريقة الثانية\n3. الطريقة الثالثة\nوبعدها كل اسم صعب بسطر: الكلمة = نطقها·مقطّع");
-      if(!isDirect(who)){handoff(who,prompt,x=>{const r=parseOpts(x);if(!r.options.length)return false;pendingEasy=r;easySheet();return true;});return;}
+      if(!isDirect(who)){setupSheet(who,prompt,x=>{const r=parseOpts(x);if(!r.options.length)return false;pendingEasy=r;easySheet();return true;});return;}
       goB.disabled=true;out.innerHTML='<p class="note"><span class="spin"></span> '+t("thinking",PROV[who].name)+'</p>';
-      try{show(await aiJson(prompt,who));}catch(e){out.innerHTML="";out.append(el("p","note",AIMSG(e&&e.code)));}
+      try{show(parseOpts(await aiAsk(prompt,who)));}catch(e){out.innerHTML="";out.append(el("p","note",AIMSG(e&&e.code)));}
       goB.disabled=false;goB.textContent=t("easyMore");});
     if(pendingEasy){const r=pendingEasy;pendingEasy=null;show(r);setTimeout(()=>out.scrollIntoView({block:"start",behavior:"smooth"}),300);}}
   const g2=grp(B,t("selfWrite"));const ta=el("textarea","field");ta.value=s.t;ta.dir="auto";g2.append(ta);
