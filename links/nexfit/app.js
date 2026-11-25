@@ -1,5 +1,5 @@
 // مدرّبي: منطق التطبيق
-import { EX, REST_DAY, DAY_NAMES, DAY_IMG, PROGRAMS, VID, CLIP, FD, IBS, SUPPS, SCHEDULE, TIPS, INFO, EASY, SUPP_LIB, BAN as BAN0, BAN2, BAN_WORDS, IBS_BAN, IBS_GOOD } from './data.js';
+import { EX, REST_DAY, DAY_NAMES, DAY_IMG, PROGRAMS, VID, CLIP, SUPP2, FD, IBS, SUPPS, SCHEDULE, TIPS, INFO, EASY, SUPP_LIB, BAN as BAN0, BAN2, BAN_WORDS, IBS_BAN, IBS_GOOD } from './data.js';
 import { BODY } from './bodymap.js';
 import { FOODS, RECIPES, CATS, GEN, DRINKS, MEAS, SECTIONS } from './food2.js';
 
@@ -544,11 +544,26 @@ const tags = ok => `<span class="badges">${ok.filter(([, t]) => !/حلال/.test
 let suppCat = 'protein';
 function vSupps() {
   const minor = +S.age && +S.age < 18;
+  const card = (C, k) => { const x = C[k]; return `<button class="spc ${k}" data-sp="${C.id}:${k}"><span class="tag">${k === 'best' ? '🥇 الأفضل' : '🥈 البديل'}</span><span class="pi"><img src="img/supp/${x.img}.webp" alt="" loading="lazy"></span><b>${x.n}</b><small>${esc(x.b)}</small><span class="go">التفاصيل والشراء ‹</span></button>`; };
   return `${head('المكملات')}
-  <p class="sm mut" style="margin-top:-6px">بس الي يفيدك بالتضخيم. اضغط على المنتج تشوف شلون تاخذه ومنين تشتريه.</p>
+  <p class="sm mut" style="margin-top:-6px">لكل نوع اخترنا <b>الأفضل</b> حسب الدراسات والمدربين، و<b>بديل</b> إذا ما لگيته أو غالي. الجرعات محسوبة على جسمك.</p>
   ${minor ? '<div class="warn"><b>عمرك أقل من 18:</b> لا تاخذ كرياتين ولا بروتين قبل ما تسأل طبيب.</div>' : ''}
-  ${SUPP_LIB.map(C => { const it = C.items.filter(x => !x.bad); return it.length ? `<div class="sec-h"><h2>${C.ic} ${C.n}</h2></div><div class="pgrid">${it.map(x => `<button class="pcard" data-supp="${C.id}:${x.id}"><span class="pi"><img src="img/${x.img}.webp" alt="" loading="lazy">${x.best ? '<em>⭐ الأفضل</em>' : ''}</span><b>${x.n}</b><small>${esc(x.b)}</small></button>`).join('')}</div>` : ''; }).join('')}
-  <p class="xs mut">تثقيف عام مو وصفة طبية. اسأل الطبيب أو الصيدلي قبل أي مكمّل.</p>`;
+  ${SUPP2.map(C => `<section class="sps"><div class="sec-h"><h2>${C.ic} ${C.n}</h2>${C.must ? '<span class="pill g">أساسي</span>' : '<span class="pill">اختياري</span>'}</div>
+   <div class="dz"><div><span>💊 شكد</span><b>${C.dose}</b></div><div><span>⏰ شوكت</span><b>${C.when}</b></div><div><span>📦 تكفيك</span><b>${C.last}</b></div><div class="mx"><span>⛔ الحد</span><b>${C.max}</b></div></div>
+   <div class="pgrid">${card(C, 'best')}${card(C, 'alt')}</div>
+   <details class="card stdy"><summary><b>📚 شنو تگول الدراسات</b></summary><p class="sm" style="margin-top:8px">${C.study}</p>${C.otc ? `<p class="xs" style="color:#34c759;margin-top:6px">✓ ${C.otc}</p>` : ''}</details></section>`).join('')}
+  <p class="xs mut">تثقيف عام مو وصفة طبية. كل هاي ما تحتاج وصفة، بس إذا عندك مرض أو تاخذ دوا اسأل الصيدلي أو الطبيب.</p>`;
+}
+function openSp(cid, k) {
+  const C = SUPP2.find(c => c.id === cid), x = C[k], o = C[k === 'best' ? 'alt' : 'best'];
+  show(`<div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><div class="grow"><p class="xs mut">${C.n}</p><h2>${k === 'best' ? '🥇 الأفضل' : '🥈 البديل'}</h2></div></div>
+  <div class="prod" style="height:260px"><img src="img/supp/${x.img}.webp" alt="${esc(x.b)}" style="max-height:240px"></div>
+  <div><h1 style="font-size:24px">${x.n}</h1><span class="fi" style="font-size:13.5px">${esc(x.b)}</span><p class="sm" style="color:var(--g);margin-top:4px">${x.per}</p></div>
+  <div class="card"><h3>ليش اخترناه</h3><div class="good sm col">${x.why.map(t => `<p>${t}</p>`).join('')}</div></div>
+  <div class="card"><h3>منين تشتريه</h3><div class="buyrow">${x.stores.map(([n, u]) => `<a class="buy" href="${u}" target="_blank" rel="noopener"><span>🛒</span><b>${n}</b><i>↗</i></a>`).join('')}</div><p class="xs mut" style="margin-top:8px">قبل ما تشتري شوف تاريخ الانتهاء. الأسعار تتغير، فقارن بين المتاجر.</p></div>
+  <div class="card"><h3>شلون تاخذه (محسوب على جسمك)</h3><div class="dz"><div><span>💊 شكد</span><b>${C.dose}</b></div><div><span>⏰ شوكت</span><b>${C.when}</b></div><div><span>📦 تكفيك</span><b>${C.last}</b></div><div class="mx"><span>⛔ الحد</span><b>${C.max}</b></div></div></div>
+  <div class="card"><h3>📚 شنو تگول الدراسات</h3><p class="sm">${C.study}</p>${C.otc ? `<p class="xs" style="color:#34c759;margin-top:6px">✓ ${C.otc}</p>` : ''}</div>
+  <button class="prow" data-sp="${C.id}:${k === 'best' ? 'alt' : 'best'}"><span class="pth" style="width:60px;height:60px"><img src="img/supp/${o.img}.webp" alt=""></span><div class="grow"><span class="xs mut">${k === 'best' ? 'إذا غالي أو ما لگيته، البديل:' : 'الأفضل:'}</span><b>${o.n}</b></div>${I.chev}</button>`, true);
 }
 function openSupp(cid, id) {
   const C = SUPP_LIB.find(c => c.id === cid), x = C.items.find(i => i.id === id), alts = C.items.filter(i => i.id !== id && !i.bad), daily = SUPPS.find(s => s.img === x.img.replace('supp/', ''));
@@ -735,7 +750,7 @@ function openBan(i) {
 }
 
 /* ================= أنا ================= */
-const VERSION = '32';
+const VERSION = '33';
 function weightInfo() {
   const start = S.startW || (S.weights[0]?.w) || +S.w || 52, goal = +S.goal || 62, cur = curW();
   const ms = [start + 1, start + 3, start + 5, start + 7].filter(x => x < goal).concat([goal]).map(x => +x.toFixed(1));
@@ -971,6 +986,7 @@ document.addEventListener('click', e => {
   if (d.sec) { openSection(d.sec, d.forslot); return; }
   if (d.font) { S.font = d.font; save(); applyFont(); document.querySelectorAll('[data-font]').forEach(x => x.classList.toggle('on', x === b)); haptic(); return; }
   if (d.fz) { S.fz = +d.fz; save(); applyFont(); document.querySelectorAll('[data-fz]').forEach(x => x.classList.toggle('on', x === b)); haptic(); return; }
+  if (d.sp) { const [c, k] = d.sp.split(':'); openSp(c, k); return; }
   if (d.ytv) { b.outerHTML = vframe(d.ytv); return; }
   if (d.mus) { openMuscle(d.mus); return; }
   if (d.pday) { openPlanDay(d.pday); return; }
