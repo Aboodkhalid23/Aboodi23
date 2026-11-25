@@ -153,21 +153,38 @@ def look(key, name, cat, use, **kw):
     LOOKS[key] = dict(BASE, **kw, name=name, cat=cat, use=use)
 
 
-# ⭐ الاحترافي (25 تشرين الثاني 2026، النسخة الثانية): فلتر أساسي واحد + نسخة غامگة منه، بس.
-# صاحب القناة يغيّر لون ضوء الخلفية حسب القصة (أحمر، أزرق، بنفسجي، أبيض...)، فالفلتر ما مربوط بلون:
-# يشتغل على الوجه أول (البشرة لخط البشرة، والضوء الملوّن الطالع على الوجه يهدى)، وأي ضوء ملوّن
-# بالخلفية يبقى غني بدون ما يفقع أو يتكسّر، والأبيض ينطفي بنعومة. الهدف: الفيديو يطلع جاهز، بلا تلوين بعدين.
-# انضبط على 4 صور من كاميرته (أحمر، أزرق وكهرماني) وعلى نسخة بنفسجية وصور استوديو ثانية.
-look("PROMAIN", "الأساسي الاحترافي", "الاحترافية", "كل الحلقات، بأي لون ضوء بالخلفية",
-     contrast=1.58, gray=0.19, toe=0.002, sat=1.05, dens=0.3, teal=0.0, sh=(210, 0.012), skin=0.45,
-     rgb_pop=0.25,
-     pro=dict(skin_pull=0.5, skin_norm=0.45, skin_c=(0.05, 0.09), skin_lift=0.02, spill=0.35, wall=0.45,
-              green=0.4, accent=(0.2, 0.08)))
-look("PRODARK", "الاحترافي الغامق", "الاحترافية", "القصص الغامضة: الخلفية أغمگ والوجه بنفس الوضوح",
-     contrast=1.75, gray=0.17, toe=0.0035, sat=0.98, dens=0.45, teal=0.15, sh=(210, 0.028), hi=(70, 0.008),
-     skin=0.5, rgb_pop=0.2,
-     pro=dict(skin_pull=0.55, skin_norm=0.5, skin_c=(0.045, 0.085), skin_lift=0.03, spill=0.45, wall=0.6,
-              green=0.6, accent=(0.15, 0.18)))
+# ⭐ المجموعة الاحترافية (25 تشرين الثاني 2026، النسخة الثالثة): 7 ستايلات بس، كل واحد "شكل" سينمائي كامل.
+# صاحب القناة يغيّر لون ضوء الخلفية حسب القصة، ويريد شكل احترافي (وثائقي، دراما، فيلم...) مو فلاتر ألوان.
+# كلهم مبنيين على نفس المحرك (pro_color): البشرة طبيعية وتفاصيل الوجه واضحة بأي ضوء، والستايل يجي من
+# المنحنى وكثافة الفيلم ولون الظلال والإضاءات. الفيديو يطلع جاهز للنشر، بلا تصحيح ألوان بعدين.
+FACE = dict(skin_pull=0.5, skin_norm=0.45, skin_c=(0.05, 0.09), skin_lift=0.02, spill=0.35, wall=0.45, green=0.4)
+
+
+def pro(**kw):
+    return dict(FACE, **kw)
+
+
+look("PROMAIN", "وثائقي", "الاحترافية", "الأساسي لكل الحلقات: نظيف وغني مثل وثائقيات نتفلكس",
+     contrast=1.58, gray=0.19, toe=0.002, sat=1.05, dens=0.3, sh=(210, 0.012), skin=0.45, rgb_pop=0.25,
+     pro=pro(accent=(0.2, 0.08)))
+look("PROFILM", "فيلم سينما", "الاحترافية", "قصص كبيرة ومقدمات: شكل شريط سينما، ألوان كثيفة وإضاءات ناعمة",
+     contrast=1.55, gray=0.18, toe=0.003, sat=1.0, wb=(1.02, 0.98), dens=0.65, teal=0.35, sh=(205, 0.03),
+     hi=(75, 0.025), fade=0.015, film=True, skin=0.5, rgb_pop=0.15, pro=pro(accent=(0.1, 0.15)))
+look("PRODRAMA", "دراما", "الاحترافية", "قصص فيها صراع وتوتر: تباين قوي، ظلال عميقة، تيل وبرتقالي هادي",
+     contrast=1.82, gray=0.17, toe=0.004, sat=1.02, dens=0.5, teal=0.7, sh=(208, 0.035), hi=(68, 0.015),
+     skin=0.6, rgb_pop=0.15, pro=pro(spill=0.4, wall=0.5, accent=(0.15, 0.12)))
+look("PRODARK", "غموض وجريمة", "الاحترافية", "الجرائم والأسرار: ظلال خضرة باردة وإضاءات صفرة، ألوان مكتومة",
+     contrast=1.8, gray=0.158, toe=0.005, sat=0.85, dens=0.55, teal=0.3, sh=(185, 0.035), hi=(90, 0.018),
+     skin=0.6, rgb_pop=0.05, pro=pro(spill=0.5, wall=0.6, green=0.2, skin_lift=0.03, accent=(0.0, 0.2)))
+look("PROGOLD", "تاريخ ذهبي", "الاحترافية", "التاريخ وقصص الشركات القديمة: دافي وذهبي، أسود ناعم مثل الأرشيف",
+     contrast=1.5, gray=0.18, toe=0.003, sat=0.95, wb=(1.05, 0.93), dens=0.5, teal=0.15, sh=(50, 0.02),
+     hi=(80, 0.03), fade=0.03, film=True, skin=0.55, rgb_pop=0.1, pro=pro(accent=(0.0, 0.15)))
+look("PROCOLD", "تقني بارد", "الاحترافية", "التكنولوجيا والإثارة: بارد ونظيف، والوجه يبقى دافي",
+     contrast=1.7, gray=0.17, toe=0.003, sat=0.92, wb=(0.96, 1.05), dens=0.45, teal=0.4, sh=(225, 0.035),
+     hi=(215, 0.01), skin=0.7, rgb_pop=0.15, pro=pro(skin_pull=0.6, skin_norm=0.5, accent=(0.1, 0.1)))
+look("PRONOIR", "أبيض وأسود", "الاحترافية", "لقطات درامية ومشاهد الذكريات: أبيض وأسود سينمائي، الوجه مضوّي",
+     contrast=1.85, gray=0.17, toe=0.004, mono=(0.45, 0.45, 0.10))
+PRO_SET = ["PROMAIN", "PROFILM", "PRODRAMA", "PRODARK", "PROGOLD", "PROCOLD", "PRONOIR"]
 
 # مخصوصة لاستوديو صاحب القناة (من صورة حقيقية دزها 10 تشرين الثاني 2026: ضوء أحمر مغرّگ الحايط
 # الأبيض وطالع على وجهه). تهدّي الأحمر وتغمّگه، وتبرّد الصورة شوية حتى الوجه يرجع طبيعي.
@@ -275,8 +292,7 @@ look("RLDRAMA", "ريلز درامي", "ريلز", "ريلز قصص وغموض",
 # الـ16 الي تنحط بالكاميرا (استوديو قصص بضوء أحمر)، وأول أربعة منهم للاختيار السريع PPLUT1-4.
 # الفلاتر الدافية (ABWARM، STGOLD...) برا القائمة: تزيد الأحمر باستوديوه.
 # (من 25 تشرين الثاني 2026 أول اثنين هم الاحترافي PROMAIN وPRODARK)
-TOP16 = ["PROMAIN", "PRODARK", "ABCLEAN", "ABMOODY", "ABRED", "ABREDX", "ABTEAL", "ABNEON", "ABFILM",
-         "STLUXE", "CNBLKBUS", "CNNIGHT", "CNNOIR", "STPURPLE", "STSOFT", "RLDRAMA"]
+TOP16 = PRO_SET  # من 25 تشرين الثاني 2026: الكاميرا بيها السبعة الاحترافية بس، والقديمة بالأرشيف
 OUTDOOR = {"فلوگ وبرا"}  # هاي تنعرض على صورة خارجية (وياها ABDAY)
 
 
@@ -561,10 +577,18 @@ def main():
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     tables = {}
+    arch = out / "archive"   # الفلاتر القديمة (قبل 25 تشرين الثاني 2026): مكتبة احتياط، مو للكاميرا
+    arch.mkdir(exist_ok=True)
+    for old in out.glob("*.cube"):
+        if old.stem not in PRO_SET:
+            old.unlink()
     for key, p in LOOKS.items():
         assert len(key) <= 8, f"{key}: الكارت يعرض 8 حروف بس"
-        tables[key] = write_cube(out / f"{key}.cube", f"{key} - Aboodi Studio", p)
-        size = (out / f"{key}.cube").stat().st_size
+        dest = (out if key in PRO_SET else arch) / f"{key}.cube"
+        table = write_cube(dest, f"{key} - Aboodi Studio", p)
+        if key in PRO_SET:
+            tables[key] = table
+        size = dest.stat().st_size
         assert size < 1_000_000, f"{key} أكبر من 1 ميگا"
         print(f"✓ {key}.cube  ({p['name']})  {size // 1024} KB")
     if a.preview:
