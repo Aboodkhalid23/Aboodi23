@@ -153,6 +153,32 @@ def look(key, name, cat, use, **kw):
     LOOKS[key] = dict(BASE, **kw, name=name, cat=cat, use=use)
 
 
+# ⭐ الفلاتر الاحترافية (25 تشرين الثاني 2026): أربعة بس، تملي PPLUT1-4.
+# انصنعت على 4 صور من كاميرته: استوديو بضوء أحمر، واستوديو بضوء أزرق على الوجه وكهرماني على الخشب.
+# الفكرة مثل ملوّني الوثائقيات: البشرة طبيعية دائماً، وأضواء الخلفية غنية وغامگة، والأبيض ينطفي بنعومة.
+look("DOCRED", "وثائقي أحمر", "الاحترافية", "استوديوك بالضوء الأحمر (اليومي)",
+     contrast=1.62, gray=0.188, toe=0.0025, wb=(0.985, 1.015), sat=1.06, dens=0.25, teal=0.15,
+     sh=(205, 0.02), hi=(70, 0.008), skin=0.4, rgb_pop=0.15,
+     pro=dict(skin_pull=0.55, skin_norm=0.6, skin_c=(0.05, 0.085), skin_lift=0.02,
+              red=(24, 0.25, 0.45, 0.04), amber=(70, 0.3, 0.1, 0.12), wall=0.55, green=0.5))
+look("DOCBLUE", "وثائقي أزرق وذهبي", "الاحترافية", "ضوء أزرق على الوجه وكهرماني على الخشب",
+     contrast=1.62, gray=0.188, toe=0.0025, wb=(1.0, 1.0), sat=1.06, dens=0.3, teal=0.35,
+     sh=(210, 0.022), hi=(72, 0.01), skin=0.4, rgb_pop=0.15,
+     pro=dict(skin_pull=0.45, skin_norm=0.25, skin_c=(0.05, 0.1), skin_lift=0.02,
+              amber=(64, 0.35, 0.45, 0.06), blue=(238, 0.35, 0.12, 0.18), blue_skin=0.4, wall=0.4,
+              green=0.5))
+look("DOCNAT", "وثائقي طبيعي", "الاحترافية", "أي ضوء: ألوان حقيقية وبشرة صافية",
+     contrast=1.55, gray=0.19, toe=0.002, sat=1.04, dens=0.25, skin=0.5, rgb_pop=0.15,
+     pro=dict(skin_pull=0.4, skin_norm=0.4, skin_c=(0.05, 0.09), skin_lift=0.015,
+              red=(22, 0.2, 0.08, 0.12), amber=(68, 0.2, 0.08, 0.08), blue=(245, 0.2, 0.05, 0.1),
+              blue_skin=0.25, wall=0.3, green=0.3))
+look("DOCDARK", "وثائقي غامض", "الاحترافية", "حلقات الأسرار والجرائم: الخلفية تغمگ والوجه يبقى واضح",
+     contrast=1.78, gray=0.168, toe=0.004, wb=(0.98, 1.02), sat=0.95, dens=0.5, teal=0.45,
+     sh=(210, 0.035), hi=(70, 0.01), skin=0.5, rgb_pop=0.1,
+     pro=dict(skin_pull=0.55, skin_norm=0.6, skin_c=(0.045, 0.08), skin_lift=0.03,
+              red=(22, 0.3, 0.3, 0.12), amber=(66, 0.35, 0.1, 0.2), blue=(235, 0.4, 0.0, 0.25),
+              blue_skin=0.4, wall=0.6, green=0.7))
+
 # مخصوصة لاستوديو صاحب القناة (من صورة حقيقية دزها 10 تشرين الثاني 2026: ضوء أحمر مغرّگ الحايط
 # الأبيض وطالع على وجهه). تهدّي الأحمر وتغمّگه، وتبرّد الصورة شوية حتى الوجه يرجع طبيعي.
 look("ABRED", "استوديو أحمر", "الأساسية", "استوديوك بالضوء الأحمر. ابدأ بيه",
@@ -258,9 +284,50 @@ look("RLDRAMA", "ريلز درامي", "ريلز", "ريلز قصص وغموض",
 
 # الـ16 الي تنحط بالكاميرا (استوديو قصص بضوء أحمر)، وأول أربعة منهم للاختيار السريع PPLUT1-4.
 # الفلاتر الدافية (ABWARM، STGOLD...) برا القائمة: تزيد الأحمر باستوديوه.
-TOP16 = ["ABRED", "ABREDX", "ABMOODY", "ABCLEAN", "ABTEAL", "ABNEON", "ABFILM", "STTECH", "STPODCST",
-         "STLUXE", "CNBLKBUS", "CNNIGHT", "CNBLEACH", "CNNOIR", "CNMATRIX", "RLDRAMA"]
+# (من 25 تشرين الثاني 2026 أول أربعة هم الاحترافية DOC)
+TOP16 = ["DOCRED", "DOCBLUE", "DOCNAT", "DOCDARK", "ABRED", "ABREDX", "ABMOODY", "ABCLEAN", "ABTEAL",
+         "ABNEON", "STLUXE", "CNBLKBUS", "CNNIGHT", "CNNOIR", "ABFILM", "RLDRAMA"]
 OUTDOOR = {"فلوگ وبرا"}  # هاي تنعرض على صورة خارجية (وياها ABDAY)
+
+
+PRO_BASE = dict(skin_pull=0.0, skin_c=(0.05, 0.09), skin_norm=0.0, skin_lift=0.0,
+                red=(25, 0.0, 0.0, 0.0), amber=(68, 0.0, 0.0, 0.0), blue=(245, 0.0, 0.0, 0.0),
+                blue_skin=0.0, wall=0.0, green=0.0)
+
+
+def pro_color(L, C, h, q):
+    """تلوين الفلاتر الاحترافية (DOC): كل لون بالمشهد يتعامل وحده، مثل الملوّن بالدافنشي.
+
+    البشرة: لونها يرجع لخط البشرة (55 درجة) وقوتها تنضبط بمدى طبيعي، فضوء الأحمر أو الأزرق الي
+    طالع على الوجه يخف، وتفاصيل الوجه تبقى (ما نلمس السطوع إلا رفعة خفيفة).
+    أضواء الخلفية (أحمر، كهرماني، أزرق): (درجة اللون الهدف، قوة الإزاحة، زيادة التشبع، الكثافة)
+    الكثافة = اللون يغمگ ويصير غني مثل الفيلم، بدل ما يفقع مثل الموبايل.
+    """
+    q = dict(PRO_BASE, **q)
+    sk = (hw(h, 52, 42) * smoothstep(0.012, 0.03, C) * smoothstep(0.19, 0.11, C)
+           * smoothstep(0.12, 0.3, L) * smoothstep(0.97, 0.85, L))
+    h = h - q["skin_pull"] * sk * hdiff(h, 55)
+    lo, hi = q["skin_c"]
+    C = C + q["skin_norm"] * sk * (np.clip(C, lo, hi) - C)
+    L = L + q["skin_lift"] * sk * smoothstep(0.2, 0.5, L) * smoothstep(0.85, 0.6, L)
+    rest = 1 - sk
+    for key, center, width, cmin in (("red", 22, 26, 0.09), ("amber", 68, 24, 0.07), ("blue", 250, 50, 0.05)):
+        target, shift, sat, dens = q[key]
+        w = hw(h, center, width) * smoothstep(cmin, cmin + 0.07, C) * rest
+        h = h - shift * w * hdiff(h, target)
+        C = C * (1 + sat * w)
+        L = L * (1 - dens * w)
+    # ضوء أزرق خفيف على الوجه (لون ضعيف بنص الإضاءة): نهديه حتى الوجه ما يصير رمادي مزرگ
+    bs = hw(h, 250, 55) * smoothstep(0.11, 0.04, C) * smoothstep(0.18, 0.4, L)
+    C = C * (1 - q["blue_skin"] * bs)
+    # الحايط الأبيض المصبوغ بالضوء الملوّن: يرجع أنظف حتى الوجه ينفصل عنه
+    wl = smoothstep(0.055, 0.02, C) * smoothstep(0.45, 0.7, L)
+    C = C * (1 - q["wall"] * wl)
+    # الأخضر (نباتات وبوسترات) يميل للزيتي ويهدى، حتى ما يسرق العين من الوجه
+    g = hw(h, 140, 40) * smoothstep(0.01, 0.04, C)
+    h = h - 0.25 * q["green"] * g * hdiff(h, 110)
+    C = C * (1 - 0.3 * q["green"] * g)
+    return L, C, h % 360
 
 
 def apply_look(slog, p):
@@ -293,6 +360,8 @@ def apply_look(slog, p):
     L = lab[..., 0]
     C = np.hypot(lab[..., 1], lab[..., 2])
     h = np.degrees(np.arctan2(lab[..., 2], lab[..., 1])) % 360
+    if p.get("pro"):
+        L, C, h = pro_color(L, C, h, p["pro"])
     if not mono:
         skin = hw(h, 55, 30) * smoothstep(0.015, 0.045, C) * smoothstep(0.21, 0.13, C)
         sel = smoothstep(0.012, 0.05, C)   # تعديلات اللون المحدد ما تلمس الرمادي (حتى الأبيض يبقى أبيض)
