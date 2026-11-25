@@ -735,7 +735,7 @@ function openBan(i) {
 }
 
 /* ================= أنا ================= */
-const VERSION = '31';
+const VERSION = '32';
 function weightInfo() {
   const start = S.startW || (S.weights[0]?.w) || +S.w || 52, goal = +S.goal || 62, cur = curW();
   const ms = [start + 1, start + 3, start + 5, start + 7].filter(x => x < goal).concat([goal]).map(x => +x.toFixed(1));
@@ -895,9 +895,9 @@ function chart(W, goal = 62) {
 /* ================= التنقل ================= */
 const V = { home: vHome, course: vCourse, food: vFood, supps: vSupps, me: vMe };
 const TABS = Object.keys(V); let lastTab = null;
-function route() { if (SUS === null) refreshSus(); let h = location.hash.slice(1); if (h.startsWith('hk')) { const r = parseHK(decodeURIComponent(h.slice(3))); if (r) { saveHK(r); toast('وصلت أرقام الساعة ✓'); } history.replaceState(null, '', '#home'); h = 'home'; } if (!V[h]) h = 'home'; $('#app').innerHTML = V[h](); if (h === 'me') loadPhotos(); const a = $('#app'); a.classList.remove('fade', 'sl', 'sr'); if (lastTab !== h) { void a.offsetWidth; a.classList.add(lastTab == null ? 'fade' : TABS.indexOf(h) > TABS.indexOf(lastTab) ? 'sl' : 'sr'); } lastTab = h; document.querySelectorAll('nav a').forEach(a => a.classList.toggle('on', a.dataset.t === h)); if (typeof countUp === 'function') countUp($('#app')); if (scrollMem && scrollMem[h] != null) { const y = scrollMem[h]; requestAnimationFrame(() => scrollTo(0, y)); } }
+function route() { if (SUS === null) refreshSus(); let h = location.hash.slice(1); if (h.startsWith('hk')) { const r = parseHK(decodeURIComponent(h.slice(3))); if (r) { saveHK(r); toast('وصلت أرقام الساعة ✓'); } history.replaceState(null, '', '#home'); h = 'home'; } if (!V[h]) h = 'home'; $('#app').innerHTML = V[h](); if (h === 'me') loadPhotos(); const a = $('#app'); a.classList.remove('fade', 'sl', 'sr'); if (lastTab !== h) { void a.offsetWidth; a.classList.add(lastTab == null ? 'fade' : TABS.indexOf(h) > TABS.indexOf(lastTab) ? 'sl' : 'sr'); if (lastTab != null && !S.noAnim) { const dx = TABS.indexOf(h) > TABS.indexOf(lastTab) ? -60 : 60; a.animate([{ opacity: 0, transform: `translateX(${dx}px) scale(.98)` }, { opacity: 1, transform: 'none' }], { duration: 420, easing: 'cubic-bezier(.22,1,.36,1)' }); } } lastTab = h; document.querySelectorAll('nav a').forEach(a => a.classList.toggle('on', a.dataset.t === h)); if (typeof countUp === 'function') countUp($('#app')); if (scrollMem && scrollMem[h] != null) { const y = scrollMem[h]; requestAnimationFrame(() => scrollTo(0, y)); } }
 let stack = [], hdepth = 0, skipPops = 0, animating = false;
-const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const RM = !!S.noAnim; // الحركة تشتغل دائماً، إلا إذا انت طفيتها من الإعدادات
 const EASE = 'cubic-bezier(.22,1,.36,1)';
 // حركة انتقال: الصفحة الجديدة تدخل من اليسار (عربي) والقديمة تطلع شوية لليمين وتغمق
 function slideSwap(dir) { // dir: 1 دخول، -1 رجوع
@@ -1061,7 +1061,7 @@ function countUp(root = document) { if (RM) return; root.querySelectorAll('[data
 route();
 /* نحمّل كل مقاطع الحركة مرة وحدة، حتى تشتغل بعدين بدون نت */
 setTimeout(() => { if (!navigator.onLine) return; let i = 0; const L = CLIP.flatMap(id => [`img/clip/${id}-0.webp`, `img/clip/${id}-1.webp`]); const next = () => { const u = L.slice(i, i + 6); i += 6; if (!u.length) return; Promise.all(u.map(x => fetch(x).catch(() => 0))).then(() => setTimeout(next, 150)); }; next(); }, 4000);
-(() => { const sp = document.getElementById('splash'); if (!sp) return; const go = () => { if (sp.classList.contains('out')) return; sp.classList.add('out'); $('#app').animate([{ opacity: 0, transform: 'translateY(30px) scale(.97)' }, { opacity: 1, transform: 'none' }], { duration: 700, easing: 'cubic-bezier(.22,1,.36,1)' }); setTimeout(() => sp.remove(), 750); }; setTimeout(go, RM ? 200 : 4400); setTimeout(() => sp.classList.add('sp-shake'), 0); sp.addEventListener('click', go); })();
+(() => { const sp = document.getElementById('splash'); if (!sp) return; const go = () => { if (sp.classList.contains('out') || sp.dataset.lock) return; sp.classList.add('out'); $('#app').animate([{ opacity: 0, transform: 'translateY(30px) scale(.97)' }, { opacity: 1, transform: 'none' }], { duration: 700, easing: 'cubic-bezier(.22,1,.36,1)' }); setTimeout(() => sp.remove(), 750); }; sp.classList.add('run', 'sp-shake'); setTimeout(go, 5400); })();
 
 /* ================= التحديث التلقائي ================= */
 if ('serviceWorker' in navigator) {
@@ -1070,5 +1070,5 @@ if ('serviceWorker' in navigator) {
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update(); });
   }).catch(() => {});
   let reloaded = false;
-  navigator.serviceWorker.addEventListener('controllerchange', () => { if (reloaded || SES) return; reloaded = true; location.reload(); });
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (reloaded || SES || document.getElementById('splash')) return; reloaded = true; location.reload(); });
 }
