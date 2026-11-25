@@ -1,6 +1,6 @@
 #!/bin/bash
 # تطبيق «كاميرتي» للماك: يقرا كارت الكاميرا (Sony ZV-E10 II) ويجهّزه وحده، بنوافذ وأزرار عربية (بلا Terminal).
-# - يحط الفلاتر السبعة بالمكان الي الكاميرا تدوّر بيه (PRIVATE/SONY/PRO/LUT)
+# - يحط الفلاتر السبعة بالمكان الي الكاميرا تدوّر بيه (PRIVATE/SONY/PRO/LUT)، وفلاتره الجديدة 8-16 من مجلد التنزيلات
 # - يحفظ ملف إعدادات الكاميرا (الي تسويه الكاميرا بـ Save/Load Settings) بالماك، ويرجّعه للكارت وقت الحاجة
 # ملاحظة: ملف الإعدادات تصنعه الكاميرا بس (صيغة سوني مقفولة)، فلازم تحفظه منها مرة وحدة.
 # يشتغل على bash 3.2 وosascript (موجودين بكل ماك).
@@ -47,9 +47,18 @@ settings_on_card() {  # ملفات إعدادات سوني على الكارت (
   find "$CARD/PRIVATE/SONY" -type f \( -iname '*.dat' -o -iname '*.set' -o -iname '*.cfg' \) -not -path '*/PRO/LUT/*'
 }
 
+DOWNLOADS="${DOWNLOADS_DIR:-$HOME/Downloads}"
+NEW_LUTS=""
 put_luts() {
-  mkdir -p "$CARD/PRIVATE/SONY/PRO/LUT" || return 1
-  cp -f "$LUTS"/[1-7].cube "$CARD/PRIVATE/SONY/PRO/LUT/" || return 1
+  local dest="$CARD/PRIVATE/SONY/PRO/LUT" n f
+  mkdir -p "$dest" || return 1
+  cp -f "$LUTS"/[1-7].cube "$dest/" || return 1
+  # الفلاتر الجديدة الي صنعها بالتطبيق (8.cube لحد 16.cube) من مجلد التنزيلات (الأحدث إذا تكرر الاسم)
+  for n in 8 9 10 11 12 13 14 15 16; do
+    f="$(ls -t "$DOWNLOADS/$n".cube "$DOWNLOADS/$n "*.cube "$DOWNLOADS/$n-"*.cube 2>/dev/null | head -n 1)"
+    if [ -n "$f" ] && [ -f "$f" ]; then cp -f "$f" "$dest/$n.cube" && NEW_LUTS="$NEW_LUTS $n"; fi
+  done
+  return 0
 }
 
 save_settings() {  # من الكارت للماك (النسخة القديمة تنحفظ جنبها)
@@ -82,6 +91,8 @@ if ! put_luts; then
   exit 0
 fi
 done_txt="✅ حطيت الفلاتر السبعة بالكارت."
+[ -n "$NEW_LUTS" ] && done_txt="$done_txt
+✅ وفلاترك الجديدة:$NEW_LUTS (بالكاميرا دخّلها بنفس أرقامها: User8...)"
 
 on_card="$(settings_on_card)"
 if [ -n "$on_card" ] && [ ! -d "$SAVED" ]; then
