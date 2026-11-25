@@ -1,7 +1,7 @@
 ---
 name: remotion-render
-description: Export a Remotion video
-version: 4.0.543
+description: Export a Remotion video, still image, or editable OpenTimelineIO timeline
+version: 4.0.547
 ---
 
 ## General rendering strategy
@@ -15,8 +15,10 @@ unless the user explicitly requests a different browser.
 Render a video using:
 
 ```
-npx remotion render
+npx remotion render [composition-id] out/video.mp4
 ```
+
+Always pass the composition ID. Without it, Remotion shows an interactive picker, or fails in a non-interactive terminal. List the IDs with `npx remotion compositions`.
 
 Full list of options: https://www.remotion.dev/docs/cli/render.md
 
@@ -35,11 +37,12 @@ See https://www.remotion.dev/docs/passing-props.md.
 ## License key
 
 Companies that need a [Remotion license](../remotion-license/REFERENCE.md) should
-pass their license key to every render. If the user qualifies for the free
-license, pass `free-license` instead:
+pass their license key to every render. Replace `YOUR_API_KEY` in this example
+with that license key. If the user qualifies for the free license, pass
+`free-license` instead.
 
 ```
-npx remotion render [composition-id] out/video.mp4 --license-key=$REMOTION_PRIVATE_LICENSE_KEY
+npx remotion render [composition-id] out/video.mp4 --license-key=YOUR_API_KEY
 ```
 
 Only pass `--license-key` if a key is available, since an empty value is not a valid key.
@@ -71,3 +74,11 @@ to change the pattern.
 ## Transparent videos
 
 See [Transparent videos](./transparent-videos.md) for rendering out a video with transparency.
+
+## OpenTimelineIO export (optional)
+
+When the user asks for an editable timeline for DaVinci Resolve, Adobe Premiere,
+or another video editor, follow [Export to OpenTimelineIO](./opentimeline.md).
+This workflow preserves editable media clips where possible and prerenders
+unsupported elements. Use it only for requested timeline exports; ordinary video
+and still renders use the commands above.
