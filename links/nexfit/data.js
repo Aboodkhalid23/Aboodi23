@@ -152,32 +152,34 @@ export const DAY_IMG = { A: 'bbbench', B: 'pullup', C: 'squat', R: 'rest' };
 
 /* ================= الكورسات =================
    كل كورس شهرين (56 يوم): صدر+ترايسبس، ظهر+بايسبس، أكتاف+رجل، راحة، وتنعاد.
+   المعادلة: العضلة الكبيرة (صدر، ظهر، رجل) 4 تمارين، والصغيرة (بايسبس، ترايسبس، أكتاف) 3-4 تمارين،
+   حتى كل عضلة تاخذ 10-20 سِت بالأسبوع (الكمية الي الدراسات تگول تكبّر العضلة).
    f = العضلات الي يركّز عليها (تاخذ سِت زيادة). x = تمرين واحد: [id, سِتات, عدّات أقل, عدّات أكثر] */
 export const PROGRAMS = [
   { id: 'base', n: 'كورس التأسيس', ic: '🧱', img: 'dbbench', goal: 'تتعلم الحركات الصح، وتبني أساس قوي لكل الجسم', who: 'أول شهرين بالجيم، أو إذا رجعت بعد انقطاع', f: [],
-    days: { A: [['chestpress', 3, 8, 12], ['dbbench', 3, 8, 12], ['incline', 3, 8, 12], ['cablecross', 3, 12, 15], ['pushdown', 3, 10, 12], ['ohtri', 3, 10, 12]],
-      B: [['latpull', 3, 8, 12], ['row', 3, 8, 12], ['dbrow', 3, 8, 12], ['straightarm', 2, 12, 15], ['curl', 3, 10, 12], ['hammer', 3, 10, 12]],
+    days: { A: [['dbbench', 3, 8, 12], ['incline', 3, 8, 12], ['chestpress', 3, 10, 12], ['cablecross', 3, 12, 15], ['pushdown', 3, 10, 12], ['ohtri', 3, 10, 12], ['skull', 3, 10, 12]],
+      B: [['latpull', 3, 8, 12], ['row', 3, 8, 12], ['dbrow', 3, 8, 12], ['straightarm', 3, 12, 15], ['curl', 3, 10, 12], ['hammer', 3, 10, 12], ['preacher', 3, 10, 12]],
       C: [['shpress', 3, 8, 12], ['lateral', 3, 12, 15], ['reardelt', 3, 12, 15], ['legpress', 3, 10, 12], ['legcurl', 3, 10, 12], ['legext', 3, 12, 15], ['standcalf', 3, 12, 15], ['crunch', 2, 12, 15]] } },
   { id: 'vtaper', n: 'كورس التوسيع (شكل V)', ic: '🔻', img: 'pullup', goal: 'ظهر عريض وأكتاف جانبية، حتى خصرك يبين أضيق وجسمك مثلث', who: 'إذا تريد تبين عريض بالتيشيرت', f: ['back', 'shoulders'],
-    days: { A: [['incline', 4, 8, 12], ['dbbench', 3, 8, 12], ['cablecross', 3, 12, 15], ['lateral', 3, 12, 15], ['ropepush', 3, 10, 12], ['skull', 3, 10, 12]],
-      B: [['pullup', 3, 6, 10], ['latpull', 4, 8, 12], ['closelat', 3, 10, 12], ['straightarm', 3, 12, 15], ['machrow', 3, 10, 12], ['bbcurl', 3, 8, 12], ['inclinecurl', 3, 10, 12]],
-      C: [['shpress', 3, 8, 12], ['lateral', 4, 12, 20], ['revfly', 3, 12, 15], ['squat', 3, 8, 10], ['rdl', 3, 8, 12], ['legcurl', 3, 10, 12], ['standcalf', 3, 12, 15]] } },
+    days: { A: [['incline', 4, 8, 12], ['dbbench', 3, 8, 12], ['cablecross', 3, 12, 15], ['dbfly', 3, 10, 12], ['ropepush', 3, 10, 12], ['skull', 3, 10, 12], ['ohtri', 3, 10, 12], ['lateral', 3, 12, 20]],
+      B: [['pullup', 3, 6, 10], ['latpull', 4, 8, 12], ['closelat', 3, 10, 12], ['straightarm', 3, 12, 15], ['machrow', 3, 10, 12], ['bbcurl', 3, 8, 12], ['inclinecurl', 3, 10, 12], ['hammer', 3, 10, 12]],
+      C: [['shpress', 3, 8, 12], ['lateral', 4, 12, 20], ['revfly', 3, 12, 15], ['facepull', 3, 12, 15], ['squat', 3, 8, 10], ['rdl', 3, 8, 12], ['legcurl', 3, 10, 12], ['standcalf', 3, 12, 15]] } },
   { id: 'shoulders', n: 'كورس إبراز الأكتاف', ic: '🥥', img: 'lateral', goal: 'أكتاف مدورة وبارزة من الگدام والجنب والورا', who: 'إذا كتفك ضعيف أو تحسه ضيّق', f: ['shoulders'],
-    days: { A: [['incline', 3, 8, 12], ['dbbench', 3, 8, 12], ['cablecross', 3, 12, 15], ['lateral', 3, 12, 15], ['ropepush', 3, 10, 12], ['ohtri', 3, 10, 12]],
-      B: [['latpull', 3, 8, 12], ['row', 3, 8, 12], ['facepull', 3, 12, 15], ['reardelt', 3, 12, 15], ['bbcurl', 3, 8, 12], ['hammer', 3, 10, 12]],
-      C: [['bbpress', 4, 6, 10], ['lateral', 4, 12, 20], ['uprow', 3, 10, 12], ['revfly', 3, 12, 15], ['legpress', 3, 10, 12], ['rdl', 3, 8, 12], ['standcalf', 3, 12, 15]] } },
+    days: { A: [['incline', 3, 8, 12], ['dbbench', 3, 8, 12], ['cablecross', 3, 12, 15], ['dbfly', 3, 10, 12], ['ropepush', 3, 10, 12], ['ohtri', 3, 10, 12], ['skull', 3, 10, 12], ['lateral', 3, 12, 20]],
+      B: [['latpull', 3, 8, 12], ['row', 3, 8, 12], ['dbrow', 3, 8, 12], ['straightarm', 3, 12, 15], ['bbcurl', 3, 8, 12], ['preacher', 3, 10, 12], ['hammer', 3, 10, 12], ['facepull', 3, 12, 15]],
+      C: [['bbpress', 4, 6, 10], ['lateral', 4, 12, 20], ['uprow', 3, 10, 12], ['revfly', 3, 12, 15], ['frontraise', 2, 10, 12], ['legpress', 3, 10, 12], ['rdl', 3, 8, 12], ['legext', 3, 12, 15], ['standcalf', 3, 12, 15]] } },
   { id: 'arms', n: 'كورس الذراع (بايسبس وترايسبس)', ic: '💪', img: 'preacher', goal: 'زند أكبر ومليان، والترايسبس يعطي ثلثين حجم الذراع', who: 'إذا تريد ذراع يبين بالتيشيرت', f: ['biceps', 'triceps'],
-    days: { A: [['dbbench', 3, 8, 12], ['incline', 3, 8, 12], ['closebench', 3, 6, 10], ['skull', 3, 8, 12], ['ropepush', 3, 10, 15], ['kickback', 2, 12, 15]],
-      B: [['latpull', 3, 8, 12], ['dbrow', 3, 8, 12], ['chinup', 3, 6, 10], ['bbcurl', 3, 8, 12], ['preacher', 3, 10, 12], ['inclinecurl', 3, 10, 12], ['hammer', 3, 10, 12]],
-      C: [['shpress', 3, 8, 12], ['lateral', 3, 12, 15], ['reardelt', 3, 12, 15], ['squat', 3, 8, 10], ['legcurl', 3, 10, 12], ['standcalf', 3, 12, 15], ['wristcurl', 2, 15, 20]] } },
+    days: { A: [['dbbench', 3, 8, 12], ['incline', 3, 8, 12], ['chestpress', 3, 10, 12], ['cablecross', 3, 12, 15], ['closebench', 3, 6, 10], ['skull', 3, 8, 12], ['ropepush', 3, 10, 15], ['ohtri', 3, 10, 12]],
+      B: [['latpull', 3, 8, 12], ['dbrow', 3, 8, 12], ['row', 3, 8, 12], ['straightarm', 3, 12, 15], ['bbcurl', 3, 8, 12], ['preacher', 3, 10, 12], ['inclinecurl', 3, 10, 12], ['hammer', 3, 10, 12]],
+      C: [['shpress', 3, 8, 12], ['lateral', 3, 12, 15], ['reardelt', 3, 12, 15], ['squat', 3, 8, 10], ['legcurl', 3, 10, 12], ['legext', 3, 12, 15], ['standcalf', 3, 12, 15], ['wristcurl', 2, 15, 20]] } },
   { id: 'chest', n: 'كورس الصدر العريض', ic: '🛡️', img: 'bbbench', goal: 'صدر أعرض وأعلى صدر مليان', who: 'إذا صدرك مسطّح أو أعلاه ضعيف', f: ['chest'],
-    days: { A: [['bbbench', 4, 6, 10], ['inclinebb', 3, 8, 10], ['incline', 3, 8, 12], ['dbfly', 3, 10, 12], ['cablecross', 3, 12, 15], ['pushdown', 3, 10, 12], ['ohtri', 2, 10, 12]],
-      B: [['latpull', 3, 8, 12], ['row', 3, 8, 12], ['dbrow', 3, 8, 12], ['curl', 3, 10, 12], ['hammer', 3, 10, 12]],
+    days: { A: [['bbbench', 4, 6, 10], ['inclinebb', 3, 8, 10], ['incline', 3, 8, 12], ['dbfly', 3, 10, 12], ['cablecross', 3, 12, 15], ['pushdown', 3, 10, 12], ['ohtri', 3, 10, 12], ['skull', 3, 10, 12]],
+      B: [['latpull', 3, 8, 12], ['row', 3, 8, 12], ['dbrow', 3, 8, 12], ['straightarm', 3, 12, 15], ['curl', 3, 10, 12], ['hammer', 3, 10, 12], ['preacher', 3, 10, 12]],
       C: [['shpress', 3, 8, 12], ['lateral', 3, 12, 15], ['reardelt', 3, 12, 15], ['legpress', 3, 10, 12], ['rdl', 3, 8, 12], ['legcurl', 3, 10, 12], ['standcalf', 3, 12, 15]] } },
   { id: 'strength', n: 'كورس القوة', ic: '🏋️', img: 'deadlift', goal: 'تشيل أثقل بالتمارين الكبيرة، والقوة ترفع حجمك بالكورس الي بعده', who: 'بعد كورس أو كورسين، لما الحركات صارت مضبوطة', f: [], heavy: 1,
-    days: { A: [['bbbench', 4, 5, 8], ['inclinebb', 3, 6, 8], ['dips', 3, 6, 10], ['closebench', 3, 6, 8], ['pushdown', 2, 10, 12]],
-      B: [['deadlift', 3, 4, 6], ['bbrow', 4, 6, 8], ['pullup', 3, 5, 8], ['latpull', 3, 8, 10], ['bbcurl', 3, 6, 10], ['hammer', 2, 8, 12]],
-      C: [['bbpress', 4, 5, 8], ['lateral', 3, 10, 15], ['squat', 4, 5, 8], ['rdl', 3, 6, 10], ['legpress', 3, 8, 12], ['standcalf', 3, 10, 15]] } },
+    days: { A: [['bbbench', 4, 5, 8], ['inclinebb', 3, 6, 8], ['dips', 3, 6, 10], ['cablecross', 2, 10, 12], ['closebench', 3, 6, 8], ['skull', 3, 8, 10], ['pushdown', 2, 10, 12]],
+      B: [['deadlift', 3, 4, 6], ['bbrow', 4, 6, 8], ['pullup', 3, 5, 8], ['latpull', 3, 8, 10], ['bbcurl', 3, 6, 10], ['hammer', 3, 8, 12], ['preacher', 2, 10, 12]],
+      C: [['bbpress', 4, 5, 8], ['lateral', 3, 10, 15], ['facepull', 3, 12, 15], ['squat', 4, 5, 8], ['rdl', 3, 6, 10], ['legpress', 3, 8, 12], ['standcalf', 3, 10, 15]] } },
 ];
 
 /* ================= الأكل =================

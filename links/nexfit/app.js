@@ -76,9 +76,9 @@ function buildProg(pid, n, ev) {
       return { id, s, r: e.sec ? [20, 40] : [r0, r1], rest: T.heavy && e.c ? 150 : e.c ? 90 : 60, w };
     });
   }
-  return { v: 2, pid: T.id, n, name: T.n, goal: T.goal, start: today(), plan, done: {} };
+  return { v: 3, pid: T.id, n, name: T.n, goal: T.goal, start: today(), plan, done: {} };
 }
-if (!S.month || S.month.v !== 2) { S.month = buildProg('base', 1); save(); }
+if (!S.month || S.month.v !== 3) { const o = S.month && S.month.v === 2 ? S.month : null; S.month = buildProg(o ? o.pid : 'base', o ? o.n : 1); if (o) Object.assign(S.month, { start: o.start, done: o.done }); save(); }
 function curDay() { for (let i = 0; i < MDAYS; i++) if (!S.month.done[i]) return i; return MDAYS; }
 const isDeload = i => i >= 48;
 function setsAt(item, i) { if (S.month.n === 1 && i < 8 && !EX[item.id].sec) return Math.min(2, item.s); if (isDeload(i) && !EX[item.id].sec) return Math.max(2, item.s - 1); return item.s; }
@@ -143,6 +143,15 @@ const GOF = m => ['quads', 'hamstrings', 'glutes', 'calves'].includes(m) ? 'legs
 const exList = g => Object.keys(EX).filter(id => EX[id].m && !REST_DAY.includes(id) && EX[id].m.some(m => GOF(m) === g));
 function planOf(id) { for (const d of ['A', 'B', 'C']) { const x = (S.month.plan[d] || []).find(z => z.id === id); if (x) return x; } return null; }
 const DMUS = { A: ['chest', 'triceps'], B: ['back', 'biceps'], C: ['shoulders', 'legs'] };
+const GRP = id => GOF(EX[id].m[0]);
+function weekSets() { const c = {}; for (const d of ['A', 'B', 'C']) for (const x of S.month.plan[d]) { const g = GRP(x.id); c[g] = (c[g] || 0) + x.s; } for (const g in c) c[g] = Math.round(c[g] * 7 / 4); return c; }
+function balanceCard() {
+  const c = weekSets(), L = [['chest', 'الصدر'], ['back', 'الظهر'], ['legs', 'الرجل'], ['shoulders', 'الأكتاف'], ['biceps', 'البايسبس'], ['triceps', 'الترايسبس']];
+  return `<details class="card bal"><summary><b>⚖️ معادلة الكورس</b><span class="xs mut"> شكد تشتغل كل عضلة بالأسبوع</span></summary>
+  <p class="xs mut" style="margin:8px 0">الدراسات تگول العضلة تكبر بـ<b>10-20 سِت بالأسبوع</b>. العضلة الكبيرة تاخذ 4 تمارين باليوم، والصغيرة 3، حتى الكل يكبر سوة.</p>
+  ${L.map(([g, n]) => { const v = c[g] || 0; return `<div class="balr"><span>${n}</span><div class="bb"><i style="width:${Math.min(100, v / 24 * 100)}%"></i><em style="right:${10 / 24 * 100}%"></em><em style="right:${20 / 24 * 100}%"></em></div><b class="num">${v}</b></div>`; }).join('')}
+  <p class="xs mut" style="margin-top:6px">الخطين = المنطقة الذهبية (10-20 سِت)</p></details>`;
+}
 const MUSN = g => (MUS.find(m => m[0] === g) || [, g])[1];
 function vCourse() {
   const c = curDay(), M = S.month, P = progOf(M.pid), doneN = Object.keys(M.done).length, t = c < MDAYS ? dayType(c) : null;
@@ -156,8 +165,9 @@ function vCourse() {
   </div>
   ${t === null ? '' : `<div class="sec-h"><h2>الأيام الجاية</h2></div><div class="hs cdays">${next}</div>`}
   <div class="sec-h"><h2>أيام الكورس</h2><span class="xs mut">تنعاد لحد ما يخلص</span></div>
-  <div class="col">${['A', 'B', 'C'].map((d, k) => `<button class="dayc" data-pday="${d}"><img src="img/ex3d/${DAY_IMG[d]}.jpg" alt=""><div class="grow"><small>اليوم ${['الأول', 'الثاني', 'الثالث'][k]}</small><h3>${DAY_NAMES[d]}</h3><div class="mchips">${S.month.plan[d].slice(0, 3).map(x => `<i>${EX[x.id].n}</i>`).join('')}${S.month.plan[d].length > 3 ? `<i class="num">+${S.month.plan[d].length - 3}</i>` : ''}</div></div>${I.chev}</button>`).join('')}
+  <div class="col">${['A', 'B', 'C'].map((d, k) => `<button class="dayc" data-pday="${d}"><img src="img/ex3d/${DAY_IMG[d]}.jpg" alt=""><div class="grow"><small>اليوم ${['الأول', 'الثاني', 'الثالث'][k]}</small><h3>${DAY_NAMES[d]}</h3><div class="mchips">${[...new Set(S.month.plan[d].map(x => GRP(x.id)))].map(g => `<i class="num">${MUSN(g)} ${S.month.plan[d].filter(x => GRP(x.id) === g).length}</i>`).join('')}</div></div>${I.chev}</button>`).join('')}
    <div class="dayc rest"><span class="big">😴</span><div class="grow"><small>اليوم الرابع</small><h3>راحة</h3><p class="xs mut">العضل يكبر وقت الراحة. امشي 30 دقيقة وسوّي إطالات خفيفة.</p></div></div></div>
+  ${balanceCard()}
   <button class="obtn wide2" data-pick>🔁 غيّر الكورس</button>
   <div class="sec-h"><h2>مكتبة التمارين</h2><span class="xs mut">كل التمارين حسب العضلة</span></div>
   <div class="mgrid3">${MUS.map(([g, n, img]) => `<button class="mus" data-mus="${g}"><img src="img/ex3d/${img}.jpg" alt="" loading="lazy"><div><b>${n}</b><small class="num">${exList(g).length} تمرين</small></div></button>`).join('')}</div>`;
@@ -166,7 +176,8 @@ function openPlanDay(d) {
   const L = S.month.plan[d];
   show(`<div class="row"><button class="ib" data-close aria-label="رجوع">${I.back}</button><div class="grow"><p class="xs mut">${progOf(S.month.pid).n}</p><h2>${DAY_NAMES[d]}</h2></div></div>
   <div class="card"><p class="sm">🔥 <b>قبل:</b> 5 دقايق إحماء، وأول تمرين سِت خفيف بنص الوزن.<br>⏱️ <b>الراحة:</b> دقيقة ونص بالتمارين الكبيرة، ودقيقة بالصغيرة.<br>📈 <b>تتطور شلون؟</b> لما تخلّص كل السِتات بأعلى عدّة، زيد الوزن شوية الجلسة الجاية.</p></div>
-  <div class="col">${L.map((x, k) => `<button class="exrow" data-ex="${x.id}"><img src="img/ex3d/${x.id}.jpg" alt="" loading="lazy"><div class="grow"><h3><span class="num" style="color:var(--g)">${k + 1}.</span> ${EX[x.id].n}</h3><p class="sm num" style="color:var(--g)">${x.s} سِت × <bdi dir="ltr">${rng(x.r)}</bdi> ${EX[x.id].sec ? "ثانية" : "عدّة"}</p><p class="xs mut">${MNAME[EX[x.id].m[0]] || ''}${x.w ? ' • ابدي بـ ' + x.w + ' كغم' : ''}</p></div><span class="k">${I.play}</span></button>`).join('')}</div>`, true);
+  ${[...new Set(L.map(x => GRP(x.id)))].map(g => { const G = L.filter(x => GRP(x.id) === g); return `<div class="sec-h"><h2>${MUSN(g)}</h2><span class="xs mut num">${G.length} تمارين • ${G.reduce((a, x) => a + x.s, 0)} سِت</span></div>
+  <div class="col">${G.map(x => `<button class="exrow" data-ex="${x.id}"><img src="img/ex3d/${x.id}.jpg" alt="" loading="lazy"><div class="grow"><h3><span class="num" style="color:var(--g)">${L.indexOf(x) + 1}.</span> ${EX[x.id].n}</h3><p class="sm num" style="color:var(--g)">${x.s} سِتات • كل سِت ${x.r[0] === x.r[1] ? x.r[0] : x.r[0] + ' إلى ' + x.r[1]} ${EX[x.id].sec ? 'ثانية' : 'عدّة'}</p><p class="xs mut">${MNAME[EX[x.id].m[0]] || ''}${x.w ? ' • ابدي بـ ' + x.w + ' كغم' : ''}</p></div><span class="k">${I.play}</span></button>`).join('')}</div>`; }).join('')}`, true);
 }
 function openPick(rec) {
   const cur = S.month.pid, done = Object.keys(S.month.done).length;
@@ -721,7 +732,7 @@ function openBan(i) {
 }
 
 /* ================= أنا ================= */
-const VERSION = '28';
+const VERSION = '29';
 function weightInfo() {
   const start = S.startW || (S.weights[0]?.w) || +S.w || 52, goal = +S.goal || 62, cur = curW();
   const ms = [start + 1, start + 3, start + 5, start + 7].filter(x => x < goal).concat([goal]).map(x => +x.toFixed(1));
