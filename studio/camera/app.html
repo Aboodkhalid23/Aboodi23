@@ -1,0 +1,242 @@
+<title>كاميرتي جاهزة</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* التصميم: شاشة كاميرا (أسود، وتحديد برتقالي مثل قوائم سوني). خطوة وحدة بالشاشة، أزرار كبيرة للإبهام. */
+:root {
+  --bg: #0b0b0d; --panel: #17171b; --line: #2a2a31; --fg: #f3f1ec; --dim: #9b98a3;
+  --acc: #ff8a1f; --acc-ink: #1a0d00; --ok: #3ccf7a; --warn: #ffcc4d;
+  --ar: "Tajawal", "Noto Naskh Arabic", system-ui, sans-serif;
+  --cam: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--bg); color: var(--fg); }
+body { font-family: var(--ar); font-size: 18px; line-height: 1.6; }
+.wrap { max-width: 640px; margin: 0 auto; padding-block: 12px 120px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 10px 8px; }
+h1 { font-size: 26px; font-weight: 900; margin: 0; text-wrap: balance; }
+.sub { color: var(--dim); margin: 0; font-size: 15px; }
+nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 10px; }
+nav button { font: 700 15px var(--ar); color: var(--dim); background: var(--panel); border: 1px solid var(--line);
+  border-radius: 10px; padding: 10px 4px; cursor: pointer; }
+nav button[aria-selected="true"] { background: var(--acc); color: var(--acc-ink); border-color: var(--acc); }
+button:focus-visible, a:focus-visible { outline: 3px solid var(--warn); outline-offset: 2px; }
+
+.bar { height: 6px; background: var(--line); border-radius: 6px; overflow: hidden; margin-top: 12px; }
+.bar i { display: block; height: 100%; background: var(--acc); width: 0; transition: width .3s; }
+.count { color: var(--dim); font-size: 14px; margin-top: 6px; font-variant-numeric: tabular-nums; }
+
+.step { margin-top: 18px; display: grid; gap: 16px; }
+.num { width: 64px; height: 64px; border-radius: 50%; background: var(--acc); color: var(--acc-ink);
+  display: grid; place-items: center; font: 900 32px var(--ar); }
+.step h2 { font-size: 28px; line-height: 1.3; margin: 0; font-weight: 900; text-wrap: balance; }
+.why { color: var(--dim); margin: 0; }
+.screen { background: #000; border: 2px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 8px; }
+.screen .lbl { font-size: 13px; color: var(--dim); }
+.path { display: grid; gap: 8px; }
+.path div { direction: ltr; font: 600 18px var(--cam); background: var(--panel); border: 1px solid var(--line);
+  border-radius: 8px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.path div span.ar { direction: rtl; font: 500 14px var(--ar); color: var(--dim); text-align: right; }
+.path div:last-child { background: var(--acc); color: var(--acc-ink); border-color: var(--acc); }
+.path div:last-child span.ar { color: var(--acc-ink); }
+.note { border-right: 4px solid var(--warn); background: var(--panel); padding: 10px 14px; border-radius: 8px; margin: 0; }
+.note.ok { border-color: var(--ok); }
+
+.foot { position: fixed; inset: auto 0 0; background: linear-gradient(transparent, var(--bg) 30%); z-index: 6;
+  padding-block: 24px calc(12px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.foot .in { max-width: 640px; margin: 0 auto; display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
+.btn { font: 900 20px var(--ar); border-radius: 14px; padding: 16px; border: 0; cursor: pointer; }
+.btn.go { background: var(--acc); color: var(--acc-ink); }
+.btn.back { background: var(--panel); color: var(--fg); border: 1px solid var(--line); }
+.btn:disabled { opacity: .35; }
+
+.cards { display: grid; gap: 14px; margin-top: 16px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.card img { display: block; width: 100%; aspect-ratio: 16/9; object-fit: cover; object-position: top; }
+.card .t { padding: 12px 14px; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; align-items: center; }
+.card .k { grid-row: span 2; width: 46px; height: 46px; border-radius: 10px; background: var(--acc); color: var(--acc-ink);
+  display: grid; place-items: center; font: 900 24px var(--ar); }
+.card b { font-size: 20px; }
+.card small { color: var(--dim); font-size: 15px; }
+.dl { display: block; text-align: center; text-decoration: none; margin-top: 16px; }
+.list { display: grid; gap: 10px; margin-top: 16px; padding: 0; list-style: none; }
+.list li { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.list li b { display: block; }
+.list li span { color: var(--dim); font-size: 16px; }
+.big { font-size: 22px; font-weight: 900; margin: 18px 0 4px; }
+.done { text-align: center; display: grid; gap: 12px; margin-top: 30px; }
+.done .num { margin: 0 auto; background: var(--ok); }
+@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+</style>
+
+<div class="wrap" dir="rtl" lang="ar">
+  <header>
+    <h1>كاميرتي جاهزة</h1>
+    <p class="sub">Sony ZV-E10 II · تضبطها مرة وحدة، وبعدها تدوس تسجيل بس</p>
+    <nav role="tablist">
+      <button role="tab" id="t-setup" aria-selected="true" data-tab="setup">الإعداد</button>
+      <button role="tab" id="t-daily" aria-selected="false" data-tab="daily">كل يوم</button>
+      <button role="tab" id="t-luts" aria-selected="false" data-tab="luts">الفلاتر</button>
+      <button role="tab" id="t-help" aria-selected="false" data-tab="help">مشكلة؟</button>
+    </nav>
+  </header>
+
+  <section id="setup">
+    <div class="bar"><i id="barfill"></i></div>
+    <div class="count" id="count"></div>
+    <div id="stepbox"></div>
+  </section>
+
+  <section id="daily" hidden>
+    <p class="big">كل يوم، 3 خطوات بس</p>
+    <ol class="list">
+      <li><b>1. شغّل الكاميرا</b><span>ضوء الوجه (السوفت بوكس) شغّال، وضوء الغرفة مطفي.</span></li>
+      <li><b>2. اختار MR 1</b><span>دوس زر الوضع لحد ما يبين MR، واختار 1. هسه كل الإعدادات رجعت مثل ما ضبطناها.</span></li>
+      <li><b>3. دوس تسجيل</b><span>تريد ستايل ثاني؟ زر Fn ← Picture Profile ← اختار PPLUT1 لحد 4.</span></li>
+    </ol>
+    <p class="big">قبل ما تدوس تسجيل، شوف الشاشة</p>
+    <ul class="list">
+      <li><b>علامة i الخضرة؟</b><span>لا. لازم تكون مطفية (الوضع اليدوي). وياها الفلتر ما يشتغل.</span></li>
+      <li><b>خطوط الزيبرا</b><span>خطوط خفيفة على خدودك بس = الضوء مضبوط. على كل الوجه = ضوء زايد.</span></li>
+      <li><b>المربع على عيونك</b><span>الكاميرا لازم تأشّر على عينك، يعني الفوكس شغّال.</span></li>
+      <li><b>كل 20 دقيقة</b><span>وگّف وابدي من جديد، حتى كل ملف يبقى تحت 5 گيگا.</span></li>
+    </ul>
+  </section>
+
+  <section id="luts" hidden>
+    <p class="big">الفلاتر السبعة</p>
+    <p class="why">كلها تحمي وجهك أول شي، بأي لون ضوء بالخلفية. ما تعرف شتختار؟ <b>الفلتر 1 دائماً.</b></p>
+    <a class="btn go dl" id="dl" target="_blank" rel="noopener"
+       href="https://raw.githubusercontent.com/Aboodkhalid23/Aboodi23/refs/heads/claude/github-skills-development-3orc6c/studio/camera/luts.zip">نزّل الفلاتر السبعة (ملف واحد مضغوط)</a>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <section id="help" hidden>
+    <p class="big">شنو المشكلة؟</p>
+    <ul class="list" id="probs"></ul>
+  </section>
+</div>
+
+<div class="foot" id="foot"><div class="in">
+  <button class="btn back" id="prev" type="button">رجوع</button>
+  <button class="btn go" id="next" type="button">خلصت، الي بعدها</button>
+</div></div>
+
+<script>
+// كل خطوة: العنوان، ليش، المسار بالكاميرا [كلمة الشاشة، معناها]، وملاحظة
+const STEPS = [
+  { t: "شيل الكارت وانقل الي عليه", why: "راح نمسح الكارت بالخطوة الجاية. انقل أي فيديو مهم لموبايلك أول.",
+    note: ["warn", "كارتك لازم مكتوب عليه V30 أو V60. إذا أقل، الكاميرا ما تقبل الجودة الي نريدها."] },
+  { t: "غيّر نظام الفيديو لـ NTSC", why: "هذا الي يفتح أحسن جودة بأصغر حجم. الضوء ما راح يرمش، لأن الغالق راح يكون 1/50.",
+    path: [["MENU","القائمة"],["Setup","الإعدادات العامة"],["Area/Date","المنطقة والتاريخ"],["NTSC/PAL Selector","نظام الفيديو"],["NTSC",""]],
+    note: ["warn", "الكاميرا تطفي وتشتغل، وتطلب تمسح الكارت. وافق."] },
+  { t: "امسح الكارت (فرمتة)", why: "كارت نظيف = تسجيل بلا مشاكل.",
+    path: [["MENU","القائمة"],["Shooting","التصوير"],["Media","الكارت"],["Format","مسح كامل"],["Enter","تأكيد"]] },
+  { t: "حوّل للفيديو والوضع اليدوي", why: "أهم خطوة. بالأوتوماتيكي (علامة i الخضرة) الفلاتر ما تشتغل أبداً.",
+    path: [["Still/Movie/S&Q","الزر فوگ الكاميرا: دوسه لحد فيديو"],["MENU","القائمة"],["Shooting","التصوير"],["Shooting Mode","وضع التصوير"],["Exposure Mode","وضع الإضاءة"],["Manual Exposure","يدوي"]],
+    note: ["ok", "بعدها علامة i الخضرة تختفي من الشاشة."] },
+  { t: "نوع الملف", why: "ضغط حديث: نفس الوضوح بنص الحجم.",
+    path: [["MENU","القائمة"],["Shooting","التصوير"],["Image Quality/Rec","الجودة والتسجيل"],["File Format","نوع الملف"],["XAVC HS 4K",""]] },
+  { t: "الفريمات", why: "24 صورة بالثانية = شكل السينما والوثائقيات.",
+    path: [["Movie Settings","إعدادات الفيديو"],["Rec Frame Rate","الفريمات"],["24p",""]] },
+  { t: "الجودة والحجم", why: "كل 20 دقيقة تقريباً 4.5 گيگا. و10bit يعني ألوان ناعمة بلا تكسير بكسلات.",
+    path: [["Movie Settings","إعدادات الفيديو"],["Record Setting","جودة التسجيل"],["30M 4:2:0 10bit",""]] },
+  { t: "طفّي النسخة الصغيرة", why: "إذا شغّالة، تنتقل نسخة ضعيفة لموبايلك وتحس الفيديو مكسّر.",
+    path: [["MENU","القائمة"],["Shooting","التصوير"],["Image Quality/Rec","الجودة والتسجيل"],["Proxy Settings","النسخة الصغيرة"],["Proxy Recording","تسجيلها"],["Off","طافي"]] },
+  { t: "الغالق 1/50", why: "حركة طبيعية، وبلا رمشة ضوء. لفّ العجلة الخلفية لحد ما يبين 1/50.",
+    path: [["Shutter","الغالق"],["1/50",""]] },
+  { t: "الفتحة على أصغر رقم", why: "ضوء أكثر، وخلفية ضبابية حلوة. لفّ العجلة لحد أصغر رقم F تسمح بيه عدستك.",
+    path: [["F","الفتحة"],["أصغر رقم (مثلاً 3.5)",""]] },
+  { t: "ISO ثابت، مو AUTO", why: "كل ما يرتفع ISO، الحبوب تزيد. خليه على أقل رقم تقبله الكاميرا.",
+    path: [["ISO","حساسية الضوء"],["أقل رقم",""]], note: ["warn", "الصورة غامگة؟ قوّي ضوء وجهك أو قرّبه. لا ترفع ISO."] },
+  { t: "توازن الأبيض بالورقة البيضة", why: "هيچ لون وجهك يطلع صح كل مرة، شنو ما چان لون الخلفية.",
+    path: [["MENU","القائمة"],["Exposure/Color","الإضاءة والألوان"],["White Balance","توازن الأبيض"],["Custom 1","مخصّص 1"],["SET","دوس يمين العجلة"]],
+    note: ["ok", "حط ورقة بيضة مكان وجهك تحت ضوء السوفت بوكس، وخليها تملي المربع بالشاشة، ودوس الزر النص."] },
+  { t: "الفوكس يلحق عيونك", why: "الكاميرا تلحق وجهك وحدها، حتى لو تحركت.",
+    path: [["MENU","القائمة"],["Focus","الفوكس"],["AF/MF","أوتوماتيكي/يدوي"],["Focus Mode","وضع الفوكس"],["AF-C","أوتوماتيكي مستمر"]] },
+  { t: "التعرف على الإنسان", why: "حتى الفوكس يروح لعيونك مو للحايط.",
+    path: [["MENU","القائمة"],["Focus","الفوكس"],["Subject Recognition","التعرف"],["Recognition Target","على شنو"],["Human","إنسان"]] },
+  { t: "نزّل الفلاتر على موبايلك", why: "من تبويب «الفلاتر» فوگ، نزّل الملف المضغوط وافتحه. يطلع 7 ملفات: 1.cube لحد 7.cube.",
+    note: ["ok", "الأسهل: شبّك الكارت بالموبايل (قارئ كارت) وحط الملفات بالمسار PRIVATE > SONY > PRO > LUT."] },
+  { t: "دخّل الفلاتر بالكاميرا", why: "رجّع الكارت للكاميرا، ودخّل كل فلتر بمكان برقمه: 1 بـUser1، و2 بـUser2، لحد 7.",
+    path: [["MENU","القائمة"],["Exposure/Color","الإضاءة والألوان"],["Color/Tone","اللون"],["Manage User LUTs","إدارة الفلاتر"],["Import/Edit","إدخال"],["User1 ← 1.cube",""]] },
+  { t: "تعويض الإضاءة لكل فلتر", why: "هذا الي يشيل الحبوب. سوّيه للسبعة.",
+    path: [["Manage User LUTs","إدارة الفلاتر"],["Import/Edit","تعديل"],["User1","الفلتر"],["AE Level Offset","تعويض الإضاءة"],["+5/3EV",""]] },
+  { t: "طفّي التصوير الخام", why: "حتى الكاميرا تطبع الفلتر داخل الفيديو.",
+    path: [["MENU","القائمة"],["Exposure/Color","الإضاءة والألوان"],["Color/Tone","اللون"],["Log Shooting Setting","التصوير الخام"],["Off","طافي"]] },
+  { t: "حط الفلاتر بالاختيار السريع", why: "PPLUT1 = الفلتر 1 (وثائقي). وعيدها: PPLUT2 = User2، وPPLUT3 = User3، وPPLUT4 = User4.",
+    path: [["Color/Tone","اللون"],["Picture Profile","ستايل الصورة"],["PPLUT1","دوس يمين العجلة"],["Basic Look","الفلتر الأساسي"],["User1",""]],
+    note: ["ok", "اخر شي، اختار PPLUT1 حتى يبقى هو الشغّال."] },
+  { t: "شغلات صغيرة", why: "المثبت طافي لأن الكاميرا على حامل، وتعويض الزوايا طافي لأنه يكبّر الحبوب.",
+    path: [["Image Stabilization > SteadyShot","المثبت"],["Off","طافي"]],
+    note: ["ok", "وهم: Lens Compensation > Shading Comp. = Off. وZebra Display = On، والمستوى 70."] },
+  { t: "احفظ بالذاكرة رقم 1", why: "من هسه كل يوم: تشغّل، تختار MR 1، تدوس تسجيل.",
+    path: [["MENU","القائمة"],["Shooting","التصوير"],["Shooting Mode","وضع التصوير"],["Camera Set. Memory","حفظ الإعدادات"],["1",""]] },
+  { t: "احفظ نسخة على الكارت", why: "إذا صار أي شي بالكاميرا، ترجع كل الإعدادات بدوسة وحدة، بدل ما تعيد كل هالخطوات.",
+    path: [["MENU","القائمة"],["Setup","الإعدادات العامة"],["Reset/Save Settings","حفظ وإرجاع"],["Save/Load Settings","حفظ على الكارت"],["Save New","حفظ جديد"]],
+    note: ["warn", "وقت الإرجاع: نفس المكان ← Load. (طلّع الكاميرا من MR قبل، لأن بيه ما يشتغل.) ولا تفرمت الكارت بعدها، أو انقل الملف قبل."] },
+];
+
+const LUTS = [
+  ["وثائقي", "الأساسي لكل الحلقات"], ["فيلم سينما", "القصص الكبيرة والمقدمات"], ["دراما", "صراع وتوتر"],
+  ["غموض وجريمة", "الجرائم والأسرار"], ["تاريخ ذهبي", "التاريخ والشركات القديمة"], ["تقني بارد", "التكنولوجيا والإثارة"],
+  ["أبيض وأسود", "لقطات درامية وذكريات"],
+];
+const PROBS = [
+  ["الفلتر ما مبين", "الكاميرا على الأوتوماتيكي (علامة i). الخطوة 4."],
+  ["حبوب بالصورة", "الخطوة 17 (5/3EV)، وقوّي ضوء وجهك، وISO على أقل رقم."],
+  ["الفيديو مموّه بالموبايل", "الخطوة 8 (النسخة الصغيرة طافية)."],
+  ["لون وجهي غلط", "عيد الخطوة 12 (الورقة البيضة)."],
+  ["وجهي مو حاد", "الخطوات 13 و14، والغالق 1/50 مو أبطأ."],
+  ["الملف كبير", "الخطوة 7 (30M). ووگّف التسجيل كل 20 دقيقة."],
+  ["ما لگيت خيار بالقائمة", "حدّث نظام الكاميرا من تطبيق سوني، أو صوّر الشاشة ودزها لـClaude."],
+  ["خربت الإعدادات", "الخطوة 22: Load من الكارت، وكلشي يرجع."],
+];
+
+let i = 0;
+try { i = Math.min(+localStorage.getItem("step") || 0, STEPS.length); } catch (e) {}
+
+const $ = (s) => document.querySelector(s);
+const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function render() {
+  try { localStorage.setItem("step", i); } catch (e) {}
+  $("#barfill").style.width = (i / STEPS.length) * 100 + "%";
+  $("#prev").disabled = i === 0;
+  if (i >= STEPS.length) {
+    $("#count").textContent = "كل الخطوات خلصت";
+    $("#stepbox").innerHTML = `<div class="done"><div class="num">✓</div><h2>الكاميرا جاهزة</h2>
+      <p class="why">من هسه شوف تبويب «كل يوم». تشغّل، MR 1، تسجيل.</p></div>`;
+    $("#next").textContent = "ابدي من جديد";
+    return;
+  }
+  const s = STEPS[i];
+  $("#count").textContent = `الخطوة ${i + 1} من ${STEPS.length}`;
+  const path = s.path ? `<div class="screen"><span class="lbl">دوس بالكاميرا بهذا الترتيب:</span><div class="path">${
+    s.path.map(([w, m]) => `<div>${esc(w)}<span class="ar">${esc(m)}</span></div>`).join("")}</div></div>` : "";
+  const note = s.note ? `<p class="note ${s.note[0]}">${esc(s.note[1])}</p>` : "";
+  $("#stepbox").innerHTML = `<div class="step"><div class="num">${i + 1}</div><h2>${esc(s.t)}</h2>
+    <p class="why">${esc(s.why)}</p>${path}${note}</div>`;
+  $("#next").textContent = i === STEPS.length - 1 ? "خلصت كلشي" : "خلصت، الي بعدها";
+}
+
+$("#next").onclick = () => { i = i >= STEPS.length ? 0 : i + 1; render(); scrollTo(0, 0); };
+$("#prev").onclick = () => { if (i > 0) { i--; render(); scrollTo(0, 0); } };
+
+document.querySelectorAll("nav button").forEach((b) => b.onclick = () => {
+  document.querySelectorAll("nav button").forEach((x) => x.setAttribute("aria-selected", x === b));
+  ["setup", "daily", "luts", "help"].forEach((id) => $("#" + id).hidden = id !== b.dataset.tab);
+  $("#foot").hidden = b.dataset.tab !== "setup";
+  scrollTo(0, 0);
+});
+
+$("#cards").innerHTML = LUTS.map(([n, u], k) => `<div class="card"><img src="previews/${k + 1}.jpg" alt="الفلتر ${k + 1}: ${n}" loading="lazy">
+  <div class="t"><span class="k">${k + 1}</span><b>${n}</b><small>${u}${k < 4 ? ` · PPLUT${k + 1}` : ""}</small></div></div>`).join("");
+$("#probs").innerHTML = PROBS.map(([a, b]) => `<li><b>${a}</b><span>${b}</span></li>`).join("");
+render();
+</script>
