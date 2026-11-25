@@ -101,8 +101,9 @@
 - **لكل فلتر من السبعة.** الفلتر مصمم إن الكاميرا تاخذ ضوء أكثر، فالحبوب تقل.
 
 ### 12) اختار الستايل
-1. `MENU > Exposure/Color > Color/Tone > Log Shooting Setting > Off`
-2. `Picture Profile > PPLUT1` ← دوس يمين العجلة ← `Basic Look > User1` (= الفلتر 1).
+1. `MENU > Shooting > Image Quality/Rec > Log Shooting Setting > Log Shooting > Off` (بقائمة التصوير، مو الألوان). `Select LUT` بقائمة الألوان لا تلمسه: يشتغل بس ويا التصوير الخام.
+   - وبقائمة الألوان: `Soft Skin Effect > Off` (تنعيم البشرة يمسح تفاصيل وجهك)، و`D-Range Optimizer > Off`.
+2. `MENU > Exposure/Color > Color/Tone > Picture Profile > PPLUT1` ← دوس يمين العجلة ← `Basic Look` ← دوس النص ← `User1` (= الفلتر 1). توازن الأبيض (الخطوة 8) سوّيه قبل هالخطوة: سوني تگول PPLUT ممكن يخرّب ضبط الأبيض المخصّص.
 3. نفس الشي: PPLUT2 = User2، PPLUT3 = User3، PPLUT4 = User4.
 4. تريد الفلتر 5 أو 6 أو 7؟ بدّل الـBasic Look بأي PPLUT.
 
@@ -155,6 +156,7 @@
 | لون الوجه غلط | عيد الخطوة 8 (الورقة البيضة) |
 | الوجه مو حاد | الخطوة 9 (AF-C ويا التعرف على الإنسان)، والغالق 1/50 مو أبطأ |
 | الملف كبير | الخطوة 4 (30M)، ووگّف التسجيل كل 20 دقيقة |
+| الكاميرا تكتب Running on NTSC | طبيعي، تذكير إنها على NTSC (الخطوة 2) |
 | الأسود باهت ورمادي | گول لـClaude (يغيّر مستوى الأسود بالفلتر) |
 
 ---
