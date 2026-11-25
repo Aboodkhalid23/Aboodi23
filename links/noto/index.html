@@ -12,7 +12,7 @@
 <link rel="icon" href="icon-192.png">
 <title>Noto</title>
 <style>body{margin:0;background:#121316}</style>
-<script>if("serviceWorker" in navigator&&location.protocol==="https:"){addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=1795553684",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));let re=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(re||window.__notoReading)return;re=true;location.reload();});}</script>
+<script>if("serviceWorker" in navigator&&location.protocol==="https:"){addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=1795618276",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));let re=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(re||window.__notoReading)return;re=true;location.reload();});}</script>
 </head>
 <body>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -107,11 +107,12 @@ a.btn{color:var(--fg)}
 .rStage{flex:1;min-height:0;position:relative;overflow:hidden}
 #cardV{position:absolute;inset:0;padding:4px max(4%,var(--sal)) 4px max(4%,var(--sar));display:flex;flex-direction:column;align-items:center;gap:8px}
 #cardV.mir,#scrollV.mir{transform:scaleX(-1)}
-.sCue{font-family:var(--ui);font-size:15px;font-weight:700;color:var(--amber)}
+.sCue{font-family:var(--ui);font-size:clamp(15px,2.2vh,22px);font-weight:700;color:var(--amber);text-align:center;line-height:1.5}
 #sBox{flex:1 1 auto;min-height:0;width:100%;display:grid;place-items:center;overflow:hidden}
 #sBox>*{grid-area:1/1}
 #read.top #sBox{place-items:start center;padding-top:2vh}
 #sTxt{margin:0;text-align:center;text-wrap:balance;word-break:keep-all;overflow-wrap:normal;transition:opacity .35s}
+.st{color:#8fb4ff;text-decoration:underline;text-decoration-color:#4d82ff;text-decoration-thickness:.07em;text-underline-offset:.22em}
 .hw{text-decoration:underline;text-decoration-color:var(--amber);text-decoration-thickness:.06em;text-underline-offset:.2em}
 #memoCue{opacity:0;transition:opacity .35s;pointer-events:none;text-align:center}
 #read.memo #sTxt{opacity:0}
@@ -386,7 +387,7 @@ const I={x:'<path d="M6 6l12 12M18 6 6 18"/>',chevR:'<path d="m9 6 6 6-6 6"/>',c
 const PLAY='<svg width="30" height="30" viewBox="0 0 24 24" fill="#fff"><path d="M8 4.8v14.4L19.5 12z"/></svg>';
 const PAUSE='<svg width="28" height="28" viewBox="0 0 24 24" fill="#fff"><rect x="6" y="4.5" width="4.2" height="15" rx="1.2"/><rect x="13.8" y="4.5" width="4.2" height="15" rx="1.2"/></svg>';
 
-const DEF={lang:"ar",mode:"card",font:"vazir",weight:1,theme:"white",fgC:"",bgC:"",scale:1,measure:"mid",lead:"auto",sec:8,longMore:false,cd:true,gap:false,memo:false,next:true,
+const DEF={lang:"ar",mode:"card",font:"vazir",weight:1,theme:"white",fgC:"",bgC:"",scale:1,measure:"mid",lead:"auto",sec:10,longMore:false,autoTime:true,coach:true,cd:true,gap:false,memo:false,next:true,
   mirror:false,pos:"mid",slen:"mid",hardMark:true,selfSize:28,wpm:120,guide:.36,box:true,ai:"",cdN:3,hideUi:false,showLeft:true,secPause:false,endPause:false};
 const S=Object.assign({},DEF,N.get("set",{}));
 const save=()=>N.set("set",S);
@@ -456,6 +457,12 @@ const T={ar:{
  step1_deepseek:"تنفتح صفحة DeepSeek. سجّل دخول، واضغط «Create new API key»، وسمّيه Noto، وبعدين «Copy». (لازم تشحن رصيد صغير من Top up، رخيص كلش.)",
  splashT:"حركة البداية",splashS:"اضغط أي وحدة حتى تشوفها، وتبقى هي الي تطلع من تفتح Noto.",spRandom:"تتبدّل كل مرة",
  sp_draw:"الشريط ينرسم",sp_write:"الكتابة",sp_wave:"موجة الصوت",sp_lines:"سطور الملقّن",sp_lens:"العدسة",sp_count:"العد التنازلي",sp_fly:"الشريط يطير",sp_ink:"الحبر",
+ secPer8:"{0} ث / 8 كلمات",secRow8:"ثواني لكل 8 كلمات",autoTime:"الوقت حسب عدد الكلمات (تلقائي)",autoTimeS:"المقطع القصير يمشي أسرع والطويل ياخذ وقت أكثر، فالرتم ما ينكسر",
+ coach:"إرشادات الإلقاء (المخرج)",coachS:"فوگ كل مقطع: شلون تگوله، وكلمة تشد عليها",dir:"المخرج",dirT:"مخرج الإلقاء",
+ dirS:"Noto يقرا السكريبت كله قبل ما تبدي، ويحط فوگ كل مقطع شلون تگوله: متحمس، جدي، هادي… وأي كلمة تشد عليها، ويسرّع أو يبطّئ الوقت حسب الرتم. ما يغيّر ولا كلمة من سكريبتك.",
+ dirAi:"حلّل السكريبت بالذكاء",dirAgain:"حلّل من جديد",dirBusy:"🎭 {0} دا يحلل السكريبت…",dirDone:"✓ حللت السكريبت كله ({0} مقطع)",dirLocal:"هسه التحليل بسيط (من علامات الترقيم والأرقام). اربط Gemini المجاني حتى يصير تحليل كامل يفهم القصة.",
+ dirFrom:"آخر تحليل: {0}",overall:"الرتم العام",
+ tn_excite:"حماس",tn_serious:"جدّي",tn_calm:"هادي",tn_fun:"مرح",tn_mystery:"غموض",tn_sad:"حزين",tn_suspense:"تشويق",tn_question:"سؤال",pc_fast:"أسرع",pc_slow:"على مهلك",
  aBack5:"رجوع 5 ثواني",aFwd5:"قدّام 5 ثواني",aEnd:"المقطع الجاي",aPrevPara:"المقطع الي قبله"},
 en:{
  lockMsg:"Enter your code to open Noto",lockWait:"One moment…",lockBad:"Wrong code, try again",lockMany:"Too many tries. Wait 30 seconds",lockNo:"This device can't use the lock",del:"Delete",
@@ -521,6 +528,12 @@ en:{
  step1_deepseek:"The DeepSeek page opens. Sign in, tap “Create new API key”, name it Noto, then Copy. (Top up a small amount; it's very cheap.)",
  splashT:"Opening animation",splashS:"Tap one to preview it. It becomes the one that plays when Noto opens.",spRandom:"Different each time",
  sp_draw:"Ribbon draw",sp_write:"Handwriting",sp_wave:"Voice wave",sp_lines:"Prompter lines",sp_lens:"Lens",sp_count:"Countdown",sp_fly:"Flying ribbon",sp_ink:"Ink",
+ secPer8:"{0}s / 8 words",secRow8:"Seconds per 8 words",autoTime:"Time by word count (automatic)",autoTimeS:"Short parts move faster and long ones get more time, so your rhythm stays",
+ coach:"Delivery coaching (Director)",coachS:"Above each part: how to say it, and a word to stress",dir:"Director",dirT:"Delivery director",
+ dirS:"Noto reads the whole script before you start and puts a cue above each part: excited, serious, calm… which word to stress, and speeds up or slows down the timing. It never changes a word.",
+ dirAi:"Analyze with AI",dirAgain:"Analyze again",dirBusy:"🎭 {0} is analyzing the script…",dirDone:"✓ Analyzed the whole script ({0} parts)",dirLocal:"Right now the analysis is basic (punctuation and numbers). Connect free Gemini for a full analysis that understands the story.",
+ dirFrom:"Last analysis: {0}",overall:"Overall pace",
+ tn_excite:"Excited",tn_serious:"Serious",tn_calm:"Calm",tn_fun:"Fun",tn_mystery:"Mystery",tn_sad:"Sad",tn_suspense:"Suspense",tn_question:"Question",pc_fast:"Faster",pc_slow:"Slow down",
  aBack5:"Back 5 seconds",aFwd5:"Forward 5 seconds",aEnd:"Next section",aPrevPara:"Previous section"}};
 const t=(k,...a)=>{let s=(T[S.lang]||T.ar)[k];if(s==null)s=T.ar[k]||k;a.forEach((v,i)=>{s=s.replace("{"+i+"}",v);});return s;};
 let toastT=0;
@@ -604,7 +617,7 @@ function splitLong(p,M){
   if(best<0)best=mid;
   return [...splitLong(w.slice(0,best).join(" "),M),...splitLong(w.slice(best).join(" "),M)];
 }
-function parse(text){
+function parse(text,noMerge){
   const lines=cleanText(text).split("\n"),out=[];let sec="",cue="";const M=SLEN[S.slen]||12;
   lines.forEach((line,li)=>{
     if(!line)return;const hm=line.match(HEAD_RE);
@@ -613,13 +626,22 @@ function parse(text){
     let body=line,ls=sec;if(hm&&hm[2]){ls=hm[1];body=hm[2];}
     body.split(/(?<=[.!؟?…])\s+|\s*\/\/\s*/).map(x=>x.trim()).filter(Boolean).forEach(p=>{
       p=p.replace(/\[([^\]]*)\]/g,(m,c)=>{cue=c.trim();return "";}).replace(/\s+/g," ").trim();if(!p)return;
-      splitLong(p,M).forEach(x=>{out.push({t:x,li,sec:ls,cue,w:wc(x)});cue="";});});
+      splitLong(p,M).forEach(x=>{out.push({t:x,li,sec:ls,cue,w:wc(x),parts:[{li,t:x}]});cue="";});});
   });
-  return out;
+  if(noMerge||S.mode==="scroll")return out;
+  /* تجميع: المقطع القصير (كلمة أو كلمتين) ينضم لجاره، حتى ما تنتظر على كلمتين */
+  const MIN={short:4,mid:6,long:8}[S.slen]||6,MAX={short:9,mid:12,long:16}[S.slen]||12,res=[];
+  out.forEach(c=>{const l=res[res.length-1];
+    if(l&&l.sec===c.sec&&!c.cue&&(l.w<MIN||c.w<MIN)&&l.w+c.w<=MAX){l.t+=" "+c.t;l.w+=c.w;l.parts.push(c.parts[0]);}
+    else res.push(Object.assign({},c,{parts:c.parts.slice()}));});
+  return res;
 }
 let SENT=[];
 const R={min:0,idx:0,t:0,playing:false,peek:false,clock:0,marks:[],lastMark:-1e9,counting:false,cdT:0,extra:{},pos:0,max:1,pxw:1,lineH:40,vel:0,drag:false,anim:null};
-function dur(i,arr){const s=(arr||SENT)[i];if(!s)return S.sec;let d=S.sec;if(S.longMore)d=Math.round(S.sec*Math.min(2,Math.max(.7,s.w/7)));return Math.max(3,d)+((!arr&&R.extra[i])||0);}
+function dur(i,arr){const s=(arr||SENT)[i];if(!s)return S.sec;let d=S.sec;
+  if(S.autoTime){d=Math.max(2.5,S.sec*s.w/8);if(/[.!؟?…]$/.test(s.t))d+=.4;}
+  if(!arr&&ANA&&ANA.items[i]){const pc=ANA.items[i].pace;d*=pc==="fast"?.85:pc==="slow"?1.2:1;}
+  return Math.max(2.5,Math.round(d*10)/10)+((!arr&&R.extra[i])||0);}
 function estimate(text){const s=parse(text);if(S.mode==="scroll")return wc(s.map(x=>x.t).join(" "))/S.wpm*60;let x=0;for(let i=0;i<s.length;i++)x+=dur(i,s);return x;}
 
 /* ---------- سكريبتاتك ---------- */
@@ -730,12 +752,13 @@ $("edGo").addEventListener("click",()=>{edSave();if(!wc(doc.text))return;openRea
 let raf=0,last=0,calmT=0,wake=null;
 const CARD=()=>S.mode!=="scroll";
 function openRead(d){
-  doc=Object.assign({},d);SENT=parse(doc.text);if(!SENT.length){openEdit(d);return;}
+  doc=Object.assign({},d);SENT=parse(doc.text);if(!SENT.length){openEdit(d);return;}loadAna();
   Object.assign(R,{t:0,playing:false,peek:false,clock:0,marks:[],lastMark:-1e9,extra:{},vel:0,anim:null,counting:false});$("rTime").textContent="00:00";
   const p=N.get("pos_"+doc.id,0);R.idx=Math.max(0,Math.min(SENT.length-1,p));if(R.idx>=SENT.length-1)R.idx=0;
   show("read");$("cardV").hidden=!CARD();$("scrollV").hidden=CARD();$("gBox").hidden=CARD()||!S.box;buildPanel();applyLook();
   if(!CARD()){const k=N.get("spos_"+doc.id,0);R.pos=fromFrac(k>=.99?0:k);renderScroll();}
   setPlayUi();cancelAnimationFrame(raf);last=0;raf=requestAnimationFrame(loop);
+  if(CARD()&&S.coach&&ANA.src!=="ai"&&Object.keys(PROV).some(isDirect))setTimeout(()=>{if(cur==="read")analyze(false);},600);
 }
 function applyLook(){const f=font(),th=theme(),rd=$("read");rd.style.setProperty("--tbg",th.bg);rd.style.setProperty("--tfg",th.fg);
   const fam='"'+f.css+'","Vazirmatn",system-ui,sans-serif',w=f.w[S.weight]||800;
@@ -751,10 +774,10 @@ function buildPanel(){
   else{setB("pFirst",IC(I.first,22),t("aPrevPara"));setB("pBack",IC(I.back,24)+'<small>5</small>',t("aBack5"));setB("pFwd",IC(I.fwd,24)+'<small>5</small>',t("aFwd5"));setB("pLast",IC(I.last,22),t("aEnd"));}
   const C=$("pChips");C.innerHTML="";const ch=(ic,x,fn)=>{const b=el("button","pChip");b.innerHTML=ic;b.append(x);b.addEventListener("click",fn);C.append(b);};
   ch(IC(I.aa,18),t("look"),()=>lookSheet());ch(IC('<path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>',18),t("list"),()=>listSheet());
-  if(card){ch(IC(I.spark,18),t("easy"),()=>{pause();easySheet();});ch(IC(I.ear,18),t("listen"),()=>{pause();say(SENT[R.idx].t);});}
+  if(card){ch("🎭 ",t("dir"),()=>dirSheet());ch(IC(I.spark,18),t("easy"),()=>{pause();easySheet();});ch(IC(I.ear,18),t("listen"),()=>{pause();say(SENT[R.idx].t);});}
   $("rClose").innerHTML=IC(I.x);$("rCam").innerHTML=IC(I.cam);$("rSet").innerHTML=IC(I.gear);
   $("stM").setAttribute("aria-label",t("aLess"));$("stP").setAttribute("aria-label",t("aMoreV"));stepUi();$("rCount").textContent="";}
-function stepUi(){if(CARD())$("stV").textContent=R.playing?t("left",Math.max(0,Math.ceil(dur(R.idx)-R.t))):(S.longMore?t("secAvg",S.sec):t("secEach",S.sec));else $("stV").textContent=t("wpm",S.wpm);}
+function stepUi(){if(CARD())$("stV").textContent=R.playing?t("left",Math.max(0,Math.ceil(dur(R.idx)-R.t))):(S.autoTime?t("secPer8",S.sec):t("secEach",S.sec));else $("stV").textContent=t("wpm",S.wpm);}
 $("stM").addEventListener("click",()=>{if(CARD())S.sec=Math.max(3,S.sec-1);else S.wpm=Math.max(40,S.wpm-5);save();stepUi();});
 $("stP").addEventListener("click",()=>{if(CARD())S.sec=Math.min(40,S.sec+1);else S.wpm=Math.min(260,S.wpm+5);save();stepUi();});
 function showNow(){if(CARD())showSent();else renderScroll();}
@@ -806,13 +829,46 @@ document.addEventListener("keydown",e=>{if(cur!=="read"||sf.on||$("lock"))return
   else if(e.key==="r"||e.key==="R"){if(CARD())again();}else if(e.key==="Escape")closeSheet();});
 document.addEventListener("visibilitychange",()=>{if(document.hidden){if(R.playing&&!sf.rec)pause();savePos();}else if(R.playing)wakeOn();});
 
+/* ---------- المخرج: يحلل السكريبت كله ويحط إرشاد إلقاء لكل مقطع (ما يغيّر النص) ---------- */
+let ANA=null,anaBusy=false;
+const TN={excite:"🔥",serious:"🎯",calm:"🌙",fun:"😄",mystery:"🕵️",sad:"💧",suspense:"⚡",question:"❓"};
+const hsh=x=>{let h=0;for(let i=0;i<x.length;i++)h=(h*31+x.charCodeAt(i))|0;return String(h);};
+const anaKey=()=>hsh(SENT.map(x=>x.t).join("|"));
+function localItem(x){const it={tone:"",pace:"normal",stress:"",note:""};const tx=x.t.trim();
+  if(/[؟?]$/.test(tx))it.tone="question";else if(/!$/.test(tx))it.tone="excite";
+  const num=tx.split(/\s+/).find(w=>/[0-9٠-٩]/.test(w)||/^(مليون|مليار|ألف|الف|آلاف|ملايين|مليارات)/.test(w));if(num){it.stress=num.replace(/[.,،!؟?]+$/,"");it.note=S.lang==="en"?"stress the number":"شدّ على الرقم";}
+  return it;}
+function loadAna(){const c=doc&&N.get("ana_"+doc.id,null);ANA=c&&c.map?{src:c.src,by:c.by,at:c.at,overall:c.overall,items:SENT.map(x=>c.map[x.t]||localItem(x))}:{src:"local",items:SENT.map(localItem)};}
+async function analyze(force){if(anaBusy||!doc)return;const id=Object.keys(PROV).filter(isDirect).includes(aiPick())?aiPick():Object.keys(PROV).filter(isDirect)[0];if(!id)return false;
+  if(!force&&ANA&&ANA.src==="ai")return true;anaBusy=true;toast(t("dirBusy",PROV[id].name));const docId=doc.id,key=anaKey(),list=SENT.slice(),items=list.map(localItem);let overall=null;
+  try{for(let o=0;o<list.length;o+=60){const part=list.slice(o,o+60);
+      const prompt="انت مخرج ومدرّب إلقاء لمقدّم يوتيوب عراقي، يقرا من الملقّن مقطع مقطع. اقرا السكريبت كله وافهم القصة والرتم، وبعدين لكل مقطع حدد شلون ينقال. لا تغيّر ولا كلمة من النص.\n"+
+        "لكل مقطع رجّع: i = رقمه، tone = وحدة من: excite, serious, calm, fun, mystery, sad, suspense, question، pace = وحدة من: slow, normal, fast، stress = كلمة وحدة من نفس المقطع حرفياً ينضغط عليها (أو فاضي)، note = توجيه قصير جداً باللهجة العراقية (كلمتين لأربع، مثل: ابتسم، وگفة قبلها، بصوت واطي، ارفع صوتك) أو فاضي.\n"+
+        "خلي الإرشادات متنوعة وحقيقية حسب معنى القصة، مو كلها نفس الشي، والمقاطع العادية خليها normal بدون note.\n"+(o===0?"وكمان overall = {tone, pace, summary: جملة وحدة عن طريقة إلقاء السكريبت كله}.\n":"")+
+        "رجّع JSON بس: {\"items\":[{\"i\":0,\"tone\":\"\",\"pace\":\"\",\"stress\":\"\",\"note\":\"\"}]"+(o===0?",\"overall\":{\"tone\":\"\",\"pace\":\"\",\"summary\":\"\"}":"")+"}\n\nالمقاطع:\n"+part.map((x,k)=>(o+k)+": "+x.t).join("\n");
+      const r=await aiJson(prompt,id);if(r&&r.overall)overall=r.overall;
+      (r&&Array.isArray(r.items)?r.items:[]).forEach(x=>{const i=+x.i;if(!(i>=o&&i<o+part.length))return;const it=items[i];
+        if(TN[x.tone])it.tone=x.tone;if(/^(slow|normal|fast)$/.test(x.pace))it.pace=x.pace;const st=String(x.stress||"").trim();if(st&&list[i].t.includes(st))it.stress=st;if(x.note)it.note=String(x.note).trim().slice(0,30);});}
+    const map={};list.forEach((x,k)=>map[x.t]=items[k]);N.set("ana_"+docId,{src:"ai",by:PROV[id].name,at:Date.now(),overall,map});if(doc&&doc.id===docId){loadAna();if(CARD())showSent();}
+    toast(t("dirDone",AR(list.length)));anaBusy=false;return true;
+  }catch(e){toast(AIMSG(e&&e.code));anaBusy=false;return false;}}
+function dirSheet(){openSheet(t("dirT"),B=>{B.append(el("p","note",t("dirS")));
+  if(ANA&&ANA.overall){const c=el("div","card");c.append(el("b",null,(TN[ANA.overall.tone]||"")+" "+(t("tn_"+ANA.overall.tone)||"")+" · "+t("overall")+": "+(ANA.overall.pace==="fast"?t("pc_fast"):ANA.overall.pace==="slow"?t("pc_slow"):t("normal"))));if(ANA.overall.summary)c.append(el("p","note",ANA.overall.summary));B.append(c);}
+  const g=grp(B,"");swRow(g,t("coach"),t("coachS"),S.coach,v=>{S.coach=v;save();showSent();});
+  const has=Object.keys(PROV).some(isDirect);
+  if(has){const b=el("button","btn p w",ANA&&ANA.src==="ai"?t("dirAgain"):t("dirAi"));b.style.marginTop="12px";b.addEventListener("click",async()=>{b.disabled=true;await analyze(true);b.disabled=false;if(shOpen)dirSheet();});B.append(b);
+    if(ANA&&ANA.src==="ai")B.append(el("p","note",t("dirFrom",ANA.by||"")));}
+  else{B.append(el("p","note",t("dirLocal")));const b=el("button","btn p w",t("gemFree"));b.style.marginTop="10px";b.addEventListener("click",()=>connectSheet("gemini",()=>{analyze(true);}));B.append(b);}});}
+
 /* ---------- جملة جملة ---------- */
 function showSent(){
   const s=SENT[R.idx];if(!s)return;const x=$("sTxt");x.innerHTML="";x.dir="auto";
-  if(S.hardMark){const {tok,hit}=hardSpans(s.t);const mk=new Set();hit.forEach(h=>{for(let k=0;k<h.n;k++)mk.add(h.i+k);});tok.forEach((w,i)=>{if(i)x.append(" ");if(mk.has(i))x.append(el("span","hw",w));else x.append(w);});}
-  else x.textContent=s.t;
+  const A=S.coach&&ANA&&ANA.items[R.idx];const stw=A&&A.stress?norm(A.stress):"";
+  {const {tok,hit}=hardSpans(s.t);const mk=new Set();if(S.hardMark)hit.forEach(h=>{for(let k=0;k<h.n;k++)mk.add(h.i+k);});let stDone=false;
+    tok.forEach((w,i)=>{if(i)x.append(" ");const isSt=!stDone&&stw&&norm(w)===stw;if(isSt)stDone=true;if(isSt)x.append(el("span","st",w));else if(mk.has(i))x.append(el("span","hw",w));else x.append(w);});}
   const w=s.t.split(/\s+/);$("memoCue").textContent=w.slice(0,2).join(" ")+(w.length>2?" …":"");
-  $("sCue").textContent=s.cue?"[ "+s.cue+" ]":"";$("sCue").hidden=!s.cue;
+  {const bits=[];if(A){if(A.tone)bits.push(TN[A.tone]+" "+t("tn_"+A.tone));if(A.pace==="fast")bits.push("↑ "+t("pc_fast"));if(A.pace==="slow")bits.push("↓ "+t("pc_slow"));if(A.note)bits.push(A.note);}
+   if(s.cue)bits.push("[ "+s.cue+" ]");$("sCue").textContent=bits.join("  ·  ");$("sCue").hidden=!bits.length;}
   const P=N.get("pron_"+doc.id,{});const hints=[];s.t.split(/\s+/).forEach(y=>{const k=norm(y);if(P[k])hints.push(y+" = "+P[k]);});$("sHint").textContent=hints.join("   ");$("sHint").hidden=!hints.length;
   const nx=SENT[R.idx+1];$("sNext").textContent=nx&&S.next?nx.t:"";$("sNext").hidden=!(nx&&S.next);
   $("rCount").textContent=AR(R.idx+1)+"/"+AR(SENT.length);$("read").classList.remove("memo","blank");tick();fit();
@@ -903,14 +959,15 @@ function settingsSheet(){openSheet(t("settings"),B=>{
     m.addEventListener("click",()=>{if(S.mode===v)return;S.mode=v;save();if(cur==="read"&&doc){const d=docs.find(x=>x.id===doc.id)||doc;pause();closeSheet();openRead(d);}if(cur==="lib")renderLib();settingsSheet();});ms.append(m);});g.append(ms);
   if(S.mode!=="scroll"){
     g=grp(B,t("card"));
-    stepRow(g,t("secRow"),null,()=>S.sec,d=>{S.sec=Math.max(3,Math.min(40,S.sec+d));save();stepUi();},v=>v+" "+t("secUnit"));
-    swRow(g,t("longMore"),t("longMoreS"),S.longMore,v=>{S.longMore=v;save();stepUi();});
+    stepRow(g,S.autoTime?t("secRow8"):t("secRow"),null,()=>S.sec,d=>{S.sec=Math.max(3,Math.min(40,S.sec+d));save();stepUi();},v=>v+" "+t("secUnit"));
+    swRow(g,t("autoTime"),t("autoTimeS"),S.autoTime,v=>{S.autoTime=v;save();stepUi();settingsSheet();});
+    swRow(g,t("coach"),t("coachS"),S.coach,v=>{S.coach=v;save();if(cur==="read")showSent();});
     swRow(g,t("memo"),t("memoS"),S.memo,v=>{S.memo=v;save();});
     swRow(g,t("showNext"),null,S.next,v=>{S.next=v;upd();});
     swRow(g,t("hardMark"),t("hardMarkS"),S.hardMark,v=>{S.hardMark=v;upd();});
     swRow(g,t("gap"),t("gapS"),S.gap,v=>{S.gap=v;save();});
     swRow(g,t("secPause"),t("secPauseS"),S.secPause,v=>{S.secPause=v;save();});
-    const g2=grp(B,t("slen"));chips(g2,[["short","short"],["mid","mid"],["long","long"]].map(([v,n])=>({t:t(n),on:S.slen===v,fn:()=>{S.slen=v;save();if(cur==="read"){SENT=parse(doc.text);R.idx=Math.min(R.idx,SENT.length-1);showSent();}settingsSheet();}})));
+    const g2=grp(B,t("slen"));chips(g2,[["short","short"],["mid","mid"],["long","long"]].map(([v,n])=>({t:t(n),on:S.slen===v,fn:()=>{S.slen=v;save();if(cur==="read"){SENT=parse(doc.text);loadAna();R.idx=Math.min(R.idx,SENT.length-1);showSent();}settingsSheet();}})));
     const g3=grp(B,t("screen"));chips(g3,[["mid","posMid"],["top","posTop"]].map(([v,n])=>({t:t(n),on:S.pos===v,fn:()=>{S.pos=v;upd();settingsSheet();}})));
   }else{
     g=grp(B,t("scroll"));
@@ -1026,8 +1083,8 @@ function writeSheet(){openSheet(t("writeTitle"),B=>{
 /* ---------- سهّل الجملة ---------- */
 let undoText=null,pendingEasy=null;
 function replaceSent(i,nt){nt=String(nt||"").replace(/\s+/g," ").trim();const s=SENT[i];if(!s||!nt||nt===s.t)return false;
-  const lines=cleanText(doc.text).split("\n");const L=lines[s.li];if(L==null||!L.includes(s.t)){toast(t("notFound"));return false;}
-  undoText={text:doc.text,idx:i};lines[s.li]=L.replace(s.t,nt);doc.text=lines.join("\n");saveDoc(doc);SENT=parse(doc.text);R.idx=Math.min(i,SENT.length-1);R.t=0;showSent();savePos();return true;}
+  const lines=cleanText(doc.text).split("\n");const ps=s.parts||[{li:s.li,t:s.t}];if(ps.some(x=>lines[x.li]==null||!lines[x.li].includes(x.t))){toast(t("notFound"));return false;}
+  undoText={text:doc.text,idx:i};ps.forEach((x,k)=>{lines[x.li]=lines[x.li].replace(x.t,k===0?nt:"").replace(/\s{2,}/g," ").trim();});doc.text=lines.filter((l,k)=>l||!ps.some(x=>x.li===k)).join("\n");saveDoc(doc);SENT=parse(doc.text);loadAna();R.idx=Math.min(i,SENT.length-1);R.t=0;showSent();savePos();return true;}
 function easySheet(){const i=R.idx,s=SENT[i];if(!s)return;openSheet(t("easyTitle"),B=>{
   const c=el("div","card");const bg=el("div","big",s.t);bg.dir="auto";c.append(bg);B.append(c);
   const {tok,hit}=hardSpans(s.t);
@@ -1054,7 +1111,7 @@ function easySheet(){const i=R.idx,s=SENT[i];if(!s)return;openSheet(t("easyTitle
     if(pendingEasy){const r=pendingEasy;pendingEasy=null;show(r);setTimeout(()=>out.scrollIntoView({block:"start",behavior:"smooth"}),300);}}
   const g2=grp(B,t("selfWrite"));const ta=el("textarea","field");ta.value=s.t;ta.dir="auto";g2.append(ta);
   const sv=el("button","btn w",t("saveSent"));sv.style.marginTop="8px";sv.addEventListener("click",()=>{if(replaceSent(i,ta.value)){toast(t("saved"));closeSheet();}});g2.append(sv);
-  if(undoText){const u=el("button","btn w",t("undo"));u.style.marginTop="8px";u.addEventListener("click",()=>{doc.text=undoText.text;saveDoc(doc);SENT=parse(doc.text);R.idx=Math.min(undoText.idx,SENT.length-1);undoText=null;showSent();toast(t("undone"));closeSheet();});g2.append(u);}
+  if(undoText){const u=el("button","btn w",t("undo"));u.style.marginTop="8px";u.addEventListener("click",()=>{doc.text=undoText.text;saveDoc(doc);SENT=parse(doc.text);loadAna();R.idx=Math.min(undoText.idx,SENT.length-1);undoText=null;showSent();toast(t("undone"));closeSheet();});g2.append(u);}
   B.append(el("p","note",t("driveUnchanged")));});}
 
 /* ---------- صوّر وانت تقرا ---------- */
