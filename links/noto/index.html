@@ -12,7 +12,7 @@
 <link rel="icon" href="icon-192.png">
 <title>Noto</title>
 <style>body{margin:0;background:#121316}</style>
-<script>if("serviceWorker" in navigator&&location.protocol==="https:"){addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=1795553684",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));let re=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(re||window.__notoReading)return;re=true;location.reload();});}</script>
+<script>if("serviceWorker" in navigator&&location.protocol==="https:"){addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=1795643927",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));let re=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(re||window.__notoReading)return;re=true;location.reload();});}</script>
 </head>
 <body>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -107,11 +107,23 @@ a.btn{color:var(--fg)}
 .rStage{flex:1;min-height:0;position:relative;overflow:hidden}
 #cardV{position:absolute;inset:0;padding:4px max(4%,var(--sal)) 4px max(4%,var(--sar));display:flex;flex-direction:column;align-items:center;gap:8px}
 #cardV.mir,#scrollV.mir{transform:scaleX(-1)}
-.sCue{font-family:var(--ui);font-size:15px;font-weight:700;color:var(--amber)}
+.sCue{font-family:var(--ui);font-size:clamp(15px,2.2vh,22px);font-weight:700;color:var(--amber);text-align:center;line-height:1.5}
 #sBox{flex:1 1 auto;min-height:0;width:100%;display:grid;place-items:center;overflow:hidden}
 #sBox>*{grid-area:1/1}
 #read.top #sBox{place-items:start center;padding-top:2vh}
 #sTxt{margin:0;text-align:center;text-wrap:balance;word-break:keep-all;overflow-wrap:normal;transition:opacity .35s}
+#sTxt .br{opacity:.35;font-weight:300;font-size:.7em;margin:0 .12em;color:var(--amber)}
+#sTxt.pg .w{opacity:.42;transition:opacity .22s}
+#sTxt.pg .w.on{opacity:1}
+.rStage{box-shadow:inset 0 0 min(18vw,160px) -10px var(--mood,transparent);transition:box-shadow .8s}
+#mood{position:absolute;inset:0;z-index:6;display:grid;place-items:center;text-align:center;background:var(--tbg);font-family:var(--ui);padding:0 8%;animation:moodIn .5s ease}
+#mood b{display:block;font-size:clamp(54px,12vh,110px);line-height:1.1}
+#mood strong{display:block;font-size:clamp(28px,5vh,46px);margin:6px 0 10px}
+#mood span{display:block;font-size:clamp(18px,3vh,28px);opacity:.8;line-height:1.6;max-width:22em;margin:0 auto}
+@keyframes moodIn{from{opacity:0;transform:scale(.96)}}
+.breathC{width:160px;height:160px;border-radius:50%;margin:18px auto 8px;background:radial-gradient(circle,#4d82ff 0%,#2160ff 55%,rgba(33,96,255,.15) 70%);transform:scale(.6);transition:transform 4s ease-in-out}
+.breathC.in{transform:scale(1)}
+.st{color:#8fb4ff;text-decoration:underline;text-decoration-color:#4d82ff;text-decoration-thickness:.07em;text-underline-offset:.22em}
 .hw{text-decoration:underline;text-decoration-color:var(--amber);text-decoration-thickness:.06em;text-underline-offset:.2em}
 #memoCue{opacity:0;transition:opacity .35s;pointer-events:none;text-align:center}
 #read.memo #sTxt{opacity:0}
@@ -341,7 +353,7 @@ window.__notoSplash=play;window.__notoSplashList=V;play();})();</script>
     </div>
     <div id="scrollV" hidden><div id="scrollTxt"></div></div>
     <div id="gBox" hidden></div>
-    <div id="cdown" hidden></div>
+    <div id="cdown" hidden></div><div id="mood" hidden></div>
   </div>
   <div class="rPanel" id="rPanel">
     <div class="grab"></div>
@@ -386,7 +398,7 @@ const I={x:'<path d="M6 6l12 12M18 6 6 18"/>',chevR:'<path d="m9 6 6 6-6 6"/>',c
 const PLAY='<svg width="30" height="30" viewBox="0 0 24 24" fill="#fff"><path d="M8 4.8v14.4L19.5 12z"/></svg>';
 const PAUSE='<svg width="28" height="28" viewBox="0 0 24 24" fill="#fff"><rect x="6" y="4.5" width="4.2" height="15" rx="1.2"/><rect x="13.8" y="4.5" width="4.2" height="15" rx="1.2"/></svg>';
 
-const DEF={lang:"ar",mode:"card",font:"vazir",weight:1,theme:"white",fgC:"",bgC:"",scale:1,measure:"mid",lead:"auto",sec:8,longMore:false,cd:true,gap:false,memo:false,next:true,
+const DEF={lang:"ar",mode:"card",font:"vazir",weight:1,theme:"white",fgC:"",bgC:"",scale:1,measure:"mid",lead:"auto",sec:10,longMore:false,autoTime:true,coach:true,paceGuide:true,breath:true,moodCard:true,moodTint:true,cd:true,gap:false,memo:false,next:true,
   mirror:false,pos:"mid",slen:"mid",hardMark:true,selfSize:28,wpm:120,guide:.36,box:true,ai:"",cdN:3,hideUi:false,showLeft:true,secPause:false,endPause:false};
 const S=Object.assign({},DEF,N.get("set",{}));
 const save=()=>N.set("set",S);
@@ -456,6 +468,19 @@ const T={ar:{
  step1_deepseek:"تنفتح صفحة DeepSeek. سجّل دخول، واضغط «Create new API key»، وسمّيه Noto، وبعدين «Copy». (لازم تشحن رصيد صغير من Top up، رخيص كلش.)",
  splashT:"حركة البداية",splashS:"اضغط أي وحدة حتى تشوفها، وتبقى هي الي تطلع من تفتح Noto.",spRandom:"تتبدّل كل مرة",
  sp_draw:"الشريط ينرسم",sp_write:"الكتابة",sp_wave:"موجة الصوت",sp_lines:"سطور الملقّن",sp_lens:"العدسة",sp_count:"العد التنازلي",sp_fly:"الشريط يطير",sp_ink:"الحبر",
+ secPer8:"{0} ث / 8 كلمات",secRow8:"ثواني لكل 8 كلمات",autoTime:"الوقت حسب عدد الكلمات (تلقائي)",autoTimeS:"المقطع القصير يمشي أسرع والطويل ياخذ وقت أكثر، فالرتم ما ينكسر",
+ coach:"إرشادات الإلقاء (المخرج)",coachS:"فوگ كل مقطع: شلون تگوله، وكلمة تشد عليها",dir:"المخرج",dirT:"مخرج الإلقاء",
+ dirS:"Noto يقرا السكريبت كله قبل ما تبدي، ويحط فوگ كل مقطع شلون تگوله: متحمس، جدي، هادي… وأي كلمة تشد عليها، ويسرّع أو يبطّئ الوقت حسب الرتم. ما يغيّر ولا كلمة من سكريبتك.",
+ dirAi:"حلّل السكريبت بالذكاء",dirAgain:"حلّل من جديد",dirBusy:"🎭 {0} دا يحلل السكريبت…",dirDone:"✓ حللت السكريبت كله ({0} مقطع)",dirLocal:"هسه التحليل بسيط (من علامات الترقيم والأرقام). اربط Gemini المجاني حتى يصير تحليل كامل يفهم القصة.",
+ dirFrom:"آخر تحليل: {0}",overall:"الرتم العام",
+ tn_excite:"حماس",tn_serious:"جدّي",tn_calm:"هادي",tn_fun:"مرح",tn_mystery:"غموض",tn_sad:"حزين",tn_suspense:"تشويق",tn_question:"سؤال",pc_fast:"أسرع",pc_slow:"على مهلك",
+ paceGuide:"مرشد الرتم",paceGuideS:"الكلمات تضوي وحدة وحدة بسرعة الكلام الطبيعية، حتى ما تسبقها وتتلعثم",breathM:"علامات النفَس",breathMS:"خط خفيف عند كل فارزة: هنا خذ نفَس",
+ moodCard:"بطاقة الشعور قبل كل قسم",moodCardS:"ثانيتين ونص تگلك شنو الإحساس، حتى تدخل بالمود",moodTint:"لون الشعور",moodTintS:"إضاءة خفيفة على أطراف الشاشة حسب إحساس المقطع",
+ mt_excite:"ارفع طاقتك وابتسم، كأنك تبشّر صاحبك بخبر حلو",mt_serious:"صوت ثابت وهادي، وكل كلمة بوقتها",mt_calm:"تنفّس، واحچي كأنك ويّا صاحبك بالگعدة",mt_fun:"ابتسم وانت تحچي، الابتسامة تنسمع بالصوت",
+ mt_mystery:"وطّي صوتك شوية، كأنك تحچي سر",mt_sad:"على مهلك، خلي الكلمة تنزل وتأثر",mt_suspense:"وگفة صغيرة قبل الكلمة المهمة، خلي المشاهد ينتظر",mt_question:"اسأل المشاهد كأنه گاعد گدامك",
+ warmT:"تمرين تسخين قبل التصوير",warmS:"دقيقة وحدة: ثلاث أنفاس هادية حتى يرتاح صوتك، وبعدين تتمرن على أصعب المقاطع على مهلك.",inhale:"شهيق من الأنف…",hold:"اثبت…",exhale:"زفير من الحلگ، على مهلك…",
+ warmGo:"زين! هسه أصعب 3 مقاطع 👇",warmHard:"اگراهن بصوت عالي، على مهلك",goThere:"روح إلها",warmTip:"گول كل مقطع مرتين: مرة بطيئة كلش، ومرة بالسرعة الطبيعية. البطء أول مرة يعلّم لسانك الطريق.",
+ aiSlow:"الذكاء طوّل كلش بالجواب. جرّب مرة ثانية.",dirPart:"✓ حللت {0} من {1} أجزاء. اضغط «حلّل من جديد» حتى يكمل الباقي.",
  aBack5:"رجوع 5 ثواني",aFwd5:"قدّام 5 ثواني",aEnd:"المقطع الجاي",aPrevPara:"المقطع الي قبله"},
 en:{
  lockMsg:"Enter your code to open Noto",lockWait:"One moment…",lockBad:"Wrong code, try again",lockMany:"Too many tries. Wait 30 seconds",lockNo:"This device can't use the lock",del:"Delete",
@@ -521,6 +546,19 @@ en:{
  step1_deepseek:"The DeepSeek page opens. Sign in, tap “Create new API key”, name it Noto, then Copy. (Top up a small amount; it's very cheap.)",
  splashT:"Opening animation",splashS:"Tap one to preview it. It becomes the one that plays when Noto opens.",spRandom:"Different each time",
  sp_draw:"Ribbon draw",sp_write:"Handwriting",sp_wave:"Voice wave",sp_lines:"Prompter lines",sp_lens:"Lens",sp_count:"Countdown",sp_fly:"Flying ribbon",sp_ink:"Ink",
+ secPer8:"{0}s / 8 words",secRow8:"Seconds per 8 words",autoTime:"Time by word count (automatic)",autoTimeS:"Short parts move faster and long ones get more time, so your rhythm stays",
+ coach:"Delivery coaching (Director)",coachS:"Above each part: how to say it, and a word to stress",dir:"Director",dirT:"Delivery director",
+ dirS:"Noto reads the whole script before you start and puts a cue above each part: excited, serious, calm… which word to stress, and speeds up or slows down the timing. It never changes a word.",
+ dirAi:"Analyze with AI",dirAgain:"Analyze again",dirBusy:"🎭 {0} is analyzing the script…",dirDone:"✓ Analyzed the whole script ({0} parts)",dirLocal:"Right now the analysis is basic (punctuation and numbers). Connect free Gemini for a full analysis that understands the story.",
+ dirFrom:"Last analysis: {0}",overall:"Overall pace",
+ tn_excite:"Excited",tn_serious:"Serious",tn_calm:"Calm",tn_fun:"Fun",tn_mystery:"Mystery",tn_sad:"Sad",tn_suspense:"Suspense",tn_question:"Question",pc_fast:"Faster",pc_slow:"Slow down",
+ paceGuide:"Pace guide",paceGuideS:"Words light up one by one at natural speaking speed, so you don't rush and stumble",breathM:"Breath marks",breathMS:"A light bar at each comma: breathe here",
+ moodCard:"Feeling card before each section",moodCardS:"2.5 seconds that tell you the feeling, so you get into the mood",moodTint:"Feeling color",moodTintS:"A soft glow at the screen edges for the part's feeling",
+ mt_excite:"Lift your energy and smile, like sharing good news with a friend",mt_serious:"Steady, calm voice; every word in its time",mt_calm:"Breathe, and talk like you're with a friend",mt_fun:"Smile while you talk; people can hear a smile",
+ mt_mystery:"Lower your voice a little, like telling a secret",mt_sad:"Slow down and let the words land",mt_suspense:"A small pause before the key word; make them wait",mt_question:"Ask the viewer like they're sitting in front of you",
+ warmT:"Warm-up before recording",warmS:"One minute: three calm breaths to relax your voice, then practice the hardest parts slowly.",inhale:"Breathe in through your nose…",hold:"Hold…",exhale:"Breathe out slowly…",
+ warmGo:"Great! Now the 3 hardest parts 👇",warmHard:"Read them aloud, slowly",goThere:"Go there",warmTip:"Say each part twice: once very slowly, once at normal speed. Going slow first teaches your tongue the way.",
+ aiSlow:"The AI took too long. Try again.",dirPart:"✓ Analyzed {0} of {1} parts. Tap Analyze again to finish the rest.",
  aBack5:"Back 5 seconds",aFwd5:"Forward 5 seconds",aEnd:"Next section",aPrevPara:"Previous section"}};
 const t=(k,...a)=>{let s=(T[S.lang]||T.ar)[k];if(s==null)s=T.ar[k]||k;a.forEach((v,i)=>{s=s.replace("{"+i+"}",v);});return s;};
 let toastT=0;
@@ -604,7 +642,7 @@ function splitLong(p,M){
   if(best<0)best=mid;
   return [...splitLong(w.slice(0,best).join(" "),M),...splitLong(w.slice(best).join(" "),M)];
 }
-function parse(text){
+function parse(text,noMerge){
   const lines=cleanText(text).split("\n"),out=[];let sec="",cue="";const M=SLEN[S.slen]||12;
   lines.forEach((line,li)=>{
     if(!line)return;const hm=line.match(HEAD_RE);
@@ -613,13 +651,22 @@ function parse(text){
     let body=line,ls=sec;if(hm&&hm[2]){ls=hm[1];body=hm[2];}
     body.split(/(?<=[.!؟?…])\s+|\s*\/\/\s*/).map(x=>x.trim()).filter(Boolean).forEach(p=>{
       p=p.replace(/\[([^\]]*)\]/g,(m,c)=>{cue=c.trim();return "";}).replace(/\s+/g," ").trim();if(!p)return;
-      splitLong(p,M).forEach(x=>{out.push({t:x,li,sec:ls,cue,w:wc(x)});cue="";});});
+      splitLong(p,M).forEach(x=>{out.push({t:x,li,sec:ls,cue,w:wc(x),parts:[{li,t:x}]});cue="";});});
   });
-  return out;
+  if(noMerge||S.mode==="scroll")return out;
+  /* تجميع: المقطع القصير (كلمة أو كلمتين) ينضم لجاره، حتى ما تنتظر على كلمتين */
+  const MIN={short:4,mid:6,long:8}[S.slen]||6,MAX={short:9,mid:12,long:16}[S.slen]||12,res=[];
+  out.forEach(c=>{const l=res[res.length-1];
+    if(l&&l.sec===c.sec&&!c.cue&&(l.w<MIN||c.w<MIN)&&l.w+c.w<=MAX){l.t+=" "+c.t;l.w+=c.w;l.parts.push(c.parts[0]);}
+    else res.push(Object.assign({},c,{parts:c.parts.slice()}));});
+  return res;
 }
 let SENT=[];
-const R={min:0,idx:0,t:0,playing:false,peek:false,clock:0,marks:[],lastMark:-1e9,counting:false,cdT:0,extra:{},pos:0,max:1,pxw:1,lineH:40,vel:0,drag:false,anim:null};
-function dur(i,arr){const s=(arr||SENT)[i];if(!s)return S.sec;let d=S.sec;if(S.longMore)d=Math.round(S.sec*Math.min(2,Math.max(.7,s.w/7)));return Math.max(3,d)+((!arr&&R.extra[i])||0);}
+const R={moodT:0,pk:-1,min:0,idx:0,t:0,playing:false,peek:false,clock:0,marks:[],lastMark:-1e9,counting:false,cdT:0,extra:{},pos:0,max:1,pxw:1,lineH:40,vel:0,drag:false,anim:null};
+function dur(i,arr){const s=(arr||SENT)[i];if(!s)return S.sec;let d=S.sec;
+  if(S.autoTime){d=Math.max(2.5,S.sec*s.w/8);if(/[.!؟?…]$/.test(s.t))d+=.4;}
+  if(!arr&&ANA&&ANA.items[i]){const pc=ANA.items[i].pace;d*=pc==="fast"?.85:pc==="slow"?1.2:1;}
+  return Math.max(2.5,Math.round(d*10)/10)+((!arr&&R.extra[i])||0);}
 function estimate(text){const s=parse(text);if(S.mode==="scroll")return wc(s.map(x=>x.t).join(" "))/S.wpm*60;let x=0;for(let i=0;i<s.length;i++)x+=dur(i,s);return x;}
 
 /* ---------- سكريبتاتك ---------- */
@@ -730,12 +777,13 @@ $("edGo").addEventListener("click",()=>{edSave();if(!wc(doc.text))return;openRea
 let raf=0,last=0,calmT=0,wake=null;
 const CARD=()=>S.mode!=="scroll";
 function openRead(d){
-  doc=Object.assign({},d);SENT=parse(doc.text);if(!SENT.length){openEdit(d);return;}
+  doc=Object.assign({},d);SENT=parse(doc.text);if(!SENT.length){openEdit(d);return;}loadAna();
   Object.assign(R,{t:0,playing:false,peek:false,clock:0,marks:[],lastMark:-1e9,extra:{},vel:0,anim:null,counting:false});$("rTime").textContent="00:00";
   const p=N.get("pos_"+doc.id,0);R.idx=Math.max(0,Math.min(SENT.length-1,p));if(R.idx>=SENT.length-1)R.idx=0;
   show("read");$("cardV").hidden=!CARD();$("scrollV").hidden=CARD();$("gBox").hidden=CARD()||!S.box;buildPanel();applyLook();
   if(!CARD()){const k=N.get("spos_"+doc.id,0);R.pos=fromFrac(k>=.99?0:k);renderScroll();}
   setPlayUi();cancelAnimationFrame(raf);last=0;raf=requestAnimationFrame(loop);
+  if(CARD()&&S.coach&&ANA.src!=="ai"&&Object.keys(PROV).some(isDirect))setTimeout(()=>{if(cur==="read")analyze(false);},600);
 }
 function applyLook(){const f=font(),th=theme(),rd=$("read");rd.style.setProperty("--tbg",th.bg);rd.style.setProperty("--tfg",th.fg);
   const fam='"'+f.css+'","Vazirmatn",system-ui,sans-serif',w=f.w[S.weight]||800;
@@ -751,20 +799,20 @@ function buildPanel(){
   else{setB("pFirst",IC(I.first,22),t("aPrevPara"));setB("pBack",IC(I.back,24)+'<small>5</small>',t("aBack5"));setB("pFwd",IC(I.fwd,24)+'<small>5</small>',t("aFwd5"));setB("pLast",IC(I.last,22),t("aEnd"));}
   const C=$("pChips");C.innerHTML="";const ch=(ic,x,fn)=>{const b=el("button","pChip");b.innerHTML=ic;b.append(x);b.addEventListener("click",fn);C.append(b);};
   ch(IC(I.aa,18),t("look"),()=>lookSheet());ch(IC('<path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>',18),t("list"),()=>listSheet());
-  if(card){ch(IC(I.spark,18),t("easy"),()=>{pause();easySheet();});ch(IC(I.ear,18),t("listen"),()=>{pause();say(SENT[R.idx].t);});}
+  if(card){ch("🎭 ",t("dir"),()=>dirSheet());ch(IC(I.spark,18),t("easy"),()=>{pause();easySheet();});ch(IC(I.ear,18),t("listen"),()=>{pause();say(SENT[R.idx].t);});}
   $("rClose").innerHTML=IC(I.x);$("rCam").innerHTML=IC(I.cam);$("rSet").innerHTML=IC(I.gear);
   $("stM").setAttribute("aria-label",t("aLess"));$("stP").setAttribute("aria-label",t("aMoreV"));stepUi();$("rCount").textContent="";}
-function stepUi(){if(CARD())$("stV").textContent=R.playing?t("left",Math.max(0,Math.ceil(dur(R.idx)-R.t))):(S.longMore?t("secAvg",S.sec):t("secEach",S.sec));else $("stV").textContent=t("wpm",S.wpm);}
+function stepUi(){if(CARD())$("stV").textContent=R.playing?t("left",Math.max(0,Math.ceil(dur(R.idx)-R.t))):(S.autoTime?t("secPer8",S.sec):t("secEach",S.sec));else $("stV").textContent=t("wpm",S.wpm);}
 $("stM").addEventListener("click",()=>{if(CARD())S.sec=Math.max(3,S.sec-1);else S.wpm=Math.max(40,S.wpm-5);save();stepUi();});
 $("stP").addEventListener("click",()=>{if(CARD())S.sec=Math.min(40,S.sec+1);else S.wpm=Math.min(260,S.wpm+5);save();stepUi();});
 function showNow(){if(CARD())showSent();else renderScroll();}
 function setPlayUi(){$("pPlay").innerHTML=R.playing||R.counting?PAUSE:PLAY;$("pPlay").setAttribute("aria-label",t(R.playing?"aPause":"aPlay"));$("rClock").classList.toggle("rec",R.playing);stepUi();}
 async function wakeOn(){try{if(navigator.wakeLock&&!wake){wake=await navigator.wakeLock.request("screen");wake.addEventListener("release",()=>{wake=null;});}}catch(e){}}
 function play(){if(R.playing||R.counting)return;if(!CARD()&&R.pos>=R.max-1)R.pos=R.min;
-  const goP=()=>{R.counting=false;$("cdown").hidden=true;R.playing=true;R.vel=0;R.hold=0;syncStops();setPlayUi();calmSoon();wakeOn();};
+  const goP=()=>{const first=!R.clock;R.counting=false;$("cdown").hidden=true;R.playing=true;R.vel=0;R.hold=0;syncStops();setPlayUi();calmSoon();wakeOn();if(CARD()&&first&&S.moodCard&&!sf.on)showMood(R.idx);};
   if(S.cd&&S.cdN&&!R.clock&&!sf.on){R.counting=true;let n=S.cdN;const c=$("cdown");c.hidden=false;c.textContent=AR(n);setPlayUi();clearInterval(R.cdT);R.cdT=setInterval(()=>{n--;if(n<=0){clearInterval(R.cdT);goP();}else c.textContent=AR(n);},850);}
   else goP();}
-function pause(){if(R.counting){clearInterval(R.cdT);R.counting=false;$("cdown").hidden=true;}R.playing=false;setPlayUi();wakeUi();savePos();}
+function pause(){if(R.moodT){R.moodT=0;$("mood").hidden=true;}if(R.counting){clearInterval(R.cdT);R.counting=false;$("cdown").hidden=true;}R.playing=false;setPlayUi();wakeUi();savePos();}
 function toggle(){if(R.playing||R.counting)pause();else play();}
 function wakeUi(){clearTimeout(calmT);$("read").classList.remove("calm","hid");if(R.playing)calmSoon();}
 function calmSoon(){clearTimeout(calmT);calmT=setTimeout(()=>{if(R.playing&&!shOpen){$("read").classList.add("calm");$("read").classList.toggle("hid",!!S.hideUi);}},2600);}
@@ -772,6 +820,7 @@ function savePos(){if(!doc||cur!=="read")return;if(CARD())N.set("pos_"+doc.id,R.
 function mark(){if(!R.clock)return;if(R.clock-R.lastMark>3)R.marks.push({at:R.clock,i:CARD()?R.idx:-1});R.lastMark=R.clock;}
 function loop(ts){raf=requestAnimationFrame(loop);const dt=last?Math.min(.1,(ts-last)/1000):0;last=ts;if(cur!=="read")return;
   if(R.playing&&!R.counting){R.clock+=dt;$("rTime").textContent=mmss(R.clock);
+    if(CARD()&&R.moodT>0){R.moodT-=dt;if(R.moodT<=0){R.moodT=0;$("mood").hidden=true;}tick();return;}
     if(CARD()){R.t+=dt;const du=dur(R.idx),gp=S.gap?.8:0;if(R.t>=du+gp){if(R.idx<SENT.length-1)go(R.idx+1,true);else{R.t=du;pause();finish();return;}}tick();}
     else{if(R.hold>0){R.hold-=dt;return;}const tv=S.wpm/60*R.pxw;R.vel+=(tv-R.vel)*Math.min(1,dt*3);R.pos+=R.vel*dt;
       while(R.stops&&R.si<R.stops.length&&R.pos>=R.stops[R.si].y){const st=R.stops[R.si++];if(st.k==="end"){R.hold=.6;R.vel=0;}else{R.pos=st.y;renderScroll();pause();toast(t("secPaused",st.name));return;}}
@@ -806,13 +855,71 @@ document.addEventListener("keydown",e=>{if(cur!=="read"||sf.on||$("lock"))return
   else if(e.key==="r"||e.key==="R"){if(CARD())again();}else if(e.key==="Escape")closeSheet();});
 document.addEventListener("visibilitychange",()=>{if(document.hidden){if(R.playing&&!sf.rec)pause();savePos();}else if(R.playing)wakeOn();});
 
+/* ---------- المخرج: يحلل السكريبت كله ويحط إرشاد إلقاء لكل مقطع (ما يغيّر النص) ---------- */
+let ANA=null,anaBusy=false;
+const MOODC={excite:"rgba(255,122,48,.55)",serious:"rgba(150,160,180,.35)",calm:"rgba(90,170,255,.35)",fun:"rgba(255,210,60,.5)",mystery:"rgba(150,80,255,.5)",sad:"rgba(70,120,255,.45)",suspense:"rgba(255,60,80,.45)",question:"rgba(0,210,200,.4)"};
+const TN={excite:"🔥",serious:"🎯",calm:"🌙",fun:"😄",mystery:"🕵️",sad:"💧",suspense:"⚡",question:"❓"};
+const hsh=x=>{let h=0;for(let i=0;i<x.length;i++)h=(h*31+x.charCodeAt(i))|0;return String(h);};
+const anaKey=()=>hsh(SENT.map(x=>x.t).join("|"));
+function localItem(x){const it={tone:"",pace:"normal",stress:"",note:""};const tx=x.t.trim();
+  if(/[؟?]$/.test(tx))it.tone="question";else if(/!$/.test(tx))it.tone="excite";
+  const num=tx.split(/\s+/).find(w=>/[0-9٠-٩]/.test(w)||/^(مليون|مليار|ألف|الف|آلاف|ملايين|مليارات)/.test(w));if(num){it.stress=num.replace(/[.,،!؟?]+$/,"");it.note=S.lang==="en"?"stress the number":"شدّ على الرقم";}
+  return it;}
+function loadAna(){const c=doc&&N.get("ana_"+doc.id,null);ANA=c&&c.map?{src:c.src,by:c.by,at:c.at,overall:c.overall,items:SENT.map(x=>c.map[x.t]||localItem(x))}:{src:"local",items:SENT.map(localItem)};}
+async function analyze(force){if(anaBusy||!doc)return;const ids=Object.keys(PROV).filter(isDirect);const id=ids.includes(aiPick())?aiPick():ids[0];if(!id)return false;
+  if(!force&&ANA&&ANA.src==="ai")return true;anaBusy=true;const docId=doc.id,list=SENT.slice(),items=list.map(localItem);let overall=null,done=0,ok=0,lastErr=null;
+  const story=list.map(x=>x.t).join(" ").slice(0,2500);const B=40,jobs=[];for(let o=0;o<list.length;o+=B)jobs.push(o);
+  const prog=()=>toast(t("dirBusy",PROV[id].name)+" "+AR(Math.min(list.length,done))+"/"+AR(list.length));prog();
+  const one=async o=>{const part=list.slice(o,o+B);
+    const prompt="انت مخرج ومدرّب إلقاء لمقدّم يوتيوب عراقي يقرا من الملقّن مقطع مقطع. هدفك: يحچي بإحساس ويشد المشاهد، وما يسرع ويتلعثم. لا تغيّر ولا كلمة من النص.\n"+
+      "فكرة القصة كلها (للفهم بس): «"+story+"»\n\n"+
+      "لكل مقطع من المقاطع تحت، رجّع مصفوفة بهذا الترتيب: [رقم المقطع, tone, pace, stress, note, pause]\n"+
+      "tone وحدة من: excite, serious, calm, fun, mystery, sad, suspense, question\npace وحدة من: slow, normal, fast\nstress = كلمة وحدة مكتوبة حرفياً من نفس المقطع ينضغط عليها، أو \"\"\n"+
+      "note = توجيه قصير جداً باللهجة العراقية (2 لـ4 كلمات: ابتسم، وگفة قبلها، بصوت واطي، ارفع صوتك، باوع للكاميرا) أو \"\"\npause = رقم الكلمة (من 1) الي بعدها يوگف نص ثانية حتى يشد المشاهد، أو 0\n"+
+      "نوّع حسب معنى القصة: الهوك والمفاجآت والأرقام أقوى، والمقاطع العادية normal بدون note.\n"+
+      "رجّع JSON بس بهذا الشكل: {\"r\":[[0,\"suspense\",\"slow\",\"كنز\",\"بصوت واطي\",3]]"+(o===0?",\"o\":{\"tone\":\"\",\"pace\":\"\",\"summary\":\"جملة وحدة عن شلون ينلقى السكريبت كله\"}":"")+"}\n\nالمقاطع:\n"+part.map((x,k)=>(o+k)+": "+x.t).join("\n");
+    let r=null;for(let tr=0;tr<2&&!r;tr++){try{r=await aiJson(prompt,id);}catch(e){lastErr=e;if(e&&(e.code==="bad"||e.code==="money"))throw e;if(e&&e.code==="limit")await new Promise(z=>setTimeout(z,4000));}}
+    if(!r){done+=part.length;prog();return;}ok++;
+    if(r.o||r.overall)overall=r.o||r.overall;
+    const rows=Array.isArray(r.r)?r.r:Array.isArray(r.items)?r.items.map(x=>[x.i,x.tone,x.pace,x.stress,x.note,x.pause||0]):[];
+    rows.forEach(x=>{if(!Array.isArray(x))return;const i=+x[0];if(!(i>=o&&i<o+part.length))return;const it=items[i];
+      if(TN[x[1]])it.tone=x[1];if(/^(slow|normal|fast)$/.test(x[2]))it.pace=x[2];const st=String(x[3]||"").trim();if(st&&list[i].t.includes(st))it.stress=st;
+      if(x[4])it.note=String(x[4]).trim().slice(0,30);const pz=parseInt(x[5],10);if(pz>0&&pz<list[i].w)it.pz=pz-1;});
+    done+=part.length;prog();};
+  try{for(let q=0;q<jobs.length;q+=3)await Promise.all(jobs.slice(q,q+3).map(one));}
+  catch(e){anaBusy=false;toast(AIMSG(e&&e.code));return false;}
+  anaBusy=false;
+  if(!ok){toast(AIMSG(lastErr&&lastErr.code));return false;}
+  const map={};list.forEach((x,k)=>map[x.t]=items[k]);N.set("ana_"+docId,{src:"ai",by:PROV[id].name,at:Date.now(),overall,map});if(doc&&doc.id===docId){loadAna();if(CARD())showSent();}
+  toast(ok===jobs.length?t("dirDone",AR(list.length)):t("dirPart",AR(ok),AR(jobs.length)));return true;}
+function hardest(){return SENT.map((x,i)=>({i,sc:hardSpans(x.t).hit.length*3+x.w})).sort((a,b)=>b.sc-a.sc).slice(0,3).sort((a,b)=>a.i-b.i);}
+function warmSheet(){pause();openSheet(t("warmT"),B=>{B.append(el("p","note",t("warmS")));const c=el("div","breathC"),lb=el("p","note");lb.style.textAlign="center";lb.style.fontSize="20px";lb.style.fontWeight="800";B.append(c,lb);
+  let n=0;const cyc=()=>{if(!c.isConnected)return;if(n>=3){lb.textContent=t("warmGo");c.classList.remove("in");show2();return;}n++;lb.textContent=t("inhale")+" ("+AR(n)+"/"+AR(3)+")";c.classList.add("in");
+    setTimeout(()=>{if(!c.isConnected)return;lb.textContent=t("hold");setTimeout(()=>{if(!c.isConnected)return;lb.textContent=t("exhale");c.classList.remove("in");setTimeout(cyc,4200);},1800);},4200);};
+  setTimeout(cyc,500);
+  const show2=()=>{const g=grp(B,t("warmHard"));hardest().forEach(h=>{const b=el("div","card");const tx=el("div","big",SENT[h.i].t);tx.dir="auto";b.append(tx);const r=el("div","chips");r.style.marginTop="8px";
+    const l=el("button","chip","🔊 "+t("listen"));l.addEventListener("click",()=>say(SENT[h.i].t));const gb=el("button","chip",t("goThere"));gb.addEventListener("click",()=>{closeSheet();go(h.i);});r.append(l,gb);b.append(r);g.append(b);});
+    g.append(el("p","note",t("warmTip")));};});}
+function dirSheet(){openSheet(t("dirT"),B=>{B.append(el("p","note",t("dirS")));{const w=el("button","btn w","🫁 "+t("warmT"));w.style.marginTop="10px";w.addEventListener("click",warmSheet);B.append(w);}
+  if(ANA&&ANA.overall){const c=el("div","card");c.append(el("b",null,(TN[ANA.overall.tone]||"")+" "+(t("tn_"+ANA.overall.tone)||"")+" · "+t("overall")+": "+(ANA.overall.pace==="fast"?t("pc_fast"):ANA.overall.pace==="slow"?t("pc_slow"):t("normal"))));if(ANA.overall.summary)c.append(el("p","note",ANA.overall.summary));B.append(c);}
+  const g=grp(B,"");swRow(g,t("coach"),t("coachS"),S.coach,v=>{S.coach=v;save();showSent();});
+  const has=Object.keys(PROV).some(isDirect);
+  if(has){const b=el("button","btn p w",ANA&&ANA.src==="ai"?t("dirAgain"):t("dirAi"));b.style.marginTop="12px";b.addEventListener("click",async()=>{b.disabled=true;await analyze(true);b.disabled=false;if(shOpen)dirSheet();});B.append(b);
+    if(ANA&&ANA.src==="ai")B.append(el("p","note",t("dirFrom",ANA.by||"")));}
+  else{B.append(el("p","note",t("dirLocal")));const b=el("button","btn p w",t("gemFree"));b.style.marginTop="10px";b.addEventListener("click",()=>connectSheet("gemini",()=>{analyze(true);}));B.append(b);}});}
+
 /* ---------- جملة جملة ---------- */
 function showSent(){
   const s=SENT[R.idx];if(!s)return;const x=$("sTxt");x.innerHTML="";x.dir="auto";
-  if(S.hardMark){const {tok,hit}=hardSpans(s.t);const mk=new Set();hit.forEach(h=>{for(let k=0;k<h.n;k++)mk.add(h.i+k);});tok.forEach((w,i)=>{if(i)x.append(" ");if(mk.has(i))x.append(el("span","hw",w));else x.append(w);});}
-  else x.textContent=s.t;
+  const A=S.coach&&ANA&&ANA.items[R.idx];const stw=A&&A.stress?norm(A.stress):"";
+  {const {tok,hit}=hardSpans(s.t);const mk=new Set();if(S.hardMark)hit.forEach(h=>{for(let k=0;k<h.n;k++)mk.add(h.i+k);});let stDone=false;
+    tok.forEach((w,i)=>{if(i)x.append(" ");const isSt=!stDone&&stw&&norm(w)===stw;if(isSt)stDone=true;x.append(el("span","w"+(isSt?" st":mk.has(i)?" hw":""),w));
+      if(S.breath&&i<tok.length-1&&(/[،,؛]$/.test(w)||(A&&A.pz===i))){x.append(" ");x.append(el("span","br","|"));}});}
+  x.classList.remove("pg");R.pk=-1;
+  {const tn=A&&A.tone;$("read").style.setProperty("--mood",S.moodTint&&tn?MOODC[tn]:"transparent");}
   const w=s.t.split(/\s+/);$("memoCue").textContent=w.slice(0,2).join(" ")+(w.length>2?" …":"");
-  $("sCue").textContent=s.cue?"[ "+s.cue+" ]":"";$("sCue").hidden=!s.cue;
+  {const bits=[];if(A){if(A.tone)bits.push(TN[A.tone]+" "+t("tn_"+A.tone));if(A.pace==="fast")bits.push("↑ "+t("pc_fast"));if(A.pace==="slow")bits.push("↓ "+t("pc_slow"));if(A.note)bits.push(A.note);}
+   if(s.cue)bits.push("[ "+s.cue+" ]");$("sCue").textContent=bits.join("  ·  ");$("sCue").hidden=!bits.length;}
   const P=N.get("pron_"+doc.id,{});const hints=[];s.t.split(/\s+/).forEach(y=>{const k=norm(y);if(P[k])hints.push(y+" = "+P[k]);});$("sHint").textContent=hints.join("   ");$("sHint").hidden=!hints.length;
   const nx=SENT[R.idx+1];$("sNext").textContent=nx&&S.next?nx.t:"";$("sNext").hidden=!(nx&&S.next);
   $("rCount").textContent=AR(R.idx+1)+"/"+AR(SENT.length);$("read").classList.remove("memo","blank");tick();fit();
@@ -827,9 +934,16 @@ function fit(){
   best=Math.floor(best);ok(best);mc.style.fontSize=Math.round(best*.6)+"px";
 }
 function tick(){if(!CARD())return;$("rCount").textContent=AR(R.idx+1)+"/"+AR(SENT.length)+(S.showLeft?" · "+t("left2",mmss(leftTime())):"");const du=dur(R.idx),fr=Math.min(1,R.t/du);$("tally").querySelector("i").style.width=(fr*100)+"%";$("tally").classList.toggle("warn",R.playing&&du-R.t<=2&&R.t<du);stepUi();
+  if(S.paceGuide){const x=$("sTxt"),ws=x.querySelectorAll(".w");const on=R.playing&&!R.moodT;x.classList.toggle("pg",on);
+    if(on){const k=Math.min(ws.length,Math.ceil(Math.max(0,R.t-.25)/(du*.82)*ws.length+.001));if(k!==R.pk){R.pk=k;ws.forEach((w,i)=>w.classList.toggle("on",i<k));}}}
   const rd=$("read");rd.classList.toggle("memo",R.playing&&S.memo&&!R.peek&&R.t>=du*.45&&R.t<du);rd.classList.toggle("blank",R.playing&&S.gap&&R.t>=du);if(sf.on)selfieTick();}
 function go(i,auto){i=Math.max(0,Math.min(SENT.length-1,i));R.idx=i;R.t=0;R.peek=false;showSent();savePos();if(!auto)wakeUi();
-  else if(S.secPause&&SENT[i].sec&&SENT[i-1]&&SENT[i].sec!==SENT[i-1].sec){pause();toast(t("secPaused",SENT[i].sec));}}
+  else if(S.secPause&&SENT[i].sec&&SENT[i-1]&&SENT[i].sec!==SENT[i-1].sec){pause();toast(t("secPaused",SENT[i].sec));}
+  else if(S.moodCard&&SENT[i-1]&&SENT[i].sec!==SENT[i-1].sec)showMood(i);}
+function secTone(i){if(!ANA)return "";const sec=SENT[i].sec,c={};SENT.forEach((x,k)=>{if(x.sec===sec&&ANA.items[k]&&ANA.items[k].tone)c[ANA.items[k].tone]=(c[ANA.items[k].tone]||0)+1;});
+  let best="",n=0;for(const k in c)if(c[k]>n){n=c[k];best=k;}return best||(ANA.overall&&TN[ANA.overall.tone]?ANA.overall.tone:"");}
+function showMood(i){const tn=secTone(i);if(!tn)return;const m=$("mood");m.innerHTML="";m.append(el("b",null,TN[tn]),el("strong",null,(SENT[i].sec?SENT[i].sec+" · ":"")+t("tn_"+tn)),el("span",null,t("mt_"+tn)));
+  m.hidden=false;R.moodT=2.6;}
 function leftTime(){if(CARD()){let x=Math.max(0,dur(R.idx)-R.t);for(let i=R.idx+1;i<SENT.length;i++)x+=dur(i);return x;}return Math.max(0,(R.max-R.pos)/Math.max(1e-3,S.wpm/60*R.pxw));}
 function prev(){mark();go(R.idx-1);}
 function next(){go(R.idx+1);}
@@ -903,14 +1017,19 @@ function settingsSheet(){openSheet(t("settings"),B=>{
     m.addEventListener("click",()=>{if(S.mode===v)return;S.mode=v;save();if(cur==="read"&&doc){const d=docs.find(x=>x.id===doc.id)||doc;pause();closeSheet();openRead(d);}if(cur==="lib")renderLib();settingsSheet();});ms.append(m);});g.append(ms);
   if(S.mode!=="scroll"){
     g=grp(B,t("card"));
-    stepRow(g,t("secRow"),null,()=>S.sec,d=>{S.sec=Math.max(3,Math.min(40,S.sec+d));save();stepUi();},v=>v+" "+t("secUnit"));
-    swRow(g,t("longMore"),t("longMoreS"),S.longMore,v=>{S.longMore=v;save();stepUi();});
+    stepRow(g,S.autoTime?t("secRow8"):t("secRow"),null,()=>S.sec,d=>{S.sec=Math.max(3,Math.min(40,S.sec+d));save();stepUi();},v=>v+" "+t("secUnit"));
+    swRow(g,t("autoTime"),t("autoTimeS"),S.autoTime,v=>{S.autoTime=v;save();stepUi();settingsSheet();});
+    swRow(g,t("coach"),t("coachS"),S.coach,v=>{S.coach=v;save();if(cur==="read")showSent();});
+    swRow(g,t("paceGuide"),t("paceGuideS"),S.paceGuide,v=>{S.paceGuide=v;save();if(cur==="read")showSent();});
+    swRow(g,t("breathM"),t("breathMS"),S.breath,v=>{S.breath=v;save();if(cur==="read")showSent();});
+    swRow(g,t("moodCard"),t("moodCardS"),S.moodCard,v=>{S.moodCard=v;save();});
+    swRow(g,t("moodTint"),t("moodTintS"),S.moodTint,v=>{S.moodTint=v;save();if(cur==="read")showSent();});
     swRow(g,t("memo"),t("memoS"),S.memo,v=>{S.memo=v;save();});
     swRow(g,t("showNext"),null,S.next,v=>{S.next=v;upd();});
     swRow(g,t("hardMark"),t("hardMarkS"),S.hardMark,v=>{S.hardMark=v;upd();});
     swRow(g,t("gap"),t("gapS"),S.gap,v=>{S.gap=v;save();});
     swRow(g,t("secPause"),t("secPauseS"),S.secPause,v=>{S.secPause=v;save();});
-    const g2=grp(B,t("slen"));chips(g2,[["short","short"],["mid","mid"],["long","long"]].map(([v,n])=>({t:t(n),on:S.slen===v,fn:()=>{S.slen=v;save();if(cur==="read"){SENT=parse(doc.text);R.idx=Math.min(R.idx,SENT.length-1);showSent();}settingsSheet();}})));
+    const g2=grp(B,t("slen"));chips(g2,[["short","short"],["mid","mid"],["long","long"]].map(([v,n])=>({t:t(n),on:S.slen===v,fn:()=>{S.slen=v;save();if(cur==="read"){SENT=parse(doc.text);loadAna();R.idx=Math.min(R.idx,SENT.length-1);showSent();}settingsSheet();}})));
     const g3=grp(B,t("screen"));chips(g3,[["mid","posMid"],["top","posTop"]].map(([v,n])=>({t:t(n),on:S.pos===v,fn:()=>{S.pos=v;upd();settingsSheet();}})));
   }else{
     g=grp(B,t("scroll"));
@@ -963,16 +1082,20 @@ function parseOpts(x){try{const a=x.indexOf("{"),b=x.lastIndexOf("}");if(a>=0&&b
   const names=[];L.forEach(l=>{const m=l.match(/^(.{2,30}?)\s*[=:]\s*([^\s].*·.*)$/);if(m)names.push({w:m[1].replace(/[*-]/g,"").trim(),s:m[2].trim()});});
   return {options:num.length?num.slice(0,3):[],names};}
 function aiErr(status,txt){const e={code:"upstream"};if(status===401||status===403)e.code="bad";else if(status===402||/credit|balance|billing|quota|insufficient/i.test(txt||""))e.code="money";else if(status===429)e.code="limit";else if(status===400&&/API key not valid|invalid.*key|API_KEY_INVALID/i.test(txt||""))e.code="bad";return e;}
-async function jfetch(url,opt){let r;try{r=await fetch(url,opt);}catch(e){throw {code:"net"};}const txt=await r.text();if(!r.ok)throw aiErr(r.status,txt);try{return JSON.parse(txt);}catch(e){throw {code:"upstream"};}}
+async function jfetch(url,opt,ms){let r;const ac=window.AbortController?new AbortController():null;const tm=ac?setTimeout(()=>ac.abort(),ms||90000):0;try{r=await fetch(url,Object.assign({},opt,ac?{signal:ac.signal}:{}));}catch(e){clearTimeout(tm);throw {code:e&&e.name==="AbortError"?"slow":"net"};}clearTimeout(tm);const txt=await r.text();if(!r.ok)throw aiErr(r.status,txt);try{return JSON.parse(txt);}catch(e){throw {code:"upstream"};}}
 const ANT=k=>({"content-type":"application/json","x-api-key":k,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true","anthropic-beta":"server-side-fallback-2026-07-01"});
 const GEN={
   async claude(k,m,p,mx){const j=await jfetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:ANT(k),body:JSON.stringify({model:m||"claude-opus-5-5",max_tokens:mx||6000,output_config:{effort:"low"},fallbacks:"default",messages:[{role:"user",content:p}]})});
     if(j.stop_reason==="refusal")throw {code:"upstream"};return (j.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("").trim();},
-  async openai(k,m,p){const j=await jfetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+k},body:JSON.stringify({model:m,messages:[{role:"user",content:p}]})});
+  async openai(k,m,p,mx,js){const b={model:m,messages:[{role:"user",content:p}]};if(js)b.response_format={type:"json_object"};const j=await jfetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+k},body:JSON.stringify(b)});
     const c=(j.choices||[])[0];return ((c&&c.message&&c.message.content)||"").trim();},
-  async deepseek(k,m,p){const j=await jfetch("https://api.deepseek.com/chat/completions",{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+k},body:JSON.stringify({model:m||"deepseek-chat",messages:[{role:"user",content:p}]})});
+  async deepseek(k,m,p,mx,js){const b={model:m||"deepseek-chat",messages:[{role:"user",content:p}]};if(js)b.response_format={type:"json_object"};const j=await jfetch("https://api.deepseek.com/chat/completions",{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+k},body:JSON.stringify(b)});
     const c=(j.choices||[])[0];return ((c&&c.message&&c.message.content)||"").trim();},
-  async gemini(k,m,p){const j=await jfetch("https://generativelanguage.googleapis.com/v1beta/"+m+":generateContent?key="+encodeURIComponent(k),{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({contents:[{role:"user",parts:[{text:p}]}]})});
+  async gemini(k,m,p,mx,js){const url="https://generativelanguage.googleapis.com/v1beta/"+m+":generateContent?key="+encodeURIComponent(k);
+    const body=gc=>JSON.stringify(Object.assign({contents:[{role:"user",parts:[{text:p}]}]},gc?{generationConfig:gc}:{}));let j;
+    /* JSON مضمون وبدون «تفكير» طويل، وإذا النموذج ما يقبل هالإعدادات نرجع للطلب العادي */
+    try{j=await jfetch(url,{method:"POST",headers:{"content-type":"application/json"},body:body(js?{responseMimeType:"application/json",thinkingConfig:{thinkingBudget:0}}:{thinkingConfig:{thinkingBudget:0}})});}
+    catch(e){if(e&&e.code==="upstream")j=await jfetch(url,{method:"POST",headers:{"content-type":"application/json"},body:body(js?{responseMimeType:"application/json"}:null)});else throw e;}
     const c=(j.candidates||[])[0];return ((c&&c.content&&c.content.parts)||[]).map(x=>x.text||"").join("").trim();}};
 const TEST={
   async claude(k){await GEN.claude(k,"claude-opus-5-5","قل: تم",20);return "claude-opus-5-5";},
@@ -983,12 +1106,15 @@ const TEST={
     const ms=(j.models||[]).filter(x=>(x.supportedGenerationMethods||[]).includes("generateContent")&&/gemini/.test(x.name)&&!/image|tts|embedding|vision|live|audio|exp|preview|lite|thinking/.test(x.name));
     const v=n=>parseFloat((n.match(/gemini-(\d+(\.\d+)?)/)||[0,0])[1]);ms.sort((a,b)=>v(b.name)-v(a.name)||(/flash/.test(b.name)-/flash/.test(a.name)));const m=ms.find(x=>/flash/.test(x.name))||ms[0];if(!m)throw {code:"upstream"};return m.name;},
   async deepseek(k){const j=await jfetch("https://api.deepseek.com/models",{headers:{authorization:"Bearer "+k}});const ids=(j.data||[]).map(x=>x.id);return ids.includes("deepseek-chat")?"deepseek-chat":ids[0]||"deepseek-chat";}};
-const AIMSG=c=>({bad:t("keyBad"),money:t("keyNoMoney"),limit:t("keyLimit"),net:t("keyNet"),noai:t("noAI")})[c]||t("easyFail");
+const AIMSG=c=>({slow:t("aiSlow"),bad:t("keyBad"),money:t("keyNoMoney"),limit:t("keyLimit"),net:t("keyNet"),noai:t("noAI")})[c]||t("easyFail");
 const sampleP=STANDALONE?null:use("sample");
 async function aiAsk(prompt,id){id=id||aiPick();if(!id)throw {code:"noai"};
   if(id==="claude"&&!STANDALONE&&!(KEYS.claude&&KEYS.claude.k)){const s=await sampleP;if(!s)throw {code:"noai"};const r=await s(prompt,{cache:false});return (r&&r.text)||"";}
-  const k=KEYS[id];return GEN[id](k.k,k.m,prompt);}
-async function aiJson(prompt,id){const x=await aiAsk(prompt,id);const a=x.indexOf("{"),b=x.lastIndexOf("}");if(a<0||b<a)throw {code:"upstream"};return JSON.parse(x.slice(a,b+1));}
+  const k=KEYS[id];return GEN[id](k.k,k.m,prompt,0,arguments[2]);}
+/* قراءة JSON متسامحة: تشيل ``` وتصلّح الأخطاء الصغيرة */
+function looseJson(x){x=String(x||"").replace(/```(?:json)?/gi,"").trim();const a=x.indexOf("{"),b=x.lastIndexOf("}");if(a<0||b<a)throw {code:"upstream"};let y=x.slice(a,b+1);
+  try{return JSON.parse(y);}catch(e){}y=y.replace(/,\s*([\]}])/g,"$1").replace(/[“”]/g,'"');try{return JSON.parse(y);}catch(e){}throw {code:"upstream",raw:x};}
+async function aiJson(prompt,id){return looseJson(await aiAsk(prompt,id,true));}
 function setupSheet(id,prompt,cb){openSheet(t("setupT"),B=>{B.append(el("p","note",t("setupWhy")));
   const run=async nid=>{toast(t("writing",PROV[nid].name));try{const x=await aiAsk(prompt,nid);if(cb(x)===false)toast(t("ansBad"));}catch(e){toast(AIMSG(e&&e.code));}};
   const g=el("button","btn p w",t("gemFree"));g.style.marginTop="14px";g.addEventListener("click",()=>connectSheet("gemini",run));B.append(g);
@@ -1026,8 +1152,8 @@ function writeSheet(){openSheet(t("writeTitle"),B=>{
 /* ---------- سهّل الجملة ---------- */
 let undoText=null,pendingEasy=null;
 function replaceSent(i,nt){nt=String(nt||"").replace(/\s+/g," ").trim();const s=SENT[i];if(!s||!nt||nt===s.t)return false;
-  const lines=cleanText(doc.text).split("\n");const L=lines[s.li];if(L==null||!L.includes(s.t)){toast(t("notFound"));return false;}
-  undoText={text:doc.text,idx:i};lines[s.li]=L.replace(s.t,nt);doc.text=lines.join("\n");saveDoc(doc);SENT=parse(doc.text);R.idx=Math.min(i,SENT.length-1);R.t=0;showSent();savePos();return true;}
+  const lines=cleanText(doc.text).split("\n");const ps=s.parts||[{li:s.li,t:s.t}];if(ps.some(x=>lines[x.li]==null||!lines[x.li].includes(x.t))){toast(t("notFound"));return false;}
+  undoText={text:doc.text,idx:i};ps.forEach((x,k)=>{lines[x.li]=lines[x.li].replace(x.t,k===0?nt:"").replace(/\s{2,}/g," ").trim();});doc.text=lines.filter((l,k)=>l||!ps.some(x=>x.li===k)).join("\n");saveDoc(doc);SENT=parse(doc.text);loadAna();R.idx=Math.min(i,SENT.length-1);R.t=0;showSent();savePos();return true;}
 function easySheet(){const i=R.idx,s=SENT[i];if(!s)return;openSheet(t("easyTitle"),B=>{
   const c=el("div","card");const bg=el("div","big",s.t);bg.dir="auto";c.append(bg);B.append(c);
   const {tok,hit}=hardSpans(s.t);
@@ -1054,7 +1180,7 @@ function easySheet(){const i=R.idx,s=SENT[i];if(!s)return;openSheet(t("easyTitle
     if(pendingEasy){const r=pendingEasy;pendingEasy=null;show(r);setTimeout(()=>out.scrollIntoView({block:"start",behavior:"smooth"}),300);}}
   const g2=grp(B,t("selfWrite"));const ta=el("textarea","field");ta.value=s.t;ta.dir="auto";g2.append(ta);
   const sv=el("button","btn w",t("saveSent"));sv.style.marginTop="8px";sv.addEventListener("click",()=>{if(replaceSent(i,ta.value)){toast(t("saved"));closeSheet();}});g2.append(sv);
-  if(undoText){const u=el("button","btn w",t("undo"));u.style.marginTop="8px";u.addEventListener("click",()=>{doc.text=undoText.text;saveDoc(doc);SENT=parse(doc.text);R.idx=Math.min(undoText.idx,SENT.length-1);undoText=null;showSent();toast(t("undone"));closeSheet();});g2.append(u);}
+  if(undoText){const u=el("button","btn w",t("undo"));u.style.marginTop="8px";u.addEventListener("click",()=>{doc.text=undoText.text;saveDoc(doc);SENT=parse(doc.text);loadAna();R.idx=Math.min(undoText.idx,SENT.length-1);undoText=null;showSent();toast(t("undone"));closeSheet();});g2.append(u);}
   B.append(el("p","note",t("driveUnchanged")));});}
 
 /* ---------- صوّر وانت تقرا ---------- */

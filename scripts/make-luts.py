@@ -153,6 +153,41 @@ def look(key, name, cat, use, **kw):
     LOOKS[key] = dict(BASE, **kw, name=name, cat=cat, use=use)
 
 
+# ⭐ المجموعة الاحترافية (25 تشرين الثاني 2026، النسخة الثالثة): 7 ستايلات بس، كل واحد "شكل" سينمائي كامل.
+# صاحب القناة يغيّر لون ضوء الخلفية حسب القصة، ويريد شكل احترافي (وثائقي، دراما، فيلم...) مو فلاتر ألوان.
+# كلهم مبنيين على نفس المحرك (pro_color): البشرة طبيعية وتفاصيل الوجه واضحة بأي ضوء، والستايل يجي من
+# المنحنى وكثافة الفيلم ولون الظلال والإضاءات. الفيديو يطلع جاهز للنشر، بلا تصحيح ألوان بعدين.
+FACE = dict(skin_pull=0.5, skin_norm=0.45, skin_c=(0.05, 0.09), skin_lift=0.02, spill=0.35, wall=0.45, green=0.4)
+
+
+def pro(**kw):
+    return dict(FACE, **kw)
+
+
+look("PROMAIN", "وثائقي", "الاحترافية", "الأساسي لكل الحلقات: نظيف وغني مثل وثائقيات نتفلكس",
+     contrast=1.58, gray=0.19, toe=0.002, sat=1.05, dens=0.3, sh=(210, 0.012), skin=0.45, rgb_pop=0.25,
+     pro=pro(accent=(0.2, 0.08)))
+look("PROFILM", "فيلم سينما", "الاحترافية", "قصص كبيرة ومقدمات: شكل شريط سينما، ألوان كثيفة وإضاءات ناعمة",
+     contrast=1.55, gray=0.18, toe=0.003, sat=1.0, wb=(1.02, 0.98), dens=0.65, teal=0.35, sh=(205, 0.03),
+     hi=(75, 0.025), fade=0.015, film=True, skin=0.5, rgb_pop=0.15, pro=pro(accent=(0.1, 0.15)))
+look("PRODRAMA", "دراما", "الاحترافية", "قصص فيها صراع وتوتر: تباين قوي، ظلال عميقة، تيل وبرتقالي هادي",
+     contrast=1.82, gray=0.17, toe=0.004, sat=1.02, dens=0.5, teal=0.7, sh=(208, 0.035), hi=(68, 0.015),
+     skin=0.6, rgb_pop=0.15, pro=pro(spill=0.4, wall=0.5, accent=(0.15, 0.12)))
+look("PRODARK", "غموض وجريمة", "الاحترافية", "الجرائم والأسرار: ظلال خضرة باردة وإضاءات صفرة، ألوان مكتومة",
+     contrast=1.8, gray=0.158, toe=0.005, sat=0.85, dens=0.55, teal=0.3, sh=(185, 0.035), hi=(90, 0.018),
+     skin=0.6, rgb_pop=0.05, pro=pro(spill=0.5, wall=0.6, green=0.2, skin_lift=0.03, accent=(0.0, 0.2)))
+look("PROGOLD", "تاريخ ذهبي", "الاحترافية", "التاريخ وقصص الشركات القديمة: دافي وذهبي، أسود ناعم مثل الأرشيف",
+     contrast=1.5, gray=0.18, toe=0.003, sat=0.95, wb=(1.05, 0.93), dens=0.5, teal=0.15, sh=(50, 0.02),
+     hi=(80, 0.03), fade=0.03, film=True, skin=0.55, rgb_pop=0.1, pro=pro(accent=(0.0, 0.15)))
+look("PROCOLD", "تقني بارد", "الاحترافية", "التكنولوجيا والإثارة: بارد ونظيف، والوجه يبقى دافي",
+     contrast=1.7, gray=0.17, toe=0.003, sat=0.92, wb=(0.96, 1.05), dens=0.45, teal=0.4, sh=(225, 0.035),
+     hi=(215, 0.01), skin=0.7, rgb_pop=0.15, pro=pro(skin_pull=0.6, skin_norm=0.5, accent=(0.1, 0.1)))
+look("PRONOIR", "أبيض وأسود", "الاحترافية", "لقطات درامية ومشاهد الذكريات: أبيض وأسود سينمائي، الوجه مضوّي",
+     contrast=1.85, gray=0.17, toe=0.004, mono=(0.45, 0.45, 0.10))
+PRO_SET = ["PROMAIN", "PROFILM", "PRODRAMA", "PRODARK", "PROGOLD", "PROCOLD", "PRONOIR"]
+# صاحب القناة يريد الملفات بأرقام بس (1.cube لحد 7.cube)، حتى يعرفها بالكاميرا بسهولة
+NUM = {k: str(i + 1) for i, k in enumerate(PRO_SET)}
+
 # مخصوصة لاستوديو صاحب القناة (من صورة حقيقية دزها 10 تشرين الثاني 2026: ضوء أحمر مغرّگ الحايط
 # الأبيض وطالع على وجهه). تهدّي الأحمر وتغمّگه، وتبرّد الصورة شوية حتى الوجه يرجع طبيعي.
 look("ABRED", "استوديو أحمر", "الأساسية", "استوديوك بالضوء الأحمر. ابدأ بيه",
@@ -258,9 +293,56 @@ look("RLDRAMA", "ريلز درامي", "ريلز", "ريلز قصص وغموض",
 
 # الـ16 الي تنحط بالكاميرا (استوديو قصص بضوء أحمر)، وأول أربعة منهم للاختيار السريع PPLUT1-4.
 # الفلاتر الدافية (ABWARM، STGOLD...) برا القائمة: تزيد الأحمر باستوديوه.
-TOP16 = ["ABRED", "ABREDX", "ABMOODY", "ABCLEAN", "ABTEAL", "ABNEON", "ABFILM", "STTECH", "STPODCST",
-         "STLUXE", "CNBLKBUS", "CNNIGHT", "CNBLEACH", "CNNOIR", "CNMATRIX", "RLDRAMA"]
+# (من 25 تشرين الثاني 2026 أول اثنين هم الاحترافي PROMAIN وPRODARK)
+TOP16 = PRO_SET  # من 25 تشرين الثاني 2026: الكاميرا بيها السبعة الاحترافية بس، والقديمة بالأرشيف
 OUTDOOR = {"فلوگ وبرا"}  # هاي تنعرض على صورة خارجية (وياها ABDAY)
+
+
+PRO_BASE = dict(skin_pull=0.0, skin_c=(0.05, 0.09), skin_norm=0.0, skin_lift=0.0,
+                red=(25, 0.0, 0.0, 0.0), amber=(68, 0.0, 0.0, 0.0), blue=(245, 0.0, 0.0, 0.0),
+                blue_skin=0.0, wall=0.0, green=0.0, spill=0.0, accent=(0.0, 0.0))
+
+
+def pro_color(L, C, h, q):
+    """تلوين الفلاتر الاحترافية (PRO): كل لون بالمشهد يتعامل وحده، مثل الملوّن بالدافنشي.
+
+    البشرة: لونها يرجع لخط البشرة (55 درجة) وقوتها تنضبط بمدى طبيعي، فضوء الأحمر أو الأزرق الي
+    طالع على الوجه يخف، وتفاصيل الوجه تبقى (ما نلمس السطوع إلا رفعة خفيفة).
+    أضواء الخلفية (أحمر، كهرماني، أزرق): (درجة اللون الهدف، قوة الإزاحة، زيادة التشبع، الكثافة)
+    الكثافة = اللون يغمگ ويصير غني مثل الفيلم، بدل ما يفقع مثل الموبايل.
+    """
+    q = dict(PRO_BASE, **q)
+    sk = (hw(h, 52, 40) * smoothstep(0.012, 0.03, C) * smoothstep(0.15, 0.10, C)
+           * smoothstep(0.12, 0.3, L) * smoothstep(0.97, 0.85, L))
+    h = h - q["skin_pull"] * sk * hdiff(h, 55)
+    lo, hi = q["skin_c"]
+    C = C + q["skin_norm"] * sk * (np.clip(C, lo, hi) - C)
+    L = L + q["skin_lift"] * sk * smoothstep(0.2, 0.5, L) * smoothstep(0.85, 0.6, L)
+    rest = 1 - sk
+    for key, center, width, cmin in (("red", 22, 26, 0.09), ("amber", 68, 24, 0.07), ("blue", 250, 50, 0.05)):
+        target, shift, sat, dens = q[key]
+        w = hw(h, center, width) * smoothstep(cmin, cmin + 0.07, C) * rest
+        h = h - shift * w * hdiff(h, target)
+        C = C * (1 + sat * w)
+        L = L * (1 - dens * w)
+    # ضوء أزرق خفيف على الوجه (لون ضعيف بنص الإضاءة): نهديه حتى الوجه ما يصير رمادي مزرگ
+    bs = hw(h, 250, 55) * smoothstep(0.11, 0.04, C) * smoothstep(0.18, 0.4, L)
+    C = C * (1 - q["blue_skin"] * bs)
+    # أي ضوء ملوّن خفيف (طالع على الوجه أو مرشوش على الحايط)، مهما كان لونه: يهدى شوية
+    sp = smoothstep(0.11, 0.04, C) * smoothstep(0.15, 0.35, L) * (1 - sk)
+    C = C * (1 - q["spill"] * sp)
+    # أضواء الخلفية القوية، مهما كان لونها: تشبع أغنى وكثافة (تغمگ شوية بدل ما تفقع)
+    ac = smoothstep(0.1, 0.18, C) * (1 - sk)
+    C = C * (1 + q["accent"][0] * ac)
+    L = L * (1 - q["accent"][1] * ac)
+    # الحايط الأبيض المصبوغ بالضوء الملوّن: يرجع أنظف حتى الوجه ينفصل عنه
+    wl = smoothstep(0.055, 0.02, C) * smoothstep(0.45, 0.7, L)
+    C = C * (1 - q["wall"] * wl)
+    # الأخضر (نباتات وبوسترات) يميل للزيتي ويهدى، حتى ما يسرق العين من الوجه
+    g = hw(h, 140, 40) * smoothstep(0.01, 0.04, C)
+    h = h - 0.25 * q["green"] * g * hdiff(h, 110)
+    C = C * (1 - 0.3 * q["green"] * g)
+    return L, C, h % 360
 
 
 def apply_look(slog, p):
@@ -293,6 +375,8 @@ def apply_look(slog, p):
     L = lab[..., 0]
     C = np.hypot(lab[..., 1], lab[..., 2])
     h = np.degrees(np.arctan2(lab[..., 2], lab[..., 1])) % 360
+    if p.get("pro"):
+        L, C, h = pro_color(L, C, h, p["pro"])
     if not mono:
         skin = hw(h, 55, 30) * smoothstep(0.015, 0.045, C) * smoothstep(0.21, 0.13, C)
         sel = smoothstep(0.012, 0.05, C)   # تعديلات اللون المحدد ما تلمس الرمادي (حتى الأبيض يبقى أبيض)
@@ -466,7 +550,7 @@ def preview(tables, mine=None):
         tops = ["mine", "outdoor" if first == "outdoor" else "studio2"] if mine else [first, "studio2"]
         x, y = (i % cols) * tw, (i // cols) * (th + bar)
         sheet.paste(shot(scenes[tops[0] if mine or first == "outdoor" else "studio2"], table, (tw, th)), (x, y + bar))
-        ds.text((x + tw - 8, y + 5), f"{p['name']}  {key}", fill=(235, 235, 235), font=font(17), anchor="ra",
+        ds.text((x + tw - 8, y + 5), f"{NUM.get(key, '')}  {p['name']}", fill=(235, 235, 235), font=font(17), anchor="ra",
                 direction="rtl")
         top = len(tops) * H
         card = Image.new("RGB", (W, top + B), (11, 11, 15))
@@ -475,8 +559,8 @@ def preview(tables, mine=None):
         d = ImageDraw.Draw(card)
         d.text((W - 24, top + 10), p["name"], fill=(255, 255, 255), font=font(40), anchor="ra", direction="rtl")
         d.text((W - 24, top + 62), p["use"], fill=(255, 196, 0), font=font(25), anchor="ra", direction="rtl")
-        d.text((24, top + 26), key, fill=(255, 255, 255), font=font(40, "Cairo-Black.ttf"))
-        card.save(out / f"{key}.jpg", quality=85)
+        d.text((24, top + 26), NUM.get(key, key), fill=(255, 255, 255), font=font(40, "Cairo-Black.ttf"))
+        card.save(out / f"{NUM.get(key, key)}.jpg", quality=85)
     sheet.save(base / "preview.jpg", quality=90)
     return base
 
@@ -495,12 +579,20 @@ def main():
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     tables = {}
+    arch = out / "archive"   # الفلاتر القديمة (قبل 25 تشرين الثاني 2026): مكتبة احتياط، مو للكاميرا
+    arch.mkdir(exist_ok=True)
+    for old in out.glob("*.cube"):
+        if old.stem not in NUM.values():
+            old.unlink()
     for key, p in LOOKS.items():
         assert len(key) <= 8, f"{key}: الكارت يعرض 8 حروف بس"
-        tables[key] = write_cube(out / f"{key}.cube", f"{key} - Aboodi Studio", p)
-        size = (out / f"{key}.cube").stat().st_size
+        dest = out / f"{NUM[key]}.cube" if key in PRO_SET else arch / f"{key}.cube"
+        table = write_cube(dest, f"{NUM.get(key, key)} {key} - Aboodi Studio", p)
+        if key in PRO_SET:
+            tables[key] = table
+        size = dest.stat().st_size
         assert size < 1_000_000, f"{key} أكبر من 1 ميگا"
-        print(f"✓ {key}.cube  ({p['name']})  {size // 1024} KB")
+        print(f"✓ {dest.name}  {key} ({p['name']})  {size // 1024} KB")
     if a.preview:
         preview(tables)
         print("✓ صور المعاينة:", CAM / "previews", "و", CAM / "preview.jpg")
