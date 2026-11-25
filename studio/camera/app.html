@@ -113,15 +113,15 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--warn); outline-
     <p class="why">كلها تحمي وجهك أول شي، بأي لون ضوء بالخلفية. ما تعرف شتختار؟ <b>الفلتر 1 دائماً.</b></p>
     <a class="btn go dl" id="dl" target="_blank" rel="noopener"
        href="https://raw.githubusercontent.com/Aboodkhalid23/Aboodi23/refs/heads/claude/github-skills-development-3orc6c/studio/camera/luts.zip">نزّل الفلاتر السبعة (ملف واحد مضغوط)</a>
-    <p class="big">عندك ماك؟ أسهل</p>
-    <p class="why">برنامج صغير يحط الفلاتر بالكارت بدوسة، ويحفظ نسخة من إعدادات الكاميرا بالماك ويرجعها.</p>
+    <p class="big">تطبيق الماك «كاميرتي»</p>
+    <p class="why">تدخّل الكارت وتفتحه، ويسوي كلشي وحده: يحط الفلاتر السبعة، ويحفظ إعدادات كاميرتك بالماك أول مرة، ويرجّعها للكارت إذا انمسحت.</p>
     <a class="btn go dl" target="_blank" rel="noopener"
-       href="https://raw.githubusercontent.com/Aboodkhalid23/Aboodi23/refs/heads/claude/github-skills-development-3orc6c/studio/camera/mac.zip">نزّل برنامج الماك</a>
+       href="https://raw.githubusercontent.com/Aboodkhalid23/Aboodi23/refs/heads/claude/github-skills-development-3orc6c/studio/camera/mac.zip">نزّل تطبيق الماك</a>
     <ol class="list">
-      <li><b>1. افتح الملف المنزّل</b><span>يطلع مجلد اسمه «كاميرتي».</span></li>
+      <li><b>1. افتح الملف المنزّل</b><span>يطلع تطبيق «كاميرتي». اسحبه لمجلد التطبيقات (Applications).</span></li>
       <li><b>2. دخّل الكارت بالماك</b><span>بقارئ كارت.</span></li>
-      <li><b>3. كليك يمين على «جهز-الكارت» ← Open ← Open</b><span>أول مرة بس، لأن الماك يحمي من البرامج الجديدة. بعدها دبل كليك عادي.</span></li>
-      <li><b>4. اكتب 1 ودوس Enter</b><span>يحط الفلاتر ويطلّع الكارت. 2 = يحفظ إعداداتك بالماك، 3 = يرجعها.</span></li>
+      <li><b>3. أول مرة بس: كليك يمين على «كاميرتي» ← Open</b><span>إذا الماك رفض: الإعدادات ← الخصوصية والأمان ← انزل جوه ← Open Anyway. بعدها تفتحه عادي.</span></li>
+      <li><b>4. خلص</b><span>يشتغل وحده، ويطلعلك نافذة شنو سوّى وشنو تسوي بالكاميرا، ويطلّع الكارت.</span></li>
     </ol>
     <div class="cards" id="cards"></div>
   </section>
@@ -171,7 +171,7 @@ const STEPS = [
     path: [["MENU","القائمة"],["Focus","الفوكس"],["AF/MF","أوتوماتيكي/يدوي"],["Focus Mode","وضع الفوكس"],["AF-C","أوتوماتيكي مستمر"]] },
   { t: "التعرف على الإنسان", why: "حتى الفوكس يروح لعيونك مو للحايط.",
     path: [["MENU","القائمة"],["Focus","الفوكس"],["Subject Recognition","التعرف"],["Recognition Target","على شنو"],["Human","إنسان"]] },
-  { t: "حط الفلاتر بالكارت", why: "بالماك: من تبويب «الفلاتر» نزّل برنامج الماك، ودخّل الكارت، وشغّله واكتب 1. يحط الفلاتر بالمكان الصح ويطلّع الكارت.",
+  { t: "حط الفلاتر بالكارت", why: "بالماك: دخّل الكارت وافتح تطبيق «كاميرتي» (تنزّله من تبويب «الفلاتر»). يحط الفلاتر بالمكان الصح ويطلّع الكارت وحده.",
     note: ["ok", "بلا ماك: نزّل الفلاتر السبعة، وحطها بالكارت بالمسار PRIVATE > SONY > PRO > LUT."] },
   { t: "دخّل الفلاتر بالكاميرا", why: "رجّع الكارت للكاميرا، ودخّل كل فلتر بمكان برقمه: 1 بـUser1، و2 بـUser2، لحد 7.",
     path: [["MENU","القائمة"],["Exposure/Color","الإضاءة والألوان"],["Color/Tone","اللون"],["Manage User LUTs","إدارة الفلاتر"],["Import/Edit","إدخال"],["User1 ← 1.cube",""]] },
@@ -187,7 +187,7 @@ const STEPS = [
     note: ["ok", "وهم: Lens Compensation > Shading Comp. = Off. وZebra Display = On، والمستوى 70."] },
   { t: "احفظ بالذاكرة رقم 1", why: "من هسه كل يوم: تشغّل، تختار MR 1، تدوس تسجيل.",
     path: [["MENU","القائمة"],["Shooting","التصوير"],["Shooting Mode","وضع التصوير"],["Camera Set. Memory","حفظ الإعدادات"],["1",""]] },
-  { t: "احفظ نسخة على الكارت", why: "إذا صار أي شي بالكاميرا، ترجع كل الإعدادات بدوسة وحدة، بدل ما تعيد كل هالخطوات.",
+  { t: "احفظ نسخة على الكارت", why: "بعدها دخّل الكارت بالماك وافتح «كاميرتي»: يحفظ إعداداتك بالماك للأبد. إذا خربت يوم، يرجّعها للكارت وتسوي Load بدوسة.",
     path: [["MENU","القائمة"],["Setup","الإعدادات العامة"],["Reset/Save Settings","حفظ وإرجاع"],["Save/Load Settings","حفظ على الكارت"],["Save New","حفظ جديد"]],
     note: ["warn", "وقت الإرجاع: نفس المكان ← Load. (طلّع الكاميرا من MR قبل، لأن بيه ما يشتغل.) ولا تفرمت الكارت بعدها، أو انقل الملف قبل."] },
 ];
