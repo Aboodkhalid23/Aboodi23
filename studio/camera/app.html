@@ -113,6 +113,16 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--warn); outline-
     <p class="why">كلها تحمي وجهك أول شي، بأي لون ضوء بالخلفية. ما تعرف شتختار؟ <b>الفلتر 1 دائماً.</b></p>
     <a class="btn go dl" id="dl" target="_blank" rel="noopener"
        href="https://raw.githubusercontent.com/Aboodkhalid23/Aboodi23/refs/heads/claude/github-skills-development-3orc6c/studio/camera/luts.zip">نزّل الفلاتر السبعة (ملف واحد مضغوط)</a>
+    <p class="big">عندك ماك؟ أسهل</p>
+    <p class="why">برنامج صغير يحط الفلاتر بالكارت بدوسة، ويحفظ نسخة من إعدادات الكاميرا بالماك ويرجعها.</p>
+    <a class="btn go dl" target="_blank" rel="noopener"
+       href="https://raw.githubusercontent.com/Aboodkhalid23/Aboodi23/refs/heads/claude/github-skills-development-3orc6c/studio/camera/mac.zip">نزّل برنامج الماك</a>
+    <ol class="list">
+      <li><b>1. افتح الملف المنزّل</b><span>يطلع مجلد اسمه «كاميرتي».</span></li>
+      <li><b>2. دخّل الكارت بالماك</b><span>بقارئ كارت.</span></li>
+      <li><b>3. كليك يمين على «جهز-الكارت» ← Open ← Open</b><span>أول مرة بس، لأن الماك يحمي من البرامج الجديدة. بعدها دبل كليك عادي.</span></li>
+      <li><b>4. اكتب 1 ودوس Enter</b><span>يحط الفلاتر ويطلّع الكارت. 2 = يحفظ إعداداتك بالماك، 3 = يرجعها.</span></li>
+    </ol>
     <div class="cards" id="cards"></div>
   </section>
 
@@ -161,8 +171,8 @@ const STEPS = [
     path: [["MENU","القائمة"],["Focus","الفوكس"],["AF/MF","أوتوماتيكي/يدوي"],["Focus Mode","وضع الفوكس"],["AF-C","أوتوماتيكي مستمر"]] },
   { t: "التعرف على الإنسان", why: "حتى الفوكس يروح لعيونك مو للحايط.",
     path: [["MENU","القائمة"],["Focus","الفوكس"],["Subject Recognition","التعرف"],["Recognition Target","على شنو"],["Human","إنسان"]] },
-  { t: "نزّل الفلاتر على موبايلك", why: "من تبويب «الفلاتر» فوگ، نزّل الملف المضغوط وافتحه. يطلع 7 ملفات: 1.cube لحد 7.cube.",
-    note: ["ok", "الأسهل: شبّك الكارت بالموبايل (قارئ كارت) وحط الملفات بالمسار PRIVATE > SONY > PRO > LUT."] },
+  { t: "حط الفلاتر بالكارت", why: "بالماك: من تبويب «الفلاتر» نزّل برنامج الماك، ودخّل الكارت، وشغّله واكتب 1. يحط الفلاتر بالمكان الصح ويطلّع الكارت.",
+    note: ["ok", "بلا ماك: نزّل الفلاتر السبعة، وحطها بالكارت بالمسار PRIVATE > SONY > PRO > LUT."] },
   { t: "دخّل الفلاتر بالكاميرا", why: "رجّع الكارت للكاميرا، ودخّل كل فلتر بمكان برقمه: 1 بـUser1، و2 بـUser2، لحد 7.",
     path: [["MENU","القائمة"],["Exposure/Color","الإضاءة والألوان"],["Color/Tone","اللون"],["Manage User LUTs","إدارة الفلاتر"],["Import/Edit","إدخال"],["User1 ← 1.cube",""]] },
   { t: "تعويض الإضاءة لكل فلتر", why: "هذا الي يشيل الحبوب. سوّيه للسبعة.",
