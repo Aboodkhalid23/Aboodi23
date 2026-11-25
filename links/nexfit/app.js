@@ -149,7 +149,7 @@ function balanceCard() {
   const c = weekSets(), L = [['chest', 'الصدر'], ['back', 'الظهر'], ['legs', 'الرجل'], ['shoulders', 'الأكتاف'], ['biceps', 'البايسبس'], ['triceps', 'الترايسبس']];
   return `<details class="card bal"><summary><b>⚖️ معادلة الكورس</b><span class="xs mut"> شكد تشتغل كل عضلة بالأسبوع</span></summary>
   <p class="xs mut" style="margin:8px 0">الدراسات تگول العضلة تكبر بـ<b>10-20 سِت بالأسبوع</b>. العضلة الكبيرة تاخذ 4 تمارين باليوم، والصغيرة 3، حتى الكل يكبر سوة.</p>
-  ${L.map(([g, n]) => { const v = c[g] || 0; return `<div class="balr"><span>${n}</span><div class="bb"><i style="width:${Math.min(100, v / 24 * 100)}%"></i><em style="right:${10 / 24 * 100}%"></em><em style="right:${20 / 24 * 100}%"></em></div><b class="num">${v}</b></div>`; }).join('')}
+  ${L.map(([g, n]) => { const v = c[g] || 0; return `<div class="balr"><span>${n}</span><div class="bb"><i style="width:${Math.min(100, v / 24 * 100)}%"></i><em style="right:${10 / 24 * 100}%"></em><em style="right:${20 / 24 * 100}%"></em></div><b class="num" data-count="${v}">${v}</b></div>`; }).join('')}
   <p class="xs mut" style="margin-top:6px">الخطين = المنطقة الذهبية (10-20 سِت)</p></details>`;
 }
 const MUSN = g => (MUS.find(m => m[0] === g) || [, g])[1];
@@ -158,7 +158,7 @@ function vCourse() {
   const pct = Math.round(doneN / MDAYS * 100), C2 = 2 * Math.PI * 34;
   const next = Array.from({ length: 8 }, (_, k) => c + k).filter(i => i < MDAYS).map(i => { const ty = dayType(i); return `<button class="cd ${i === c ? 'now' : ''} ${ty === 'R' ? 'rest' : ''}" data-day="${i}"><span class="xs num">يوم ${i + 1}</span><b>${ty === 'R' ? '😴' : ty === 'A' ? '🛡️' : ty === 'B' ? '🔻' : '🦵'}</b><small>${ty === 'R' ? 'راحة' : DAY_NAMES[ty]}</small></button>`; }).join('');
   return `${head('الكورس')}
-  <div class="pcard2"><div class="row" style="gap:14px;align-items:center"><div class="pring"><svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="34" stroke="rgba(255,255,255,.08)" stroke-width="8" fill="none"/><circle cx="40" cy="40" r="34" stroke="url(#pg)" stroke-width="8" fill="none" stroke-linecap="round" stroke-dasharray="${C2}" stroke-dashoffset="${C2 * (1 - doneN / MDAYS)}" transform="rotate(-90 40 40)"/><defs><linearGradient id="pg"><stop offset="0" stop-color="#ffc145"/><stop offset="1" stop-color="#ff8a00"/></linearGradient></defs></svg><b class="num">${pct}%</b></div>
+  <div class="pcard2"><div class="row" style="gap:14px;align-items:center"><div class="pring"><svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="34" stroke="rgba(255,255,255,.08)" stroke-width="8" fill="none"/><circle cx="40" cy="40" r="34" stroke="url(#pg)" stroke-width="8" fill="none" stroke-linecap="round" stroke-dasharray="${C2}" stroke-dashoffset="${C2 * (1 - doneN / MDAYS)}" transform="rotate(-90 40 40)"/><defs><linearGradient id="pg"><stop offset="0" stop-color="#ffc145"/><stop offset="1" stop-color="#ff8a00"/></linearGradient></defs></svg><b class="num" data-count="${pct}" data-suf="%">${pct}%</b></div>
    <div class="grow"><small>كورسك هسه • ${AR(Math.min(c + 1, MDAYS))} من ${MDAYS} يوم</small><h2>${P.ic} ${P.n}</h2><p class="xs mut">${P.goal}</p></div></div>
    ${t === null ? `<div class="donebox"><h3>خلصت الكورس 🎉</h3><p class="sm mut">قيّم نفسك، وبعدها اختار الكورس الجاي.</p><button class="gbtn" data-eval>قيّم واختار الكورس الجاي</button></div>`
    : `<div class="today"><div class="grow"><small>تمرين اليوم</small><h3>${t === 'R' ? 'راحة ومشي 30 دقيقة' : DAY_NAMES[t]}</h3>${t !== 'R' ? `<span class="xs mut num">${S.month.plan[t].length} تمارين • تقريباً ${S.month.plan[t].reduce((a, x) => a + x.s, 0) * 2 + 10} دقيقة</span>` : ''}</div><button class="gbtn" data-${t === 'R' ? 'day' : 'start'}="${c}">${t === 'R' ? 'شوف' : 'ابدأ'}</button></div>`}
@@ -735,7 +735,7 @@ function openBan(i) {
 }
 
 /* ================= أنا ================= */
-const VERSION = '30';
+const VERSION = '31';
 function weightInfo() {
   const start = S.startW || (S.weights[0]?.w) || +S.w || 52, goal = +S.goal || 62, cur = curW();
   const ms = [start + 1, start + 3, start + 5, start + 7].filter(x => x < goal).concat([goal]).map(x => +x.toFixed(1));
@@ -775,6 +775,7 @@ function openSettings() {
   <p class="sh">المظهر</p>
   <div class="sgrp"><div class="themes">${[['dark', 'غامق', I.moon], ['light', 'فاتح', I.sun], ['auto', 'تلقائي', '◐']].map(([k, n, ic]) => `<button class="${th === k ? 'on' : ''}" data-theme="${k}"><span class="tprev ${k}"><i></i><i></i></span>${n}</button>`).join('')}</div>
    ${row('✨', '#8e5cf7', 'حركة بين الخانات', 'حركة بسيطة لما تتنقل', 'data-anim', tgl(!S.noAnim))}</div>
+  ${fontPicker()}
   <p class="sh">الصحة</p>
   <div class="sgrp">${row(I.watch, '#ff2d3d', 'ساعة أبل والصحة', hd ? `آخر قراءة اليوم: ${AR(hd.steps || 0)} خطوة` : 'اربط الخطوات والنبض بالتطبيق', 'data-health')}
    ${row('🩺', '#1aa260', 'قواعد صحتك', 'متى توگف التمرين وتروح للطبيب', 'data-rules')}</div>
@@ -827,6 +828,17 @@ function openHealth() {
    <div class="steps sm" style="margin-top:12px"><p>افتح تطبيق الاختصارات واضغط + وسمّيه NEXFIT</p><p>أضف إجراء "العثور على عينات الصحة": النوع الخطوات، التاريخ اليوم. وبعده "حساب الإحصائيات": المجموع</p><p>كرّرها للطاقة النشطة (المجموع)، ولنبض الراحة (آخر وحدة)</p><p>أضف إجراء "نص" واكتب بيه السطر الي تحت، وبدّل كل كلمة بين قوسين بالرقم من الخطوة الي فوگها</p><p>آخر شي أضف "نسخ إلى الحافظة"، وشغّله، وارجع اضغط الزر الي فوگ</p></div>
    <div class="code" dir="ltr">steps=[الخطوات];kcal=[الطاقة];rhr=[النبض]</div></details>`, true);
 }
+/* ================= اهتزاز خفيف مثل التطبيقات ================= */
+const hapEl = (() => { try { const l = document.createElement('label'); l.style.cssText = 'position:fixed;left:-99px;top:0;opacity:0;pointer-events:none'; const i = document.createElement('input'); i.type = 'checkbox'; i.setAttribute('switch', ''); l.append(i); document.body.append(l); return l; } catch (e) { return null; } })();
+function haptic(ms = 8) { try { if (navigator.vibrate) navigator.vibrate(ms); else if (hapEl) hapEl.click(); } catch (e) {} }
+/* ================= الخط ================= */
+const FONTS = [['vazir', 'وزير', 'Vazirmatn', ''], ['cairo', 'القاهرة', 'Cairo', 'Cairo:wght@400;500;600;700;800;900'], ['tajawal', 'تجوّل', 'Tajawal', 'Tajawal:wght@400;500;700;800;900'], ['plex', 'بلكس', 'IBM Plex Sans Arabic', 'IBM+Plex+Sans+Arabic:wght@400;500;600;700'], ['kufi', 'كوفي', 'Noto Kufi Arabic', 'Noto+Kufi+Arabic:wght@400;500;600;700;800;900'], ['almarai', 'المراعي', 'Almarai', 'Almarai:wght@400;700;800'], ['readex', 'ريدكس', 'Readex Pro', 'Readex+Pro:wght@400;500;600;700']];
+function loadFont(k) { const f = FONTS.find(x => x[0] === k); if (f && f[3] && !document.querySelector(`link[data-f="${k}"]`)) { const l = document.createElement('link'); l.rel = 'stylesheet'; l.dataset.f = k; l.href = 'https://fonts.googleapis.com/css2?family=' + f[3] + '&display=swap'; document.head.append(l); } return f; }
+function applyFont() { const f = loadFont(S.font || 'vazir') || FONTS[0], r = document.documentElement.style; r.setProperty('--fd', `'${f[2]}',system-ui,sans-serif`); r.setProperty('--fb', `'${f[2]}',system-ui,sans-serif`); r.setProperty('--z', S.fz || 1); }
+applyFont();
+function fontPicker() { FONTS.forEach(f => loadFont(f[0])); const cur = S.font || 'vazir', z = S.fz || 1;
+  return `<p class="sh">الخط</p><div class="sgrp"><div class="fonts">${FONTS.map(([k, n, fam]) => `<button class="${cur === k ? 'on' : ''}" data-font="${k}" style="font-family:'${fam}',system-ui"><b>عاشت إيدك 💪</b><em>Bench Press 3×12</em><small>${n}</small></button>`).join('')}</div>
+  <div class="fsz">${[[.92, 'صغير'], [1, 'عادي'], [1.1, 'كبير']].map(([v, n]) => `<button class="${z === v ? 'on' : ''}" data-fz="${v}">${n}</button>`).join('')}</div></div>`; }
 /* ================= المظهر ================= */
 function applyTheme() {
   const t = S.theme || 'dark', dark = t === 'auto' ? matchMedia('(prefers-color-scheme: dark)').matches : t === 'dark';
@@ -883,7 +895,7 @@ function chart(W, goal = 62) {
 /* ================= التنقل ================= */
 const V = { home: vHome, course: vCourse, food: vFood, supps: vSupps, me: vMe };
 const TABS = Object.keys(V); let lastTab = null;
-function route() { if (SUS === null) refreshSus(); let h = location.hash.slice(1); if (h.startsWith('hk')) { const r = parseHK(decodeURIComponent(h.slice(3))); if (r) { saveHK(r); toast('وصلت أرقام الساعة ✓'); } history.replaceState(null, '', '#home'); h = 'home'; } if (!V[h]) h = 'home'; $('#app').innerHTML = V[h](); if (h === 'me') loadPhotos(); const a = $('#app'); a.classList.remove('fade', 'sl', 'sr'); if (lastTab !== h) { void a.offsetWidth; a.classList.add(lastTab == null ? 'fade' : TABS.indexOf(h) > TABS.indexOf(lastTab) ? 'sl' : 'sr'); } lastTab = h; document.querySelectorAll('nav a').forEach(a => a.classList.toggle('on', a.dataset.t === h)); }
+function route() { if (SUS === null) refreshSus(); let h = location.hash.slice(1); if (h.startsWith('hk')) { const r = parseHK(decodeURIComponent(h.slice(3))); if (r) { saveHK(r); toast('وصلت أرقام الساعة ✓'); } history.replaceState(null, '', '#home'); h = 'home'; } if (!V[h]) h = 'home'; $('#app').innerHTML = V[h](); if (h === 'me') loadPhotos(); const a = $('#app'); a.classList.remove('fade', 'sl', 'sr'); if (lastTab !== h) { void a.offsetWidth; a.classList.add(lastTab == null ? 'fade' : TABS.indexOf(h) > TABS.indexOf(lastTab) ? 'sl' : 'sr'); } lastTab = h; document.querySelectorAll('nav a').forEach(a => a.classList.toggle('on', a.dataset.t === h)); if (typeof countUp === 'function') countUp($('#app')); if (scrollMem && scrollMem[h] != null) { const y = scrollMem[h]; requestAnimationFrame(() => scrollTo(0, y)); } }
 let stack = [], hdepth = 0, skipPops = 0, animating = false;
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const EASE = 'cubic-bezier(.22,1,.36,1)';
@@ -957,6 +969,8 @@ document.addEventListener('click', e => {
   if (d.food) { openFood(d.food); return; }
   if (d.fcat) { fdCat = d.fcat; openDB(); return; }
   if (d.sec) { openSection(d.sec, d.forslot); return; }
+  if (d.font) { S.font = d.font; save(); applyFont(); document.querySelectorAll('[data-font]').forEach(x => x.classList.toggle('on', x === b)); haptic(); return; }
+  if (d.fz) { S.fz = +d.fz; save(); applyFont(); document.querySelectorAll('[data-fz]').forEach(x => x.classList.toggle('on', x === b)); haptic(); return; }
   if (d.ytv) { b.outerHTML = vframe(d.ytv); return; }
   if (d.mus) { openMuscle(d.mus); return; }
   if (d.pday) { openPlanDay(d.pday); return; }
@@ -1029,10 +1043,25 @@ function renderPlayerSets() { // تحديث السطور بدون ما نعيد 
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'mq') { e.preventDefault(); nameSearch(); } if (e.key === 'Enter' && e.target.id === 'bcIn') { e.preventDefault(); lookupBC(e.target.value); } });
 document.addEventListener('change', async e => { if (e.target.id === 'ingImg' && e.target.files[0]) { ocrIngredients(e.target.files[0], e.target.dataset.code || ''); e.target.value = ''; return; } if (e.target.id === 'bcImg' && e.target.files[0]) { decodeImage(e.target.files[0]); e.target.value = ''; return; } if (e.target.id === 'impIn' && e.target.files[0]) { try { const o = JSON.parse(await e.target.files[0].text()); if (!o || !o.month) throw 0; S = Object.assign(def(), o); save(); applyTheme(); closeScreen(); toast('رجعت معلوماتك ✓'); } catch (er) { toast('الملف مو صحيح'); } return; } if (e.target.id === 'photoIn' && e.target.files[0]) { await savePhoto(e.target.files[0]); toast('انحفظت الصورة'); loadPhotos(); } });
 document.addEventListener('input', e => { const t = e.target; if (t.id === 'fdq') { fdQ = t.value; const pos = t.selectionStart; openDB(); const n = $('#fdq'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (er) {} } return; } if (!SES) return; if (t.dataset.w != null) SES.sets[SES.k][+t.dataset.w].w = t.value; if (t.dataset.r != null) SES.sets[SES.k][+t.dataset.r].r = t.value; });
+/* ================= إحساس التطبيق الحقيقي ================= */
+// لمسة ضوء مكان إصبعك
+const RIPS = '.dayc,.exrow,.prog,.mus,.excard,.pcard,.slot,.chc,.cd,.gbtn,.obtn,.btn,.ytbtn,.srow,.hero2,.fonts button';
+document.addEventListener('pointerdown', e => { const el = e.target.closest(RIPS); if (!el || RM) return; const r = el.getBoundingClientRect(), d = Math.max(r.width, r.height) * 2.2, sp = document.createElement('span'); sp.className = 'rip'; sp.style.cssText = `width:${d}px;height:${d}px;left:${e.clientX - r.left - d / 2}px;top:${e.clientY - r.top - d / 2}px`; el.append(sp); setTimeout(() => sp.remove(), 600); }, { passive: true });
+// اهتزاز خفيف بالأزرار المهمة
+document.addEventListener('click', e => { const b = e.target.closest('.gbtn,.btn,[data-ok],[data-start],[data-took],[data-back],[data-close],[data-setprog]'); if (b) haptic(b.matches('[data-ok],[data-setprog]') ? 14 : 8); }, true);
+// التبويبات: تنط، وإذا ضغطت نفس التبويب يرجعك لفوگ
+const scrollMem = {};
+document.querySelector('nav').addEventListener('click', e => { const a = e.target.closest('a'); if (!a) return; haptic(); const t = a.dataset.t; if (location.hash.slice(1) === t || (!location.hash && t === 'home')) { e.preventDefault(); scrollTo({ top: 0, behavior: 'smooth' }); return; } scrollMem[lastTab] = scrollY; a.classList.remove('pop'); void a.offsetWidth; a.classList.add('pop'); });
+// شريط العنوان الصغير
+const mb = $('#minibar');
+addEventListener('scroll', () => { if (!mb) return; const h = $('#app h1') || $('#app .hi b'); const on = scrollY > 70 && $('#screen').hidden; if (on && h) mb.textContent = h.textContent.replace(/!$/, ''); mb.classList.toggle('on', on); }, { passive: true });
+// الأرقام تعد لحد قيمتها
+function countUp(root = document) { if (RM) return; root.querySelectorAll('[data-count]').forEach(el => { const to = +el.dataset.count, suf = el.dataset.suf || '', t0 = performance.now(), D = 900; const f = now => { const k = Math.min(1, (now - t0) / D), v = Math.round(to * (1 - Math.pow(1 - k, 3))); el.textContent = v + suf; if (k < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); }); }
+
 route();
 /* نحمّل كل مقاطع الحركة مرة وحدة، حتى تشتغل بعدين بدون نت */
 setTimeout(() => { if (!navigator.onLine) return; let i = 0; const L = CLIP.flatMap(id => [`img/clip/${id}-0.webp`, `img/clip/${id}-1.webp`]); const next = () => { const u = L.slice(i, i + 6); i += 6; if (!u.length) return; Promise.all(u.map(x => fetch(x).catch(() => 0))).then(() => setTimeout(next, 150)); }; next(); }, 4000);
-(() => { const sp = document.getElementById('splash'); if (!sp) return; const go = () => { sp.classList.add('out'); setTimeout(() => sp.remove(), 600); }; setTimeout(go, RM ? 200 : 2800); sp.addEventListener('click', go); })();
+(() => { const sp = document.getElementById('splash'); if (!sp) return; const go = () => { if (sp.classList.contains('out')) return; sp.classList.add('out'); $('#app').animate([{ opacity: 0, transform: 'translateY(30px) scale(.97)' }, { opacity: 1, transform: 'none' }], { duration: 700, easing: 'cubic-bezier(.22,1,.36,1)' }); setTimeout(() => sp.remove(), 750); }; setTimeout(go, RM ? 200 : 4400); setTimeout(() => sp.classList.add('sp-shake'), 0); sp.addEventListener('click', go); })();
 
 /* ================= التحديث التلقائي ================= */
 if ('serviceWorker' in navigator) {

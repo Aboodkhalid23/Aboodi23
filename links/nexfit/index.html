@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Oswald:wght@500;600;700&display=swap">
 <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
-<script>try{var _t=JSON.parse(localStorage.getItem("coach-v4")||"{}").theme||"dark";if(_t==="auto")_t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=_t;}catch(e){}</script>
+<script>try{var _S=JSON.parse(localStorage.getItem("coach-v4")||"{}"),_F={cairo:["Cairo","Cairo:wght@400;500;600;700;800;900"],tajawal:["Tajawal","Tajawal:wght@400;500;700;800;900"],plex:["IBM Plex Sans Arabic","IBM+Plex+Sans+Arabic:wght@400;500;600;700"],kufi:["Noto Kufi Arabic","Noto+Kufi+Arabic:wght@400;500;600;700;800;900"],almarai:["Almarai","Almarai:wght@400;700;800"],readex:["Readex Pro","Readex+Pro:wght@400;500;600;700"]}[_S.font];if(_F){document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family='+_F[1]+'&display=swap">');document.documentElement.style.setProperty("--fd","'"+_F[0]+"',system-ui,sans-serif");document.documentElement.style.setProperty("--fb","'"+_F[0]+"',system-ui,sans-serif");}if(_S.fz)document.documentElement.style.setProperty("--z",_S.fz);var _t=_S.theme||"dark";if(_t==="auto")_t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=_t;}catch(e){}</script>
 <style>
 /* هوية NEXFIT: أسود وأحمر وفضي مثل اللوغو، خط فازير يدعم كل الحروف العراقية */
 :root{
@@ -720,30 +720,44 @@ nav a.on>span svg{width:22px!important;height:22px!important}
 .pcard b{font-size:14.5px;line-height:1.35;margin-top:4px}.pcard small{font-size:11px;color:var(--mut);direction:ltr;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* ===== v24: الحركة والتنقل ===== */
-#splash{position:fixed;inset:0;z-index:999;background:#1b1b1d;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;transition:opacity .55s ease,transform .7s cubic-bezier(.22,1,.36,1)}
-#splash.out{opacity:0;transform:scale(1.12);pointer-events:none}
-.sp-svg{width:min(88vw,460px);height:auto;overflow:visible;animation:spZoom 3s cubic-bezier(.22,1,.36,1) both}
-.spx1,.spx2{stroke-dasharray:1;stroke-dashoffset:1;animation:spDraw .55s cubic-bezier(.65,0,.35,1) forwards,spHide .2s linear 1.05s forwards}.spx2{animation-delay:.28s,1.05s}@keyframes spHide{to{opacity:0}}.sp-xfull{animation:spTag .25s ease .8s both}
-.sp-head{transform-box:fill-box;transform-origin:center;animation:spPop .6s cubic-bezier(.34,1.8,.64,1) .7s both}
-.sp-body{transform-box:fill-box;transform-origin:50% 100%;animation:spSquash .5s ease-out 1.38s both}
-.sp-bar{animation:spDrop .75s cubic-bezier(.5,0,.75,0) .95s both,spLift .6s cubic-bezier(.34,1.56,.64,1) 1.55s both}
-.sp-glow{transform-box:fill-box;transform-origin:center;animation:spGlow 1.2s ease-out 1.35s both}
+#splash{position:fixed;inset:0;z-index:999;background:radial-gradient(600px 500px at 50% 45%,#232327,#141416 70%);display:flex;align-items:center;justify-content:center;overflow:hidden;transition:opacity .7s ease}
+#splash.out{opacity:0;pointer-events:none}#splash.out .sp-svg{transform:scale(.55) translateY(-60%)!important;transition:transform .7s cubic-bezier(.7,0,.2,1)}
+.sp-svg{position:relative;z-index:2;width:min(88vw,460px);height:auto;overflow:visible;animation:spZoom 4.4s cubic-bezier(.22,1,.36,1) both}
+.sp-intro{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
+.sp-ecg{fill:none;stroke:#ffb020;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;filter:drop-shadow(0 0 6px #ff9d1a);animation:spDraw .8s cubic-bezier(.5,0,.3,1) .05s forwards,spHide .3s ease 1.05s forwards}
+.sp-plate{transform-box:fill-box;transform-origin:center;animation:spPlate .55s cubic-bezier(.6,0,.4,1) .5s both,spPlateOut .3s ease-in 1.15s forwards}
+.sp-shock{transform-box:fill-box;transform-origin:center;fill:none;stroke:#ffb020;stroke-width:3;opacity:0;animation:spShock .8s ease-out 1.05s both}
+.sp-shock.s2{animation-delay:1.18s;stroke-width:1.5}
+#splash.sp-shake{animation:spShake .35s ease 1.05s}
+.sp-sparks{position:absolute;inset:0;z-index:1;pointer-events:none}.sp-sparks i{position:absolute;bottom:-10px;width:4px;height:4px;border-radius:50%;background:#ffb020;box-shadow:0 0 8px #ff9d1a;opacity:0;animation:spSpark 2.2s ease-out both}
+.sp-load{position:absolute;bottom:calc(60px + env(safe-area-inset-bottom,0px));left:50%;width:120px;height:3px;margin-left:-60px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;z-index:3}.sp-load i{display:block;height:100%;background:linear-gradient(90deg,#ffc145,#ff8a00);transform-origin:left;animation:spLoad 4.2s cubic-bezier(.4,0,.2,1) both}
+.spx1,.spx2{stroke-dasharray:1;stroke-dashoffset:1;animation:spDraw .55s cubic-bezier(.65,0,.35,1) 1.2s forwards,spHide .2s linear 2.25s forwards}.spx2{animation-delay:1.48s,2.25s}.sp-xfull{animation:spTag .25s ease 2.00s both}
+.sp-head{transform-box:fill-box;transform-origin:center;animation:spPop .6s cubic-bezier(.34,1.8,.64,1) 1.90s both}
+.sp-body{transform-box:fill-box;transform-origin:50% 100%;animation:spSquash .5s ease-out 2.58s both}
+.sp-bar{animation:spDrop .75s cubic-bezier(.5,0,.75,0) 2.15s both,spLift .6s cubic-bezier(.34,1.56,.64,1) 2.75s both}
+.sp-glow{transform-box:fill-box;transform-origin:center;animation:spGlow 1.2s ease-out 2.55s both,spBreath 1.6s ease-in-out 3.80s infinite}
 .sp-l,.sp-r{opacity:0;animation:.65s cubic-bezier(.22,1,.36,1) both}
-.sp-l{animation-name:spInL;animation-delay:1.75s}.sp-l.l2{animation-delay:1.65s}
-.sp-r{animation-name:spInR;animation-delay:1.65s}.sp-r.r2{animation-delay:1.73s}.sp-r.r3{animation-delay:1.81s}
-.sp-shine{animation:spShine .7s ease-in-out 2.05s both}
-
-@keyframes spDraw{to{stroke-dashoffset:0}}
+.sp-l{animation-name:spInL;animation-delay:2.95s}.sp-l.l2{animation-delay:2.85s}
+.sp-r{animation-name:spInR;animation-delay:2.85s}.sp-r.r2{animation-delay:2.93s}.sp-r.r3{animation-delay:3.01s}
+.sp-shine{animation:spShine .8s ease-in-out 3.30s both}
+@keyframes spDraw{to{stroke-dashoffset:0}}@keyframes spHide{to{opacity:0}}
 @keyframes spPop{from{transform:scale(0)}to{transform:none}}
 @keyframes spDrop{0%{transform:translateY(-700px);opacity:0}15%{opacity:1}100%{transform:translateY(40px)}}
 @keyframes spLift{from{transform:translateY(40px)}to{transform:none}}
 @keyframes spSquash{0%{transform:none}35%{transform:scale(1.04,.9)}100%{transform:none}}
 @keyframes spGlow{0%{opacity:0;transform:scale(.3)}40%{opacity:1}100%{opacity:.55;transform:scale(1)}}
+@keyframes spBreath{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:.8;transform:scale(1.08)}}
 @keyframes spInL{from{opacity:0;transform:translateX(260px)}to{opacity:1;transform:none}}
 @keyframes spInR{from{opacity:0;transform:translateX(-260px)}to{opacity:1;transform:none}}
 @keyframes spShine{from{transform:skewX(-20deg) translateX(0)}to{transform:skewX(-20deg) translateX(2500px)}}
 @keyframes spTag{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-@keyframes spZoom{0%{transform:scale(1.25)}60%{transform:scale(1)}100%{transform:scale(.98)}}
+@keyframes spPlate{from{opacity:0;transform:scale(3.2) rotate(-540deg);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+@keyframes spPlateOut{to{opacity:0;transform:scale(.15) rotate(90deg)}}
+@keyframes spShock{0%{opacity:1;transform:scale(.3)}100%{opacity:0;transform:scale(4)}}
+@keyframes spShake{0%,100%{transform:none}20%{transform:translate(-5px,4px)}40%{transform:translate(5px,-3px)}60%{transform:translate(-3px,2px)}80%{transform:translate(2px,-1px)}}
+@keyframes spSpark{0%{opacity:0;transform:translateY(0) scale(.6)}15%{opacity:1}100%{opacity:0;transform:translateY(-70vh) scale(1.2)}}
+@keyframes spLoad{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes spZoom{0%{transform:scale(1.2)}27%{transform:scale(1.2)}75%{transform:scale(1)}100%{transform:scale(.97)}}
 .screen{overflow-x:hidden;box-shadow:0 0 60px rgba(0,0,0,.6);will-change:transform}
 .screen:not([hidden]) .in{animation:none}
 .screen .in.ghost{position:absolute;left:0;right:0;margin:0 auto;pointer-events:none;z-index:-1}
@@ -797,10 +811,32 @@ nav a{transition:color .3s}
 .clip .off{position:absolute;top:10px;left:10px;font-size:11px;background:rgba(52,199,89,.85);color:#04210f;font-weight:800;border-radius:999px;padding:3px 9px}
 .pclip{position:absolute;inset:0;border-radius:0;aspect-ratio:auto;border:0}
 .ytbtn{width:100%;background:var(--s1);border:1px solid var(--line);color:var(--fg);border-radius:16px;padding:12px;font-size:14.5px;font-weight:700}.ytbtn small{color:var(--mut);font-weight:400}
+
+/* ===== v31: إحساس التطبيق الحقيقي ===== */
+html{-webkit-text-size-adjust:100%;overscroll-behavior:none}
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation;overscroll-behavior-y:none}
+input,textarea,[contenteditable],.steps,.card p{-webkit-user-select:text;user-select:text}
+#app,.screen .in{zoom:var(--z,1)}
+/* شريط عنوان صغير يطلع لما تنزل */
+#minibar{position:fixed;top:0;left:0;right:0;z-index:55;padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px;text-align:center;font-family:var(--fd);font-weight:800;font-size:16px;background:rgba(14,14,16,.78);-webkit-backdrop-filter:blur(20px) saturate(1.5);backdrop-filter:blur(20px) saturate(1.5);border-bottom:1px solid var(--line);transform:translateY(-100%);opacity:0;transition:transform .35s cubic-bezier(.22,1,.36,1),opacity .25s}
+#minibar.on{transform:none;opacity:1}
+/* لمسة الضغط مثل التطبيقات */
+.rip{position:absolute;border-radius:50%;pointer-events:none;background:rgba(255,180,60,.28);transform:scale(0);animation:rip .55s cubic-bezier(.22,1,.36,1) forwards}
+@keyframes rip{to{transform:scale(1);opacity:0}}
+.dayc,.exrow,.prog,.mus,.excard,.pcard,.slot,.chc,.cd,.gbtn,.obtn,.btn,.ytbtn,.srow,.hero2{position:relative;overflow:hidden}
+/* أيقونة التبويب تنط */
+nav a.pop>span{animation:tabpop .5s cubic-bezier(.34,1.8,.64,1)}
+@keyframes tabpop{0%{transform:scale(.7)}60%{transform:scale(1.12)}100%{transform:none}}
+/* اختيار الخط */
+.fonts{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px}
+.fonts button{background:var(--s2);border:2px solid transparent;border-radius:16px;padding:12px 10px;color:var(--fg);text-align:center;display:flex;flex-direction:column;gap:2px}
+.fonts button.on{border-color:var(--g);background:rgba(255,164,27,.1)}.fonts b{font-size:19px;line-height:1.4}.fonts small{font-size:12px;color:var(--mut)}.fonts em{font-style:normal;font-size:13px;direction:ltr;color:var(--g)}
+.fsz{display:flex;gap:8px;padding:0 12px 12px}.fsz button{flex:1;background:var(--s2);border:2px solid transparent;border-radius:14px;padding:10px 0;color:var(--fg);font-weight:800}.fsz button.on{border-color:var(--g)}
+.count{display:inline-block}
 </style>
 </head>
 <body>
-<div id="splash" aria-hidden="true"><svg class="sp-svg" viewBox="160 600 1780 860" xmlns="http://www.w3.org/2000/svg">
+<div id="splash" aria-hidden="true"><svg class="sp-intro" viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice"><path class="sp-ecg" pathLength="1" d="M-20 400 L120 400 L140 400 L152 370 L164 440 L178 330 L192 470 L204 400 L230 400 L250 400 L262 385 L274 400 L420 400"/><g class="sp-plate"><circle cx="200" cy="400" r="46" fill="#232327" stroke="#e09b36" stroke-width="7"/><circle cx="200" cy="400" r="30" fill="none" stroke="#e09b36" stroke-width="2" opacity=".6"/><circle cx="200" cy="400" r="9" fill="#141416" stroke="#e09b36" stroke-width="3"/><rect x="194" y="358" width="12" height="8" rx="2" fill="#e09b36"/></g><circle class="sp-shock" cx="200" cy="400" r="50"/><circle class="sp-shock s2" cx="200" cy="400" r="50"/></svg><div class="sp-sparks"><i style="left:49%;animation-delay:4.12s;animation-duration:2.15s;width:3px;height:3px"></i><i style="left:76%;animation-delay:2.75s;animation-duration:2.42s;width:5px;height:3px"></i><i style="left:12%;animation-delay:2.74s;animation-duration:2.19s;width:3px;height:3px"></i><i style="left:78%;animation-delay:3.28s;animation-duration:2.76s;width:3px;height:3px"></i><i style="left:88%;animation-delay:3.60s;animation-duration:2.93s;width:5px;height:5px"></i><i style="left:58%;animation-delay:2.68s;animation-duration:1.91s;width:5px;height:3px"></i><i style="left:45%;animation-delay:3.27s;animation-duration:2.36s;width:5px;height:4px"></i><i style="left:79%;animation-delay:3.91s;animation-duration:1.85s;width:5px;height:5px"></i><i style="left:89%;animation-delay:2.90s;animation-duration:1.74s;width:5px;height:3px"></i><i style="left:80%;animation-delay:2.70s;animation-duration:1.89s;width:5px;height:5px"></i><i style="left:62%;animation-delay:3.84s;animation-duration:2.25s;width:4px;height:4px"></i><i style="left:46%;animation-delay:3.00s;animation-duration:1.85s;width:3px;height:3px"></i><i style="left:81%;animation-delay:3.08s;animation-duration:2.29s;width:4px;height:5px"></i><i style="left:65%;animation-delay:3.06s;animation-duration:2.97s;width:3px;height:5px"></i><i style="left:61%;animation-delay:2.86s;animation-duration:2.08s;width:4px;height:4px"></i><i style="left:13%;animation-delay:4.14s;animation-duration:1.71s;width:5px;height:5px"></i><i style="left:48%;animation-delay:3.14s;animation-duration:2.09s;width:4px;height:5px"></i><i style="left:66%;animation-delay:2.71s;animation-duration:1.73s;width:4px;height:4px"></i></div><div class="sp-load"><i></i></div><svg class="sp-svg" viewBox="160 600 1780 860" xmlns="http://www.w3.org/2000/svg">
 <defs>
 
 <linearGradient id="spgl" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
@@ -814,6 +850,7 @@ nav a{transition:color .3s}
 <g class="sp-bar"><path d="M727.6 828.8C724.4 817.3 688.0 676.9 686.3 669.4C685.9 667.8 686.4 667.1 688.2 666.6C699.3 663.5 722.3 658.0 722.7 658.4C722.9 658.6 726.2 670.9 730.0 685.6C737.4 714.8 740.7 727.0 741.4 727.7C741.6 727.9 745.6 727.0 750.1 725.6C806.6 708.6 878.1 695.7 950.0 689.4C974.5 687.2 1052.6 686.4 1077.4 687.9C1152.2 692.7 1217.5 703.5 1288.9 723.1C1299.0 725.8 1307.3 728.0 1307.5 727.8C1307.9 727.3 1314.5 702.4 1320.0 680.5C1322.9 669.0 1325.7 659.1 1326.1 658.7C1326.7 657.9 1360.6 666.3 1361.9 667.6C1362.6 668.2 1352.8 707.4 1339.0 759.5C1336.8 767.8 1331.6 787.8 1327.4 804.0C1323.2 820.2 1319.6 833.6 1319.5 833.8C1319.0 834.4 1286.0 825.7 1284.6 824.6C1283.2 823.6 1284.1 819.2 1291.6 789.6C1296.3 771.0 1299.9 755.3 1299.7 754.7C1299.3 753.4 1295.2 752.2 1267.0 745.0C1139.3 712.8 1021.6 705.5 897.5 722.1C846.4 728.9 747.1 751.1 748.5 755.3C750.6 761.4 765.0 821.8 764.8 823.3C764.5 825.0 762.0 826.0 748.0 829.6C738.9 832.0 731.0 833.9 730.3 834.0C729.6 834.0 728.4 831.6 727.6 828.8ZM673.1 815.2C666.4 793.0 644.7 708.2 645.5 707.0C646.7 705.1 679.3 696.0 680.5 697.2C680.9 697.6 685.4 714.0 690.5 733.7C695.6 753.4 702.3 779.1 705.3 790.9C708.4 802.7 710.8 812.5 710.7 812.6C710.3 812.9 677.0 822.0 676.1 822.0C675.6 822.0 674.3 819.0 673.1 815.2ZM1354.8 817.1C1346.2 814.6 1338.9 812.2 1338.6 811.9C1338.1 811.4 1345.6 781.9 1362.6 716.8C1365.2 707.1 1367.6 698.6 1368.1 697.9C1368.8 696.8 1370.2 696.9 1376.2 698.4C1385.6 700.8 1402.3 706.0 1403.2 706.9C1404.0 707.6 1384.6 783.7 1374.3 820.2C1373.6 822.6 1373.0 822.5 1354.8 817.1Z" fill="#fff"/></g>
 <g clip-path="url(#sptxt)"><rect class="sp-shine" x="-300" y="860" width="260" height="380" fill="url(#spgl)" transform="skewX(-20)"/></g>
 </svg></div>
+<div id="minibar"></div>
 <main id="app"></main>
 <nav aria-label="القائمة"><div class="in">
   <a href="#home" data-t="home"><span data-i="home"></span>الرئيسية</a>
@@ -824,6 +861,6 @@ nav a{transition:color .3s}
 </div></nav>
 <div id="screen" class="screen" hidden></div>
 <div id="player" class="player" hidden></div>
-<script type="module" src="app.js?v=30"></script>
+<script type="module" src="app.js?v=31"></script>
 </body>
 </html>
