@@ -185,6 +185,8 @@ look("PROCOLD", "تقني بارد", "الاحترافية", "التكنولوج
 look("PRONOIR", "أبيض وأسود", "الاحترافية", "لقطات درامية ومشاهد الذكريات: أبيض وأسود سينمائي، الوجه مضوّي",
      contrast=1.85, gray=0.17, toe=0.004, mono=(0.45, 0.45, 0.10))
 PRO_SET = ["PROMAIN", "PROFILM", "PRODRAMA", "PRODARK", "PROGOLD", "PROCOLD", "PRONOIR"]
+# صاحب القناة يريد الملفات بأرقام بس (1.cube لحد 7.cube)، حتى يعرفها بالكاميرا بسهولة
+NUM = {k: str(i + 1) for i, k in enumerate(PRO_SET)}
 
 # مخصوصة لاستوديو صاحب القناة (من صورة حقيقية دزها 10 تشرين الثاني 2026: ضوء أحمر مغرّگ الحايط
 # الأبيض وطالع على وجهه). تهدّي الأحمر وتغمّگه، وتبرّد الصورة شوية حتى الوجه يرجع طبيعي.
@@ -548,7 +550,7 @@ def preview(tables, mine=None):
         tops = ["mine", "outdoor" if first == "outdoor" else "studio2"] if mine else [first, "studio2"]
         x, y = (i % cols) * tw, (i // cols) * (th + bar)
         sheet.paste(shot(scenes[tops[0] if mine or first == "outdoor" else "studio2"], table, (tw, th)), (x, y + bar))
-        ds.text((x + tw - 8, y + 5), f"{p['name']}  {key}", fill=(235, 235, 235), font=font(17), anchor="ra",
+        ds.text((x + tw - 8, y + 5), f"{NUM.get(key, '')}  {p['name']}", fill=(235, 235, 235), font=font(17), anchor="ra",
                 direction="rtl")
         top = len(tops) * H
         card = Image.new("RGB", (W, top + B), (11, 11, 15))
@@ -557,8 +559,8 @@ def preview(tables, mine=None):
         d = ImageDraw.Draw(card)
         d.text((W - 24, top + 10), p["name"], fill=(255, 255, 255), font=font(40), anchor="ra", direction="rtl")
         d.text((W - 24, top + 62), p["use"], fill=(255, 196, 0), font=font(25), anchor="ra", direction="rtl")
-        d.text((24, top + 26), key, fill=(255, 255, 255), font=font(40, "Cairo-Black.ttf"))
-        card.save(out / f"{key}.jpg", quality=85)
+        d.text((24, top + 26), NUM.get(key, key), fill=(255, 255, 255), font=font(40, "Cairo-Black.ttf"))
+        card.save(out / f"{NUM.get(key, key)}.jpg", quality=85)
     sheet.save(base / "preview.jpg", quality=90)
     return base
 
@@ -580,17 +582,17 @@ def main():
     arch = out / "archive"   # الفلاتر القديمة (قبل 25 تشرين الثاني 2026): مكتبة احتياط، مو للكاميرا
     arch.mkdir(exist_ok=True)
     for old in out.glob("*.cube"):
-        if old.stem not in PRO_SET:
+        if old.stem not in NUM.values():
             old.unlink()
     for key, p in LOOKS.items():
         assert len(key) <= 8, f"{key}: الكارت يعرض 8 حروف بس"
-        dest = (out if key in PRO_SET else arch) / f"{key}.cube"
-        table = write_cube(dest, f"{key} - Aboodi Studio", p)
+        dest = out / f"{NUM[key]}.cube" if key in PRO_SET else arch / f"{key}.cube"
+        table = write_cube(dest, f"{NUM.get(key, key)} {key} - Aboodi Studio", p)
         if key in PRO_SET:
             tables[key] = table
         size = dest.stat().st_size
         assert size < 1_000_000, f"{key} أكبر من 1 ميگا"
-        print(f"✓ {key}.cube  ({p['name']})  {size // 1024} KB")
+        print(f"✓ {dest.name}  {key} ({p['name']})  {size // 1024} KB")
     if a.preview:
         preview(tables)
         print("✓ صور المعاينة:", CAM / "previews", "و", CAM / "preview.jpg")
