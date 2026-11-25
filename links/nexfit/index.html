@@ -842,6 +842,26 @@ nav a.pop>span{animation:tabpop .5s cubic-bezier(.34,1.8,.64,1)}
 .spc .pi{display:grid;place-items:center;height:140px;border-radius:16px;background:radial-gradient(circle at 50% 45%,#fff 0,#f1f1f3 60%,#dcdce0 100%)}.spc .pi img{max-width:85%;max-height:126px;object-fit:contain}
 .spc b{font-size:14px;line-height:1.35;margin-top:4px}.spc small{font-size:10.5px;color:var(--mut);direction:ltr;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.spc .go{font-size:12px;color:var(--g);font-weight:700}
 .stdy summary{cursor:pointer}
+
+/* ===== v34: الرئيسية اليومية ===== */
+.hbar{display:flex;align-items:center;justify-content:space-between;gap:10px}.wlogo{height:66px;width:auto;max-width:62%;object-fit:contain;filter:drop-shadow(0 6px 18px rgba(255,150,20,.25))}
+.hdate{text-align:center;color:var(--mut);font-size:13px;margin:-8px 0 -4px}
+.tw{position:relative;border-radius:26px;overflow:hidden;border:1px solid rgba(255,170,40,.3);background:radial-gradient(420px 220px at 100% 0,rgba(255,160,30,.22),transparent 70%),var(--s1);display:flex;flex-direction:column}
+.tw>img{width:100%;height:170px;object-fit:cover;display:block;mask-image:linear-gradient(#000 55%,transparent);-webkit-mask-image:linear-gradient(#000 55%,transparent)}
+.twb{padding:0 16px 16px;margin-top:-34px;position:relative;display:flex;flex-direction:column;gap:8px}.tw small{color:var(--g);font-weight:800;font-size:12.5px}.tw h2{font-size:25px;line-height:1.25}
+.tw.start,.tw.rest{padding:18px;gap:8px}.tw .done{color:#34c759;font-weight:800}
+.todo{display:flex;flex-direction:column;gap:8px}
+.td{display:flex;align-items:center;gap:12px;background:var(--s1);border:1px solid var(--line);border-radius:18px;padding:11px 12px;color:var(--fg);text-align:right;transition:all .3s}
+.td .ic{width:42px;height:42px;border-radius:13px;background:var(--s2);display:grid;place-items:center;font-size:21px;flex:none}
+.td b{display:block;font-size:15px}.td small{display:block;color:var(--mut);font-size:12px;line-height:1.4}
+.td .ck{width:30px;height:30px;border-radius:50%;border:2px solid var(--s3);display:grid;place-items:center;flex:none;color:transparent;transition:all .35s cubic-bezier(.34,1.56,.64,1)}.td .ck svg{width:16px;height:16px}
+.td.on{border-color:rgba(52,199,89,.35);background:rgba(52,199,89,.06)}.td.on b{text-decoration:line-through;opacity:.6}.td.on .ck{background:#34c759;border-color:#34c759;color:#04210f;transform:scale(1.08)}
+.mrow{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.mc{background:var(--s1);border:1px solid var(--line);border-radius:16px;padding:9px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--fg);text-decoration:none}.mc span{font-size:20px}.mc small{font-size:10.5px;color:var(--mut);text-align:center;line-height:1.2}.mc.on{border-color:rgba(52,199,89,.4)}.mc.on span{color:#34c759;font-weight:900}
+.shift{display:flex;align-items:center;justify-content:space-between;gap:6px}.shift button{background:var(--s2);border:0;color:var(--fg);border-radius:999px;padding:7px 12px;font-size:12.5px;font-weight:700}
+.meals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.ml{background:var(--s1);border:1px solid var(--line);border-radius:22px;overflow:hidden;display:flex;flex-direction:column;min-width:0}.ml:first-child{grid-column:1/-1}
+.mlb{background:none;border:0;color:var(--fg);text-align:right;padding:12px;display:flex;flex-direction:column;gap:3px;flex:1}.mi{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;font-size:22px;margin-bottom:4px}
+.mlb b{font-size:16px}.mlb small{color:var(--mut);font-size:11.5px}.mlb .mn{font-size:13.5px;line-height:1.4;margin-top:2px}
+.mck{border:0;border-top:1px solid var(--line);background:var(--s2);color:var(--mut);font-size:12.5px;font-weight:800;padding:9px}.mck.on{background:rgba(52,199,89,.15);color:#34c759}.ml.on{border-color:rgba(52,199,89,.35)}
 </style>
 </head>
 <body>
@@ -870,6 +890,6 @@ nav a.pop>span{animation:tabpop .5s cubic-bezier(.34,1.8,.64,1)}
 </div></nav>
 <div id="screen" class="screen" hidden></div>
 <div id="player" class="player" hidden></div>
-<script type="module" src="app.js?v=33"></script>
+<script type="module" src="app.js?v=34"></script>
 </body>
 </html>
