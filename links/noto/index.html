@@ -12,7 +12,7 @@
 <link rel="icon" href="icon-192.png">
 <title>Noto</title>
 <style>body{margin:0;background:#121316}</style>
-<script>if("serviceWorker" in navigator&&location.protocol==="https:"){addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=1795643927",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));let re=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(re||window.__notoReading)return;re=true;location.reload();});}</script>
+<script>if("serviceWorker" in navigator&&location.protocol==="https:"){addEventListener("load",()=>navigator.serviceWorker.register("sw.js?v=1795645636",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));let re=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(re||window.__notoReading)return;re=true;location.reload();});}</script>
 </head>
 <body>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -481,6 +481,8 @@ const T={ar:{
  warmT:"تمرين تسخين قبل التصوير",warmS:"دقيقة وحدة: ثلاث أنفاس هادية حتى يرتاح صوتك، وبعدين تتمرن على أصعب المقاطع على مهلك.",inhale:"شهيق من الأنف…",hold:"اثبت…",exhale:"زفير من الحلگ، على مهلك…",
  warmGo:"زين! هسه أصعب 3 مقاطع 👇",warmHard:"اگراهن بصوت عالي، على مهلك",goThere:"روح إلها",warmTip:"گول كل مقطع مرتين: مرة بطيئة كلش، ومرة بالسرعة الطبيعية. البطء أول مرة يعلّم لسانك الطريق.",
  aiSlow:"الذكاء طوّل كلش بالجواب. جرّب مرة ثانية.",dirPart:"✓ حللت {0} من {1} أجزاء. اضغط «حلّل من جديد» حتى يكمل الباقي.",
+ aiBusy:"الذكاء مشغول هسه (ضغط على خوادمهم). جرّب بعد دقيقة.",aiModel:"النموذج المحفوظ قديم، وما لگيت بديل يشتغل.",aiRegion:"Google ما تسمح بـ Gemini ببلدك. جرّب ChatGPT أو Claude.",
+ aiBlocked:"الذكاء رفض يحلل هذا المحتوى (فلتر الحماية مالته). جرّب ChatGPT أو Claude.",aiWait:"⏳ Google طلبت ننتظر شوية… {0} ث",errWhy:"شنو صار بالضبط:",ping:"جرّب الاتصال بالذكاء",pingOk:"شغّال",dirLocalNow:"هسه شغّال «تحليل Noto الداخلي» (بدون إنترنت). حلّل بالذكاء حتى يصير أدق.",
  aBack5:"رجوع 5 ثواني",aFwd5:"قدّام 5 ثواني",aEnd:"المقطع الجاي",aPrevPara:"المقطع الي قبله"},
 en:{
  lockMsg:"Enter your code to open Noto",lockWait:"One moment…",lockBad:"Wrong code, try again",lockMany:"Too many tries. Wait 30 seconds",lockNo:"This device can't use the lock",del:"Delete",
@@ -559,6 +561,8 @@ en:{
  warmT:"Warm-up before recording",warmS:"One minute: three calm breaths to relax your voice, then practice the hardest parts slowly.",inhale:"Breathe in through your nose…",hold:"Hold…",exhale:"Breathe out slowly…",
  warmGo:"Great! Now the 3 hardest parts 👇",warmHard:"Read them aloud, slowly",goThere:"Go there",warmTip:"Say each part twice: once very slowly, once at normal speed. Going slow first teaches your tongue the way.",
  aiSlow:"The AI took too long. Try again.",dirPart:"✓ Analyzed {0} of {1} parts. Tap Analyze again to finish the rest.",
+ aiBusy:"The AI is busy right now. Try again in a minute.",aiModel:"The saved model is outdated and no working replacement was found.",aiRegion:"Google doesn't allow Gemini in your country. Try ChatGPT or Claude.",
+ aiBlocked:"The AI refused this content (its safety filter). Try ChatGPT or Claude.",aiWait:"⏳ Google asked us to wait… {0}s",errWhy:"What exactly happened:",ping:"Test the AI connection",pingOk:"works",dirLocalNow:"Noto's built-in analysis is on now (works offline). Analyze with AI for more accuracy.",
  aBack5:"Back 5 seconds",aFwd5:"Forward 5 seconds",aEnd:"Next section",aPrevPara:"Previous section"}};
 const t=(k,...a)=>{let s=(T[S.lang]||T.ar)[k];if(s==null)s=T.ar[k]||k;a.forEach((v,i)=>{s=s.replace("{"+i+"}",v);});return s;};
 let toastT=0;
@@ -861,37 +865,51 @@ const MOODC={excite:"rgba(255,122,48,.55)",serious:"rgba(150,160,180,.35)",calm:
 const TN={excite:"🔥",serious:"🎯",calm:"🌙",fun:"😄",mystery:"🕵️",sad:"💧",suspense:"⚡",question:"❓"};
 const hsh=x=>{let h=0;for(let i=0;i<x.length;i++)h=(h*31+x.charCodeAt(i))|0;return String(h);};
 const anaKey=()=>hsh(SENT.map(x=>x.t).join("|"));
-function localItem(x){const it={tone:"",pace:"normal",stress:"",note:""};const tx=x.t.trim();
+const LEX={excite:/(تخيّل|تخيل|صدگ|صدق|فجأة|فجاة|عجيب|خيالي|أكبر|اكبر|أول مرة|ضخم|مليون|مليار|أغنى|اغنى|ما تتوقع|انصدم|صدمة|انفجر)/,mystery:/(سر|أسرار|غامض|لغز|محد يعرف|محد|اختفى|اختفت|ليش|شنو الي|الحقيقة|مخفي|خفي|جاسوس)/,
+  serious:/(مات|موت|قتل|حرب|سجن|خسر|خسارة|مشكلة|خطر|خطير|جريمة|اعدام|إعدام|فشل|أزمة|ازمة|انهار)/,sad:/(حزين|وحيد|فقد|دموع|بكى|ودّع|ودع|يتيم|فقير|مرض)/,fun:/(ضحك|يضحك|مضحك|نكتة|هههه|طريف|مقلب|تخيلوا)/,suspense:/(بس|لكن|وفجأة|وبعدين|الي صار|انتظر|بعدها)/};
+function localItem(x){const it={tone:"",pace:"normal",stress:"",note:""};const tx=x.t.trim(),w=tx.split(/\s+/);
   if(/[؟?]$/.test(tx))it.tone="question";else if(/!$/.test(tx))it.tone="excite";
-  const num=tx.split(/\s+/).find(w=>/[0-9٠-٩]/.test(w)||/^(مليون|مليار|ألف|الف|آلاف|ملايين|مليارات)/.test(w));if(num){it.stress=num.replace(/[.,،!؟?]+$/,"");it.note=S.lang==="en"?"stress the number":"شدّ على الرقم";}
+  else for(const k of ["serious","sad","mystery","excite","fun","suspense"])if(LEX[k].test(tx)){it.tone=k;break;}
+  if(it.tone==="serious"||it.tone==="sad"||it.tone==="mystery")it.pace="slow";else if(it.tone==="excite"&&x.w<=10)it.pace="fast";
+  const num=w.find(v=>/[0-9٠-٩]/.test(v)||/^(مليون|مليار|ألف|الف|آلاف|ملايين|مليارات)/.test(v));
+  const sup=w.find(v=>/^(أكبر|اكبر|أشهر|اشهر|أول|اول|آخر|اخر|أغنى|اغنى|أخطر|اخطر|أقوى|اقوى)$/.test(v.replace(/[.,،!؟?]+$/,"")));
+  if(num){it.stress=num.replace(/[.,،!؟?]+$/,"");it.note=S.lang==="en"?"stress the number":"شدّ على الرقم";}else if(sup)it.stress=sup.replace(/[.,،!؟?]+$/,"");
+  if(x.w>=8){const k=w.findIndex((v,i)=>i>=2&&i<=w.length-3&&/^(بس|لكن|حتى|لأن|لان|و[^ا])/.test(v));if(k>0)it.pz=k-1;}
+  if(it.tone==="question"&&!it.note)it.note=S.lang==="en"?"ask the viewer":"اسأل المشاهد";if(it.tone==="mystery"&&!it.note)it.note=S.lang==="en"?"lower your voice":"وطّي صوتك";
   return it;}
 function loadAna(){const c=doc&&N.get("ana_"+doc.id,null);ANA=c&&c.map?{src:c.src,by:c.by,at:c.at,overall:c.overall,items:SENT.map(x=>c.map[x.t]||localItem(x))}:{src:"local",items:SENT.map(localItem)};}
+let anaErr=null,anaStage="";
+function anaStatus(x){anaStage=x;toast(x);const n=document.getElementById("anaSt");if(n)n.textContent=x;}
 async function analyze(force){if(anaBusy||!doc)return;const ids=Object.keys(PROV).filter(isDirect);const id=ids.includes(aiPick())?aiPick():ids[0];if(!id)return false;
-  if(!force&&ANA&&ANA.src==="ai")return true;anaBusy=true;const docId=doc.id,list=SENT.slice(),items=list.map(localItem);let overall=null,done=0,ok=0,lastErr=null;
-  const story=list.map(x=>x.t).join(" ").slice(0,2500);const B=40,jobs=[];for(let o=0;o<list.length;o+=B)jobs.push(o);
-  const prog=()=>toast(t("dirBusy",PROV[id].name)+" "+AR(Math.min(list.length,done))+"/"+AR(list.length));prog();
-  const one=async o=>{const part=list.slice(o,o+B);
-    const prompt="انت مخرج ومدرّب إلقاء لمقدّم يوتيوب عراقي يقرا من الملقّن مقطع مقطع. هدفك: يحچي بإحساس ويشد المشاهد، وما يسرع ويتلعثم. لا تغيّر ولا كلمة من النص.\n"+
-      "فكرة القصة كلها (للفهم بس): «"+story+"»\n\n"+
-      "لكل مقطع من المقاطع تحت، رجّع مصفوفة بهذا الترتيب: [رقم المقطع, tone, pace, stress, note, pause]\n"+
-      "tone وحدة من: excite, serious, calm, fun, mystery, sad, suspense, question\npace وحدة من: slow, normal, fast\nstress = كلمة وحدة مكتوبة حرفياً من نفس المقطع ينضغط عليها، أو \"\"\n"+
-      "note = توجيه قصير جداً باللهجة العراقية (2 لـ4 كلمات: ابتسم، وگفة قبلها، بصوت واطي، ارفع صوتك، باوع للكاميرا) أو \"\"\npause = رقم الكلمة (من 1) الي بعدها يوگف نص ثانية حتى يشد المشاهد، أو 0\n"+
-      "نوّع حسب معنى القصة: الهوك والمفاجآت والأرقام أقوى، والمقاطع العادية normal بدون note.\n"+
-      "رجّع JSON بس بهذا الشكل: {\"r\":[[0,\"suspense\",\"slow\",\"كنز\",\"بصوت واطي\",3]]"+(o===0?",\"o\":{\"tone\":\"\",\"pace\":\"\",\"summary\":\"جملة وحدة عن شلون ينلقى السكريبت كله\"}":"")+"}\n\nالمقاطع:\n"+part.map((x,k)=>(o+k)+": "+x.t).join("\n");
-    let r=null;for(let tr=0;tr<2&&!r;tr++){try{r=await aiJson(prompt,id);}catch(e){lastErr=e;if(e&&(e.code==="bad"||e.code==="money"))throw e;if(e&&e.code==="limit")await new Promise(z=>setTimeout(z,4000));}}
-    if(!r){done+=part.length;prog();return;}ok++;
-    if(r.o||r.overall)overall=r.o||r.overall;
-    const rows=Array.isArray(r.r)?r.r:Array.isArray(r.items)?r.items.map(x=>[x.i,x.tone,x.pace,x.stress,x.note,x.pause||0]):[];
-    rows.forEach(x=>{if(!Array.isArray(x))return;const i=+x[0];if(!(i>=o&&i<o+part.length))return;const it=items[i];
-      if(TN[x[1]])it.tone=x[1];if(/^(slow|normal|fast)$/.test(x[2]))it.pace=x[2];const st=String(x[3]||"").trim();if(st&&list[i].t.includes(st))it.stress=st;
-      if(x[4])it.note=String(x[4]).trim().slice(0,30);const pz=parseInt(x[5],10);if(pz>0&&pz<list[i].w)it.pz=pz-1;});
-    done+=part.length;prog();};
-  try{for(let q=0;q<jobs.length;q+=3)await Promise.all(jobs.slice(q,q+3).map(one));}
-  catch(e){anaBusy=false;toast(AIMSG(e&&e.code));return false;}
-  anaBusy=false;
-  if(!ok){toast(AIMSG(lastErr&&lastErr.code));return false;}
-  const map={};list.forEach((x,k)=>map[x.t]=items[k]);N.set("ana_"+docId,{src:"ai",by:PROV[id].name,at:Date.now(),overall,map});if(doc&&doc.id===docId){loadAna();if(CARD())showSent();}
-  toast(ok===jobs.length?t("dirDone",AR(list.length)):t("dirPart",AR(ok),AR(jobs.length)));return true;}
+  if(!force&&ANA&&ANA.src==="ai")return true;anaBusy=true;anaErr=null;const docId=doc.id,list=SENT.slice(),items=list.map(localItem);let overall=null,ok=0;
+  const B=150,jobs=[];for(let o=0;o<list.length;o+=B)jobs.push(o);const t0=Date.now();
+  const tk=setInterval(()=>{if(anaBusy)anaStatus(t("dirBusy",PROV[id].name)+" "+AR(Math.round((Date.now()-t0)/1000))+" ث");},1000);anaStatus(t("dirBusy",PROV[id].name));
+  try{for(const o of jobs){const part=list.slice(o,o+B);
+      const prompt="انت مخرج ومدرّب إلقاء لمقدّم يوتيوب عراقي يقرا من الملقّن مقطع مقطع. هدفك: يحچي بإحساس ويشد المشاهد، وما يسرع ويتلعثم. لا تغيّر ولا كلمة من النص.\n"+
+        "لكل مقطع رجّع مصفوفة بهذا الترتيب: [رقم المقطع, tone, pace, stress, note, pause]\n"+
+        "tone وحدة من: excite, serious, calm, fun, mystery, sad, suspense, question\npace وحدة من: slow, normal, fast\nstress = كلمة وحدة مكتوبة حرفياً من نفس المقطع ينضغط عليها، أو \"\"\n"+
+        "note = توجيه قصير جداً باللهجة العراقية (2 لـ4 كلمات: ابتسم، وگفة قبلها، بصوت واطي، ارفع صوتك، باوع للكاميرا) أو \"\"\npause = رقم الكلمة (من 1) الي بعدها يوگف نص ثانية، أو 0\n"+
+        "نوّع حسب معنى القصة: الهوك والمفاجآت والأرقام أقوى، والمقاطع العادية normal بدون note.\n"+
+        "رجّع JSON بس: {\"r\":[[0,\"suspense\",\"slow\",\"كنز\",\"بصوت واطي\",3]]"+(o===0?",\"o\":{\"tone\":\"\",\"pace\":\"\",\"summary\":\"جملة وحدة عن شلون ينلقى السكريبت كله\"}":"")+"}\n\nالمقاطع:\n"+part.map((x,k)=>(o+k)+": "+x.t).join("\n");
+      let r=null,tries=0;
+      while(!r&&tries<4){tries++;try{r=await aiJson(prompt,id);}catch(e){anaErr=e;
+          if(e&&(e.code==="bad"||e.code==="money"||e.code==="region"))throw e;
+          if(e&&e.code==="limit"){const w=Math.min(65,Math.max(8,Math.ceil(e.retry||20)));for(let k=w;k>0;k--){anaStatus(t("aiWait",AR(k)));await new Promise(z=>setTimeout(z,1000));}}
+          else await new Promise(z=>setTimeout(z,1500));}}
+      if(!r)continue;ok++;
+      if(r.o||r.overall)overall=r.o||r.overall;
+      const rows=Array.isArray(r.r)?r.r:Array.isArray(r.items)?r.items.map(x=>[x.i,x.tone,x.pace,x.stress,x.note,x.pause||0]):[];
+      rows.forEach(x=>{if(!Array.isArray(x))return;const i=+x[0];if(!(i>=o&&i<o+part.length))return;const it=items[i];
+        if(TN[x[1]])it.tone=x[1];if(/^(slow|normal|fast)$/.test(x[2]))it.pace=x[2];const st=String(x[3]||"").trim();if(st&&list[i].t.includes(st))it.stress=st;
+        it.note=x[4]?String(x[4]).trim().slice(0,30):it.note;const pz=parseInt(x[5],10);if(pz>0&&pz<list[i].w)it.pz=pz-1;});}
+  }catch(e){anaErr=e;}
+  clearInterval(tk);anaBusy=false;
+  if(!ok){anaStatus(AIMSG(anaErr&&anaErr.code)+(anaErr&&anaErr.status?" ("+anaErr.status+")":""));if(shOpen&&$("shT").textContent===t("dirT"))dirSheet();return false;}
+  anaErr=null;const map={};list.forEach((x,k)=>map[x.t]=items[k]);N.set("ana_"+docId,{src:"ai",by:PROV[id].name,at:Date.now(),overall,map});if(doc&&doc.id===docId){loadAna();if(CARD())showSent();}
+  anaStatus(ok===jobs.length?t("dirDone",AR(list.length)):t("dirPart",AR(ok),AR(jobs.length)));if(shOpen&&$("shT").textContent===t("dirT"))dirSheet();return true;}
+async function aiPing(){const ids=Object.keys(PROV).filter(isDirect);const id=ids.includes(aiPick())?aiPick():ids[0];if(!id)return t("noAI");
+  try{const x=await aiAsk("رد بكلمة وحدة: تمام",id);return "✓ "+PROV[id].name+" "+t("pingOk")+": «"+String(x).slice(0,30)+"»";}
+  catch(e){return "✗ "+AIMSG(e&&e.code)+(e&&e.status?" ["+e.status+"] ":" ")+((e&&e.msg)||"");}}
 function hardest(){return SENT.map((x,i)=>({i,sc:hardSpans(x.t).hit.length*3+x.w})).sort((a,b)=>b.sc-a.sc).slice(0,3).sort((a,b)=>a.i-b.i);}
 function warmSheet(){pause();openSheet(t("warmT"),B=>{B.append(el("p","note",t("warmS")));const c=el("div","breathC"),lb=el("p","note");lb.style.textAlign="center";lb.style.fontSize="20px";lb.style.fontWeight="800";B.append(c,lb);
   let n=0;const cyc=()=>{if(!c.isConnected)return;if(n>=3){lb.textContent=t("warmGo");c.classList.remove("in");show2();return;}n++;lb.textContent=t("inhale")+" ("+AR(n)+"/"+AR(3)+")";c.classList.add("in");
@@ -904,8 +922,11 @@ function dirSheet(){openSheet(t("dirT"),B=>{B.append(el("p","note",t("dirS")));{
   if(ANA&&ANA.overall){const c=el("div","card");c.append(el("b",null,(TN[ANA.overall.tone]||"")+" "+(t("tn_"+ANA.overall.tone)||"")+" · "+t("overall")+": "+(ANA.overall.pace==="fast"?t("pc_fast"):ANA.overall.pace==="slow"?t("pc_slow"):t("normal"))));if(ANA.overall.summary)c.append(el("p","note",ANA.overall.summary));B.append(c);}
   const g=grp(B,"");swRow(g,t("coach"),t("coachS"),S.coach,v=>{S.coach=v;save();showSent();});
   const has=Object.keys(PROV).some(isDirect);
-  if(has){const b=el("button","btn p w",ANA&&ANA.src==="ai"?t("dirAgain"):t("dirAi"));b.style.marginTop="12px";b.addEventListener("click",async()=>{b.disabled=true;await analyze(true);b.disabled=false;if(shOpen)dirSheet();});B.append(b);
-    if(ANA&&ANA.src==="ai")B.append(el("p","note",t("dirFrom",ANA.by||"")));}
+  if(has){const b=el("button","btn p w",ANA&&ANA.src==="ai"?t("dirAgain"):t("dirAi"));b.style.marginTop="12px";b.disabled=anaBusy;b.addEventListener("click",()=>{b.disabled=true;analyze(true);});B.append(b);
+    const st=el("p","note",anaBusy?anaStage:"");st.id="anaSt";st.style.fontWeight="700";B.append(st);
+    if(anaErr&&!anaBusy){const c=el("div","card");c.append(el("b",null,t("errWhy")),el("p","note",AIMSG(anaErr.code)+(anaErr.status?" ["+anaErr.status+"]":"")),el("p","note",anaErr.msg||""));c.lastChild.style.direction="ltr";B.append(c);}
+    const pg=el("button","btn w",t("ping"));pg.style.marginTop="8px";const po=el("p","note");po.style.direction="auto";pg.addEventListener("click",async()=>{pg.disabled=true;po.innerHTML='<span class="spin"></span>';po.textContent=await aiPing();pg.disabled=false;});B.append(pg,po);
+    B.append(el("p","note",ANA&&ANA.src==="ai"?t("dirFrom",ANA.by||""):t("dirLocalNow")));}
   else{B.append(el("p","note",t("dirLocal")));const b=el("button","btn p w",t("gemFree"));b.style.marginTop="10px";b.addEventListener("click",()=>connectSheet("gemini",()=>{analyze(true);}));B.append(b);}});}
 
 /* ---------- جملة جملة ---------- */
@@ -1081,7 +1102,17 @@ function parseOpts(x){try{const a=x.indexOf("{"),b=x.lastIndexOf("}");if(a>=0&&b
   const L=x.split("\n").map(l=>l.trim()).filter(Boolean);const num=L.map(l=>l.match(/^(?:[*#-]\s*)?(?:[1-3١-٣])\s*[.)\-:ـ]\s*(.+)$/)).filter(Boolean).map(m=>m[1].replace(/\*\*/g,"").trim());
   const names=[];L.forEach(l=>{const m=l.match(/^(.{2,30}?)\s*[=:]\s*([^\s].*·.*)$/);if(m)names.push({w:m[1].replace(/[*-]/g,"").trim(),s:m[2].trim()});});
   return {options:num.length?num.slice(0,3):[],names};}
-function aiErr(status,txt){const e={code:"upstream"};if(status===401||status===403)e.code="bad";else if(status===402||/credit|balance|billing|quota|insufficient/i.test(txt||""))e.code="money";else if(status===429)e.code="limit";else if(status===400&&/API key not valid|invalid.*key|API_KEY_INVALID/i.test(txt||""))e.code="bad";return e;}
+function aiErr(status,txt){let msg="",retry=0;try{const j=JSON.parse(txt);const er=j.error||j;msg=String(er.message||er.status||"").slice(0,160);
+    (er.details||[]).forEach(d=>{if(d&&d.retryDelay)retry=parseFloat(d.retryDelay)||0;});}catch(e){msg=String(txt||"").slice(0,120);}
+  const m=msg+" "+txt,e={code:"upstream",status,msg,retry};
+  if(status===401||status===403)e.code="bad";
+  else if(status===400&&/API key not valid|API_KEY_INVALID|invalid.*api.?key/i.test(m))e.code="bad";
+  else if(status===429)e.code=/insufficient_quota|insufficient balance/i.test(m)?"money":"limit";
+  else if(status===402||/insufficient_quota|insufficient balance|credit balance is too low/i.test(m))e.code="money";
+  else if(status===503||status===500||/overloaded|unavailable/i.test(m))e.code="busy";
+  else if(status===404||/not found|is not supported|no longer available|deprecated/i.test(m))e.code="model";
+  else if(/location is not supported|not available in your country|User location/i.test(m))e.code="region";
+  return e;}
 async function jfetch(url,opt,ms){let r;const ac=window.AbortController?new AbortController():null;const tm=ac?setTimeout(()=>ac.abort(),ms||90000):0;try{r=await fetch(url,Object.assign({},opt,ac?{signal:ac.signal}:{}));}catch(e){clearTimeout(tm);throw {code:e&&e.name==="AbortError"?"slow":"net"};}clearTimeout(tm);const txt=await r.text();if(!r.ok)throw aiErr(r.status,txt);try{return JSON.parse(txt);}catch(e){throw {code:"upstream"};}}
 const ANT=k=>({"content-type":"application/json","x-api-key":k,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true","anthropic-beta":"server-side-fallback-2026-07-01"});
 const GEN={
@@ -1091,11 +1122,19 @@ const GEN={
     const c=(j.choices||[])[0];return ((c&&c.message&&c.message.content)||"").trim();},
   async deepseek(k,m,p,mx,js){const b={model:m||"deepseek-chat",messages:[{role:"user",content:p}]};if(js)b.response_format={type:"json_object"};const j=await jfetch("https://api.deepseek.com/chat/completions",{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+k},body:JSON.stringify(b)});
     const c=(j.choices||[])[0];return ((c&&c.message&&c.message.content)||"").trim();},
-  async gemini(k,m,p,mx,js){const url="https://generativelanguage.googleapis.com/v1beta/"+m+":generateContent?key="+encodeURIComponent(k);
-    const body=gc=>JSON.stringify(Object.assign({contents:[{role:"user",parts:[{text:p}]}]},gc?{generationConfig:gc}:{}));let j;
+  async gemini(k,m,p,mx,js){
+    /* سلسلة نماذج: إذا النموذج مشغول أو قديم نجرّب الي بعده وحده */
+    const chain=[...new Set([m,"models/gemini-flash-latest","models/gemini-2.5-flash","models/gemini-2.0-flash","models/gemini-flash-lite-latest"].filter(Boolean))];let last=null;
+    for(const mm of chain){try{const x=await GEN.gemini1(k,mm,p,js);if(mm!==m&&KEYS.gemini){KEYS.gemini.m=mm;N.set("keys",KEYS);}return x;}
+      catch(e){if(!last||last.code!=="limit"||e.code==="limit")last=e;if(!e||!/^(busy|model|upstream|limit|blocked)$/.test(e.code))throw e;}}
+    throw last;},
+  async gemini1(k,m,p,js){const url="https://generativelanguage.googleapis.com/v1beta/"+m+":generateContent?key="+encodeURIComponent(k);
+    const SAFE=["HARM_CATEGORY_HARASSMENT","HARM_CATEGORY_HATE_SPEECH","HARM_CATEGORY_SEXUALLY_EXPLICIT","HARM_CATEGORY_DANGEROUS_CONTENT"].map(c=>({category:c,threshold:"BLOCK_NONE"}));
+    const body=gc=>JSON.stringify(Object.assign({contents:[{role:"user",parts:[{text:p}]}],safetySettings:SAFE},gc?{generationConfig:gc}:{}));let j;
     /* JSON مضمون وبدون «تفكير» طويل، وإذا النموذج ما يقبل هالإعدادات نرجع للطلب العادي */
     try{j=await jfetch(url,{method:"POST",headers:{"content-type":"application/json"},body:body(js?{responseMimeType:"application/json",thinkingConfig:{thinkingBudget:0}}:{thinkingConfig:{thinkingBudget:0}})});}
-    catch(e){if(e&&e.code==="upstream")j=await jfetch(url,{method:"POST",headers:{"content-type":"application/json"},body:body(js?{responseMimeType:"application/json"}:null)});else throw e;}
+    catch(e){if(e&&e.code==="upstream"&&e.status===400)j=await jfetch(url,{method:"POST",headers:{"content-type":"application/json"},body:body(js?{responseMimeType:"application/json"}:null)});else throw e;}
+    const c0=(j.candidates||[])[0];if(!c0||!c0.content){throw {code:/SAFETY|BLOCK|PROHIBITED/.test(String((c0&&c0.finishReason)||(j.promptFeedback&&j.promptFeedback.blockReason)||""))?"blocked":"upstream",status:200,msg:"empty: "+((c0&&c0.finishReason)||(j.promptFeedback&&j.promptFeedback.blockReason)||"no candidates")};}
     const c=(j.candidates||[])[0];return ((c&&c.content&&c.content.parts)||[]).map(x=>x.text||"").join("").trim();}};
 const TEST={
   async claude(k){await GEN.claude(k,"claude-opus-5-5","قل: تم",20);return "claude-opus-5-5";},
@@ -1106,7 +1145,7 @@ const TEST={
     const ms=(j.models||[]).filter(x=>(x.supportedGenerationMethods||[]).includes("generateContent")&&/gemini/.test(x.name)&&!/image|tts|embedding|vision|live|audio|exp|preview|lite|thinking/.test(x.name));
     const v=n=>parseFloat((n.match(/gemini-(\d+(\.\d+)?)/)||[0,0])[1]);ms.sort((a,b)=>v(b.name)-v(a.name)||(/flash/.test(b.name)-/flash/.test(a.name)));const m=ms.find(x=>/flash/.test(x.name))||ms[0];if(!m)throw {code:"upstream"};return m.name;},
   async deepseek(k){const j=await jfetch("https://api.deepseek.com/models",{headers:{authorization:"Bearer "+k}});const ids=(j.data||[]).map(x=>x.id);return ids.includes("deepseek-chat")?"deepseek-chat":ids[0]||"deepseek-chat";}};
-const AIMSG=c=>({slow:t("aiSlow"),bad:t("keyBad"),money:t("keyNoMoney"),limit:t("keyLimit"),net:t("keyNet"),noai:t("noAI")})[c]||t("easyFail");
+const AIMSG=c=>({blocked:t("aiBlocked"),busy:t("aiBusy"),model:t("aiModel"),region:t("aiRegion"),slow:t("aiSlow"),bad:t("keyBad"),money:t("keyNoMoney"),limit:t("keyLimit"),net:t("keyNet"),noai:t("noAI")})[c]||t("easyFail");
 const sampleP=STANDALONE?null:use("sample");
 async function aiAsk(prompt,id){id=id||aiPick();if(!id)throw {code:"noai"};
   if(id==="claude"&&!STANDALONE&&!(KEYS.claude&&KEYS.claude.k)){const s=await sampleP;if(!s)throw {code:"noai"};const r=await s(prompt,{cache:false});return (r&&r.text)||"";}
