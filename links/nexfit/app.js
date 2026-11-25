@@ -152,6 +152,7 @@ function vHome() {
   ${work}
   <div class="sec-h"><h2>🔔 لا تنسى اليوم</h2><span class="xs mut num">${doneN}/${L.length}</span></div>
   <div class="todo">${L.map(([k, ic, n, sub]) => `<button class="td ${tk[k] ? 'on' : ''}" data-tk="${k}"><span class="ic">${ic}</span><span class="grow"><b>${n}</b><small>${sub}</small></span><span class="ck">${I.check}</span></button>`).join('')}</div>
+  <button class="pcbtn" data-protcalc><span>🧮</span><div class="grow"><b>حاسبة البروتين</b><small>شكد بروتين تحتاج اليوم وشلون تقسمه</small></div>${I.chev}</button>
   <div class="sec-h"><h2>🍽️ أكلك اليوم</h2><a class="xs" href="#food" style="color:var(--g)">كل الوجبات ‹</a></div>
   <div class="mrow">${SLOTS.map(([k, n]) => `<a href="#food" class="mc ${eaten[k] ? 'on' : ''}"><span>${eaten[k] ? '✓' : { b: '🍳', s: '🥣', l: '🍛', a: '🥤', d: '🥗' }[k]}</span><small>${n}</small></a>`).join('')}</div>`;
 }
@@ -397,6 +398,7 @@ function vFood() {
   <div class="card"><div class="sec-h"><h2>أكلت اليوم</h2><span class="xs mut num">القائمة: ${Math.round(plan.k)} سعرة • ${Math.round(plan.p)}g بروتين</span></div>
    ${bar(tot.k, T.k, 'var(--g)', 'السعرات', 'سعرة')}${bar(tot.p, T.p, 'var(--gold)', 'البروتين', 'غم')}${bar(tot.c, Math.round(T.k * .5 / 4), 'var(--blue)', 'الكارب', 'غم')}${bar(tot.f, Math.round(T.k * .27 / 9), '#ff9f0a', 'الدهون', 'غم')}
    <p class="xs mut">هدفك للتضخيم النظيف: ${T.k} سعرة و${T.p}g بروتين.</p></div>
+  <button class="pcbtn" data-protcalc><span>🧮</span><div class="grow"><b>حاسبة البروتين</b><small>وزنك ← شكد تحتاج، وجدول تقسيمه على الوجبات</small></div>${I.chev}</button>
   <div class="sec-h"><h2>وجباتك اليوم</h2><span class="xs mut">اضغط على الوجبة وسجّل شنو أكلت</span></div>
   <div class="meals">${TM.map(({ m, o }) => { const v = optVal(o), c = IC[m.k]; return `<div class="ml ${eaten[m.k] ? 'on' : ''}"><button class="mlb" data-sec="${SEC[m.k]}" data-forslot="${m.k}"><span class="mi" style="background:${c[1]}22">${c[0]}</span><b>${m.n}</b><small>${m.t}</small><span class="mn">${o.n}</span><span class="xs num" style="color:var(--g)">${Math.round(v.p)}g بروتين • ${Math.round(v.k)} سعرة</span></button><button class="mck ${eaten[m.k] ? 'on' : ''}" data-eat="${m.k}">${eaten[m.k] ? '✓ أكلتها' : 'سجّل إنك أكلتها'}</button></div>`; }).join('')}</div>
   <div class="sec-h"><h2>أقسام ثانية</h2></div>
@@ -567,6 +569,7 @@ function vSupps() {
   const minor = +S.age && +S.age < 18;
   const card = (C, k) => { const x = C[k]; return `<button class="spc ${k}" data-sp="${C.id}:${k}"><span class="tag">${k === 'best' ? '🥇 الأفضل' : '🥈 البديل'}</span><span class="pi"><img src="img/supp/${x.img}.webp" alt="" loading="lazy"></span><b>${x.n}</b><small>${esc(x.b)}</small><span class="go">التفاصيل والشراء ‹</span></button>`; };
   return `${head('المكملات')}
+  <button class="pcbtn" data-protcalc><span>🧮</span><div class="grow"><b>احسب بروتينك</b><small>اكتب وزنك وأگلك شكد تحتاج وشلون تقسمه باليوم</small></div>${I.chev}</button>
   <p class="sm mut" style="margin-top:-6px">لكل نوع اخترنا <b>الأفضل</b> حسب الدراسات والمدربين، و<b>بديل</b> إذا ما لگيته أو غالي. الجرعات محسوبة على جسمك.</p>
   ${minor ? '<div class="warn"><b>عمرك أقل من 18:</b> لا تاخذ كرياتين ولا بروتين قبل ما تسأل طبيب.</div>' : ''}
   ${SUPP2.map(C => `<section class="sps"><div class="sec-h"><h2>${C.ic} ${C.n}</h2>${C.must ? '<span class="pill g">أساسي</span>' : '<span class="pill">اختياري</span>'}</div>
@@ -771,7 +774,7 @@ function openBan(i) {
 }
 
 /* ================= أنا ================= */
-const VERSION = '34';
+const VERSION = '35';
 function weightInfo() {
   const start = S.startW || (S.weights[0]?.w) || +S.w || 52, goal = +S.goal || 62, cur = curW();
   const ms = [start + 1, start + 3, start + 5, start + 7].filter(x => x < goal).concat([goal]).map(x => +x.toFixed(1));
@@ -870,6 +873,36 @@ function openHealth() {
 /* ================= اهتزاز خفيف مثل التطبيقات ================= */
 const hapEl = (() => { try { const l = document.createElement('label'); l.style.cssText = 'position:fixed;left:-99px;top:0;opacity:0;pointer-events:none'; const i = document.createElement('input'); i.type = 'checkbox'; i.setAttribute('switch', ''); l.append(i); document.body.append(l); return l; } catch (e) { return null; } })();
 function haptic(ms = 8) { try { if (navigator.vibrate) navigator.vibrate(ms); else if (hapEl) hapEl.click(); } catch (e) {} }
+
+/* ================= حاسبة البروتين =================
+   الدراسات (ISSN 2017، Morton 2018): للي يتمرن 1.6 لحد 2.2 غم لكل كيلو. الجسم يستفاد أحسن إذا توزّعه على 4-5 وجبات، كل وجبة تقريباً 0.4 غم لكل كيلو.
+   للقولون: لا تاخذ أكثر من 30 غم بالمرة الوحدة، والسكوب يتقسم نصين إذا ينفخك. */
+let PC = null;
+function openProtCalc() {
+  PC = PC || { w: +curW() || 52, g: 'bulk', ibs: true, n: 4 };
+  show(`<div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><div class="grow"><h2>🧮 حاسبة البروتين</h2><p class="xs mut">اكتب وزنك وأگلك شكد تحتاج وشلون تقسمه</p></div></div><div id="pcOut">${protBody()}</div>`, true);
+}
+function protBody() {
+  const { w, g, ibs, n } = PC, F = { bulk: [2.0, 'تضخيم (تكبير عضل)'], keep: [1.6, 'ثبات (تحافظ على عضلك)'], cut: [2.2, 'تنشيف (تنزل دهون وتحافظ على العضل)'] }, f = F[g][0];
+  const tot = Math.round(w * f), lo = Math.round(w * 1.6), hi = Math.round(w * 2.2), cap = ibs ? 30 : 40;
+  const meals = n === 3 ? [['🍳', 'الريوق', '8 الصبح'], ['🍛', 'الغدا', '2 الظهر'], ['🥗', 'العشا', '8 بالليل']] : n === 4 ? [['🍳', 'الريوق', '8 الصبح'], ['🍛', 'الغدا', '1 الظهر'], ['🥤', 'العصرونية / بعد التمرين', '5 العصر'], ['🥗', 'العشا', '9 بالليل']] : [['🍳', 'الريوق', '8 الصبح'], ['🥣', 'سناك الضحى', '11 الضحى'], ['🍛', 'الغدا', '2 الظهر'], ['🥤', 'بعد التمرين', '5 العصر'], ['🥗', 'العشا', '9 بالليل']];
+  let per = Math.round(tot / n); if (per > cap) per = cap;
+  const shake = Math.min(25, Math.round(tot * .25)), food = tot - shake, rows = meals.map((m, i) => { const p = i === meals.length - 2 && n > 3 ? Math.min(per, cap) : per; return [m, p]; });
+  const sum = rows.reduce((a, x) => a + x[1], 0), short = Math.max(0, tot - sum);
+  const EQ = [['صدر دجاج مطبوخ', 100, 31], ['بيضة كبيرة', 1, 6, 'حبة'], ['رهكا (Rahka) بدون لاكتوز', 250, 25], ['تونة بالمي', 100, 25], ['سلمون', 100, 22], ['سكوب بروتين أيزوليت', 1, 25, 'سكوب'], ['حليب بدون لاكتوز', 250, 8, 'مل'], ['عدس مطبوخ', 150, 13]];
+  return `<div class="card pcin"><label class="f">وزنك (كيلو)<input class="field num" id="pcW" type="number" inputmode="decimal" value="${w}" min="30" max="200"></label>
+   <p class="xs mut" style="margin:10px 0 6px">هدفك</p><div class="chips">${Object.entries(F).map(([k, [, t]]) => `<button class="${g === k ? 'on' : ''}" data-pcg="${k}">${t}</button>`).join('')}</div>
+   <p class="xs mut" style="margin:10px 0 6px">كم وجبة باليوم؟</p><div class="chips">${[3, 4, 5].map(k => `<button class="${n === k ? 'on' : ''}" data-pcn="${k}">${k} وجبات</button>`).join('')}</div>
+   <label class="srow" style="margin-top:10px;padding:8px 0" data-pcibs><span class="sic" style="background:#34c759">🫃</span><span class="grow"><b>عندي قولون أو معدة حساسة</b><small>أقسم البروتين لكميات أصغر حتى ما ينفخك</small></span>${tgl(ibs)}</label></div>
+  <div class="pcres"><small>جسمك يحتاج باليوم</small><b class="num" data-count="${tot}">${tot}</b><span>غرام بروتين</span><p class="xs">المدى الصحي إلك: ${lo} إلى ${hi} غم (يعني ${w} كيلو × 1.6 لحد 2.2)</p></div>
+  <div class="card"><h3>📅 جدولك اليومي</h3><div class="pct">${rows.map(([[ic, nm, tm], p]) => `<div class="pcr"><span class="ic">${ic}</span><div class="grow"><b>${nm}</b><small>${tm}</small></div><b class="num g">${p} غم</b></div>`).join('')}
+   ${short ? `<div class="pcr" style="opacity:.85"><span class="ic">🌙</span><div class="grow"><b>سناك قبل النوم</b><small>رهكا أو حليب</small></div><b class="num g">${short} غم</b></div>` : ''}</div>
+   <p class="xs mut" style="margin-top:8px">المجموع: <b class="num">${tot}</b> غم. منها تقريباً <b class="num">${shake}</b> غم من سكوب البروتين، والباقي <b class="num">${food}</b> غم من الأكل.</p></div>
+  ${ibs ? `<div class="card"><h3>🫃 للقولون والمعدة</h3><div class="good sm col"><p>لا تاخذ أكثر من <b>30 غم</b> بالمرة الوحدة. المعدة تهضم أريح لما الكمية أصغر.</p><p>إذا السكوب ينفخك: <b>قسمه نصين</b>، نص الصبح (12 غم) ونص العصر (12 غم).</p><p>خلّي البروتين <b>أيزوليت</b> (لاكتوز قليل) وبمي مو حليب.</p><p>اشرب البروتين على مهلك، مو مرة وحدة.</p><p>لا تاخذه على معدة فارغة كلش إذا يزعجك، خليه ويا أكلة خفيفة.</p></div></div>` : ''}
+  <div class="card"><h3>🍗 شكد بروتين بالأكل؟</h3><div class="pct">${EQ.map(([n2, a, p, u]) => `<div class="pcr"><div class="grow"><b>${n2}</b><small class="num">${a} ${u || 'غم'}</small></div><b class="num g">${p} غم</b></div>`).join('')}</div></div>
+  <p class="xs mut">المصدر: الجمعية الدولية للتغذية الرياضية (ISSN 2017) ودراسة مورتون 2018 الي جمعت 49 دراسة. تثقيف عام مو وصفة طبية.</p>`;
+}
+const pcRe = () => { const o = $('#pcOut'); if (o) { o.innerHTML = protBody(); countUp(o); } };
 /* ================= الخط ================= */
 const FONTS = [['vazir', 'وزير', 'Vazirmatn', ''], ['cairo', 'القاهرة', 'Cairo', 'Cairo:wght@400;500;600;700;800;900'], ['tajawal', 'تجوّل', 'Tajawal', 'Tajawal:wght@400;500;700;800;900'], ['plex', 'بلكس', 'IBM Plex Sans Arabic', 'IBM+Plex+Sans+Arabic:wght@400;500;600;700'], ['kufi', 'كوفي', 'Noto Kufi Arabic', 'Noto+Kufi+Arabic:wght@400;500;600;700;800;900'], ['almarai', 'المراعي', 'Almarai', 'Almarai:wght@400;700;800'], ['readex', 'ريدكس', 'Readex Pro', 'Readex+Pro:wght@400;500;600;700']];
 function loadFont(k) { const f = FONTS.find(x => x[0] === k); if (f && f[3] && !document.querySelector(`link[data-f="${k}"]`)) { const l = document.createElement('link'); l.rel = 'stylesheet'; l.dataset.f = k; l.href = 'https://fonts.googleapis.com/css2?family=' + f[3] + '&display=swap'; document.head.append(l); } return f; }
@@ -1014,6 +1047,10 @@ document.addEventListener('click', e => {
   if ('startc' in d) { startCourse(); haptic(20); toast('يلا! اليوم أول يوم بالكورس 💪'); reroute(); return; }
   if (d.cshift) { startCourse(Math.max(0, curDay() + +d.cshift)); reroute(); return; }
   if (d.ateit) { const [id, sl] = d.ateit.split(':'), t = today(); S.mp = S.mp || {}; S.mp[t] = S.mp[t] || {}; S.mp[t][sl] = id; S.eaten = S.eaten || {}; S.eaten[t] = S.eaten[t] || {}; S.eaten[t][sl] = true; save(); haptic(14); toast('انسجلت ✓'); closeScreen(); return; }
+  if (d.pcg) { PC.g = d.pcg; pcRe(); return; }
+  if (d.pcn) { PC.n = +d.pcn; pcRe(); return; }
+  if ('pcibs' in d) { e.preventDefault(); PC.ibs = !PC.ibs; pcRe(); return; }
+  if ('protcalc' in d) { openProtCalc(); return; }
   if (d.sp) { const [c, k] = d.sp.split(':'); openSp(c, k); return; }
   if (d.ytv) { b.outerHTML = vframe(d.ytv); return; }
   if (d.mus) { openMuscle(d.mus); return; }
@@ -1086,7 +1123,7 @@ function renderPlayerSets() { // تحديث السطور بدون ما نعيد 
 }
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'mq') { e.preventDefault(); nameSearch(); } if (e.key === 'Enter' && e.target.id === 'bcIn') { e.preventDefault(); lookupBC(e.target.value); } });
 document.addEventListener('change', async e => { if (e.target.id === 'ingImg' && e.target.files[0]) { ocrIngredients(e.target.files[0], e.target.dataset.code || ''); e.target.value = ''; return; } if (e.target.id === 'bcImg' && e.target.files[0]) { decodeImage(e.target.files[0]); e.target.value = ''; return; } if (e.target.id === 'impIn' && e.target.files[0]) { try { const o = JSON.parse(await e.target.files[0].text()); if (!o || !o.month) throw 0; S = Object.assign(def(), o); save(); applyTheme(); closeScreen(); toast('رجعت معلوماتك ✓'); } catch (er) { toast('الملف مو صحيح'); } return; } if (e.target.id === 'photoIn' && e.target.files[0]) { await savePhoto(e.target.files[0]); toast('انحفظت الصورة'); loadPhotos(); } });
-document.addEventListener('input', e => { const t = e.target; if (t.id === 'fdq') { fdQ = t.value; const pos = t.selectionStart; openDB(); const n = $('#fdq'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (er) {} } return; } if (!SES) return; if (t.dataset.w != null) SES.sets[SES.k][+t.dataset.w].w = t.value; if (t.dataset.r != null) SES.sets[SES.k][+t.dataset.r].r = t.value; });
+document.addEventListener('input', e => { const t = e.target; if (t.id === 'pcW') { const v = +t.value; if (v >= 30 && v <= 200) { PC.w = v; const o = $('#pcOut'); const pos = t.selectionStart; pcRe(); const n = $('#pcW'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (er) {} } } return; } if (t.id === 'fdq') { fdQ = t.value; const pos = t.selectionStart; openDB(); const n = $('#fdq'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (er) {} } return; } if (!SES) return; if (t.dataset.w != null) SES.sets[SES.k][+t.dataset.w].w = t.value; if (t.dataset.r != null) SES.sets[SES.k][+t.dataset.r].r = t.value; });
 /* ================= إحساس التطبيق الحقيقي ================= */
 // لمسة ضوء مكان إصبعك
 const RIPS = '.dayc,.exrow,.prog,.mus,.excard,.pcard,.slot,.chc,.cd,.gbtn,.obtn,.btn,.ytbtn,.srow,.hero2,.fonts button';
