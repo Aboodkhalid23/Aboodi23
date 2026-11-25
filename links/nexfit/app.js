@@ -1,5 +1,5 @@
 // مدرّبي: منطق التطبيق
-import { EX, REST_DAY, DAY_NAMES, DAY_IMG, MONTHS, FD, IBS, SUPPS, SCHEDULE, TIPS, INFO, EASY, SUPP_LIB, BAN as BAN0, BAN2, BAN_WORDS, IBS_BAN, IBS_GOOD } from './data.js';
+import { EX, REST_DAY, DAY_NAMES, DAY_IMG, PROGRAMS, VID, FD, IBS, SUPPS, SCHEDULE, TIPS, INFO, EASY, SUPP_LIB, BAN as BAN0, BAN2, BAN_WORDS, IBS_BAN, IBS_GOOD } from './data.js';
 import { BODY } from './bodymap.js';
 import { FOODS, RECIPES, CATS, GEN, DRINKS, MEAS, SECTIONS } from './food2.js';
 
@@ -60,40 +60,28 @@ try { S = Object.assign(def(), JSON.parse(localStorage.getItem(KEY) || '{}')); }
 try { const o = JSON.parse(localStorage.getItem('coach-v3') || 'null'); if (o && !localStorage.getItem(KEY)) { S.age = o.age || ''; S.h = o.h || 168; S.weights = o.weights || []; } } catch (e) {}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 
-/* ================= بناء برنامج الشهر ================= */
-/* تقسيم علوي/سفلي 4 أيام بالأسبوع: كل عضلة تتمرن مرتين بالأسبوع (أقوى من مرة وحدة حسب الدراسات) */
-const MDAYS = 28, CYC = ['A', 'B', 'R', 'C', 'D', 'R', 'R'];
-const dayType = i => CYC[i % 7];
-const MOS = ['تشرين الثاني', 'كانون الأول', 'كانون الثاني', 'شباط', 'آذار', 'نيسان', 'أيار', 'حزيران', 'تموز', 'آب', 'أيلول', 'تشرين الأول'];
-const NEXT = [[2, 'القوة'], [4, 'الحجم'], [3, 'الكتف والزند'], [5, 'التشكيل']];
-/* الكورس مفتوح: بعد الستة أشهر الأولى يدوّر على مراحل القوة والحجم والكتف والتشكيل، وكل دورة أثقل من الي قبلها لأن الأوزان تنبني على أرقامك */
-function tplFor(n) { if (n <= MONTHS.length) return MONTHS[n - 1]; const [i, nm] = NEXT[(n - 7) % 4], T = MONTHS[i]; return Object.assign({}, T, { n: nm + ' ' + AR(Math.floor((n - 7) / 4) + 2), mo: MOS[(n - 1) % 12], tw: +(T.tw + 1.5 * Math.ceil((n - 6) / 2)).toFixed(1), goal: T.goal + ' (دورة جديدة بأوزانك الحالية)' }); }
-function buildMonth(n, ev) {
-  const T = tplFor(n), plan = {}, prevTop = id => (S.month && S.month.plan && Object.values(S.month.plan).flat().find(x => x.id === id) || {}).r?.[1];
-  for (const d of ['A', 'B', 'C', 'D']) {
-    plan[d] = T.days[d].map(id => {
-      const e = EX[id], base = e.c ? T.c : T.i;
-      let s = base.s, r = e.sec ? [20, 40] : base.r.slice();
-      if (id === 'calf' || id === 'plank') s = 3;
-      if (ev) {
-        if (ev.weak.some(m => e.m.includes(m))) s += 1;
-        if (ev.feel === 'easy' && e.c) s += 1;
-        if (ev.feel === 'hard') s -= 1;
-      }
+/* ================= الكورس: 3 أيام تنعاد (صدر+ترايسبس، ظهر+بايسبس، أكتاف+رجل) وبعدها راحة، لمدة شهرين ================= */
+const MDAYS = 56, CYC = ['A', 'B', 'C', 'R'];
+const dayType = i => CYC[i % 4];
+const progOf = id => PROGRAMS.find(p => p.id === id) || PROGRAMS[0];
+function buildProg(pid, n, ev) {
+  const T = progOf(pid), plan = {}, prevTop = id => (S.month && S.month.plan && Object.values(S.month.plan).flat().find(x => x.id === id) || {}).r?.[1];
+  for (const d of ['A', 'B', 'C']) {
+    plan[d] = T.days[d].map(([id, s0, r0, r1]) => {
+      const e = EX[id]; let s = s0;
+      if (ev) { if (ev.weak.some(m => e.m.includes(m))) s += 1; if (ev.feel === 'easy' && e.c) s += 1; if (ev.feel === 'hard') s -= 1; }
       s = Math.max(2, Math.min(5, s));
-      let w = e.w0;
-      const b = S.best[id];
-      if (b && b.w) { w = b.w; const pt = prevTop(id) || 12; if (b.r >= pt) w = +(w + e.inc).toFixed(1); }
-      return { id, s, r, rest: e.c ? 90 : 60, w };
+      let w = e.w0; const b = S.best[id];
+      if (b && b.w) { w = b.w; const pt = prevTop(id) || r1; if (b.r >= pt) w = +(w + e.inc).toFixed(1); }
+      return { id, s, r: e.sec ? [20, 40] : [r0, r1], rest: T.heavy && e.c ? 150 : e.c ? 90 : 60, w };
     });
   }
-  return { n, name: T.n, goal: T.goal, start: today(), plan, done: {} };
+  return { v: 2, pid: T.id, n, name: T.n, goal: T.goal, start: today(), plan, done: {} };
 }
-if (!S.month) { S.month = buildMonth(1); save(); }
-if (!S.month.plan || !S.month.plan.D) { const old = S.month; S.month = Object.assign(buildMonth(old.n || 1), { start: old.start || today(), done: {} }); save(); }
+if (!S.month || S.month.v !== 2) { S.month = buildProg('base', 1); save(); }
 function curDay() { for (let i = 0; i < MDAYS; i++) if (!S.month.done[i]) return i; return MDAYS; }
-const isDeload = i => S.month.n % 2 === 0 && i >= 21;
-function setsAt(item, i) { if (S.month.n === 1 && i < 14 && !EX[item.id].sec) return Math.min(2, item.s); if (isDeload(i) && !EX[item.id].sec) return Math.max(2, item.s - 1); return item.s; }
+const isDeload = i => i >= 48;
+function setsAt(item, i) { if (S.month.n === 1 && i < 8 && !EX[item.id].sec) return Math.min(2, item.s); if (isDeload(i) && !EX[item.id].sec) return Math.max(2, item.s - 1); return item.s; }
 function dayItems(i) { const t = dayType(i); return t === 'R' ? REST_DAY.map(id => ({ id, s: 1, r: EX[id].sec ? [30, 30] : [10, 10], rest: 15, w: 0 })) : S.month.plan[t]; }
 
 /* ================= الحسابات ================= */
@@ -153,12 +141,47 @@ const MUS = [['chest', 'الصدر', 'bbbench'], ['back', 'الظهر', 'pullup'
 const MGROUP = id => { const m = (EX[id] || {}).m ? EX[id].m[0] : ''; return ['quads', 'hamstrings', 'glutes', 'calves'].includes(m) ? 'legs' : m === 'lowerback' ? 'back' : m; };
 const GOF = m => ['quads', 'hamstrings', 'glutes', 'calves'].includes(m) ? 'legs' : m === 'lowerback' ? 'back' : m === 'traps' ? 'shoulders' : m;
 const exList = g => Object.keys(EX).filter(id => EX[id].m && !REST_DAY.includes(id) && EX[id].m.some(m => GOF(m) === g));
-function planOf(id) { for (const d of ['A', 'B', 'C', 'D']) { const x = (S.month.plan[d] || []).find(z => z.id === id); if (x) return x; } return null; }
+function planOf(id) { for (const d of ['A', 'B', 'C']) { const x = (S.month.plan[d] || []).find(z => z.id === id); if (x) return x; } return null; }
+const DMUS = { A: ['chest', 'triceps'], B: ['back', 'biceps'], C: ['shoulders', 'legs'] };
+const MUSN = g => (MUS.find(m => m[0] === g) || [, g])[1];
 function vCourse() {
-  return `${head('التمارين')}
-  <p class="sm mut" style="margin-top:-6px">اختار العضلة، وتطلعلك كل تماريناها بالرسم: السهم يأشّر على العضلة الي تشتغل.</p>
+  const c = curDay(), M = S.month, P = progOf(M.pid), doneN = Object.keys(M.done).length, t = c < MDAYS ? dayType(c) : null;
+  const pct = Math.round(doneN / MDAYS * 100), C2 = 2 * Math.PI * 34;
+  const next = Array.from({ length: 8 }, (_, k) => c + k).filter(i => i < MDAYS).map(i => { const ty = dayType(i); return `<button class="cd ${i === c ? 'now' : ''} ${ty === 'R' ? 'rest' : ''}" data-day="${i}"><span class="xs num">يوم ${i + 1}</span><b>${ty === 'R' ? '😴' : ty === 'A' ? '🛡️' : ty === 'B' ? '🔻' : '🦵'}</b><small>${ty === 'R' ? 'راحة' : DAY_NAMES[ty]}</small></button>`; }).join('');
+  return `${head('الكورس')}
+  <div class="pcard2"><div class="row" style="gap:14px;align-items:center"><div class="pring"><svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="34" stroke="rgba(255,255,255,.08)" stroke-width="8" fill="none"/><circle cx="40" cy="40" r="34" stroke="url(#pg)" stroke-width="8" fill="none" stroke-linecap="round" stroke-dasharray="${C2}" stroke-dashoffset="${C2 * (1 - doneN / MDAYS)}" transform="rotate(-90 40 40)"/><defs><linearGradient id="pg"><stop offset="0" stop-color="#ffc145"/><stop offset="1" stop-color="#ff8a00"/></linearGradient></defs></svg><b class="num">${pct}%</b></div>
+   <div class="grow"><small>كورسك هسه • ${AR(Math.min(c + 1, MDAYS))} من ${MDAYS} يوم</small><h2>${P.ic} ${P.n}</h2><p class="xs mut">${P.goal}</p></div></div>
+   ${t === null ? `<div class="donebox"><h3>خلصت الكورس 🎉</h3><p class="sm mut">قيّم نفسك، وبعدها اختار الكورس الجاي.</p><button class="gbtn" data-eval>قيّم واختار الكورس الجاي</button></div>`
+   : `<div class="today"><div class="grow"><small>تمرين اليوم</small><h3>${t === 'R' ? 'راحة ومشي 30 دقيقة' : DAY_NAMES[t]}</h3>${t !== 'R' ? `<span class="xs mut num">${S.month.plan[t].length} تمارين • تقريباً ${S.month.plan[t].reduce((a, x) => a + x.s, 0) * 2 + 10} دقيقة</span>` : ''}</div><button class="gbtn" data-${t === 'R' ? 'day' : 'start'}="${c}">${t === 'R' ? 'شوف' : 'ابدأ'}</button></div>`}
+  </div>
+  ${t === null ? '' : `<div class="sec-h"><h2>الأيام الجاية</h2></div><div class="hs cdays">${next}</div>`}
+  <div class="sec-h"><h2>أيام الكورس</h2><span class="xs mut">تنعاد لحد ما يخلص</span></div>
+  <div class="col">${['A', 'B', 'C'].map((d, k) => `<button class="dayc" data-pday="${d}"><img src="img/ex3d/${DAY_IMG[d]}.jpg" alt=""><div class="grow"><small>اليوم ${['الأول', 'الثاني', 'الثالث'][k]}</small><h3>${DAY_NAMES[d]}</h3><div class="mchips">${S.month.plan[d].slice(0, 3).map(x => `<i>${EX[x.id].n}</i>`).join('')}${S.month.plan[d].length > 3 ? `<i class="num">+${S.month.plan[d].length - 3}</i>` : ''}</div></div>${I.chev}</button>`).join('')}
+   <div class="dayc rest"><span class="big">😴</span><div class="grow"><small>اليوم الرابع</small><h3>راحة</h3><p class="xs mut">العضل يكبر وقت الراحة. امشي 30 دقيقة وسوّي إطالات خفيفة.</p></div></div></div>
+  <button class="obtn wide2" data-pick>🔁 غيّر الكورس</button>
+  <div class="sec-h"><h2>مكتبة التمارين</h2><span class="xs mut">كل التمارين حسب العضلة</span></div>
   <div class="mgrid3">${MUS.map(([g, n, img]) => `<button class="mus" data-mus="${g}"><img src="img/ex3d/${img}.jpg" alt="" loading="lazy"><div><b>${n}</b><small class="num">${exList(g).length} تمرين</small></div></button>`).join('')}</div>`;
 }
+function openPlanDay(d) {
+  const L = S.month.plan[d];
+  show(`<div class="row"><button class="ib" data-close aria-label="رجوع">${I.back}</button><div class="grow"><p class="xs mut">${progOf(S.month.pid).n}</p><h2>${DAY_NAMES[d]}</h2></div></div>
+  <div class="card"><p class="sm">🔥 <b>قبل:</b> 5 دقايق إحماء، وأول تمرين سِت خفيف بنص الوزن.<br>⏱️ <b>الراحة:</b> دقيقة ونص بالتمارين الكبيرة، ودقيقة بالصغيرة.<br>📈 <b>تتطور شلون؟</b> لما تخلّص كل السِتات بأعلى عدّة، زيد الوزن شوية الجلسة الجاية.</p></div>
+  <div class="col">${L.map((x, k) => `<button class="exrow" data-ex="${x.id}"><img src="img/ex3d/${x.id}.jpg" alt="" loading="lazy"><div class="grow"><h3><span class="num" style="color:var(--g)">${k + 1}.</span> ${EX[x.id].n}</h3><p class="sm num" style="color:var(--g)">${x.s} سِت × <bdi dir="ltr">${rng(x.r)}</bdi> ${EX[x.id].sec ? "ثانية" : "عدّة"}</p><p class="xs mut">${MNAME[EX[x.id].m[0]] || ''}${x.w ? ' • ابدي بـ ' + x.w + ' كغم' : ''}</p></div><span class="k">${I.play}</span></button>`).join('')}</div>`, true);
+}
+function openPick(rec) {
+  const cur = S.month.pid, done = Object.keys(S.month.done).length;
+  show(`<div class="row"><button class="ib" data-close aria-label="رجوع">${I.back}</button><div class="grow"><h2>اختار الكورس</h2><p class="xs mut">كل كورس شهرين، 3 أيام تمرين ويوم راحة وتنعاد</p></div></div>
+  ${done && done < MDAYS ? `<div class="warm">⚠️ إذا غيّرت هسه يبدي الكورس الجديد من اليوم الأول. الأحسن تكمّل كورسك (${done} من ${MDAYS}).</div>` : ''}
+  <div class="col">${PROGRAMS.map(P => `<button class="prog ${P.id === cur ? 'cur' : ''}" data-progv="${P.id}"><img src="img/ex3d/${P.img}.jpg" alt=""><div class="grow"><div class="row" style="gap:6px;flex-wrap:wrap">${P.id === cur ? '<span class="pill g">كورسك هسه</span>' : ''}${rec === P.id ? '<span class="pill g">⭐ ننصحك بيه</span>' : ''}</div><h3>${P.ic} ${P.n}</h3><p class="xs">${P.goal}</p><p class="xs mut">${P.who}</p></div>${I.chev}</button>`).join('')}</div>`, true);
+}
+function openProg(pid) {
+  const P = progOf(pid);
+  show(`<div class="row"><button class="ib" data-back aria-label="رجوع">${I.back}</button><div class="grow"><h2>${P.ic} ${P.n}</h2></div></div>
+  <div class="card"><p class="sm">${P.goal}</p><p class="xs mut">${P.who} • شهرين • 3 أيام وراحة</p></div>
+  ${['A', 'B', 'C'].map(d => `<div class="card"><h3>${DAY_NAMES[d]}</h3>${P.days[d].map(([id, sN, a, b]) => `<div class="row between sm" style="padding:6px 0;border-bottom:1px solid var(--line)"><span>${EX[id].n}</span><span class="num mut">${sN} × ${a}-${b}</span></div>`).join('')}</div>`).join('')}
+  <button class="gbtn" style="width:100%" data-setprog="${P.id}">ابدأ هذا الكورس</button>`, true);
+}
+function setProg(pid) { const last = S.evals.length ? S.evals[S.evals.length - 1] : null, fin = curDay() >= MDAYS; S.month = buildProg(pid, (S.month.n || 1) + (fin || Object.keys(S.month.done).length ? 1 : 0), fin ? last : null); save(); closeScreen(); location.hash = '#course'; toast('بدا ' + progOf(pid).n + ' 💪'); }
 function openMuscle(g) {
   const [, n] = MUS.find(m => m[0] === g), L = exList(g).sort((a, b) => (MGROUP(b) === g ? 2 : 0) + (EX[b].star ? 1 : 0) - (MGROUP(a) === g ? 2 : 0) - (EX[a].star ? 1 : 0));
   show(`<div class="row"><button class="ib" data-close aria-label="رجوع">${I.back}</button><div class="grow"><h1>تمارين ${n}</h1><p class="xs mut">${L.length} تمرين • اضغط على التمرين تشوف الحركة والشرح</p></div></div>
@@ -170,8 +193,8 @@ const WARM = ['دقيقتين مشي سريع أو دراجة لحد ما تعر
 function openDay(i) {
   if (i >= MDAYS) { openEval(); return; }
   const t = dayType(i), it = dayItems(i);
-  show(`<div class="row"><button class="ib" data-close aria-label="رجوع">${I.back}</button><div class="grow"><p class="xs mut">اليوم ${AR(i + 1)} • الشهر ${AR(S.month.n)}</p><h2>${DAY_NAMES[t]}</h2></div></div>
-  <div class="month" style="min-height:200px"><img src="img/ex3d/${DAY_IMG[t]}.jpg" alt=""><h1>${DAY_NAMES[t]}</h1><p class="sm mut">${t === 'R' ? 'مشي 30 دقيقة، وهاي التمارين 10 دقايق قبل النوم.' : 'إحماء: 5 دقايق مشي سريع أو دراجة، وأول تمرين سِت خفيف بنص الوزن.'}</p></div>
+  show(`<div class="row"><button class="ib" data-close aria-label="رجوع">${I.back}</button><div class="grow"><p class="xs mut">اليوم ${AR(i + 1)} من ${MDAYS} • ${progOf(S.month.pid).n}</p><h2>${DAY_NAMES[t]}</h2></div></div>
+  <div class="month" style="min-height:200px"><img src="img/ex3d/${t === 'R' ? 'child' : DAY_IMG[t]}.jpg" alt=""><h1>${DAY_NAMES[t]}</h1><p class="sm mut">${t === 'R' ? 'مشي 30 دقيقة، وهاي التمارين 10 دقايق قبل النوم.' : 'إحماء: 5 دقايق مشي سريع أو دراجة، وأول تمرين سِت خفيف بنص الوزن.'}</p></div>
   ${t !== 'R' ? `<details class="card warmc"><summary><b>🔥 إحماء المفاصل (5 دقايق)</b><span class="xs mut"> يحمي الكتف والركبة والرسغ</span></summary><div class="steps sm">${WARM.map(w => `<p>${w}</p>`).join('')}</div></details>` : ''}
   ${isDeload(i) ? '<div class="warm">🌿 <b>أسبوع تخفيف:</b> سِت أقل وأوزان أخف 15٪. هذا مو كسل: العضل يكبر وقت الراحة، والمدربين الكبار يسوّوه كل 6-8 أسابيع.</div>' : ''}
   <div class="col">${it.map((x, k) => `<button class="exrow" data-ex="${x.id}"><img src="img/ex3d/${x.id}.jpg" alt="" loading="lazy"><div class="grow"><h3>${EX[x.id].n}${EX[x.id].star ? ' ⭐' : ''}</h3><p class="sm num" style="color:var(--g)">${AR(setsAt(x, i))} × ${rng(x.r)} ${EX[x.id].sec ? 'ثانية' : ''}</p><p class="xs mut">${x.w ? 'ابدي بـ ' + AR(x.w) + ' كغم' : 'بدون وزن'}</p></div><span class="k num">${AR(k + 1)}</span></button>`).join('')}</div>
@@ -183,6 +206,7 @@ function openDay(i) {
 let engineP = null, anims = [];
 const engine = () => engineP || (engineP = import('./anim/engine.js'));
 async function mountAnim(canvas, id, phEl) {
+  if (!canvas) return null;
   try {
     const { createAnimator, EXERCISES } = await engine();
     if (!canvas.isConnected) return null;
@@ -195,9 +219,10 @@ function killAnims() { anims.forEach(a => { try { a.dispose(); } catch (e) {} })
 
 /* ================= شرح التمرين ================= */
 const MNAME = { chest: 'الصدر', back: 'الظهر', shoulders: 'الكتف', traps: 'الترابيس', biceps: 'البايسبس', triceps: 'الترايسبس', forearms: 'الساعد', abs: 'البطن', obliques: 'الخواصر', quads: 'الفخذ الأمامي', hamstrings: 'الفخذ الخلفي', glutes: 'المؤخرة', calves: 'السمانة', lowerback: 'أسفل الظهر', hipflex: 'الورك' };
+const vframe = (id, cls = 'vid') => `<div class="${cls}"><iframe src="https://www.youtube-nocookie.com/embed/${VID[id]}?autoplay=1&mute=1&loop=1&playlist=${VID[id]}&playsinline=1&rel=0&modestbranding=1" title="فيديو الحركة" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe></div>`;
 function exInfo(id) {
   const e = EX[id];
-  return `<div class="anim"><canvas id="ac"></canvas><span class="ph"><i></i><span id="aph">استعد</span></span></div>
+  return `${VID[id] ? vframe(id) : `<div class="anim"><canvas id="ac"></canvas><span class="ph"><i></i><span id="aph">استعد</span></span></div>`}
   <div><p class="xs mut">اسمه بالجيم: ${e.gym}</p><h1>${e.n}${e.star ? ' ⭐' : ''}</h1><div class="mchips" style="margin-top:8px">${e.m.map((m, i) => `<i style="${i ? '' : 'background:var(--grad);color:#1a1000;font-weight:800'}">${i ? '' : '🎯 '}${MNAME[m] || m}</i>`).join('')}</div></div>
   <div class="card"><h3>شلون تسويه</h3><div class="steps sm">${e.st.map(s => `<p>${s}</p>`).join('')}</div></div>
   ${e.bad.length ? `<div class="card"><h3>لا تسوي هيچ</h3><div class="bad sm col">${e.bad.map(s => `<p>${s}</p>`).join('')}</div></div>` : ''}
@@ -221,7 +246,7 @@ function renderPlayer() {
   const doneEx = SES.sets.map(s => s.every(z => z.ok)); const C = 2 * Math.PI * 22, frac = (SES.k + 1) / n;
   const cur = sets.findIndex(s => !s.ok);
   P.hidden = false; document.body.style.overflow = 'hidden';
-  P.innerHTML = `<div class="stage"><canvas id="pc"></canvas><div class="fade"></div><div class="ov"><div class="row between"><button class="ib" data-pclose aria-label="طلّع">${I.x}</button><div class="row"><button class="ib" data-swap="${x.id}" aria-label="بدّل التمرين">⇄</button><button class="ib" data-slow aria-label="أبطأ">${I.slow}</button><button class="ib" data-info="${x.id}" aria-label="الشرح">${I.info}</button></div></div>
+  P.innerHTML = `<div class="stage">${VID[x.id] ? vframe(x.id, 'pvid') : '<canvas id="pc"></canvas>'}<div class="fade"></div><div class="ov"><div class="row between"><button class="ib" data-pclose aria-label="طلّع">${I.x}</button><div class="row"><button class="ib" data-swap="${x.id}" aria-label="بدّل التمرين">⇄</button><button class="ib" data-slow aria-label="أبطأ">${I.slow}</button><button class="ib" data-info="${x.id}" aria-label="الشرح">${I.info}</button></div></div>
    <span class="ph"><i></i><span id="pph">استعد</span></span></div></div>
   <div class="ploop">
    ${S.last[x.id] ? `<div class="lastt"><span>المرة الفاتتة</span><b class="num">${S.last[x.id].map(z => AR(z.w) + '×' + AR(z.r)).join('  ')}</b></div>` : `<div class="lastt"><span>أول مرة</span><b>ابدي خفيف وتعلّم الحركة</b></div>`}
@@ -254,7 +279,7 @@ function finishDay(skip) {
   });
   S.month.done[i] = today(); S.hist.push({ d: today(), t: dayType(i), sets, mus: [...mus] }); save();
   killAnims(); $('#player').hidden = true; $('#player').innerHTML = '';
-  show(`${confetti()}<div class="col" style="min-height:75vh;justify-content:center;align-items:center;text-align:center;gap:18px"><div class="medal pop" style="width:auto;padding:20px 28px"><span class="c" style="width:84px;height:84px">${I.trophy}</span></div><h1>عاشت إيدك يا بطل!</h1><span class="pill g num">+${AR(sets * 10 + 50)} نقطة</span><p class="mut">خلصت اليوم ${AR(i + 1)} من الشهر ${AR(S.month.n)}${sets ? ' • ' + AR(sets) + ' سِت' : ''}</p><div class="card" style="text-align:right;width:100%"><p class="sm">${dayType(i) === 'R' ? 'باچر تمرين، نام زين الليلة.' : 'هسه: سكوب البروتين خلال ساعتين، وجبة زينة، ونوم 8 ساعات.'}</p></div><button class="btn wide" data-close>رجوع</button></div>`);
+  show(`${confetti()}<div class="col" style="min-height:75vh;justify-content:center;align-items:center;text-align:center;gap:18px"><div class="medal pop" style="width:auto;padding:20px 28px"><span class="c" style="width:84px;height:84px">${I.trophy}</span></div><h1>عاشت إيدك يا بطل!</h1><span class="pill g num">+${AR(sets * 10 + 50)} نقطة</span><p class="mut">خلصت اليوم ${AR(i + 1)} من ${MDAYS}${sets ? ' • ' + AR(sets) + ' سِت' : ''}</p><div class="card" style="text-align:right;width:100%"><p class="sm">${dayType(i) === 'R' ? 'باچر تمرين، نام زين الليلة.' : 'هسه: سكوب البروتين خلال ساعتين، وجبة زينة، ونوم 8 ساعات.'}</p></div><button class="btn wide" data-close>رجوع</button></div>`);
   SES = null;
 }
 
@@ -263,14 +288,14 @@ let EV = null;
 function openEval() {
   const comp = [...new Set(Object.values(S.month.plan).flat().filter(x => EX[x.id].c).map(x => x.id))];
   EV = { weak: [], feel: 'ok' };
-  show(`<div class="row"><button class="ib" data-close aria-label="رجوع">${I.back}</button><h2>تقييم الشهر ${AR(S.month.n)}</h2></div>
-  <div class="card"><p class="sm">جاوب بصراحة. من أجوبتك أبنيلك الشهر الجاي: الأوزان، والعدّات، وأي عضلة نركّز عليها.</p></div>
+  show(`<div class="row"><button class="ib" data-close aria-label="رجوع">${I.back}</button><h2>تقييم الكورس</h2></div>
+  <div class="card"><p class="sm">جاوب بصراحة. من أجوبتك أنصحك بالكورس الجاي وأظبط الأوزان والعدّات.</p></div>
   <div class="card"><h3>وزنك هسه</h3><label class="f">بالكيلو<input class="field" id="evW" inputmode="decimal" value="${curW()}"></label></div>
   <div class="card"><h3>أثقل وزن شلته بكل تمرين</h3><p class="xs mut">الوزن والعدّات بأحسن سِت. معبّية من الي سجلته، عدّلها إذا تريد.</p>
    ${comp.map(id => `<div class="row"><img src="img/ex3d/${id}.jpg" alt="" style="width:46px;height:46px;border-radius:12px;object-fit:cover"><span class="grow sm">${EX[id].n}</span><input class="field" style="width:76px;text-align:center" inputmode="decimal" data-evw="${id}" value="${S.best[id]?.w ?? ''}" placeholder="كغم" aria-label="الوزن"><input class="field" style="width:62px;text-align:center" inputmode="numeric" data-evr="${id}" value="${S.best[id]?.r ?? ''}" placeholder="×" aria-label="العدّات"></div>`).join('')}</div>
   <div class="card"><h3>أي عضلة تحسها ضعيفة أو تريدها تكبر أكثر؟</h3><div class="chips" id="evWeak">${['chest', 'back', 'shoulders', 'biceps', 'triceps', 'quads', 'hamstrings', 'calves'].map(m => `<button data-weak="${m}">${MN[m]}</button>`).join('')}</div></div>
-  <div class="card"><h3>شلون كان الشهر عليك؟</h3><div class="chips" id="evFeel"><button data-feel="easy">سهل</button><button data-feel="ok" class="on">مناسب</button><button data-feel="hard">صعب ومتعب</button></div></div>
-  <button class="btn wide" data-evsubmit>ابني الشهر الجاي</button>`);
+  <div class="card"><h3>شلون كان الكورس عليك؟</h3><div class="chips" id="evFeel"><button data-feel="easy">سهل</button><button data-feel="ok" class="on">مناسب</button><button data-feel="hard">صعب ومتعب</button></div></div>
+  <button class="btn wide" data-evsubmit>شوف الكورس الجاي</button>`);
 }
 function submitEval() {
   const w = +$('#evW').value; if (w > 25 && w < 200) { const t = today(), x = S.weights.find(z => z.d === t); if (x) x.w = w; else S.weights.push({ d: t, w }); }
@@ -278,11 +303,9 @@ function submitEval() {
   const prevW = S.evals.length ? S.evals[S.evals.length - 1].w : (S.weights[0]?.w || +S.w), gain = curW() - prevW;
   const kcalAdj = (S.evals.length ? S.evals[S.evals.length - 1].kcalAdj || 0 : 0) + (gain < .8 ? 200 : gain > 2.5 ? -150 : 0);
   const ev = { d: today(), month: S.month.n, w: curW(), gain, weak: EV.weak, feel: EV.feel, kcalAdj };
-  S.evals.push(ev); const old = S.month; S.month = buildMonth(old.n + 1, ev); save();
-  const ch = []; if (EV.weak.length) ch.push('سِت زيادة لـ ' + EV.weak.map(m => MN[m]).join(' و')); if (EV.feel === 'easy') ch.push('سِت زيادة للتمارين الكبيرة'); if (EV.feel === 'hard') ch.push('سِت أقل حتى ترتاح'); ch.push(gain < .8 ? 'وزنك زاد قليل، زدنا 200 سعرة على أكلك' : gain > 2.5 ? 'وزنك زاد بسرعة، نقّصنا 150 سعرة' : 'وزنك يزيد بالسرعة الصحيحة'); ch.push('الأوزان زادت للتمارين الي خلصت عدّاتها');
-  show(`<div class="col" style="gap:16px"><h1>الشهر ${AR(S.month.n)}: ${S.month.name}</h1><p class="mut">${S.month.goal}</p><div class="card"><h3>شنو تغيّر</h3><div class="good sm col">${ch.map(c => `<p>${c}</p>`).join('')}</div></div>
-  ${['A', 'B', 'C', 'D'].map(d => `<div class="card"><h3>${DAY_NAMES[d]}</h3>${S.month.plan[d].map(x => `<div class="row between sm"><span>${EX[x.id].n}</span><span class="num mut">${AR(x.s)} × ${rng(x.r)}${x.w ? ' • ' + AR(x.w) + ' كغم' : ''}</span></div>`).join('')}</div>`).join('')}
-  <button class="btn wide" data-close>يلا نبدي</button></div>`);
+  S.evals.push(ev); save();
+  const W = EV.weak, rec = W.some(m => m === 'back') ? 'vtaper' : W.some(m => m === 'shoulders') ? 'shoulders' : W.some(m => m === 'biceps' || m === 'triceps') ? 'arms' : W.includes('chest') ? 'chest' : EV.feel === 'easy' ? 'strength' : S.month.pid === 'base' ? 'vtaper' : 'strength';
+  closeScreen(true); openPick(rec);
 }
 
 /* ================= الأكل ================= */
@@ -698,7 +721,7 @@ function openBan(i) {
 }
 
 /* ================= أنا ================= */
-const VERSION = '26';
+const VERSION = '28';
 function weightInfo() {
   const start = S.startW || (S.weights[0]?.w) || +S.w || 52, goal = +S.goal || 62, cur = curW();
   const ms = [start + 1, start + 3, start + 5, start + 7].filter(x => x < goal).concat([goal]).map(x => +x.toFixed(1));
@@ -911,7 +934,7 @@ document.addEventListener('click', e => {
   if (d.pgo != null) { SES.k = +d.pgo; renderPlayer(); return; }
   if ('pfinish' in d) { finishDay(); return; }
   if (d.ok != null) { const s = SES.sets[SES.k][+d.ok]; s.ok = !s.ok; const left = SES.sets[SES.k].filter(x => !x.ok).length; const x = SES.items[SES.k]; if (s.ok && left && x.rest) rest(x.rest); if (s.ok && !left) toast('خلصت هذا التمرين 💪'); const a = anims[0]; renderPlayerSets(); return; }
-  if (d.yt) { b.outerHTML = `<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/${d.yt}?autoplay=1&playsinline=1&rel=0" title="فيديو شرح" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>`; return; }
+  if (d.yt) { b.outerHTML = `<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/${d.yt}?autoplay=1&playsinline=1&rel=0" title="فيديو شرح" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>`; return; }
   if (d.eval != null) { openEval(); return; }
   if (d.weak) { b.classList.toggle('on'); const m = d.weak; EV.weak = EV.weak.includes(m) ? EV.weak.filter(x => x !== m) : [...EV.weak, m]; return; }
   if (d.feel) { document.querySelectorAll('[data-feel]').forEach(x => x.classList.toggle('on', x === b)); EV.feel = d.feel; return; }
@@ -921,6 +944,10 @@ document.addEventListener('click', e => {
   if (d.fcat) { fdCat = d.fcat; openDB(); return; }
   if (d.sec) { openSection(d.sec, d.forslot); return; }
   if (d.mus) { openMuscle(d.mus); return; }
+  if (d.pday) { openPlanDay(d.pday); return; }
+  if ('pick' in d) { openPick(); return; }
+  if (d.progv) { openProg(d.progv); return; }
+  if (d.setprog) { setProg(d.setprog); return; }
   if (d.goto) { location.hash = '#' + d.goto; return; }
   if ('drinks' in d) { openDrinks(); return; }
   if ('fdb' in d) { openDB(); return; }

@@ -767,6 +767,24 @@ main.sl,main.sr,main.fade{animation:none}
 nav a>span{transition:all .45s cubic-bezier(.34,1.56,.64,1)}
 nav a{transition:color .3s}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* ===== v27: الكورس ===== */
+.pcard2{border-radius:26px;padding:16px;background:radial-gradient(400px 200px at 100% 0,rgba(255,160,30,.22),transparent 70%),linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.01)),var(--s1);border:1px solid rgba(255,170,40,.25);display:flex;flex-direction:column;gap:14px}
+.pcard2 small{color:var(--g);font-weight:800;font-size:12px}.pcard2 h2{font-size:20px;line-height:1.35;margin:2px 0}
+.pring{position:relative;width:76px;height:76px;flex:none}.pring svg{width:100%;height:100%}.pring b{position:absolute;inset:0;display:grid;place-items:center;font-size:17px}
+.today{display:flex;align-items:center;gap:12px;background:rgba(0,0,0,.28);border-radius:18px;padding:12px 14px}.today h3{font-size:17px;margin:2px 0}
+.donebox{text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center}
+.cdays .cd{flex:none;width:92px;border-radius:18px;padding:10px 6px;background:var(--s1);border:1px solid var(--line);color:var(--fg);display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}
+.cd b{font-size:24px}.cd small{font-size:11px;line-height:1.3;color:var(--mut)}.cd.now{background:var(--grad);border:0}.cd.now small,.cd.now span{color:#1a1000}.cd.rest{opacity:.7}
+.dayc{display:flex;align-items:center;gap:12px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015)),var(--s1);border:1px solid var(--line);border-radius:22px;padding:10px;color:var(--fg);text-align:right}
+.dayc img{width:84px;height:84px;border-radius:16px;object-fit:cover;flex:none}.dayc small{color:var(--g);font-weight:800;font-size:12px}.dayc h3{font-size:17px;margin:2px 0 6px}.dayc .mchips i{font-size:11px}
+.dayc.rest .big{width:84px;height:84px;border-radius:16px;background:var(--s2);display:grid;place-items:center;font-size:36px;flex:none}
+.dayc>svg,.prog>svg{width:18px;height:18px;flex:none;opacity:.5}
+.wide2{width:100%}
+.prog{display:flex;align-items:center;gap:12px;background:var(--s1);border:1px solid var(--line);border-radius:22px;padding:10px;color:var(--fg);text-align:right}.prog.cur{border-color:rgba(255,170,40,.45)}
+.prog img{width:92px;height:110px;border-radius:16px;object-fit:cover;flex:none}.prog h3{font-size:16.5px;margin:4px 0}.prog p{line-height:1.5}
+.vid{position:relative;width:100%;aspect-ratio:16/9;border-radius:22px;overflow:hidden;background:#000;border:1px solid rgba(255,170,40,.25);box-shadow:0 14px 40px rgba(0,0,0,.5)}.vid iframe,.pvid iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.pvid{position:absolute;inset:0;background:#000;display:flex;align-items:center}.pvid iframe{position:relative;aspect-ratio:16/9;height:auto}
 </style>
 </head>
 <body>
@@ -787,13 +805,13 @@ nav a{transition:color .3s}
 <main id="app"></main>
 <nav aria-label="القائمة"><div class="in">
   <a href="#home" data-t="home"><span data-i="home"></span>الرئيسية</a>
-  <a href="#course" data-t="course"><span data-i="dumb"></span>التمارين</a>
+  <a href="#course" data-t="course"><span data-i="dumb"></span>الكورس</a>
   <a href="#food" data-t="food"><span data-i="food"></span>الأكل</a>
   <a href="#supps" data-t="supps"><span data-i="pill"></span>المكملات</a>
   <a href="#me" data-t="me"><span data-i="user"></span>أنا</a>
 </div></nav>
 <div id="screen" class="screen" hidden></div>
 <div id="player" class="player" hidden></div>
-<script type="module" src="app.js?v=26"></script>
+<script type="module" src="app.js?v=28"></script>
 </body>
 </html>
