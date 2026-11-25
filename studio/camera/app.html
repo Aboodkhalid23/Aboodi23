@@ -21,8 +21,8 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 10px 8px; }
 h1 { font-size: 26px; font-weight: 900; margin: 0; }
 .sub { color: var(--dim); margin: 0; font-size: 15px; }
-nav { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 10px; }
-nav button { font: 700 15px var(--ar); color: var(--dim); background: var(--panel); border: 1px solid var(--line);
+nav { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin-top: 10px; }
+nav button { font: 700 14px var(--ar); color: var(--dim); background: var(--panel); border: 1px solid var(--line);
   border-radius: 10px; padding: 9px 2px; cursor: pointer; }
 nav button[aria-selected="true"] { background: var(--acc); color: var(--acc-ink); border-color: var(--acc); }
 button:focus-visible, a:focus-visible, textarea:focus-visible, input:focus-visible { outline: 3px solid var(--warn); outline-offset: 2px; }
@@ -128,6 +128,24 @@ textarea, input[type=text] { width: 100%; font: 500 17px var(--ar); color: var(-
 .ideas { display: flex; flex-wrap: wrap; gap: 6px; }
 svg text { font-family: var(--ar); }
 @media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+.recipe { display: grid; gap: 10px; }
+.swatch { height: 70px; border-radius: 12px; position: relative; overflow: hidden; }
+.swatch .face { position: absolute; left: 50%; bottom: -14px; width: 56px; height: 56px; margin-left: -28px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 40%, #f1c7a6, #b98063); }
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.kv dt { color: var(--dim); font-size: 15px; }
+.kv dd { margin: 0; font-weight: 700; }
+.meter { height: 12px; background: var(--line); border-radius: 8px; overflow: hidden; }
+.meter i { display: block; height: 100%; background: var(--warn); }
+.calc { display: grid; gap: 8px; }
+.calc label { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; font-size: 16px; }
+.calc input[type=range] { grid-column: 1 / -1; width: 100%; accent-color: var(--acc); }
+.calc output { font-weight: 900; font-variant-numeric: tabular-nums; }
+.result { font-size: 28px; font-weight: 900; color: var(--acc); font-variant-numeric: tabular-nums; }
+.ktable { width: 100%; border-collapse: collapse; font-size: 15px; }
+.ktable td { padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.ktable td:first-child { font-weight: 900; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.kdot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; vertical-align: middle; margin-left: 6px; }
 </style>
 
 <div class="wrap" dir="rtl" lang="ar">
@@ -136,6 +154,7 @@ svg text { font-family: var(--ar); }
     <p class="sub">Sony ZV-E10 II · مرجعك من الإعداد للاحتراف</p>
     <nav role="tablist">
       <button role="tab" id="t-setup" aria-selected="true" data-tab="setup">الإعداد</button>
+      <button role="tab" id="t-light" aria-selected="false" data-tab="light">الضوء</button>
       <button role="tab" id="t-luts" aria-selected="false" data-tab="luts">الفلاتر</button>
       <button role="tab" id="t-ask" aria-selected="false" data-tab="ask">اسأل</button>
       <button role="tab" id="t-daily" aria-selected="false" data-tab="daily">يومي</button>
@@ -148,6 +167,46 @@ svg text { font-family: var(--ar); }
     <div class="bar"><i id="barfill"></i></div>
     <div class="count" id="count"></div>
     <div id="stepbox"></div>
+  </section>
+
+  <!-- ===== الضوء ===== -->
+  <section id="light" hidden>
+    <p class="big">شنو قصة الحلقة؟</p>
+    <p class="why">اختار نوع القصة، ويطلعلك ترتيب الاستوديو كامل: قوة الضوء، درجة حرارته، لون الخلفية، والفلتر.</p>
+    <div class="chips" id="moods"></div>
+    <div class="recipe card" id="recipe"></div>
+
+    <p class="big">قوة ضوء وجهك (من 100)</p>
+    <div class="card calc">
+      <label for="cW">قوة الضوء مالتك (واط) <output id="oW"></output><input type="range" id="cW" min="30" max="300" step="10" value="100"></label>
+      <label for="cD">بعده عن وجهك (متر) <output id="oD"></output><input type="range" id="cD" min="0.5" max="2.5" step="0.1" value="1"></label>
+      <label for="cS">السوفت بوكس <output id="oS"></output><input type="range" id="cS" min="0" max="2" step="1" value="1"></label>
+      <span class="lbl">ابدي من:</span>
+      <span class="result" id="cR"></span>
+      <div class="meter"><i id="cM"></i></div>
+      <p class="note" id="cNote"></p>
+    </div>
+
+    <p class="big">الطريقة الأكيدة (دقيقة وحدة)</p>
+    <ol class="list">
+      <li><b>1. ثبّت الكاميرا</b><span>الغالق 1/50، الفتحة أصغر رقم، ISO أقل رقم، الفلتر شغّال. لا تغيّرهم بعد.</span></li>
+      <li><b>2. شغّل الزيبرا 70</b><span>MENU > Exposure/Color > Zebra Display > On، و Zebra Level > 70.</span></li>
+      <li><b>3. ارفع ضوء وجهك شوية شوية</b><span>لحد ما تبين خطوط خفيفة على أفتح مكان بخدك أو جبهتك. هذا الرقم الصح. إذا الخطوط على كل الوجه، نزّله.</span></li>
+      <li><b>4. الخلفية بعدين</b><span>ارفع الضوء الملوّن لحد ما يبين لونه، بس الحايط يبقى أغمگ من وجهك بوضوح.</span></li>
+    </ol>
+
+    <p class="big">درجة الحرارة (كلفن) ببساطة</p>
+    <p class="why">الرقم يگول لون الضوء الأبيض: الواطي أصفر دافي، والعالي أزرق بارد. أهم قاعدة: <b>ضوء وجهك وتوازن الأبيض بالكاميرا لازم نفس الرقم</b>.</p>
+    <div class="card" style="overflow-x:auto"><table class="ktable" id="ktable"></table></div>
+    <p class="note ok" style="margin-top:10px">جوابك المباشر: خلي ضوء وجهك على <b>5200 أو 5600</b> ولا تغيّره، وسوّي توازن الأبيض بالورقة البيضة. تريد شكل دافي؟ لا تنزّل الضوء لـ3200، اختار الفلتر 5 (تاريخ ذهبي)، أو خلي الدفء بالخلفية بس.</p>
+
+    <p class="big">افحص لقطة من تصويرك</p>
+    <div class="card">
+      <span class="why">صوّر 5 ثواني، خذ صورة من الفيديو (أو صوّر شاشة الكاميرا)، ودزها. Claude يگلك: الإضاءة، لون الوجه، الخلفية، الوضوح، وشنو تغيّر بالأرقام.</span>
+      <label class="btn go sm filebtn">اختار اللقطة<input type="file" id="shotFile" accept="image/*"></label>
+      <p class="msg" id="shotMsg"></p>
+      <div class="bub ai" id="shotOut" hidden style="max-width:100%"></div>
+    </div>
   </section>
 
   <!-- ===== الفلاتر ===== -->
@@ -428,7 +487,7 @@ $("#probs").innerHTML = PROBS.map(([a, b]) => `<li><b>${esc(a)}</b><span>${esc(b
 /* ================= التبويبات ================= */
 function showTab(id) {
   document.querySelectorAll("nav button").forEach((x) => x.setAttribute("aria-selected", x.dataset.tab === id));
-  ["setup", "luts", "ask", "daily", "help"].forEach((t) => $("#" + t).hidden = t !== id);
+  ["setup", "light", "luts", "ask", "daily", "help"].forEach((t) => $("#" + t).hidden = t !== id);
   $("#foot").hidden = id !== "setup";
   if (id === "luts") lutsInit();
   scrollTo(0, 0);
@@ -720,6 +779,7 @@ ${STUDIO}
 إعداداته الحالية: NTSC، XAVC HS 4K، 24p، 30M 4:2:0 10bit، غالق 1/50، ISO ثابت، توازن أبيض Custom، AF-C ويا التعرف على الإنسان، Soft Skin Effect Off، Log Shooting Off،
 الفلاتر بـ User1-7 (1 وثائقي، 2 فيلم، 3 دراما، 4 غموض، 5 تاريخ ذهبي، 6 تقني بارد، 7 أبيض وأسود) و PPLUT1-4، كل فلتر AE Level Offset +5/3EV، Auto Power OFF Temp. High.
 عنده تطبيق ماك «كاميرتي» يحط الفلاتر بالكارت، وبهذا التطبيق يگدر يصنع فلاتر جديدة بتبويب «الفلاتر».
+إضاءته: ضوء الوجه 5600K (أو 5200) بسوفت بوكس على جنبه 45°، والضوء الملوّن على الخلفية بس، 20-35% وأغمگ من وجهه، والقوة الأكيدة بالزيبرا 70. لا تنصحه ينزّل ضوء الوجه لـ3200K ويا توازن أبيض 5600 (الوجه يطلع برتقالي).
 إذا دز صورة من فيديو: حلل الإضاءة (وين الضوء، قوته، لونه)، والعدسة والبعد، والألوان، وگله شلون يسوي نفسها باستوديوه وبأدواته، خطوة خطوة.`;
 const ASK_IDEAS = ["شلون أخلي وجهي أوضح بالفيديو؟", "شنو أحسن ترتيب ضوء لوثائقي غامض؟", "شلون أخلي الخلفية ضبابية أكثر؟", "شنو أشتري حتى أطوّر الصورة؟ (رخيص لغالي)"];
 $("#askIdeas").innerHTML = ASK_IDEAS.map((t) => `<button class="chip" type="button">${esc(t)}</button>`).join("");
@@ -753,6 +813,91 @@ $("#askBtn").onclick = async () => {
     $("#askMsg").className = "msg err";
     $("#askMsg").textContent = e && e.code === "rate_limited" ? "أسئلة هواية. انطر دقيقة." : e && e.code === "not_granted" ? "لازم توافق إن الصفحة تسأل Claude." : "ما وصل الجواب. جرّب مرة ثانية.";
   } finally { $("#askBtn").disabled = false; askBlob = null; $("#askThumb").hidden = true; $("#askFile").value = ""; renderChat(); }
+};
+
+/* ================= الضوء ================= */
+const MOODS = [
+  { id: "doc", name: "وثائقي وقصص شركات", key: 50, k: 5600, ang: "45°", bgName: "برتقالي دافي (أو أبيض 3200K)", bg: "#ff9a3c", bgPct: 25, lut: 1,
+    tip: "الشكل الأساسي. ضوء ناعم، والخلفية دافية خفيفة حتى الصورة تبين غنية." },
+  { id: "crime", name: "جريمة وغموض", key: 40, k: 5600, ang: "60-70° (أكثر للجنب)", bgName: "تيل أو أزرق غامگ", bg: "#1f6f8b", bgPct: 20, lut: 4,
+    tip: "نص وجهك بالظل = غموض. لا تحط ضوء ثاني من الجهة الثانية." },
+  { id: "drama", name: "دراما وصراع", key: 45, k: 5600, ang: "60°", bgName: "أحمر غامگ", bg: "#b3121f", bgPct: 25, lut: 3,
+    tip: "الأحمر يعني خطر وتوتر. خليه على الحايط بس، مو على وجهك." },
+  { id: "tech", name: "تكنولوجيا ومستقبل", key: 55, k: 5600, ang: "30-45°", bgName: "سماوي أو أزرق", bg: "#2aa7ff", bgPct: 35, lut: 6,
+    tip: "صورة نظيفة ومضوّية. الأزرق يعطي إحساس التقنية." },
+  { id: "hist", name: "تاريخ وأرشيف", key: 45, k: 5600, ang: "45°", bgName: "كهرماني (أبيض 2700-3200K)", bg: "#e08a2e", bgPct: 30, lut: 5,
+    tip: "الدفء يجي من الفلتر والخلفية، مو من ضوء وجهك." },
+  { id: "rich", name: "أغنياء وفخامة", key: 50, k: 5600, ang: "45°", bgName: "ذهبي", bg: "#d4a017", bgPct: 30, lut: 2,
+    tip: "ذهبي وغامگ شوية = فخامة. خلي الأغراض ورا بسيطة وقليلة." },
+  { id: "war", name: "حرب وكوارث", key: 40, k: 5600, ang: "60°", bgName: "أخضر مزرگ باهت", bg: "#4f7f6a", bgPct: 15, lut: 4,
+    tip: "ألوان قليلة وباهتة. خلي الخلفية خافتة كلش." },
+  { id: "sad", name: "ذكريات وحزن", key: 45, k: 5600, ang: "45°", bgName: "بنفسجي خافت", bg: "#7a4fd1", bgPct: 20, lut: 7,
+    tip: "الأبيض والأسود (الفلتر 7) يخلي المشهد إحساس ذكرى." },
+];
+let mood = MOODS[0];
+function renderMoods() {
+  $("#moods").innerHTML = MOODS.map((m) => `<button class="chip" type="button" data-m="${m.id}" aria-pressed="${m === mood}">${esc(m.name)}</button>`).join("");
+  $("#moods").querySelectorAll("button").forEach((b) => b.onclick = () => { mood = MOODS.find((x) => x.id === b.dataset.m); renderMoods(); });
+  const lutName = PRESETS[mood.lut - 1] ? PRESETS[mood.lut - 1].name : "";
+  $("#recipe").innerHTML = `<div class="swatch" style="background:radial-gradient(ellipse at 50% 30%, ${mood.bg}, #08080a 75%)"><div class="face"></div></div>
+    <b style="font-size:21px">${esc(mood.name)}</b><span class="why">${esc(mood.tip)}</span>
+    <dl class="kv">
+      <dt>ضوء وجهك</dt><dd>${mood.key}% تقريباً (عدّله بالزيبرا)</dd>
+      <dt>حرارته</dt><dd>${mood.k}K، ونفسه بتوازن الأبيض</dd>
+      <dt>مكانه</dt><dd>على جنبك ${esc(mood.ang)}، أعلى من عيونك شوية</dd>
+      <dt>لون الخلفية</dt><dd><span class="kdot" style="background:${mood.bg}"></span>${esc(mood.bgName)}</dd>
+      <dt>قوة الخلفية</dt><dd>${mood.bgPct}% (أغمگ من وجهك)</dd>
+      <dt>الفلتر</dt><dd>${mood.lut}. ${esc(lutName)}</dd>
+      <dt>ضوء الغرفة</dt><dd>مطفي</dd>
+    </dl>`;
+}
+renderMoods();
+
+const BOX = ["بلا سوفت بوكس", "سوفت بوكس عادي", "سوفت بوكس كبير"];
+function calcLight() {
+  const W = +$("#cW").value, D = +$("#cD").value, S = +$("#cS").value;
+  $("#oW").textContent = W + " واط"; $("#oD").textContent = D.toFixed(1) + " م"; $("#oS").textContent = BOX[S];
+  // نقطة بداية: ضوء 100 واط بسوفت بوكس عادي على بعد متر = 50%. الضوء يضعف بمربع المسافة.
+  const loss = [0.6, 1, 1.3][S];
+  let pct = 50 * (100 / W) * Math.pow(D, 2) * loss;
+  const over = pct > 100;
+  pct = Math.max(5, Math.min(100, Math.round(pct / 5) * 5));
+  $("#cR").textContent = over ? "100% (وبعده قليل)" : pct + "%";
+  $("#cM").style.width = pct + "%";
+  $("#cNote").textContent = over ? "الضوء ضعيف لهالبعد. قرّبه لوجهك: كل ما يقرب، الصورة تنظف والحبوب تقل."
+    : D > 1.3 ? "تقريب الضوء لـ70 سم يضاعف قوته، ويخلي الضوء أنعم على الوجه. جرّب."
+    : "هذا رقم بداية بس. الرقم الأكيد يطلع بالزيبرا (تحت).";
+}
+["cW", "cD", "cS"].forEach((id) => $("#" + id).oninput = calcLight);
+calcLight();
+
+const KELVIN = [
+  ["2700K", "#ffb56b", "أصفر كلش (مثل لمبة البيت)", "للخلفية بس: شكل قديم ودافي"],
+  ["3200K", "#ffd29a", "دافي", "للخلفية، أو إذا الكاميرا كلها 3200 ويا توازن الأبيض. على الوجه ويا كاميرا 5600 يطلع الوجه برتقالي"],
+  ["4300K", "#fff0d8", "بالنص", "قليل الاستخدام"],
+  ["5200-5600K", "#ffffff", "أبيض مثل الشمس", "⭐ ضوء وجهك. أنظف لون بشرة، والفلاتر مصممة عليه"],
+  ["6500K", "#dfe9ff", "أبيض مزرگ", "للخلفية إذا تريد برود"],
+];
+$("#ktable").innerHTML = KELVIN.map(([k, c, a, b]) => `<tr><td><span class="kdot" style="background:${c}"></span>${k}</td><td><b>${esc(a)}</b><br><span class="lbl">${esc(b)}</span></td></tr>`).join("");
+
+$("#shotFile").onchange = async (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  await capsReady;
+  const msg = $("#shotMsg"), out = $("#shotOut");
+  if (!claudeSample) { msg.className = "msg err"; msg.textContent = "الفحص يحتاج تفتح التطبيق من claude.ai."; return; }
+  msg.className = "msg"; msg.textContent = "Claude دا يفحص اللقطة…"; out.hidden = false; out.textContent = "";
+  try {
+    const { stats, small } = await imgStats(f);
+    const opts = { cache: false, modelTier: "complex", onText: ({ text }) => { out.textContent = text; } };
+    try { const lim = await claudeSample.limits(); if (lim.images) opts.images = [small]; } catch (e2) {}
+    const prompt = CONTEXT + `\n\nهاي لقطة من تصويره (بعد الفلتر). إحصاء الألوان (Oklab): ${JSON.stringify(stats)}.
+افحصها كمصوّر سينمائي وجاوب بنقاط قصيرة: 1) إضاءة الوجه (زايدة، ناقصة، مضبوطة؟ وكم % يغيّر ضوء وجهه)، 2) لون البشرة، 3) الخلفية (أغمگ من الوجه؟ لونها وقوتها)، 4) الوضوح والفوكس والحبوب، 5) أهم 3 تغييرات بالأرقام. إذا ما تشوف الصورة نفسها، اعتمد على الإحصاء وگول هيچ.`;
+    const r = await claudeSample(prompt, opts);
+    out.textContent = r.text; msg.textContent = "";
+  } catch (e3) {
+    out.hidden = true; msg.className = "msg err";
+    msg.textContent = e3 && e3.code === "rate_limited" ? "طلبات هواية. انطر دقيقة." : "ما وصل الفحص. جرّب مرة ثانية.";
+  } finally { $("#shotFile").value = ""; }
 };
 
 renderStep();
