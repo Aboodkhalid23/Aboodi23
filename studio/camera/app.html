@@ -146,6 +146,21 @@ svg text { font-family: var(--ar); }
 .ktable td { padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
 .ktable td:first-child { font-weight: 900; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .kdot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; vertical-align: middle; margin-left: 6px; }
+.stage { perspective: 900px; margin-top: 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 8px; overflow: hidden; }
+.stage svg { width: 100%; display: block; transition: transform .6s; transform-origin: 50% 60%; }
+.stage.d3 svg { transform: rotateX(52deg) scale(1.05); }
+.ctl { display: grid; gap: 10px; margin-top: 10px; }
+.ctl label { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: center; font-size: 16px; }
+.ctl input[type=range] { grid-column: 1 / -1; width: 100%; accent-color: var(--acc); }
+.ctl output { font-weight: 900; font-variant-numeric: tabular-nums; }
+select { font: 600 16px var(--ar); color: var(--fg); background: #0f0f12; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; width: 100%; }
+.blurdemo { height: 56px; border-radius: 10px; position: relative; overflow: hidden; background: #0f0f12; }
+.blurdemo i { position: absolute; inset: -20px; background:
+  radial-gradient(circle at 20% 40%, #ff8a1f 0 7px, transparent 8px), radial-gradient(circle at 45% 60%, #3a8bff 0 6px, transparent 7px),
+  radial-gradient(circle at 70% 35%, #fff 0 5px, transparent 6px), radial-gradient(circle at 85% 65%, #b05cff 0 7px, transparent 8px),
+  repeating-linear-gradient(90deg, #2a2a31 0 14px, #1a1a1f 14px 28px); }
+.ok-t { color: var(--ok); } .warn-t { color: var(--warn); } .bad-t { color: var(--bad); }
+.tick { color: var(--ok); font-weight: 900; }
 </style>
 
 <div class="wrap" dir="rtl" lang="ar">
@@ -154,10 +169,10 @@ svg text { font-family: var(--ar); }
     <p class="sub">Sony ZV-E10 II · مرجعك من الإعداد للاحتراف</p>
     <nav role="tablist">
       <button role="tab" id="t-setup" aria-selected="true" data-tab="setup">الإعداد</button>
-      <button role="tab" id="t-light" aria-selected="false" data-tab="light">الضوء</button>
+      <button role="tab" id="t-light" aria-selected="false" data-tab="light">الاستوديو</button>
       <button role="tab" id="t-luts" aria-selected="false" data-tab="luts">الفلاتر</button>
       <button role="tab" id="t-ask" aria-selected="false" data-tab="ask">اسأل</button>
-      <button role="tab" id="t-daily" aria-selected="false" data-tab="daily">يومي</button>
+      <button role="tab" id="t-daily" aria-selected="false" data-tab="daily">الكاميرا</button>
       <button role="tab" id="t-help" aria-selected="false" data-tab="help">مشاكل</button>
     </nav>
   </header>
@@ -171,6 +186,23 @@ svg text { font-family: var(--ar); }
 
   <!-- ===== الضوء ===== -->
   <section id="light" hidden>
+    <p class="big">خريطة الاستوديو بالأمتار</p>
+    <p class="why">حرّك الأرقام وشوف وين تحط الكاميرا والضوء والخلفية. الحساب حقيقي: حسب عدستك، وحساس كاميرتك، وقوانين الضوء.</p>
+    <div class="ctl">
+      <label for="pLens" style="grid-template-columns:1fr">عدستك<select id="pLens"></select></label>
+      <label for="pF">البعد البؤري (الزوم) <output id="oF"></output><input type="range" id="pF" min="16" max="50" step="1" value="16"></label>
+      <div class="chips" id="pFrame"></div>
+      <label for="pBg">بعدك عن الحايط الي وراك <output id="oBg"></output><input type="range" id="pBg" min="0.4" max="3.5" step="0.1" value="1.5"></label>
+      <label for="pK">بعد ضوء وجهك عنك <output id="oK"></output><input type="range" id="pK" min="0.4" max="2" step="0.1" value="0.8"></label>
+      <label for="pRoom">طول الغرفة (من الحايط للحايط) <output id="oRoom"></output><input type="range" id="pRoom" min="2" max="7" step="0.1" value="4"></label>
+    </div>
+    <div class="stage" id="stage"><svg id="plan" viewBox="0 0 360 420" role="img" aria-label="خريطة الاستوديو من فوگ"></svg></div>
+    <button class="btn sec sm" id="d3Btn" type="button" style="margin-top:8px">شوفها مجسّمة</button>
+    <dl class="kv" id="pOut" style="margin-top:10px"></dl>
+    <span class="lbl" style="margin-top:8px;display:block">شكل الخلفية بهالأرقام:</span>
+    <div class="blurdemo"><i id="pBlurDemo"></i></div>
+    <ul class="list" id="pTips"></ul>
+
     <p class="big">شنو قصة الحلقة؟</p>
     <p class="why">اختار نوع القصة، ويطلعلك ترتيب الاستوديو كامل: قوة الضوء، درجة حرارته، لون الخلفية، والفلتر.</p>
     <div class="chips" id="moods"></div>
@@ -293,6 +325,12 @@ svg text { font-family: var(--ar); }
 
   <!-- ===== يومي ===== -->
   <section id="daily" hidden>
+    <p class="big">طلّع أقصى جودة من كاميرتك</p>
+    <p class="why">إعدادات بكاميرتك تفرق بالوضوح والشكل. <span class="tick">✓</span> = سوّيناها بالإعداد.</p>
+    <ul class="list" id="maxList"></ul>
+    <p class="big">المعدات (من الأهم للأقل)</p>
+    <p class="why">إذا تريد تطوّر، هذا الترتيب الي يفرق أكثر بالصورة.</p>
+    <ul class="list" id="gearList"></ul>
     <p class="big">كل يوم، 3 خطوات بس</p>
     <ol class="list">
       <li><b>1. شغّل الكاميرا</b><span>ضوء الوجه (السوفت بوكس) شغّال، وضوء الغرفة مطفي.</span></li>
@@ -837,7 +875,7 @@ const MOODS = [
 let mood = MOODS[0];
 function renderMoods() {
   $("#moods").innerHTML = MOODS.map((m) => `<button class="chip" type="button" data-m="${m.id}" aria-pressed="${m === mood}">${esc(m.name)}</button>`).join("");
-  $("#moods").querySelectorAll("button").forEach((b) => b.onclick = () => { mood = MOODS.find((x) => x.id === b.dataset.m); renderMoods(); });
+  $("#moods").querySelectorAll("button").forEach((b) => b.onclick = () => { mood = MOODS.find((x) => x.id === b.dataset.m); renderMoods(); if (typeof calcPlan === "function") calcPlan(); });
   const lutName = PRESETS[mood.lut - 1] ? PRESETS[mood.lut - 1].name : "";
   $("#recipe").innerHTML = `<div class="swatch" style="background:radial-gradient(ellipse at 50% 30%, ${mood.bg}, #08080a 75%)"><div class="face"></div></div>
     <b style="font-size:21px">${esc(mood.name)}</b><span class="why">${esc(mood.tip)}</span>
@@ -899,6 +937,132 @@ $("#shotFile").onchange = async (e) => {
     msg.textContent = e3 && e3.code === "rate_limited" ? "طلبات هواية. انطر دقيقة." : "ما وصل الفحص. جرّب مرة ثانية.";
   } finally { $("#shotFile").value = ""; }
 };
+
+/* ================= خريطة الاستوديو ================= */
+// حساس كاميرتك APS-C: عرض الصورة بالفيديو 23.5 ملم (4K 24p يقرا الحساس كامل بلا قص)
+const SENSOR_W = 23.5, COC = 0.015;
+const LENSES = [
+  { name: "عدسة الكيت 16-50 (الي ويا الكاميرا)", f: [16, 50], N: (f) => interp([[16, 3.5], [20, 4], [24, 4.5], [35, 5], [50, 5.6]], f) },
+  { name: "Sigma 18-50mm F2.8", f: [18, 50], N: () => 2.8 },
+  { name: "Sony E 11mm F1.8", f: [11, 11], N: () => 1.8 },
+  { name: "Sigma 16mm F1.4", f: [16, 16], N: () => 1.4 },
+  { name: "Sigma 23mm F1.4", f: [23, 23], N: () => 1.4 },
+  { name: "Viltrox 27mm F1.2", f: [27, 27], N: () => 1.2 },
+  { name: "Sony 35mm F1.8 OSS", f: [35, 35], N: () => 1.8 },
+];
+function interp(t, x) { for (let i = 1; i < t.length; i++) if (x <= t[i][0]) { const [a, b] = [t[i - 1], t[i]]; return a[1] + (b[1] - a[1]) * (x - a[0]) / (b[0] - a[0]); } return t[t.length - 1][1]; }
+const FRAMES = [
+  { id: "close", name: "قريب (الوجه والكتوف)", h: 0.45 },
+  { id: "mid", name: "متوسط (لحد الصدر)", h: 0.7 },
+  { id: "wide", name: "واسع (ويا الميز)", h: 1.05 },
+];
+const plan = store.get("plan", { lens: 0, f: 16, frame: "mid", bg: 1.5, k: 0.8, room: 4 });
+$("#pLens").innerHTML = LENSES.map((l, i) => `<option value="${i}">${esc(l.name)}</option>`).join("");
+function renderFrames() {
+  $("#pFrame").innerHTML = FRAMES.map((f) => `<button class="chip" type="button" data-f="${f.id}" aria-pressed="${f.id === plan.frame}">${esc(f.name)}</button>`).join("");
+  $("#pFrame").querySelectorAll("button").forEach((b) => b.onclick = () => { plan.frame = b.dataset.f; renderFrames(); calcPlan(); });
+}
+const m2 = (x) => x.toFixed(2).replace(/\.?0+$/, "") + " م";
+function calcPlan() {
+  const L = LENSES[plan.lens];
+  $("#pLens").value = plan.lens;
+  const fr = $("#pF"); fr.min = L.f[0]; fr.max = L.f[1]; fr.disabled = L.f[0] === L.f[1];
+  plan.f = Math.min(L.f[1], Math.max(L.f[0], plan.f)); fr.value = plan.f;
+  const f = plan.f, N = L.N(f), frame = FRAMES.find((x) => x.id === plan.frame);
+  const W = frame.h * 16 / 9;                     // عرض الصورة عند وجهك (متر)
+  const d = W * f / SENSOR_W;                      // بعد الكاميرا عن وجهك (متر)
+  const s = d * 1000, D = (plan.bg + d) * 1000;    // بالملم
+  const blur = (f * f / (N * (s - f))) * (D - s) / D;      // قطر الضبابية على الحساس (ملم)
+  const blurPct = blur / SENSOR_W * 100;
+  const H = f * f / (N * COC) + f;
+  const near = s * (H - f) / (H + s - 2 * f), far = s < H ? s * (H - f) / (H - s) : Infinity;
+  const zone = far === Infinity ? Infinity : (far - near) / 10;  // سم
+  const wall = Math.pow(plan.k / (plan.k + plan.bg), 2) * 100;   // كم يوصل الحايط من ضوء وجهك
+  const need = plan.bg + d + 0.4;
+  store.set("plan", plan);
+  $("#oF").textContent = f + " ملم"; $("#oBg").textContent = m2(plan.bg); $("#oK").textContent = m2(plan.k); $("#oRoom").textContent = m2(plan.room);
+  const blurTxt = blurPct < 0.25 ? ["واضحة (تشتت العين)", "bad-t"] : blurPct < 0.6 ? ["ضبابية خفيفة", "warn-t"] : blurPct < 1.2 ? ["ضبابية حلوة", "ok-t"] : ["ضبابية سينمائية", "ok-t"];
+  const wallTxt = wall > 45 ? ["الحايط مضوّي هواية", "bad-t"] : wall > 30 ? ["مقبول", "warn-t"] : ["الحايط أغمگ من وجهك، ممتاز", "ok-t"];
+  const zoneTxt = zone < 12 ? ["ضيقة: إذا تحركت تطلع من الوضوح", "warn-t"] : ["مريحة", "ok-t"];
+  $("#pOut").innerHTML = `
+    <dt>الكاميرا عن وجهك</dt><dd>${m2(d)}</dd>
+    <dt>ارتفاع الكاميرا</dt><dd>العدسة بمستوى عيونك، أو أعلى 3-5 سم</dd>
+    <dt>الفتحة</dt><dd>F${N.toFixed(1)} (أصغر رقم بهالزوم)</dd>
+    <dt>الخلفية</dt><dd class="${blurTxt[1]}">${blurTxt[0]}</dd>
+    <dt>منطقة الوضوح</dt><dd class="${zoneTxt[1]}">${zone === Infinity ? "كبيرة كلش" : Math.round(zone) + " سم"}، ${zoneTxt[0]}</dd>
+    <dt>ضوء وجهك</dt><dd>${m2(plan.k)}، على جنبك 45°، أعلى من عيونك 30-50 سم، ومايل لتحت</dd>
+    <dt>الحايط ياخذ</dt><dd class="${wallTxt[1]}">${Math.round(wall)}% من ضوء وجهك: ${wallTxt[0]}</dd>
+    <dt>الغرفة</dt><dd class="${need > plan.room ? "bad-t" : "ok-t"}">${need > plan.room ? `تحتاج ${m2(need)} وغرفتك ${m2(plan.room)}: قرّب الحايط أو اختار لقطة أقرب` : `تكفي (تحتاج ${m2(need)})`}</dd>`;
+  $("#pBlurDemo").style.filter = `blur(${Math.min(14, blurPct * 8).toFixed(1)}px)`;
+  const tips = [];
+  if (blurPct < 0.6) tips.push(["الخلفية واضحة زيادة", plan.bg < 2 ? `ابعد عن الحايط (جرّب ${m2(Math.min(3, plan.bg + 0.8))})، أو قرّب الكاميرا واستخدم زوم أطول، أو عدسة أفتح.` : "استخدم زوم أطول وقرّب، أو عدسة أفتح (مثل F1.4)."]);
+  if (wall > 30) tips.push(["الحايط ياخذ ضوء هواية", "قرّب ضوء وجهك منك، أو ابعد عن الحايط. هيچ وجهك يطلع والخلفية تغمگ = شكل سينمائي."]);
+  if (plan.k > 1.2) tips.push(["ضوء وجهك بعيد", "كل ما يقرب، يصير أنعم وأقوى. أحسن مسافة 70 سم لمتر."]);
+  if (f > 30 && LENSES[plan.lens].name.includes("الكيت")) tips.push(["عدسة الكيت على زوم طويل", "الفتحة تصير F5 وأكثر، والصورة تغمگ. قرّب الكاميرا وخلي الزوم 16-24 ملم."]);
+  if (!tips.length) tips.push(["الترتيب ممتاز", "ثبّت الأماكن بشريط لاصق على الأرض حتى ترجعها كل مرة بنفس المكان."]);
+  $("#pTips").innerHTML = tips.map(([a, b]) => `<li><b>${esc(a)}</b><span>${esc(b)}</span></li>`).join("");
+  drawPlan(d, N);
+}
+function drawPlan(d) {
+  const k = Math.min(70, 360 / (plan.room + 0.6)), top = 24;
+  const H = top + plan.room * k + 16, cx = 180;
+  const wallY = top, subY = top + plan.bg * k, camY = subY + d * k;
+  const kx = cx - plan.k * k * Math.SQRT1_2, ky = subY + plan.k * k * Math.SQRT1_2;
+  const rimX = cx + 0.7 * k * 0.6, rimY = subY - 0.45 * k;
+  const over = camY > top + plan.room * k;
+  const lineLbl = (x1, y1, x2, y2, t, dx = 8) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#9b98a3" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <text x="${(x1 + x2) / 2 + dx}" y="${(y1 + y2) / 2 + 4}" fill="#f3f1ec" font-size="13" font-weight="700" text-anchor="start">${t}</text>`;
+  $("#plan").setAttribute("viewBox", `0 0 360 ${Math.max(H, camY + 50)}`);
+  $("#plan").innerHTML = `
+    <rect x="20" y="${top}" width="320" height="${plan.room * k}" fill="#111115" stroke="#2a2a31" stroke-width="2"/>
+    <rect x="20" y="${wallY - 8}" width="320" height="8" fill="#3a3a44"/>
+    <text x="180" y="${wallY - 12}" fill="#9b98a3" font-size="12" text-anchor="middle">الحايط</text>
+    <circle cx="70" cy="${wallY + 8}" r="9" fill="${mood.bg}"/><circle cx="290" cy="${wallY + 8}" r="9" fill="${mood.bg}"/>
+    <text x="70" y="${wallY + 30}" fill="#9b98a3" font-size="11" text-anchor="middle">ضوء ملوّن</text>
+    <text x="290" y="${wallY + 30}" fill="#9b98a3" font-size="11" text-anchor="middle">ضوء ملوّن</text>
+    ${lineLbl(cx, wallY, cx, subY - 16, m2(plan.bg))}
+    <circle cx="${cx}" cy="${subY}" r="16" fill="#d9a37a"/><text x="${cx}" y="${subY + 5}" fill="#1a0d00" font-size="12" font-weight="900" text-anchor="middle">إنت</text>
+    <circle cx="${rimX}" cy="${rimY}" r="6" fill="#ffffff" opacity=".8"/><text x="${rimX + 10}" y="${rimY + 4}" fill="#9b98a3" font-size="11" text-anchor="start">ضوء حافة</text>
+    <g transform="rotate(-45 ${kx} ${ky})"><rect x="${kx - 22}" y="${ky - 8}" width="44" height="16" rx="4" fill="#ff8a1f"/></g>
+    ${lineLbl(kx, ky, cx - 12, subY + 10, m2(plan.k), -46)}
+    <text x="${kx + 14}" y="${ky + 30}" fill="#ff8a1f" font-size="12" font-weight="700" text-anchor="end">سوفت بوكس 45°</text>
+    ${lineLbl(cx, subY + 16, cx, camY - 12, m2(d), 14)}
+    <rect x="${cx - 18}" y="${camY - 10}" width="36" height="22" rx="4" fill="${over ? "#ff6b6b" : "#f3f1ec"}"/>
+    <text x="${cx}" y="${camY + 30}" fill="${over ? "#ff6b6b" : "#f3f1ec"}" font-size="12" text-anchor="middle">${over ? "الكاميرا برا الغرفة!" : "الكاميرا"}</text>`;
+}
+$("#pLens").onchange = () => { plan.lens = +$("#pLens").value; plan.f = LENSES[plan.lens].f[0]; calcPlan(); };
+$("#pF").oninput = () => { plan.f = +$("#pF").value; calcPlan(); };
+[["pBg", "bg"], ["pK", "k"], ["pRoom", "room"]].forEach(([id, key]) => { $("#" + id).value = plan[key]; $("#" + id).oninput = () => { plan[key] = +$("#" + id).value; calcPlan(); }; });
+$("#d3Btn").onclick = () => { const on = $("#stage").classList.toggle("d3"); $("#d3Btn").textContent = on ? "رجّعها مسطحة" : "شوفها مجسّمة"; };
+renderFrames(); calcPlan();
+
+/* ================= أقصى جودة + المعدات ================= */
+const MAX = [
+  [true, "4K بـ24 فريم، مو 50 أو 60", "بالـ24 الكاميرا تقرا الحساس كامل (6K) وتصغّره لـ4K، فالتفاصيل أحدّ. بالـ50 و60 تقص الصورة وتحمى أكثر.", "Movie Settings > Rec Frame Rate > 24p"],
+  [true, "10bit", "ألوان ناعمة بلا خطوط بالخلفية الغامگة.", "Record Setting > 30M 4:2:0 10bit"],
+  [false, "الزوم البصري بس", "الزوم الرقمي يكبّر البكسلات ويمسح التفاصيل.", "MENU > Shooting > Zoom > Zoom Range > Optical zoom only"],
+  [false, "عدسة الكيت: خليها على 16-20 ملم", "كل ما تزوم، الفتحة تصغر والصورة تغمگ وتكثر الحبوب. قرّب الكاميرا بدل الزوم (شوف خريطة الاستوديو).", ""],
+  [false, "تصحيح العدسة", "يعدّل الخطوط المعوجة والألوان على الحواف (والزوايا خليناه طافي).", "MENU > Shooting > Image Quality/Rec > Lens Compensation > Distortion Comp. > Auto, Chromatic Aberration Comp. > Auto"],
+  [false, "سرعة الفوكس ناعمة", "لما تتحرك، الفوكس ينتقل بنعومة مثل السينما مو بقفزة. 1 أبطأ، 7 أسرع. خليه 5.", "MENU > Focus > AF/MF > AF Transition Speed > 5"],
+  [false, "الفوكس يلزم وجهك", "حتى ما يقفز للخلفية لو مرّ شي. 1 يلزم أكثر، 5 يتنقل أسرع. خليه 2.", "MENU > Focus > AF/MF > AF Subj. Shift Sens. > 2"],
+  [true, "التعرف على العيون", "الفوكس على عينك بالضبط، أهم نقطة بالوجه.", "Subject Recognition > Human"],
+  [true, "تنعيم البشرة Off وD-Range Off", "حتى تبقى تفاصيل الجلد واللحية، والفلتر يشتغل صح.", "Color/Tone > Soft Skin Effect > Off"],
+  [false, "سطوع الشاشة عادي", "إذا الشاشة مضوّية زايد تفكر الصورة مضبوطة وهي غامگة. خليها 0 واعتمد على الزيبرا.", "MENU > Setup > Display Option > Monitor Brightness > Manual > ±0"],
+  [false, "علامة النص", "خط بنص الشاشة يساعدك تخلي عيونك بنفس المكان كل حلقة (ثلث الصورة من فوگ).", "MENU > Shooting > Marker Display > On، Marker Settings > Center"],
+  [true, "ISO ثابت والغالق 1/50", "هذا أساس الصورة النظيفة.", ""],
+  [false, "كارت أسرع (V60 أو V90)", "يتحمل الجودة العالية بلا توقف، ويخليك تجرب 4K بجودة أعلى (140M) بالمستقبل.", ""],
+];
+$("#maxList").innerHTML = MAX.map(([done, t, why, path]) => `<li><b>${done ? '<span class="tick">✓</span> ' : ""}${esc(t)}</b><span>${esc(why)}</span>${path ? `<div class="path" style="margin-top:6px"><div>${esc(path)}<span></span></div></div>` : ""}</li>`).join("");
+const GEAR = [
+  ["1. عدسة أفتح (أكبر فرق)", "Sigma 18-50mm F2.8 بديل مباشر للكيت (أفتح 3 مرات). أو Sigma 16mm F1.4 أو Viltrox 27mm F1.2 للخلفية الضبابية السينمائية. جرّبها بخريطة الاستوديو فوگ."],
+  ["2. سوفت بوكس أكبر (90 سم أو أكثر)", "كل ما يكبر مصدر الضوء، يصير أنعم على الوجه والجلد. ضوء 100-200 واط يكفي."],
+  ["3. قماش أسود على الجهة الثانية", "يمتص الضوء من الجهة الثانية لوجهك، فيصير الظل أعمق = شكل سينمائي ببلاش تقريباً."],
+  ["4. ضوء حافة صغير ورا", "ضوء خفيف (15-25%) ورا راسك من فوگ، يفصلك عن الخلفية. الوثائقيات الكبيرة كلها تستخدمه."],
+  ["5. أضواء خلفية RGB (أنابيب)", "تتحكم بلونها وقوتها بدقة، بدل الشريط. لون الخلفية حسب القصة."],
+  ["6. بطارية وهمية + كارت V60", "تصوير طويل بلا سخونة ولا توقف."],
+  ["7. حامل ثابت بمستوى العين", "الكاميرا لازم ما تتحرك أبداً، وبمستوى عيونك."],
+];
+$("#gearList").innerHTML = GEAR.map(([a, b]) => `<li><b>${esc(a)}</b><span>${esc(b)}</span></li>`).join("");
 
 renderStep();
 </script>
