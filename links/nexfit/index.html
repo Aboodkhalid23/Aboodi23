@@ -787,6 +787,16 @@ nav a{transition:color .3s}
 .pvid{position:absolute;inset:0;background:#000;display:flex;align-items:center}.pvid iframe{position:relative;aspect-ratio:16/9;height:auto}
 .bal summary{cursor:pointer}.balr{display:flex;align-items:center;gap:10px;margin:7px 0}.balr span{width:72px;font-size:13px}.balr b{width:26px;text-align:left}
 .bb{position:relative;flex:1;height:10px;border-radius:6px;background:rgba(255,255,255,.07)}.bb i{position:absolute;right:0;top:0;bottom:0;border-radius:6px;background:var(--grad)}.bb em{position:absolute;top:-3px;bottom:-3px;width:2px;background:rgba(255,255,255,.45)}
+.clip{position:relative;width:100%;aspect-ratio:4/3;border-radius:22px;overflow:hidden;background:#111;border:1px solid rgba(255,170,40,.25);box-shadow:0 14px 40px rgba(0,0,0,.5)}
+.clip img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;animation:kb 2.8s ease-in-out infinite}
+.clip img.b{animation:kb 2.8s ease-in-out infinite,cf 2.8s ease-in-out infinite}
+@keyframes cf{0%,30%{opacity:0}45%,80%{opacity:1}95%,100%{opacity:0}}@keyframes kb{0%,100%{transform:scale(1.02)}50%{transform:scale(1.07)}}
+.cph{position:absolute;bottom:10px;right:10px;display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);border-radius:999px;padding:5px 12px;font-size:13px;color:#fff}.cph i{width:8px;height:8px;border-radius:50%;background:var(--g);box-shadow:0 0 8px var(--g)}
+.cph .lb{display:grid}.cph .lb b{grid-area:1/1;font-weight:700}.cph .p0{animation:t0 2.8s steps(1) infinite}.cph .p1{animation:t1 2.8s steps(1) infinite}
+@keyframes t0{0%{opacity:1}40%{opacity:0}90%{opacity:1}}@keyframes t1{0%{opacity:0}40%{opacity:1}90%{opacity:0}}
+.clip .off{position:absolute;top:10px;left:10px;font-size:11px;background:rgba(52,199,89,.85);color:#04210f;font-weight:800;border-radius:999px;padding:3px 9px}
+.pclip{position:absolute;inset:0;border-radius:0;aspect-ratio:auto;border:0}
+.ytbtn{width:100%;background:var(--s1);border:1px solid var(--line);color:var(--fg);border-radius:16px;padding:12px;font-size:14.5px;font-weight:700}.ytbtn small{color:var(--mut);font-weight:400}
 </style>
 </head>
 <body>
@@ -814,6 +824,6 @@ nav a{transition:color .3s}
 </div></nav>
 <div id="screen" class="screen" hidden></div>
 <div id="player" class="player" hidden></div>
-<script type="module" src="app.js?v=29"></script>
+<script type="module" src="app.js?v=30"></script>
 </body>
 </html>

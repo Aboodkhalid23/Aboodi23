@@ -1,5 +1,5 @@
 // مدرّبي: منطق التطبيق
-import { EX, REST_DAY, DAY_NAMES, DAY_IMG, PROGRAMS, VID, FD, IBS, SUPPS, SCHEDULE, TIPS, INFO, EASY, SUPP_LIB, BAN as BAN0, BAN2, BAN_WORDS, IBS_BAN, IBS_GOOD } from './data.js';
+import { EX, REST_DAY, DAY_NAMES, DAY_IMG, PROGRAMS, VID, CLIP, FD, IBS, SUPPS, SCHEDULE, TIPS, INFO, EASY, SUPP_LIB, BAN as BAN0, BAN2, BAN_WORDS, IBS_BAN, IBS_GOOD } from './data.js';
 import { BODY } from './bodymap.js';
 import { FOODS, RECIPES, CATS, GEN, DRINKS, MEAS, SECTIONS } from './food2.js';
 
@@ -231,10 +231,13 @@ function killAnims() { anims.forEach(a => { try { a.dispose(); } catch (e) {} })
 /* ================= شرح التمرين ================= */
 const MNAME = { chest: 'الصدر', back: 'الظهر', shoulders: 'الكتف', traps: 'الترابيس', biceps: 'البايسبس', triceps: 'الترايسبس', forearms: 'الساعد', abs: 'البطن', obliques: 'الخواصر', quads: 'الفخذ الأمامي', hamstrings: 'الفخذ الخلفي', glutes: 'المؤخرة', calves: 'السمانة', lowerback: 'أسفل الظهر', hipflex: 'الورك' };
 const vframe = (id, cls = 'vid') => `<div class="${cls}"><iframe src="https://www.youtube-nocookie.com/embed/${VID[id]}?autoplay=1&mute=1&loop=1&playlist=${VID[id]}&playsinline=1&rel=0&modestbranding=1" title="فيديو الحركة" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe></div>`;
+const HAS = new Set(CLIP);
+const clipEl = (id, cls = 'clip') => `<div class="${cls}"><img src="img/clip/${id}-0.webp" alt=""><img class="b" src="img/clip/${id}-1.webp" alt=""><span class="cph"><i></i><span class="lb"><b class="p0">البداية</b><b class="p1">النهاية</b></span></span><span class="off">✓ يشتغل بدون نت</span></div>`;
 function exInfo(id) {
   const e = EX[id];
-  return `${VID[id] ? vframe(id) : `<div class="anim"><canvas id="ac"></canvas><span class="ph"><i></i><span id="aph">استعد</span></span></div>`}
+  return `${HAS.has(id) ? clipEl(id) : VID[id] ? vframe(id) : `<div class="anim"><canvas id="ac"></canvas><span class="ph"><i></i><span id="aph">استعد</span></span></div>`}
   <div><p class="xs mut">اسمه بالجيم: ${e.gym}</p><h1>${e.n}${e.star ? ' ⭐' : ''}</h1><div class="mchips" style="margin-top:8px">${e.m.map((m, i) => `<i style="${i ? '' : 'background:var(--grad);color:#1a1000;font-weight:800'}">${i ? '' : '🎯 '}${MNAME[m] || m}</i>`).join('')}</div></div>
+  ${HAS.has(id) && VID[id] ? `<button class="ytbtn" data-ytv="${id}">▶ شوف فيديو كامل من يوتيوب <small>(يحتاج نت)</small></button>` : ''}
   <div class="card"><h3>شلون تسويه</h3><div class="steps sm">${e.st.map(s => `<p>${s}</p>`).join('')}</div></div>
   ${e.bad.length ? `<div class="card"><h3>لا تسوي هيچ</h3><div class="bad sm col">${e.bad.map(s => `<p>${s}</p>`).join('')}</div></div>` : ''}
   ${EASY[id] && EX[EASY[id][0]] ? `<button class="easy" data-ex="${EASY[id][0]}"><img src="img/ex3d/${EASY[id][0]}.jpg" alt=""><div class="grow"><span class="xs" style="color:#34c759">صعبة عليك؟ جرّب الأسهل</span><b>${EX[EASY[id][0]].n}</b><span class="xs mut">نفس العضلة • ${EASY[id][1]}</span></div>${I.chev}</button>` : ''}
@@ -257,7 +260,7 @@ function renderPlayer() {
   const doneEx = SES.sets.map(s => s.every(z => z.ok)); const C = 2 * Math.PI * 22, frac = (SES.k + 1) / n;
   const cur = sets.findIndex(s => !s.ok);
   P.hidden = false; document.body.style.overflow = 'hidden';
-  P.innerHTML = `<div class="stage">${VID[x.id] ? vframe(x.id, 'pvid') : '<canvas id="pc"></canvas>'}<div class="fade"></div><div class="ov"><div class="row between"><button class="ib" data-pclose aria-label="طلّع">${I.x}</button><div class="row"><button class="ib" data-swap="${x.id}" aria-label="بدّل التمرين">⇄</button><button class="ib" data-slow aria-label="أبطأ">${I.slow}</button><button class="ib" data-info="${x.id}" aria-label="الشرح">${I.info}</button></div></div>
+  P.innerHTML = `<div class="stage">${HAS.has(x.id) ? clipEl(x.id, 'clip pclip') : VID[x.id] ? vframe(x.id, 'pvid') : '<canvas id="pc"></canvas>'}<div class="fade"></div><div class="ov"><div class="row between"><button class="ib" data-pclose aria-label="طلّع">${I.x}</button><div class="row"><button class="ib" data-swap="${x.id}" aria-label="بدّل التمرين">⇄</button><button class="ib" data-slow aria-label="أبطأ">${I.slow}</button><button class="ib" data-info="${x.id}" aria-label="الشرح">${I.info}</button></div></div>
    <span class="ph"><i></i><span id="pph">استعد</span></span></div></div>
   <div class="ploop">
    ${S.last[x.id] ? `<div class="lastt"><span>المرة الفاتتة</span><b class="num">${S.last[x.id].map(z => AR(z.w) + '×' + AR(z.r)).join('  ')}</b></div>` : `<div class="lastt"><span>أول مرة</span><b>ابدي خفيف وتعلّم الحركة</b></div>`}
@@ -732,7 +735,7 @@ function openBan(i) {
 }
 
 /* ================= أنا ================= */
-const VERSION = '29';
+const VERSION = '30';
 function weightInfo() {
   const start = S.startW || (S.weights[0]?.w) || +S.w || 52, goal = +S.goal || 62, cur = curW();
   const ms = [start + 1, start + 3, start + 5, start + 7].filter(x => x < goal).concat([goal]).map(x => +x.toFixed(1));
@@ -954,6 +957,7 @@ document.addEventListener('click', e => {
   if (d.food) { openFood(d.food); return; }
   if (d.fcat) { fdCat = d.fcat; openDB(); return; }
   if (d.sec) { openSection(d.sec, d.forslot); return; }
+  if (d.ytv) { b.outerHTML = vframe(d.ytv); return; }
   if (d.mus) { openMuscle(d.mus); return; }
   if (d.pday) { openPlanDay(d.pday); return; }
   if ('pick' in d) { openPick(); return; }
@@ -1026,6 +1030,8 @@ document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id
 document.addEventListener('change', async e => { if (e.target.id === 'ingImg' && e.target.files[0]) { ocrIngredients(e.target.files[0], e.target.dataset.code || ''); e.target.value = ''; return; } if (e.target.id === 'bcImg' && e.target.files[0]) { decodeImage(e.target.files[0]); e.target.value = ''; return; } if (e.target.id === 'impIn' && e.target.files[0]) { try { const o = JSON.parse(await e.target.files[0].text()); if (!o || !o.month) throw 0; S = Object.assign(def(), o); save(); applyTheme(); closeScreen(); toast('رجعت معلوماتك ✓'); } catch (er) { toast('الملف مو صحيح'); } return; } if (e.target.id === 'photoIn' && e.target.files[0]) { await savePhoto(e.target.files[0]); toast('انحفظت الصورة'); loadPhotos(); } });
 document.addEventListener('input', e => { const t = e.target; if (t.id === 'fdq') { fdQ = t.value; const pos = t.selectionStart; openDB(); const n = $('#fdq'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (er) {} } return; } if (!SES) return; if (t.dataset.w != null) SES.sets[SES.k][+t.dataset.w].w = t.value; if (t.dataset.r != null) SES.sets[SES.k][+t.dataset.r].r = t.value; });
 route();
+/* نحمّل كل مقاطع الحركة مرة وحدة، حتى تشتغل بعدين بدون نت */
+setTimeout(() => { if (!navigator.onLine) return; let i = 0; const L = CLIP.flatMap(id => [`img/clip/${id}-0.webp`, `img/clip/${id}-1.webp`]); const next = () => { const u = L.slice(i, i + 6); i += 6; if (!u.length) return; Promise.all(u.map(x => fetch(x).catch(() => 0))).then(() => setTimeout(next, 150)); }; next(); }, 4000);
 (() => { const sp = document.getElementById('splash'); if (!sp) return; const go = () => { sp.classList.add('out'); setTimeout(() => sp.remove(), 600); }; setTimeout(go, RM ? 200 : 2800); sp.addEventListener('click', go); })();
 
 /* ================= التحديث التلقائي ================= */
