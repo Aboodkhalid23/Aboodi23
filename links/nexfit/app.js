@@ -146,7 +146,7 @@ function vHome() {
     : t === 'R' ? `<div class="tw rest"><small>اليوم ${c + 1} من ${MDAYS} • ${P.n}</small><h2>😴 اليوم راحة</h2><p class="sm mut">العضل يكبر وقت الراحة. امشي 30 دقيقة، وباچر ${DAY_NAMES[dayType(c + 1)]}.</p><button class="obtn" data-day="${c}">إطالات خفيفة 10 دقايق</button></div>`
     : `<div class="tw"><img src="img/ex3d/${DAY_IMG[t]}.jpg" alt=""><div class="twb"><small>تمرينك اليوم • يوم ${c + 1} من ${MDAYS}</small><h2>${DAY_NAMES[t]}</h2><div class="mchips">${[...new Set(M.plan[t].map(x => GRP(x.id)))].map(g => `<i>${MUSN(g)} ${M.plan[t].filter(x => GRP(x.id) === g).length}</i>`).join('')}</div><span class="xs mut num">${M.plan[t].length} تمارين • تقريباً ${M.plan[t].reduce((a, x) => a + x.s, 0) * 2 + 10} دقيقة</span>
       ${doneToday ? '<span class="done">✓ خلصته اليوم، عاشت إيدك</span>' : `<div class="row" style="gap:8px"><button class="gbtn" data-start="${c}">ابدأ التمرين</button><button class="obtn" data-pday="${t}">التمارين</button></div>`}</div></div>`;
-  return `<div class="hbar"><button class="ib" data-settings aria-label="الإعدادات">${I.gear}</button><img class="wlogo" src="img/logo-wide.webp" alt="NEXFIT"><span class="coin">🔥<b class="num">${streak()}</b></span></div>
+  return `<div class="hbar"><button class="ib" data-settings aria-label="الإعدادات">${I.gear}</button><img class="wlogo d" src="img/logo-wide.webp" alt="NEXFIT"><img class="wlogo l" src="img/logo-wide-l.webp" alt="NEXFIT"><span class="coin">🔥<b class="num">${streak()}</b></span></div>
   <p class="hdate">${WD[d.getDay()]} ${d.getDate()} ${MO[d.getMonth()]}</p>
   ${installCard()}
   ${work}
@@ -774,7 +774,7 @@ function openBan(i) {
 }
 
 /* ================= أنا ================= */
-const VERSION = '35';
+const VERSION = '36';
 function weightInfo() {
   const start = S.startW || (S.weights[0]?.w) || +S.w || 52, goal = +S.goal || 62, cur = curW();
   const ms = [start + 1, start + 3, start + 5, start + 7].filter(x => x < goal).concat([goal]).map(x => +x.toFixed(1));
@@ -895,12 +895,24 @@ function protBody() {
    <p class="xs mut" style="margin:10px 0 6px">كم وجبة باليوم؟</p><div class="chips">${[3, 4, 5].map(k => `<button class="${n === k ? 'on' : ''}" data-pcn="${k}">${k} وجبات</button>`).join('')}</div>
    <label class="srow" style="margin-top:10px;padding:8px 0" data-pcibs><span class="sic" style="background:#34c759">🫃</span><span class="grow"><b>عندي قولون أو معدة حساسة</b><small>أقسم البروتين لكميات أصغر حتى ما ينفخك</small></span>${tgl(ibs)}</label></div>
   <div class="pcres"><small>جسمك يحتاج باليوم</small><b class="num" data-count="${tot}">${tot}</b><span>غرام بروتين</span><p class="xs">المدى الصحي إلك: ${lo} إلى ${hi} غم (يعني ${w} كيلو × 1.6 لحد 2.2)</p></div>
+  ${scoopBox(tot)}
   <div class="card"><h3>📅 جدولك اليومي</h3><div class="pct">${rows.map(([[ic, nm, tm], p]) => `<div class="pcr"><span class="ic">${ic}</span><div class="grow"><b>${nm}</b><small>${tm}</small></div><b class="num g">${p} غم</b></div>`).join('')}
    ${short ? `<div class="pcr" style="opacity:.85"><span class="ic">🌙</span><div class="grow"><b>سناك قبل النوم</b><small>رهكا أو حليب</small></div><b class="num g">${short} غم</b></div>` : ''}</div>
    <p class="xs mut" style="margin-top:8px">المجموع: <b class="num">${tot}</b> غم. منها تقريباً <b class="num">${shake}</b> غم من سكوب البروتين، والباقي <b class="num">${food}</b> غم من الأكل.</p></div>
   ${ibs ? `<div class="card"><h3>🫃 للقولون والمعدة</h3><div class="good sm col"><p>لا تاخذ أكثر من <b>30 غم</b> بالمرة الوحدة. المعدة تهضم أريح لما الكمية أصغر.</p><p>إذا السكوب ينفخك: <b>قسمه نصين</b>، نص الصبح (12 غم) ونص العصر (12 غم).</p><p>خلّي البروتين <b>أيزوليت</b> (لاكتوز قليل) وبمي مو حليب.</p><p>اشرب البروتين على مهلك، مو مرة وحدة.</p><p>لا تاخذه على معدة فارغة كلش إذا يزعجك، خليه ويا أكلة خفيفة.</p></div></div>` : ''}
   <div class="card"><h3>🍗 شكد بروتين بالأكل؟</h3><div class="pct">${EQ.map(([n2, a, p, u]) => `<div class="pcr"><div class="grow"><b>${n2}</b><small class="num">${a} ${u || 'غم'}</small></div><b class="num g">${p} غم</b></div>`).join('')}</div></div>
   <p class="xs mut">المصدر: الجمعية الدولية للتغذية الرياضية (ISSN 2017) ودراسة مورتون 2018 الي جمعت 49 دراسة. تثقيف عام مو وصفة طبية.</p>`;
+}
+
+/* شكد سكوب آخذ اليوم؟ تعد الي أكلته بحركات بسيطة، والتطبيق يگلك */
+const PQ = [['meat', '🍗', 'قطعة دجاج أو لحم أو سمك', 'بحجم كف إيدك', 25], ['tuna', '🐟', 'علبة تونة', '', 25], ['rahka', '🥣', 'علبة رهكا أو زبادي يوناني', '250 غم', 25], ['egg', '🥚', 'بيضة', '', 6], ['milk', '🥛', 'گلاص حليب', '250 مل', 8], ['cheese', '🧀', 'شريحتين جبن', '', 7], ['beans', '🫘', 'صحن عدس أو فاصوليا', '', 12], ['carb', '🍚', 'صحن تمن أو مكرونة أو خبزتين', '', 6]];
+function scoopBox(tot) {
+  const q = ((S.pq || {})[today()]) || {}, ate = PQ.reduce((a, [k, , , , g]) => a + (q[k] || 0) * g, 0), rem = Math.max(0, tot - ate);
+  const sc = rem <= 8 ? 0 : rem <= 30 ? 1 : 2, after = Math.max(0, rem - sc * 25);
+  const msg = ate === 0 ? `<b>ما سجلت أكل بعد.</b> إذا ما تعرف شكد أكلت: <b>خذ سكوب واحد بس</b>، هذا دائماً آمن.` : sc === 0 ? `<b>✓ ما تحتاج سكوب اليوم.</b> وصلت بروتينك من الأكل.` : sc === 1 ? `<b>خذ سكوب واحد</b> (25 غم)${after ? `، وباقيلك ${after} غم كمّلها بأكلة.` : '، وتكمل حاجتك بالضبط.'}` : `<b>خذ سكوبين</b> على مرتين (الصبح والعصر)، وباقيلك ${after} غم من الأكل.${after > 0 ? ' لا تزيد على سكوبين.' : ''}`;
+  return `<div class="card sbx"><h3>🥄 شكد سكوب آخذ اليوم؟</h3><p class="xs mut">اضغط + على كل شي أكلته اليوم، والتطبيق يحسب لحاله.</p>
+   <div class="pq">${PQ.map(([k, ic, n, sub, g]) => `<div class="pqr"><span class="ic">${ic}</span><div class="grow"><b>${n}</b><small>${sub ? sub + ' • ' : ''}${g} غم بروتين</small></div><button class="pqb" data-pq="${k}:-1" aria-label="ناقص">−</button><b class="num pqn">${q[k] || 0}</b><button class="pqb p" data-pq="${k}:1" aria-label="زايد">+</button></div>`).join('')}</div>
+   <div class="sres"><div class="sbar"><i style="width:${Math.min(100, ate / tot * 100)}%"></i></div><p class="sm num">أكلت <b>${ate}</b> غم من <b>${tot}</b> • باقي <b>${rem}</b> غم</p><div class="scoops">${[0, 1].map(i => `<span class="${i < sc ? 'on' : ''}">🥄</span>`).join('')}</div><p class="sm">${msg}</p></div></div>`;
 }
 const pcRe = () => { const o = $('#pcOut'); if (o) { o.innerHTML = protBody(); countUp(o); } };
 /* ================= الخط ================= */
@@ -1047,6 +1059,7 @@ document.addEventListener('click', e => {
   if ('startc' in d) { startCourse(); haptic(20); toast('يلا! اليوم أول يوم بالكورس 💪'); reroute(); return; }
   if (d.cshift) { startCourse(Math.max(0, curDay() + +d.cshift)); reroute(); return; }
   if (d.ateit) { const [id, sl] = d.ateit.split(':'), t = today(); S.mp = S.mp || {}; S.mp[t] = S.mp[t] || {}; S.mp[t][sl] = id; S.eaten = S.eaten || {}; S.eaten[t] = S.eaten[t] || {}; S.eaten[t][sl] = true; save(); haptic(14); toast('انسجلت ✓'); closeScreen(); return; }
+  if (d.pq) { const [k, v] = d.pq.split(':'), t = today(); S.pq = S.pq || {}; S.pq[t] = S.pq[t] || {}; S.pq[t][k] = Math.max(0, (S.pq[t][k] || 0) + +v); save(); haptic(); const y = $('#screen').scrollTop; pcRe(); $('#screen').scrollTop = y; return; }
   if (d.pcg) { PC.g = d.pcg; pcRe(); return; }
   if (d.pcn) { PC.n = +d.pcn; pcRe(); return; }
   if ('pcibs' in d) { e.preventDefault(); PC.ibs = !PC.ibs; pcRe(); return; }

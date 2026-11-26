@@ -571,7 +571,7 @@ nav .in{box-shadow:0 10px 30px rgba(0,0,0,.35)}
 /* ===== تصميم NEXFIT v16: جيم فخم ===== */
 :root{--fn:'Oswald','Vazirmatn',system-ui,sans-serif;--glass:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.012));--edge:rgba(255,255,255,.07)}
 :root[data-theme=light]{--glass:linear-gradient(180deg,#fff,#fbfbfd);--edge:rgba(0,0,0,.07)}
-.num,b.num,.num b,.mac b,.nut4 b,.hk b,.tile b,.gring b,.ring b,.ringp b,.fring b,.wstep input,.qty b,.pmac b{font-family:var(--fn);font-weight:600;letter-spacing:.3px}
+.num,b.num,.num b,.mac b,.nut4 b,.hk b,.tile b,.gring b,.ring b,.ringp b,.fring b,.wstep input,.qty b,.pmac b{font-family:var(--fb);font-weight:700;letter-spacing:0;font-variant-numeric:tabular-nums}
 h1{font-size:32px;font-weight:900;letter-spacing:0}
 .card,.slist,.exrow,.rrow,.frow,.mcard,.store,.bcard,.prow,.trow,.tile,.lastt,.hcard{background:var(--glass),var(--s1);border-color:var(--edge)}
 .card{border-radius:24px}
@@ -866,6 +866,21 @@ nav a.pop>span{animation:tabpop .5s cubic-bezier(.34,1.8,.64,1)}
 .pcin .chips{flex-wrap:wrap}.pcin #pcW{font-size:26px;font-weight:800;text-align:center}
 .pcres{text-align:center;border-radius:26px;padding:20px 14px;background:radial-gradient(300px 160px at 50% 0,rgba(255,170,40,.3),transparent 70%),var(--s1);border:1px solid rgba(255,170,40,.35)}.pcres small{color:var(--mut)}.pcres>b{display:block;font-size:64px;line-height:1.1;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;font-family:var(--fd)}.pcres span{font-weight:800}.pcres p{color:var(--mut);margin-top:6px}
 .pct{display:flex;flex-direction:column}.pcr{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}.pcr:last-child{border:0}.pcr .ic{width:38px;height:38px;border-radius:12px;background:var(--s2);display:grid;place-items:center;font-size:19px;flex:none}.pcr b{font-size:14.5px}.pcr small{display:block;color:var(--mut);font-size:11.5px}.pcr .g{color:var(--g);font-size:16px}
+
+/* ===== v36: كتابة عربية سليمة وراحة للعين ===== */
+*{letter-spacing:0}
+body{text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased;font-feature-settings:"kern" 1,"liga" 1,"calt" 1;word-break:normal;overflow-wrap:break-word}
+#splash b,.brand b{letter-spacing:inherit}
+:root,:root:not([data-theme=light]){--bg:#121215;--s1:#1b1b20;--s2:#24242a;--s3:#303037;--fg:#e8e8ed;--mut:#a3a3ad;--line:rgba(255,255,255,.07);--glow:0 6px 18px rgba(255,150,20,.22)}
+:root:not([data-theme=light]) body{background:radial-gradient(700px 420px at 110% -80px,rgba(255,140,0,.1),transparent 65%),var(--bg)!important}
+p,.sm,small,.xs{line-height:1.75}
+h1,h2,h3,b{line-height:1.45}
+.wlogo.l{display:none}[data-theme=light] .wlogo.d{display:none}[data-theme=light] .wlogo.l{display:block}
+.wlogo{filter:none!important}
+.pq{display:flex;flex-direction:column;margin-top:8px}.pqr{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}.pqr:last-child{border:0}.pqr .ic{font-size:22px;width:36px;text-align:center}.pqr b{font-size:14px}.pqr small{display:block;font-size:11.5px;color:var(--mut)}
+.pqb{width:34px;height:34px;border-radius:50%;border:0;background:var(--s2);color:var(--fg);font-size:20px;font-weight:800;flex:none}.pqb.p{background:var(--grad);color:#1a1000}.pqn{width:22px;text-align:center;font-size:17px}
+.sres{margin-top:12px;background:var(--s2);border-radius:18px;padding:14px;text-align:center;display:flex;flex-direction:column;gap:8px}.sbar{height:10px;border-radius:6px;background:rgba(255,255,255,.07);overflow:hidden}.sbar i{display:block;height:100%;background:var(--grad);border-radius:6px;transition:width .5s cubic-bezier(.22,1,.36,1)}
+.scoops{display:flex;justify-content:center;gap:10px}.scoops span{font-size:30px;filter:grayscale(1) opacity(.25);transition:all .4s cubic-bezier(.34,1.56,.64,1)}.scoops span.on{filter:none;transform:scale(1.15)}
 </style>
 </head>
 <body>
@@ -894,6 +909,6 @@ nav a.pop>span{animation:tabpop .5s cubic-bezier(.34,1.8,.64,1)}
 </div></nav>
 <div id="screen" class="screen" hidden></div>
 <div id="player" class="player" hidden></div>
-<script type="module" src="app.js?v=35"></script>
+<script type="module" src="app.js?v=36"></script>
 </body>
 </html>
