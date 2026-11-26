@@ -382,7 +382,7 @@ const I={x:'<path d="M6 6l12 12M18 6 6 18"/>',chevR:'<path d="m9 6 6 6-6 6"/>',c
 const PLAY='<svg width="30" height="30" viewBox="0 0 24 24" fill="#fff"><path d="M8 4.8v14.4L19.5 12z"/></svg>';
 const PAUSE='<svg width="28" height="28" viewBox="0 0 24 24" fill="#fff"><rect x="6" y="4.5" width="4.2" height="15" rx="1.2"/><rect x="13.8" y="4.5" width="4.2" height="15" rx="1.2"/></svg>';
 
-const DEF={lang:"ar",mode:"card",font:"vazir",weight:1,theme:"white",fgC:"",bgC:"",scale:1,measure:"mid",lead:"auto",sec:10,longMore:false,autoTime:true,coach:true,paceGuide:true,breath:true,moodCard:true,moodTint:true,cd:true,gap:false,memo:false,next:true,
+const DEF={lang:"ar",mode:"card",font:"vazir",weight:1,theme:"white",fgC:"",bgC:"",scale:1,measure:"mid",lead:"auto",sec:10,longMore:false,autoTime:true,wpc:10,coach:true,paceGuide:true,breath:true,moodCard:true,moodTint:true,cd:true,gap:false,memo:false,next:true,
   mirror:false,pos:"mid",slen:"mid",hardMark:true,selfSize:28,wpm:120,guide:.36,box:true,ai:"",cdN:3,hideUi:false,showLeft:true,secPause:false,endPause:false};
 const S=Object.assign({},DEF,N.get("set",{}));
 const save=()=>N.set("set",S);
@@ -467,6 +467,7 @@ const T={ar:{
  aiSlow:"الذكاء طوّل كلش بالجواب. جرّب مرة ثانية.",dirPart:"✓ حللت {0} من {1} أجزاء. اضغط «حلّل من جديد» حتى يكمل الباقي.",
  aiBusy:"الذكاء مشغول هسه (ضغط على خوادمهم). جرّب بعد دقيقة.",aiModel:"النموذج المحفوظ قديم، وما لگيت بديل يشتغل.",aiRegion:"Google ما تسمح بـ Gemini ببلدك. جرّب ChatGPT أو Claude.",
  aiBlocked:"الذكاء رفض يحلل هذا المحتوى (فلتر الحماية مالته). جرّب ChatGPT أو Claude.",aiWait:"⏳ Google طلبت ننتظر شوية… {0} ث",errWhy:"شنو صار بالضبط:",ping:"جرّب الاتصال بالذكاء",pingOk:"شغّال",dirLocalNow:"هسه شغّال «تحليل Noto الداخلي» (بدون إنترنت). حلّل بالذكاء حتى يصير أدق.",
+ secPerN:"{0} ث / {1} كلمات",wpcRow:"كلمات بكل مقطع",wpcS:"كم كلمة تطلع بالشاشة بكل مرة",wordsU:"كلمات",secRowN:"ثواني لكل مقطع ({0} كلمات)",
  aBack5:"رجوع 5 ثواني",aFwd5:"قدّام 5 ثواني",aEnd:"المقطع الجاي",aPrevPara:"المقطع الي قبله"},
 en:{
  lockMsg:"Enter your code to open Noto",lockWait:"One moment…",lockBad:"Wrong code, try again",lockMany:"Too many tries. Wait 30 seconds",lockNo:"This device can't use the lock",del:"Delete",
@@ -547,6 +548,7 @@ en:{
  aiSlow:"The AI took too long. Try again.",dirPart:"✓ Analyzed {0} of {1} parts. Tap Analyze again to finish the rest.",
  aiBusy:"The AI is busy right now. Try again in a minute.",aiModel:"The saved model is outdated and no working replacement was found.",aiRegion:"Google doesn't allow Gemini in your country. Try ChatGPT or Claude.",
  aiBlocked:"The AI refused this content (its safety filter). Try ChatGPT or Claude.",aiWait:"⏳ Google asked us to wait… {0}s",errWhy:"What exactly happened:",ping:"Test the AI connection",pingOk:"works",dirLocalNow:"Noto's built-in analysis is on now (works offline). Analyze with AI for more accuracy.",
+ secPerN:"{0}s / {1} words",wpcRow:"Words per part",wpcS:"How many words show on screen each time",wordsU:"words",secRowN:"Seconds per part ({0} words)",
  aBack5:"Back 5 seconds",aFwd5:"Forward 5 seconds",aEnd:"Next section",aPrevPara:"Previous section"}};
 const t=(k,...a)=>{let s=(T[S.lang]||T.ar)[k];if(s==null)s=T.ar[k]||k;a.forEach((v,i)=>{s=s.replace("{"+i+"}",v);});return s;};
 let toastT=0;
@@ -631,7 +633,7 @@ function splitLong(p,M){
   return [...splitLong(w.slice(0,best).join(" "),M),...splitLong(w.slice(best).join(" "),M)];
 }
 function parse(text,noMerge){
-  const lines=cleanText(text).split("\n"),out=[];let sec="",cue="";const M=SLEN[S.slen]||12;
+  const lines=cleanText(text).split("\n"),out=[];let sec="",cue="";const M=(S.mode==="scroll"||noMerge)?12:9999;
   lines.forEach((line,li)=>{
     if(!line)return;const hm=line.match(HEAD_RE);
     if(hm&&(hm[1]==="العنوان"||!hm[2]||hm[2].length<2)){if(hm[1]!=="العنوان")sec=hm[1];return;}
@@ -642,17 +644,28 @@ function parse(text,noMerge){
       splitLong(p,M).forEach(x=>{out.push({t:x,li,sec:ls,cue,w:wc(x),parts:[{li,t:x}]});cue="";});});
   });
   if(noMerge||S.mode==="scroll")return out;
-  /* تجميع: المقطع القصير (كلمة أو كلمتين) ينضم لجاره، حتى ما تنتظر على كلمتين */
-  const MIN={short:4,mid:6,long:8}[S.slen]||6,MAX={short:9,mid:12,long:16}[S.slen]||12,res=[];
-  out.forEach(c=>{const l=res[res.length-1];
-    if(l&&l.sec===c.sec&&!c.cue&&(l.w<MIN||c.w<MIN)&&l.w+c.w<=MAX){l.t+=" "+c.t;l.w+=c.w;l.parts.push(c.parts[0]);}
-    else res.push(Object.assign({},c,{parts:c.parts.slice()}));});
+  return packChunks(out);
+}
+/* تعبئة المقاطع: كل مقطع قريب من عدد الكلمات الي اخترته، والقطع بأحسن مكان (نهاية جملة، فارزة، قبل «و/بس»)، والبقايا القصيرة تنضم */
+function packChunks(out){
+  const N=Math.max(3,S.wpc||10),MIN=Math.max(2,Math.ceil(N*.6)),MAX=N+Math.max(1,Math.round(N*.2)),res=[];
+  const groups=[];out.forEach(c=>{const g=groups[groups.length-1];if(!g||g.sec!==c.sec||c.cue)groups.push({sec:c.sec,cue:c.cue,items:[c]});else g.items.push(c);});
+  groups.forEach(g=>{const tok=[];
+    g.items.forEach(c=>{const ws=c.t.split(/\s+/);ws.forEach((w,k)=>{const last=k===ws.length-1;let br=last?(/[.!؟?…]$/.test(w)?3:2.5):(/[،,؛:]$/.test(w)?2:0);
+      if(!last&&ws[k+1]&&JOIN.test(ws[k+1]+" "))br=Math.max(br,1);tok.push({w,li:c.li,br});});});
+    const n=tok.length;let i=0,first=true;
+    while(i<n){let j;const rem=n-i;
+      if(rem<=MAX)j=n-1;
+      else{let best=-1,bs=-1e9;for(let e=i+MIN-1;e<=Math.min(i+MAX-1,n-1);e++){const len=e-i+1,left=n-e-1;let sc=tok[e].br*8-Math.abs(len-N)*4;if(left>0&&left<MIN)sc-=60;if(sc>bs){bs=sc;best=e;}}j=best<0?Math.min(i+N-1,n-1):best;}
+      const seg=tok.slice(i,j+1),parts=[];seg.forEach(x=>{const l=parts[parts.length-1];if(l&&l.li===x.li)l.t+=" "+x.w;else parts.push({li:x.li,t:x.w});});
+      res.push({t:seg.map(x=>x.w).join(" "),li:seg[0].li,sec:g.sec,cue:first?g.cue:"",w:seg.length,parts});first=false;i=j+1;}
+  });
   return res;
 }
 let SENT=[];
 const R={moodT:0,pk:-1,min:0,idx:0,t:0,playing:false,peek:false,clock:0,marks:[],lastMark:-1e9,counting:false,cdT:0,extra:{},pos:0,max:1,pxw:1,lineH:40,vel:0,drag:false,anim:null};
 function dur(i,arr){const s=(arr||SENT)[i];if(!s)return S.sec;let d=S.sec;
-  if(S.autoTime){d=Math.max(2.5,S.sec*s.w/8);if(/[.!؟?…]$/.test(s.t))d+=.4;}
+  if(S.autoTime){d=Math.max(2,S.sec*s.w/Math.max(3,S.wpc||10));if(/[.!؟?…]$/.test(s.t))d+=.4;}
   if(!arr&&ANA&&ANA.items[i]){const pc=ANA.items[i].pace;d*=pc==="fast"?.85:pc==="slow"?1.2:1;}
   return Math.max(2.5,Math.round(d*10)/10)+((!arr&&R.extra[i])||0);}
 function estimate(text){const s=parse(text);if(S.mode==="scroll")return wc(s.map(x=>x.t).join(" "))/S.wpm*60;let x=0;for(let i=0;i<s.length;i++)x+=dur(i,s);return x;}
@@ -790,7 +803,7 @@ function buildPanel(){
   if(card){ch("🎭 ",t("dir"),()=>dirSheet());ch(IC(I.spark,18),t("easy"),()=>{pause();easySheet();});ch(IC(I.ear,18),t("listen"),()=>{pause();say(SENT[R.idx].t);});}
   $("rClose").innerHTML=IC(I.x);$("rCam").innerHTML=IC(I.cam);$("rSet").innerHTML=IC(I.gear);
   $("stM").setAttribute("aria-label",t("aLess"));$("stP").setAttribute("aria-label",t("aMoreV"));stepUi();$("rCount").textContent="";}
-function stepUi(){if(CARD())$("stV").textContent=R.playing?t("left",Math.max(0,Math.ceil(dur(R.idx)-R.t))):(S.autoTime?t("secPer8",S.sec):t("secEach",S.sec));else $("stV").textContent=t("wpm",S.wpm);}
+function stepUi(){if(CARD())$("stV").textContent=R.playing?t("left",Math.max(0,Math.ceil(dur(R.idx)-R.t))):t("secPerN",S.sec,S.wpc||10);else $("stV").textContent=t("wpm",S.wpm);}
 $("stM").addEventListener("click",()=>{if(CARD())S.sec=Math.max(3,S.sec-1);else S.wpm=Math.max(40,S.wpm-5);save();stepUi();});
 $("stP").addEventListener("click",()=>{if(CARD())S.sec=Math.min(40,S.sec+1);else S.wpm=Math.min(260,S.wpm+5);save();stepUi();});
 function showNow(){if(CARD())showSent();else renderScroll();}
@@ -1022,7 +1035,9 @@ function settingsSheet(){openSheet(t("settings"),B=>{
     m.addEventListener("click",()=>{if(S.mode===v)return;S.mode=v;save();if(cur==="read"&&doc){const d=docs.find(x=>x.id===doc.id)||doc;pause();closeSheet();openRead(d);}if(cur==="lib")renderLib();settingsSheet();});ms.append(m);});g.append(ms);
   if(S.mode!=="scroll"){
     g=grp(B,t("card"));
-    stepRow(g,S.autoTime?t("secRow8"):t("secRow"),null,()=>S.sec,d=>{S.sec=Math.max(3,Math.min(40,S.sec+d));save();stepUi();},v=>v+" "+t("secUnit"));
+    const rewrap=()=>{if(cur==="read"&&CARD()&&doc){const k=SENT[R.idx]&&SENT[R.idx].parts[0];SENT=parse(doc.text);loadAna();let j=SENT.findIndex(x=>k&&x.parts.some(p=>p.li===k.li&&p.t===k.t));if(j<0)j=Math.min(R.idx,SENT.length-1);R.idx=Math.max(0,j);R.t=0;showSent();}};
+    stepRow(g,t("wpcRow"),t("wpcS"),()=>S.wpc||10,d=>{S.wpc=Math.max(3,Math.min(20,(S.wpc||10)+d));save();rewrap();stepUi();const sc=$("shB").scrollTop;settingsSheet();$("shB").scrollTop=sc;},v=>v+" "+t("wordsU"));
+    stepRow(g,t("secRowN",S.wpc||10),null,()=>S.sec,d=>{S.sec=Math.max(2,Math.min(40,S.sec+d));save();stepUi();},v=>v+" "+t("secUnit"));
     swRow(g,t("autoTime"),t("autoTimeS"),S.autoTime,v=>{S.autoTime=v;save();stepUi();settingsSheet();});
     swRow(g,t("coach"),t("coachS"),S.coach,v=>{S.coach=v;save();if(cur==="read")showSent();});
     swRow(g,t("paceGuide"),t("paceGuideS"),S.paceGuide,v=>{S.paceGuide=v;save();if(cur==="read")showSent();});
@@ -1034,7 +1049,7 @@ function settingsSheet(){openSheet(t("settings"),B=>{
     swRow(g,t("hardMark"),t("hardMarkS"),S.hardMark,v=>{S.hardMark=v;upd();});
     swRow(g,t("gap"),t("gapS"),S.gap,v=>{S.gap=v;save();});
     swRow(g,t("secPause"),t("secPauseS"),S.secPause,v=>{S.secPause=v;save();});
-    const g2=grp(B,t("slen"));chips(g2,[["short","short"],["mid","mid"],["long","long"]].map(([v,n])=>({t:t(n),on:S.slen===v,fn:()=>{S.slen=v;save();if(cur==="read"){SENT=parse(doc.text);loadAna();R.idx=Math.min(R.idx,SENT.length-1);showSent();}settingsSheet();}})));
+
     const g3=grp(B,t("screen"));chips(g3,[["mid","posMid"],["top","posTop"]].map(([v,n])=>({t:t(n),on:S.pos===v,fn:()=>{S.pos=v;upd();settingsSheet();}})));
   }else{
     g=grp(B,t("scroll"));
